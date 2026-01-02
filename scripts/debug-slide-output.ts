@@ -1,0 +1,59 @@
+/**
+ * Debug script to output current slide rendering
+ *
+ * Usage: bun run scripts/debug-slide-output.ts [pptx-path] [slide-number]
+ * Default: fixtures/poi-test-data/test-data/slideshow/themes.pptx slide 4
+ */
+import { openPresentation } from "../src/pptx";
+import * as fs from "node:fs";
+import JSZip from "jszip";
+
+async function main() {
+  const pptxPath = process.argv[2] ?? "fixtures/poi-test-data/test-data/slideshow/themes.pptx";
+  const slideNum = parseInt(process.argv[3] ?? "4", 10);
+
+  if (!fs.existsSync(pptxPath)) {
+    console.error(`File not found: ${pptxPath}`);
+    process.exit(1);
+  }
+
+  const pptxBuffer = fs.readFileSync(pptxPath);
+  const jszip = await JSZip.loadAsync(pptxBuffer);
+
+  const cache = new Map<string, { text: string; buffer: ArrayBuffer }>();
+  for (const fp of Object.keys(jszip.files)) {
+    const file = jszip.file(fp);
+    if (file !== null && !file.dir) {
+      const buffer = await file.async("arraybuffer");
+      const text = new TextDecoder().decode(buffer);
+      cache.set(fp, { text, buffer });
+    }
+  }
+
+  const presentationFile = {
+    readText: (fp: string) => cache.get(fp)?.text ?? null,
+    readBinary: (fp: string) => cache.get(fp)?.buffer ?? null,
+    exists: (fp: string) => cache.has(fp),
+  };
+
+  const presentation = openPresentation(presentationFile);
+  const slideCount = presentation.count;
+
+  if (slideNum < 1 || slideNum > slideCount) {
+    console.error(`Invalid slide number: ${slideNum}. Valid range: 1-${slideCount}`);
+    process.exit(1);
+  }
+
+  const slide = presentation.getSlide(slideNum);
+  const svg = slide.renderSVG();
+
+  const outputPath = `debug-slide-output.svg`;
+  fs.writeFileSync(outputPath, svg);
+  console.log(`Slide ${slideNum} SVG saved to: ${outputPath}`);
+  console.log(`SVG length: ${svg.length} bytes`);
+}
+
+main().catch(err => {
+  console.error(err);
+  process.exit(1);
+});

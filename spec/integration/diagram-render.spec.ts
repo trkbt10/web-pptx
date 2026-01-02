@@ -1,0 +1,203 @@
+/**
+ * @file Integration tests for diagram (SmartArt) rendering
+ *
+ * Tests actual PPTX file diagram rendering.
+ * Uses customGeo.pptx which contains a diagram on slide 7.
+ *
+ * @see ECMA-376 Part 1, Section 21.4 - DrawingML - Diagrams
+ * @see MS-ODRAWXML Section 2.4 - Diagram Drawing Elements
+ */
+
+import * as fs from "node:fs";
+import * as path from "node:path";
+import JSZip from "jszip";
+import type { PresentationFile } from "../../src/pptx";
+import { openPresentation } from "../../src/pptx";
+
+// customGeo.pptx has a diagram on slide 7
+const CUSTOM_GEO_PATH = "fixtures/poi-test-data/test-data/slideshow/customGeo.pptx";
+
+type FileCache = Map<string, { text: string; buffer: ArrayBuffer }>;
+
+async function loadPptxFile(filePath: string): Promise<PresentationFile> {
+  const pptxBuffer = fs.readFileSync(filePath);
+  const jszip = await JSZip.loadAsync(pptxBuffer);
+
+  const cache: FileCache = new Map();
+  const files = Object.keys(jszip.files);
+
+  for (const fp of files) {
+    const file = jszip.file(fp);
+    if (file !== null && !file.dir) {
+      const buffer = await file.async("arraybuffer");
+      const text = new TextDecoder().decode(buffer);
+      cache.set(fp, { text, buffer });
+    }
+  }
+
+  return {
+    readText(fp: string): string | null {
+      return cache.get(fp)?.text ?? null;
+    },
+    readBinary(fp: string): ArrayBuffer | null {
+      return cache.get(fp)?.buffer ?? null;
+    },
+    exists(fp: string): boolean {
+      return cache.has(fp);
+    },
+  };
+}
+
+describe("Diagram rendering - customGeo.pptx", () => {
+  let presentationFile: PresentationFile;
+
+  beforeAll(async () => {
+    const fullPath = path.resolve(CUSTOM_GEO_PATH);
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`Fixture file not found: ${fullPath}`);
+    }
+    presentationFile = await loadPptxFile(fullPath);
+  });
+
+  describe("Slide 7 - Diagram content", () => {
+    /**
+     * Slide 7 contains a SmartArt diagram with:
+     * - "Ohio's New Learning Standards for English Language Arts" header
+     * - 4 colored boxes: Reading Strand, Writing Strand, Speaking and Listening Strand, Language Strand
+     *
+     * The diagram is stored in ppt/diagrams/drawing1.xml and referenced via
+     * relationship type "diagramDrawing".
+     */
+
+    it("should render diagram shapes (not placeholder)", () => {
+      const presentation = openPresentation(presentationFile);
+      const slide = presentation.getSlide(7);
+      const svg = slide.renderSVG();
+
+      // Should NOT contain placeholder text
+      expect(svg).not.toContain("[Diagram]");
+    });
+
+    it("should render actual SVG path elements from diagram", () => {
+      const presentation = openPresentation(presentationFile);
+      const slide = presentation.getSlide(7);
+      const svg = slide.renderSVG();
+
+      // Should contain path elements (shapes from diagram)
+      const pathMatches = svg.match(/<path/g) ?? [];
+      expect(pathMatches.length).toBeGreaterThan(0);
+    });
+
+    it("should render text content from diagram", () => {
+      const presentation = openPresentation(presentationFile);
+      const slide = presentation.getSlide(7);
+      const svg = slide.renderSVG();
+
+      // Should contain text elements
+      expect(svg).toContain("<text");
+
+      // Should contain text from the diagram
+      // "Ohio's New Learning Standards for English Language Arts"
+      expect(svg).toContain("Ohio");
+    });
+
+    it("should render multiple diagram shapes with fill colors", () => {
+      const presentation = openPresentation(presentationFile);
+      const slide = presentation.getSlide(7);
+      const svg = slide.renderSVG();
+
+      // The diagram has multiple colored shapes:
+      // Blue: #4F81BD, Purple: #8064A2, Red: #C0504D, Orange: #F79646, Green: #9BBB59
+      // At least one of these colors should be present
+      const hasBlue = svg.includes("#4F81BD") || svg.includes("#4f81bd");
+      const hasPurple = svg.includes("#8064A2") || svg.includes("#8064a2");
+      const hasRed = svg.includes("#C0504D") || svg.includes("#c0504d");
+      const hasOrange = svg.includes("#F79646") || svg.includes("#f79646");
+      const hasGreen = svg.includes("#9BBB59") || svg.includes("#9bbb59");
+
+      expect(hasBlue || hasPurple || hasRed || hasOrange || hasGreen).toBe(true);
+    });
+
+    it("should render diagram without throwing", () => {
+      const presentation = openPresentation(presentationFile);
+      const slide = presentation.getSlide(7);
+
+      // Should not throw when rendering
+      expect(() => slide.renderSVG()).not.toThrow();
+    });
+
+    it("should have diagram frame positioned correctly", () => {
+      const presentation = openPresentation(presentationFile);
+      const slide = presentation.getSlide(7);
+      const svg = slide.renderSVG();
+
+      // Should have transform with translate for diagram frame position
+      expect(svg).toContain("translate(");
+    });
+
+    it("should render roundRect shapes (from diagram roundedRect preset)", () => {
+      const presentation = openPresentation(presentationFile);
+      const slide = presentation.getSlide(7);
+      const svg = slide.renderSVG();
+
+      // roundRect shapes have Q (quadratic bezier) commands for corners
+      expect(svg).toContain(" Q ");
+    });
+
+    it("should render multiple text elements for multi-line text", () => {
+      const presentation = openPresentation(presentationFile);
+      const slide = presentation.getSlide(7);
+      const svg = slide.renderSVG();
+
+      // The diagram has multi-line text, should have multiple text elements
+      const textMatches = svg.match(/<text/g) ?? [];
+      expect(textMatches.length).toBeGreaterThan(5);
+    });
+  });
+
+  describe("Slide comparison (diagram vs non-diagram)", () => {
+    it("should render slide 1 differently from slide 7", () => {
+      const presentation = openPresentation(presentationFile);
+
+      const slide1 = presentation.getSlide(1);
+      const slide7 = presentation.getSlide(7);
+
+      const svg1 = slide1.renderSVG();
+      const svg7 = slide7.renderSVG();
+
+      // Slide 1 and slide 7 should have different content
+      expect(svg1).not.toBe(svg7);
+
+      // Slide 7 should have "Ohio" text (from diagram)
+      expect(svg7).toContain("Ohio");
+    });
+  });
+});
+
+describe("Diagram rendering - other PPTX files", () => {
+  /**
+   * Test diagram handling across different PPTX files
+   * to ensure graceful fallback when diagrams are not present
+   */
+
+  it("should handle PPTX without diagrams gracefully", async () => {
+    const filePath = "fixtures/poi-test-data/test-data/slideshow/present1.pptx";
+    const fullPath = path.resolve(filePath);
+
+    if (!fs.existsSync(fullPath)) {
+      console.log("Skipping test: present1.pptx not found");
+      return;
+    }
+
+    const presentationFile = await loadPptxFile(fullPath);
+    const presentation = openPresentation(presentationFile);
+
+    // Should render all slides without throwing errors
+    const slideCount = presentation.slideCount;
+    for (let i = 1; i <= slideCount; i++) {
+      const slide = presentation.getSlide(i);
+      const svg = slide.renderSVG();
+      expect(svg).toContain("<svg");
+    }
+  });
+});
