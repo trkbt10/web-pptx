@@ -65,7 +65,7 @@ export function generatePieChart(
 
     // Calculate explosion offset
     // ECMA-376 21.2.2.65: explosion is a percentage (0-100) of the radius
-    const explosionPercent = config?.explosions?.[i] ?? 0;
+    const explosionPercent = config?.explosions?.[index] ?? 0;
     const explosionDistance = (explosionPercent / 100) * radius;
 
     // Calculate the midpoint angle of the slice for explosion direction
