@@ -1,0 +1,294 @@
+/**
+ * @file Unit tests for shape/rotate.ts
+ */
+
+import { describe, expect, it } from "bun:test";
+import {
+  normalizeAngle,
+  degreesToRadians,
+  radiansToDegrees,
+  calculateAngleFromCenter,
+  snapAngle,
+  rotatePointAroundCenter,
+  calculateShapeCenter,
+  rotateShapeAroundCenter,
+  calculateRotationDelta,
+  DEFAULT_SNAP_ANGLES,
+  DEFAULT_SNAP_THRESHOLD,
+  type Point,
+} from "./rotate";
+
+// =============================================================================
+// normalizeAngle Tests
+// =============================================================================
+
+describe("normalizeAngle", () => {
+  it("returns angle unchanged when in 0-360 range", () => {
+    expect(normalizeAngle(0)).toBe(0);
+    expect(normalizeAngle(90)).toBe(90);
+    expect(normalizeAngle(180)).toBe(180);
+    expect(normalizeAngle(359)).toBe(359);
+  });
+
+  it("normalizes negative angles", () => {
+    expect(normalizeAngle(-90)).toBe(270);
+    expect(normalizeAngle(-180)).toBe(180);
+    expect(normalizeAngle(-360)).toBe(0);
+    expect(normalizeAngle(-450)).toBe(270);
+  });
+
+  it("normalizes angles above 360", () => {
+    expect(normalizeAngle(360)).toBe(0);
+    expect(normalizeAngle(450)).toBe(90);
+    expect(normalizeAngle(720)).toBe(0);
+  });
+});
+
+// =============================================================================
+// degreesToRadians / radiansToDegrees Tests
+// =============================================================================
+
+describe("degreesToRadians", () => {
+  it("converts common angles correctly", () => {
+    expect(degreesToRadians(0)).toBeCloseTo(0, 10);
+    expect(degreesToRadians(90)).toBeCloseTo(Math.PI / 2, 10);
+    expect(degreesToRadians(180)).toBeCloseTo(Math.PI, 10);
+    expect(degreesToRadians(360)).toBeCloseTo(2 * Math.PI, 10);
+  });
+});
+
+describe("radiansToDegrees", () => {
+  it("converts common angles correctly", () => {
+    expect(radiansToDegrees(0)).toBeCloseTo(0, 10);
+    expect(radiansToDegrees(Math.PI / 2)).toBeCloseTo(90, 10);
+    expect(radiansToDegrees(Math.PI)).toBeCloseTo(180, 10);
+    expect(radiansToDegrees(2 * Math.PI)).toBeCloseTo(360, 10);
+  });
+
+  it("is inverse of degreesToRadians", () => {
+    const angles = [0, 30, 45, 60, 90, 120, 180, 270, 359];
+    for (const angle of angles) {
+      expect(radiansToDegrees(degreesToRadians(angle))).toBeCloseTo(angle, 10);
+    }
+  });
+});
+
+// =============================================================================
+// calculateAngleFromCenter Tests
+// =============================================================================
+
+describe("calculateAngleFromCenter", () => {
+  it("calculates angle for point to the right", () => {
+    const angle = calculateAngleFromCenter(0, 0, 10, 0);
+    expect(angle).toBeCloseTo(0, 5);
+  });
+
+  it("calculates angle for point below", () => {
+    const angle = calculateAngleFromCenter(0, 0, 0, 10);
+    expect(angle).toBeCloseTo(90, 5);
+  });
+
+  it("calculates angle for point to the left", () => {
+    const angle = calculateAngleFromCenter(0, 0, -10, 0);
+    expect(angle).toBeCloseTo(180, 5);
+  });
+
+  it("calculates angle for point above", () => {
+    const angle = calculateAngleFromCenter(0, 0, 0, -10);
+    expect(angle).toBeCloseTo(-90, 5);
+  });
+
+  it("handles offset center", () => {
+    const angle = calculateAngleFromCenter(100, 100, 110, 100);
+    expect(angle).toBeCloseTo(0, 5);
+  });
+});
+
+// =============================================================================
+// snapAngle Tests
+// =============================================================================
+
+describe("snapAngle", () => {
+  it("snaps to nearby angle within threshold", () => {
+    expect(snapAngle(2)).toBe(0);
+    expect(snapAngle(43)).toBe(45);
+    expect(snapAngle(92)).toBe(90);
+    expect(snapAngle(178)).toBe(180);
+  });
+
+  it("does not snap when outside threshold", () => {
+    expect(snapAngle(10)).toBe(10);
+    expect(snapAngle(30)).toBe(30);
+    expect(snapAngle(60)).toBe(60);
+  });
+
+  it("snaps near 360/0 boundary", () => {
+    expect(snapAngle(358)).toBe(0);
+    expect(snapAngle(359)).toBe(0);
+  });
+
+  it("uses custom snap angles", () => {
+    const customAngles = [0, 30, 60, 90];
+    expect(snapAngle(28, customAngles)).toBe(30);
+    expect(snapAngle(58, customAngles)).toBe(60);
+    expect(snapAngle(45, customAngles)).toBe(45); // not snapped
+  });
+
+  it("uses custom threshold", () => {
+    expect(snapAngle(43, DEFAULT_SNAP_ANGLES, 1)).toBe(43); // not snapped with threshold 1
+    expect(snapAngle(43, DEFAULT_SNAP_ANGLES, 5)).toBe(45); // snapped with threshold 5
+  });
+});
+
+// =============================================================================
+// rotatePointAroundCenter Tests
+// =============================================================================
+
+describe("rotatePointAroundCenter", () => {
+  it("rotates point 90 degrees", () => {
+    const point: Point = { x: 10, y: 0 };
+    const center: Point = { x: 0, y: 0 };
+    const result = rotatePointAroundCenter(point, center, Math.PI / 2);
+
+    expect(result.x).toBeCloseTo(0, 10);
+    expect(result.y).toBeCloseTo(10, 10);
+  });
+
+  it("rotates point 180 degrees", () => {
+    const point: Point = { x: 10, y: 0 };
+    const center: Point = { x: 0, y: 0 };
+    const result = rotatePointAroundCenter(point, center, Math.PI);
+
+    expect(result.x).toBeCloseTo(-10, 10);
+    expect(result.y).toBeCloseTo(0, 10);
+  });
+
+  it("rotates point 360 degrees (full circle)", () => {
+    const point: Point = { x: 10, y: 5 };
+    const center: Point = { x: 0, y: 0 };
+    const result = rotatePointAroundCenter(point, center, 2 * Math.PI);
+
+    expect(result.x).toBeCloseTo(10, 10);
+    expect(result.y).toBeCloseTo(5, 10);
+  });
+
+  it("handles offset center", () => {
+    const point: Point = { x: 110, y: 100 };
+    const center: Point = { x: 100, y: 100 };
+    const result = rotatePointAroundCenter(point, center, Math.PI / 2);
+
+    expect(result.x).toBeCloseTo(100, 10);
+    expect(result.y).toBeCloseTo(110, 10);
+  });
+
+  it("rotates negative angle", () => {
+    const point: Point = { x: 10, y: 0 };
+    const center: Point = { x: 0, y: 0 };
+    const result = rotatePointAroundCenter(point, center, -Math.PI / 2);
+
+    expect(result.x).toBeCloseTo(0, 10);
+    expect(result.y).toBeCloseTo(-10, 10);
+  });
+});
+
+// =============================================================================
+// calculateShapeCenter Tests
+// =============================================================================
+
+describe("calculateShapeCenter", () => {
+  it("calculates center of a shape at origin", () => {
+    const center = calculateShapeCenter(0, 0, 100, 100);
+    expect(center.x).toBe(50);
+    expect(center.y).toBe(50);
+  });
+
+  it("calculates center of offset shape", () => {
+    const center = calculateShapeCenter(100, 200, 50, 80);
+    expect(center.x).toBe(125);
+    expect(center.y).toBe(240);
+  });
+});
+
+// =============================================================================
+// rotateShapeAroundCenter Tests
+// =============================================================================
+
+describe("rotateShapeAroundCenter", () => {
+  it("rotates shape around external center", () => {
+    // Shape at (100, 0) with size 20x20, center at (0, 0), rotate 90 degrees
+    const result = rotateShapeAroundCenter(
+      90, // x (so center is at 100)
+      -10, // y (so center is at 0)
+      20,
+      20,
+      0,
+      0,
+      0,
+      90
+    );
+
+    // Shape center (100, 0) rotates to (0, 100)
+    // New top-left: (0 - 10, 100 - 10) = (-10, 90)
+    expect(result.x).toBeCloseTo(-10, 5);
+    expect(result.y).toBeCloseTo(90, 5);
+    expect(result.rotation).toBe(90);
+  });
+
+  it("accumulates rotation with initial rotation", () => {
+    const result = rotateShapeAroundCenter(0, 0, 100, 100, 45, 50, 50, 45);
+
+    expect(result.rotation).toBe(90);
+  });
+
+  it("normalizes rotation above 360", () => {
+    const result = rotateShapeAroundCenter(0, 0, 100, 100, 350, 50, 50, 20);
+
+    expect(result.rotation).toBe(10);
+  });
+});
+
+// =============================================================================
+// calculateRotationDelta Tests
+// =============================================================================
+
+describe("calculateRotationDelta", () => {
+  it("calculates delta from start to current angle", () => {
+    // Start angle 0 (pointing right), current at 45 degrees
+    const delta = calculateRotationDelta(
+      0,
+      0,
+      Math.cos(Math.PI / 4) * 10,
+      Math.sin(Math.PI / 4) * 10,
+      0
+    );
+
+    expect(delta).toBeCloseTo(45, 5);
+  });
+
+  it("calculates negative delta for clockwise rotation", () => {
+    // Start angle 90, current at 45
+    const delta = calculateRotationDelta(
+      0,
+      0,
+      Math.cos(Math.PI / 4) * 10,
+      Math.sin(Math.PI / 4) * 10,
+      90
+    );
+
+    expect(delta).toBeCloseTo(-45, 5);
+  });
+});
+
+// =============================================================================
+// Constants Tests
+// =============================================================================
+
+describe("constants", () => {
+  it("has correct default snap angles", () => {
+    expect(DEFAULT_SNAP_ANGLES).toEqual([0, 45, 90, 135, 180, 225, 270, 315]);
+  });
+
+  it("has correct default snap threshold", () => {
+    expect(DEFAULT_SNAP_THRESHOLD).toBe(5);
+  });
+});

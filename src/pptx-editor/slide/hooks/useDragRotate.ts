@@ -5,13 +5,20 @@
  * Supports multi-selection rotation around combined center.
  */
 
-import { useCallback, useEffect } from "react";
-import type { Pixels, Bounds } from "../../../pptx/domain/types";
+import { useEffect } from "react";
+import type { Pixels } from "../../../pptx/domain/types";
 import { deg, px } from "../../../pptx/domain/types";
 import { useSlideEditor } from "../context";
-import { clientToSlideCoords } from "../shape/coords";
 import { useSlideState } from "./useSlideState";
-import type { ShapeId } from "../types";
+import { useClientToSlide } from "./useClientToSlide";
+import {
+  normalizeAngle,
+  snapAngle,
+  rotateShapeAroundCenter,
+  calculateRotationDelta,
+  DEFAULT_SNAP_ANGLES,
+  DEFAULT_SNAP_THRESHOLD,
+} from "../shape/rotate";
 
 // =============================================================================
 // Types
@@ -38,56 +45,6 @@ export type UseDragRotateResult = {
 };
 
 // =============================================================================
-// Helper Functions
-// =============================================================================
-
-/**
- * Normalize angle to 0-360 range
- */
-function normalizeAngle(angle: number): number {
-  let normalized = angle % 360;
-  if (normalized < 0) normalized += 360;
-  return normalized;
-}
-
-/**
- * Snap angle to nearest snap point if within threshold
- */
-function snapAngle(
-  angle: number,
-  snapAngles: readonly number[],
-  threshold: number
-): number {
-  for (const snapAngle of snapAngles) {
-    const diff = Math.abs(normalizeAngle(angle - snapAngle));
-    if (diff < threshold || diff > 360 - threshold) {
-      return snapAngle;
-    }
-  }
-  return angle;
-}
-
-/**
- * Rotate a point around a center point
- */
-function rotatePoint(
-  x: number,
-  y: number,
-  centerX: number,
-  centerY: number,
-  angleRad: number
-): { x: number; y: number } {
-  const cos = Math.cos(angleRad);
-  const sin = Math.sin(angleRad);
-  const dx = x - centerX;
-  const dy = y - centerY;
-  return {
-    x: centerX + dx * cos - dy * sin,
-    y: centerY + dx * sin + dy * cos,
-  };
-}
-
-// =============================================================================
 // Hook
 // =============================================================================
 
@@ -101,27 +58,18 @@ export function useDragRotate({
   width,
   height,
   containerRef,
-  snapAngles = [0, 45, 90, 135, 180, 225, 270, 315],
-  snapThreshold = 5,
+  snapAngles = DEFAULT_SNAP_ANGLES,
+  snapThreshold = DEFAULT_SNAP_THRESHOLD,
   onDragComplete,
 }: UseDragRotateOptions): UseDragRotateResult {
   const { state, dispatch } = useSlideEditor();
-  const { updateShapeTransform, updateMultipleShapeTransforms } = useSlideState();
+  const { updateShapeTransform } = useSlideState();
   const { drag } = state;
 
   const isDragging = drag.type === "rotate";
 
-  // Convert client coordinates to slide coordinates using unified utility
-  const clientToSlide = useCallback(
-    (clientX: number, clientY: number): { x: number; y: number } | null => {
-      const container = containerRef.current;
-      if (!container) return null;
-
-      const rect = container.getBoundingClientRect();
-      return clientToSlideCoords(clientX, clientY, rect, width as number, height as number);
-    },
-    [width, height, containerRef]
-  );
+  // Use shared coordinate conversion hook
+  const clientToSlide = useClientToSlide({ width, height, containerRef });
 
   // Handle pointer move during drag
   useEffect(() => {
@@ -131,50 +79,49 @@ export function useDragRotate({
       const pos = clientToSlide(e.clientX, e.clientY);
       if (!pos) return;
 
-      // Calculate angle from center to current position
       const centerX = drag.centerX as number;
       const centerY = drag.centerY as number;
-      const currentAngle = Math.atan2(pos.y - centerY, pos.x - centerX) * (180 / Math.PI);
-
-      // Calculate rotation delta
       const startAngle = drag.startAngle as number;
-      const deltaAngle = currentAngle - startAngle;
+
+      // Calculate rotation delta using extracted utility
+      const deltaAngle = calculateRotationDelta(
+        centerX,
+        centerY,
+        pos.x,
+        pos.y,
+        startAngle
+      );
 
       const isMultiSelection = drag.shapeIds.length > 1;
 
       if (isMultiSelection) {
         // Multi-selection: rotate each shape around combined center
-        const updates: Array<{ id: ShapeId; bounds: { x: Pixels; y: Pixels; width: Pixels; height: Pixels } }> = [];
-        const deltaRad = (deltaAngle * Math.PI) / 180;
-
         for (const shapeId of drag.shapeIds) {
           const initialBounds = drag.initialBoundsMap.get(shapeId);
           const initialRotationDeg = drag.initialRotationsMap.get(shapeId);
           if (!initialBounds || initialRotationDeg === undefined) continue;
-          const initialRotation = initialRotationDeg as number;
 
-          // Calculate shape center
-          const shapeCenterX = (initialBounds.x as number) + (initialBounds.width as number) / 2;
-          const shapeCenterY = (initialBounds.y as number) + (initialBounds.height as number) / 2;
+          // Use extracted rotation calculation
+          const result = rotateShapeAroundCenter(
+            initialBounds.x as number,
+            initialBounds.y as number,
+            initialBounds.width as number,
+            initialBounds.height as number,
+            initialRotationDeg as number,
+            centerX,
+            centerY,
+            deltaAngle
+          );
 
-          // Rotate shape center around combined center
-          const newCenter = rotatePoint(shapeCenterX, shapeCenterY, centerX, centerY, deltaRad);
+          // Apply snapping if shift is held
+          const finalRotation = e.shiftKey
+            ? snapAngle(result.rotation, snapAngles, snapThreshold)
+            : result.rotation;
 
-          // Calculate new top-left position
-          const newX = newCenter.x - (initialBounds.width as number) / 2;
-          const newY = newCenter.y - (initialBounds.height as number) / 2;
-
-          // Also update the shape's individual rotation
-          let newRotation = normalizeAngle(initialRotation + deltaAngle);
-          if (e.shiftKey) {
-            newRotation = snapAngle(newRotation, snapAngles, snapThreshold);
-          }
-
-          // Update both position and rotation
           updateShapeTransform(shapeId, {
-            x: px(newX),
-            y: px(newY),
-            rotation: deg(newRotation),
+            x: px(result.x),
+            y: px(result.y),
+            rotation: deg(finalRotation),
           });
         }
       } else {
@@ -210,7 +157,6 @@ export function useDragRotate({
     dispatch,
     clientToSlide,
     updateShapeTransform,
-    updateMultipleShapeTransforms,
     snapAngles,
     snapThreshold,
     onDragComplete,
