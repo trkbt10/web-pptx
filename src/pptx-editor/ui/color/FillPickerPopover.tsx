@@ -11,13 +11,9 @@ import { Slider } from "../primitives/Slider";
 import { Input } from "../primitives/Input";
 import { Select } from "../primitives/Select";
 import { ColorSwatch, type ColorSwatchSize } from "./ColorSwatch";
+import { ColorModeSliders } from "./components";
+import { parseHexInput } from "./color-convert";
 import { deg, pct } from "../../../pptx/domain/types";
-import {
-  hexToRgb as hexToRgbBase,
-  rgbToHex as rgbToHexBase,
-  rgbToHsl as rgbToHslBase,
-  hslToRgb as hslToRgbBase,
-} from "../../../color";
 import type {
   Fill,
   SolidFill,
@@ -40,37 +36,6 @@ export type FillPickerPopoverProps = {
   /** Custom trigger element */
   readonly trigger?: ReactNode;
 };
-
-// =============================================================================
-// Color Conversion Wrappers (adapting src/color API to UI format)
-// =============================================================================
-
-/** hexToRgb wrapper - returns same format as before */
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  const rgb = hexToRgbBase(hex);
-  return { r: Math.round(rgb.r), g: Math.round(rgb.g), b: Math.round(rgb.b) };
-}
-
-/** rgbToHex wrapper - returns uppercase hex without # */
-function rgbToHex(r: number, g: number, b: number): string {
-  return rgbToHexBase(r, g, b).toUpperCase();
-}
-
-/** rgbToHsl wrapper - converts s/l from 0-1 to 0-100 for UI display */
-function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
-  const hsl = rgbToHslBase(r, g, b);
-  return {
-    h: Math.round(hsl.h),
-    s: Math.round(hsl.s * 100),
-    l: Math.round(hsl.l * 100),
-  };
-}
-
-/** hslToRgb wrapper - converts s/l from 0-100 UI format to 0-1 for base function */
-function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
-  const rgb = hslToRgbBase(h, s / 100, l / 100);
-  return { r: Math.round(rgb.r), g: Math.round(rgb.g), b: Math.round(rgb.b) };
-}
 
 // =============================================================================
 // Fill Utilities
@@ -186,27 +151,6 @@ const sliderValueStyle: CSSProperties = {
   color: "var(--text-secondary, #999)",
 };
 
-const modeTabsStyle: CSSProperties = {
-  display: "flex",
-  gap: "2px",
-  backgroundColor: "var(--bg-tertiary, #222)",
-  borderRadius: "4px",
-  padding: "2px",
-};
-
-const modeTabStyle = (isActive: boolean): CSSProperties => ({
-  flex: 1,
-  padding: "4px 8px",
-  fontSize: "11px",
-  fontWeight: 500,
-  border: "none",
-  borderRadius: "3px",
-  cursor: "pointer",
-  backgroundColor: isActive ? "var(--bg-secondary, #2a2a2a)" : "transparent",
-  color: isActive ? "var(--text-primary, #fff)" : "var(--text-tertiary, #888)",
-  transition: "all 150ms ease",
-});
-
 const gradientStopsStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
@@ -219,79 +163,25 @@ const gradientStopRowStyle: CSSProperties = {
   gap: "6px",
 };
 
+function getTriggerBorder(isNoFill: boolean): string {
+  if (isNoFill) {
+    return "2px dashed var(--border-subtle, #444)";
+  }
+  return "1px solid var(--border-subtle, rgba(255, 255, 255, 0.08))";
+}
+
+function getSizePixels(size: ColorSwatchSize): string {
+  const sizeMap: Record<ColorSwatchSize, string> = {
+    sm: "16px",
+    md: "24px",
+    lg: "32px",
+  };
+  return sizeMap[size];
+}
+
 // =============================================================================
 // Sub-components
 // =============================================================================
-
-type RgbSlidersProps = {
-  readonly r: number;
-  readonly g: number;
-  readonly b: number;
-  readonly onChange: (r: number, g: number, b: number) => void;
-};
-
-function RgbSliders({ r, g, b, onChange }: RgbSlidersProps) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-      <div style={sliderRowStyle}>
-        <span style={{ ...sliderLabelStyle, color: "#e57373" }}>R</span>
-        <div style={sliderContainerStyle}>
-          <Slider value={r} onChange={(v) => onChange(v, g, b)} min={0} max={255} showValue={false} />
-        </div>
-        <span style={sliderValueStyle}>{r}</span>
-      </div>
-      <div style={sliderRowStyle}>
-        <span style={{ ...sliderLabelStyle, color: "#81c784" }}>G</span>
-        <div style={sliderContainerStyle}>
-          <Slider value={g} onChange={(v) => onChange(r, v, b)} min={0} max={255} showValue={false} />
-        </div>
-        <span style={sliderValueStyle}>{g}</span>
-      </div>
-      <div style={sliderRowStyle}>
-        <span style={{ ...sliderLabelStyle, color: "#64b5f6" }}>B</span>
-        <div style={sliderContainerStyle}>
-          <Slider value={b} onChange={(v) => onChange(r, g, v)} min={0} max={255} showValue={false} />
-        </div>
-        <span style={sliderValueStyle}>{b}</span>
-      </div>
-    </div>
-  );
-}
-
-type HslSlidersProps = {
-  readonly h: number;
-  readonly s: number;
-  readonly l: number;
-  readonly onChange: (h: number, s: number, l: number) => void;
-};
-
-function HslSliders({ h, s, l, onChange }: HslSlidersProps) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-      <div style={sliderRowStyle}>
-        <span style={sliderLabelStyle}>H</span>
-        <div style={sliderContainerStyle}>
-          <Slider value={h} onChange={(v) => onChange(v, s, l)} min={0} max={360} showValue={false} />
-        </div>
-        <span style={sliderValueStyle}>{h}°</span>
-      </div>
-      <div style={sliderRowStyle}>
-        <span style={sliderLabelStyle}>S</span>
-        <div style={sliderContainerStyle}>
-          <Slider value={s} onChange={(v) => onChange(h, v, l)} min={0} max={100} showValue={false} />
-        </div>
-        <span style={sliderValueStyle}>{s}%</span>
-      </div>
-      <div style={sliderRowStyle}>
-        <span style={sliderLabelStyle}>L</span>
-        <div style={sliderContainerStyle}>
-          <Slider value={l} onChange={(v) => onChange(h, s, v)} min={0} max={100} showValue={false} />
-        </div>
-        <span style={sliderValueStyle}>{l}%</span>
-      </div>
-    </div>
-  );
-}
 
 type SolidFillEditorProps = {
   readonly value: SolidFill;
@@ -299,11 +189,7 @@ type SolidFillEditorProps = {
 };
 
 function SolidFillEditor({ value, onChange }: SolidFillEditorProps) {
-  const [mode, setMode] = useState<"rgb" | "hsl">("rgb");
-
   const hex = value.color.spec.type === "srgb" ? value.color.spec.value : "000000";
-  const rgb = useMemo(() => hexToRgb(hex), [hex]);
-  const hsl = useMemo(() => rgbToHsl(rgb.r, rgb.g, rgb.b), [rgb]);
 
   const handleHexChange = useCallback(
     (newHex: string) => {
@@ -312,26 +198,11 @@ function SolidFillEditor({ value, onChange }: SolidFillEditorProps) {
     [value, onChange]
   );
 
-  const handleRgbChange = useCallback(
-    (r: number, g: number, b: number) => {
-      onChange({ ...value, color: createDefaultColor(rgbToHex(r, g, b)) });
-    },
-    [value, onChange]
-  );
-
-  const handleHslChange = useCallback(
-    (h: number, s: number, l: number) => {
-      const { r, g, b } = hslToRgb(h, s, l);
-      onChange({ ...value, color: createDefaultColor(rgbToHex(r, g, b)) });
-    },
-    [value, onChange]
-  );
-
   const handleHexInput = useCallback(
     (input: string | number) => {
-      const newHex = String(input).replace(/^#/, "").slice(0, 6).toUpperCase();
-      if (/^[0-9A-F]{6}$/i.test(newHex)) {
-        handleHexChange(newHex);
+      const parsedHex = parseHexInput(String(input));
+      if (parsedHex !== null) {
+        handleHexChange(parsedHex);
       }
     },
     [handleHexChange]
@@ -346,17 +217,7 @@ function SolidFillEditor({ value, onChange }: SolidFillEditorProps) {
         </div>
       </div>
 
-      <div style={modeTabsStyle}>
-        <button type="button" style={modeTabStyle(mode === "rgb")} onClick={() => setMode("rgb")}>
-          RGB
-        </button>
-        <button type="button" style={modeTabStyle(mode === "hsl")} onClick={() => setMode("hsl")}>
-          HSL
-        </button>
-      </div>
-
-      {mode === "rgb" && <RgbSliders r={rgb.r} g={rgb.g} b={rgb.b} onChange={handleRgbChange} />}
-      {mode === "hsl" && <HslSliders h={hsl.h} s={hsl.s} l={hsl.l} onChange={handleHslChange} />}
+      <ColorModeSliders value={hex} onChange={handleHexChange} />
     </>
   );
 }
@@ -444,9 +305,9 @@ function GradientFillEditor({ value, onChange }: GradientFillEditorProps) {
                 type="text"
                 value={stopHex}
                 onChange={(v) => {
-                  const newHex = String(v).replace(/^#/, "").slice(0, 6).toUpperCase();
-                  if (/^[0-9A-F]{6}$/i.test(newHex)) {
-                    handleStopColorChange(index, newHex);
+                  const parsedHex = parseHexInput(String(v));
+                  if (parsedHex !== null) {
+                    handleStopColorChange(index, parsedHex);
                   }
                 }}
                 style={{ flex: 1, width: "auto" }}
@@ -491,14 +352,15 @@ export function FillPickerPopover({
     [onChange]
   );
 
+  const sizePixels = getSizePixels(size);
   const triggerElement = trigger ?? (
     <div
       style={{
         ...previewSwatchStyle,
-        width: size === "sm" ? "16px" : size === "md" ? "24px" : "32px",
-        height: size === "sm" ? "16px" : size === "md" ? "24px" : "32px",
+        width: sizePixels,
+        height: sizePixels,
         background: preview.gradient ?? `#${preview.color}`,
-        border: value.type === "noFill" ? "2px dashed var(--border-subtle, #444)" : "1px solid var(--border-subtle, rgba(255, 255, 255, 0.08))",
+        border: getTriggerBorder(value.type === "noFill"),
         cursor: disabled ? "not-allowed" : "pointer",
         opacity: disabled ? 0.5 : 1,
       }}
