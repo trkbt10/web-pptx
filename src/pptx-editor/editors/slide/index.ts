@@ -1,0 +1,15 @@
+/**
+ * @file Slide-level editor exports
+ */
+
+export {
+  BackgroundEditor,
+  createDefaultBackground,
+  type BackgroundEditorProps,
+} from "./BackgroundEditor";
+
+export {
+  TransitionEditor,
+  createDefaultTransition,
+  type TransitionEditorProps,
+} from "./TransitionEditor";

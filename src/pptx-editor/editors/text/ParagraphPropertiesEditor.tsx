@@ -176,8 +176,8 @@ export function ParagraphPropertiesEditor({
         <FieldRow>
           <FieldGroup label="Alignment" style={fieldStyle}>
             <Select
-              value={value.alignment}
-              onChange={(v) => updateField("alignment", v)}
+              value={value.alignment ?? "left"}
+              onChange={(v) => updateField("alignment", v as TextAlign)}
               options={alignmentOptions}
               disabled={disabled}
             />
@@ -185,7 +185,7 @@ export function ParagraphPropertiesEditor({
           <FieldGroup label="Level" style={{ minWidth: "70px" }}>
             <Input
               type="number"
-              value={value.level}
+              value={value.level ?? 0}
               onChange={handleLevelChange}
               min={0}
               max={8}

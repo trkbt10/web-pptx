@@ -46,8 +46,8 @@ describe("parseBodyProperties", () => {
       expect(result.anchor).toBe("top");
       expect(result.anchorCenter).toBe(false);
       expect(result.overflow).toBe("overflow");
-      expect(result.autoFit.type).toBe("none");
-      expect(result.insets.left as number).toBe(0);
+      expect(result.autoFit?.type).toBe("none");
+      expect(result.insets?.left as number).toBe(0);
     });
 
     it("returns defaults for empty bodyPr", () => {
@@ -124,11 +124,11 @@ describe("parseBodyProperties", () => {
       const result = parseBodyProperties(bodyPr);
 
       // 914400 EMU = 96 px
-      expect(result.insets.left as number).toBeCloseTo(96, 1);
+      expect(result.insets?.left as number).toBeCloseTo(96, 1);
       // 457200 EMU = 48 px
-      expect(result.insets.top as number).toBeCloseTo(48, 1);
-      expect(result.insets.right as number).toBeCloseTo(96, 1);
-      expect(result.insets.bottom as number).toBeCloseTo(48, 1);
+      expect(result.insets?.top as number).toBeCloseTo(48, 1);
+      expect(result.insets?.right as number).toBeCloseTo(96, 1);
+      expect(result.insets?.bottom as number).toBeCloseTo(48, 1);
     });
   });
 
@@ -140,7 +140,7 @@ describe("parseBodyProperties", () => {
         </a:bodyPr>
       `);
       const result = parseBodyProperties(bodyPr);
-      expect(result.autoFit.type).toBe("none");
+      expect(result.autoFit?.type).toBe("none");
     });
 
     it("parses a:spAutoFit (shape auto-fit)", () => {
@@ -150,7 +150,7 @@ describe("parseBodyProperties", () => {
         </a:bodyPr>
       `);
       const result = parseBodyProperties(bodyPr);
-      expect(result.autoFit.type).toBe("shape");
+      expect(result.autoFit?.type).toBe("shape");
     });
 
     it("parses a:normAutofit with scale attributes", () => {
@@ -160,10 +160,11 @@ describe("parseBodyProperties", () => {
         </a:bodyPr>
       `);
       const result = parseBodyProperties(bodyPr);
-      expect(result.autoFit.type).toBe("normal");
-      if (result.autoFit.type === "normal") {
-        expect(result.autoFit.fontScale as number).toBeCloseTo(90, 1);
-        expect(result.autoFit.lineSpaceReduction as number).toBeCloseTo(10, 1);
+      const autoFit = result.autoFit;
+      expect(autoFit?.type).toBe("normal");
+      if (autoFit?.type === "normal") {
+        expect(autoFit.fontScale as number).toBeCloseTo(90, 1);
+        expect(autoFit.lineSpaceReduction as number).toBeCloseTo(10, 1);
       }
     });
   });
@@ -295,11 +296,13 @@ describe("parseBodyProperties", () => {
 
 describe("parseParagraphProperties", () => {
   describe("default values", () => {
-    it("returns defaults when pPr is undefined", () => {
+    it("returns empty object when pPr is undefined (no ECMA-376 defaults)", () => {
       const result = parseParagraphProperties(undefined);
 
-      expect(result.level).toBe(0);
-      expect(result.alignment).toBe("left");
+      // ECMA-376 21.1.2.2.7: lvl and algn have no explicit defaults
+      // Values are inherited from master/layout styles
+      expect(result.level).toBeUndefined();
+      expect(result.alignment).toBeUndefined();
     });
   });
 
@@ -310,10 +313,11 @@ describe("parseParagraphProperties", () => {
       expect(result.level).toBe(2);
     });
 
-    it("defaults to 0 when lvl not specified", () => {
+    it("returns undefined when lvl not specified (no ECMA-376 default)", () => {
       const pPr = xml('<a:pPr xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"/>');
       const result = parseParagraphProperties(pPr);
-      expect(result.level).toBe(0);
+      // ECMA-376 21.1.2.2.7: lvl has no explicit default, inherited from styles
+      expect(result.level).toBeUndefined();
     });
   });
 
@@ -1259,7 +1263,8 @@ describe("parseParagraph", () => {
     const result = parseParagraph(p);
 
     expect(result.runs).toHaveLength(0);
-    expect(result.properties.level).toBe(0);
+    // ECMA-376 21.1.2.2.7: lvl has no explicit default
+    expect(result.properties.level).toBeUndefined();
   });
 
   it("parses paragraph with single text run", () => {

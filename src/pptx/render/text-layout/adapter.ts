@@ -289,21 +289,37 @@ export function toTextBoxConfig(options: ToTextBoxConfigOptions): TextBoxConfig 
   // Determine wrap mode
   const wrapMode = resolveWrapMode(bodyProperties.wrapping);
 
+  // ECMA-376 Part 1, Section 21.1.2.1.1 (bodyPr) default insets:
+  // lIns=91440 EMU (0.1 inch), tIns=45720 EMU (0.05 inch)
+  // rIns=91440 EMU (0.1 inch), bIns=45720 EMU (0.05 inch)
+  // EMU to px: value / 914400 * 96
+  // @see https://c-rex.net/samples/ooxml/e1/Part4/OOXML_P4_DOCX_bodyPr_topic_ID0EMGMKB.html
+  const DEFAULT_INSET_LR = px(91440 / 914400 * 96); // 9.6px
+  const DEFAULT_INSET_TB = px(45720 / 914400 * 96); // 4.8px
+  const insets = bodyProperties.insets ?? {
+    left: DEFAULT_INSET_LR,
+    right: DEFAULT_INSET_LR,
+    top: DEFAULT_INSET_TB,
+    bottom: DEFAULT_INSET_TB,
+  };
+
   return {
     width,
     height,
-    insetLeft: bodyProperties.insets.left,
-    insetRight: bodyProperties.insets.right,
-    insetTop: bodyProperties.insets.top,
-    insetBottom: bodyProperties.insets.bottom,
-    anchor: bodyProperties.anchor,
-    anchorCenter: bodyProperties.anchorCenter,
+    insetLeft: insets.left,
+    insetRight: insets.right,
+    insetTop: insets.top,
+    insetBottom: insets.bottom,
+    // ECMA-376 21.1.2.1.1: anchor default="t" (top)
+    anchor: bodyProperties.anchor ?? "top",
+    // ECMA-376 21.1.2.1.1: anchorCtr default="0" (false)
+    anchorCenter: bodyProperties.anchorCenter ?? false,
     wrapMode,
-    autoFit: toAutoFitConfig(bodyProperties.autoFit),
-    // Overflow handling
-    // @see ECMA-376 Part 1, Section 21.1.2.1.16 (horzOverflow)
-    // @see ECMA-376 Part 1, Section 21.1.2.1.42 (vertOverflow)
-    horzOverflow: bodyProperties.overflow,
+    // ECMA-376 21.1.2.1.1: no autofit element = noAutofit implied
+    autoFit: toAutoFitConfig(bodyProperties.autoFit ?? { type: "none" }),
+    // ECMA-376 21.1.2.1.1: horzOverflow default="overflow"
+    // ECMA-376 21.1.2.1.1: vertOverflow default="overflow"
+    horzOverflow: bodyProperties.overflow ?? "overflow",
     vertOverflow: bodyProperties.verticalOverflow ?? "overflow",
     // Additional body properties
     // @see ECMA-376 Part 1, Section 21.1.2.1.2
@@ -861,9 +877,11 @@ function paragraphToInput(
   // @see ECMA-376 Part 1, Section 21.1.2.2.3 (a:endParaRPr)
   const endParaFontSize = para.endProperties?.fontSize ?? defaultFontSize;
 
+  // ECMA-376 21.1.2.2.7 (pPr): algn has no explicit default.
+  // Normally inherited from master/layout. Fallback to "left" when no inheritance context.
   return {
     spans,
-    alignment: properties.alignment,
+    alignment: properties.alignment ?? "left",
     marginLeft: properties.marginLeft ?? px(0),
     indent: properties.indent ?? px(0),
     marginRight: properties.marginRight ?? px(0),
@@ -963,7 +981,8 @@ function resolveRadialCenter(
   fill: Fill,
   isRadial: boolean
 ): { cx: number; cy: number } | undefined {
-  if (!isRadial || !fill.path?.fillToRect) {
+  // path property only exists on GradientFill
+  if (!isRadial || fill.type !== "gradientFill" || !fill.path?.fillToRect) {
     return undefined;
   }
 

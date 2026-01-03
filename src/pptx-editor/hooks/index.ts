@@ -9,3 +9,5 @@ export {
   nestedUpdate,
   type UpdateFn,
 } from "./useEditorReducer";
+
+export { useUndoRedo, type UseUndoRedoResult } from "./useUndoRedo";

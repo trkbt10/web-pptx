@@ -278,7 +278,7 @@ export function GeometryEditor({
             disabled={disabled}
           />
         </FieldGroup>
-        {preset.adjustValues.length > 0 && (
+        {preset.adjustValues && preset.adjustValues.length > 0 && (
           <FieldGroup label="Adjust Values">
             <AdjustValuesEditor
               values={preset.adjustValues}
@@ -310,14 +310,15 @@ export function GeometryEditor({
       <>
         <FieldGroup label="Info">
           <span style={infoStyle}>
-            {custom.paths.length} path(s)
-            {custom.guides.length > 0 && `, ${custom.guides.length} guide(s)`}
-            {custom.connectionSites.length > 0 &&
-              `, ${custom.connectionSites.length} site(s)`}
+            {custom.paths?.length ?? 0} path(s)
+            {custom.guides?.length ? `, ${custom.guides.length} guide(s)` : ""}
+            {custom.connectionSites?.length
+              ? `, ${custom.connectionSites.length} site(s)`
+              : ""}
           </span>
         </FieldGroup>
 
-        {custom.adjustValues.length > 0 && (
+        {custom.adjustValues && custom.adjustValues.length > 0 && (
           <FieldGroup label="Adjust Values">
             <AdjustValuesEditor
               values={custom.adjustValues}

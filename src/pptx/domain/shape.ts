@@ -281,16 +281,17 @@ export type PresetGeometry = {
 
 /**
  * Custom geometry
+ * Only pathLst is required per ECMA-376
  * @see ECMA-376 Part 1, Section 20.1.9.8 (custGeom)
  */
 export type CustomGeometry = {
   readonly type: "custom";
-  readonly paths: readonly GeometryPath[];
-  readonly adjustValues: readonly AdjustValue[];
-  readonly adjustHandles: readonly AdjustHandle[];
-  readonly guides: readonly GeometryGuide[];
-  readonly connectionSites: readonly ConnectionSite[];
-  readonly textRect?: TextRect;
+  readonly paths: readonly GeometryPath[]; // Required (pathLst)
+  readonly adjustValues?: readonly AdjustValue[]; // Optional (avLst)
+  readonly adjustHandles?: readonly AdjustHandle[]; // Optional (ahLst)
+  readonly guides?: readonly GeometryGuide[]; // Optional (gdLst)
+  readonly connectionSites?: readonly ConnectionSite[]; // Optional (cxnLst)
+  readonly textRect?: TextRect; // Optional (rect)
 };
 
 /**

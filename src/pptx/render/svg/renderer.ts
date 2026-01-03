@@ -35,6 +35,23 @@ export type SvgSlideRenderResult = {
   readonly warnings: readonly RenderWarning[];
 };
 
+/**
+ * SVG slide content render result (without wrapper element)
+ */
+export type SvgSlideContentRenderResult = {
+  /** SVG defs content (gradients, patterns, etc.) */
+  readonly defs: string;
+
+  /** Background SVG content */
+  readonly background: string;
+
+  /** Shapes SVG content */
+  readonly shapes: string;
+
+  /** Warnings generated during rendering */
+  readonly warnings: readonly RenderWarning[];
+};
+
 // =============================================================================
 // Main Render Function
 // =============================================================================

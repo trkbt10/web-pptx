@@ -15,13 +15,14 @@ import {
   TableEditorsTest,
   ChartEditorsTest,
   UIComponentsTest,
+  SlideEditorTest,
 } from "./editor-tests";
 
 type EditorTestPageProps = {
   readonly onBack: () => void;
 };
 
-type TabId = "primitives" | "colors" | "text" | "shapes" | "tables" | "charts" | "ui";
+type TabId = "slide" | "primitives" | "colors" | "text" | "shapes" | "tables" | "charts" | "ui";
 
 type Tab = {
   readonly id: TabId;
@@ -29,6 +30,7 @@ type Tab = {
 };
 
 const tabs: readonly Tab[] = [
+  { id: "slide", label: "Slide Editor" },
   { id: "primitives", label: "Primitives" },
   { id: "colors", label: "Colors" },
   { id: "text", label: "Text" },
@@ -115,6 +117,8 @@ function TabButton({
  */
 function TabContent({ activeTab }: { activeTab: TabId }) {
   switch (activeTab) {
+    case "slide":
+      return <SlideEditorTest />;
     case "primitives":
       return <PrimitiveEditorsTest />;
     case "colors":
@@ -136,7 +140,7 @@ function TabContent({ activeTab }: { activeTab: TabId }) {
  * Editor test page main component
  */
 export function EditorTestPage({ onBack }: EditorTestPageProps) {
-  const [activeTab, setActiveTab] = useState<TabId>("primitives");
+  const [activeTab, setActiveTab] = useState<TabId>("slide");
 
   return (
     <EditorConfigProvider config={{ locale: "en-US" }}>

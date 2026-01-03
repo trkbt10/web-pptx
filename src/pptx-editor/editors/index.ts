@@ -119,3 +119,33 @@ export {
   type ChartSeriesEditorProps,
   type ChartEditorProps,
 } from "./chart";
+
+// Diagram editors
+export {
+  DiagramEditor,
+  DiagramPointEditor,
+  DiagramConnectionEditor,
+  createDefaultDiagramDataModel,
+  createDefaultDiagramPoint,
+  createDefaultDiagramConnection,
+  type DiagramEditorProps,
+  type DiagramPointEditorProps,
+  type DiagramConnectionEditorProps,
+} from "./diagram";
+
+// Slide-level editors
+export {
+  BackgroundEditor,
+  TransitionEditor,
+  createDefaultBackground,
+  createDefaultTransition,
+  type BackgroundEditorProps,
+  type TransitionEditorProps,
+} from "./slide";
+
+// OLE object editors
+export {
+  OleObjectEditor,
+  createDefaultOleReference,
+  type OleObjectEditorProps,
+} from "./ole";

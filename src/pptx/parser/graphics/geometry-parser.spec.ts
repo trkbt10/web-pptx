@@ -241,9 +241,10 @@ describe("parseGeometry - a:custGeom (ECMA-376 Section 20.1.9.8)", () => {
       const result = parseGeometry(spPr);
       expect(result?.type).toBe("custom");
       if (result?.type === "custom") {
-        expect(result.adjustHandles).toHaveLength(2);
-        expect(result.adjustHandles[0]?.type).toBe("xy");
-        const handle = result.adjustHandles[1];
+        const handles = result.adjustHandles ?? [];
+        expect(handles).toHaveLength(2);
+        expect(handles[0]?.type).toBe("xy");
+        const handle = handles[1];
         if (handle?.type === "polar") {
           expect(handle.minAngle).toBe("adjMinAng");
         } else {
@@ -530,9 +531,10 @@ describe("parseGeometry - a:custGeom (ECMA-376 Section 20.1.9.8)", () => {
       const result = parseGeometry(spPr);
 
       if (result?.type === "custom") {
-        expect(result.guides).toHaveLength(2);
-        expect(result.guides[0].name).toBe("g0");
-        expect(result.guides[0].formula).toBe("+/ w 1 2");
+        const guides = result.guides ?? [];
+        expect(guides).toHaveLength(2);
+        expect(guides[0].name).toBe("g0");
+        expect(guides[0].formula).toBe("+/ w 1 2");
       }
     });
   });
@@ -556,10 +558,11 @@ describe("parseGeometry - a:custGeom (ECMA-376 Section 20.1.9.8)", () => {
       const result = parseGeometry(spPr);
 
       if (result?.type === "custom") {
-        expect(result.connectionSites).toHaveLength(2);
-        expect(result.connectionSites[0].angle).toBe(0);
-        expect(result.connectionSites[0].position.x).toBeCloseTo(96, 0);
-        expect(result.connectionSites[1].angle).toBe(90);
+        const sites = result.connectionSites ?? [];
+        expect(sites).toHaveLength(2);
+        expect(sites[0].angle).toBe(0);
+        expect(sites[0].position.x).toBeCloseTo(96, 0);
+        expect(sites[1].angle).toBe(90);
       }
     });
   });

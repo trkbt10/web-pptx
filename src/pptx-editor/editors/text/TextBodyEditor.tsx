@@ -289,7 +289,7 @@ export function TextBodyEditor({
   maxPreviewLength = 50,
 }: TextBodyEditorProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(
-    value.paragraphs.length > 0 ? 0 : null
+    value.paragraphs?.length > 0 ? 0 : null
   );
 
   const handleParagraphSelect = useCallback((index: number) => {
@@ -318,7 +318,7 @@ export function TextBodyEditor({
   );
 
   const getSelectedParagraph = (): Paragraph | null => {
-    if (selectedIndex === null || selectedIndex >= value.paragraphs.length) {
+    if (selectedIndex === null || !value.paragraphs || selectedIndex >= value.paragraphs.length) {
       return null;
     }
     return value.paragraphs[selectedIndex];

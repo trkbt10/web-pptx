@@ -517,11 +517,10 @@ function parseTabStops(pPr: XmlElement): readonly TabStop[] | undefined {
  * @see ECMA-376 Part 1, Section 21.1.2.3.2 (a:defRPr)
  */
 export function parseParagraphProperties(pPr: XmlElement | undefined): ParagraphProperties {
+  // ECMA-376 21.1.2.2.7: pPr is optional, all attributes are optional with no explicit defaults
+  // level and alignment are inherited from master/layout styles
   if (!pPr) {
-    return {
-      level: 0,
-      alignment: "left",
-    };
+    return {};
   }
 
   // Parse default run properties (a:defRPr)
@@ -529,7 +528,8 @@ export function parseParagraphProperties(pPr: XmlElement | undefined): Paragraph
   const defRPr = getChild(pPr, "a:defRPr");
 
   return {
-    level: parseTextIndentLevel(getAttr(pPr, "lvl")) ?? 0,
+    // ECMA-376 21.1.2.2.7: lvl and algn have no explicit defaults, inherited from styles
+    level: parseTextIndentLevel(getAttr(pPr, "lvl")),
     alignment: mapParagraphAlignment(getAttr(pPr, "algn")),
     defaultTabSize: getEmuAttr(pPr, "defTabSz"),
     marginLeft: parseTextMargin(getAttr(pPr, "marL")),
@@ -850,10 +850,11 @@ export function parseTextBody(
     paragraphs.push(parseTextParagraph(p, lstStyle, ctx));
   }
 
-  // Empty text body (no paragraphs) is valid
+  // Empty text body (no paragraphs) is valid - add empty paragraph with no default properties
+  // ECMA-376 21.1.2.2.7: properties inherit from master/layout styles
   if (paragraphs.length === 0) {
     paragraphs.push({
-      properties: { level: 0, alignment: "left" },
+      properties: {},
       runs: [],
     });
   }
@@ -955,7 +956,8 @@ function parseTextParagraph(
   const pPr = getChild(element, "a:pPr");
   const endParaRPr = getChild(element, "a:endParaRPr");
   const props = parseParagraphProperties(pPr);
-  const lvl = props.level;
+  // Level defaults to 0 per ECMA-376
+  const lvl = props.level ?? 0;
 
   // Resolve alignment with inheritance chain
   const directAlgn = pPr ? getAttr(pPr, "algn") : undefined;

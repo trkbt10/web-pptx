@@ -89,20 +89,21 @@ export type TextWarp = {
 
 /**
  * Text body properties
+ * All attributes are optional per ECMA-376
  * @see ECMA-376 Part 1, Section 21.1.2.1.1 (bodyPr)
  */
 export type BodyProperties = {
   readonly rotation?: Degrees;
-  readonly verticalType: TextVerticalType;
-  readonly wrapping: TextWrapping;
-  readonly anchor: TextAnchor;
-  readonly anchorCenter: boolean;
+  readonly verticalType?: TextVerticalType;
+  readonly wrapping?: TextWrapping;
+  readonly anchor?: TextAnchor;
+  readonly anchorCenter?: boolean;
   /** Horizontal overflow behavior */
-  readonly overflow: TextOverflow;
+  readonly overflow?: TextOverflow;
   /** Vertical overflow behavior @see ECMA-376 21.1.2.1.42 */
   readonly verticalOverflow?: TextVerticalOverflow;
-  readonly autoFit: AutoFit;
-  readonly insets: {
+  readonly autoFit?: AutoFit;
+  readonly insets?: {
     readonly left: Pixels;
     readonly top: Pixels;
     readonly right: Pixels;
@@ -219,8 +220,8 @@ export type BulletStyle = {
  * @see ECMA-376 Part 1, Section 21.1.2.2.7 (pPr)
  */
 export type ParagraphProperties = {
-  readonly level: number; // 0-8
-  readonly alignment: TextAlign;
+  readonly level?: number; // 0-8, optional per ECMA-376
+  readonly alignment?: TextAlign; // optional per ECMA-376
   readonly defaultTabSize?: Pixels;
   readonly marginLeft?: Pixels;
   readonly marginRight?: Pixels;

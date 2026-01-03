@@ -1,0 +1,82 @@
+/**
+ * @file BackgroundEditor - Editor for slide background
+ *
+ * Edits Background: fill and shadeToTitle.
+ */
+
+import type { CSSProperties } from "react";
+import type { Background } from "../../../pptx/domain/slide";
+import type { Fill } from "../../../pptx/domain/color";
+import type { EditorProps } from "../../types";
+import { FieldGroup } from "../../ui/layout";
+import { Toggle } from "../../ui/primitives";
+import { FillEditor, createDefaultSolidFill } from "../color";
+
+export type BackgroundEditorProps = EditorProps<Background> & {
+  readonly style?: CSSProperties;
+};
+
+// =============================================================================
+// Styles
+// =============================================================================
+
+const containerStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "12px",
+};
+
+// =============================================================================
+// Main Component
+// =============================================================================
+
+/**
+ * Editor for slide Background type.
+ *
+ * Features:
+ * - Edit fill via FillEditor (solid, gradient, pattern, image)
+ * - Toggle shadeToTitle
+ */
+export function BackgroundEditor({
+  value,
+  onChange,
+  disabled,
+  className,
+  style,
+}: BackgroundEditorProps) {
+  const handleFillChange = (fill: Fill) => {
+    onChange({ ...value, fill });
+  };
+
+  const handleShadeToTitleChange = (shadeToTitle: boolean) => {
+    onChange({ ...value, shadeToTitle: shadeToTitle || undefined });
+  };
+
+  return (
+    <div style={{ ...containerStyle, ...style }} className={className}>
+      <FieldGroup label="Fill">
+        <FillEditor
+          value={value.fill}
+          onChange={handleFillChange}
+          disabled={disabled}
+        />
+      </FieldGroup>
+
+      <Toggle
+        checked={value.shadeToTitle ?? false}
+        onChange={handleShadeToTitleChange}
+        disabled={disabled}
+        label="Shade to Title"
+      />
+    </div>
+  );
+}
+
+/**
+ * Create a default Background
+ */
+export function createDefaultBackground(): Background {
+  return {
+    fill: createDefaultSolidFill(),
+  };
+}

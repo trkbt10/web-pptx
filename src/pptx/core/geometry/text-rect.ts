@@ -180,8 +180,8 @@ export function calculateTextRect(
   }
 
   // Custom geometry with text rect - resolve using guides
-  const context = createGuideContext(width, height, geometry.adjustValues);
-  evaluateGuides(geometry.guides, context);
+  const context = createGuideContext(width, height, geometry.adjustValues ?? []);
+  evaluateGuides(geometry.guides ?? [], context);
 
   return resolveTextRect(geometry.textRect, context);
 }

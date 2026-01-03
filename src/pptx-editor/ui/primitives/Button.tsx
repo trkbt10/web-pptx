@@ -15,6 +15,7 @@ export type ButtonProps = {
   readonly className?: string;
   readonly style?: CSSProperties;
   readonly type?: "button" | "submit" | "reset";
+  readonly title?: string;
 };
 
 const baseStyle: CSSProperties = {
@@ -66,6 +67,7 @@ export function Button({
   className,
   style,
   type = "button",
+  title,
 }: ButtonProps) {
   const combinedStyle: CSSProperties = {
     ...baseStyle,
@@ -81,6 +83,7 @@ export function Button({
       disabled={disabled}
       className={className}
       style={combinedStyle}
+      title={title}
     >
       {children}
     </button>

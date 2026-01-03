@@ -185,19 +185,20 @@ function resolveCustomConnectionSites(
   width: number,
   height: number,
 ): readonly ResolvedConnectionSite[] {
-  if (geom.connectionSites.length === 0) {
+  const sites = geom.connectionSites ?? [];
+  if (sites.length === 0) {
     // No custom sites defined - use default 4-point sites
     return getPresetConnectionSites("rect", width, height);
   }
 
   // Create guide context with shape dimensions and adjust values
-  const context = createGuideContext(width, height, geom.adjustValues);
+  const context = createGuideContext(width, height, geom.adjustValues ?? []);
 
   // Evaluate all guides first (order matters)
-  evaluateGuides(geom.guides, context);
+  evaluateGuides(geom.guides ?? [], context);
 
   // Resolve each connection site
-  return geom.connectionSites.map((site, index) => {
+  return sites.map((site, index) => {
     // Resolve position coordinates
     // The position may be stored as Pixels (already converted) or may need
     // formula evaluation. We need to handle both cases.

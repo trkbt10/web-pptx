@@ -186,13 +186,13 @@ function getColumnLetter(index: number): string {
  * Cell grid display with selection
  */
 function CellGrid({ rows, grid, selectedCell, disabled, onSelectCell }: CellGridProps) {
-  const colCount = grid.columns.length;
+  const colCount = grid?.columns?.length ?? 0;
 
-  if (rows.length === 0 || colCount === 0) {
+  if (!rows?.length || colCount === 0) {
     return <div style={noSelectionStyle}>No cells in table</div>;
   }
 
-  const gridTemplateColumns = `auto ${grid.columns.map(() => "1fr").join(" ")}`;
+  const gridTemplateColumns = `auto ${(grid?.columns ?? []).map(() => "1fr").join(" ")}`;
 
   const handleCellClick = (row: number, col: number) => {
     if (!disabled) {
@@ -359,7 +359,7 @@ function SelectedCellPanel({
  */
 export function TableEditor({ value, onChange, disabled, className, style }: TableEditorProps) {
   const [selectedCell, setSelectedCell] = useState<CellPosition | null>(
-    value.rows.length > 0 && value.rows[0].cells.length > 0 ? { row: 0, col: 0 } : null
+    value.rows?.length > 0 && value.rows[0]?.cells?.length > 0 ? { row: 0, col: 0 } : null
   );
 
   const handlePropertiesChange = useCallback(
