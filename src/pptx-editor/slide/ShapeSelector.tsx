@@ -7,7 +7,8 @@
 
 import { useCallback, useMemo } from "react";
 import type { Pixels } from "../../pptx/domain/types";
-import { useSlideEditor, findShapeByIdWithParents } from "../context/SlideEditorContext";
+import { useSlideEditor } from "../context/SlideEditorContext";
+import { findShapeByIdWithParents } from "./shape";
 import { getAbsoluteBounds, clientToSlideCoords } from "../utils";
 import { SelectionBox } from "./components/SelectionBox";
 import { MultiSelectionBox } from "./components/MultiSelectionBox";

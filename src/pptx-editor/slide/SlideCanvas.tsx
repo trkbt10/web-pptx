@@ -5,58 +5,14 @@
  * Uses an overlay pattern to add interactivity on top of SVG rendering.
  */
 
-import { useCallback, useMemo, useRef, type CSSProperties, type MouseEvent } from "react";
-import type { Shape, SpShape, CxnShape, GrpShape } from "../../pptx/domain";
+import { useCallback, useMemo, useState, type CSSProperties, type MouseEvent } from "react";
 import type { Pixels } from "../../pptx/domain/types";
-import type { SolidFill } from "../../pptx/domain/color";
-import { isShapeHidden } from "../../pptx/render/svg/slide-utils";
 import { useSlideEditor } from "../context/SlideEditorContext";
-import { getAbsoluteBounds, clientToSlideCoords } from "../utils";
+import { clientToSlideCoords } from "../utils";
 import { useSelection } from "./hooks/useSelection";
+import { collectShapeRenderData } from "./shape";
+import { SlideContextMenu } from "./context-menu";
 import type { ShapeId } from "./types";
-
-// =============================================================================
-// Helper: Extract fill color from shape
-// =============================================================================
-
-function getFillColor(shape: Shape): string | undefined {
-  if (!("properties" in shape)) return undefined;
-  const fill = shape.properties.fill;
-  if (!fill) return undefined;
-  if (fill.type === "solidFill") {
-    const solidFill = fill as SolidFill;
-    if (solidFill.color.spec.type === "srgb") {
-      return `#${solidFill.color.spec.value}`;
-    }
-  }
-  return "#cccccc"; // Default gray for other fill types
-}
-
-function getStrokeColor(shape: Shape): string | undefined {
-  if (!("properties" in shape)) return undefined;
-  // Only SpShape and CxnShape have line property
-  if (shape.type !== "sp" && shape.type !== "cxnSp") return undefined;
-  const shapeWithLine = shape as SpShape | CxnShape;
-  const line = shapeWithLine.properties.line;
-  if (!line?.fill) return undefined;
-  if (line.fill.type === "solidFill") {
-    const solidFill = line.fill as SolidFill;
-    if (solidFill.color.spec.type === "srgb") {
-      return `#${solidFill.color.spec.value}`;
-    }
-  }
-  return "#333333";
-}
-
-function getStrokeWidth(shape: Shape): number {
-  if (!("properties" in shape)) return 1;
-  // Only SpShape and CxnShape have line property
-  if (shape.type !== "sp" && shape.type !== "cxnSp") return 1;
-  const shapeWithLine = shape as SpShape | CxnShape;
-  const line = shapeWithLine.properties.line;
-  if (!line?.width) return 1;
-  return line.width as number;
-}
 
 // =============================================================================
 // Types
@@ -75,6 +31,23 @@ export type SlideCanvasProps = {
   /** Custom style */
   readonly style?: CSSProperties;
 };
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+function getRotationTransform(
+  rotation: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): string | undefined {
+  if (rotation === 0) {
+    return undefined;
+  }
+  return `rotate(${rotation}, ${x + width / 2}, ${y + height / 2})`;
+}
 
 // =============================================================================
 // Component
@@ -96,64 +69,24 @@ export function SlideCanvas({
   const { slide, state, dispatch } = useSlideEditor();
   const { isSelected, select, toggleSelect, clearSelection } = useSelection();
   const { drag } = state;
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+
   // Extract inner content from SVG string (removes <svg> wrapper)
-  // This allows us to embed the content in our own SVG element
   const svgInnerContent = useMemo(() => {
-    if (!svgContent) return undefined;
-    // Extract content between opening and closing svg tags
+    if (!svgContent) {
+      return undefined;
+    }
     const match = svgContent.match(/<svg[^>]*>([\s\S]*)<\/svg>/i);
     return match?.[1] ?? undefined;
   }, [svgContent]);
 
   // Collect all shapes with transforms for rendering and hit areas
-  const shapeRenderData = useMemo(() => {
-    const shapes: Array<{
-      id: ShapeId;
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-      rotation: number;
-      fill?: string;
-      stroke?: string;
-      strokeWidth: number;
-      name: string;
-    }> = [];
-
-    const collectShapes = (shapeList: readonly Shape[], parentGroups: readonly GrpShape[] = []) => {
-      for (const shape of shapeList) {
-        if (isShapeHidden(shape)) continue;
-
-        const id = "nonVisual" in shape ? shape.nonVisual.id : undefined;
-        if (!id) continue;
-
-        // Use getAbsoluteBounds for proper group transform handling
-        const bounds = getAbsoluteBounds(shape, parentGroups);
-        if (!bounds) continue;
-
-        shapes.push({
-          id,
-          x: bounds.x,
-          y: bounds.y,
-          width: bounds.width,
-          height: bounds.height,
-          rotation: bounds.rotation,
-          fill: getFillColor(shape),
-          stroke: getStrokeColor(shape),
-          strokeWidth: getStrokeWidth(shape),
-          name: "nonVisual" in shape ? shape.nonVisual.name ?? "" : "",
-        });
-
-        // Handle group children with proper parent chain
-        if (shape.type === "grpSp") {
-          collectShapes(shape.children, [...parentGroups, shape]);
-        }
-      }
-    };
-
-    collectShapes(slide.shapes);
-    return shapes;
-  }, [slide.shapes]);
+  const shapeRenderData = useMemo(
+    () => collectShapeRenderData(slide.shapes),
+    [slide.shapes]
+  );
 
   // Handle shape click
   const handleShapeClick = useCallback(
@@ -176,7 +109,9 @@ export function SlideCanvas({
   // Handle pointer down for drag
   const handlePointerDown = useCallback(
     (shapeId: ShapeId, e: React.PointerEvent) => {
-      if (e.button !== 0) return; // Only left click
+      if (e.button !== 0) {
+        return;
+      }
       e.stopPropagation();
       e.preventDefault();
 
@@ -191,7 +126,9 @@ export function SlideCanvas({
 
       // Start move drag using unified coordinate conversion
       const rect = (e.target as SVGElement).ownerSVGElement?.getBoundingClientRect();
-      if (!rect) return;
+      if (!rect) {
+        return;
+      }
 
       const coords = clientToSlideCoords(e.clientX, e.clientY, rect, width as number, height as number);
 
@@ -204,11 +141,32 @@ export function SlideCanvas({
     [dispatch, width, height, isSelected, select, toggleSelect]
   );
 
+  // Handle context menu (right-click)
+  const handleContextMenu = useCallback(
+    (shapeId: ShapeId, e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Select the shape if not already selected
+      if (!isSelected(shapeId)) {
+        select(shapeId);
+      }
+
+      setContextMenu({ x: e.clientX, y: e.clientY });
+    },
+    [isSelected, select]
+  );
+
+  // Close context menu
+  const handleCloseContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
   const containerStyle: CSSProperties = {
     position: "relative",
     width: "100%",
     height: 0,
-    paddingBottom: `${((height as number) / (width as number)) * 100}%`, // Maintain aspect ratio
+    paddingBottom: `${((height as number) / (width as number)) * 100}%`,
     overflow: "hidden",
     ...style,
   };
@@ -237,7 +195,6 @@ export function SlideCanvas({
       onClick={handleBackgroundClick}
     >
       <div style={innerContainerStyle}>
-        {/* Single SVG element containing both rendered content and hit areas */}
         <svg
           style={svgStyle}
           viewBox={`0 0 ${width} ${height}`}
@@ -252,11 +209,7 @@ export function SlideCanvas({
           {!svgContent && shapeRenderData.map((shape) => (
             <g
               key={`render-${shape.id}`}
-              transform={
-                shape.rotation !== 0
-                  ? `rotate(${shape.rotation}, ${shape.x + shape.width / 2}, ${shape.y + shape.height / 2})`
-                  : undefined
-              }
+              transform={getRotationTransform(shape.rotation, shape.x, shape.y, shape.width, shape.height)}
             >
               <rect
                 x={shape.x}
@@ -267,7 +220,6 @@ export function SlideCanvas({
                 stroke={shape.stroke ?? "#666"}
                 strokeWidth={shape.strokeWidth}
               />
-              {/* Shape name text */}
               {shape.name && (
                 <text
                   x={shape.x + shape.width / 2}
@@ -288,11 +240,7 @@ export function SlideCanvas({
           {shapeRenderData.map((shape) => (
             <g
               key={`hit-${shape.id}`}
-              transform={
-                shape.rotation !== 0
-                  ? `rotate(${shape.rotation}, ${shape.x + shape.width / 2}, ${shape.y + shape.height / 2})`
-                  : undefined
-              }
+              transform={getRotationTransform(shape.rotation, shape.x, shape.y, shape.width, shape.height)}
             >
               <rect
                 x={shape.x}
@@ -305,12 +253,22 @@ export function SlideCanvas({
                 style={{ cursor: "pointer" }}
                 onClick={(e) => handleShapeClick(shape.id, e)}
                 onPointerDown={(e) => handlePointerDown(shape.id, e)}
+                onContextMenu={(e) => handleContextMenu(shape.id, e)}
                 data-shape-id={shape.id}
               />
             </g>
           ))}
         </svg>
       </div>
+
+      {/* Context menu */}
+      {contextMenu && (
+        <SlideContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onClose={handleCloseContextMenu}
+        />
+      )}
     </div>
   );
 }

@@ -275,8 +275,19 @@ export {
   SlideEditorProvider,
   useSlideEditor,
   useSlideEditorOptional,
-  findShapeByIdWithParents,
 } from "./context";
+
+// Shape helpers
+export {
+  getShapeId,
+  hasShapeId,
+  findShapeById,
+  findShapeByIdWithParents,
+  getTopLevelShapeIds,
+  isTopLevelShape,
+  getShapeBounds,
+  getCombinedBounds,
+} from "./slide/shape";
 
 // Utilities
 export {

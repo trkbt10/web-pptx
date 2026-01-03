@@ -1,11 +1,9 @@
 /**
  * @file Shape transform utilities tests
  */
-
-import { describe, it, expect } from "bun:test";
-import { px, deg } from "../../pptx/domain/types";
-import type { SpShape, GraphicFrame, GrpShape, CxnShape, ContentPartShape } from "../../pptx/domain/shape";
-import { getShapeTransform, withUpdatedTransform, hasEditableTransform } from "./shape-transform";
+import { px, deg } from "../../../pptx/domain/types";
+import type { SpShape, GraphicFrame, GrpShape, CxnShape, ContentPartShape } from "../../../pptx/domain/shape";
+import { getShapeTransform, withUpdatedTransform, hasEditableTransform } from "./transform";
 
 // =============================================================================
 // Test Fixtures

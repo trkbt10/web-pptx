@@ -21,8 +21,9 @@ import {
 } from "react";
 import type { Shape, GrpShape } from "../../pptx/domain";
 import { useSlideEditor } from "../context/SlideEditorContext";
-import { getShapeId, hasShapeId, isTopLevelShape } from "../context/shape";
+import { getShapeId, hasShapeId, isTopLevelShape } from "./shape";
 import { Button } from "../ui/primitives";
+import { SlideContextMenu } from "./context-menu";
 
 // =============================================================================
 // Types
@@ -431,175 +432,6 @@ function LayerToolbar({
   );
 }
 
-/**
- * Context menu for layer actions
- */
-function ContextMenu({
-  x,
-  y,
-  canGroup,
-  canUngroup,
-  onGroup,
-  onUngroup,
-  onBringToFront,
-  onSendToBack,
-  onBringForward,
-  onSendBackward,
-  onDelete,
-  onClose,
-}: {
-  readonly x: number;
-  readonly y: number;
-  readonly canGroup: boolean;
-  readonly canUngroup: boolean;
-  readonly onGroup: () => void;
-  readonly onUngroup: () => void;
-  readonly onBringToFront: () => void;
-  readonly onSendToBack: () => void;
-  readonly onBringForward: () => void;
-  readonly onSendBackward: () => void;
-  readonly onDelete: () => void;
-  readonly onClose: () => void;
-}) {
-  const menuStyle: CSSProperties = {
-    position: "fixed",
-    left: x,
-    top: y,
-    backgroundColor: "var(--bg-primary, #0a0a0a)",
-    border: "1px solid var(--border-subtle, #333)",
-    borderRadius: "6px",
-    padding: "4px 0",
-    zIndex: 1000,
-    minWidth: "160px",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
-  };
-
-  const menuItemStyle: CSSProperties = {
-    padding: "6px 12px",
-    fontSize: "12px",
-    cursor: "pointer",
-    color: "var(--text-secondary, #a1a1a1)",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-  };
-
-  const menuItemDisabledStyle: CSSProperties = {
-    ...menuItemStyle,
-    color: "var(--text-tertiary, #555)",
-    cursor: "default",
-  };
-
-  const separatorStyle: CSSProperties = {
-    height: "1px",
-    backgroundColor: "var(--border-subtle, #333)",
-    margin: "4px 0",
-  };
-
-  const MenuItem = ({
-    label,
-    shortcut,
-    disabled,
-    onClick,
-  }: {
-    label: string;
-    shortcut?: string;
-    disabled?: boolean;
-    onClick: () => void;
-  }) => (
-    <div
-      style={disabled ? menuItemDisabledStyle : menuItemStyle}
-      onClick={disabled ? undefined : onClick}
-      onMouseEnter={(e) => {
-        if (!disabled) {
-          e.currentTarget.style.backgroundColor = "var(--bg-secondary, #1a1a1a)";
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = "transparent";
-      }}
-    >
-      <span style={{ flex: 1 }}>{label}</span>
-      {shortcut && (
-        <span style={{ color: "var(--text-tertiary, #555)", fontSize: "10px" }}>
-          {shortcut}
-        </span>
-      )}
-    </div>
-  );
-
-  return (
-    <>
-      {/* Backdrop to close menu */}
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 999,
-        }}
-        onClick={onClose}
-      />
-      <div style={menuStyle}>
-        <MenuItem
-          label="Group"
-          shortcut="⌘G"
-          disabled={!canGroup}
-          onClick={() => {
-            onGroup();
-            onClose();
-          }}
-        />
-        <MenuItem
-          label="Ungroup"
-          shortcut="⌘⇧G"
-          disabled={!canUngroup}
-          onClick={() => {
-            onUngroup();
-            onClose();
-          }}
-        />
-        <div style={separatorStyle} />
-        <MenuItem
-          label="Bring to Front"
-          onClick={() => {
-            onBringToFront();
-            onClose();
-          }}
-        />
-        <MenuItem
-          label="Send to Back"
-          onClick={() => {
-            onSendToBack();
-            onClose();
-          }}
-        />
-        <MenuItem
-          label="Bring Forward"
-          onClick={() => {
-            onBringForward();
-            onClose();
-          }}
-        />
-        <MenuItem
-          label="Send Backward"
-          onClick={() => {
-            onSendBackward();
-            onClose();
-          }}
-        />
-        <div style={separatorStyle} />
-        <MenuItem
-          label="Delete"
-          shortcut="⌫"
-          onClick={() => {
-            onDelete();
-            onClose();
-          }}
-        />
-      </div>
-    </>
-  );
-}
 
 // =============================================================================
 // Main Component
@@ -697,36 +529,6 @@ export function LayerPanel({ className, style }: LayerPanelProps) {
     }
   }, [dispatch, primaryShape, canUngroup]);
 
-  const handleBringToFront = useCallback(() => {
-    if (selectedIds.length === 1) {
-      dispatch({ type: "REORDER_SHAPE", shapeId: selectedIds[0], direction: "front" });
-    }
-  }, [dispatch, selectedIds]);
-
-  const handleSendToBack = useCallback(() => {
-    if (selectedIds.length === 1) {
-      dispatch({ type: "REORDER_SHAPE", shapeId: selectedIds[0], direction: "back" });
-    }
-  }, [dispatch, selectedIds]);
-
-  const handleBringForward = useCallback(() => {
-    if (selectedIds.length === 1) {
-      dispatch({ type: "REORDER_SHAPE", shapeId: selectedIds[0], direction: "forward" });
-    }
-  }, [dispatch, selectedIds]);
-
-  const handleSendBackward = useCallback(() => {
-    if (selectedIds.length === 1) {
-      dispatch({ type: "REORDER_SHAPE", shapeId: selectedIds[0], direction: "backward" });
-    }
-  }, [dispatch, selectedIds]);
-
-  const handleDelete = useCallback(() => {
-    if (selectedIds.length > 0) {
-      dispatch({ type: "DELETE_SHAPES", shapeIds: selectedIds });
-    }
-  }, [dispatch, selectedIds]);
-
   // Clear selection when clicking empty area
   const handlePanelClick = useCallback(() => {
     dispatch({ type: "CLEAR_SELECTION" });
@@ -764,18 +566,9 @@ export function LayerPanel({ className, style }: LayerPanelProps) {
 
       {/* Context menu */}
       {contextMenu && (
-        <ContextMenu
+        <SlideContextMenu
           x={contextMenu.x}
           y={contextMenu.y}
-          canGroup={canGroup}
-          canUngroup={canUngroup}
-          onGroup={handleGroup}
-          onUngroup={handleUngroup}
-          onBringToFront={handleBringToFront}
-          onSendToBack={handleSendToBack}
-          onBringForward={handleBringForward}
-          onSendBackward={handleSendBackward}
-          onDelete={handleDelete}
           onClose={handleCloseContextMenu}
         />
       )}

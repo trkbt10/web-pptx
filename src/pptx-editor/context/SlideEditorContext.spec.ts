@@ -9,7 +9,7 @@
  * - Copy/Paste
  */
 
-import { slideEditorReducer } from "./SlideEditorContext";
+import { slideEditorReducer } from "../slide/reducer";
 import type { Slide, SpShape, Shape } from "../../pptx/domain";
 import { px, deg } from "../../pptx/domain/types";
 import {

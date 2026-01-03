@@ -6,9 +6,8 @@
 
 import { useCallback, useMemo } from "react";
 import { px, type Pixels } from "../../../pptx/domain/types";
-import { useSlideEditor, findShapeByIdWithParents } from "../../context/SlideEditorContext";
-import { getAbsoluteBounds, type AbsoluteBounds } from "../../utils/shape-transform";
-import type { MultiShapeTransformUpdate } from "./useSlideState";
+import { useSlideEditor } from "../../context/SlideEditorContext";
+import { findShapeByIdWithParents, getAbsoluteBounds, type AbsoluteBounds } from "../shape";
 import { useSlideState } from "./useSlideState";
 
 // =============================================================================
@@ -83,27 +82,6 @@ export function useAlignmentActions(): AlignmentActions {
 
   const canAlign = boundsInfos.length >= 2;
   const canDistribute = boundsInfos.length >= 3;
-
-  // Helper to calculate delta for alignment
-  const calculateUpdates = useCallback(
-    (
-      calculateNewPosition: (bounds: AbsoluteBounds, target: number) => { dx: number; dy: number }
-    ): readonly MultiShapeTransformUpdate[] => {
-      return boundsInfos.map(({ id, bounds }) => {
-        const delta = calculateNewPosition(bounds, 0);
-        return {
-          id,
-          bounds: {
-            x: px(bounds.x + delta.dx),
-            y: px(bounds.y + delta.dy),
-            width: px(bounds.width),
-            height: px(bounds.height),
-          },
-        };
-      });
-    },
-    [boundsInfos]
-  );
 
   // ==========================================================================
   // Alignment Operations
