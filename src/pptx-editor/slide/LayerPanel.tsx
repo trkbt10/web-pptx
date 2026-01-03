@@ -20,10 +20,11 @@ import {
   type MouseEvent,
 } from "react";
 import type { Shape, GrpShape } from "../../pptx/domain";
-import { useSlideEditor } from "../context/SlideEditorContext";
-import { getShapeId, hasShapeId, isTopLevelShape } from "./shape";
+import { useSlideEditor } from "./context";
+import { getShapeId, hasShapeId } from "./shape/identity";
+import { isTopLevelShape } from "./shape/query";
 import { Button } from "../ui/primitives";
-import { SlideContextMenu } from "./context-menu";
+import { SlideContextMenu } from "./context-menu/SlideContextMenu";
 
 // =============================================================================
 // Types

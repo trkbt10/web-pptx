@@ -7,7 +7,7 @@
 
 import { useCallback, useMemo } from "react";
 import type { CSSProperties } from "react";
-import { useSlideEditor } from "../context/SlideEditorContext";
+import { useSlideEditor } from "./context";
 import { useSlideState } from "./hooks/useSlideState";
 import { useSelection } from "./hooks/useSelection";
 import { Button } from "../ui/primitives/Button";

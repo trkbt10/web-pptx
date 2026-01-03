@@ -8,8 +8,8 @@ import { useCallback, useMemo } from "react";
 import type { Slide, Shape } from "../../../pptx/domain";
 import type { Transform, Pixels } from "../../../pptx/domain/types";
 import { px } from "../../../pptx/domain/types";
-import { useSlideEditor } from "../../context/SlideEditorContext";
-import { getShapeTransform, withUpdatedTransform } from "../../utils";
+import { useSlideEditor } from "../context";
+import { getShapeTransform, withUpdatedTransform } from "../shape/transform";
 import type { ShapeId } from "../types";
 
 // =============================================================================

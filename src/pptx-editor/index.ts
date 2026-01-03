@@ -32,12 +32,12 @@ export type {
   SelectOption,
 } from "./types";
 
-// Context
+// Context - EditorConfig
 export {
   EditorConfigProvider,
   useEditorConfig,
   type EditorConfig,
-} from "./context";
+} from "./context/EditorConfigContext";
 
 // Hooks
 export {
@@ -208,10 +208,9 @@ export {
   type OleObjectEditorProps,
 } from "./editors";
 
-// Slide Editor (Phase 2)
+// Slide Editor Types
+export type { ShapeId } from "./slide/types";
 export {
-  // Types
-  type ShapeId,
   type SelectionState,
   type ResizeHandlePosition,
   type DragState,
@@ -227,76 +226,58 @@ export {
   undoHistory,
   redoHistory,
   createSlideEditorState,
-  // Hooks
-  useSlideState,
-  type UseSlideStateResult,
-  useSelection,
-  type UseSelectionResult,
-  useDragMove,
-  type UseDragMoveOptions,
-  type UseDragMoveResult,
-  useDragResize,
-  type UseDragResizeOptions,
-  type UseDragResizeResult,
-  useDragRotate,
-  type UseDragRotateOptions,
-  type UseDragRotateResult,
-  useClipboard,
-  type UseClipboardResult,
-  useKeyboardShortcuts,
-  type UseKeyboardShortcutsOptions,
-  type UseKeyboardShortcutsResult,
-  // Components
-  SlideEditor,
-  type SlideEditorProps,
-  SlideCanvas,
-  type SlideCanvasProps,
-  ShapeSelector,
-  type ShapeSelectorProps,
-  PropertyPanel,
-  type PropertyPanelProps,
-  ShapeToolbar,
-  type ShapeToolbarProps,
-  LayerPanel,
-  type LayerPanelProps,
-  // Sub-components
-  SelectionBox,
-  type SelectionBoxProps,
-  ResizeHandle,
-  type ResizeHandleProps,
-  RotateHandle,
-  type RotateHandleProps,
-  MultiSelectionBox,
-  type MultiSelectionBoxProps,
-} from "./slide";
+} from "./slide/types";
 
-// Context (including Slide Editor Context)
+// Slide Editor Context
 export {
   SlideEditorProvider,
   useSlideEditor,
   useSlideEditorOptional,
-} from "./context";
+} from "./slide/context";
 
-// Shape helpers
-export {
-  getShapeId,
-  hasShapeId,
-  findShapeById,
-  findShapeByIdWithParents,
-  getTopLevelShapeIds,
-  isTopLevelShape,
-  getShapeBounds,
-  getCombinedBounds,
-} from "./slide/shape";
+// Slide Editor Hooks
+export { useSlideState, type UseSlideStateResult, type MultiShapeTransformUpdate } from "./slide/hooks/useSlideState";
+export { useSelection, type UseSelectionResult } from "./slide/hooks/useSelection";
+export { useDragMove, type UseDragMoveOptions, type UseDragMoveResult } from "./slide/hooks/useDragMove";
+export { useDragResize, type UseDragResizeOptions, type UseDragResizeResult } from "./slide/hooks/useDragResize";
+export { useDragRotate, type UseDragRotateOptions, type UseDragRotateResult } from "./slide/hooks/useDragRotate";
+export { useClipboard, type UseClipboardResult } from "./slide/hooks/useClipboard";
+export { useKeyboardShortcuts, type UseKeyboardShortcutsOptions, type UseKeyboardShortcutsResult } from "./slide/hooks/useKeyboardShortcuts";
 
-// Utilities
+// Slide Editor Components
+export { SlideEditor, type SlideEditorProps } from "./slide/SlideEditor";
+export { SlideCanvas, type SlideCanvasProps } from "./slide/SlideCanvas";
+export { ShapeSelector, type ShapeSelectorProps } from "./slide/ShapeSelector";
+export { PropertyPanel, type PropertyPanelProps } from "./slide/PropertyPanel";
+export { ShapeToolbar, type ShapeToolbarProps } from "./slide/ShapeToolbar";
+export { LayerPanel, type LayerPanelProps } from "./slide/LayerPanel";
+
+// Slide Editor Sub-components
+export { SelectionBox, type SelectionBoxProps } from "./slide/components/SelectionBox";
+export { ResizeHandle, type ResizeHandleProps } from "./slide/components/ResizeHandle";
+export { RotateHandle, type RotateHandleProps } from "./slide/components/RotateHandle";
+export { MultiSelectionBox, type MultiSelectionBoxProps } from "./slide/components/MultiSelectionBox";
+
+// Shape identity utilities
+export { getShapeId, hasShapeId } from "./slide/shape/identity";
+
+// Shape query utilities
+export { findShapeById, findShapeByIdWithParents, getTopLevelShapeIds, isTopLevelShape } from "./slide/shape/query";
+
+// Shape bounds utilities
+export { getShapeBounds, getCombinedBounds } from "./slide/shape/bounds";
+
+// Shape transform utilities
 export {
   getShapeTransform,
   withUpdatedTransform,
   hasEditableTransform,
-  clientToSlideCoords,
   getAbsoluteBounds,
-  getShapeCapabilities,
   type AbsoluteBounds,
-  type ShapeCapabilities,
-} from "./utils";
+} from "./slide/shape/transform";
+
+// Shape coordinate utilities
+export { clientToSlideCoords } from "./slide/shape/coords";
+
+// Shape capabilities
+export { getShapeCapabilities, type ShapeCapabilities } from "./slide/shape/capabilities";

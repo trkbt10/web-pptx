@@ -17,16 +17,15 @@ import {
   undoHistory,
   redoHistory,
 } from "./types";
+import { findShapeById } from "./shape/query";
 import {
-  findShapeById,
   updateShapeById,
   deleteShapesById,
   reorderShape,
-  getShapeBounds,
   generateShapeId,
-  getShapeTransform,
-  withUpdatedTransform,
-} from "./shape";
+} from "./shape/mutation";
+import { getShapeBounds } from "./shape/bounds";
+import { getShapeTransform, withUpdatedTransform } from "./shape/transform";
 
 // =============================================================================
 // Helper Functions

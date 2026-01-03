@@ -9,7 +9,7 @@ import { useCallback, type CSSProperties } from "react";
 import type { Shape, SpShape, PicShape, CxnShape, GrpShape, GraphicFrame } from "../../pptx/domain";
 import type { Table } from "../../pptx/domain/table";
 import type { Chart } from "../../pptx/domain/chart";
-import { useSlideEditor } from "../context/SlideEditorContext";
+import { useSlideEditor } from "./context";
 import { useSlideState } from "./hooks/useSlideState";
 import { Accordion } from "../ui/layout/Accordion";
 import {

@@ -7,19 +7,17 @@
 
 import { useCallback, useMemo } from "react";
 import { ContextMenu, type MenuEntry } from "../../ui/context-menu";
-import { useSlideEditor } from "../../context/SlideEditorContext";
+import { useSlideEditor } from "../context";
 import { useContextMenuActions } from "../hooks/useContextMenuActions";
-import {
-  getCommonMenuItems,
-  getZOrderMenuItems,
-  getGroupMenuItems,
-  getAlignmentMenuItems,
-  getShapeMenuItems,
-  getPictureMenuItems,
-  getTableMenuItems,
-  getChartMenuItems,
-  getDiagramMenuItems,
-} from "./definitions";
+import { getCommonMenuItems } from "./definitions/common";
+import { getZOrderMenuItems } from "./definitions/z-order";
+import { getGroupMenuItems } from "./definitions/group";
+import { getAlignmentMenuItems } from "./definitions/alignment";
+import { getShapeMenuItems } from "./definitions/shape";
+import { getPictureMenuItems } from "./definitions/picture";
+import { getTableMenuItems } from "./definitions/table";
+import { getChartMenuItems } from "./definitions/chart";
+import { getDiagramMenuItems } from "./definitions/diagram";
 
 // =============================================================================
 // Types

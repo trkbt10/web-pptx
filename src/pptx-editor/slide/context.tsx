@@ -15,12 +15,9 @@ import type { Slide, Shape } from "../../pptx/domain";
 import {
   type SlideEditorContextValue,
   createSlideEditorState,
-} from "../slide/types";
-import { slideEditorReducer } from "../slide/reducer";
-import { findShapeById } from "../slide/shape";
-
-// Re-export for convenience
-export type { SlideEditorContextValue } from "../slide/types";
+} from "./types";
+import { slideEditorReducer } from "./reducer";
+import { findShapeById } from "./shape/query";
 
 // =============================================================================
 // Context

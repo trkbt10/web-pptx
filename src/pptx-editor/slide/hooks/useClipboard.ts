@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useMemo } from "react";
-import { useSlideEditor } from "../../context/SlideEditorContext";
+import { useSlideEditor } from "../context";
 
 // =============================================================================
 // Types

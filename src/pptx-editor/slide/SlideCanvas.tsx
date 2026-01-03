@@ -7,11 +7,11 @@
 
 import { useCallback, useMemo, useState, type CSSProperties, type MouseEvent } from "react";
 import type { Pixels } from "../../pptx/domain/types";
-import { useSlideEditor } from "../context/SlideEditorContext";
-import { clientToSlideCoords } from "../utils";
+import { useSlideEditor } from "./context";
+import { clientToSlideCoords } from "./shape/coords";
 import { useSelection } from "./hooks/useSelection";
-import { collectShapeRenderData } from "./shape";
-import { SlideContextMenu } from "./context-menu";
+import { collectShapeRenderData } from "./shape/traverse";
+import { SlideContextMenu } from "./context-menu/SlideContextMenu";
 import type { ShapeId } from "./types";
 
 // =============================================================================

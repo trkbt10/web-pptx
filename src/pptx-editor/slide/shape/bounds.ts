@@ -7,7 +7,7 @@
 import type { Shape } from "../../../pptx/domain";
 import type { Bounds } from "../../../pptx/domain/types";
 import { px } from "../../../pptx/domain/types";
-import { getShapeTransform } from "../../utils";
+import { getShapeTransform } from "./transform";
 
 /**
  * Get bounds from shape transform

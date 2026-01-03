@@ -6,7 +6,7 @@
 
 import { useCallback, useMemo } from "react";
 import type { Shape } from "../../../pptx/domain";
-import { useSlideEditor } from "../../context/SlideEditorContext";
+import { useSlideEditor } from "../context";
 import type { ShapeId, SelectionState } from "../types";
 
 /**

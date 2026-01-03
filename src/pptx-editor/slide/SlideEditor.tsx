@@ -10,19 +10,17 @@ import type { Pixels } from "../../pptx/domain/types";
 import type { EditorProps } from "../types";
 import type { RenderContext } from "../../pptx/render/context";
 import { renderSlideSvg } from "../../pptx/render/svg/renderer";
-import { SlideEditorProvider, useSlideEditor } from "../context/SlideEditorContext";
+import { SlideEditorProvider, useSlideEditor } from "./context";
 import { SlideCanvas } from "./SlideCanvas";
 import { ShapeSelector } from "./ShapeSelector";
 import { PropertyPanel } from "./PropertyPanel";
 import { ShapeToolbar } from "./ShapeToolbar";
 import { LayerPanel } from "./LayerPanel";
 import { Panel } from "../ui/layout";
-import {
-  useDragMove,
-  useDragResize,
-  useDragRotate,
-  useKeyboardShortcuts,
-} from "./hooks";
+import { useDragMove } from "./hooks/useDragMove";
+import { useDragResize } from "./hooks/useDragResize";
+import { useDragRotate } from "./hooks/useDragRotate";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 
 // =============================================================================
 // Types

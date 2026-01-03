@@ -6,8 +6,9 @@
 
 import { useCallback, useMemo } from "react";
 import { px, type Pixels } from "../../../pptx/domain/types";
-import { useSlideEditor } from "../../context/SlideEditorContext";
-import { findShapeByIdWithParents, getAbsoluteBounds, type AbsoluteBounds } from "../shape";
+import { useSlideEditor } from "../context";
+import { findShapeByIdWithParents } from "../shape/query";
+import { getAbsoluteBounds, type AbsoluteBounds } from "../shape/transform";
 import { useSlideState } from "./useSlideState";
 
 // =============================================================================

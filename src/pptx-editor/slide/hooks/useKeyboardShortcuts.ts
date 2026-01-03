@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useCallback } from "react";
-import { useSlideEditor } from "../../context/SlideEditorContext";
+import { useSlideEditor } from "../context";
 import { useSlideState } from "./useSlideState";
 import { useSelection } from "./useSelection";
 import { useClipboard } from "./useClipboard";

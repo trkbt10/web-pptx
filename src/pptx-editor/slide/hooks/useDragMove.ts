@@ -7,8 +7,8 @@
 import { useCallback, useEffect } from "react";
 import type { Pixels } from "../../../pptx/domain/types";
 import { px } from "../../../pptx/domain/types";
-import { useSlideEditor } from "../../context/SlideEditorContext";
-import { clientToSlideCoords } from "../../utils";
+import { useSlideEditor } from "../context";
+import { clientToSlideCoords } from "../shape/coords";
 import { useSlideState } from "./useSlideState";
 
 // =============================================================================

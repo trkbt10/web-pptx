@@ -7,9 +7,10 @@
 
 import { useCallback, useMemo } from "react";
 import type { Pixels } from "../../pptx/domain/types";
-import { useSlideEditor } from "../context/SlideEditorContext";
-import { findShapeByIdWithParents } from "./shape";
-import { getAbsoluteBounds, clientToSlideCoords } from "../utils";
+import { useSlideEditor } from "./context";
+import { findShapeByIdWithParents } from "./shape/query";
+import { getAbsoluteBounds } from "./shape/transform";
+import { clientToSlideCoords } from "./shape/coords";
 import { SelectionBox } from "./components/SelectionBox";
 import { MultiSelectionBox } from "./components/MultiSelectionBox";
 import type { ResizeHandlePosition, ShapeId } from "./types";
