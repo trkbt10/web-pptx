@@ -114,7 +114,7 @@ const thumbnailStyle: CSSProperties = {
 
 const thumbnailActiveStyle: CSSProperties = {
   ...thumbnailStyle,
-  borderColor: "var(--accent-blue, #0066cc)",
+  border: "2px solid var(--accent-blue, #0066cc)",
 };
 
 const thumbnailNumberStyle: CSSProperties = {

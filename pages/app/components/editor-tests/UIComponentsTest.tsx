@@ -1,13 +1,12 @@
 /**
  * @file UI Components Test
  *
- * Test component for UI primitives (Accordion, ColorSwatch, FieldGroup).
+ * Test component for UI primitives (Accordion, FieldGroup).
  */
 
 import { useState, type CSSProperties } from "react";
 import {
   Accordion,
-  ColorSwatch,
   FieldGroup,
   FieldRow,
   Toggle,
@@ -36,29 +35,11 @@ const gridStyle: CSSProperties = {
   gap: "24px",
 };
 
-const swatchRowStyle: CSSProperties = {
-  display: "flex",
-  gap: "8px",
-  alignItems: "center",
-  flexWrap: "wrap",
-};
-
-const sampleColors = [
-  { hex: "FF0000", name: "Red" },
-  { hex: "00FF00", name: "Green" },
-  { hex: "0000FF", name: "Blue" },
-  { hex: "0070f3", name: "Accent" },
-  { hex: "FF00FF", name: "Magenta" },
-  { hex: "000000", name: "Black" },
-  { hex: "FFFFFF", name: "White" },
-];
-
 /**
- * Test component for Accordion and ColorSwatch UI components.
+ * Test component for Accordion and FieldGroup UI components.
  */
 export function UIComponentsTest() {
   const [accordionExpanded, setAccordionExpanded] = useState(true);
-  const [selectedColor, setSelectedColor] = useState("0070f3");
 
   return (
     <div style={gridStyle}>
@@ -103,61 +84,6 @@ export function UIComponentsTest() {
           <Accordion title="Disabled Accordion" disabled>
             <p style={{ margin: 0 }}>This content cannot be toggled.</p>
           </Accordion>
-        </div>
-      </div>
-
-      {/* ColorSwatch Test */}
-      <div style={cardStyle}>
-        <h2 style={cardTitleStyle}>ColorSwatch</h2>
-
-        <FieldGroup label="Size Variants">
-          <FieldRow gap={16}>
-            <ColorSwatch color="0070f3" size="sm" />
-            <ColorSwatch color="0070f3" size="md" />
-            <ColorSwatch color="0070f3" size="lg" />
-          </FieldRow>
-        </FieldGroup>
-
-        <div style={{ marginTop: "16px" }}>
-          <FieldGroup label="Color Palette (Clickable)">
-            <div style={swatchRowStyle}>
-              {sampleColors.map((c) => (
-                <ColorSwatch
-                  key={c.hex}
-                  color={c.hex}
-                  size="md"
-                  onClick={() => setSelectedColor(c.hex)}
-                  selected={selectedColor === c.hex}
-                />
-              ))}
-            </div>
-            <p
-              style={{
-                marginTop: "8px",
-                fontSize: "12px",
-                color: "var(--text-tertiary)",
-              }}
-            >
-              Selected: #{selectedColor}
-            </p>
-          </FieldGroup>
-        </div>
-
-        <div style={{ marginTop: "16px" }}>
-          <FieldGroup label="Transparency (Alpha)">
-            <FieldRow gap={8}>
-              <ColorSwatch color="FF0000" alpha={1.0} size="lg" />
-              <ColorSwatch color="FF0000" alpha={0.75} size="lg" />
-              <ColorSwatch color="FF0000" alpha={0.5} size="lg" />
-              <ColorSwatch color="FF0000" alpha={0.25} size="lg" />
-            </FieldRow>
-          </FieldGroup>
-        </div>
-
-        <div style={{ marginTop: "16px" }}>
-          <FieldGroup label="Disabled State">
-            <ColorSwatch color="0070f3" size="md" disabled />
-          </FieldGroup>
         </div>
       </div>
 

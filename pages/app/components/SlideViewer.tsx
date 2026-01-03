@@ -7,9 +7,10 @@ type Props = {
   fileName: string;
   onBack: () => void;
   onStartSlideshow: (slideNumber: number) => void;
+  onStartEditor: () => void;
 };
 
-export function SlideViewer({ presentation, fileName, onBack, onStartSlideshow }: Props) {
+export function SlideViewer({ presentation, fileName, onBack, onStartSlideshow, onStartEditor }: Props) {
   const [currentSlide, setCurrentSlide] = useState(1);
   const [renderedContent, setRenderedContent] = useState<string>("");
   const [isRendering, setIsRendering] = useState(false);
@@ -110,6 +111,13 @@ export function SlideViewer({ presentation, fileName, onBack, onStartSlideshow }
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <path d="M9 3v18" />
             </svg>
+          </button>
+          <button className="edit-button" onClick={onStartEditor}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            <span>Edit</span>
           </button>
           <button className="present-button" onClick={() => onStartSlideshow(currentSlide)}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
