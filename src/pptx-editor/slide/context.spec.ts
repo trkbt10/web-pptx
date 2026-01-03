@@ -9,14 +9,14 @@
  * - Copy/Paste
  */
 
-import { slideEditorReducer } from "../slide/reducer";
+import { slideEditorReducer } from "./reducer";
 import type { Slide, SpShape, Shape } from "../../pptx/domain";
 import { px, deg } from "../../pptx/domain/types";
 import {
   createSlideEditorState,
   type SlideEditorState,
   type SlideEditorAction,
-} from "../slide/types";
+} from "./types";
 
 // =============================================================================
 // Test Fixtures
