@@ -6,6 +6,7 @@
 
 import { type ReactNode, type CSSProperties, type MouseEvent } from "react";
 import type { ButtonVariant } from "../../types";
+import { colorTokens, radiusTokens, fontTokens } from "../design-tokens";
 
 export type ButtonProps = {
   readonly children: ReactNode;
@@ -23,10 +24,10 @@ const baseStyle: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   padding: "6px 12px",
-  fontSize: "13px",
-  fontWeight: 500,
+  fontSize: fontTokens.size.lg,
+  fontWeight: fontTokens.weight.medium,
   fontFamily: "inherit",
-  borderRadius: "var(--radius-sm, 6px)",
+  borderRadius: `var(--radius-sm, ${radiusTokens.sm})`,
   border: "none",
   cursor: "pointer",
   transition: "all 150ms ease",
@@ -35,16 +36,16 @@ const baseStyle: CSSProperties = {
 
 const variantStyles: Record<ButtonVariant, CSSProperties> = {
   primary: {
-    color: "#000000",
-    backgroundColor: "var(--accent-primary, #ffffff)",
+    color: colorTokens.text.inverse,
+    backgroundColor: `var(--accent-primary, ${colorTokens.accent.primary})`,
   },
   secondary: {
-    color: "var(--text-primary, #fafafa)",
-    backgroundColor: "var(--bg-tertiary, #111111)",
-    border: "1px solid var(--border-subtle, rgba(255, 255, 255, 0.08))",
+    color: `var(--text-primary, ${colorTokens.text.primary})`,
+    backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
+    border: `1px solid var(--border-subtle, ${colorTokens.border.subtle})`,
   },
   ghost: {
-    color: "var(--text-secondary, #a1a1a1)",
+    color: `var(--text-secondary, ${colorTokens.text.secondary})`,
     backgroundColor: "transparent",
   },
 };

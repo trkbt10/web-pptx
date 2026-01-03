@@ -2,11 +2,13 @@
  * @file Selection box component
  *
  * Renders a bounding box around a selected shape.
+ * Uses design tokens for consistent selection styling.
  */
 
 import type { ResizeHandlePosition } from "../../state";
 import { ResizeHandle } from "./ResizeHandle";
 import { RotateHandle } from "./RotateHandle";
+import { colorTokens } from "../../ui/design-tokens";
 
 // =============================================================================
 // Types
@@ -39,8 +41,8 @@ export type SelectionBoxProps = {
 // Constants
 // =============================================================================
 
-const SELECTION_COLOR_PRIMARY = "#0066ff";
-const SELECTION_COLOR_SECONDARY = "#00aaff";
+const SELECTION_COLOR_PRIMARY = colorTokens.selection.primary;
+const SELECTION_COLOR_SECONDARY = colorTokens.selection.secondary;
 const SELECTION_STROKE_WIDTH = 2;
 const ROTATE_HANDLE_OFFSET = 24;
 

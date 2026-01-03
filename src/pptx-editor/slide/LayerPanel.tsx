@@ -8,6 +8,7 @@
  * - Expandable groups
  *
  * Props-based component that can be used with any state management.
+ * Uses lucide-react icons for consistent visual design.
  */
 
 import {
@@ -16,6 +17,7 @@ import {
   useMemo,
   type CSSProperties,
   type MouseEvent,
+  type ReactNode,
 } from "react";
 import type { Slide, Shape, GrpShape } from "../../pptx/domain";
 import type { ShapeId } from "../../pptx/domain/types";
@@ -23,6 +25,25 @@ import type { SelectionState } from "../state";
 import { getShapeId, hasShapeId } from "../shape/identity";
 import { isTopLevelShape } from "../shape/query";
 import { Button } from "../ui/primitives";
+import {
+  RectIcon,
+  EllipseIcon,
+  TriangleIcon,
+  StarIcon,
+  LineIcon,
+  RightArrowIcon,
+  DiamondIcon,
+  PictureIcon,
+  ConnectorIcon,
+  FolderIcon,
+  TableIcon,
+  ChartIcon,
+  DiagramIcon,
+  OleObjectIcon,
+  ChevronRightIcon,
+  UnknownShapeIcon,
+} from "../ui/icons";
+import { colorTokens, fontTokens, iconTokens } from "../ui/design-tokens";
 
 // =============================================================================
 // Types
@@ -65,10 +86,15 @@ type ShapeItemProps = {
 // Helper Functions
 // =============================================================================
 
+const LAYER_ICON_SIZE = iconTokens.size.sm;
+const LAYER_ICON_STROKE = iconTokens.strokeWidth;
+
 /**
  * Get display icon for shape type
  */
-function getShapeIcon(shape: Shape): string {
+function getShapeIcon(shape: Shape): ReactNode {
+  const iconProps = { size: LAYER_ICON_SIZE, strokeWidth: LAYER_ICON_STROKE };
+
   switch (shape.type) {
     case "sp": {
       const geometry = shape.properties.geometry;
@@ -76,48 +102,48 @@ function getShapeIcon(shape: Shape): string {
         switch (geometry.preset) {
           case "rect":
           case "roundRect":
-            return "▢";
+            return <RectIcon {...iconProps} />;
           case "ellipse":
-            return "○";
+            return <EllipseIcon {...iconProps} />;
           case "triangle":
           case "rtTriangle":
-            return "△";
+            return <TriangleIcon {...iconProps} />;
           case "star5":
           case "star6":
-            return "★";
+            return <StarIcon {...iconProps} />;
           case "line":
-            return "─";
+            return <LineIcon {...iconProps} />;
           case "rightArrow":
           case "leftArrow":
-            return "→";
+            return <RightArrowIcon {...iconProps} />;
           default:
-            return "◇";
+            return <DiamondIcon {...iconProps} />;
         }
       }
-      return "◇";
+      return <DiamondIcon {...iconProps} />;
     }
     case "pic":
-      return "🖼";
+      return <PictureIcon {...iconProps} />;
     case "cxnSp":
-      return "⤤";
+      return <ConnectorIcon {...iconProps} />;
     case "grpSp":
-      return "📁";
+      return <FolderIcon {...iconProps} />;
     case "graphicFrame": {
       switch (shape.content.type) {
         case "table":
-          return "▦";
+          return <TableIcon {...iconProps} />;
         case "chart":
-          return "📊";
+          return <ChartIcon {...iconProps} />;
         case "diagram":
-          return "🔀";
+          return <DiagramIcon {...iconProps} />;
         case "oleObject":
-          return "📎";
+          return <OleObjectIcon {...iconProps} />;
         default:
-          return "▣";
+          return <UnknownShapeIcon {...iconProps} />;
       }
     }
     default:
-      return "▣";
+      return <UnknownShapeIcon {...iconProps} />;
   }
 }
 
@@ -196,9 +222,15 @@ function ShapeItem({
   };
 
   const getItemBackground = (): string => {
-    if (isPrimary) { return "var(--accent-primary, #3b82f6)"; }
-    if (isSelected) { return "var(--bg-secondary, #1a1a1a)"; }
+    if (isPrimary) { return `var(--selection-primary, ${colorTokens.selection.primary})`; }
+    if (isSelected) { return `var(--selection-secondary, ${colorTokens.selection.secondary})22`; } // 22 = 13% alpha
     return "transparent";
+  };
+
+  const getItemTextColor = (): string => {
+    if (isPrimary) { return "#ffffff"; }
+    if (isSelected) { return `var(--text-primary, ${colorTokens.text.primary})`; }
+    return `var(--text-secondary, ${colorTokens.text.secondary})`;
   };
 
   const itemStyle: CSSProperties = {
@@ -209,7 +241,7 @@ function ShapeItem({
     paddingLeft: `${8 + depth * 16}px`,
     cursor: "pointer",
     backgroundColor: getItemBackground(),
-    color: isPrimary ? "white" : "var(--text-secondary, #a1a1a1)",
+    color: getItemTextColor(),
     borderRadius: "4px",
     fontSize: "12px",
     userSelect: "none",
@@ -222,16 +254,18 @@ function ShapeItem({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "10px",
-    color: "var(--text-tertiary, #737373)",
+    color: isPrimary ? "#ffffff" : `var(--text-tertiary, ${colorTokens.text.tertiary})`,
     transition: "transform 0.15s",
     transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
   };
 
   const iconStyle: CSSProperties = {
-    fontSize: "12px",
     width: "16px",
-    textAlign: "center",
+    height: "16px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: isPrimary ? "#ffffff" : `var(--text-secondary, ${colorTokens.text.secondary})`,
   };
 
   const nameStyle: CSSProperties = {
@@ -250,12 +284,14 @@ function ShapeItem({
       >
         {/* Expand/Collapse toggle for groups */}
         {hasChildren && (
-          <span style={expandIconStyle} onClick={handleToggleExpand}>▶</span>
+          <div style={expandIconStyle} onClick={handleToggleExpand}>
+            <ChevronRightIcon size={12} strokeWidth={iconTokens.strokeWidth} />
+          </div>
         )}
-        {!hasChildren && <span style={{ width: "16px" }} />}
+        {!hasChildren && <div style={{ width: "16px" }} />}
 
         {/* Shape icon */}
-        <span style={iconStyle}>{getShapeIcon(shape)}</span>
+        <div style={iconStyle}>{getShapeIcon(shape)}</div>
 
         {/* Shape name */}
         <span style={nameStyle}>{getShapeName(shape)}</span>
@@ -264,9 +300,9 @@ function ShapeItem({
         {isGroup && (
           <span
             style={{
-              fontSize: "10px",
-              color: "var(--text-tertiary, #737373)",
-              backgroundColor: "var(--bg-tertiary, #111111)",
+              fontSize: fontTokens.size.xs,
+              color: `var(--text-tertiary, ${colorTokens.text.tertiary})`,
+              backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
               padding: "1px 4px",
               borderRadius: "3px",
             }}
@@ -337,8 +373,8 @@ function ShapeList({
   const emptyStyle: CSSProperties = {
     padding: "24px 16px",
     textAlign: "center",
-    color: "var(--text-tertiary, #737373)",
-    fontSize: "12px",
+    color: `var(--text-tertiary, ${colorTokens.text.tertiary})`,
+    fontSize: fontTokens.size.md,
   };
 
   if (shapes.length === 0) {
@@ -396,7 +432,7 @@ function LayerToolbar({
   const toolbarStyle: CSSProperties = {
     display: "flex",
     gap: "4px",
-    borderTop: "1px solid var(--border-subtle, #222)",
+    borderTop: `1px solid var(--border-subtle, ${colorTokens.border.subtle})`,
     padding: "8px",
   };
 
@@ -407,7 +443,7 @@ function LayerToolbar({
         title="Group (⌘G)"
         disabled={!canGroup}
         onClick={onGroup}
-        style={{ flex: 1, fontSize: "11px", padding: "6px" }}
+        style={{ flex: 1, fontSize: fontTokens.size.sm, padding: "6px" }}
       >
         Group
       </Button>
@@ -416,7 +452,7 @@ function LayerToolbar({
         title="Ungroup (⌘⇧G)"
         disabled={!canUngroup}
         onClick={onUngroup}
-        style={{ flex: 1, fontSize: "11px", padding: "6px" }}
+        style={{ flex: 1, fontSize: fontTokens.size.sm, padding: "6px" }}
       >
         Ungroup
       </Button>

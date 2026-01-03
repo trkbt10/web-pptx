@@ -6,6 +6,7 @@
 
 import { useCallback, type ChangeEvent, type CSSProperties } from "react";
 import type { SelectOption } from "../../types";
+import { colorTokens, fontTokens, radiusTokens } from "../design-tokens";
 
 export type SelectProps<T extends string = string> = {
   readonly value: T;
@@ -19,16 +20,16 @@ export type SelectProps<T extends string = string> = {
 
 const selectStyle: CSSProperties = {
   padding: "5px 8px",
-  fontSize: "12px",
+  fontSize: fontTokens.size.md,
   fontFamily: "inherit",
-  color: "var(--text-primary, #fafafa)",
-  backgroundColor: "var(--bg-tertiary, #1a1a1a)",
+  color: `var(--text-primary, ${colorTokens.text.primary})`,
+  backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
   border: "none",
-  borderRadius: "4px",
+  borderRadius: radiusTokens.sm,
   outline: "none",
   cursor: "pointer",
   appearance: "none",
-  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E")`,
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23737373' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E")`,
   backgroundRepeat: "no-repeat",
   backgroundPosition: "right 6px center",
   paddingRight: "24px",

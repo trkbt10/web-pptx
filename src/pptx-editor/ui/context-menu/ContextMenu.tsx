@@ -3,6 +3,7 @@
  *
  * A floating context menu that appears at specified coordinates.
  * Uses a portal to render outside the DOM hierarchy.
+ * Uses design tokens for consistent styling.
  */
 
 import { type CSSProperties, useCallback, useEffect, useRef } from "react";
@@ -12,6 +13,7 @@ import { ContextMenuItem } from "./ContextMenuItem";
 import { ContextMenuSeparator } from "./ContextMenuSeparator";
 import { ContextMenuSubmenu } from "./ContextMenuSubmenu";
 import { isSeparator, isSubmenu } from "./types";
+import { colorTokens, radiusTokens } from "../design-tokens";
 
 export type ContextMenuProps = {
   /** X coordinate (client) */
@@ -34,9 +36,9 @@ const backdropStyle: CSSProperties = {
 
 const menuBaseStyle: CSSProperties = {
   position: "fixed",
-  backgroundColor: "var(--bg-primary, #0a0a0a)",
-  border: "1px solid var(--border-subtle, #333)",
-  borderRadius: "6px",
+  backgroundColor: `var(--bg-primary, ${colorTokens.background.primary})`,
+  border: `1px solid var(--border-strong, ${colorTokens.border.strong})`,
+  borderRadius: radiusTokens.md,
   padding: "4px 0",
   zIndex: 1000,
   minWidth: "160px",

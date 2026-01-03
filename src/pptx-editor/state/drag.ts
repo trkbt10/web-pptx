@@ -82,13 +82,25 @@ export type RotateDragState = {
 };
 
 /**
- * Drag state - idle, moving, resizing, or rotating
+ * Create drag state - drawing a new shape
+ */
+export type CreateDragState = {
+  readonly type: "create";
+  readonly startX: Pixels;
+  readonly startY: Pixels;
+  readonly currentX: Pixels;
+  readonly currentY: Pixels;
+};
+
+/**
+ * Drag state - idle, moving, resizing, rotating, or creating
  */
 export type DragState =
   | IdleDragState
   | MoveDragState
   | ResizeDragState
-  | RotateDragState;
+  | RotateDragState
+  | CreateDragState;
 
 // =============================================================================
 // Functions
@@ -127,4 +139,11 @@ export function isDragResize(drag: DragState): drag is ResizeDragState {
  */
 export function isDragRotate(drag: DragState): drag is RotateDragState {
   return drag.type === "rotate";
+}
+
+/**
+ * Check if drag state is create
+ */
+export function isDragCreate(drag: DragState): drag is CreateDragState {
+  return drag.type === "create";
 }

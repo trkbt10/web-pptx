@@ -12,7 +12,7 @@
  */
 
 import { useRef, useEffect, useMemo, useCallback, type CSSProperties } from "react";
-import type { Slide, Shape } from "../../pptx/domain";
+import type { Slide, Shape, TextBody } from "../../pptx/domain";
 import type { Pixels, ShapeId } from "../../pptx/domain/types";
 import { px, deg } from "../../pptx/domain/types";
 import type { ResizeHandlePosition } from "../state";
@@ -20,7 +20,14 @@ import type { PresentationDocument, SlideWithId, PresentationEditorAction } from
 import type { ContextMenuActions } from "../slide/context-menu/SlideContextMenu";
 import { PresentationEditorProvider, usePresentationEditor } from "./context";
 import { SlideThumbnailPanel } from "./SlideThumbnailPanel";
+import { useSlideThumbnails } from "./use-slide-thumbnails";
+import { SlideThumbnailPreview } from "./SlideThumbnailPreview";
+import { CreationToolbar } from "../slide/CreationToolbar";
+import type { CreationMode } from "./types";
+import { createShapeFromMode, createBoundsFromDrag, getDefaultBoundsForMode } from "../shape/factory";
 import { SlideCanvas } from "../slide/SlideCanvas";
+import { TextEditOverlay } from "../slide/components/TextEditOverlay";
+import { isTextEditActive } from "../state";
 import { PropertyPanel } from "../slide/PropertyPanel";
 import { ShapeToolbar } from "../slide/ShapeToolbar";
 import { LayerPanel } from "../slide/LayerPanel";
@@ -31,6 +38,7 @@ import { withUpdatedTransform } from "../shape/transform";
 import { calculateAlignedBounds } from "../shape/alignment";
 import { renderSlideSvg } from "../../pptx/render/svg/renderer";
 import { createRenderContext } from "../../pptx/render/context";
+import { createRenderContextFromApiSlide } from "./slide-render-context-builder";
 
 // =============================================================================
 // Types
@@ -280,22 +288,100 @@ function EditorContent({
   showLayerPanel: boolean;
   showToolbar: boolean;
 }) {
-  const { state, dispatch, document, activeSlide, selectedShapes, primaryShape, canUndo, canRedo } =
+  const { state, dispatch, document, activeSlide, selectedShapes, primaryShape, canUndo, canRedo, creationMode, textEdit } =
     usePresentationEditor();
   const containerRef = useRef<HTMLDivElement>(null);
   const { shapeSelection: selection, drag } = state;
+
+  // Creation mode handlers
+  const handleCreationModeChange = useCallback(
+    (mode: CreationMode) => {
+      dispatch({ type: "SET_CREATION_MODE", mode });
+    },
+    [dispatch]
+  );
+
+  const handleCanvasCreate = useCallback(
+    (x: number, y: number) => {
+      if (creationMode.type === "select") return;
+
+      const bounds = getDefaultBoundsForMode(creationMode, px(x), px(y));
+      const shape = createShapeFromMode(creationMode, bounds);
+      if (shape) {
+        dispatch({ type: "CREATE_SHAPE", shape });
+      }
+    },
+    [creationMode, dispatch]
+  );
+
+  // Text editing handlers
+  const handleDoubleClick = useCallback(
+    (shapeId: ShapeId) => {
+      dispatch({ type: "ENTER_TEXT_EDIT", shapeId });
+    },
+    [dispatch]
+  );
+
+  const handleTextEditComplete = useCallback(
+    (newTextBody: TextBody) => {
+      if (isTextEditActive(textEdit)) {
+        dispatch({ type: "UPDATE_TEXT_BODY", shapeId: textEdit.shapeId, textBody: newTextBody });
+      }
+    },
+    [dispatch, textEdit]
+  );
+
+  const handleTextEditCancel = useCallback(() => {
+    dispatch({ type: "EXIT_TEXT_EDIT" });
+  }, [dispatch]);
 
   const slide = activeSlide?.slide;
   const width = document.slideWidth;
   const height = document.slideHeight;
 
-  // Render context for SVG
-  const renderContext = useMemo(
-    () => createRenderContext({ slideSize: { width, height } }),
-    [width, height]
+  // Thumbnail rendering hook (with theme context for proper rendering)
+  const { getThumbnailSvg } = useSlideThumbnails({
+    slideWidth: width,
+    slideHeight: height,
+    slides: document.slides,
+    colorContext: document.colorContext,
+    resources: document.resources,
+    fontScheme: document.fontScheme,
+    fileCache: document.fileCache,
+  });
+
+  const renderThumbnail = useCallback(
+    (slideWithId: SlideWithId) => {
+      const svg = getThumbnailSvg(slideWithId);
+      return <SlideThumbnailPreview svg={svg} />;
+    },
+    [getThumbnailSvg]
   );
 
+  // Render context for SVG rendering
+  // When apiSlide and fileCache are available, build full context from API slide
+  // This preserves theme/master/layout inheritance for proper rendering after edits
+  const renderContext = useMemo(() => {
+    const apiSlide = activeSlide?.apiSlide;
+    const fileCache = document.fileCache;
+
+    // Use full context from API slide if available
+    if (apiSlide && fileCache) {
+      return createRenderContextFromApiSlide(apiSlide, fileCache, { width, height });
+    }
+
+    // Fall back to basic context for newly created slides
+    return createRenderContext({
+      slideSize: { width, height },
+      colorContext: document.colorContext,
+      resources: document.resources,
+      fontScheme: document.fontScheme,
+      resolvedBackground: activeSlide?.resolvedBackground,
+    });
+  }, [width, height, activeSlide?.apiSlide, activeSlide?.resolvedBackground, document.fileCache, document.colorContext, document.resources, document.fontScheme]);
+
   // Rendered SVG content
+  // Always render the edited domain slide with proper context
   const svgContent = useMemo(() => {
     if (!slide) return undefined;
     const result = renderSlideSvg(slide, renderContext);
@@ -607,7 +693,7 @@ function EditorContent({
     <div style={containerStyle}>
       {/* Left: Slide Thumbnails */}
       <div style={thumbnailPanelStyle}>
-        <SlideThumbnailPanel />
+        <SlideThumbnailPanel renderThumbnail={renderThumbnail} />
       </div>
 
       {/* Center: Main editing area */}
@@ -615,19 +701,25 @@ function EditorContent({
         {/* Toolbar */}
         {showToolbar && (
           <div style={toolbarStyle}>
-            <ShapeToolbar
-              canUndo={canUndo}
-              canRedo={canRedo}
-              selectedIds={selection.selectedIds}
-              primaryShape={primaryShape}
-              onUndo={() => dispatch({ type: "UNDO" })}
-              onRedo={() => dispatch({ type: "REDO" })}
-              onDelete={handleDelete}
-              onDuplicate={handleDuplicate}
-              onReorder={handleReorder}
-              onShapeChange={handleShapeChange}
-              direction="horizontal"
-            />
+            <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+              <CreationToolbar
+                mode={creationMode}
+                onModeChange={handleCreationModeChange}
+              />
+              <ShapeToolbar
+                canUndo={canUndo}
+                canRedo={canRedo}
+                selectedIds={selection.selectedIds}
+                primaryShape={primaryShape}
+                onUndo={() => dispatch({ type: "UNDO" })}
+                onRedo={() => dispatch({ type: "REDO" })}
+                onDelete={handleDelete}
+                onDuplicate={handleDuplicate}
+                onReorder={handleReorder}
+                onShapeChange={handleShapeChange}
+                direction="horizontal"
+              />
+            </div>
           </div>
         )}
 
@@ -651,7 +743,21 @@ function EditorContent({
                 onStartMove={handleStartMove}
                 onStartResize={handleStartResize}
                 onStartRotate={handleStartRotate}
+                onDoubleClick={handleDoubleClick}
+                creationMode={creationMode}
+                onCreate={handleCanvasCreate}
               />
+              {/* Text edit overlay */}
+              {isTextEditActive(textEdit) && (
+                <TextEditOverlay
+                  bounds={textEdit.bounds}
+                  textBody={textEdit.initialTextBody}
+                  slideWidth={width as number}
+                  slideHeight={height as number}
+                  onComplete={handleTextEditComplete}
+                  onCancel={handleTextEditCancel}
+                />
+              )}
             </div>
           </div>
 

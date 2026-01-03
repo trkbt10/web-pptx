@@ -5,6 +5,7 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
+import { colorTokens, fontTokens } from "../design-tokens";
 
 export type ToggleProps = {
   readonly checked: boolean;
@@ -27,7 +28,9 @@ const trackStyle = (checked: boolean, disabled: boolean): CSSProperties => ({
   width: "28px",
   height: "16px",
   borderRadius: "8px",
-  backgroundColor: checked ? "var(--accent-blue, #0070f3)" : "var(--bg-tertiary, #222)",
+  backgroundColor: checked
+    ? `var(--accent-secondary, ${colorTokens.accent.secondary})`
+    : `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
   transition: "background-color 150ms ease",
   opacity: disabled ? 0.5 : 1,
   cursor: disabled ? "not-allowed" : "pointer",
@@ -47,8 +50,8 @@ const thumbStyle = (checked: boolean): CSSProperties => ({
 });
 
 const labelStyle: CSSProperties = {
-  fontSize: "12px",
-  color: "var(--text-secondary, #a1a1a1)",
+  fontSize: fontTokens.size.md,
+  color: `var(--text-secondary, ${colorTokens.text.secondary})`,
   userSelect: "none",
 };
 

@@ -6,7 +6,7 @@
  */
 
 import type { Slide, Shape } from "../../pptx/domain";
-import type { Bounds, ShapeId } from "../../pptx/domain/types";
+import type { ShapeId } from "../../pptx/domain/types";
 import { px, deg } from "../../pptx/domain/types";
 import type {
   PresentationDocument,
@@ -14,10 +14,13 @@ import type {
   PresentationEditorAction,
   SlideWithId,
 } from "./types";
+import { createSelectMode } from "./types";
 import {
   createHistory,
   createEmptySelection,
   createIdleDragState,
+  createInactiveTextEditState,
+  createActiveTextEditState,
   pushHistory,
   undoHistory,
   redoHistory,
@@ -37,8 +40,8 @@ import {
   reorderShape,
   generateShapeId,
 } from "../shape/mutation";
+import { createPicShape, createChartGraphicFrame, createDiagramGraphicFrame, type ShapeBounds, type ChartType, type DiagramType } from "../shape/factory";
 import {
-  getShapeBounds,
   getCombinedBounds,
   collectBoundsForIds,
   getCombinedCenter,
@@ -95,6 +98,8 @@ export function createPresentationEditorState(
     shapeSelection: createEmptySelection(),
     drag: createIdleDragState(),
     clipboard: undefined,
+    creationMode: createSelectMode(),
+    textEdit: createInactiveTextEditState(),
   };
 }
 
@@ -485,7 +490,6 @@ export function presentationEditorReducer(
 
       const selectedIds = state.shapeSelection.selectedIds;
       const initialBoundsMap = collectBoundsForIds(activeSlide.slide.shapes, selectedIds);
-      const boundsArray = Array.from(initialBoundsMap.values());
       const combinedBounds = getCombinedBounds(
         selectedIds
           .map((id) => findShapeById(activeSlide.slide.shapes, id))
@@ -700,6 +704,231 @@ export function presentationEditorReducer(
           ...state.clipboard,
           pasteCount: state.clipboard.pasteCount + 1,
         },
+      };
+    }
+
+    // =========================================================================
+    // Creation mode
+    // =========================================================================
+
+    case "SET_CREATION_MODE": {
+      return {
+        ...state,
+        creationMode: action.mode,
+        // Clear selection when entering a creation mode (not select)
+        shapeSelection:
+          action.mode.type === "select" ? state.shapeSelection : createEmptySelection(),
+      };
+    }
+
+    case "CREATE_SHAPE": {
+      const newDoc = updateActiveSlideInDocument(
+        state.documentHistory.present,
+        state.activeSlideId,
+        (slide) => ({
+          ...slide,
+          shapes: [...slide.shapes, action.shape],
+        })
+      );
+
+      const shapeId =
+        "nonVisual" in action.shape ? action.shape.nonVisual.id : undefined;
+
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+        shapeSelection: shapeId
+          ? { selectedIds: [shapeId], primaryId: shapeId }
+          : state.shapeSelection,
+        // Return to select mode after creating a shape
+        creationMode: createSelectMode(),
+      };
+    }
+
+    // =========================================================================
+    // Picture Insertion
+    // =========================================================================
+
+    case "ADD_PICTURE": {
+      const activeSlide = getActiveSlide(state);
+      if (!activeSlide) {
+        return state;
+      }
+
+      const newId = generateShapeId(activeSlide.slide.shapes);
+      const bounds: ShapeBounds = {
+        x: action.x,
+        y: action.y,
+        width: action.width,
+        height: action.height,
+      };
+
+      const picShape = createPicShape(newId, bounds, action.dataUrl);
+
+      const newDoc = updateActiveSlideInDocument(
+        state.documentHistory.present,
+        state.activeSlideId,
+        (slide) => ({
+          ...slide,
+          shapes: [...slide.shapes, picShape],
+        })
+      );
+
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+        shapeSelection: {
+          selectedIds: [newId],
+          primaryId: newId,
+        },
+        creationMode: createSelectMode(),
+      };
+    }
+
+    // =========================================================================
+    // Chart Insertion
+    // =========================================================================
+
+    case "ADD_CHART": {
+      const activeSlide = getActiveSlide(state);
+      if (!activeSlide) {
+        return state;
+      }
+
+      const newId = generateShapeId(activeSlide.slide.shapes);
+      const bounds: ShapeBounds = {
+        x: action.x,
+        y: action.y,
+        width: action.width,
+        height: action.height,
+      };
+
+      const chartShape = createChartGraphicFrame(newId, bounds, action.chartType);
+
+      const newDoc = updateActiveSlideInDocument(
+        state.documentHistory.present,
+        state.activeSlideId,
+        (slide) => ({
+          ...slide,
+          shapes: [...slide.shapes, chartShape],
+        })
+      );
+
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+        shapeSelection: {
+          selectedIds: [newId],
+          primaryId: newId,
+        },
+        creationMode: createSelectMode(),
+      };
+    }
+
+    // =========================================================================
+    // Diagram Insertion
+    // =========================================================================
+
+    case "ADD_DIAGRAM": {
+      const activeSlide = getActiveSlide(state);
+      if (!activeSlide) {
+        return state;
+      }
+
+      const newId = generateShapeId(activeSlide.slide.shapes);
+      const bounds: ShapeBounds = {
+        x: action.x,
+        y: action.y,
+        width: action.width,
+        height: action.height,
+      };
+
+      const diagramShape = createDiagramGraphicFrame(newId, bounds, action.diagramType);
+
+      const newDoc = updateActiveSlideInDocument(
+        state.documentHistory.present,
+        state.activeSlideId,
+        (slide) => ({
+          ...slide,
+          shapes: [...slide.shapes, diagramShape],
+        })
+      );
+
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+        shapeSelection: {
+          selectedIds: [newId],
+          primaryId: newId,
+        },
+        creationMode: createSelectMode(),
+      };
+    }
+
+    // =========================================================================
+    // Text Editing
+    // =========================================================================
+
+    case "ENTER_TEXT_EDIT": {
+      const activeSlide = state.activeSlideId
+        ? findSlideById(state.documentHistory.present, state.activeSlideId)
+        : undefined;
+      if (!activeSlide) {
+        return state;
+      }
+
+      const shape = findShapeById(activeSlide.slide.shapes, action.shapeId);
+      if (!shape || shape.type !== "sp" || !shape.textBody) {
+        return state;
+      }
+
+      const transform = getShapeTransform(shape);
+      if (!transform) {
+        return state;
+      }
+
+      return {
+        ...state,
+        textEdit: createActiveTextEditState(
+          action.shapeId,
+          {
+            x: transform.x,
+            y: transform.y,
+            width: transform.width,
+            height: transform.height,
+            rotation: transform.rotation as number,
+          },
+          shape.textBody
+        ),
+      };
+    }
+
+    case "EXIT_TEXT_EDIT": {
+      return {
+        ...state,
+        textEdit: createInactiveTextEditState(),
+      };
+    }
+
+    case "UPDATE_TEXT_BODY": {
+      const newDoc = updateActiveSlideInDocument(
+        state.documentHistory.present,
+        state.activeSlideId,
+        (slide) => ({
+          ...slide,
+          shapes: updateShapeById(slide.shapes, action.shapeId, (shape) => {
+            if (shape.type !== "sp") {
+              return shape;
+            }
+            return { ...shape, textBody: action.textBody };
+          }),
+        })
+      );
+
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+        textEdit: createInactiveTextEditState(),
       };
     }
 

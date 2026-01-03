@@ -9,6 +9,7 @@
  */
 
 import type { ReactNode, CSSProperties } from "react";
+import { colorTokens, radiusTokens, spacingTokens } from "../design-tokens";
 
 export type SectionProps = {
   /** Content to render inside the section */
@@ -34,10 +35,10 @@ export function Section({
     display: "flex",
     flexDirection: "column",
     gap: `${gap}px`,
-    padding: "12px",
-    backgroundColor: "var(--bg-tertiary, #111111)",
-    borderRadius: "var(--radius-md, 8px)",
-    border: "1px solid var(--border-subtle, rgba(255, 255, 255, 0.08))",
+    padding: spacingTokens.md,
+    backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
+    borderRadius: `var(--radius-md, ${radiusTokens.md})`,
+    border: `1px solid var(--border-subtle, ${colorTokens.border.subtle})`,
   };
 
   return (

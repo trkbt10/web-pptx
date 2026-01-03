@@ -2,7 +2,10 @@
  * @file Rotate handle component
  *
  * A draggable handle for rotating shapes.
+ * Uses design tokens for consistent styling.
  */
+
+import { colorTokens } from "../../ui/design-tokens";
 
 // =============================================================================
 // Types
@@ -22,8 +25,8 @@ export type RotateHandleProps = {
 // =============================================================================
 
 const HANDLE_RADIUS = 5;
-const HANDLE_FILL = "#ffffff";
-const HANDLE_STROKE = "#0066ff";
+const HANDLE_FILL = colorTokens.text.primary;
+const HANDLE_STROKE = colorTokens.selection.primary;
 const HANDLE_STROKE_WIDTH = 1;
 
 // =============================================================================

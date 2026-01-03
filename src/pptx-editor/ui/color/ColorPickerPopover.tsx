@@ -3,6 +3,7 @@
  *
  * Adobe/Figma-style color picker that opens in a popover.
  * Displays a color swatch that, when clicked, opens a popover with RGB/HSL sliders.
+ * Uses design tokens for consistent styling.
  */
 
 import { useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
@@ -12,6 +13,7 @@ import { Popover } from "../primitives/Popover";
 import { LabeledSlider } from "../common";
 import { FillPreview } from "./FillPreview";
 import { HexColorEditor } from "./components";
+import { colorTokens, radiusTokens, spacingTokens } from "../design-tokens";
 
 export type ColorPickerPopoverProps = {
   /** Hex color value (6 characters, no #) */
@@ -33,16 +35,16 @@ export type ColorPickerPopoverProps = {
 const defaultTriggerStyle: CSSProperties = {
   width: "24px",
   height: "24px",
-  borderRadius: "4px",
+  borderRadius: radiusTokens.sm,
   cursor: "pointer",
-  border: "1px solid var(--border-subtle, rgba(255, 255, 255, 0.08))",
+  border: `1px solid var(--border-subtle, ${colorTokens.border.subtle})`,
   overflow: "hidden",
 };
 
 const popoverContentStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: "12px",
+  gap: spacingTokens.md,
   width: "240px",
 };
 

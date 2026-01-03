@@ -5,7 +5,32 @@
  */
 
 import type { Slide } from "../../pptx/domain";
+import type { ColorContext } from "../../pptx/domain/resolution";
+import type { ResourceResolver } from "../../pptx/render/core";
 import type { PresentationDocument, SlideWithId, SlideId } from "./types";
+
+// =============================================================================
+// Default Context Values
+// =============================================================================
+
+/**
+ * Empty color context (no theme colors)
+ */
+const EMPTY_COLOR_CONTEXT: ColorContext = {
+  colorScheme: {},
+  colorMap: {},
+};
+
+/**
+ * Empty resource resolver (no resources)
+ */
+const EMPTY_RESOURCE_RESOLVER: ResourceResolver = {
+  resolve: () => undefined,
+  getMimeType: () => undefined,
+  getFilePath: () => undefined,
+  readFile: () => null,
+  getResourceByType: () => undefined,
+};
 
 // =============================================================================
 // Slide ID Generation
@@ -116,9 +141,30 @@ export function duplicateSlide(
     return undefined;
   }
 
-  // Deep clone the slide
+  // Deep clone the slide domain data
   const clonedSlide: Slide = JSON.parse(JSON.stringify(sourceSlide.slide));
-  return addSlide(document, clonedSlide, slideId);
+
+  // Create new SlideWithId with same API slide and background as source
+  const newSlideId = generateSlideId(document);
+  const insertIndex = getSlideIndex(document, slideId) + 1;
+
+  const newSlideWithId: SlideWithId = {
+    id: newSlideId,
+    slide: clonedSlide,
+    apiSlide: sourceSlide.apiSlide, // Preserve API slide for rendering context
+    resolvedBackground: sourceSlide.resolvedBackground,
+  };
+
+  const newSlides = [
+    ...document.slides.slice(0, insertIndex),
+    newSlideWithId,
+    ...document.slides.slice(insertIndex),
+  ];
+
+  return {
+    document: { ...document, slides: newSlides },
+    newSlideId,
+  };
 }
 
 /**
@@ -166,7 +212,9 @@ export function createDocumentFromPresentation(
   presentation: import("../../pptx/domain").Presentation,
   slides: readonly Slide[],
   slideWidth: import("../../pptx/domain/types").Pixels,
-  slideHeight: import("../../pptx/domain/types").Pixels
+  slideHeight: import("../../pptx/domain/types").Pixels,
+  colorContext: ColorContext = EMPTY_COLOR_CONTEXT,
+  resources: ResourceResolver = EMPTY_RESOURCE_RESOLVER
 ): PresentationDocument {
   const slidesWithId: SlideWithId[] = slides.map((slide, index) => ({
     id: String(index + 1),
@@ -178,6 +226,8 @@ export function createDocumentFromPresentation(
     slides: slidesWithId,
     slideWidth,
     slideHeight,
+    colorContext,
+    resources,
   };
 }
 
@@ -201,5 +251,7 @@ export function createEmptyDocument(
     slides: [{ id: "1", slide: emptySlide }],
     slideWidth,
     slideHeight,
+    colorContext: EMPTY_COLOR_CONTEXT,
+    resources: EMPTY_RESOURCE_RESOLVER,
   };
 }

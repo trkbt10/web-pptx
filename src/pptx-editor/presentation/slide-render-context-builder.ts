@@ -1,0 +1,206 @@
+/**
+ * @file SlideRenderContext builder for editor
+ *
+ * Creates SlideRenderContext from API Slide and file cache.
+ * This enables proper re-rendering of edited slides with full theme/master/layout context.
+ */
+
+import type { Slide as ApiSlide } from "../../pptx/types/api";
+import type { SlideRenderContext } from "../../pptx/reader/slide/accessor";
+import { createSlideRenderContext } from "../../pptx/reader/slide/accessor";
+import { createResourceMap, createPlaceholderTable, createColorMap } from "../../pptx/reader/slide/resource-adapters";
+import { parseTheme, parseMasterTextStyles } from "../../pptx/core/dml/parser/theme";
+import { DEFAULT_RENDER_OPTIONS } from "../../pptx/render/render-options";
+import { createRenderContext as createCoreRenderContext } from "../../pptx/render/core/context";
+import { getBackgroundFillData } from "../../pptx/core/dml/render/background";
+import type { XmlElement, XmlDocument } from "../../xml";
+import { getByPath } from "../../xml";
+import type { FileCache } from "./types";
+import type { SlideSize } from "../../pptx/domain";
+import type { ResolvedBackgroundFill } from "../../pptx/render/core";
+import type { HtmlRenderContext } from "../../pptx/render/html/context";
+import { createStyleCollector } from "../../pptx/render/html/context";
+
+// =============================================================================
+// ZipFile Adapter
+// =============================================================================
+
+/**
+ * Create a ZipFile adapter from file cache.
+ * This allows SlideRenderContext to read resources from the cached PPTX files.
+ */
+function createZipFileAdapter(cache: FileCache) {
+  return {
+    file(path: string) {
+      const entry = cache.get(path);
+      if (!entry) {
+        return null;
+      }
+      return {
+        asArrayBuffer(): ArrayBuffer {
+          return entry.buffer;
+        },
+        asText(): string {
+          return entry.text;
+        },
+      };
+    },
+  };
+}
+
+// =============================================================================
+// SlideRenderContext Builder
+// =============================================================================
+
+/**
+ * Build SlideRenderContext from API Slide and file cache.
+ *
+ * This replicates the logic in slide-builder.ts's buildSlideRenderContext,
+ * but works with API Slide (which has the same structure as SlideData).
+ */
+export function createSlideRenderContextFromApiSlide(
+  apiSlide: ApiSlide,
+  cache: FileCache,
+  defaultTextStyle: XmlElement | null = null,
+): SlideRenderContext {
+  // Create ZipFile adapter from cache
+  const zip = createZipFileAdapter(cache);
+
+  // Extract color map from master
+  const masterClrMap = getByPath(apiSlide.master, ["p:sldMaster", "p:clrMap"]);
+
+  // Extract color map override from slide (if present)
+  const slideClrMapOvr = getByPath(apiSlide.content, ["p:sld", "p:clrMapOvr", "a:overrideClrMapping"]);
+
+  // Get slide content element
+  const slideContent = getByPath(apiSlide.content, ["p:sld"]);
+
+  const slide = {
+    content: slideContent as XmlElement,
+    resources: createResourceMap(apiSlide.relationships),
+    colorMapOverride: slideClrMapOvr !== undefined ? createColorMap(slideClrMapOvr) : undefined,
+  };
+
+  // Get layout content element for background lookup
+  const layoutContent = getByPath(apiSlide.layout, ["p:sldLayout"]);
+
+  // Get master content element for background lookup
+  const masterContent = getByPath(apiSlide.master, ["p:sldMaster"]);
+
+  const layout = {
+    placeholders: createPlaceholderTable(apiSlide.layoutTables),
+    resources: createResourceMap(apiSlide.layoutRelationships),
+    content: layoutContent as XmlElement | undefined,
+  };
+
+  const master = {
+    textStyles: parseMasterTextStyles(apiSlide.masterTextStyles as XmlElement | undefined),
+    placeholders: createPlaceholderTable(apiSlide.masterTables),
+    colorMap: createColorMap(masterClrMap),
+    resources: createResourceMap(apiSlide.masterRelationships),
+    content: masterContent as XmlElement | undefined,
+  };
+
+  const theme = parseTheme(apiSlide.theme as XmlDocument, undefined);
+
+  const presentation = {
+    theme,
+    defaultTextStyle,
+    zip,
+    renderOptions: DEFAULT_RENDER_OPTIONS,
+    themeResources: createResourceMap(apiSlide.themeRelationships),
+  };
+
+  return createSlideRenderContext(slide, layout, master, presentation);
+}
+
+// =============================================================================
+// Background Resolution
+// =============================================================================
+
+/**
+ * Convert BackgroundFill from core to ResolvedBackgroundFill.
+ * (Same logic as slide-render.ts toResolvedBackgroundFill)
+ */
+function toResolvedBackgroundFill(
+  bgFillData: ReturnType<typeof getBackgroundFillData>,
+): ResolvedBackgroundFill | undefined {
+  if (bgFillData.image !== undefined) {
+    return {
+      type: "image",
+      dataUrl: bgFillData.image,
+      mode: bgFillData.imageFillMode === "stretch" ? "stretch" : "tile",
+    };
+  }
+
+  if (bgFillData.gradientData !== undefined) {
+    const isRadial = bgFillData.gradientData.type === "path";
+    const fillToRect = bgFillData.gradientData.fillToRect;
+
+    let radialCenter: { cx: number; cy: number } | undefined;
+    if (isRadial && fillToRect !== undefined) {
+      radialCenter = {
+        cx: (fillToRect.l + fillToRect.r) / 2000,
+        cy: (fillToRect.t + fillToRect.b) / 2000,
+      };
+    }
+
+    return {
+      type: "gradient",
+      angle: bgFillData.gradientData.angle,
+      stops: bgFillData.gradientData.stops.map((stop) => ({
+        position: stop.position,
+        color: stop.color.startsWith("#") ? stop.color : `#${stop.color}`,
+      })),
+      isRadial,
+      radialCenter,
+    };
+  }
+
+  if (bgFillData.color !== undefined) {
+    return {
+      type: "solid",
+      color: bgFillData.color.startsWith("#") ? bgFillData.color : `#${bgFillData.color}`,
+    };
+  }
+
+  return undefined;
+}
+
+// =============================================================================
+// Full Render Context Builder
+// =============================================================================
+
+/**
+ * Create a complete HtmlRenderContext from API Slide.
+ *
+ * This is the main function for the editor to use when rendering edited slides.
+ * It includes:
+ * - Color context (theme colors + color map)
+ * - Resource resolver (for images)
+ * - Font scheme
+ * - Resolved background (from slide → layout → master hierarchy)
+ * - Style collector (for HTML/SVG rendering)
+ */
+export function createRenderContextFromApiSlide(
+  apiSlide: ApiSlide,
+  cache: FileCache,
+  slideSize: SlideSize,
+  defaultTextStyle: XmlElement | null = null,
+): HtmlRenderContext {
+  // Build SlideRenderContext
+  const slideRenderCtx = createSlideRenderContextFromApiSlide(apiSlide, cache, defaultTextStyle);
+
+  // Resolve background from hierarchy
+  const bgFillData = getBackgroundFillData(slideRenderCtx);
+  const resolvedBackground = toResolvedBackgroundFill(bgFillData);
+
+  // Create CoreRenderContext
+  const coreCtx = createCoreRenderContext(slideRenderCtx, slideSize, { resolvedBackground });
+
+  // Extend to HtmlRenderContext by adding style collector
+  return {
+    ...coreCtx,
+    styles: createStyleCollector(),
+  };
+}

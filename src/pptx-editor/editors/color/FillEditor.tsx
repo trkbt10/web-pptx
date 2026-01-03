@@ -4,18 +4,19 @@
  * Design principle: NO INTERNAL LABELS.
  * Parent provides semantic context via FieldGroup label.
  * This editor provides the editing UI only.
+ * Uses design tokens for consistent styling.
  *
  * Layout: [Swatch] [Type Select] [Type-specific controls]
  */
 
-import { useCallback, type CSSProperties } from "react";
+import { useCallback, type CSSProperties, type ChangeEvent } from "react";
 import { Select, Toggle } from "../../ui/primitives";
 import { FieldRow } from "../../ui/layout";
 import { FillPickerPopover, ColorPickerPopover } from "../../ui/color";
 import { createDefaultColor } from "./ColorEditor";
 import { GradientStopsEditor, createDefaultGradientStops } from "./GradientStopsEditor";
 import { DegreesEditor } from "../primitives/DegreesEditor";
-import { PercentEditor } from "../primitives/PercentEditor";
+import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../../ui/design-tokens";
 import {
   PATTERN_PRESETS,
   type Fill,
@@ -23,10 +24,11 @@ import {
   type SolidFill,
   type GradientFill,
   type PatternFill,
+  type BlipFill,
   type PatternType,
   type LinearGradient,
 } from "../../../pptx/domain/color";
-import { deg } from "../../../pptx/domain/types";
+import { deg, type ResourceId } from "../../../pptx/domain/types";
 import type { EditorProps, SelectOption } from "../../types";
 
 // =============================================================================
@@ -52,6 +54,7 @@ const allFillTypeOptions: SelectOption<FillType>[] = [
   { value: "solidFill", label: "Solid" },
   { value: "gradientFill", label: "Gradient" },
   { value: "patternFill", label: "Pattern" },
+  { value: "blipFill", label: "Image" },
 ];
 
 const PATTERN_LABELS: Record<PatternType, string> = {
@@ -108,6 +111,12 @@ function createDefaultFill(type: FillType): Fill {
         foregroundColor: createDefaultColor("000000"),
         backgroundColor: createDefaultColor("FFFFFF"),
       };
+    case "blipFill":
+      return {
+        type: "blipFill",
+        resourceId: "" as ResourceId,
+        rotWithShape: true,
+      };
     default:
       return { type: "noFill" };
   }
@@ -120,13 +129,6 @@ function getFilteredFillOptions(allowedTypes?: readonly Fill["type"][]): SelectO
   return allFillTypeOptions.filter((opt) => allowedTypes.includes(opt.value));
 }
 
-function getSolidHex(fill: Fill): string {
-  if (fill.type === "solidFill" && fill.color.spec.type === "srgb") {
-    return fill.color.spec.value;
-  }
-  return "888888";
-}
-
 // =============================================================================
 // Styles
 // =============================================================================
@@ -134,18 +136,46 @@ function getSolidHex(fill: Fill): string {
 const containerStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: "8px",
+  gap: spacingTokens.sm,
 };
 
 const rowStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
-  gap: "8px",
+  gap: spacingTokens.sm,
 };
 
 const typeSelectStyle: CSSProperties = {
   width: "90px",
   flexShrink: 0,
+};
+
+const imageSelectLabelStyle: CSSProperties = {
+  padding: `${spacingTokens.xs} ${spacingTokens.sm}`,
+  fontSize: fontTokens.size.md,
+  backgroundColor: `var(--bg-secondary, ${colorTokens.background.secondary})`,
+  border: `1px solid var(--border-primary, ${colorTokens.border.primary})`,
+  borderRadius: radiusTokens.sm,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+};
+
+const imagePreviewContainerStyle: CSSProperties = {
+  width: "100%",
+  height: "60px",
+  border: `1px solid var(--border-primary, ${colorTokens.border.primary})`,
+  borderRadius: radiusTokens.sm,
+  overflow: "hidden",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
+};
+
+const imagePreviewStyle: CSSProperties = {
+  maxWidth: "100%",
+  maxHeight: "100%",
+  objectFit: "contain",
 };
 
 // =============================================================================
@@ -296,8 +326,68 @@ export function FillEditor({
             onChange={(hex) => onChange({ ...patternFill, backgroundColor: createDefaultColor(hex) })}
             disabled={disabled}
           />
-          <span style={{ fontSize: "11px", color: "var(--text-tertiary)" }}>FG / BG</span>
+          <span style={{ fontSize: fontTokens.size.sm, color: `var(--text-tertiary, ${colorTokens.text.tertiary})` }}>FG / BG</span>
         </FieldRow>
+      </div>
+    );
+  }
+
+  // Blip Fill (Image)
+  if (value.type === "blipFill") {
+    const blipFill = value as BlipFill;
+    const hasImage = blipFill.resourceId !== "";
+
+    const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result as string;
+        onChange({
+          ...blipFill,
+          resourceId: dataUrl as ResourceId,
+        });
+      };
+      reader.readAsDataURL(file);
+    };
+
+    return (
+      <div className={className} style={{ ...containerStyle, ...style }}>
+        <div style={rowStyle}>
+          <Select
+            value={value.type}
+            onChange={handleTypeChange}
+            options={fillTypeOptions}
+            disabled={disabled}
+            style={typeSelectStyle}
+          />
+          <label style={imageSelectLabelStyle}>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileSelect}
+              disabled={disabled}
+              style={{ display: "none" }}
+            />
+            {hasImage ? "Change Image" : "Select Image"}
+          </label>
+          <Toggle
+            checked={blipFill.rotWithShape}
+            onChange={(checked) => onChange({ ...blipFill, rotWithShape: checked })}
+            disabled={disabled}
+          />
+          <span style={{ fontSize: fontTokens.size.sm, color: `var(--text-tertiary, ${colorTokens.text.tertiary})` }}>Rotate</span>
+        </div>
+        {hasImage && (
+          <div style={imagePreviewContainerStyle}>
+            <img
+              src={blipFill.resourceId}
+              alt="Fill preview"
+              style={imagePreviewStyle}
+            />
+          </div>
+        )}
       </div>
     );
   }

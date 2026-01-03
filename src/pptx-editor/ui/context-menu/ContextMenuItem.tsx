@@ -1,9 +1,11 @@
 /**
  * @file Context menu item component
+ * Uses design tokens for consistent styling.
  */
 
 import { type CSSProperties, useCallback, useState } from "react";
 import type { MenuItem } from "./types";
+import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../design-tokens";
 
 export type ContextMenuItemProps = {
   readonly item: MenuItem;
@@ -11,30 +13,30 @@ export type ContextMenuItemProps = {
 };
 
 const baseItemStyle: CSSProperties = {
-  padding: "6px 12px",
-  fontSize: "12px",
+  padding: `6px ${spacingTokens.md}`,
+  fontSize: fontTokens.size.md,
   display: "flex",
   alignItems: "center",
-  gap: "8px",
-  borderRadius: "4px",
-  margin: "0 4px",
+  gap: spacingTokens.sm,
+  borderRadius: radiusTokens.sm,
+  margin: `0 ${spacingTokens.xs}`,
 };
 
 const enabledStyle: CSSProperties = {
   ...baseItemStyle,
   cursor: "pointer",
-  color: "var(--text-secondary, #a1a1a1)",
+  color: `var(--text-secondary, ${colorTokens.text.secondary})`,
 };
 
 const disabledStyle: CSSProperties = {
   ...baseItemStyle,
-  color: "var(--text-tertiary, #555)",
+  color: `var(--text-tertiary, ${colorTokens.text.tertiary})`,
   cursor: "default",
 };
 
 const dangerStyle: CSSProperties = {
   ...enabledStyle,
-  color: "var(--danger, #ef4444)",
+  color: `var(--danger, ${colorTokens.accent.danger})`,
 };
 
 export function ContextMenuItem({ item, onClick }: ContextMenuItemProps) {
@@ -64,7 +66,7 @@ export function ContextMenuItem({ item, onClick }: ContextMenuItemProps) {
     if (isHovered) {
       return {
         ...base,
-        backgroundColor: "var(--bg-secondary, #1a1a1a)",
+        backgroundColor: `var(--bg-secondary, ${colorTokens.background.secondary})`,
       };
     }
     return base;
@@ -79,7 +81,7 @@ export function ContextMenuItem({ item, onClick }: ContextMenuItemProps) {
     >
       <span style={{ flex: 1 }}>{item.label}</span>
       {item.shortcut && (
-        <span style={{ color: "var(--text-tertiary, #555)", fontSize: "10px" }}>
+        <span style={{ color: `var(--text-tertiary, ${colorTokens.text.tertiary})`, fontSize: fontTokens.size.xs }}>
           {item.shortcut}
         </span>
       )}

@@ -6,6 +6,7 @@
  */
 
 import { useCallback, useEffect, type ChangeEvent, type CSSProperties } from "react";
+import { colorTokens, fontTokens, radiusTokens } from "../design-tokens";
 
 export type InputProps = {
   readonly value: string | number;
@@ -45,8 +46,8 @@ function injectStyles() {
 const containerStyle = (width?: number | string): CSSProperties => ({
   display: "flex",
   alignItems: "center",
-  backgroundColor: "var(--bg-tertiary, #1a1a1a)",
-  borderRadius: "4px",
+  backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
+  borderRadius: radiusTokens.sm,
   overflow: "hidden",
   // Use explicit width if provided, otherwise fill container
   width: width ?? "100%",
@@ -59,9 +60,9 @@ const inputInnerStyle = (hasSuffix: boolean): CSSProperties => ({
   minWidth: 0,
   width: "100%",
   padding: hasSuffix ? "5px 4px 5px 8px" : "5px 8px",
-  fontSize: "12px",
+  fontSize: fontTokens.size.md,
   fontFamily: "inherit",
-  color: "var(--text-primary, #fafafa)",
+  color: `var(--text-primary, ${colorTokens.text.primary})`,
   backgroundColor: "transparent",
   border: "none",
   outline: "none",
@@ -70,8 +71,8 @@ const inputInnerStyle = (hasSuffix: boolean): CSSProperties => ({
 const suffixInnerStyle: CSSProperties = {
   flexShrink: 0,
   paddingRight: "8px",
-  fontSize: "11px",
-  color: "var(--text-tertiary, #666)",
+  fontSize: fontTokens.size.sm,
+  color: `var(--text-tertiary, ${colorTokens.text.tertiary})`,
   userSelect: "none",
   pointerEvents: "none",
 };

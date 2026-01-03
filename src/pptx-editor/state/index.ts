@@ -43,6 +43,7 @@ export {
   isDragMove,
   isDragResize,
   isDragRotate,
+  isDragCreate,
 } from "./drag";
 export type {
   ResizeHandlePosition,
@@ -50,6 +51,7 @@ export type {
   MoveDragState,
   ResizeDragState,
   RotateDragState,
+  CreateDragState,
   DragState,
 } from "./drag";
 
@@ -58,3 +60,19 @@ export type {
 // =============================================================================
 export { createClipboardContent, incrementPasteCount } from "./clipboard";
 export type { ClipboardContent } from "./clipboard";
+
+// =============================================================================
+// Text Edit
+// =============================================================================
+export {
+  createInactiveTextEditState,
+  createActiveTextEditState,
+  isTextEditInactive,
+  isTextEditActive,
+} from "./text-edit";
+export type {
+  TextEditBounds,
+  InactiveTextEditState,
+  ActiveTextEditState,
+  TextEditState,
+} from "./text-edit";

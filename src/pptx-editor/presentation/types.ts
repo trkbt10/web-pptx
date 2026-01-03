@@ -5,14 +5,18 @@
  * Uses state/ module for shared state management primitives.
  */
 
-import type { Slide, Shape, Presentation } from "../../pptx/domain";
+import type { Slide, Shape, Presentation, TextBody } from "../../pptx/domain";
 import type { ShapeId, Pixels } from "../../pptx/domain/types";
+import type { ColorContext, FontScheme } from "../../pptx/domain/resolution";
+import type { ResourceResolver, ResolvedBackgroundFill } from "../../pptx/render/core";
+import type { Slide as ApiSlide } from "../../pptx/types/api";
 import type {
   UndoRedoHistory,
   SelectionState,
   DragState,
   ClipboardContent,
   ResizeHandlePosition,
+  TextEditState,
 } from "../state";
 
 // =============================================================================
@@ -25,7 +29,23 @@ import type {
 export type SlideId = string;
 
 /**
+ * File cache entry for PPTX content
+ */
+export type FileCacheEntry = {
+  readonly text: string;
+  readonly buffer: ArrayBuffer;
+};
+
+/**
+ * File cache for PPTX resources (images, XML, etc.)
+ */
+export type FileCache = ReadonlyMap<string, FileCacheEntry>;
+
+/**
  * Presentation document for editing
+ *
+ * Contains all information needed to render slides correctly,
+ * including theme colors, fonts, and resource resolution.
  */
 export type PresentationDocument = {
   /** Original presentation data */
@@ -35,15 +55,81 @@ export type PresentationDocument = {
   /** Slide dimensions */
   readonly slideWidth: Pixels;
   readonly slideHeight: Pixels;
+
+  // === Rendering Context ===
+  /** Color context for resolving theme/scheme colors */
+  readonly colorContext: ColorContext;
+  /** Font scheme for resolving theme fonts (+mj-lt, +mn-lt, etc.) */
+  readonly fontScheme?: FontScheme;
+  /** Resource resolver for images and embedded content */
+  readonly resources: ResourceResolver;
+
+  /**
+   * File cache from loaded PPTX.
+   * Used to build SlideRenderContext for proper rendering after edits.
+   */
+  readonly fileCache?: FileCache;
 };
 
 /**
  * Slide with ID for tracking
+ *
+ * Contains the domain slide data plus the original API slide for proper rendering context.
  */
 export type SlideWithId = {
   readonly id: SlideId;
+  /** Parsed domain slide (for editing) */
   readonly slide: Slide;
+  /**
+   * Original API slide from the presentation reader.
+   * Required for proper rendering with full context (theme, master, layout inheritance).
+   * Contains all XML data needed to build SlideRenderContext.
+   */
+  readonly apiSlide?: ApiSlide;
+  /** Pre-resolved background (from slide → layout → master inheritance) */
+  readonly resolvedBackground?: ResolvedBackgroundFill;
 };
+
+// =============================================================================
+// Creation Mode Types
+// =============================================================================
+
+/**
+ * Preset shape types for creation
+ */
+export type CreationPresetShape =
+  | "rect"
+  | "roundRect"
+  | "ellipse"
+  | "triangle"
+  | "rtTriangle"
+  | "diamond"
+  | "pentagon"
+  | "hexagon"
+  | "star5"
+  | "rightArrow"
+  | "leftArrow"
+  | "upArrow"
+  | "downArrow"
+  | "line";
+
+/**
+ * Creation mode - determines what happens on canvas click/drag
+ */
+export type CreationMode =
+  | { readonly type: "select" }
+  | { readonly type: "shape"; readonly preset: CreationPresetShape }
+  | { readonly type: "textbox" }
+  | { readonly type: "picture" }
+  | { readonly type: "connector" }
+  | { readonly type: "table"; readonly rows: number; readonly cols: number };
+
+/**
+ * Create default select mode
+ */
+export function createSelectMode(): CreationMode {
+  return { type: "select" };
+}
 
 // =============================================================================
 // Presentation Editor State
@@ -66,6 +152,10 @@ export type PresentationEditorState = {
   readonly drag: DragState;
   /** Clipboard content */
   readonly clipboard: ClipboardContent | undefined;
+  /** Current creation mode */
+  readonly creationMode: CreationMode;
+  /** Text editing state */
+  readonly textEdit: TextEditState;
 };
 
 // =============================================================================
@@ -135,7 +225,56 @@ export type PresentationEditorAction =
 
   // Clipboard
   | { readonly type: "COPY" }
-  | { readonly type: "PASTE" };
+  | { readonly type: "PASTE" }
+
+  // Creation mode
+  | { readonly type: "SET_CREATION_MODE"; readonly mode: CreationMode }
+  | {
+      readonly type: "CREATE_SHAPE";
+      readonly shape: Shape;
+    }
+
+  // Picture insertion
+  | {
+      readonly type: "ADD_PICTURE";
+      readonly dataUrl: string;
+      readonly x: Pixels;
+      readonly y: Pixels;
+      readonly width: Pixels;
+      readonly height: Pixels;
+    }
+
+  // Chart insertion
+  | {
+      readonly type: "ADD_CHART";
+      readonly chartType: "bar" | "line" | "pie";
+      readonly x: Pixels;
+      readonly y: Pixels;
+      readonly width: Pixels;
+      readonly height: Pixels;
+    }
+
+  // Diagram insertion
+  | {
+      readonly type: "ADD_DIAGRAM";
+      readonly diagramType: "process" | "cycle" | "hierarchy" | "relationship";
+      readonly x: Pixels;
+      readonly y: Pixels;
+      readonly width: Pixels;
+      readonly height: Pixels;
+    }
+
+  // Text editing
+  | {
+      readonly type: "ENTER_TEXT_EDIT";
+      readonly shapeId: ShapeId;
+    }
+  | { readonly type: "EXIT_TEXT_EDIT" }
+  | {
+      readonly type: "UPDATE_TEXT_BODY";
+      readonly shapeId: ShapeId;
+      readonly textBody: TextBody;
+    };
 
 // =============================================================================
 // Context Value Types
@@ -159,4 +298,8 @@ export type PresentationEditorContextValue = {
   readonly canUndo: boolean;
   /** Can redo */
   readonly canRedo: boolean;
+  /** Current creation mode */
+  readonly creationMode: CreationMode;
+  /** Text editing state */
+  readonly textEdit: TextEditState;
 };

@@ -2,9 +2,11 @@
  * @file Resize handle component
  *
  * A draggable handle for resizing shapes.
+ * Uses design tokens for consistent styling.
  */
 
 import type { ResizeHandlePosition } from "../../state";
+import { colorTokens } from "../../ui/design-tokens";
 
 // =============================================================================
 // Types
@@ -26,8 +28,8 @@ export type ResizeHandleProps = {
 // =============================================================================
 
 const HANDLE_SIZE = 8;
-const HANDLE_FILL = "#ffffff";
-const HANDLE_STROKE = "#0066ff";
+const HANDLE_FILL = colorTokens.text.primary;
+const HANDLE_STROKE = colorTokens.selection.primary;
 const HANDLE_STROKE_WIDTH = 1;
 
 /**

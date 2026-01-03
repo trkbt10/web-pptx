@@ -2,7 +2,7 @@
  * @file Shape toolbar component
  *
  * Provides quick action buttons for shape operations.
- * Props-based component that can be used with any state management.
+ * Uses lucide-react icons for consistent visual design.
  */
 
 import { useCallback, useMemo } from "react";
@@ -11,6 +11,17 @@ import { Button } from "../ui/primitives/Button";
 import { LinePickerPopover } from "../ui/line";
 import type { Line, Shape } from "../../pptx/domain";
 import type { ShapeId } from "../../pptx/domain/types";
+import {
+  TrashIcon,
+  CopyIcon,
+  UndoIcon,
+  RedoIcon,
+  BringToFrontIcon,
+  SendToBackIcon,
+  BringForwardIcon,
+  SendBackwardIcon,
+} from "../ui/icons";
+import { colorTokens, iconTokens } from "../ui/design-tokens";
 
 // =============================================================================
 // Types
@@ -44,84 +55,6 @@ export type ShapeToolbarProps = {
   /** Layout direction */
   readonly direction?: "horizontal" | "vertical";
 };
-
-// =============================================================================
-// Icons
-// =============================================================================
-
-function TrashIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polyline points="3 6 5 6 21 6" />
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-    </svg>
-  );
-}
-
-function CopyIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-    </svg>
-  );
-}
-
-function BringToFrontIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="2" y="8" width="12" height="12" rx="1" />
-      <rect x="10" y="4" width="12" height="12" rx="1" fill="currentColor" opacity="0.2" />
-    </svg>
-  );
-}
-
-function SendToBackIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="10" y="4" width="12" height="12" rx="1" />
-      <rect x="2" y="8" width="12" height="12" rx="1" fill="currentColor" opacity="0.2" />
-    </svg>
-  );
-}
-
-function BringForwardIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polyline points="12 4 12 1 12 4" />
-      <polyline points="8 8 12 4 16 8" />
-      <rect x="6" y="10" width="12" height="10" rx="1" />
-    </svg>
-  );
-}
-
-function SendBackwardIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polyline points="12 20 12 23 12 20" />
-      <polyline points="8 16 12 20 16 16" />
-      <rect x="6" y="4" width="12" height="10" rx="1" />
-    </svg>
-  );
-}
-
-function UndoIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polyline points="1 4 1 10 7 10" />
-      <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
-    </svg>
-  );
-}
-
-function RedoIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <polyline points="23 4 23 10 17 10" />
-      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-    </svg>
-  );
-}
 
 // =============================================================================
 // Helpers
@@ -237,9 +170,12 @@ export function ShapeToolbar({
   const separatorStyle: CSSProperties = {
     width: direction === "horizontal" ? "1px" : "100%",
     height: direction === "horizontal" ? "20px" : "1px",
-    backgroundColor: "var(--editor-border, #333)",
+    backgroundColor: `var(--border-strong, ${colorTokens.border.strong})`,
     margin: direction === "horizontal" ? "0 4px" : "4px 0",
   };
+
+  const iconSize = iconTokens.size.sm;
+  const strokeWidth = iconTokens.strokeWidth;
 
   return (
     <div className={className} style={containerStyle}>
@@ -251,7 +187,7 @@ export function ShapeToolbar({
         title="Undo (Ctrl+Z)"
         style={{ padding: "4px 6px" }}
       >
-        <UndoIcon />
+        <UndoIcon size={iconSize} strokeWidth={strokeWidth} />
       </Button>
       <Button
         variant="ghost"
@@ -260,7 +196,7 @@ export function ShapeToolbar({
         title="Redo (Ctrl+Y)"
         style={{ padding: "4px 6px" }}
       >
-        <RedoIcon />
+        <RedoIcon size={iconSize} strokeWidth={strokeWidth} />
       </Button>
 
       <div style={separatorStyle} />
@@ -273,7 +209,7 @@ export function ShapeToolbar({
         title="Delete (Del)"
         style={{ padding: "4px 6px" }}
       >
-        <TrashIcon />
+        <TrashIcon size={iconSize} strokeWidth={strokeWidth} />
       </Button>
       <Button
         variant="ghost"
@@ -282,7 +218,7 @@ export function ShapeToolbar({
         title="Duplicate (Ctrl+D)"
         style={{ padding: "4px 6px" }}
       >
-        <CopyIcon />
+        <CopyIcon size={iconSize} strokeWidth={strokeWidth} />
       </Button>
 
       <div style={separatorStyle} />
@@ -295,7 +231,7 @@ export function ShapeToolbar({
         title="Bring to Front"
         style={{ padding: "4px 6px" }}
       >
-        <BringToFrontIcon />
+        <BringToFrontIcon size={iconSize} strokeWidth={strokeWidth} />
       </Button>
       <Button
         variant="ghost"
@@ -304,7 +240,7 @@ export function ShapeToolbar({
         title="Send to Back"
         style={{ padding: "4px 6px" }}
       >
-        <SendToBackIcon />
+        <SendToBackIcon size={iconSize} strokeWidth={strokeWidth} />
       </Button>
       <Button
         variant="ghost"
@@ -313,7 +249,7 @@ export function ShapeToolbar({
         title="Bring Forward"
         style={{ padding: "4px 6px" }}
       >
-        <BringForwardIcon />
+        <BringForwardIcon size={iconSize} strokeWidth={strokeWidth} />
       </Button>
       <Button
         variant="ghost"
@@ -322,7 +258,7 @@ export function ShapeToolbar({
         title="Send Backward"
         style={{ padding: "4px 6px" }}
       >
-        <SendBackwardIcon />
+        <SendBackwardIcon size={iconSize} strokeWidth={strokeWidth} />
       </Button>
 
       {/* Line style picker */}

@@ -5,6 +5,7 @@
  */
 
 import { useState, useCallback, type ReactNode, type CSSProperties } from "react";
+import { colorTokens, radiusTokens, fontTokens, spacingTokens } from "../design-tokens";
 
 export type TabItem<T extends string = string> = {
   readonly id: T;
@@ -33,25 +34,25 @@ export type TabsProps<T extends string = string> = {
 const containerStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: "12px",
+  gap: spacingTokens.md,
 };
 
 const tabListStyle: CSSProperties = {
   display: "flex",
   gap: "2px",
-  backgroundColor: "var(--bg-tertiary, #111111)",
-  borderRadius: "var(--radius-sm, 6px)",
+  backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
+  borderRadius: `var(--radius-sm, ${radiusTokens.sm})`,
   padding: "2px",
 };
 
 function getTabTextColor(isActive: boolean, disabled: boolean): string {
   if (isActive) {
-    return "var(--text-primary, #fafafa)";
+    return `var(--text-primary, ${colorTokens.text.primary})`;
   }
   if (disabled) {
-    return "var(--text-tertiary, #737373)";
+    return `var(--text-tertiary, ${colorTokens.text.tertiary})`;
   }
-  return "var(--text-secondary, #a1a1a1)";
+  return `var(--text-secondary, ${colorTokens.text.secondary})`;
 }
 
 function getTabButtonStyle(isActive: boolean, disabled: boolean, size: "sm" | "md"): CSSProperties {
@@ -60,18 +61,20 @@ function getTabButtonStyle(isActive: boolean, disabled: boolean, size: "sm" | "m
     md: "6px 12px",
   };
   const fontSizeMap = {
-    sm: "11px",
-    md: "12px",
+    sm: fontTokens.size.sm,
+    md: fontTokens.size.md,
   };
-  const backgroundColor = isActive ? "var(--bg-secondary, #1a1a1a)" : "transparent";
+  const backgroundColor = isActive
+    ? `var(--bg-secondary, ${colorTokens.background.secondary})`
+    : "transparent";
 
   return {
     flex: 1,
     padding: paddingMap[size],
     fontSize: fontSizeMap[size],
-    fontWeight: 500,
+    fontWeight: fontTokens.weight.medium,
     border: "none",
-    borderRadius: "4px",
+    borderRadius: radiusTokens.sm,
     cursor: disabled ? "not-allowed" : "pointer",
     transition: "all 150ms ease",
     backgroundColor,

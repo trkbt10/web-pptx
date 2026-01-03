@@ -1,13 +1,15 @@
 /**
  * @file Context menu separator component
+ * Uses design tokens for consistent styling.
  */
 
 import type { CSSProperties } from "react";
+import { colorTokens, spacingTokens } from "../design-tokens";
 
 const separatorStyle: CSSProperties = {
   height: "1px",
-  backgroundColor: "var(--border-subtle, #333)",
-  margin: "4px 0",
+  backgroundColor: `var(--border-subtle, ${colorTokens.border.subtle})`,
+  margin: `${spacingTokens.xs} 0`,
 };
 
 export function ContextMenuSeparator() {

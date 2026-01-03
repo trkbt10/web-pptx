@@ -5,8 +5,8 @@
  */
 
 import type { SlideSize } from "../domain";
-import type { ColorContext } from "../domain/resolution";
-import type { RenderOptions, ResourceResolver } from "./core";
+import type { ColorContext, FontScheme } from "../domain/resolution";
+import type { RenderOptions, ResolvedBackgroundFill, ResourceResolver } from "./core";
 
 // Core types
 export type {
@@ -61,6 +61,8 @@ export function createRenderContext(config: {
   options?: Partial<RenderOptions>;
   colorContext?: ColorContext;
   resources?: ResourceResolver;
+  fontScheme?: FontScheme;
+  resolvedBackground?: ResolvedBackgroundFill;
 }): RenderContext {
   return createHtmlRenderContext(config);
 }

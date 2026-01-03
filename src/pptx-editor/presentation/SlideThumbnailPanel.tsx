@@ -2,12 +2,15 @@
  * @file Slide thumbnail panel
  *
  * Left panel for slide management: navigation, add, delete, duplicate, reorder.
+ * Uses lucide-react icons for consistent visual design.
  */
 
-import { useCallback, useState, useRef, type CSSProperties } from "react";
+import { useCallback, useState, useEffect, useRef, type CSSProperties } from "react";
 import type { Slide } from "../../pptx/domain";
 import type { SlideWithId, SlideId } from "./types";
 import { usePresentationEditor } from "./context";
+import { AddIcon, CopyIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon } from "../ui/icons";
+import { colorTokens, radiusTokens, fontTokens, iconTokens } from "../ui/design-tokens";
 
 // =============================================================================
 // Types
@@ -26,8 +29,8 @@ const panelStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
   height: "100%",
-  backgroundColor: "var(--bg-secondary, #1a1a1a)",
-  borderRight: "1px solid var(--border-subtle, #333)",
+  backgroundColor: `var(--bg-secondary, ${colorTokens.background.secondary})`,
+  borderRight: `1px solid var(--border-strong, ${colorTokens.border.strong})`,
   overflow: "hidden",
 };
 
@@ -36,14 +39,14 @@ const headerStyle: CSSProperties = {
   alignItems: "center",
   justifyContent: "space-between",
   padding: "8px 12px",
-  borderBottom: "1px solid var(--border-subtle, #333)",
-  backgroundColor: "var(--bg-tertiary, #0a0a0a)",
+  borderBottom: `1px solid var(--border-strong, ${colorTokens.border.strong})`,
+  backgroundColor: `var(--bg-primary, ${colorTokens.background.primary})`,
 };
 
 const headerTitleStyle: CSSProperties = {
-  fontSize: "12px",
-  fontWeight: 600,
-  color: "var(--text-secondary, #888)",
+  fontSize: fontTokens.size.md,
+  fontWeight: fontTokens.weight.semibold,
+  color: `var(--text-secondary, ${colorTokens.text.secondary})`,
   textTransform: "uppercase",
   letterSpacing: "0.5px",
 };
@@ -58,21 +61,20 @@ const iconButtonStyle: CSSProperties = {
   height: "24px",
   padding: 0,
   border: "none",
-  borderRadius: "4px",
+  borderRadius: radiusTokens.sm,
   backgroundColor: "transparent",
-  color: "var(--text-secondary, #888)",
+  color: `var(--text-secondary, ${colorTokens.text.secondary})`,
   cursor: "pointer",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "14px",
   transition: "all 0.15s ease",
 };
 
 const iconButtonHoverStyle: CSSProperties = {
   ...iconButtonStyle,
-  backgroundColor: "var(--bg-hover, #333)",
-  color: "var(--text-primary, #fff)",
+  backgroundColor: `var(--bg-hover, ${colorTokens.background.hover})`,
+  color: `var(--text-primary, ${colorTokens.text.primary})`,
 };
 
 const iconButtonDisabledStyle: CSSProperties = {
@@ -114,7 +116,7 @@ const thumbnailStyle: CSSProperties = {
 
 const thumbnailActiveStyle: CSSProperties = {
   ...thumbnailStyle,
-  border: "2px solid var(--accent-blue, #0066cc)",
+  border: `2px solid var(--selection-primary, ${colorTokens.selection.primary})`,
 };
 
 const thumbnailNumberStyle: CSSProperties = {
@@ -192,38 +194,12 @@ const dragIndicatorStyle: CSSProperties = {
   left: 0,
   right: 0,
   height: "2px",
-  backgroundColor: "var(--accent-blue, #0066cc)",
+  backgroundColor: `var(--selection-primary, ${colorTokens.selection.primary})`,
   zIndex: 10,
 };
 
-// =============================================================================
-// Icon Components
-// =============================================================================
-
-function PlusIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-      <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-    </svg>
-  );
-}
-
-function CopyIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-      <rect x="4" y="4" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
-      <path d="M2 10V3a1 1 0 011-1h7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-    </svg>
-  );
-}
-
-function TrashIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
-      <path d="M2 4h10M5 4V3a1 1 0 011-1h2a1 1 0 011 1v1M4 4v8a1 1 0 001 1h4a1 1 0 001-1V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-    </svg>
-  );
-}
+// Icon size for this panel
+const ICON_SIZE = iconTokens.size.sm;
 
 // =============================================================================
 // Context Menu
@@ -285,7 +261,7 @@ function SlideContextMenu({
           onMouseEnter={() => setHoveredItem("duplicate")}
           onMouseLeave={() => setHoveredItem(null)}
         >
-          <CopyIcon /> Duplicate Slide
+          <CopyIcon size={ICON_SIZE} strokeWidth={iconTokens.strokeWidth} /> Duplicate Slide
         </div>
         <div style={menuSeparatorStyle} />
         <div
@@ -298,7 +274,7 @@ function SlideContextMenu({
           onMouseEnter={() => setHoveredItem("up")}
           onMouseLeave={() => setHoveredItem(null)}
         >
-          ↑ Move Up
+          <ArrowUpIcon size={ICON_SIZE} strokeWidth={iconTokens.strokeWidth} /> Move Up
         </div>
         <div
           style={{
@@ -310,12 +286,12 @@ function SlideContextMenu({
           onMouseEnter={() => setHoveredItem("down")}
           onMouseLeave={() => setHoveredItem(null)}
         >
-          ↓ Move Down
+          <ArrowDownIcon size={ICON_SIZE} strokeWidth={iconTokens.strokeWidth} /> Move Down
         </div>
         <div style={menuSeparatorStyle} />
         <div
           style={{
-            ...(hoveredItem === "delete" ? { ...menuItemDangerStyle, backgroundColor: "var(--bg-hover, #333)" } : menuItemDangerStyle),
+            ...(hoveredItem === "delete" ? { ...menuItemDangerStyle, backgroundColor: `var(--bg-hover, ${colorTokens.background.hover})` } : menuItemDangerStyle),
             opacity: canDelete ? 1 : 0.4,
             cursor: canDelete ? "pointer" : "not-allowed",
           }}
@@ -323,7 +299,7 @@ function SlideContextMenu({
           onMouseEnter={() => setHoveredItem("delete")}
           onMouseLeave={() => setHoveredItem(null)}
         >
-          <TrashIcon /> Delete Slide
+          <TrashIcon size={ICON_SIZE} strokeWidth={iconTokens.strokeWidth} /> Delete Slide
         </div>
       </div>
     </>
@@ -348,6 +324,7 @@ function ThumbnailItem({
   onDrop,
   isDragOver,
   dragPosition,
+  itemRef,
 }: {
   slideWithId: SlideWithId;
   index: number;
@@ -362,11 +339,13 @@ function ThumbnailItem({
   onDrop: (e: React.DragEvent) => void;
   isDragOver: boolean;
   dragPosition: "before" | "after" | null;
+  itemRef?: React.RefObject<HTMLDivElement | null>;
 }) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div
+      ref={itemRef}
       style={{
         ...thumbnailWrapperStyle,
         position: "relative",
@@ -476,6 +455,7 @@ export function SlideThumbnailPanel({
   renderThumbnail,
 }: SlideThumbnailPanelProps) {
   const { document, dispatch, activeSlide } = usePresentationEditor();
+  const activeItemRef = useRef<HTMLDivElement>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     visible: false,
     x: 0,
@@ -487,6 +467,16 @@ export function SlideThumbnailPanel({
     overId: SlideId | null;
     position: "before" | "after" | null;
   }>({ draggingId: null, overId: null, position: null });
+
+  // Scroll active slide into view when it changes
+  useEffect(() => {
+    if (activeItemRef.current) {
+      activeItemRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [activeSlide?.id]);
 
   const handleSlideClick = useCallback(
     (slideId: SlideId) => {
@@ -622,21 +612,21 @@ export function SlideThumbnailPanel({
         <span style={headerTitleStyle}>Slides</span>
         <div style={buttonGroupStyle}>
           <IconButton onClick={handleAddSlide} title="Add Slide">
-            <PlusIcon />
+            <AddIcon size={ICON_SIZE} strokeWidth={iconTokens.strokeWidth} />
           </IconButton>
           <IconButton
             onClick={() => activeSlide && handleDuplicateSlide(activeSlide.id)}
             disabled={!activeSlide}
             title="Duplicate Slide"
           >
-            <CopyIcon />
+            <CopyIcon size={ICON_SIZE} strokeWidth={iconTokens.strokeWidth} />
           </IconButton>
           <IconButton
             onClick={() => activeSlide && handleDeleteSlide(activeSlide.id)}
             disabled={!activeSlide || document.slides.length <= 1}
             title="Delete Slide"
           >
-            <TrashIcon />
+            <TrashIcon size={ICON_SIZE} strokeWidth={iconTokens.strokeWidth} />
           </IconButton>
         </div>
       </div>
@@ -663,6 +653,7 @@ export function SlideThumbnailPanel({
               dragPosition={
                 dragState.overId === slideWithId.id ? dragState.position : null
               }
+              itemRef={isActive ? activeItemRef : undefined}
             />
           );
         })}

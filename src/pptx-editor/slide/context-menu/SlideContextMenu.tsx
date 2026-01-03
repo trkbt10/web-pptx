@@ -16,9 +16,11 @@ import { getGroupMenuItems } from "./definitions/group";
 import { getAlignmentMenuItems } from "./definitions/alignment";
 import { getShapeMenuItems } from "./definitions/shape";
 import { getPictureMenuItems } from "./definitions/picture";
+import { getConnectorMenuItems } from "./definitions/connector";
 import { getTableMenuItems } from "./definitions/table";
 import { getChartMenuItems } from "./definitions/chart";
 import { getDiagramMenuItems } from "./definitions/diagram";
+import { getOleObjectMenuItems } from "./definitions/ole";
 
 // =============================================================================
 // Types
@@ -150,6 +152,9 @@ export function SlideContextMenu({
         case "pic":
           groups.push(getPictureMenuItems());
           break;
+        case "cxnSp":
+          groups.push(getConnectorMenuItems());
+          break;
         case "graphicFrame": {
           const content = primaryShape.content;
           if (content.type === "table") {
@@ -158,6 +163,8 @@ export function SlideContextMenu({
             groups.push(getChartMenuItems());
           } else if (content.type === "diagram") {
             groups.push(getDiagramMenuItems());
+          } else if (content.type === "oleObject") {
+            groups.push(getOleObjectMenuItems());
           }
           break;
         }
@@ -244,6 +251,7 @@ export function SlideContextMenu({
         case "editGeometry":
         case "editFill":
         case "editLine":
+        case "editArrows":
         case "editEffects":
         case "editCrop":
         case "editTransform":
@@ -255,6 +263,7 @@ export function SlideContextMenu({
         case "editDiagramData":
         case "editDiagramLayout":
         case "editDiagramStyle":
+        case "editOleProperties":
           // TODO: Open corresponding property panel section
           console.log(`Open property panel for: ${actionId}`);
           break;

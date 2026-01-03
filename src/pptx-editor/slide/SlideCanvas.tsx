@@ -14,6 +14,7 @@ import { useCallback, useMemo, useState, type CSSProperties, type MouseEvent } f
 import type { Slide, Shape } from "../../pptx/domain";
 import type { Pixels, ShapeId } from "../../pptx/domain/types";
 import type { DragState, SelectionState, ResizeHandlePosition } from "../state";
+import type { CreationMode } from "../presentation/types";
 import { clientToSlideCoords } from "../shape/coords";
 import { collectShapeRenderData } from "../shape/traverse";
 import { findShapeByIdWithParents } from "../shape/query";
@@ -57,6 +58,11 @@ export type SlideCanvasProps = {
   readonly onStartMove: (startX: number, startY: number) => void;
   readonly onStartResize: (handle: ResizeHandlePosition, startX: number, startY: number, aspectLocked: boolean) => void;
   readonly onStartRotate: (startX: number, startY: number) => void;
+  readonly onDoubleClick?: (shapeId: ShapeId) => void;
+
+  // Creation mode
+  readonly creationMode?: CreationMode;
+  readonly onCreate?: (x: number, y: number) => void;
 };
 
 type ShapeBounds = {
@@ -174,6 +180,9 @@ export function SlideCanvas({
   onStartMove,
   onStartResize,
   onStartRotate,
+  onDoubleClick,
+  creationMode,
+  onCreate,
 }: SlideCanvasProps) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
@@ -240,9 +249,43 @@ export function SlideCanvas({
     [onSelect]
   );
 
-  const handleBackgroundClick = useCallback(() => {
-    onClearSelection();
-  }, [onClearSelection]);
+  const handleShapeDoubleClick = useCallback(
+    (shapeId: ShapeId, e: MouseEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (onDoubleClick) {
+        onDoubleClick(shapeId);
+      }
+    },
+    [onDoubleClick]
+  );
+
+  const handleContainerClick = useCallback(
+    (e: MouseEvent<HTMLDivElement>) => {
+      // Only clear selection if clicking directly on the container (not bubbled from SVG)
+      if (e.target === e.currentTarget) {
+        onClearSelection();
+      }
+    },
+    [onClearSelection]
+  );
+
+  const handleSvgBackgroundClick = useCallback(
+    (e: MouseEvent<SVGRectElement>) => {
+      // If in creation mode and onCreate is provided, create shape at click position
+      if (creationMode && creationMode.type !== "select" && onCreate) {
+        const svg = e.currentTarget.ownerSVGElement;
+        if (svg) {
+          const rect = svg.getBoundingClientRect();
+          const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+          onCreate(coords.x, coords.y);
+          return;
+        }
+      }
+      onClearSelection();
+    },
+    [onClearSelection, creationMode, onCreate, widthNum, heightNum]
+  );
 
   const handlePointerDown = useCallback(
     (shapeId: ShapeId, e: React.PointerEvent) => {
@@ -332,13 +375,24 @@ export function SlideCanvas({
   };
 
   return (
-    <div className={className} style={containerStyle} onClick={handleBackgroundClick}>
+    <div className={className} style={containerStyle} onClick={handleContainerClick}>
       <div style={innerContainerStyle}>
         <svg
           style={svgStyle}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
         >
+          {/* Background hit area for clicks */}
+          <rect
+            x={0}
+            y={0}
+            width={widthNum}
+            height={heightNum}
+            fill="transparent"
+            onClick={handleSvgBackgroundClick}
+            style={{ cursor: creationMode?.type !== "select" ? "crosshair" : "default" }}
+          />
+
           {/* Rendered content layer */}
           {svgInnerContent && (
             <g dangerouslySetInnerHTML={{ __html: svgInnerContent }} />
@@ -391,6 +445,7 @@ export function SlideCanvas({
                 strokeWidth={1}
                 style={{ cursor: "pointer" }}
                 onClick={(e) => handleShapeClick(shape.id, e)}
+                onDoubleClick={(e) => handleShapeDoubleClick(shape.id, e)}
                 onPointerDown={(e) => handlePointerDown(shape.id, e)}
                 onContextMenu={(e) => handleContextMenu(shape.id, e)}
                 data-shape-id={shape.id}

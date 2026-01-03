@@ -5,11 +5,12 @@
  */
 
 import type { SlideSize } from "../../domain";
-import type { ColorContext } from "../../domain/resolution";
+import type { ColorContext, FontScheme } from "../../domain/resolution";
 import { px } from "../../domain/types";
 import type {
   CoreRenderContext,
   RenderOptions,
+  ResolvedBackgroundFill,
   ResourceResolver,
 } from "../core";
 import {
@@ -104,6 +105,8 @@ export type HtmlRenderContextConfig = {
   options?: Partial<RenderOptions>;
   colorContext?: ColorContext;
   resources?: ResourceResolver;
+  fontScheme?: FontScheme;
+  resolvedBackground?: ResolvedBackgroundFill;
 };
 
 /**
@@ -120,6 +123,8 @@ export function createHtmlRenderContext(config: HtmlRenderContextConfig): HtmlRe
     warnings: createWarningCollector(),
     getNextShapeId: () => `shape-${shapeId.value++}`,
     styles: createStyleCollector(),
+    fontScheme: config.fontScheme,
+    resolvedBackground: config.resolvedBackground,
   };
 }
 

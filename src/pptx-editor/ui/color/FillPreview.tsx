@@ -3,11 +3,13 @@
  *
  * Pure visualization of a Fill value. Fills its container (100% x 100%).
  * No size or interaction props - parent controls those concerns.
+ * Uses design tokens for consistent styling.
  */
 
 import type { CSSProperties } from "react";
 import type { Fill, GradientFill } from "../../../pptx/domain/color";
 import { getHexFromColor, getStopHex } from "./fill/fill-utils";
+import { colorTokens } from "../design-tokens";
 
 const containerStyle: CSSProperties = {
   width: "100%",
@@ -34,7 +36,7 @@ const checkerboardStyle: CSSProperties = {
 const noFillStyle: CSSProperties = {
   width: "100%",
   height: "100%",
-  border: "2px dashed var(--border-subtle, #444)",
+  border: `2px dashed var(--border-strong, ${colorTokens.border.strong})`,
   boxSizing: "border-box",
   borderRadius: "inherit",
 };

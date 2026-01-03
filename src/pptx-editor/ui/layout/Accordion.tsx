@@ -3,9 +3,12 @@
  *
  * A collapsible section for grouping related fields.
  * Supports both controlled and uncontrolled modes.
+ * Uses lucide-react icons for consistent visual design.
  */
 
 import { useState, useCallback, type ReactNode, type CSSProperties } from "react";
+import { ChevronRightIcon } from "../icons";
+import { colorTokens, fontTokens, iconTokens, spacingTokens } from "../design-tokens";
 
 export type AccordionProps = {
   /** Section title displayed in the header */
@@ -31,31 +34,32 @@ export type AccordionProps = {
 // =============================================================================
 
 const containerStyle: CSSProperties = {
-  borderBottom: "1px solid var(--border-subtle, rgba(255, 255, 255, 0.06))",
+  borderBottom: `1px solid var(--border-subtle, ${colorTokens.border.subtle})`,
 };
 
 const headerStyle = (disabled: boolean): CSSProperties => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  padding: "8px 4px",
+  padding: `${spacingTokens.sm} ${spacingTokens.xs}`,
   cursor: disabled ? "not-allowed" : "pointer",
   userSelect: "none",
   opacity: disabled ? 0.5 : 1,
 });
 
 const titleStyle: CSSProperties = {
-  fontSize: "11px",
-  fontWeight: 600,
-  color: "var(--text-secondary, #a1a1a1)",
+  fontSize: fontTokens.size.sm,
+  fontWeight: fontTokens.weight.semibold,
+  color: `var(--text-secondary, ${colorTokens.text.secondary})`,
   textTransform: "uppercase",
   letterSpacing: "0.3px",
 };
 
-const chevronStyle = (expanded: boolean): CSSProperties => ({
-  width: "14px",
-  height: "14px",
-  color: "var(--text-tertiary, #737373)",
+const chevronContainerStyle = (expanded: boolean): CSSProperties => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: `var(--text-tertiary, ${colorTokens.text.tertiary})`,
   transition: "transform 150ms ease",
   transform: expanded ? "rotate(90deg)" : "rotate(0deg)",
 });
@@ -70,23 +74,9 @@ const contentWrapperStyle = (expanded: boolean): CSSProperties => ({
 const contentStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: "8px",
-  padding: "4px 4px 12px",
+  gap: spacingTokens.sm,
+  padding: `${spacingTokens.xs} ${spacingTokens.xs} ${spacingTokens.md}`,
 };
-
-function ChevronIcon({ style }: { readonly style?: CSSProperties }) {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={style}>
-      <path
-        d="M6 4L10 8L6 12"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 /**
  * A collapsible accordion component for grouping related fields.
@@ -127,7 +117,9 @@ export function Accordion({
         aria-expanded={expanded}
       >
         <span style={titleStyle}>{title}</span>
-        <ChevronIcon style={chevronStyle(expanded)} />
+        <div style={chevronContainerStyle(expanded)}>
+          <ChevronRightIcon size={iconTokens.size.sm} strokeWidth={iconTokens.strokeWidth} />
+        </div>
       </div>
 
       <div style={contentWrapperStyle(expanded)}>

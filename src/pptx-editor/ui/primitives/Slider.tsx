@@ -5,6 +5,7 @@
  */
 
 import { useCallback, type ChangeEvent, type CSSProperties } from "react";
+import { colorTokens, fontTokens } from "../design-tokens";
 
 export type SliderProps = {
   readonly value: number;
@@ -30,15 +31,15 @@ const sliderStyle: CSSProperties = {
   height: "4px",
   borderRadius: "2px",
   appearance: "none",
-  backgroundColor: "var(--bg-tertiary, #111111)",
+  backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
   cursor: "pointer",
   outline: "none",
 };
 
 const valueStyle: CSSProperties = {
   minWidth: "40px",
-  fontSize: "12px",
-  color: "var(--text-secondary, #a1a1a1)",
+  fontSize: fontTokens.size.md,
+  color: `var(--text-secondary, ${colorTokens.text.secondary})`,
   textAlign: "right",
 };
 

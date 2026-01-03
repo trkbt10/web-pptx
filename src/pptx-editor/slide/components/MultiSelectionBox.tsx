@@ -8,6 +8,7 @@
 import type { ResizeHandlePosition } from "../../state";
 import { ResizeHandle } from "./ResizeHandle";
 import { RotateHandle } from "./RotateHandle";
+import { colorTokens } from "../../ui/design-tokens";
 
 // =============================================================================
 // Types
@@ -32,7 +33,7 @@ export type MultiSelectionBoxProps = {
 // Constants
 // =============================================================================
 
-const MULTI_SELECTION_COLOR = "#ff6600";
+const MULTI_SELECTION_COLOR = colorTokens.selection.secondary;
 const MULTI_SELECTION_STROKE_WIDTH = 2;
 const ROTATE_HANDLE_OFFSET = 24;
 

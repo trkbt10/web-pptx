@@ -2,9 +2,11 @@
  * @file Panel layout component
  *
  * Reusable panel container for sidebars and property panels.
+ * Uses design tokens for consistent styling.
  */
 
 import type { ReactNode, CSSProperties } from "react";
+import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../design-tokens";
 
 // =============================================================================
 // Types
@@ -52,9 +54,9 @@ export function Panel({
   const containerStyle: CSSProperties = {
     width: typeof width === "number" ? `${width}px` : width,
     flexShrink: 0,
-    backgroundColor: "var(--editor-panel-bg, #0a0a0a)",
-    borderRadius: "var(--radius-md, 8px)",
-    border: "1px solid var(--editor-border, #222)",
+    backgroundColor: `var(--bg-primary, ${colorTokens.background.primary})`,
+    borderRadius: `var(--radius-md, ${radiusTokens.md})`,
+    border: `1px solid var(--border-strong, ${colorTokens.border.strong})`,
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
@@ -62,22 +64,22 @@ export function Panel({
   };
 
   const headerStyle: CSSProperties = {
-    padding: "12px 16px",
-    borderBottom: "1px solid var(--border-subtle, #222)",
-    fontSize: "12px",
-    fontWeight: 600,
-    color: "var(--text-primary, #fff)",
+    padding: `${spacingTokens.md} ${spacingTokens.lg}`,
+    borderBottom: `1px solid var(--border-subtle, ${colorTokens.border.subtle})`,
+    fontSize: fontTokens.size.md,
+    fontWeight: fontTokens.weight.semibold,
+    color: `var(--text-primary, ${colorTokens.text.primary})`,
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
   };
 
   const badgeStyle: CSSProperties = {
-    fontSize: "10px",
-    color: "var(--text-tertiary, #737373)",
-    backgroundColor: "var(--bg-tertiary, #111111)",
+    fontSize: fontTokens.size.xs,
+    color: `var(--text-tertiary, ${colorTokens.text.tertiary})`,
+    backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
     padding: "2px 6px",
-    borderRadius: "4px",
+    borderRadius: radiusTokens.sm,
   };
 
   const contentStyle: CSSProperties = {

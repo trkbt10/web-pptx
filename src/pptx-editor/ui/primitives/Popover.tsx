@@ -14,6 +14,7 @@ import {
   type CSSProperties,
 } from "react";
 import { createPortal } from "react-dom";
+import { colorTokens, radiusTokens, spacingTokens } from "../design-tokens";
 
 export type PopoverProps = {
   /** Trigger element that opens the popover */
@@ -43,11 +44,11 @@ const overlayStyle: CSSProperties = {
 const contentStyle: CSSProperties = {
   position: "fixed",
   zIndex: 1000,
-  backgroundColor: "var(--bg-secondary, #1a1a1a)",
-  borderRadius: "var(--radius-md, 8px)",
-  border: "1px solid var(--border-subtle, rgba(255, 255, 255, 0.12))",
+  backgroundColor: `var(--bg-secondary, ${colorTokens.background.secondary})`,
+  borderRadius: `var(--radius-md, ${radiusTokens.md})`,
+  border: `1px solid var(--border-primary, ${colorTokens.border.primary})`,
   boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
-  padding: "12px",
+  padding: spacingTokens.md,
   maxWidth: "400px",
   maxHeight: "80vh",
   overflow: "auto",
