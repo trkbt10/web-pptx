@@ -28,7 +28,7 @@ import type {
 } from "../../domain";
 import type { RenderContext } from "../context";
 import type { SvgDefsCollector } from "./slide-utils";
-import { createDefsCollector, getShapeTransform, isShapeHidden, buildTransformAttr } from "./slide-utils";
+import { createDefsCollector, getShapeTransform, isShapeHidden, buildTransformAttr, buildGroupTransformAttr } from "./slide-utils";
 import { renderFillToSvgDef, renderFillToSvgStyle, getResolvedImageFill, renderImageFillToSvgDef } from "./fill";
 import { renderGeometryData } from "./geometry";
 import { generateLineMarkers } from "./marker";
@@ -63,7 +63,7 @@ export function renderShapeSvg(shape: Shape, ctx: RenderContext, defsCollector: 
       return renderPictureSvg(shape, ctx, transformAttr, w, h);
 
     case "grpSp":
-      return renderGroupSvg(shape, ctx, defsCollector, transformAttr);
+      return renderGroupSvg(shape, ctx, defsCollector);
 
     case "cxnSp":
       return renderConnectorSvg(shape, ctx, defsCollector, transformAttr, w, h);
@@ -337,13 +337,28 @@ function renderPictureSvg(shape: PicShape, ctx: RenderContext, transformAttr: st
 
 /**
  * Render a group shape (p:grpSp) to SVG
+ *
+ * Per ECMA-376 Part 1, Section 20.1.7.5 (grpSpPr):
+ * Group shapes have a special transform that includes child coordinate space mapping.
+ * - ext (width/height): The visual size of the group
+ * - chExt (childExtentWidth/Height): The coordinate space for children
+ * - chOff (childOffsetX/Y): The origin of child coordinate space
+ *
+ * Children are positioned in chExt coordinate space and must be scaled to fit within ext.
+ * Scale factors: scaleX = width / childExtentWidth, scaleY = height / childExtentHeight
+ *
+ * @see ECMA-376 Part 1, Section 20.1.7.5 (grpSpPr)
+ * @see ECMA-376 Part 1, Section 20.1.7.2 (chExt)
+ * @see ECMA-376 Part 1, Section 20.1.7.3 (chOff)
  */
 function renderGroupSvg(
   shape: GrpShape,
   ctx: RenderContext,
   defsCollector: SvgDefsCollector,
-  transformAttr: string,
 ): string {
+  // Use group-specific transform that handles childOffset/childExtent scaling
+  const transformAttr = buildGroupTransformAttr(shape.properties.transform);
+
   const childrenSvg = shape.children
     .map((child) => renderShapeSvg(child, ctx, defsCollector))
     .filter((svg) => svg !== "")

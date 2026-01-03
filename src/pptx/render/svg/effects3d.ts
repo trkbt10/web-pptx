@@ -123,10 +123,7 @@ export type LightRigPreset =
  *
  * @see ECMA-376 Part 1, Section 20.1.5.6 (lightRig dir attribute)
  */
-export type LightDirection =
-  | "tl" | "t" | "tr"
-  | "l" | "r"
-  | "bl" | "b" | "br";
+export type LightDirection = "tl" | "t" | "tr" | "l" | "r" | "bl" | "b" | "br";
 
 /**
  * Bevel preset types.
@@ -195,10 +192,7 @@ export type Effect3dResult = {
  *
  * @see ECMA-376 Part 1, Section 20.1.5.2 (camera)
  */
-export function calculateCameraTransform(
-  preset: string,
-  _fov?: Degrees,
-): Transform3dResult {
+export function calculateCameraTransform(preset: string, _fov?: Degrees): Transform3dResult {
   void _fov;
   // Default: no transform (orthographic front view)
   const defaultTransform: Transform3dResult = {
@@ -364,10 +358,7 @@ export function calculateCameraTransform(
  *
  * @see ECMA-376 Part 1, Section 20.1.5.6 (lightRig)
  */
-export function calculateLightingGradient(
-  lightRig: LightRig,
-  gradientId: string,
-): string {
+export function calculateLightingGradient(lightRig: LightRig, gradientId: string): string {
   const direction = lightRig.direction as LightDirection;
   const rig = lightRig.rig as LightRigPreset;
 
@@ -390,18 +381,30 @@ export function calculateLightingGradient(
  * Get gradient coordinates for light direction.
  */
 function getGradientCoordinates(direction: LightDirection): {
-  x1: number; y1: number; x2: number; y2: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
 } {
   switch (direction) {
-    case "tl": return { x1: 0, y1: 0, x2: 100, y2: 100 };
-    case "t":  return { x1: 50, y1: 0, x2: 50, y2: 100 };
-    case "tr": return { x1: 100, y1: 0, x2: 0, y2: 100 };
-    case "l":  return { x1: 0, y1: 50, x2: 100, y2: 50 };
-    case "r":  return { x1: 100, y1: 50, x2: 0, y2: 50 };
-    case "bl": return { x1: 0, y1: 100, x2: 100, y2: 0 };
-    case "b":  return { x1: 50, y1: 100, x2: 50, y2: 0 };
-    case "br": return { x1: 100, y1: 100, x2: 0, y2: 0 };
-    default:   return { x1: 0, y1: 0, x2: 100, y2: 100 };
+    case "tl":
+      return { x1: 0, y1: 0, x2: 100, y2: 100 };
+    case "t":
+      return { x1: 50, y1: 0, x2: 50, y2: 100 };
+    case "tr":
+      return { x1: 100, y1: 0, x2: 0, y2: 100 };
+    case "l":
+      return { x1: 0, y1: 50, x2: 100, y2: 50 };
+    case "r":
+      return { x1: 100, y1: 50, x2: 0, y2: 50 };
+    case "bl":
+      return { x1: 0, y1: 100, x2: 100, y2: 0 };
+    case "b":
+      return { x1: 50, y1: 100, x2: 50, y2: 0 };
+    case "br":
+      return { x1: 100, y1: 100, x2: 0, y2: 0 };
+    default:
+      return { x1: 0, y1: 0, x2: 100, y2: 100 };
   }
 }
 
@@ -547,15 +550,24 @@ function getBevelSides(direction: LightDirection): {
   shadowSide: string[];
 } {
   switch (direction) {
-    case "tl": return { highlightSide: ["top", "left"], shadowSide: ["bottom", "right"] };
-    case "t":  return { highlightSide: ["top"], shadowSide: ["bottom"] };
-    case "tr": return { highlightSide: ["top", "right"], shadowSide: ["bottom", "left"] };
-    case "l":  return { highlightSide: ["left"], shadowSide: ["right"] };
-    case "r":  return { highlightSide: ["right"], shadowSide: ["left"] };
-    case "bl": return { highlightSide: ["bottom", "left"], shadowSide: ["top", "right"] };
-    case "b":  return { highlightSide: ["bottom"], shadowSide: ["top"] };
-    case "br": return { highlightSide: ["bottom", "right"], shadowSide: ["top", "left"] };
-    default:   return { highlightSide: ["top", "left"], shadowSide: ["bottom", "right"] };
+    case "tl":
+      return { highlightSide: ["top", "left"], shadowSide: ["bottom", "right"] };
+    case "t":
+      return { highlightSide: ["top"], shadowSide: ["bottom"] };
+    case "tr":
+      return { highlightSide: ["top", "right"], shadowSide: ["bottom", "left"] };
+    case "l":
+      return { highlightSide: ["left"], shadowSide: ["right"] };
+    case "r":
+      return { highlightSide: ["right"], shadowSide: ["left"] };
+    case "bl":
+      return { highlightSide: ["bottom", "left"], shadowSide: ["top", "right"] };
+    case "b":
+      return { highlightSide: ["bottom"], shadowSide: ["top"] };
+    case "br":
+      return { highlightSide: ["bottom", "right"], shadowSide: ["top", "left"] };
+    default:
+      return { highlightSide: ["top", "left"], shadowSide: ["bottom", "right"] };
   }
 }
 
@@ -594,10 +606,10 @@ export function renderExtrusionEffect(
   const paths: string[] = [];
 
   for (let i = layers; i > 0; i--) {
-    const layerOffset = (i / layers);
+    const layerOffset = i / layers;
     const x = offsetX * layerOffset;
     const y = offsetY * layerOffset;
-    const opacity = 0.5 + (0.5 * (1 - layerOffset));
+    const opacity = 0.5 + 0.5 * (1 - layerOffset);
 
     paths.push(`
       <path d="${shapePath}"
@@ -614,7 +626,10 @@ export function renderExtrusionEffect(
 /**
  * Calculate extrusion offset direction based on camera.
  */
-function getExtrusionOffset(camera: string, height: number): {
+function getExtrusionOffset(
+  camera: string,
+  height: number,
+): {
   offsetX: number;
   offsetY: number;
 } {
@@ -729,10 +744,7 @@ export function render3dEffects(
   };
 }
 
-function buildLightingGradient(
-  lightRig: Scene3D["lightRig"] | undefined,
-  shapeId: string
-): string {
+function buildLightingGradient(lightRig: Scene3d["lightRig"] | undefined, shapeId: string): string {
   if (!lightRig) {
     return "";
   }
@@ -740,11 +752,7 @@ function buildLightingGradient(
   return calculateLightingGradient(lightRig, gradientId);
 }
 
-function buildExtrusionElements(
-  shape3d: Shape3D | undefined,
-  shapePath: string,
-  cameraPreset: string
-): string {
+function buildExtrusionElements(shape3d: Shape3d | undefined, shapePath: string, cameraPreset: string): string {
   if (!shape3d?.extrusionHeight || shape3d.extrusionHeight <= 0) {
     return "";
   }
@@ -753,10 +761,10 @@ function buildExtrusionElements(
 }
 
 function buildBevelElements(
-  shape3d: Shape3D | undefined,
+  shape3d: Shape3d | undefined,
   width: number,
   height: number,
-  lightDirection: LightDirection
+  lightDirection: LightDirection,
 ): string {
   if (!shape3d?.bevel) {
     return "";
@@ -771,10 +779,7 @@ function buildBevelElements(
  * @param shape3d - 3D shape properties
  * @returns True if shape has 3D effects
  */
-export function has3dEffects(
-  scene3d: Scene3d | undefined,
-  shape3d: Shape3d | undefined,
-): boolean {
+export function has3dEffects(scene3d: Scene3d | undefined, shape3d: Shape3d | undefined): boolean {
   if (!scene3d && !shape3d) {
     return false;
   }
