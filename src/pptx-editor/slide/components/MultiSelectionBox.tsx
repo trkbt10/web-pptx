@@ -5,7 +5,7 @@
  * This box has resize and rotate handles for group manipulation.
  */
 
-import type { ResizeHandlePosition } from "../types";
+import type { ResizeHandlePosition } from "../../state";
 import { ResizeHandle } from "./ResizeHandle";
 import { RotateHandle } from "./RotateHandle";
 

@@ -12,3 +12,4 @@ export { DiagramEditorTest } from "./DiagramEditorTest";
 export { SlidePropertiesTest } from "./SlidePropertiesTest";
 export { UIComponentsTest } from "./UIComponentsTest";
 export { SlideEditorTest } from "./SlideEditorTest";
+export { PresentationEditorTest } from "./PresentationEditorTest";

@@ -1,0 +1,709 @@
+/**
+ * @file Presentation editor reducer
+ *
+ * State management logic for presentation-level editing operations.
+ * Imports from shape/ and state/ modules directly.
+ */
+
+import type { Slide, Shape } from "../../pptx/domain";
+import type { Bounds, ShapeId } from "../../pptx/domain/types";
+import { px, deg } from "../../pptx/domain/types";
+import type {
+  PresentationDocument,
+  PresentationEditorState,
+  PresentationEditorAction,
+  SlideWithId,
+} from "./types";
+import {
+  createHistory,
+  createEmptySelection,
+  createIdleDragState,
+  pushHistory,
+  undoHistory,
+  redoHistory,
+} from "../state";
+import {
+  findSlideById,
+  updateSlide,
+  addSlide,
+  deleteSlide,
+  duplicateSlide,
+  moveSlide,
+} from "./document-ops";
+import { findShapeById } from "../shape/query";
+import {
+  updateShapeById,
+  deleteShapesById,
+  reorderShape,
+  generateShapeId,
+} from "../shape/mutation";
+import {
+  getShapeBounds,
+  getCombinedBounds,
+  collectBoundsForIds,
+  getCombinedCenter,
+} from "../shape/bounds";
+import { getShapeTransform, withUpdatedTransform } from "../shape/transform";
+import { ungroupShape, groupShapes } from "../shape/group";
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+function getActiveSlide(state: PresentationEditorState): SlideWithId | undefined {
+  if (!state.activeSlideId) {
+    return undefined;
+  }
+  return findSlideById(state.documentHistory.present, state.activeSlideId);
+}
+
+function updateActiveSlideInDocument(
+  document: PresentationDocument,
+  activeSlideId: string | undefined,
+  updater: (slide: Slide) => Slide
+): PresentationDocument {
+  if (!activeSlideId) {
+    return document;
+  }
+  return updateSlide(document, activeSlideId, updater);
+}
+
+function getPrimaryIdAfterDeletion(
+  remainingIds: readonly ShapeId[],
+  currentPrimaryId: ShapeId | undefined
+): ShapeId | undefined {
+  if (remainingIds.includes(currentPrimaryId ?? "")) {
+    return currentPrimaryId;
+  }
+  return remainingIds[0];
+}
+
+// =============================================================================
+// State Creation
+// =============================================================================
+
+/**
+ * Create initial presentation editor state
+ */
+export function createPresentationEditorState(
+  document: PresentationDocument
+): PresentationEditorState {
+  const firstSlideId = document.slides[0]?.id;
+  return {
+    documentHistory: createHistory(document),
+    activeSlideId: firstSlideId,
+    shapeSelection: createEmptySelection(),
+    drag: createIdleDragState(),
+    clipboard: undefined,
+  };
+}
+
+// =============================================================================
+// Reducer
+// =============================================================================
+
+/**
+ * Presentation editor reducer
+ */
+export function presentationEditorReducer(
+  state: PresentationEditorState,
+  action: PresentationEditorAction
+): PresentationEditorState {
+  switch (action.type) {
+    // =========================================================================
+    // Document mutations
+    // =========================================================================
+
+    case "SET_DOCUMENT": {
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, action.document),
+      };
+    }
+
+    // =========================================================================
+    // Slide management
+    // =========================================================================
+
+    case "ADD_SLIDE": {
+      const { document: newDoc, newSlideId } = addSlide(
+        state.documentHistory.present,
+        action.slide,
+        action.afterSlideId
+      );
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+        activeSlideId: newSlideId,
+        shapeSelection: createEmptySelection(),
+      };
+    }
+
+    case "DELETE_SLIDE": {
+      const currentDoc = state.documentHistory.present;
+      if (currentDoc.slides.length <= 1) {
+        return state; // Don't delete last slide
+      }
+
+      const deletedIndex = currentDoc.slides.findIndex((s) => s.id === action.slideId);
+      const newDoc = deleteSlide(currentDoc, action.slideId);
+
+      // Select adjacent slide if active slide was deleted
+      let newActiveSlideId = state.activeSlideId;
+      if (state.activeSlideId === action.slideId) {
+        const newIndex = Math.min(deletedIndex, newDoc.slides.length - 1);
+        newActiveSlideId = newDoc.slides[newIndex]?.id;
+      }
+
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+        activeSlideId: newActiveSlideId,
+        shapeSelection: state.activeSlideId === action.slideId
+          ? createEmptySelection()
+          : state.shapeSelection,
+      };
+    }
+
+    case "DUPLICATE_SLIDE": {
+      const result = duplicateSlide(state.documentHistory.present, action.slideId);
+      if (!result) {
+        return state;
+      }
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, result.document),
+        activeSlideId: result.newSlideId,
+        shapeSelection: createEmptySelection(),
+      };
+    }
+
+    case "MOVE_SLIDE": {
+      const newDoc = moveSlide(
+        state.documentHistory.present,
+        action.slideId,
+        action.toIndex
+      );
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+      };
+    }
+
+    case "SELECT_SLIDE": {
+      if (state.activeSlideId === action.slideId) {
+        return state;
+      }
+      return {
+        ...state,
+        activeSlideId: action.slideId,
+        shapeSelection: createEmptySelection(),
+        drag: createIdleDragState(),
+      };
+    }
+
+    // =========================================================================
+    // Active slide mutations
+    // =========================================================================
+
+    case "UPDATE_ACTIVE_SLIDE": {
+      const newDoc = updateActiveSlideInDocument(
+        state.documentHistory.present,
+        state.activeSlideId,
+        action.updater
+      );
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+      };
+    }
+
+    case "UPDATE_SHAPE": {
+      const activeSlide = getActiveSlide(state);
+      if (!activeSlide) {
+        return state;
+      }
+
+      const newDoc = updateActiveSlideInDocument(
+        state.documentHistory.present,
+        state.activeSlideId,
+        (slide) => ({
+          ...slide,
+          shapes: updateShapeById(slide.shapes, action.shapeId, action.updater),
+        })
+      );
+
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+      };
+    }
+
+    case "DELETE_SHAPES": {
+      const activeSlide = getActiveSlide(state);
+      if (!activeSlide || action.shapeIds.length === 0) {
+        return state;
+      }
+
+      const idsToDelete = new Set(action.shapeIds);
+      const newDoc = updateActiveSlideInDocument(
+        state.documentHistory.present,
+        state.activeSlideId,
+        (slide) => ({
+          ...slide,
+          shapes: deleteShapesById(slide.shapes, action.shapeIds),
+        })
+      );
+
+      const remainingSelectedIds = state.shapeSelection.selectedIds.filter(
+        (id) => !idsToDelete.has(id)
+      );
+
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+        shapeSelection: {
+          selectedIds: remainingSelectedIds,
+          primaryId: getPrimaryIdAfterDeletion(
+            remainingSelectedIds,
+            state.shapeSelection.primaryId
+          ),
+        },
+      };
+    }
+
+    case "ADD_SHAPE": {
+      const newDoc = updateActiveSlideInDocument(
+        state.documentHistory.present,
+        state.activeSlideId,
+        (slide) => ({
+          ...slide,
+          shapes: [...slide.shapes, action.shape],
+        })
+      );
+
+      const shapeId =
+        "nonVisual" in action.shape ? action.shape.nonVisual.id : undefined;
+
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+        shapeSelection: shapeId
+          ? { selectedIds: [shapeId], primaryId: shapeId }
+          : state.shapeSelection,
+      };
+    }
+
+    case "REORDER_SHAPE": {
+      const newDoc = updateActiveSlideInDocument(
+        state.documentHistory.present,
+        state.activeSlideId,
+        (slide) => ({
+          ...slide,
+          shapes: reorderShape(slide.shapes, action.shapeId, action.direction),
+        })
+      );
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+      };
+    }
+
+    case "UNGROUP_SHAPE": {
+      const activeSlide = getActiveSlide(state);
+      if (!activeSlide) {
+        return state;
+      }
+
+      const result = ungroupShape(activeSlide.slide.shapes, action.shapeId);
+      if (!result) {
+        return state;
+      }
+
+      const newDoc = updateActiveSlideInDocument(
+        state.documentHistory.present,
+        state.activeSlideId,
+        (slide) => ({ ...slide, shapes: result.newShapes })
+      );
+
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+        shapeSelection: {
+          selectedIds: result.childIds,
+          primaryId: result.childIds[0],
+        },
+      };
+    }
+
+    case "GROUP_SHAPES": {
+      const activeSlide = getActiveSlide(state);
+      if (!activeSlide) {
+        return state;
+      }
+
+      const result = groupShapes(activeSlide.slide.shapes, action.shapeIds);
+      if (!result) {
+        return state;
+      }
+
+      const newDoc = updateActiveSlideInDocument(
+        state.documentHistory.present,
+        state.activeSlideId,
+        (slide) => ({ ...slide, shapes: result.newShapes })
+      );
+
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+        shapeSelection: {
+          selectedIds: [result.groupId],
+          primaryId: result.groupId,
+        },
+      };
+    }
+
+    case "MOVE_SHAPE_TO_INDEX": {
+      const activeSlide = getActiveSlide(state);
+      if (!activeSlide) {
+        return state;
+      }
+
+      const newDoc = updateActiveSlideInDocument(
+        state.documentHistory.present,
+        state.activeSlideId,
+        (slide) => {
+          const shapes = [...slide.shapes];
+          const currentIndex = shapes.findIndex(
+            (s) => "nonVisual" in s && s.nonVisual.id === action.shapeId
+          );
+          if (currentIndex === -1 || currentIndex === action.newIndex) {
+            return slide;
+          }
+          const [shape] = shapes.splice(currentIndex, 1);
+          shapes.splice(action.newIndex, 0, shape);
+          return { ...slide, shapes };
+        }
+      );
+
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, newDoc),
+      };
+    }
+
+    // =========================================================================
+    // Shape selection
+    // =========================================================================
+
+    case "SELECT_SHAPE": {
+      if (action.addToSelection) {
+        const isAlreadySelected = state.shapeSelection.selectedIds.includes(action.shapeId);
+        if (isAlreadySelected) {
+          // Deselect
+          const newSelectedIds = state.shapeSelection.selectedIds.filter(
+            (id) => id !== action.shapeId
+          );
+          return {
+            ...state,
+            shapeSelection: {
+              selectedIds: newSelectedIds,
+              primaryId: state.shapeSelection.primaryId === action.shapeId
+                ? newSelectedIds[0]
+                : state.shapeSelection.primaryId,
+            },
+          };
+        }
+        // Add to selection
+        return {
+          ...state,
+          shapeSelection: {
+            selectedIds: [...state.shapeSelection.selectedIds, action.shapeId],
+            primaryId: action.shapeId,
+          },
+        };
+      }
+      // Replace selection
+      return {
+        ...state,
+        shapeSelection: {
+          selectedIds: [action.shapeId],
+          primaryId: action.shapeId,
+        },
+      };
+    }
+
+    case "SELECT_MULTIPLE_SHAPES": {
+      return {
+        ...state,
+        shapeSelection: {
+          selectedIds: action.shapeIds,
+          primaryId: action.shapeIds[0],
+        },
+      };
+    }
+
+    case "CLEAR_SHAPE_SELECTION": {
+      return {
+        ...state,
+        shapeSelection: createEmptySelection(),
+      };
+    }
+
+    // =========================================================================
+    // Drag operations
+    // =========================================================================
+
+    case "START_MOVE": {
+      const activeSlide = getActiveSlide(state);
+      if (!activeSlide || state.shapeSelection.selectedIds.length === 0) {
+        return state;
+      }
+
+      const initialBounds = collectBoundsForIds(
+        activeSlide.slide.shapes,
+        state.shapeSelection.selectedIds
+      );
+
+      return {
+        ...state,
+        drag: {
+          type: "move",
+          startX: action.startX,
+          startY: action.startY,
+          shapeIds: state.shapeSelection.selectedIds,
+          initialBounds,
+        },
+      };
+    }
+
+    case "START_RESIZE": {
+      const activeSlide = getActiveSlide(state);
+      if (!activeSlide || state.shapeSelection.selectedIds.length === 0) {
+        return state;
+      }
+
+      const selectedIds = state.shapeSelection.selectedIds;
+      const initialBoundsMap = collectBoundsForIds(activeSlide.slide.shapes, selectedIds);
+      const boundsArray = Array.from(initialBoundsMap.values());
+      const combinedBounds = getCombinedBounds(
+        selectedIds
+          .map((id) => findShapeById(activeSlide.slide.shapes, id))
+          .filter((s): s is Shape => s !== undefined)
+      );
+
+      if (!combinedBounds) {
+        return state;
+      }
+
+      const primaryId = state.shapeSelection.primaryId ?? selectedIds[0];
+      const primaryBounds = initialBoundsMap.get(primaryId);
+
+      return {
+        ...state,
+        drag: {
+          type: "resize",
+          handle: action.handle,
+          startX: action.startX,
+          startY: action.startY,
+          shapeIds: selectedIds,
+          initialBoundsMap,
+          combinedBounds,
+          aspectLocked: action.aspectLocked,
+          shapeId: primaryId,
+          initialBounds: primaryBounds ?? combinedBounds,
+        },
+      };
+    }
+
+    case "START_ROTATE": {
+      const activeSlide = getActiveSlide(state);
+      if (!activeSlide || state.shapeSelection.selectedIds.length === 0) {
+        return state;
+      }
+
+      const selectedIds = state.shapeSelection.selectedIds;
+      const initialBoundsMap = collectBoundsForIds(activeSlide.slide.shapes, selectedIds);
+      const centerResult = getCombinedCenter(initialBoundsMap);
+
+      if (!centerResult) {
+        return state;
+      }
+
+      const initialRotationsMap = new Map<ShapeId, import("../../pptx/domain/types").Degrees>();
+      for (const id of selectedIds) {
+        const shape = findShapeById(activeSlide.slide.shapes, id);
+        if (shape) {
+          const transform = getShapeTransform(shape);
+          initialRotationsMap.set(id, transform?.rotation ?? deg(0));
+        }
+      }
+
+      const primaryId = state.shapeSelection.primaryId ?? selectedIds[0];
+      const primaryShape = findShapeById(activeSlide.slide.shapes, primaryId);
+      const primaryTransform = primaryShape ? getShapeTransform(primaryShape) : undefined;
+
+      // Calculate start angle from mouse position relative to center
+      const dx = (action.startX as number) - centerResult.centerX;
+      const dy = (action.startY as number) - centerResult.centerY;
+      const startAngle = deg(Math.atan2(dy, dx) * (180 / Math.PI));
+
+      return {
+        ...state,
+        drag: {
+          type: "rotate",
+          startAngle,
+          shapeIds: selectedIds,
+          initialRotationsMap,
+          initialBoundsMap,
+          centerX: px(centerResult.centerX),
+          centerY: px(centerResult.centerY),
+          shapeId: primaryId,
+          initialRotation: primaryTransform?.rotation ?? deg(0),
+        },
+      };
+    }
+
+    case "END_DRAG": {
+      return {
+        ...state,
+        drag: createIdleDragState(),
+      };
+    }
+
+    // =========================================================================
+    // Undo/Redo
+    // =========================================================================
+
+    case "UNDO": {
+      const newHistory = undoHistory(state.documentHistory);
+      if (newHistory === state.documentHistory) {
+        return state;
+      }
+      // Check if active slide still exists
+      const activeSlideExists = newHistory.present.slides.some(
+        (s) => s.id === state.activeSlideId
+      );
+      return {
+        ...state,
+        documentHistory: newHistory,
+        activeSlideId: activeSlideExists
+          ? state.activeSlideId
+          : newHistory.present.slides[0]?.id,
+        shapeSelection: createEmptySelection(),
+      };
+    }
+
+    case "REDO": {
+      const newHistory = redoHistory(state.documentHistory);
+      if (newHistory === state.documentHistory) {
+        return state;
+      }
+      // Check if active slide still exists
+      const activeSlideExists = newHistory.present.slides.some(
+        (s) => s.id === state.activeSlideId
+      );
+      return {
+        ...state,
+        documentHistory: newHistory,
+        activeSlideId: activeSlideExists
+          ? state.activeSlideId
+          : newHistory.present.slides[0]?.id,
+        shapeSelection: createEmptySelection(),
+      };
+    }
+
+    // =========================================================================
+    // Clipboard
+    // =========================================================================
+
+    case "COPY": {
+      const activeSlide = getActiveSlide(state);
+      if (!activeSlide || state.shapeSelection.selectedIds.length === 0) {
+        return state;
+      }
+
+      const shapesToCopy = state.shapeSelection.selectedIds
+        .map((id) => findShapeById(activeSlide.slide.shapes, id))
+        .filter((s): s is Shape => s !== undefined);
+
+      if (shapesToCopy.length === 0) {
+        return state;
+      }
+
+      return {
+        ...state,
+        clipboard: {
+          shapes: shapesToCopy,
+          pasteCount: 0,
+        },
+      };
+    }
+
+    case "PASTE": {
+      const activeSlide = getActiveSlide(state);
+      if (!activeSlide || !state.clipboard || state.clipboard.shapes.length === 0) {
+        return state;
+      }
+
+      const offset = (state.clipboard.pasteCount + 1) * 20;
+      const pastedShapes: Shape[] = [];
+      const pastedIds: ShapeId[] = [];
+
+      let currentDoc = state.documentHistory.present;
+
+      for (const shape of state.clipboard.shapes) {
+        // Generate new ID
+        const activeSlideData = findSlideById(currentDoc, state.activeSlideId!);
+        if (!activeSlideData) continue;
+
+        const newId = generateShapeId(activeSlideData.slide.shapes);
+        const transform = getShapeTransform(shape);
+
+        // Clone shape with new ID and offset position
+        const newShape = {
+          ...shape,
+          nonVisual: {
+            ...("nonVisual" in shape ? shape.nonVisual : {}),
+            id: newId,
+            name: `Copy of ${"nonVisual" in shape ? shape.nonVisual.name : "Shape"}`,
+          },
+        } as Shape;
+
+        // Apply offset if shape has transform
+        const offsetShape = transform
+          ? withUpdatedTransform(newShape, {
+              x: px((transform.x as number) + offset),
+              y: px((transform.y as number) + offset),
+            })
+          : newShape;
+
+        pastedShapes.push(offsetShape);
+        pastedIds.push(newId);
+
+        // Update document
+        currentDoc = updateActiveSlideInDocument(
+          currentDoc,
+          state.activeSlideId,
+          (slide) => ({ ...slide, shapes: [...slide.shapes, offsetShape] })
+        );
+      }
+
+      return {
+        ...state,
+        documentHistory: pushHistory(state.documentHistory, currentDoc),
+        shapeSelection: {
+          selectedIds: pastedIds,
+          primaryId: pastedIds[0],
+        },
+        clipboard: {
+          ...state.clipboard,
+          pasteCount: state.clipboard.pasteCount + 1,
+        },
+      };
+    }
+
+    default:
+      return state;
+  }
+}

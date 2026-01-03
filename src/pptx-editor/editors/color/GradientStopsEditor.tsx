@@ -5,12 +5,12 @@
  * Each stop opens a Popover with complete editing (position + color + remove).
  */
 
-import { useState, useCallback, useRef, type CSSProperties, type MouseEvent } from "react";
+import { useState, useCallback, useRef, useMemo, type CSSProperties, type MouseEvent } from "react";
 import { Button, Popover } from "../../ui/primitives";
-import { ColorSwatch } from "../../ui/color";
+import { FillPreview } from "../../ui/color";
 import { GradientStopEditor } from "./GradientStopEditor";
 import { createDefaultColor } from "./ColorEditor";
-import type { GradientStop, Color } from "../../../pptx/domain/color";
+import type { GradientStop, Color, SolidFill } from "../../../pptx/domain/color";
 import type { Percent } from "../../../pptx/domain/types";
 import { pct } from "../../../pptx/domain/types";
 import type { EditorProps } from "../../types";
@@ -76,6 +76,20 @@ const stopTriangleStyle = (isSelected: boolean): CSSProperties => ({
 const stopSwatchContainerStyle: CSSProperties = {
   marginTop: "-1px",
 };
+
+const swatchPreviewStyle = (isSelected: boolean): CSSProperties => ({
+  width: "16px",
+  height: "16px",
+  borderRadius: "2px",
+  border: isSelected
+    ? "2px solid var(--accent-blue, #0070f3)"
+    : "1px solid var(--border-subtle, rgba(255, 255, 255, 0.08))",
+  overflow: "hidden",
+});
+
+function createFillFromColor(color: Color): SolidFill {
+  return { type: "solidFill", color };
+}
 
 const emptyMessageStyle: CSSProperties = {
   color: "var(--text-tertiary, #737373)",

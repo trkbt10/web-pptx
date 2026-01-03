@@ -2,14 +2,13 @@
  * @file Property panel component
  *
  * Displays property editors for selected shapes.
- * Orchestrates shape-type-specific panels.
+ * Props-based component that can be used with any state management.
  */
 
 import { useCallback, type CSSProperties } from "react";
-import type { Shape } from "../../pptx/domain";
+import type { Slide, Shape } from "../../pptx/domain";
 import type { Background, SlideTransition } from "../../pptx/domain/slide";
-import { useSlideEditor } from "./context";
-import { useSlideState } from "./hooks/useSlideState";
+import type { ShapeId } from "../../pptx/domain/types";
 import { SlidePropertiesPanel } from "./property-panels/SlidePropertiesPanel";
 import { MultiSelectState } from "./property-panels/MultiSelectState";
 import { SpShapePanel } from "./property-panels/SpShapePanel";
@@ -27,6 +26,20 @@ import { UnknownShapePanel } from "./property-panels/UnknownShapePanel";
 // =============================================================================
 
 export type PropertyPanelProps = {
+  /** Current slide */
+  readonly slide: Slide;
+  /** Selected shapes */
+  readonly selectedShapes: readonly Shape[];
+  /** Primary selected shape */
+  readonly primaryShape: Shape | undefined;
+  /** Callback when a shape is updated */
+  readonly onShapeChange: (shapeId: ShapeId, updater: (shape: Shape) => Shape) => void;
+  /** Callback when slide properties are updated */
+  readonly onSlideChange: (updater: (slide: Slide) => Slide) => void;
+  /** Callback to ungroup a shape */
+  readonly onUngroup: (shapeId: ShapeId) => void;
+  /** Callback to select a shape */
+  readonly onSelect: (shapeId: ShapeId) => void;
   /** Custom class name */
   readonly className?: string;
   /** Custom style */
@@ -37,36 +50,37 @@ export type PropertyPanelProps = {
 // Helpers
 // =============================================================================
 
+type ShapePanelContext = {
+  readonly onShapeChange: (shape: Shape) => void;
+  readonly onUngroup: (shapeId: ShapeId) => void;
+  readonly onSelect: (shapeId: ShapeId) => void;
+};
+
 /**
  * Render the appropriate panel for a shape.
  */
 function renderShapePanel(
   shape: Shape,
-  onShapeChange: (shape: Shape) => void,
-  dispatch: ReturnType<typeof useSlideEditor>["dispatch"]
+  ctx: ShapePanelContext
 ): React.ReactNode {
   switch (shape.type) {
     case "sp":
-      return <SpShapePanel shape={shape} onChange={onShapeChange} />;
+      return <SpShapePanel shape={shape} onChange={ctx.onShapeChange} />;
     case "pic":
-      return <PicShapePanel shape={shape} onChange={onShapeChange} />;
+      return <PicShapePanel shape={shape} onChange={ctx.onShapeChange} />;
     case "cxnSp":
-      return <CxnShapePanel shape={shape} onChange={onShapeChange} />;
+      return <CxnShapePanel shape={shape} onChange={ctx.onShapeChange} />;
     case "grpSp":
       return (
         <GrpShapePanel
           shape={shape}
-          onChange={onShapeChange}
-          onUngroup={() =>
-            dispatch({ type: "UNGROUP_SHAPE", shapeId: shape.nonVisual.id })
-          }
-          onSelectChild={(childId) =>
-            dispatch({ type: "SELECT", shapeId: childId, addToSelection: false })
-          }
+          onChange={ctx.onShapeChange}
+          onUngroup={() => ctx.onUngroup(shape.nonVisual.id)}
+          onSelectChild={(childId) => ctx.onSelect(childId)}
         />
       );
     case "graphicFrame":
-      return renderGraphicFramePanel(shape, onShapeChange);
+      return renderGraphicFramePanel(shape, ctx.onShapeChange);
     case "contentPart":
       return (
         <div
@@ -139,49 +153,42 @@ function renderGraphicFramePanel(
 /**
  * Property panel for editing selected shape properties.
  *
- * Displays appropriate editors based on shape type:
- * - SpShape: NonVisual, Transform, Geometry, Fill, Line, Effects, Text
- * - PicShape: NonVisual, Transform, Crop (sourceRect), Stretch/Rotate, Effects
- * - CxnShape: NonVisual, Connections, Transform, Geometry, Line style, Effects
- * - GrpShape: NonVisual, Group info, Transform, Fill, Effects
- * - GraphicFrame (table): NonVisual, Transform, Table
- * - GraphicFrame (chart): NonVisual, Transform, Chart
- * - GraphicFrame (diagram): NonVisual, Transform, Diagram info
- * - GraphicFrame (oleObject): NonVisual, Transform, OLE Object info
- * - ContentPartShape: External content reference (read-only)
+ * Props-based component that receives all state and callbacks as props.
+ * Can be used with SlideEditor context or with PresentationEditor directly.
  */
-export function PropertyPanel({ className, style }: PropertyPanelProps) {
-  const { selectedShapes, primaryShape, slide, dispatch } = useSlideEditor();
-  const { updateShape } = useSlideState();
-
+export function PropertyPanel({
+  slide,
+  selectedShapes,
+  primaryShape,
+  onShapeChange,
+  onSlideChange,
+  onUngroup,
+  onSelect,
+  className,
+  style,
+}: PropertyPanelProps) {
   const handleShapeChange = useCallback(
     (newShape: Shape) => {
       const id = "nonVisual" in newShape ? newShape.nonVisual.id : undefined;
       if (id) {
-        updateShape(id, () => newShape);
+        onShapeChange(id, () => newShape);
       }
     },
-    [updateShape]
+    [onShapeChange]
   );
 
   const handleBackgroundChange = useCallback(
     (background: Background | undefined) => {
-      dispatch({
-        type: "UPDATE_SLIDE",
-        updater: (s) => ({ ...s, background }),
-      });
+      onSlideChange((s) => ({ ...s, background }));
     },
-    [dispatch]
+    [onSlideChange]
   );
 
   const handleTransitionChange = useCallback(
     (transition: SlideTransition | undefined) => {
-      dispatch({
-        type: "UPDATE_SLIDE",
-        updater: (s) => ({ ...s, transition }),
-      });
+      onSlideChange((s) => ({ ...s, transition }));
     },
-    [dispatch]
+    [onSlideChange]
   );
 
   const containerStyle: CSSProperties = {
@@ -190,6 +197,12 @@ export function PropertyPanel({ className, style }: PropertyPanelProps) {
     gap: "0",
     overflow: "auto",
     ...style,
+  };
+
+  const shapePanelCtx: ShapePanelContext = {
+    onShapeChange: handleShapeChange,
+    onUngroup,
+    onSelect,
   };
 
   // No selection - show slide properties
@@ -233,7 +246,7 @@ export function PropertyPanel({ className, style }: PropertyPanelProps) {
 
   return (
     <div className={className} style={containerStyle}>
-      {renderShapePanel(shape, handleShapeChange, dispatch)}
+      {renderShapePanel(shape, shapePanelCtx)}
     </div>
   );
 }

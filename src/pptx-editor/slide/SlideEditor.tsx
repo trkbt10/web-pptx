@@ -2,31 +2,49 @@
  * @file Slide editor component
  *
  * Main component that integrates all slide editing functionality.
+ * Fully controlled component - receives all state and dispatch as props.
  */
 
-import { useRef, useEffect, useMemo, type CSSProperties } from "react";
-import type { Slide } from "../../pptx/domain";
-import type { Pixels } from "../../pptx/domain/types";
-import type { EditorProps } from "../types";
+import { useRef, useEffect, useMemo, useCallback, type CSSProperties } from "react";
+import type { Slide, Shape } from "../../pptx/domain";
+import type { Pixels, ShapeId } from "../../pptx/domain/types";
+import { px, deg } from "../../pptx/domain/types";
 import type { RenderContext } from "../../pptx/render/context";
+import type { SlideEditorState, SlideEditorAction } from "./types";
+import type { SelectionState, DragState, ResizeHandlePosition } from "../state";
+import type { ContextMenuActions } from "./context-menu/SlideContextMenu";
 import { renderSlideSvg } from "../../pptx/render/svg/renderer";
-import { SlideEditorProvider, useSlideEditor } from "./context";
 import { SlideCanvas } from "./SlideCanvas";
 import { ShapeSelector } from "./ShapeSelector";
 import { PropertyPanel } from "./PropertyPanel";
 import { ShapeToolbar } from "./ShapeToolbar";
 import { LayerPanel } from "./LayerPanel";
 import { Panel } from "../ui/layout";
-import { useDragMove } from "./hooks/useDragMove";
-import { useDragResize } from "./hooks/useDragResize";
-import { useDragRotate } from "./hooks/useDragRotate";
-import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { findShapeById } from "../shape/query";
+import { isTopLevelShape } from "../shape/query";
+import { clientToSlideCoords } from "../shape/coords";
+import { getShapeTransform, withUpdatedTransform } from "../shape/transform";
+import { calculateAlignedBounds } from "../shape/alignment";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type SlideEditorProps = EditorProps<Slide> & {
+export type SlideEditorProps = {
+  /** Editor state */
+  readonly state: SlideEditorState;
+  /** Dispatch action */
+  readonly dispatch: (action: SlideEditorAction) => void;
+  /** Current slide (convenience, derived from state) */
+  readonly slide: Slide;
+  /** Selected shapes (convenience, derived from state) */
+  readonly selectedShapes: readonly Shape[];
+  /** Primary selected shape (convenience, derived from state) */
+  readonly primaryShape: Shape | undefined;
+  /** Can undo */
+  readonly canUndo: boolean;
+  /** Can redo */
+  readonly canRedo: boolean;
   /** Slide width */
   readonly width: Pixels;
   /** Slide height */
@@ -36,7 +54,6 @@ export type SlideEditorProps = EditorProps<Slide> & {
   /**
    * Render context for integrated SVG rendering.
    * When provided, the editor will automatically re-render the slide to SVG on changes.
-   * This enables full-fidelity rendering of all shape types including tables, charts, diagrams.
    */
   readonly renderContext?: RenderContext;
   /** Show property panel */
@@ -54,84 +71,552 @@ export type SlideEditorProps = EditorProps<Slide> & {
 };
 
 // =============================================================================
-// Internal Editor Component
+// Helper Functions
 // =============================================================================
 
-type SlideEditorInternalProps = {
-  readonly width: Pixels;
-  readonly height: Pixels;
-  readonly svgContent?: string;
-  readonly renderContext?: RenderContext;
-  readonly showPropertyPanel: boolean;
-  readonly showLayerPanel: boolean;
-  readonly showToolbar: boolean;
-  readonly propertyPanelPosition: "left" | "right";
-  readonly onChange: (slide: Slide) => void;
-  readonly className?: string;
-  readonly style?: CSSProperties;
-};
+/**
+ * Apply move delta to shapes during drag
+ */
+function applyMoveDelta(
+  slide: Slide,
+  drag: DragState,
+  deltaX: number,
+  deltaY: number,
+  dispatch: (action: SlideEditorAction) => void
+): void {
+  if (drag.type !== "move") return;
 
-function SlideEditorInternal({
+  for (const shapeId of drag.shapeIds) {
+    const initialBounds = drag.initialBounds.get(shapeId);
+    if (!initialBounds) continue;
+
+    dispatch({
+      type: "UPDATE_SHAPE",
+      shapeId,
+      updater: (shape) =>
+        withUpdatedTransform(shape, {
+          x: px(initialBounds.x + deltaX),
+          y: px(initialBounds.y + deltaY),
+        }),
+    });
+  }
+}
+
+/**
+ * Apply resize delta to shapes during drag
+ */
+function applyResizeDelta(
+  slide: Slide,
+  drag: DragState,
+  deltaX: number,
+  deltaY: number,
+  dispatch: (action: SlideEditorAction) => void
+): void {
+  if (drag.type !== "resize") return;
+
+  const { handle, combinedBounds, initialBoundsMap } = drag;
+  if (!combinedBounds || !initialBoundsMap) return;
+
+  // Calculate new combined bounds (use plain numbers for arithmetic)
+  let newCombinedBounds = {
+    x: combinedBounds.x as number,
+    y: combinedBounds.y as number,
+    width: combinedBounds.width as number,
+    height: combinedBounds.height as number,
+  };
+  const aspect = (combinedBounds.width as number) / (combinedBounds.height as number);
+
+  // Use base values for arithmetic
+  const baseX = combinedBounds.x as number;
+  const baseY = combinedBounds.y as number;
+  const baseW = combinedBounds.width as number;
+  const baseH = combinedBounds.height as number;
+
+  // Apply deltas based on handle
+  switch (handle) {
+    case "nw":
+      newCombinedBounds = {
+        x: baseX + deltaX,
+        y: baseY + deltaY,
+        width: baseW - deltaX,
+        height: baseH - deltaY,
+      };
+      break;
+    case "n":
+      newCombinedBounds = {
+        ...newCombinedBounds,
+        y: baseY + deltaY,
+        height: baseH - deltaY,
+      };
+      break;
+    case "ne":
+      newCombinedBounds = {
+        ...newCombinedBounds,
+        y: baseY + deltaY,
+        width: baseW + deltaX,
+        height: baseH - deltaY,
+      };
+      break;
+    case "e":
+      newCombinedBounds = {
+        ...newCombinedBounds,
+        width: baseW + deltaX,
+      };
+      break;
+    case "se":
+      newCombinedBounds = {
+        ...newCombinedBounds,
+        width: baseW + deltaX,
+        height: baseH + deltaY,
+      };
+      break;
+    case "s":
+      newCombinedBounds = {
+        ...newCombinedBounds,
+        height: baseH + deltaY,
+      };
+      break;
+    case "sw":
+      newCombinedBounds = {
+        ...newCombinedBounds,
+        x: baseX + deltaX,
+        width: baseW - deltaX,
+        height: baseH + deltaY,
+      };
+      break;
+    case "w":
+      newCombinedBounds = {
+        ...newCombinedBounds,
+        x: baseX + deltaX,
+        width: baseW - deltaX,
+      };
+      break;
+  }
+
+  // Clamp to minimum size
+  newCombinedBounds.width = Math.max(10, newCombinedBounds.width);
+  newCombinedBounds.height = Math.max(10, newCombinedBounds.height);
+
+  // Apply aspect lock if needed
+  if (drag.aspectLocked) {
+    if (handle === "n" || handle === "s") {
+      newCombinedBounds.width = newCombinedBounds.height * aspect;
+    } else if (handle === "e" || handle === "w") {
+      newCombinedBounds.height = newCombinedBounds.width / aspect;
+    } else {
+      // Corner handles - use width as reference
+      newCombinedBounds.height = newCombinedBounds.width / aspect;
+    }
+  }
+
+  // Calculate scale factors
+  const scaleX = newCombinedBounds.width / baseW;
+  const scaleY = newCombinedBounds.height / baseH;
+
+  // Apply to each shape
+  for (const shapeId of drag.shapeIds) {
+    const initialBounds = initialBoundsMap.get(shapeId);
+    if (!initialBounds) continue;
+
+    // Scale relative to combined bounds origin
+    const relX = (initialBounds.x as number) - baseX;
+    const relY = (initialBounds.y as number) - baseY;
+    const newX = newCombinedBounds.x + relX * scaleX;
+    const newY = newCombinedBounds.y + relY * scaleY;
+    const newWidth = (initialBounds.width as number) * scaleX;
+    const newHeight = (initialBounds.height as number) * scaleY;
+
+    dispatch({
+      type: "UPDATE_SHAPE",
+      shapeId,
+      updater: (shape) =>
+        withUpdatedTransform(shape, {
+          x: px(newX),
+          y: px(newY),
+          width: px(newWidth),
+          height: px(newHeight),
+        }),
+    });
+  }
+}
+
+/**
+ * Apply rotation delta to shapes during drag
+ */
+function applyRotateDelta(
+  slide: Slide,
+  drag: DragState,
+  currentAngle: number,
+  dispatch: (action: SlideEditorAction) => void
+): void {
+  if (drag.type !== "rotate") return;
+
+  const { startAngle, initialRotationsMap, shapeIds } = drag;
+  const angleDelta = currentAngle - (startAngle as number);
+
+  for (const shapeId of shapeIds) {
+    const initialRotation = initialRotationsMap?.get(shapeId);
+    if (initialRotation === undefined) continue;
+
+    let newRotation = ((initialRotation as number) + angleDelta) % 360;
+    if (newRotation < 0) newRotation += 360;
+
+    dispatch({
+      type: "UPDATE_SHAPE",
+      shapeId,
+      updater: (shape) =>
+        withUpdatedTransform(shape, {
+          rotation: deg(newRotation),
+        }),
+    });
+  }
+}
+
+// =============================================================================
+// Component
+// =============================================================================
+
+/**
+ * Slide editor with canvas, property panel, and toolbar.
+ *
+ * Fully controlled component - all state comes from props.
+ */
+export function SlideEditor({
+  state,
+  dispatch,
+  slide,
+  selectedShapes,
+  primaryShape,
+  canUndo,
+  canRedo,
   width,
   height,
   svgContent: externalSvgContent,
   renderContext,
-  showPropertyPanel,
-  showLayerPanel,
-  showToolbar,
-  propertyPanelPosition,
-  onChange,
+  showPropertyPanel = true,
+  showLayerPanel = true,
+  showToolbar = true,
+  propertyPanelPosition = "right",
   className,
   style,
-}: SlideEditorInternalProps) {
+}: SlideEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { slide } = useSlideEditor();
+  const { selection, drag } = state;
 
   // Integrated SVG rendering: re-render when slide changes
   const renderedSvgContent = useMemo(() => {
-    // External svgContent takes precedence
     if (externalSvgContent !== undefined) {
       return externalSvgContent;
     }
-    // If renderContext is provided, render the slide to SVG
     if (renderContext !== undefined) {
       const result = renderSlideSvg(slide, renderContext);
       return result.svg;
     }
-    // No rendering - will use fallback in SlideCanvas
     return undefined;
   }, [slide, externalSvgContent, renderContext]);
 
-  // Set up drag hooks
-  useDragMove({
-    width,
-    height,
-    containerRef,
-  });
+  // ==========================================================================
+  // Drag handlers (move, resize, rotate)
+  // ==========================================================================
 
-  useDragResize({
-    width,
-    height,
-    containerRef,
-  });
-
-  useDragRotate({
-    width,
-    height,
-    containerRef,
-  });
-
-  // Set up keyboard shortcuts
-  useKeyboardShortcuts();
-
-  // Sync changes back to parent
-  const prevSlideRef = useRef(slide);
   useEffect(() => {
-    if (prevSlideRef.current !== slide) {
-      onChange(slide);
-      prevSlideRef.current = slide;
+    if (drag.type === "idle") return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+      const coords = clientToSlideCoords(e.clientX, e.clientY, rect, width as number, height as number);
+
+      if (drag.type === "move") {
+        const deltaX = coords.x - (drag.startX as number);
+        const deltaY = coords.y - (drag.startY as number);
+        applyMoveDelta(slide, drag, deltaX, deltaY, dispatch);
+      } else if (drag.type === "resize") {
+        const deltaX = coords.x - (drag.startX as number);
+        const deltaY = coords.y - (drag.startY as number);
+        applyResizeDelta(slide, drag, deltaX, deltaY, dispatch);
+      } else if (drag.type === "rotate") {
+        const centerX = drag.centerX as number;
+        const centerY = drag.centerY as number;
+        const currentAngle = Math.atan2(coords.y - centerY, coords.x - centerX) * (180 / Math.PI);
+        applyRotateDelta(slide, drag, currentAngle, dispatch);
+      }
+    };
+
+    const handlePointerUp = () => {
+      dispatch({ type: "END_DRAG" });
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [drag, slide, width, height, dispatch]);
+
+  // ==========================================================================
+  // Keyboard shortcuts
+  // ==========================================================================
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
+      const modKey = isMac ? e.metaKey : e.ctrlKey;
+
+      // Undo/Redo
+      if (modKey && e.key === "z" && !e.shiftKey) {
+        e.preventDefault();
+        dispatch({ type: "UNDO" });
+        return;
+      }
+      if (modKey && (e.key === "y" || (e.shiftKey && e.key === "z"))) {
+        e.preventDefault();
+        dispatch({ type: "REDO" });
+        return;
+      }
+
+      // Copy/Paste
+      if (modKey && e.key === "c") {
+        e.preventDefault();
+        dispatch({ type: "COPY" });
+        return;
+      }
+      if (modKey && e.key === "v") {
+        e.preventDefault();
+        dispatch({ type: "PASTE" });
+        return;
+      }
+
+      // Delete
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        dispatch({ type: "DELETE_SHAPES", shapeIds: selection.selectedIds });
+        return;
+      }
+
+      // Duplicate
+      if (modKey && e.key === "d") {
+        e.preventDefault();
+        dispatch({ type: "COPY" });
+        dispatch({ type: "PASTE" });
+        return;
+      }
+
+      // Select all
+      if (modKey && e.key === "a") {
+        e.preventDefault();
+        const allIds = slide.shapes
+          .filter((s): s is Shape & { nonVisual: { id: ShapeId } } => "nonVisual" in s)
+          .map((s) => s.nonVisual.id);
+        dispatch({ type: "SELECT_MULTIPLE", shapeIds: allIds });
+        return;
+      }
+
+      // Group/Ungroup
+      if (modKey && e.key === "g" && !e.shiftKey) {
+        e.preventDefault();
+        if (selection.selectedIds.length >= 2) {
+          dispatch({ type: "GROUP_SHAPES", shapeIds: selection.selectedIds });
+        }
+        return;
+      }
+      if (modKey && e.shiftKey && e.key === "g") {
+        e.preventDefault();
+        if (selection.primaryId && primaryShape?.type === "grpSp") {
+          dispatch({ type: "UNGROUP_SHAPE", shapeId: selection.primaryId });
+        }
+        return;
+      }
+
+      // Escape to deselect
+      if (e.key === "Escape") {
+        dispatch({ type: "CLEAR_SELECTION" });
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [dispatch, selection, slide, primaryShape]);
+
+  // ==========================================================================
+  // Context menu actions
+  // ==========================================================================
+
+  const canGroup = useMemo(() => {
+    if (selection.selectedIds.length < 2) return false;
+    return selection.selectedIds.every((id) => isTopLevelShape(slide.shapes, id));
+  }, [selection.selectedIds, slide.shapes]);
+
+  const canUngroup = useMemo(() => {
+    if (selection.selectedIds.length !== 1) return false;
+    return primaryShape?.type === "grpSp";
+  }, [selection.selectedIds, primaryShape]);
+
+  const hasSelection = selection.selectedIds.length > 0;
+  const isMultiSelect = selection.selectedIds.length > 1;
+  const canAlign = selection.selectedIds.length >= 2;
+  const canDistribute = selection.selectedIds.length >= 3;
+  const hasClipboard = state.clipboard !== undefined && state.clipboard.shapes.length > 0;
+
+  const contextMenuActions: ContextMenuActions = useMemo(() => ({
+    // State flags
+    hasSelection,
+    hasClipboard,
+    isMultiSelect,
+    canGroup,
+    canUngroup,
+    canAlign,
+    canDistribute,
+    // Actions
+    copy: () => dispatch({ type: "COPY" }),
+    cut: () => {
+      dispatch({ type: "COPY" });
+      dispatch({ type: "DELETE_SHAPES", shapeIds: selection.selectedIds });
+    },
+    paste: () => dispatch({ type: "PASTE" }),
+    duplicateSelected: () => {
+      dispatch({ type: "COPY" });
+      dispatch({ type: "PASTE" });
+    },
+    deleteSelected: () => dispatch({ type: "DELETE_SHAPES", shapeIds: selection.selectedIds }),
+    bringToFront: () => {
+      if (selection.primaryId) {
+        dispatch({ type: "REORDER_SHAPE", shapeId: selection.primaryId, direction: "front" });
+      }
+    },
+    bringForward: () => {
+      if (selection.primaryId) {
+        dispatch({ type: "REORDER_SHAPE", shapeId: selection.primaryId, direction: "forward" });
+      }
+    },
+    sendBackward: () => {
+      if (selection.primaryId) {
+        dispatch({ type: "REORDER_SHAPE", shapeId: selection.primaryId, direction: "backward" });
+      }
+    },
+    sendToBack: () => {
+      if (selection.primaryId) {
+        dispatch({ type: "REORDER_SHAPE", shapeId: selection.primaryId, direction: "back" });
+      }
+    },
+    group: () => {
+      if (canGroup) {
+        dispatch({ type: "GROUP_SHAPES", shapeIds: selection.selectedIds });
+      }
+    },
+    ungroup: () => {
+      if (canUngroup && selection.primaryId) {
+        dispatch({ type: "UNGROUP_SHAPE", shapeId: selection.primaryId });
+      }
+    },
+    alignLeft: () => applyAlignment("left"),
+    alignCenter: () => applyAlignment("center"),
+    alignRight: () => applyAlignment("right"),
+    alignTop: () => applyAlignment("top"),
+    alignMiddle: () => applyAlignment("middle"),
+    alignBottom: () => applyAlignment("bottom"),
+    distributeHorizontally: () => applyAlignment("distributeH"),
+    distributeVertically: () => applyAlignment("distributeV"),
+  }), [dispatch, selection, canGroup, canUngroup, hasSelection, hasClipboard, isMultiSelect, canAlign, canDistribute]);
+
+  // Alignment helper
+  const applyAlignment = useCallback((alignment: string) => {
+    if (selection.selectedIds.length < 2) return;
+
+    const alignedBounds = calculateAlignedBounds(
+      slide.shapes,
+      selection.selectedIds,
+      alignment as "left" | "center" | "right" | "top" | "middle" | "bottom" | "distributeH" | "distributeV"
+    );
+
+    for (const [shapeId, bounds] of alignedBounds) {
+      dispatch({
+        type: "UPDATE_SHAPE",
+        shapeId,
+        updater: (shape) =>
+          withUpdatedTransform(shape, {
+            x: px(bounds.x),
+            y: px(bounds.y),
+          }),
+      });
     }
-  }, [slide, onChange]);
+  }, [dispatch, selection.selectedIds, slide.shapes]);
+
+  // ==========================================================================
+  // Callbacks for child components
+  // ==========================================================================
+
+  const handleShapeChange = useCallback(
+    (shapeId: ShapeId, updater: (shape: Shape) => Shape) => {
+      dispatch({ type: "UPDATE_SHAPE", shapeId, updater });
+    },
+    [dispatch]
+  );
+
+  const handleSlideChange = useCallback(
+    (updater: (slide: Slide) => Slide) => {
+      dispatch({ type: "UPDATE_SLIDE", updater });
+    },
+    [dispatch]
+  );
+
+  const handleSelect = useCallback(
+    (shapeId: ShapeId, addToSelection: boolean = false) => {
+      dispatch({ type: "SELECT", shapeId, addToSelection });
+    },
+    [dispatch]
+  );
+
+  const handleDelete = useCallback(
+    (shapeIds: readonly ShapeId[]) => {
+      dispatch({ type: "DELETE_SHAPES", shapeIds });
+    },
+    [dispatch]
+  );
+
+  const handleDuplicate = useCallback(() => {
+    dispatch({ type: "COPY" });
+    dispatch({ type: "PASTE" });
+  }, [dispatch]);
+
+  const handleReorder = useCallback(
+    (shapeId: ShapeId, direction: "front" | "back" | "forward" | "backward") => {
+      dispatch({ type: "REORDER_SHAPE", shapeId, direction });
+    },
+    [dispatch]
+  );
+
+  const handleGroup = useCallback(
+    (shapeIds: readonly ShapeId[]) => {
+      dispatch({ type: "GROUP_SHAPES", shapeIds });
+    },
+    [dispatch]
+  );
+
+  const handleUngroup = useCallback(
+    (shapeId: ShapeId) => {
+      dispatch({ type: "UNGROUP_SHAPE", shapeId });
+    },
+    [dispatch]
+  );
+
+  const handleClearSelection = useCallback(() => {
+    dispatch({ type: "CLEAR_SELECTION" });
+  }, [dispatch]);
+
+  // ==========================================================================
+  // Styles
+  // ==========================================================================
 
   const containerStyle: CSSProperties = {
     display: "flex",
@@ -161,15 +646,14 @@ function SlideEditorInternal({
     padding: "24px",
   };
 
-  // Calculate canvas wrapper dimensions maintaining aspect ratio
   const aspectRatio = (width as number) / (height as number);
   const canvasWrapperStyle: CSSProperties = {
     position: "relative",
     width: "100%",
-    maxWidth: `calc((100vh - 200px) * ${aspectRatio})`, // Limit by viewport height
+    maxWidth: `calc((100vh - 200px) * ${aspectRatio})`,
     aspectRatio: `${width} / ${height}`,
     boxShadow: "0 4px 24px rgba(0, 0, 0, 0.4)",
-    backgroundColor: "white", // Slide background
+    backgroundColor: "white",
   };
 
   const toolbarStyle: CSSProperties = {
@@ -183,14 +667,30 @@ function SlideEditorInternal({
       {/* Layer Panel (left side) */}
       {showLayerPanel && propertyPanelPosition === "right" && (
         <Panel title="Layers" badge={slide.shapes.length}>
-          <LayerPanel />
+          <LayerPanel
+            slide={slide}
+            selection={selection}
+            primaryShape={primaryShape}
+            onSelect={handleSelect}
+            onGroup={handleGroup}
+            onUngroup={handleUngroup}
+            onClearSelection={handleClearSelection}
+          />
         </Panel>
       )}
 
       {/* Property Panel */}
       {showPropertyPanel && (
         <Panel title="Properties">
-          <PropertyPanel />
+          <PropertyPanel
+            slide={slide}
+            selectedShapes={selectedShapes}
+            primaryShape={primaryShape}
+            onShapeChange={handleShapeChange}
+            onSlideChange={handleSlideChange}
+            onUngroup={handleUngroup}
+            onSelect={(id) => handleSelect(id, false)}
+          />
         </Panel>
       )}
 
@@ -199,7 +699,19 @@ function SlideEditorInternal({
         {/* Toolbar */}
         {showToolbar && (
           <div style={toolbarStyle}>
-            <ShapeToolbar direction="horizontal" />
+            <ShapeToolbar
+              canUndo={canUndo}
+              canRedo={canRedo}
+              selectedIds={selection.selectedIds}
+              primaryShape={primaryShape}
+              onUndo={() => dispatch({ type: "UNDO" })}
+              onRedo={() => dispatch({ type: "REDO" })}
+              onDelete={handleDelete}
+              onDuplicate={handleDuplicate}
+              onReorder={handleReorder}
+              onShapeChange={handleShapeChange}
+              direction="horizontal"
+            />
           </div>
         )}
 
@@ -207,11 +719,24 @@ function SlideEditorInternal({
         <div style={canvasContainerStyle}>
           <div ref={containerRef} style={canvasWrapperStyle}>
             <SlideCanvas
+              slide={slide}
+              selection={selection}
+              drag={drag}
+              dispatch={dispatch}
               svgContent={renderedSvgContent}
               width={width}
               height={height}
+              primaryShape={primaryShape}
+              selectedShapes={selectedShapes}
+              contextMenuActions={contextMenuActions}
             />
-            <ShapeSelector width={width} height={height} />
+            <ShapeSelector
+              slide={slide}
+              selection={selection}
+              dispatch={dispatch}
+              width={width}
+              height={height}
+            />
           </div>
         </div>
       </div>
@@ -219,70 +744,17 @@ function SlideEditorInternal({
       {/* Layer Panel (right side, after canvas) */}
       {showLayerPanel && propertyPanelPosition === "left" && (
         <Panel title="Layers" badge={slide.shapes.length}>
-          <LayerPanel />
+          <LayerPanel
+            slide={slide}
+            selection={selection}
+            primaryShape={primaryShape}
+            onSelect={handleSelect}
+            onGroup={handleGroup}
+            onUngroup={handleUngroup}
+            onClearSelection={handleClearSelection}
+          />
         </Panel>
       )}
     </div>
-  );
-}
-
-// =============================================================================
-// Main Component
-// =============================================================================
-
-/**
- * Slide editor with canvas, property panel, and toolbar.
- *
- * @example
- * ```tsx
- * // With external SVG content (pre-rendered)
- * <SlideEditor
- *   value={slide}
- *   onChange={handleSlideChange}
- *   width={px(960)}
- *   height={px(540)}
- *   svgContent={renderedSvg}
- * />
- *
- * // With integrated rendering (auto re-renders on edit)
- * <SlideEditor
- *   value={slide}
- *   onChange={handleSlideChange}
- *   width={px(960)}
- *   height={px(540)}
- *   renderContext={ctx}
- * />
- * ```
- */
-export function SlideEditor({
-  value,
-  onChange,
-  width,
-  height,
-  svgContent,
-  renderContext,
-  showPropertyPanel = true,
-  showLayerPanel = true,
-  showToolbar = true,
-  propertyPanelPosition = "right",
-  className,
-  style,
-}: SlideEditorProps) {
-  return (
-    <SlideEditorProvider initialSlide={value}>
-      <SlideEditorInternal
-        width={width}
-        height={height}
-        svgContent={svgContent}
-        renderContext={renderContext}
-        showPropertyPanel={showPropertyPanel}
-        showLayerPanel={showLayerPanel}
-        showToolbar={showToolbar}
-        propertyPanelPosition={propertyPanelPosition}
-        onChange={onChange}
-        className={className}
-        style={style}
-      />
-    </SlideEditorProvider>
   );
 }

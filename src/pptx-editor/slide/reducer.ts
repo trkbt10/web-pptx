@@ -7,31 +7,30 @@
 import type { Slide, Shape } from "../../pptx/domain";
 import type { Bounds, ShapeId } from "../../pptx/domain/types";
 import { px, deg } from "../../pptx/domain/types";
+import type { SlideEditorState, SlideEditorAction } from "./types";
 import {
-  type SlideEditorState,
-  type SlideEditorAction,
+  createHistory,
   createEmptySelection,
   createIdleDragState,
-  createHistory,
   pushHistory,
   undoHistory,
   redoHistory,
-} from "./types";
-import { findShapeById } from "./shape/query";
+} from "../state";
+import { findShapeById } from "../shape/query";
 import {
   updateShapeById,
   deleteShapesById,
   reorderShape,
   generateShapeId,
-} from "./shape/mutation";
+} from "../shape/mutation";
 import {
   getShapeBounds,
   getCombinedBounds,
   collectBoundsForIds,
   getCombinedCenter,
-} from "./shape/bounds";
-import { getShapeTransform, withUpdatedTransform } from "./shape/transform";
-import { ungroupShape, groupShapes } from "./shape/group";
+} from "../shape/bounds";
+import { getShapeTransform, withUpdatedTransform } from "../shape/transform";
+import { ungroupShape, groupShapes } from "../shape/group";
 
 // =============================================================================
 // Helper Functions

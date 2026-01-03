@@ -4,7 +4,7 @@
  * A draggable handle for resizing shapes.
  */
 
-import type { ResizeHandlePosition } from "../types";
+import type { ResizeHandlePosition } from "../../state";
 
 // =============================================================================
 // Types

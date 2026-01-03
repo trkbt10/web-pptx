@@ -25,6 +25,12 @@ const modeTabsStyle: CSSProperties = {
   padding: "2px",
 };
 
+const slidersContainerStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "6px",
+};
+
 function modeTabStyle(isActive: boolean): CSSProperties {
   return {
     flex: 1,
@@ -75,8 +81,10 @@ export function ColorModeSliders({ value, onChange }: ColorModeSlidersProps) {
         </button>
       </div>
 
-      {mode === "rgb" && <RgbSliders r={rgb.r} g={rgb.g} b={rgb.b} onChange={handleRgbChange} />}
-      {mode === "hsl" && <HslSliders h={hsl.h} s={hsl.s} l={hsl.l} onChange={handleHslChange} />}
+      <div style={slidersContainerStyle}>
+        {mode === "rgb" && <RgbSliders r={rgb.r} g={rgb.g} b={rgb.b} onChange={handleRgbChange} />}
+        {mode === "hsl" && <HslSliders h={hsl.h} s={hsl.s} l={hsl.l} onChange={handleHslChange} />}
+      </div>
     </>
   );
 }

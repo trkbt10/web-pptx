@@ -39,15 +39,6 @@ export {
   type EditorConfig,
 } from "./context/EditorConfigContext";
 
-// Hooks
-export {
-  createEditorReducer,
-  useEditorReducer,
-  simpleUpdate,
-  nestedUpdate,
-  type UpdateFn,
-} from "./hooks";
-
 // UI Primitives
 export {
   Button,
@@ -208,41 +199,35 @@ export {
   type OleObjectEditorProps,
 } from "./editors";
 
-// Slide Editor Types
-export type { ShapeId } from "./slide/types";
+// Shape Types (re-export from domain)
+export type { ShapeId } from "../pptx/domain/types";
+
+// State Types (from state module)
+export type {
+  SelectionState,
+  ResizeHandlePosition,
+  DragState,
+  UndoRedoHistory,
+  ClipboardContent,
+} from "./state";
 export {
-  type SelectionState,
-  type ResizeHandlePosition,
-  type DragState,
-  type UndoRedoHistory,
-  type ClipboardContent,
-  type SlideEditorState,
-  type SlideEditorAction,
-  type SlideEditorContextValue,
   createEmptySelection,
   createIdleDragState,
   createHistory,
   pushHistory,
   undoHistory,
   redoHistory,
-  createSlideEditorState,
+} from "./state";
+
+// Slide Editor Types
+export type {
+  SlideEditorState,
+  SlideEditorAction,
 } from "./slide/types";
+export { createSlideEditorState } from "./slide/types";
 
-// Slide Editor Context
-export {
-  SlideEditorProvider,
-  useSlideEditor,
-  useSlideEditorOptional,
-} from "./slide/context";
-
-// Slide Editor Hooks
-export { useSlideState, type UseSlideStateResult, type MultiShapeTransformUpdate } from "./slide/hooks/useSlideState";
-export { useSelection, type UseSelectionResult } from "./slide/hooks/useSelection";
-export { useDragMove, type UseDragMoveOptions, type UseDragMoveResult } from "./slide/hooks/useDragMove";
-export { useDragResize, type UseDragResizeOptions, type UseDragResizeResult } from "./slide/hooks/useDragResize";
-export { useDragRotate, type UseDragRotateOptions, type UseDragRotateResult } from "./slide/hooks/useDragRotate";
-export { useClipboard, type UseClipboardResult } from "./slide/hooks/useClipboard";
-export { useKeyboardShortcuts, type UseKeyboardShortcutsOptions, type UseKeyboardShortcutsResult } from "./slide/hooks/useKeyboardShortcuts";
+// Slide Editor Reducer
+export { slideEditorReducer } from "./slide/reducer";
 
 // Slide Editor Components
 export { SlideEditor, type SlideEditorProps } from "./slide/SlideEditor";
@@ -259,13 +244,13 @@ export { RotateHandle, type RotateHandleProps } from "./slide/components/RotateH
 export { MultiSelectionBox, type MultiSelectionBoxProps } from "./slide/components/MultiSelectionBox";
 
 // Shape identity utilities
-export { getShapeId, hasShapeId } from "./slide/shape/identity";
+export { getShapeId, hasShapeId } from "./shape/identity";
 
 // Shape query utilities
-export { findShapeById, findShapeByIdWithParents, getTopLevelShapeIds, isTopLevelShape } from "./slide/shape/query";
+export { findShapeById, findShapeByIdWithParents, getTopLevelShapeIds, isTopLevelShape } from "./shape/query";
 
 // Shape bounds utilities
-export { getShapeBounds, getCombinedBounds } from "./slide/shape/bounds";
+export { getShapeBounds, getCombinedBounds } from "./shape/bounds";
 
 // Shape transform utilities
 export {
@@ -274,10 +259,40 @@ export {
   hasEditableTransform,
   getAbsoluteBounds,
   type AbsoluteBounds,
-} from "./slide/shape/transform";
+} from "./shape/transform";
 
 // Shape coordinate utilities
-export { clientToSlideCoords } from "./slide/shape/coords";
+export { clientToSlideCoords } from "./shape/coords";
 
 // Shape capabilities
-export { getShapeCapabilities, type ShapeCapabilities } from "./slide/shape/capabilities";
+export { getShapeCapabilities, type ShapeCapabilities } from "./shape/capabilities";
+
+// Presentation Editor Types
+export type {
+  PresentationDocument,
+  PresentationEditorState,
+  PresentationEditorAction,
+  SlideWithId,
+  SlideId,
+  PresentationEditorContextValue,
+} from "./presentation/types";
+
+// Presentation Editor Context
+export {
+  PresentationEditorProvider,
+  usePresentationEditor,
+  usePresentationEditorOptional,
+} from "./presentation/context";
+
+// Presentation Editor Reducer
+export {
+  presentationEditorReducer,
+  createPresentationEditorState,
+} from "./presentation/reducer";
+
+// Presentation Editor Components
+export { PresentationEditor, type PresentationEditorProps } from "./presentation/PresentationEditor";
+export { SlideThumbnailPanel } from "./presentation/SlideThumbnailPanel";
+
+// Context Menu Types
+export type { ContextMenuActions } from "./slide/context-menu/SlideContextMenu";

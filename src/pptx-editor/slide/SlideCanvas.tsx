@@ -3,27 +3,43 @@
  *
  * Renders a slide with interactive shape selection.
  * Uses an overlay pattern to add interactivity on top of SVG rendering.
+ *
+ * Props-based component that receives all state and callbacks as props.
  */
 
 import { useCallback, useMemo, useState, type CSSProperties, type MouseEvent } from "react";
-import type { Pixels } from "../../pptx/domain/types";
-import { useSlideEditor } from "./context";
-import { clientToSlideCoords } from "./shape/coords";
-import { useSelection } from "./hooks/useSelection";
-import { collectShapeRenderData } from "./shape/traverse";
-import { SlideContextMenu } from "./context-menu/SlideContextMenu";
-import type { ShapeId } from "./types";
+import type { Slide, Shape } from "../../pptx/domain";
+import type { Pixels, ShapeId } from "../../pptx/domain/types";
+import type { DragState, SelectionState } from "../state";
+import type { SlideEditorAction } from "./types";
+import { clientToSlideCoords } from "../shape/coords";
+import { collectShapeRenderData } from "../shape/traverse";
+import { SlideContextMenu, type ContextMenuActions } from "./context-menu/SlideContextMenu";
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export type SlideCanvasProps = {
+  /** Current slide */
+  readonly slide: Slide;
+  /** Selection state */
+  readonly selection: SelectionState;
+  /** Drag state */
+  readonly drag: DragState;
+  /** Dispatch action */
+  readonly dispatch: (action: SlideEditorAction) => void;
   /** Pre-rendered SVG content (if not using render function) */
   readonly svgContent?: string;
   /** Slide dimensions */
   readonly width: Pixels;
   readonly height: Pixels;
+  /** Primary shape */
+  readonly primaryShape: Shape | undefined;
+  /** Selected shapes */
+  readonly selectedShapes: readonly Shape[];
+  /** Context menu actions */
+  readonly contextMenuActions: ContextMenuActions;
   /** Whether to show shape hit areas (for debugging) */
   readonly debugHitAreas?: boolean;
   /** Custom class name */
@@ -59,17 +75,20 @@ function getRotationTransform(
  * Renders the slide SVG with an overlay for shape interaction.
  */
 export function SlideCanvas({
+  slide,
+  selection,
+  drag,
+  dispatch,
   svgContent,
   width,
   height,
+  primaryShape,
+  selectedShapes,
+  contextMenuActions,
   debugHitAreas = false,
   className,
   style,
 }: SlideCanvasProps) {
-  const { slide, state, dispatch } = useSlideEditor();
-  const { isSelected, select, toggleSelect, clearSelection } = useSelection();
-  const { drag } = state;
-
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
@@ -88,23 +107,26 @@ export function SlideCanvas({
     [slide.shapes]
   );
 
+  // Check if a shape is selected
+  const isSelected = useCallback(
+    (shapeId: ShapeId) => selection.selectedIds.includes(shapeId),
+    [selection.selectedIds]
+  );
+
   // Handle shape click
   const handleShapeClick = useCallback(
     (shapeId: ShapeId, e: MouseEvent) => {
       e.stopPropagation();
-      if (e.shiftKey || e.metaKey || e.ctrlKey) {
-        toggleSelect(shapeId);
-      } else {
-        select(shapeId);
-      }
+      const addToSelection = e.shiftKey || e.metaKey || e.ctrlKey;
+      dispatch({ type: "SELECT", shapeId, addToSelection });
     },
-    [select, toggleSelect]
+    [dispatch]
   );
 
   // Handle background click
   const handleBackgroundClick = useCallback(() => {
-    clearSelection();
-  }, [clearSelection]);
+    dispatch({ type: "CLEAR_SELECTION" });
+  }, [dispatch]);
 
   // Handle pointer down for drag
   const handlePointerDown = useCallback(
@@ -117,11 +139,8 @@ export function SlideCanvas({
 
       // Select if not already selected
       if (!isSelected(shapeId)) {
-        if (e.shiftKey || e.metaKey || e.ctrlKey) {
-          toggleSelect(shapeId);
-        } else {
-          select(shapeId);
-        }
+        const addToSelection = e.shiftKey || e.metaKey || e.ctrlKey;
+        dispatch({ type: "SELECT", shapeId, addToSelection });
       }
 
       // Start move drag using unified coordinate conversion
@@ -138,7 +157,7 @@ export function SlideCanvas({
         startY: coords.y as Pixels,
       });
     },
-    [dispatch, width, height, isSelected, select, toggleSelect]
+    [dispatch, width, height, isSelected]
   );
 
   // Handle context menu (right-click)
@@ -149,12 +168,12 @@ export function SlideCanvas({
 
       // Select the shape if not already selected
       if (!isSelected(shapeId)) {
-        select(shapeId);
+        dispatch({ type: "SELECT", shapeId, addToSelection: false });
       }
 
       setContextMenu({ x: e.clientX, y: e.clientY });
     },
-    [isSelected, select]
+    [isSelected, dispatch]
   );
 
   // Close context menu
@@ -266,6 +285,9 @@ export function SlideCanvas({
         <SlideContextMenu
           x={contextMenu.x}
           y={contextMenu.y}
+          primaryShape={primaryShape}
+          selectedShapes={selectedShapes}
+          actions={contextMenuActions}
           onClose={handleCloseContextMenu}
         />
       )}

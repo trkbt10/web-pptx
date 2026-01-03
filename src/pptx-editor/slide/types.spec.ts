@@ -4,6 +4,7 @@
  * Tests for undo/redo history, selection, and drag state management.
  */
 
+import { createSlideEditorState } from "./types";
 import {
   createEmptySelection,
   createIdleDragState,
@@ -11,8 +12,7 @@ import {
   pushHistory,
   undoHistory,
   redoHistory,
-  createSlideEditorState,
-} from "./types";
+} from "../state";
 import type { Slide } from "../../pptx/domain";
 
 // =============================================================================

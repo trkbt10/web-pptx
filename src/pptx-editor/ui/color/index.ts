@@ -2,37 +2,51 @@
  * @file Color UI components exports
  */
 
-export {
-  ColorSwatch,
-  type ColorSwatchProps,
-  type ColorSwatchSize,
-} from "./ColorSwatch";
+// Visualization
+export { FillPreview, type FillPreviewProps } from "./FillPreview";
 
-export {
-  ColorPickerPopover,
-  type ColorPickerPopoverProps,
-} from "./ColorPickerPopover";
+// Popovers
+export { ColorPickerPopover, type ColorPickerPopoverProps } from "./ColorPickerPopover";
+export { FillPickerPopover, type FillPickerPopoverProps } from "./FillPickerPopover";
 
+// Input components
 export {
-  FillPickerPopover,
-  type FillPickerPopoverProps,
-} from "./FillPickerPopover";
-
-export {
-  ColorModeSliders,
-  type ColorModeSlidersProps,
   RgbSliders,
   type RgbSlidersProps,
   HslSliders,
   type HslSlidersProps,
+  ColorModeSliders,
+  type ColorModeSlidersProps,
+  ColorPreviewInput,
+  type ColorPreviewInputProps,
+  HexColorEditor,
+  type HexColorEditorProps,
 } from "./components";
 
+// Conversion utilities
 export {
   hexToRgb,
   rgbToHex,
   rgbToHsl,
   hslToRgb,
   parseHexInput,
+  hexToRgbCss,
   type RgbColor,
   type HslColor,
 } from "./color-convert";
+
+// Fill utilities
+export {
+  type FillType,
+  fillTypeOptions,
+  createDefaultColor,
+  createDefaultFill,
+  getHexFromColor,
+  getStopHex,
+  SolidFillEditor,
+  type SolidFillEditorProps,
+  GradientStopRow,
+  type GradientStopRowProps,
+  GradientFillEditor,
+  type GradientFillEditorProps,
+} from "./fill";

@@ -4,7 +4,7 @@
  * Renders a bounding box around a selected shape.
  */
 
-import type { ResizeHandlePosition } from "../types";
+import type { ResizeHandlePosition } from "../../state";
 import { ResizeHandle } from "./ResizeHandle";
 import { RotateHandle } from "./RotateHandle";
 

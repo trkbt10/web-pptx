@@ -3,12 +3,13 @@
  *
  * Domain-aware context menu that builds menu items based on
  * the current selection and shape types.
+ *
+ * Props-based component that receives all state and callbacks as props.
  */
 
 import { useCallback, useMemo } from "react";
+import type { Shape } from "../../../pptx/domain";
 import { ContextMenu, type MenuEntry } from "../../ui/context-menu";
-import { useSlideEditor } from "../context";
-import { useContextMenuActions } from "../hooks/useContextMenuActions";
 import { getCommonMenuItems } from "./definitions/common";
 import { getZOrderMenuItems } from "./definitions/z-order";
 import { getGroupMenuItems } from "./definitions/group";
@@ -23,11 +24,56 @@ import { getDiagramMenuItems } from "./definitions/diagram";
 // Types
 // =============================================================================
 
+/**
+ * Context menu actions interface.
+ * All actions that can be performed from the context menu.
+ */
+export type ContextMenuActions = {
+  // State flags
+  readonly hasSelection: boolean;
+  readonly hasClipboard: boolean;
+  readonly isMultiSelect: boolean;
+  readonly canGroup: boolean;
+  readonly canUngroup: boolean;
+  readonly canAlign: boolean;
+  readonly canDistribute: boolean;
+  // Clipboard
+  readonly copy: () => void;
+  readonly cut: () => void;
+  readonly paste: () => void;
+  // Edit
+  readonly duplicateSelected: () => void;
+  readonly deleteSelected: () => void;
+  // Z-order
+  readonly bringToFront: () => void;
+  readonly bringForward: () => void;
+  readonly sendBackward: () => void;
+  readonly sendToBack: () => void;
+  // Group
+  readonly group: () => void;
+  readonly ungroup: () => void;
+  // Alignment
+  readonly alignLeft: () => void;
+  readonly alignCenter: () => void;
+  readonly alignRight: () => void;
+  readonly alignTop: () => void;
+  readonly alignMiddle: () => void;
+  readonly alignBottom: () => void;
+  readonly distributeHorizontally: () => void;
+  readonly distributeVertically: () => void;
+};
+
 export type SlideContextMenuProps = {
   /** X coordinate (client) */
   readonly x: number;
   /** Y coordinate (client) */
   readonly y: number;
+  /** Primary selected shape */
+  readonly primaryShape: Shape | undefined;
+  /** Selected shapes */
+  readonly selectedShapes: readonly Shape[];
+  /** Context menu actions */
+  readonly actions: ContextMenuActions;
   /** Callback when menu should close */
   readonly onClose: () => void;
 };
@@ -67,10 +113,14 @@ function flattenWithSeparators(groups: readonly (readonly MenuEntry[])[]): reado
  * - Selection state (single vs multi)
  * - Shape type (sp, pic, table, chart, diagram)
  */
-export function SlideContextMenu({ x, y, onClose }: SlideContextMenuProps) {
-  const { primaryShape, selectedShapes } = useSlideEditor();
-  const actions = useContextMenuActions();
-
+export function SlideContextMenu({
+  x,
+  y,
+  primaryShape,
+  selectedShapes,
+  actions,
+  onClose,
+}: SlideContextMenuProps) {
   // Build menu items based on selection
   const menuItems = useMemo((): readonly MenuEntry[] => {
     const groups: (readonly MenuEntry[])[] = [];

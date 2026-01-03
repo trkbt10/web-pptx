@@ -83,3 +83,11 @@ export function parseHexInput(input: string): string | null {
   }
   return null;
 }
+
+/**
+ * Convert hex to CSS rgba() compatible string "r, g, b".
+ */
+export function hexToRgbCss(hex: string): string {
+  const { r, g, b } = hexToRgb(hex);
+  return `${r}, ${g}, ${b}`;
+}

@@ -6,7 +6,7 @@
  */
 
 import type { MenuEntry } from "../../../ui/context-menu";
-import type { ContextMenuActions } from "../../hooks/useContextMenuActions";
+import type { ContextMenuActions } from "../SlideContextMenu";
 
 /**
  * Get common menu items (clipboard and edit operations)

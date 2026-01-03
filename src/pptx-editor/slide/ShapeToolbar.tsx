@@ -2,23 +2,41 @@
  * @file Shape toolbar component
  *
  * Provides quick action buttons for shape operations.
- * Includes line style picker for shapes with stroke properties.
+ * Props-based component that can be used with any state management.
  */
 
 import { useCallback, useMemo } from "react";
 import type { CSSProperties } from "react";
-import { useSlideEditor } from "./context";
-import { useSlideState } from "./hooks/useSlideState";
-import { useSelection } from "./hooks/useSelection";
 import { Button } from "../ui/primitives/Button";
 import { LinePickerPopover } from "../ui/line";
 import type { Line, Shape } from "../../pptx/domain";
+import type { ShapeId } from "../../pptx/domain/types";
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export type ShapeToolbarProps = {
+  /** Whether undo is available */
+  readonly canUndo: boolean;
+  /** Whether redo is available */
+  readonly canRedo: boolean;
+  /** Selected shape IDs */
+  readonly selectedIds: readonly ShapeId[];
+  /** Primary selected shape */
+  readonly primaryShape: Shape | undefined;
+  /** Callback to undo */
+  readonly onUndo: () => void;
+  /** Callback to redo */
+  readonly onRedo: () => void;
+  /** Callback to delete selected shapes */
+  readonly onDelete: (shapeIds: readonly ShapeId[]) => void;
+  /** Callback to duplicate selected shapes */
+  readonly onDuplicate: () => void;
+  /** Callback to reorder a shape */
+  readonly onReorder: (shapeId: ShapeId, direction: "front" | "back" | "forward" | "backward") => void;
+  /** Callback when shape is updated (for line changes) */
+  readonly onShapeChange: (shapeId: ShapeId, updater: (shape: Shape) => Shape) => void;
   /** Custom class name */
   readonly className?: string;
   /** Custom style */
@@ -106,7 +124,7 @@ function RedoIcon() {
 }
 
 // =============================================================================
-// Component
+// Helpers
 // =============================================================================
 
 /**
@@ -120,17 +138,34 @@ function getShapeLine(shape: Shape | undefined): Line | undefined {
   return undefined;
 }
 
+// =============================================================================
+// Component
+// =============================================================================
+
 /**
  * Shape toolbar with quick action buttons.
+ *
+ * Props-based component that receives all state and callbacks as props.
+ * Can be used with SlideEditor context or with PresentationEditor directly.
  */
 export function ShapeToolbar({
+  canUndo,
+  canRedo,
+  selectedIds,
+  primaryShape,
+  onUndo,
+  onRedo,
+  onDelete,
+  onDuplicate,
+  onReorder,
+  onShapeChange,
   className,
   style,
   direction = "horizontal",
 }: ShapeToolbarProps) {
-  const { canUndo, canRedo, primaryShape } = useSlideEditor();
-  const { deleteSelected, duplicateSelected, reorderShape, undo, redo, updateShape } = useSlideState();
-  const { hasSelection, primaryId, isMultiSelect } = useSelection();
+  const hasSelection = selectedIds.length > 0;
+  const isMultiSelect = selectedIds.length > 1;
+  const primaryId = selectedIds.length > 0 ? selectedIds[selectedIds.length - 1] : undefined;
 
   // Get line from primary selected shape
   const primaryLine = useMemo(() => getShapeLine(primaryShape), [primaryShape]);
@@ -138,7 +173,7 @@ export function ShapeToolbar({
   const handleLineChange = useCallback(
     (line: Line) => {
       if (!primaryId) return;
-      updateShape(primaryId, (shape) => {
+      onShapeChange(primaryId, (shape) => {
         if (shape.type === "sp" || shape.type === "cxnSp") {
           return {
             ...shape,
@@ -151,40 +186,44 @@ export function ShapeToolbar({
         return shape;
       });
     },
-    [primaryId, updateShape]
+    [primaryId, onShapeChange]
   );
 
   const handleDelete = useCallback(() => {
-    deleteSelected();
-  }, [deleteSelected]);
+    if (hasSelection) {
+      onDelete(selectedIds);
+    }
+  }, [onDelete, selectedIds, hasSelection]);
 
   const handleDuplicate = useCallback(() => {
-    duplicateSelected();
-  }, [duplicateSelected]);
+    if (hasSelection) {
+      onDuplicate();
+    }
+  }, [onDuplicate, hasSelection]);
 
   const handleBringToFront = useCallback(() => {
     if (primaryId) {
-      reorderShape(primaryId, "front");
+      onReorder(primaryId, "front");
     }
-  }, [primaryId, reorderShape]);
+  }, [primaryId, onReorder]);
 
   const handleSendToBack = useCallback(() => {
     if (primaryId) {
-      reorderShape(primaryId, "back");
+      onReorder(primaryId, "back");
     }
-  }, [primaryId, reorderShape]);
+  }, [primaryId, onReorder]);
 
   const handleBringForward = useCallback(() => {
     if (primaryId) {
-      reorderShape(primaryId, "forward");
+      onReorder(primaryId, "forward");
     }
-  }, [primaryId, reorderShape]);
+  }, [primaryId, onReorder]);
 
   const handleSendBackward = useCallback(() => {
     if (primaryId) {
-      reorderShape(primaryId, "backward");
+      onReorder(primaryId, "backward");
     }
-  }, [primaryId, reorderShape]);
+  }, [primaryId, onReorder]);
 
   const containerStyle: CSSProperties = {
     display: "flex",
@@ -207,7 +246,7 @@ export function ShapeToolbar({
       {/* Undo/Redo */}
       <Button
         variant="ghost"
-        onClick={undo}
+        onClick={onUndo}
         disabled={!canUndo}
         title="Undo (Ctrl+Z)"
         style={{ padding: "4px 6px" }}
@@ -216,7 +255,7 @@ export function ShapeToolbar({
       </Button>
       <Button
         variant="ghost"
-        onClick={redo}
+        onClick={onRedo}
         disabled={!canRedo}
         title="Redo (Ctrl+Y)"
         style={{ padding: "4px 6px" }}

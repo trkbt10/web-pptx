@@ -3,23 +3,32 @@
  *
  * Renders selection UI for selected shapes.
  * Supports multi-selection with a combined bounding box.
+ *
+ * Props-based component that receives all state and callbacks as props.
  */
 
 import { useCallback, useMemo } from "react";
-import type { Pixels } from "../../pptx/domain/types";
-import { useSlideEditor } from "./context";
-import { findShapeByIdWithParents } from "./shape/query";
-import { getAbsoluteBounds } from "./shape/transform";
-import { clientToSlideCoords } from "./shape/coords";
+import type { Slide } from "../../pptx/domain";
+import type { Pixels, ShapeId } from "../../pptx/domain/types";
+import type { SelectionState, ResizeHandlePosition } from "../state";
+import type { SlideEditorAction } from "./types";
+import { findShapeByIdWithParents } from "../shape/query";
+import { getAbsoluteBounds } from "../shape/transform";
+import { clientToSlideCoords } from "../shape/coords";
 import { SelectionBox } from "./components/SelectionBox";
 import { MultiSelectionBox } from "./components/MultiSelectionBox";
-import type { ResizeHandlePosition, ShapeId } from "./types";
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export type ShapeSelectorProps = {
+  /** Current slide */
+  readonly slide: Slide;
+  /** Selection state */
+  readonly selection: SelectionState;
+  /** Dispatch action */
+  readonly dispatch: (action: SlideEditorAction) => void;
   /** Slide width */
   readonly width: Pixels;
   /** Slide height */
@@ -126,10 +135,13 @@ function getRotatedCorners(
  *
  * This component should be rendered as an overlay on the slide canvas.
  */
-export function ShapeSelector({ width, height }: ShapeSelectorProps) {
-  const { slide, state, dispatch } = useSlideEditor();
-  const { selection } = state;
-
+export function ShapeSelector({
+  slide,
+  selection,
+  dispatch,
+  width,
+  height,
+}: ShapeSelectorProps) {
   // Get bounds for selected shapes using proper group transform handling
   const selectedBounds = useMemo(() => {
     const bounds: ShapeBounds[] = [];

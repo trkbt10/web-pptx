@@ -5,7 +5,7 @@
  */
 
 import type { MenuEntry } from "../../../ui/context-menu";
-import type { ContextMenuActions } from "../../hooks/useContextMenuActions";
+import type { ContextMenuActions } from "../SlideContextMenu";
 
 /**
  * Get group/ungroup menu items

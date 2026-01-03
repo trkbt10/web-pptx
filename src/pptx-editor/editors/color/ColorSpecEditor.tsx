@@ -5,10 +5,10 @@
  * Advanced color modes (scheme, hsl, etc.) are accessible via a mode menu.
  */
 
-import { useCallback, type CSSProperties } from "react";
+import { useCallback, useMemo, type CSSProperties } from "react";
 import { Input, Select } from "../../ui/primitives";
 import { FieldGroup } from "../../ui/layout";
-import { ColorSwatch } from "../../ui/color";
+import { FillPreview } from "../../ui/color";
 import { PercentEditor, DegreesEditor } from "../primitives";
 import { deg, pct } from "../../../pptx/domain/types";
 import type {
@@ -18,6 +18,7 @@ import type {
   SystemColor,
   PresetColor,
   HslColor,
+  SolidFill,
 } from "../../../pptx/domain/color";
 import type { EditorProps, SelectOption } from "../../types";
 
@@ -78,6 +79,15 @@ const hexInputStyle: CSSProperties = {
   fontFamily: "monospace",
 };
 
+const previewContainerStyle: CSSProperties = {
+  width: "24px",
+  height: "24px",
+  borderRadius: "4px",
+  flexShrink: 0,
+  border: "1px solid var(--border-subtle, rgba(255, 255, 255, 0.08))",
+  overflow: "hidden",
+};
+
 function createDefaultColorSpec(type: ColorSpecType): ColorSpec {
   switch (type) {
     case "srgb":
@@ -101,6 +111,20 @@ function getHexPreview(spec: ColorSpec): string {
   return "888888";
 }
 
+function createSolidFillFromHex(hex: string): SolidFill {
+  return {
+    type: "solidFill",
+    color: { spec: { type: "srgb", value: hex } },
+  };
+}
+
+function getDisabledContainerStyle(disabled?: boolean): CSSProperties {
+  return {
+    ...previewContainerStyle,
+    opacity: disabled ? 0.5 : 1,
+  };
+}
+
 /**
  * Compact, user-friendly color specification editor.
  * sRGB is the primary mode with swatch + hex input.
@@ -120,13 +144,20 @@ export function ColorSpecEditor({
     [onChange]
   );
 
+  const previewFill = useMemo(
+    () => createSolidFillFromHex(getHexPreview(value)),
+    [value]
+  );
+
   const renderEditor = () => {
     switch (value.type) {
       case "srgb": {
         const srgbValue = value as SrgbColor;
         return (
           <div style={rowStyle}>
-            <ColorSwatch color={srgbValue.value} size="md" disabled={disabled} />
+            <div style={getDisabledContainerStyle(disabled)}>
+              <FillPreview fill={previewFill} />
+            </div>
             <Input
               type="text"
               value={srgbValue.value}
@@ -152,7 +183,9 @@ export function ColorSpecEditor({
         const schemeValue = value as SchemeColor;
         return (
           <div style={rowStyle}>
-            <ColorSwatch color={getHexPreview(value)} size="md" disabled={disabled} />
+            <div style={getDisabledContainerStyle(disabled)}>
+              <FillPreview fill={previewFill} />
+            </div>
             <Select
               value={schemeValue.value}
               onChange={(v) => onChange({ ...schemeValue, value: v as SchemeColor["value"] })}
@@ -178,7 +211,9 @@ export function ColorSpecEditor({
         return (
           <>
             <div style={rowStyle}>
-              <ColorSwatch color={getHexPreview(value)} size="md" disabled={disabled} />
+              <div style={getDisabledContainerStyle(disabled)}>
+                <FillPreview fill={previewFill} />
+              </div>
               <Input
                 type="text"
                 value={systemValue.value}
@@ -205,7 +240,9 @@ export function ColorSpecEditor({
         const presetValue = value as PresetColor;
         return (
           <div style={rowStyle}>
-            <ColorSwatch color={getHexPreview(value)} size="md" disabled={disabled} />
+            <div style={getDisabledContainerStyle(disabled)}>
+              <FillPreview fill={previewFill} />
+            </div>
             <Input
               type="text"
               value={presetValue.value}
@@ -232,7 +269,9 @@ export function ColorSpecEditor({
         return (
           <>
             <div style={rowStyle}>
-              <ColorSwatch color={getHexPreview(value)} size="md" disabled={disabled} />
+              <div style={getDisabledContainerStyle(disabled)}>
+                <FillPreview fill={previewFill} />
+              </div>
               <span style={{ flex: 1, fontSize: "12px", color: "var(--text-secondary)" }}>
                 H:{hslValue.hue}° S:{hslValue.saturation}% L:{hslValue.luminance}%
               </span>

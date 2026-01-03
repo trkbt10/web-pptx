@@ -5,11 +5,9 @@
  * - Selection by clicking
  * - Multi-selection with Ctrl/Cmd+click
  * - Context menu for group/ungroup/reorder/delete
- * - Drag-and-drop reordering (top-level only)
  * - Expandable groups
  *
- * Note: This is pure content without container styles.
- * Use Panel component to wrap if needed.
+ * Props-based component that can be used with any state management.
  */
 
 import {
@@ -19,18 +17,32 @@ import {
   type CSSProperties,
   type MouseEvent,
 } from "react";
-import type { Shape, GrpShape } from "../../pptx/domain";
-import { useSlideEditor } from "./context";
-import { getShapeId, hasShapeId } from "./shape/identity";
-import { isTopLevelShape } from "./shape/query";
+import type { Slide, Shape, GrpShape } from "../../pptx/domain";
+import type { ShapeId } from "../../pptx/domain/types";
+import type { SelectionState } from "../state";
+import { getShapeId, hasShapeId } from "../shape/identity";
+import { isTopLevelShape } from "../shape/query";
 import { Button } from "../ui/primitives";
-import { SlideContextMenu } from "./context-menu/SlideContextMenu";
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export type LayerPanelProps = {
+  /** Current slide */
+  readonly slide: Slide;
+  /** Current selection state */
+  readonly selection: SelectionState;
+  /** Primary selected shape */
+  readonly primaryShape: Shape | undefined;
+  /** Callback when a shape is selected */
+  readonly onSelect: (shapeId: ShapeId, addToSelection: boolean) => void;
+  /** Callback to group shapes */
+  readonly onGroup: (shapeIds: readonly ShapeId[]) => void;
+  /** Callback to ungroup a shape */
+  readonly onUngroup: (shapeId: ShapeId) => void;
+  /** Callback to clear selection */
+  readonly onClearSelection: () => void;
   /** Custom class name */
   readonly className?: string;
   /** Custom style */
@@ -45,16 +57,9 @@ type ShapeItemProps = {
   readonly isExpanded: boolean;
   readonly onSelect: (shapeId: string, addToSelection: boolean) => void;
   readonly onToggleExpand: (shapeId: string) => void;
-  readonly onContextMenu: (e: MouseEvent, shapeId: string) => void;
   readonly expandedGroups: ReadonlySet<string>;
   readonly selectedIds: readonly string[];
 };
-
-type ContextMenuState = {
-  readonly x: number;
-  readonly y: number;
-  readonly shapeId: string;
-} | null;
 
 // =============================================================================
 // Helper Functions
@@ -168,7 +173,6 @@ function ShapeItem({
   isExpanded,
   onSelect,
   onToggleExpand,
-  onContextMenu,
   expandedGroups,
   selectedIds,
 }: ShapeItemProps) {
@@ -188,14 +192,6 @@ function ShapeItem({
     e.stopPropagation();
     if (shapeId) {
       onToggleExpand(shapeId);
-    }
-  };
-
-  const handleContextMenu = (e: MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (shapeId) {
-      onContextMenu(e, shapeId);
     }
   };
 
@@ -250,7 +246,6 @@ function ShapeItem({
       <div
         style={itemStyle}
         onClick={handleClick}
-        onContextMenu={handleContextMenu}
         title={getShapeName(shape)}
       >
         {/* Expand/Collapse toggle for groups */}
@@ -300,7 +295,6 @@ function ShapeItem({
                 isExpanded={expandedGroups.has(childId)}
                 onSelect={onSelect}
                 onToggleExpand={onToggleExpand}
-                onContextMenu={onContextMenu}
                 expandedGroups={expandedGroups}
                 selectedIds={selectedIds}
               />
@@ -322,7 +316,6 @@ type ShapeListProps = {
   readonly expandedGroups: ReadonlySet<string>;
   readonly onSelect: (shapeId: string, addToSelection: boolean) => void;
   readonly onToggleExpand: (shapeId: string) => void;
-  readonly onContextMenu: (e: MouseEvent, shapeId: string) => void;
   readonly onEmptyClick: () => void;
 };
 
@@ -333,7 +326,6 @@ function ShapeList({
   expandedGroups,
   onSelect,
   onToggleExpand,
-  onContextMenu,
   onEmptyClick,
 }: ShapeListProps) {
   const listStyle: CSSProperties = {
@@ -378,7 +370,6 @@ function ShapeList({
             isExpanded={isExpanded}
             onSelect={onSelect}
             onToggleExpand={onToggleExpand}
-            onContextMenu={onContextMenu}
             expandedGroups={expandedGroups}
             selectedIds={selectedIds}
           />
@@ -441,22 +432,23 @@ function LayerToolbar({
 /**
  * Layer panel showing shape hierarchy.
  *
- * Features:
- * - Tree view of all shapes
- * - Click to select, Ctrl/Cmd+click for multi-select
- * - Right-click context menu for actions
- * - Expandable group shapes
- *
- * Note: This is pure content without container styles.
- * Use Panel component to wrap if needed.
+ * Props-based component that receives all state and callbacks as props.
+ * Can be used with SlideEditor context or with PresentationEditor directly.
  */
-export function LayerPanel({ className, style }: LayerPanelProps) {
-  const { slide, state, dispatch, primaryShape } = useSlideEditor();
-  const { selection } = state;
+export function LayerPanel({
+  slide,
+  selection,
+  primaryShape,
+  onSelect,
+  onGroup,
+  onUngroup,
+  onClearSelection,
+  className,
+  style,
+}: LayerPanelProps) {
   const selectedIds = selection.selectedIds;
 
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
 
   // Toggle group expansion
   const handleToggleExpand = useCallback((shapeId: string) => {
@@ -474,31 +466,10 @@ export function LayerPanel({ className, style }: LayerPanelProps) {
   // Handle shape selection
   const handleSelect = useCallback(
     (shapeId: string, addToSelection: boolean) => {
-      dispatch({ type: "SELECT", shapeId, addToSelection });
+      onSelect(shapeId as ShapeId, addToSelection);
     },
-    [dispatch]
+    [onSelect]
   );
-
-  // Handle context menu
-  const handleContextMenu = useCallback(
-    (e: MouseEvent, shapeId: string) => {
-      // If right-clicked shape is not selected, select it first
-      if (!selectedIds.includes(shapeId)) {
-        dispatch({ type: "SELECT", shapeId, addToSelection: false });
-      }
-      setContextMenu({
-        x: e.clientX,
-        y: e.clientY,
-        shapeId,
-      });
-    },
-    [dispatch, selectedIds]
-  );
-
-  // Close context menu
-  const handleCloseContextMenu = useCallback(() => {
-    setContextMenu(null);
-  }, []);
 
   // Check if can group (2+ top-level shapes selected)
   const canGroup = useMemo(() => {
@@ -520,23 +491,22 @@ export function LayerPanel({ className, style }: LayerPanelProps) {
   // Actions
   const handleGroup = useCallback(() => {
     if (canGroup) {
-      dispatch({ type: "GROUP_SHAPES", shapeIds: selectedIds });
+      onGroup(selectedIds);
     }
-  }, [dispatch, selectedIds, canGroup]);
+  }, [onGroup, selectedIds, canGroup]);
 
   const handleUngroup = useCallback(() => {
     if (canUngroup && primaryShape && hasShapeId(primaryShape)) {
-      dispatch({ type: "UNGROUP_SHAPE", shapeId: primaryShape.nonVisual.id });
+      onUngroup(primaryShape.nonVisual.id);
     }
-  }, [dispatch, primaryShape, canUngroup]);
+  }, [onUngroup, primaryShape, canUngroup]);
 
   // Clear selection when clicking empty area
   const handlePanelClick = useCallback(() => {
-    dispatch({ type: "CLEAR_SELECTION" });
-  }, [dispatch]);
+    onClearSelection();
+  }, [onClearSelection]);
 
   // Internal flex layout for list + toolbar structure
-  // Note: No bg/border here - those are provided by Panel wrapper
   const layoutStyle: CSSProperties = {
     display: "flex",
     flexDirection: "column",
@@ -553,7 +523,6 @@ export function LayerPanel({ className, style }: LayerPanelProps) {
         expandedGroups={expandedGroups}
         onSelect={handleSelect}
         onToggleExpand={handleToggleExpand}
-        onContextMenu={handleContextMenu}
         onEmptyClick={handlePanelClick}
       />
 
@@ -564,15 +533,6 @@ export function LayerPanel({ className, style }: LayerPanelProps) {
         onGroup={handleGroup}
         onUngroup={handleUngroup}
       />
-
-      {/* Context menu */}
-      {contextMenu && (
-        <SlideContextMenu
-          x={contextMenu.x}
-          y={contextMenu.y}
-          onClose={handleCloseContextMenu}
-        />
-      )}
     </div>
   );
 }
