@@ -5,9 +5,10 @@
  */
 
 import type { Shape } from "../../../pptx/domain";
-import type { Bounds } from "../../../pptx/domain/types";
+import type { Bounds, ShapeId } from "../../../pptx/domain/types";
 import { px } from "../../../pptx/domain/types";
 import { getShapeTransform } from "./transform";
+import { findShapeById } from "./query";
 
 /**
  * Get bounds from shape transform
@@ -55,5 +56,50 @@ export function getCombinedBounds(shapes: readonly Shape[]): Bounds | undefined 
     y: px(minY),
     width: px(maxX - minX),
     height: px(maxY - minY),
+  };
+}
+
+/**
+ * Collect bounds for specified shape IDs
+ * Returns a Map from ShapeId to Bounds for shapes that have valid bounds.
+ */
+export function collectBoundsForIds(
+  shapes: readonly Shape[],
+  ids: readonly ShapeId[]
+): Map<ShapeId, Bounds> {
+  const result = new Map<ShapeId, Bounds>();
+  for (const id of ids) {
+    const shape = findShapeById(shapes, id);
+    if (shape) {
+      const bounds = getShapeBounds(shape);
+      if (bounds) {
+        result.set(id, bounds);
+      }
+    }
+  }
+  return result;
+}
+
+/**
+ * Calculate combined center point for shapes
+ */
+export function getCombinedCenter(
+  boundsMap: Map<ShapeId, Bounds>
+): { centerX: number; centerY: number } | undefined {
+  if (boundsMap.size === 0) {
+    return undefined;
+  }
+
+  let totalCenterX = 0;
+  let totalCenterY = 0;
+
+  for (const bounds of boundsMap.values()) {
+    totalCenterX += (bounds.x as number) + (bounds.width as number) / 2;
+    totalCenterY += (bounds.y as number) + (bounds.height as number) / 2;
+  }
+
+  return {
+    centerX: totalCenterX / boundsMap.size,
+    centerY: totalCenterY / boundsMap.size,
   };
 }

@@ -4,7 +4,7 @@
  * State management logic for slide editing operations.
  */
 
-import type { Slide, Shape, GrpShape, GroupTransform, Transform } from "../../pptx/domain";
+import type { Slide, Shape } from "../../pptx/domain";
 import type { Bounds, ShapeId } from "../../pptx/domain/types";
 import { px, deg } from "../../pptx/domain/types";
 import {
@@ -24,8 +24,14 @@ import {
   reorderShape,
   generateShapeId,
 } from "./shape/mutation";
-import { getShapeBounds } from "./shape/bounds";
+import {
+  getShapeBounds,
+  getCombinedBounds,
+  collectBoundsForIds,
+  getCombinedCenter,
+} from "./shape/bounds";
 import { getShapeTransform, withUpdatedTransform } from "./shape/transform";
+import { ungroupShape, groupShapes } from "./shape/group";
 
 // =============================================================================
 // Helper Functions
@@ -41,17 +47,6 @@ function getPrimaryIdAfterDeletion(
   return remainingIds[0];
 }
 
-function getExtentOrDefault<T>(
-  extent: T | undefined,
-  fallback: T
-): T {
-  return extent ?? fallback;
-}
-
-function getScaleFactor(extent: number, target: number): number {
-  return extent !== 0 ? target / extent : 1;
-}
-
 function getPrimaryIdAfterDeselect(
   newSelected: readonly ShapeId[],
   deselectedId: ShapeId,
@@ -61,27 +56,6 @@ function getPrimaryIdAfterDeselect(
     return newSelected[0];
   }
   return currentPrimaryId;
-}
-
-function getRotationCenter(
-  isMultiSelection: boolean,
-  combinedCenter: number,
-  shapeCenter: number
-): number {
-  if (isMultiSelection) {
-    return combinedCenter;
-  }
-  return shapeCenter;
-}
-
-function getChildTransform(child: Shape): Transform | undefined {
-  if (!("properties" in child)) {
-    return undefined;
-  }
-  if (child.properties && "transform" in child.properties) {
-    return child.properties.transform;
-  }
-  return undefined;
 }
 
 // =============================================================================
@@ -169,171 +143,35 @@ export function slideEditorReducer(
     }
 
     case "UNGROUP_SHAPE": {
-      // Find the group shape at top level
-      const groupIndex = currentSlide.shapes.findIndex(
-        (s) => s.type === "grpSp" && s.nonVisual.id === action.shapeId
-      );
-      if (groupIndex === -1) {return state;}
+      const result = ungroupShape(currentSlide.shapes, action.shapeId);
+      if (!result) {
+        return state;
+      }
 
-      const group = currentSlide.shapes[groupIndex];
-      if (group.type !== "grpSp") {return state;}
-
-      // Extract children with adjusted transforms (convert from group-relative to slide-relative)
-      const children = group.children.map((child) => {
-        // Skip shapes without properties (e.g., contentPart)
-        if (!("properties" in child)) {return child;}
-
-        const childTransform = getChildTransform(child);
-        const groupTransform = group.properties.transform;
-
-        if (!childTransform || !groupTransform) {return child;}
-
-        // Calculate child's position relative to the slide
-        // Child coordinates are relative to group's child extents
-        const childExtX = getExtentOrDefault(groupTransform.childExtentWidth, groupTransform.width);
-        const childExtY = getExtentOrDefault(groupTransform.childExtentHeight, groupTransform.height);
-        const childOffX = getExtentOrDefault(groupTransform.childOffsetX, px(0));
-        const childOffY = getExtentOrDefault(groupTransform.childOffsetY, px(0));
-
-        // Scale factor from child coordinate space to group bounds
-        const scaleX = getScaleFactor(childExtX as number, groupTransform.width as number);
-        const scaleY = getScaleFactor(childExtY as number, groupTransform.height as number);
-
-        // Transform child position to slide coordinates
-        const newX =
-          (groupTransform.x as number) +
-          ((childTransform.x as number) - (childOffX as number)) * scaleX;
-        const newY =
-          (groupTransform.y as number) +
-          ((childTransform.y as number) - (childOffY as number)) * scaleY;
-        const newWidth = (childTransform.width as number) * scaleX;
-        const newHeight = (childTransform.height as number) * scaleY;
-
-        return {
-          ...child,
-          properties: {
-            ...child.properties,
-            transform: {
-              ...childTransform,
-              x: newX,
-              y: newY,
-              width: newWidth,
-              height: newHeight,
-            },
-          },
-        } as Shape;
-      });
-
-      // Replace group with its children at the same position
-      const newShapes = [
-        ...currentSlide.shapes.slice(0, groupIndex),
-        ...children,
-        ...currentSlide.shapes.slice(groupIndex + 1),
-      ];
-      const newSlide: Slide = { ...currentSlide, shapes: newShapes };
-
-      // Select the ungrouped children
-      const childIds = children
-        .filter((s) => "nonVisual" in s)
-        .map((s) => (s as Shape & { nonVisual: { id: string } }).nonVisual.id);
-
+      const newSlide: Slide = { ...currentSlide, shapes: result.newShapes };
       return {
         ...state,
         slideHistory: pushHistory(state.slideHistory, newSlide),
         selection: {
-          selectedIds: childIds,
-          primaryId: childIds[0],
+          selectedIds: result.childIds,
+          primaryId: result.childIds[0],
         },
       };
     }
 
     case "GROUP_SHAPES": {
-      if (action.shapeIds.length < 2) {return state;}
-
-      // Find shapes to group (must be at top level for now)
-      const shapesToGroup: Shape[] = [];
-      const shapeIndices: number[] = [];
-      const idSet = new Set(action.shapeIds);
-
-      for (let i = 0; i < currentSlide.shapes.length; i++) {
-        const shape = currentSlide.shapes[i];
-        if ("nonVisual" in shape && idSet.has(shape.nonVisual.id)) {
-          shapesToGroup.push(shape);
-          shapeIndices.push(i);
-        }
+      const result = groupShapes(currentSlide.shapes, action.shapeIds);
+      if (!result) {
+        return state;
       }
 
-      if (shapesToGroup.length < 2) {return state;}
-
-      // Calculate combined bounding box for the group
-      let minX = Infinity;
-      let minY = Infinity;
-      let maxX = -Infinity;
-      let maxY = -Infinity;
-
-      for (const shape of shapesToGroup) {
-        const transform = getShapeTransform(shape);
-        if (transform) {
-          const x = transform.x as number;
-          const y = transform.y as number;
-          const w = transform.width as number;
-          const h = transform.height as number;
-          minX = Math.min(minX, x);
-          minY = Math.min(minY, y);
-          maxX = Math.max(maxX, x + w);
-          maxY = Math.max(maxY, y + h);
-        }
-      }
-
-      const groupWidth = maxX - minX;
-      const groupHeight = maxY - minY;
-
-      // Generate new group ID
-      const newGroupId = generateShapeId(currentSlide.shapes);
-
-      // Create group transform with childOffset/Extent matching the group bounds
-      const groupTransform: GroupTransform = {
-        x: px(minX),
-        y: px(minY),
-        width: px(groupWidth),
-        height: px(groupHeight),
-        rotation: deg(0),
-        flipH: false,
-        flipV: false,
-        childOffsetX: px(minX),
-        childOffsetY: px(minY),
-        childExtentWidth: px(groupWidth),
-        childExtentHeight: px(groupHeight),
-      };
-
-      // Create the group shape
-      const groupShape: GrpShape = {
-        type: "grpSp",
-        nonVisual: {
-          id: newGroupId,
-          name: `Group ${newGroupId}`,
-        },
-        properties: {
-          transform: groupTransform,
-        },
-        children: shapesToGroup,
-      };
-
-      // Remove grouped shapes and insert group at first shape's position
-      const insertIndex = Math.min(...shapeIndices);
-      const newShapes = currentSlide.shapes.filter(
-        (s) => !("nonVisual" in s) || !idSet.has(s.nonVisual.id)
-      );
-      newShapes.splice(insertIndex, 0, groupShape);
-
-      const newSlide: Slide = { ...currentSlide, shapes: newShapes };
-
+      const newSlide: Slide = { ...currentSlide, shapes: result.newShapes };
       return {
         ...state,
         slideHistory: pushHistory(state.slideHistory, newSlide),
         selection: {
-          selectedIds: [newGroupId],
-          primaryId: newGroupId,
+          selectedIds: [result.groupId],
+          primaryId: result.groupId,
         },
       };
     }
@@ -414,16 +252,10 @@ export function slideEditorReducer(
       if (state.selection.selectedIds.length === 0) {
         return state;
       }
-      const initialBounds = new Map<ShapeId, Bounds>();
-      for (const id of state.selection.selectedIds) {
-        const shape = findShapeById(currentSlide.shapes, id);
-        if (shape) {
-          const bounds = getShapeBounds(shape);
-          if (bounds) {
-            initialBounds.set(id, bounds);
-          }
-        }
-      }
+      const initialBounds = collectBoundsForIds(
+        currentSlide.shapes,
+        state.selection.selectedIds
+      );
       return {
         ...state,
         drag: {
@@ -438,41 +270,29 @@ export function slideEditorReducer(
 
     case "START_RESIZE": {
       const primaryId = state.selection.primaryId;
-      if (!primaryId) {return state;}
+      if (!primaryId) {
+        return state;
+      }
       const primaryShape = findShapeById(currentSlide.shapes, primaryId);
-      if (!primaryShape) {return state;}
+      if (!primaryShape) {
+        return state;
+      }
       const primaryBounds = getShapeBounds(primaryShape);
-      if (!primaryBounds) {return state;}
+      if (!primaryBounds) {
+        return state;
+      }
 
       // Collect bounds for all selected shapes
-      const initialBoundsMap = new Map<ShapeId, Bounds>();
-      for (const id of state.selection.selectedIds) {
-        const shape = findShapeById(currentSlide.shapes, id);
-        if (shape) {
-          const bounds = getShapeBounds(shape);
-          if (bounds) {
-            initialBoundsMap.set(id, bounds);
-          }
-        }
-      }
+      const initialBoundsMap = collectBoundsForIds(
+        currentSlide.shapes,
+        state.selection.selectedIds
+      );
 
-      // Calculate combined bounding box
-      let minX = Infinity;
-      let minY = Infinity;
-      let maxX = -Infinity;
-      let maxY = -Infinity;
-      for (const bounds of initialBoundsMap.values()) {
-        minX = Math.min(minX, bounds.x as number);
-        minY = Math.min(minY, bounds.y as number);
-        maxX = Math.max(maxX, (bounds.x as number) + (bounds.width as number));
-        maxY = Math.max(maxY, (bounds.y as number) + (bounds.height as number));
-      }
-      const combinedBounds: Bounds = {
-        x: px(minX),
-        y: px(minY),
-        width: px(maxX - minX),
-        height: px(maxY - minY),
-      };
+      // Calculate combined bounding box from collected shapes
+      const shapesWithBounds = state.selection.selectedIds
+        .map((id) => findShapeById(currentSlide.shapes, id))
+        .filter((s): s is Shape => s !== undefined);
+      const combinedBounds = getCombinedBounds(shapesWithBounds) ?? primaryBounds;
 
       return {
         ...state,
@@ -494,45 +314,44 @@ export function slideEditorReducer(
 
     case "START_ROTATE": {
       const primaryId = state.selection.primaryId;
-      if (!primaryId) {return state;}
+      if (!primaryId) {
+        return state;
+      }
       const primaryShape = findShapeById(currentSlide.shapes, primaryId);
-      if (!primaryShape) {return state;}
+      if (!primaryShape) {
+        return state;
+      }
       const primaryTransform = getShapeTransform(primaryShape);
-      if (!primaryTransform) {return state;}
+      if (!primaryTransform) {
+        return state;
+      }
 
       // Collect rotations and bounds for all selected shapes
       const initialRotationsMap = new Map<ShapeId, typeof primaryTransform.rotation>();
-      const initialBoundsMap = new Map<ShapeId, Bounds>();
+      const initialBoundsMap = collectBoundsForIds(
+        currentSlide.shapes,
+        state.selection.selectedIds
+      );
+
+      // Collect rotations separately (requires transform access)
       for (const id of state.selection.selectedIds) {
         const shape = findShapeById(currentSlide.shapes, id);
         if (shape) {
           const transform = getShapeTransform(shape);
-          const bounds = getShapeBounds(shape);
-          if (transform && bounds) {
+          if (transform && initialBoundsMap.has(id)) {
             initialRotationsMap.set(id, transform.rotation);
-            initialBoundsMap.set(id, bounds);
           }
         }
       }
 
-      // Calculate combined center point for all selected shapes
-      let totalCenterX = 0;
-      let totalCenterY = 0;
-      let count = 0;
-      for (const bounds of initialBoundsMap.values()) {
-        totalCenterX += (bounds.x as number) + (bounds.width as number) / 2;
-        totalCenterY += (bounds.y as number) + (bounds.height as number) / 2;
-        count++;
-      }
-      const combinedCenterX = px(count > 0 ? totalCenterX / count : 0);
-      const combinedCenterY = px(count > 0 ? totalCenterY / count : 0);
-
-      // For single selection, use shape center
+      // Calculate center point: combined center for multi-selection, shape center for single
       const isMultiSelection = state.selection.selectedIds.length > 1;
+      const combinedCenter = getCombinedCenter(initialBoundsMap);
       const shapeCenterX = (primaryTransform.x as number) + (primaryTransform.width as number) / 2;
       const shapeCenterY = (primaryTransform.y as number) + (primaryTransform.height as number) / 2;
-      const centerX = px(getRotationCenter(isMultiSelection, combinedCenterX as number, shapeCenterX));
-      const centerY = px(getRotationCenter(isMultiSelection, combinedCenterY as number, shapeCenterY));
+
+      const centerX = px(isMultiSelection && combinedCenter ? combinedCenter.centerX : shapeCenterX);
+      const centerY = px(isMultiSelection && combinedCenter ? combinedCenter.centerY : shapeCenterY);
 
       const startAngle = deg(
         Math.atan2(
