@@ -18,9 +18,7 @@ import type { XmlElement, XmlDocument } from "../../xml";
 import { getByPath, getChild } from "../../xml";
 import type { FileCache } from "./types";
 import type { SlideSize, Shape, SpShape } from "../../pptx/domain";
-import type { ResolvedBackgroundFill } from "../../pptx/render/core";
-import type { HtmlRenderContext } from "../../pptx/render/html/context";
-import { createStyleCollector } from "../../pptx/render/html/context";
+import type { ResolvedBackgroundFill, RenderContext } from "../../pptx/render/context";
 
 // =============================================================================
 // ZipFile Adapter
@@ -173,7 +171,7 @@ function toResolvedBackgroundFill(
 // =============================================================================
 
 /**
- * Create a complete HtmlRenderContext from API Slide.
+ * Create a RenderContext from API Slide.
  *
  * This is the main function for the editor to use when rendering edited slides.
  * It includes:
@@ -181,14 +179,14 @@ function toResolvedBackgroundFill(
  * - Resource resolver (for images)
  * - Font scheme
  * - Resolved background (from slide → layout → master hierarchy)
- * - Style collector (for HTML/SVG rendering)
+ * - Layout shapes (non-placeholder shapes from layout)
  */
 export function createRenderContextFromApiSlide(
   apiSlide: ApiSlide,
   cache: FileCache,
   slideSize: SlideSize,
   defaultTextStyle: XmlElement | null = null,
-): HtmlRenderContext {
+): RenderContext {
   // Build SlideRenderContext
   const slideRenderCtx = createSlideRenderContextFromApiSlide(apiSlide, cache, defaultTextStyle);
 
@@ -199,17 +197,11 @@ export function createRenderContextFromApiSlide(
   // Extract layout non-placeholder shapes
   const layoutShapes = getLayoutNonPlaceholderShapes(apiSlide);
 
-  // Create CoreRenderContext with layout shapes
-  const coreCtx = createRenderContextFromSlideContext(slideRenderCtx, slideSize, {
+  // Create RenderContext with all resolved data
+  return createRenderContextFromSlideContext(slideRenderCtx, slideSize, {
     resolvedBackground,
     layoutShapes,
   });
-
-  // Extend to HtmlRenderContext by adding style collector
-  return {
-    ...coreCtx,
-    styles: createStyleCollector(),
-  };
 }
 
 // =============================================================================

@@ -17,7 +17,7 @@ import type {
   PresentationEditorContextValue,
 } from "./types";
 import { presentationEditorReducer, createPresentationEditorState } from "./reducer/reducer";
-import { findSlideById } from "./document-ops";
+import { findSlideById } from "./slide";
 import { findShapeById } from "../shape/query";
 
 // =============================================================================

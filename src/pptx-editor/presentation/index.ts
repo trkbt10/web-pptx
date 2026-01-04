@@ -17,7 +17,7 @@ export type {
 } from "./types";
 
 // =============================================================================
-// Document Operations
+// Slide Operations
 // =============================================================================
 export {
   generateSlideId,
@@ -28,9 +28,15 @@ export {
   duplicateSlide,
   moveSlide,
   updateSlide,
+} from "./slide";
+
+// =============================================================================
+// Document Initialization
+// =============================================================================
+export {
   createDocumentFromPresentation,
   createEmptyDocument,
-} from "./document-ops";
+} from "./document-init";
 
 // =============================================================================
 // State Management

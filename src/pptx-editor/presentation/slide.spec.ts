@@ -1,7 +1,5 @@
 /**
- * @file Document operations tests
- *
- * Tests for pure document manipulation functions.
+ * @file Slide operations tests
  */
 
 /* eslint-disable no-restricted-syntax, @typescript-eslint/no-explicit-any, custom/no-as-outside-guard -- Test file uses flexible typing for mock data */
@@ -18,13 +16,7 @@ import {
   duplicateSlide,
   moveSlide,
   updateSlide,
-  createDocumentFromPresentation,
-  createEmptyDocument,
-} from "./document-ops";
-
-// =============================================================================
-// Test Fixtures
-// =============================================================================
+} from "./slide";
 
 function createEmptySlide(): Slide {
   return { shapes: [] };
@@ -54,13 +46,9 @@ function createTestDocument(slideCount = 3): PresentationDocument {
   };
 }
 
-// =============================================================================
-// Tests
-// =============================================================================
-
 describe("generateSlideId", () => {
   it("should generate next sequential ID", () => {
-    const doc = createTestDocument(3); // IDs: 1, 2, 3
+    const doc = createTestDocument(3);
     const newId = generateSlideId(doc);
     expect(newId).toBe("4");
   });
@@ -198,17 +186,15 @@ describe("duplicateSlide", () => {
     const result = duplicateSlide(doc, "1");
     expect(result).toBeDefined();
 
-    // Modify original
     doc.slides[0].slide.shapes.push({ type: "pic" } as any);
 
-    // Duplicated slide should not be affected
     expect(result?.document.slides[1].slide.shapes).toHaveLength(1);
   });
 });
 
 describe("moveSlide", () => {
   it("should move slide to new position", () => {
-    const doc = createTestDocument(4); // IDs: 1, 2, 3, 4
+    const doc = createTestDocument(4);
     const result = moveSlide(doc, "1", 2);
 
     expect(result.slides.map((s) => s.id)).toEqual(["2", "3", "1", "4"]);
@@ -260,39 +246,5 @@ describe("updateSlide", () => {
     }));
 
     expect(doc.slides[1].slide.shapes).toHaveLength(0);
-  });
-});
-
-describe("createDocumentFromPresentation", () => {
-  it("should create document with slides", () => {
-    const presentation = {
-      slideSize: { width: px(1920), height: px(1080) },
-    };
-    const slides = [createEmptySlide(), createEmptySlide()];
-
-    const doc = createDocumentFromPresentation(
-      presentation,
-      slides,
-      px(1920),
-      px(1080)
-    );
-
-    expect(doc.slides).toHaveLength(2);
-    expect(doc.slides[0].id).toBe("1");
-    expect(doc.slides[1].id).toBe("2");
-    expect(doc.slideWidth).toBe(px(1920));
-    expect(doc.slideHeight).toBe(px(1080));
-  });
-});
-
-describe("createEmptyDocument", () => {
-  it("should create document with one empty slide", () => {
-    const doc = createEmptyDocument(px(800), px(600));
-
-    expect(doc.slides).toHaveLength(1);
-    expect(doc.slides[0].id).toBe("1");
-    expect(doc.slides[0].slide.shapes).toHaveLength(0);
-    expect(doc.slideWidth).toBe(px(800));
-    expect(doc.slideHeight).toBe(px(600));
   });
 });

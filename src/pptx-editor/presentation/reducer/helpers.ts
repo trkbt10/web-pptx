@@ -11,7 +11,7 @@ import type {
   PresentationEditorState,
   SlideWithId,
 } from "../types";
-import { findSlideById, updateSlide } from "../document-ops";
+import { findSlideById, updateSlide } from "../slide";
 import {
   createInactiveTextEditState,
   isTextEditActive,

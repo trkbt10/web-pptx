@@ -16,7 +16,7 @@ import {
   deleteSlide,
   duplicateSlide,
   moveSlide,
-} from "../document-ops";
+} from "../slide";
 import { pushHistory, createEmptySelection, createIdleDragState } from "../../state";
 
 type AddSlideAction = Extract<PresentationEditorAction, { type: "ADD_SLIDE" }>;

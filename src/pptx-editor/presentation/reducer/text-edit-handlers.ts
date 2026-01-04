@@ -10,7 +10,7 @@ import type {
 } from "../types";
 import type { HandlerMap } from "./handler-types";
 import { updateActiveSlideInDocument } from "./helpers";
-import { findSlideById } from "../document-ops";
+import { findSlideById } from "../slide";
 import { pushHistory } from "../../state";
 import { findShapeById } from "../../shape/query";
 import { updateShapeById } from "../../shape/mutation";

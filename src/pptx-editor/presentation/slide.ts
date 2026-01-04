@@ -1,45 +1,16 @@
 /**
- * @file Presentation document operations
+ * @file Slide operations
  *
- * Pure functions for slide-level operations on presentation documents.
+ * Query and mutation functions for slides within a presentation document.
  */
 
-import type { Slide, Presentation } from "../../pptx/domain";
-import type { Pixels } from "../../pptx/domain/types";
-import type { ColorContext } from "../../pptx/domain/resolution";
-import type { ResourceResolver } from "../../pptx/render/core";
+import type { Slide } from "../../pptx/domain";
 import type { PresentationDocument, SlideWithId, SlideId } from "./types";
 
 // =============================================================================
-// Default Context Values
+// ID Generation
 // =============================================================================
 
-/**
- * Empty color context (no theme colors)
- */
-const EMPTY_COLOR_CONTEXT: ColorContext = {
-  colorScheme: {},
-  colorMap: {},
-};
-
-/**
- * Empty resource resolver (no resources)
- */
-const EMPTY_RESOURCE_RESOLVER: ResourceResolver = {
-  resolve: () => undefined,
-  getMimeType: () => undefined,
-  getFilePath: () => undefined,
-  readFile: () => null,
-  getResourceByType: () => undefined,
-};
-
-// =============================================================================
-// Slide ID Generation
-// =============================================================================
-
-/**
- * Find maximum numeric ID from slides
- */
 function findMaxNumericId(slides: readonly SlideWithId[]): number {
   return slides.reduce((max, slide) => {
     const numId = parseInt(slide.id, 10);
@@ -47,20 +18,14 @@ function findMaxNumericId(slides: readonly SlideWithId[]): number {
   }, 0);
 }
 
-/**
- * Generate a unique slide ID
- */
 export function generateSlideId(document: PresentationDocument): SlideId {
   return String(findMaxNumericId(document.slides) + 1);
 }
 
 // =============================================================================
-// Slide Query Operations
+// Query
 // =============================================================================
 
-/**
- * Find slide by ID
- */
 export function findSlideById(
   document: PresentationDocument,
   slideId: SlideId
@@ -68,9 +33,6 @@ export function findSlideById(
   return document.slides.find((s) => s.id === slideId);
 }
 
-/**
- * Get slide index by ID
- */
 export function getSlideIndex(
   document: PresentationDocument,
   slideId: SlideId
@@ -79,12 +41,9 @@ export function getSlideIndex(
 }
 
 // =============================================================================
-// Slide Mutation Operations
+// Mutation
 // =============================================================================
 
-/**
- * Get insert index for adding a slide
- */
 function getInsertIndex(
   document: PresentationDocument,
   afterSlideId: SlideId | undefined
@@ -96,9 +55,6 @@ function getInsertIndex(
   return afterIndex === -1 ? document.slides.length : afterIndex + 1;
 }
 
-/**
- * Insert slide at specified index
- */
 function insertSlideAt(
   slides: readonly SlideWithId[],
   slide: SlideWithId,
@@ -107,14 +63,6 @@ function insertSlideAt(
   return [...slides.slice(0, index), slide, ...slides.slice(index)];
 }
 
-/**
- * Add a slide to the document
- *
- * @param document - The document to add to
- * @param slide - The slide to add
- * @param afterSlideId - Insert after this slide (undefined = add at end)
- * @returns New document and the new slide's ID
- */
 export function addSlide(
   document: PresentationDocument,
   slide: Slide,
@@ -131,9 +79,6 @@ export function addSlide(
   };
 }
 
-/**
- * Delete a slide from the document
- */
 export function deleteSlide(
   document: PresentationDocument,
   slideId: SlideId
@@ -142,9 +87,6 @@ export function deleteSlide(
   return { ...document, slides: newSlides };
 }
 
-/**
- * Create a duplicated slide with new ID
- */
 function createDuplicatedSlide(
   sourceSlide: SlideWithId,
   newSlideId: SlideId
@@ -158,13 +100,6 @@ function createDuplicatedSlide(
   };
 }
 
-/**
- * Duplicate a slide
- *
- * @param document - The document
- * @param slideId - The slide to duplicate
- * @returns New document and the duplicated slide's ID
- */
 export function duplicateSlide(
   document: PresentationDocument,
   slideId: SlideId
@@ -185,9 +120,6 @@ export function duplicateSlide(
   };
 }
 
-/**
- * Move element in array from one index to another (immutable)
- */
 function moveElementInArray<T>(
   array: readonly T[],
   fromIndex: number,
@@ -205,9 +137,6 @@ function moveElementInArray<T>(
   ];
 }
 
-/**
- * Move a slide to a new position
- */
 export function moveSlide(
   document: PresentationDocument,
   slideId: SlideId,
@@ -222,9 +151,6 @@ export function moveSlide(
   return { ...document, slides };
 }
 
-/**
- * Update a slide in the document
- */
 export function updateSlide(
   document: PresentationDocument,
   slideId: SlideId,
@@ -234,60 +160,4 @@ export function updateSlide(
     s.id === slideId ? { ...s, slide: updater(s.slide) } : s
   );
   return { ...document, slides: newSlides };
-}
-
-// =============================================================================
-// Document Creation
-// =============================================================================
-
-/**
- * Convert slides to SlideWithId array with sequential IDs
- */
-function assignSlideIds(slides: readonly Slide[]): SlideWithId[] {
-  return slides.map((slide, index) => ({
-    id: String(index + 1),
-    slide,
-  }));
-}
-
-/**
- * Create a presentation document from presentation settings and slides
- */
-export function createDocumentFromPresentation(
-  presentation: Presentation,
-  slides: readonly Slide[],
-  slideWidth: Pixels,
-  slideHeight: Pixels,
-  colorContext: ColorContext = EMPTY_COLOR_CONTEXT,
-  resources: ResourceResolver = EMPTY_RESOURCE_RESOLVER
-): PresentationDocument {
-  return {
-    presentation,
-    slides: assignSlideIds(slides),
-    slideWidth,
-    slideHeight,
-    colorContext,
-    resources,
-  };
-}
-
-/**
- * Create an empty presentation document
- */
-export function createEmptyDocument(
-  slideWidth: Pixels,
-  slideHeight: Pixels
-): PresentationDocument {
-  const emptySlide: Slide = { shapes: [] };
-
-  return {
-    presentation: {
-      slideSize: { width: slideWidth, height: slideHeight },
-    },
-    slides: [{ id: "1", slide: emptySlide }],
-    slideWidth,
-    slideHeight,
-    colorContext: EMPTY_COLOR_CONTEXT,
-    resources: EMPTY_RESOURCE_RESOLVER,
-  };
 }

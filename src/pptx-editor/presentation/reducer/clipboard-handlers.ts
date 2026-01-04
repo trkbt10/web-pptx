@@ -10,7 +10,7 @@ import { px } from "../../../pptx/domain/types";
 import type { PresentationEditorState } from "../types";
 import type { HandlerMap } from "./handler-types";
 import { getActiveSlide, updateActiveSlideInDocument } from "./helpers";
-import { findSlideById } from "../document-ops";
+import { findSlideById } from "../slide";
 import { pushHistory } from "../../state";
 import { findShapeById } from "../../shape/query";
 import { generateShapeId } from "../../shape/mutation";

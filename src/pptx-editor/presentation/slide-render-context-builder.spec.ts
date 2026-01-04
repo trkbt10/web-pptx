@@ -275,18 +275,6 @@ describe("createRenderContextFromApiSlide", () => {
     expect(ctx.fontScheme?.minorFont.latin).toBe("Calibri");
   });
 
-  it("should include style collector for HTML rendering", () => {
-    const apiSlide = createMockApiSlide();
-    const cache = createMockFileCache();
-    const slideSize = { width: 960, height: 540 };
-
-    const ctx = createRenderContextFromApiSlide(apiSlide, cache, slideSize);
-
-    expect(ctx.styles).toBeDefined();
-    expect(typeof ctx.styles.add).toBe("function");
-    expect(typeof ctx.styles.generate).toBe("function");
-  });
-
   it("should have resource resolver", () => {
     const apiSlide = createMockApiSlide();
     const cache = createMockFileCache();
