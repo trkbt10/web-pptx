@@ -5,7 +5,7 @@
  * Uses design tokens for consistent styling.
  */
 
-import { colorTokens } from "../../ui/design-tokens";
+import { colorTokens } from "../ui/design-tokens/index";
 
 // =============================================================================
 // Types

@@ -22,8 +22,7 @@ import { collectShapeRenderData } from "../shape/traverse";
 import { findShapeByIdWithParents } from "../shape/query";
 import { getAbsoluteBounds } from "../shape/transform";
 import { SlideContextMenu, type ContextMenuActions } from "./context-menu/SlideContextMenu";
-import { SelectionBox } from "./components/SelectionBox";
-import { MultiSelectionBox } from "./components/MultiSelectionBox";
+import { SelectionBox } from "../selection/SelectionBox";
 import { SlideRenderer } from "../../pptx/render/react";
 
 // =============================================================================
@@ -525,20 +524,21 @@ export function SlideCanvas({
                 width={bounds.width}
                 height={bounds.height}
                 rotation={bounds.rotation}
-                isPrimary={bounds.isPrimary}
-                showResizeHandles={!isMultiSelection && bounds.isPrimary}
-                showRotateHandle={!isMultiSelection && bounds.isPrimary}
+                variant={bounds.isPrimary ? "primary" : "secondary"}
+                showResizeHandles={!isMultiSelection}
+                showRotateHandle={!isMultiSelection}
                 onResizeStart={handleResizeStart}
                 onRotateStart={handleRotateStart}
               />
             ))}
 
             {isMultiSelection && combinedBounds && (
-              <MultiSelectionBox
+              <SelectionBox
                 x={combinedBounds.x}
                 y={combinedBounds.y}
                 width={combinedBounds.width}
                 height={combinedBounds.height}
+                variant="multi"
                 onResizeStart={handleResizeStart}
                 onRotateStart={handleRotateStart}
               />

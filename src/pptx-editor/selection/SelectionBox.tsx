@@ -1,18 +1,31 @@
 /**
  * @file Selection box component
  *
- * Renders a bounding box around a selected shape.
+ * Renders a bounding box around selected shape(s).
  * Uses design tokens for consistent selection styling.
+ *
+ * Variants:
+ * - primary: Solid line, primary color, handles shown (controllable)
+ * - secondary: Dashed line "4 4", secondary color, no handles
+ * - multi: Dashed line "6 3", secondary color, handles always shown
  */
 
-import type { ResizeHandlePosition } from "../../state";
+import type { ResizeHandlePosition } from "../state/index";
 import { ResizeHandle } from "./ResizeHandle";
 import { RotateHandle } from "./RotateHandle";
-import { colorTokens } from "../../ui/design-tokens";
+import { colorTokens } from "../ui/design-tokens/index";
 
 // =============================================================================
 // Types
 // =============================================================================
+
+/**
+ * Selection box variant:
+ * - primary: Single selected shape (with handles)
+ * - secondary: Non-primary shape in multi-selection (no handles)
+ * - multi: Combined bounding box for multi-selection (with handles)
+ */
+export type SelectionBoxVariant = "primary" | "secondary" | "multi";
 
 export type SelectionBoxProps = {
   /** X position */
@@ -23,13 +36,13 @@ export type SelectionBoxProps = {
   readonly width: number;
   /** Height */
   readonly height: number;
-  /** Rotation in degrees */
-  readonly rotation: number;
-  /** Whether this is the primary selection */
-  readonly isPrimary: boolean;
-  /** Whether resize handles are shown */
+  /** Rotation in degrees (default: 0) */
+  readonly rotation?: number;
+  /** Selection variant */
+  readonly variant: SelectionBoxVariant;
+  /** Whether resize handles are shown (only for primary variant, default: true) */
   readonly showResizeHandles?: boolean;
-  /** Whether rotate handle is shown */
+  /** Whether rotate handle is shown (only for primary variant, default: true) */
   readonly showRotateHandle?: boolean;
   /** Handle resize start */
   readonly onResizeStart?: (handle: ResizeHandlePosition, e: React.PointerEvent) => void;
@@ -46,34 +59,67 @@ const SELECTION_COLOR_SECONDARY = colorTokens.selection.secondary;
 const SELECTION_STROKE_WIDTH = 2;
 const ROTATE_HANDLE_OFFSET = 24;
 
+/**
+ * Variant-specific styling
+ */
+const VARIANT_STYLES: Record<SelectionBoxVariant, {
+  color: string;
+  strokeDasharray: string;
+  showHandles: boolean;
+}> = {
+  primary: {
+    color: SELECTION_COLOR_PRIMARY,
+    strokeDasharray: "none",
+    showHandles: true, // controllable via props
+  },
+  secondary: {
+    color: SELECTION_COLOR_SECONDARY,
+    strokeDasharray: "4 4",
+    showHandles: false,
+  },
+  multi: {
+    color: SELECTION_COLOR_SECONDARY,
+    strokeDasharray: "6 3",
+    showHandles: true, // always shown
+  },
+};
+
 // =============================================================================
 // Component
 // =============================================================================
 
 /**
- * Selection box around a shape.
+ * Selection box around shape(s).
  *
- * Shows a bounding box with resize handles and rotation handle.
+ * Shows a bounding box with optional resize and rotation handles.
  */
 export function SelectionBox({
   x,
   y,
   width,
   height,
-  rotation,
-  isPrimary,
+  rotation = 0,
+  variant,
   showResizeHandles = true,
   showRotateHandle = true,
   onResizeStart,
   onRotateStart,
 }: SelectionBoxProps) {
-  const color = isPrimary ? SELECTION_COLOR_PRIMARY : SELECTION_COLOR_SECONDARY;
+  const style = VARIANT_STYLES[variant];
   const centerX = x + width / 2;
   const centerY = y + height / 2;
 
   const transform = rotation !== 0
     ? `rotate(${rotation}, ${centerX}, ${centerY})`
     : undefined;
+
+  // Determine if handles should be shown
+  const shouldShowResizeHandles = variant === "primary"
+    ? style.showHandles && showResizeHandles
+    : style.showHandles;
+  const shouldShowRotateHandle = variant === "primary"
+    ? style.showHandles && showRotateHandle
+    : style.showHandles;
 
   return (
     <g transform={transform}>
@@ -84,14 +130,14 @@ export function SelectionBox({
         width={width}
         height={height}
         fill="none"
-        stroke={color}
+        stroke={style.color}
         strokeWidth={SELECTION_STROKE_WIDTH}
-        strokeDasharray={isPrimary ? "none" : "4 4"}
+        strokeDasharray={style.strokeDasharray}
         pointerEvents="none"
       />
 
       {/* Resize handles */}
-      {showResizeHandles && isPrimary && (
+      {shouldShowResizeHandles && (
         <>
           {/* Corner handles */}
           <ResizeHandle
@@ -148,7 +194,7 @@ export function SelectionBox({
       )}
 
       {/* Rotate handle */}
-      {showRotateHandle && isPrimary && (
+      {shouldShowRotateHandle && (
         <>
           {/* Line from top center to rotate handle */}
           <line
@@ -156,7 +202,7 @@ export function SelectionBox({
             y1={y}
             x2={x + width / 2}
             y2={y - ROTATE_HANDLE_OFFSET}
-            stroke={color}
+            stroke={style.color}
             strokeWidth={1}
             pointerEvents="none"
           />

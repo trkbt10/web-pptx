@@ -2,7 +2,7 @@
  * @file Text editing module
  *
  * Provides utilities for inline text editing in the slide editor.
- * Handles TextBody ↔ HTML conversion with proper style resolution.
+ * Implements hybrid text editing with hidden textarea and visual cursor overlay.
  */
 
 // State types and constructors
@@ -17,23 +17,26 @@ export {
   isTextEditActive,
 } from "./state";
 
-// Style conversion
+// Cursor position mapping and text utilities
 export {
-  type StyleResolutionContext,
-  runPropertiesToStyle,
-  runPropertiesToStyleObject,
-} from "./styles";
-
-// TextBody ↔ HTML conversion
-export {
-  type TextToHtmlOptions,
-  textBodyToHtml,
-  textBodyToPlainText,
-} from "./text-to-html";
-
-export {
-  type HtmlToTextOptions,
-  htmlToTextBody,
-  plainTextToTextBody,
+  type CursorPosition,
+  type TextSelection,
+  type CursorCoordinates,
+  type SelectionRect,
+  getPlainText,
+  offsetToCursorPosition,
+  cursorPositionToOffset,
+  cursorPositionToCoordinates,
+  selectionToRects,
+  isSamePosition,
+  isBefore,
+  normalizeSelection,
   mergeTextIntoBody,
-} from "./html-to-text";
+} from "./cursor";
+
+// Text edit controller component
+export {
+  TextEditController,
+  type TextEditControllerProps,
+  type CursorState,
+} from "./TextEditController";

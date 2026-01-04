@@ -1,10 +1,12 @@
 /**
  * @file Panel components for PPTX editor
  *
- * Mountable panel components:
+ * Mountable panel/toolbar components:
  * - PropertyPanel: Shape/slide property editor (right panel)
  * - LayerPanel: Shape hierarchy view (right panel)
  * - SlideThumbnailPanel: Slide navigation (left panel)
+ * - CreationToolbar: Shape creation tools (toolbar)
+ * - ShapeToolbar: Shape editing tools (toolbar)
  */
 
 export { PropertyPanel } from "./PropertyPanel";
@@ -15,6 +17,12 @@ export type { LayerPanelProps } from "./LayerPanel";
 
 export { SlideThumbnailPanel } from "./SlideThumbnailPanel";
 export type { SlideThumbnailPanelProps } from "./SlideThumbnailPanel";
+
+export { CreationToolbar } from "./CreationToolbar";
+export type { CreationToolbarProps } from "./CreationToolbar";
+
+export { ShapeToolbar } from "./ShapeToolbar";
+export type { ShapeToolbarProps } from "./ShapeToolbar";
 
 // Property sub-panels (internal components used by PropertyPanel)
 export { SlidePropertiesPanel } from "./property/SlidePropertiesPanel";

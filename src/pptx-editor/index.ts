@@ -231,14 +231,13 @@ export { slideEditorReducer } from "./slide/reducer";
 // Slide Editor Components
 export { SlideCanvas, type SlideCanvasProps } from "./slide/SlideCanvas";
 export { PropertyPanel, type PropertyPanelProps } from "./panels/PropertyPanel";
-export { ShapeToolbar, type ShapeToolbarProps } from "./slide/ShapeToolbar";
+export { ShapeToolbar, type ShapeToolbarProps } from "./panels/ShapeToolbar";
 export { LayerPanel, type LayerPanelProps } from "./panels/LayerPanel";
 
 // Slide Editor Sub-components
-export { SelectionBox, type SelectionBoxProps } from "./slide/components/SelectionBox";
-export { ResizeHandle, type ResizeHandleProps } from "./slide/components/ResizeHandle";
-export { RotateHandle, type RotateHandleProps } from "./slide/components/RotateHandle";
-export { MultiSelectionBox, type MultiSelectionBoxProps } from "./slide/components/MultiSelectionBox";
+export { SelectionBox, type SelectionBoxProps, type SelectionBoxVariant } from "./selection/SelectionBox";
+export { ResizeHandle, type ResizeHandleProps } from "./selection/ResizeHandle";
+export { RotateHandle, type RotateHandleProps } from "./selection/RotateHandle";
 
 // Shape identity utilities
 export { getShapeId, hasShapeId } from "./shape/identity";

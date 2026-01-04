@@ -7,18 +7,18 @@
 import { useRef, useMemo, useCallback } from "react";
 import type { Pixels } from "../../pptx/domain/types";
 import type { ColorContext, FontScheme } from "../../pptx/domain/resolution";
-import type { ResourceResolver } from "../../pptx/render/core";
+import type { ResourceResolver } from "../../pptx/render/core/index";
 import { renderSlideSvg } from "../../pptx/render/svg/renderer";
 import { createRenderContext } from "../../pptx/render/context";
-import type { SlideWithId, FileCache } from "./types";
-import { createRenderContextFromApiSlide } from "./slide-render-context-builder";
+import type { SlideWithId, FileCache } from "../presentation/types";
+import { createRenderContextFromApiSlide } from "../presentation/slide-render-context-builder";
 import {
   createThumbnailCache,
   getCachedThumbnail,
   setCachedThumbnail,
   pruneCacheForSlideIds,
   type ThumbnailCache,
-} from "./thumbnail-cache";
+} from "./cache";
 
 // =============================================================================
 // Types

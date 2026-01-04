@@ -12,7 +12,7 @@
  */
 
 import { useRef, useEffect, useMemo, useCallback, type CSSProperties } from "react";
-import type { Slide, Shape, TextBody } from "../../pptx/domain";
+import type { Slide, Shape } from "../../pptx/domain";
 import type { ShapeId } from "../../pptx/domain/types";
 import { px, deg } from "../../pptx/domain/types";
 import type { ResizeHandlePosition } from "../state";
@@ -20,16 +20,16 @@ import type { PresentationDocument, SlideWithId } from "./types";
 import type { ContextMenuActions } from "../slide/context-menu/SlideContextMenu";
 import { PresentationEditorProvider, usePresentationEditor } from "./context";
 import { SlideThumbnailPanel } from "../panels/SlideThumbnailPanel";
-import { useSlideThumbnails } from "./use-slide-thumbnails";
-import { SlideThumbnailPreview } from "./SlideThumbnailPreview";
-import { CreationToolbar } from "../slide/CreationToolbar";
+import { useSlideThumbnails } from "../thumbnail/use-slide-thumbnails";
+import { SlideThumbnailPreview } from "../thumbnail/SlideThumbnailPreview";
+import { CreationToolbar } from "../panels/CreationToolbar";
 import type { CreationMode } from "./types";
 import { createShapeFromMode, getDefaultBoundsForMode } from "../shape/factory";
 import { SlideCanvas } from "../slide/SlideCanvas";
-import { TextEditOverlay } from "../slide/components/TextEditOverlay";
-import { isTextEditActive } from "../slide/text-edit";
+import { TextEditController, isTextEditActive, mergeTextIntoBody } from "../slide/text-edit";
+import { toLayoutInput, layoutTextBody } from "../../pptx/render/text-layout";
 import { PropertyPanel } from "../panels/PropertyPanel";
-import { ShapeToolbar } from "../slide/ShapeToolbar";
+import { ShapeToolbar } from "../panels/ShapeToolbar";
 import { LayerPanel } from "../panels/LayerPanel";
 import { Panel } from "../ui/layout";
 import { isTopLevelShape } from "../shape/query";
@@ -169,11 +169,22 @@ function EditorContent({
     [dispatch]
   );
 
+  const handleTextChange = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (_newText: string) => {
+      // Update text body reactively (for live preview if needed)
+      // Currently unused - text is merged on complete
+    },
+    []
+  );
+
   const handleTextEditComplete = useCallback(
-    (newTextBody: TextBody) => {
+    (newText: string) => {
       if (isTextEditActive(textEdit)) {
+        const newTextBody = mergeTextIntoBody(textEdit.initialTextBody, newText);
         dispatch({ type: "UPDATE_TEXT_BODY", shapeId: textEdit.shapeId, textBody: newTextBody });
       }
+      dispatch({ type: "EXIT_TEXT_EDIT" });
     },
     [dispatch, textEdit]
   );
@@ -223,6 +234,26 @@ function EditorContent({
 
     return undefined;
   }, [width, height, activeSlide?.apiSlide, document.fileCache]);
+
+  // Compute LayoutResult for text editing
+  const textEditLayoutResult = useMemo(() => {
+    if (!isTextEditActive(textEdit)) {
+      return undefined;
+    }
+
+    const colorContext = renderContext?.colorContext ?? document.colorContext;
+    const fontScheme = renderContext?.fontScheme ?? document.fontScheme;
+
+    const layoutInput = toLayoutInput({
+      body: textEdit.initialTextBody,
+      width: textEdit.bounds.width,
+      height: textEdit.bounds.height,
+      colorContext,
+      fontScheme,
+    });
+
+    return layoutTextBody(layoutInput);
+  }, [textEdit, renderContext, document.colorContext, document.fontScheme]);
 
   // Get the editing shape ID when in text edit mode
   const editingShapeId = isTextEditActive(textEdit) ? textEdit.shapeId : undefined;
@@ -594,15 +625,15 @@ function EditorContent({
                 creationMode={creationMode}
                 onCreate={handleCanvasCreate}
               />
-              {/* Text edit overlay */}
+              {/* Text edit controller */}
               {isTextEditActive(textEdit) && (
-                <TextEditOverlay
+                <TextEditController
                   bounds={textEdit.bounds}
                   textBody={textEdit.initialTextBody}
+                  layoutResult={textEditLayoutResult}
                   slideWidth={width as number}
                   slideHeight={height as number}
-                  colorContext={renderContext?.colorContext ?? document.colorContext}
-                  fontScheme={renderContext?.fontScheme ?? document.fontScheme}
+                  onChange={handleTextChange}
                   onComplete={handleTextEditComplete}
                   onCancel={handleTextEditCancel}
                 />

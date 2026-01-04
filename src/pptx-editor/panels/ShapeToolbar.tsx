@@ -8,8 +8,8 @@
 import { useCallback, useMemo } from "react";
 import type { CSSProperties } from "react";
 import { Button } from "../ui/primitives/Button";
-import { LinePickerPopover } from "../ui/line";
-import type { Line, Shape } from "../../pptx/domain";
+import { LinePickerPopover } from "../ui/line/index";
+import type { Line, Shape } from "../../pptx/domain/index";
 import type { ShapeId } from "../../pptx/domain/types";
 import {
   TrashIcon,
@@ -20,8 +20,8 @@ import {
   SendToBackIcon,
   BringForwardIcon,
   SendBackwardIcon,
-} from "../ui/icons";
-import { colorTokens, iconTokens } from "../ui/design-tokens";
+} from "../ui/icons/index";
+import { colorTokens, iconTokens } from "../ui/design-tokens/index";
 
 // =============================================================================
 // Types

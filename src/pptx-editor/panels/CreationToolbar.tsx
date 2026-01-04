@@ -8,7 +8,7 @@
 import { useCallback, type CSSProperties } from "react";
 import type { LucideIcon } from "lucide-react";
 import type { CreationMode } from "../presentation/types";
-import { ToolbarButton } from "../ui/toolbar";
+import { ToolbarButton } from "../ui/toolbar/index";
 import {
   SelectIcon,
   RectIcon,
@@ -18,8 +18,8 @@ import {
   RightArrowIcon,
   TextBoxIcon,
   LineIcon,
-} from "../ui/icons";
-import { colorTokens, radiusTokens } from "../ui/design-tokens";
+} from "../ui/icons/index";
+import { colorTokens, radiusTokens } from "../ui/design-tokens/index";
 
 // =============================================================================
 // Types
