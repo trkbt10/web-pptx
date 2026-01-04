@@ -4,7 +4,8 @@
  * Pure functions for slide-level operations on presentation documents.
  */
 
-import type { Slide } from "../../pptx/domain";
+import type { Slide, Presentation } from "../../pptx/domain";
+import type { Pixels } from "../../pptx/domain/types";
 import type { ColorContext } from "../../pptx/domain/resolution";
 import type { ResourceResolver } from "../../pptx/render/core";
 import type { PresentationDocument, SlideWithId, SlideId } from "./types";
@@ -37,17 +38,20 @@ const EMPTY_RESOURCE_RESOLVER: ResourceResolver = {
 // =============================================================================
 
 /**
+ * Find maximum numeric ID from slides
+ */
+function findMaxNumericId(slides: readonly SlideWithId[]): number {
+  return slides.reduce((max, slide) => {
+    const numId = parseInt(slide.id, 10);
+    return !isNaN(numId) && numId > max ? numId : max;
+  }, 0);
+}
+
+/**
  * Generate a unique slide ID
  */
 export function generateSlideId(document: PresentationDocument): SlideId {
-  let maxId = 0;
-  for (const slideWithId of document.slides) {
-    const numId = parseInt(slideWithId.id, 10);
-    if (!isNaN(numId) && numId > maxId) {
-      maxId = numId;
-    }
-  }
-  return String(maxId + 1);
+  return String(findMaxNumericId(document.slides) + 1);
 }
 
 // =============================================================================
@@ -79,6 +83,31 @@ export function getSlideIndex(
 // =============================================================================
 
 /**
+ * Get insert index for adding a slide
+ */
+function getInsertIndex(
+  document: PresentationDocument,
+  afterSlideId: SlideId | undefined
+): number {
+  if (afterSlideId === undefined) {
+    return document.slides.length;
+  }
+  const afterIndex = getSlideIndex(document, afterSlideId);
+  return afterIndex === -1 ? document.slides.length : afterIndex + 1;
+}
+
+/**
+ * Insert slide at specified index
+ */
+function insertSlideAt(
+  slides: readonly SlideWithId[],
+  slide: SlideWithId,
+  index: number
+): SlideWithId[] {
+  return [...slides.slice(0, index), slide, ...slides.slice(index)];
+}
+
+/**
  * Add a slide to the document
  *
  * @param document - The document to add to
@@ -93,20 +122,8 @@ export function addSlide(
 ): { document: PresentationDocument; newSlideId: SlideId } {
   const newSlideId = generateSlideId(document);
   const newSlideWithId: SlideWithId = { id: newSlideId, slide };
-
-  let insertIndex = document.slides.length;
-  if (afterSlideId !== undefined) {
-    const afterIndex = getSlideIndex(document, afterSlideId);
-    if (afterIndex !== -1) {
-      insertIndex = afterIndex + 1;
-    }
-  }
-
-  const newSlides = [
-    ...document.slides.slice(0, insertIndex),
-    newSlideWithId,
-    ...document.slides.slice(insertIndex),
-  ];
+  const insertIndex = getInsertIndex(document, afterSlideId);
+  const newSlides = insertSlideAt(document.slides, newSlideWithId, insertIndex);
 
   return {
     document: { ...document, slides: newSlides },
@@ -126,6 +143,22 @@ export function deleteSlide(
 }
 
 /**
+ * Create a duplicated slide with new ID
+ */
+function createDuplicatedSlide(
+  sourceSlide: SlideWithId,
+  newSlideId: SlideId
+): SlideWithId {
+  const clonedSlide: Slide = JSON.parse(JSON.stringify(sourceSlide.slide));
+  return {
+    id: newSlideId,
+    slide: clonedSlide,
+    apiSlide: sourceSlide.apiSlide,
+    resolvedBackground: sourceSlide.resolvedBackground,
+  };
+}
+
+/**
  * Duplicate a slide
  *
  * @param document - The document
@@ -141,30 +174,35 @@ export function duplicateSlide(
     return undefined;
   }
 
-  // Deep clone the slide domain data
-  const clonedSlide: Slide = JSON.parse(JSON.stringify(sourceSlide.slide));
-
-  // Create new SlideWithId with same API slide and background as source
   const newSlideId = generateSlideId(document);
   const insertIndex = getSlideIndex(document, slideId) + 1;
-
-  const newSlideWithId: SlideWithId = {
-    id: newSlideId,
-    slide: clonedSlide,
-    apiSlide: sourceSlide.apiSlide, // Preserve API slide for rendering context
-    resolvedBackground: sourceSlide.resolvedBackground,
-  };
-
-  const newSlides = [
-    ...document.slides.slice(0, insertIndex),
-    newSlideWithId,
-    ...document.slides.slice(insertIndex),
-  ];
+  const newSlideWithId = createDuplicatedSlide(sourceSlide, newSlideId);
+  const newSlides = insertSlideAt(document.slides, newSlideWithId, insertIndex);
 
   return {
     document: { ...document, slides: newSlides },
     newSlideId,
   };
+}
+
+/**
+ * Move element in array from one index to another (immutable)
+ */
+function moveElementInArray<T>(
+  array: readonly T[],
+  fromIndex: number,
+  toIndex: number
+): T[] {
+  const element = array[fromIndex];
+  const withoutElement = [
+    ...array.slice(0, fromIndex),
+    ...array.slice(fromIndex + 1),
+  ];
+  return [
+    ...withoutElement.slice(0, toIndex),
+    element,
+    ...withoutElement.slice(toIndex),
+  ];
 }
 
 /**
@@ -180,10 +218,7 @@ export function moveSlide(
     return document;
   }
 
-  const slides = [...document.slides];
-  const [slide] = slides.splice(currentIndex, 1);
-  slides.splice(toIndex, 0, slide);
-
+  const slides = moveElementInArray(document.slides, currentIndex, toIndex);
   return { ...document, slides };
 }
 
@@ -206,24 +241,29 @@ export function updateSlide(
 // =============================================================================
 
 /**
- * Create a presentation document from presentation settings and slides
+ * Convert slides to SlideWithId array with sequential IDs
  */
-export function createDocumentFromPresentation(
-  presentation: import("../../pptx/domain").Presentation,
-  slides: readonly Slide[],
-  slideWidth: import("../../pptx/domain/types").Pixels,
-  slideHeight: import("../../pptx/domain/types").Pixels,
-  colorContext: ColorContext = EMPTY_COLOR_CONTEXT,
-  resources: ResourceResolver = EMPTY_RESOURCE_RESOLVER
-): PresentationDocument {
-  const slidesWithId: SlideWithId[] = slides.map((slide, index) => ({
+function assignSlideIds(slides: readonly Slide[]): SlideWithId[] {
+  return slides.map((slide, index) => ({
     id: String(index + 1),
     slide,
   }));
+}
 
+/**
+ * Create a presentation document from presentation settings and slides
+ */
+export function createDocumentFromPresentation(
+  presentation: Presentation,
+  slides: readonly Slide[],
+  slideWidth: Pixels,
+  slideHeight: Pixels,
+  colorContext: ColorContext = EMPTY_COLOR_CONTEXT,
+  resources: ResourceResolver = EMPTY_RESOURCE_RESOLVER
+): PresentationDocument {
   return {
     presentation,
-    slides: slidesWithId,
+    slides: assignSlideIds(slides),
     slideWidth,
     slideHeight,
     colorContext,
@@ -235,18 +275,14 @@ export function createDocumentFromPresentation(
  * Create an empty presentation document
  */
 export function createEmptyDocument(
-  slideWidth: import("../../pptx/domain/types").Pixels,
-  slideHeight: import("../../pptx/domain/types").Pixels
+  slideWidth: Pixels,
+  slideHeight: Pixels
 ): PresentationDocument {
   const emptySlide: Slide = { shapes: [] };
-  const px = (v: number) => v as import("../../pptx/domain/types").Pixels;
 
   return {
     presentation: {
-      slideSize: {
-        width: px(slideWidth as number),
-        height: px(slideHeight as number),
-      },
+      slideSize: { width: slideWidth, height: slideHeight },
     },
     slides: [{ id: "1", slide: emptySlide }],
     slideWidth,
