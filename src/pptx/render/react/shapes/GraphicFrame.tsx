@@ -7,7 +7,7 @@
  * @see ECMA-376 Part 1, Section 19.3.1.21 (p:graphicFrame)
  */
 
-import type { ReactNode } from "react";
+import { memo, useMemo, type ReactNode } from "react";
 import type { GraphicFrame as GraphicFrameType, DiagramReference } from "../../../domain";
 import type { ShapeId } from "../../../domain/types";
 import { px } from "../../../domain/types";
@@ -52,7 +52,64 @@ export function GraphicFrameRenderer({
 
   const transformValue = buildTransformAttr(transform, width, height);
 
-  const frameContent = renderFrameContent(content, width, height, ctx);
+  const renderCtx = useMemo(
+    () => ({
+      slideSize: ctx.slideSize,
+      options: ctx.options,
+      colorContext: ctx.colorContext,
+      resources: ctx.resources,
+      warnings: ctx.warnings,
+      getNextShapeId: ctx.getNextShapeId,
+      resolvedBackground: ctx.resolvedBackground,
+      fontScheme: ctx.fontScheme,
+      layoutShapes: ctx.layoutShapes,
+    }),
+    [
+      ctx.slideSize,
+      ctx.options,
+      ctx.colorContext,
+      ctx.resources,
+      ctx.warnings,
+      ctx.getNextShapeId,
+      ctx.resolvedBackground,
+      ctx.fontScheme,
+      ctx.layoutShapes,
+    ],
+  );
+
+  const chartData = content.type === "chart" ? content.data : undefined;
+  const tableData = content.type === "table" ? content.data : undefined;
+
+  const chartSvgContent = useMemo(() => {
+    if (chartData === undefined) {
+      return null;
+    }
+    if (chartData.parsedChart === undefined) {
+      renderCtx.warnings.add({
+        type: "fallback",
+        message: `Chart not pre-parsed: ${chartData.resourceId}`,
+      });
+      return null;
+    }
+    const chartHtml = renderChart(chartData.parsedChart as never, width, height, renderCtx as never);
+    return extractSvgContent(chartHtml as string);
+  }, [chartData, width, height, renderCtx]);
+
+  const tableSvgContent = useMemo(() => {
+    if (tableData === undefined) {
+      return null;
+    }
+    return renderTableSvg(tableData.table as never, px(width), px(height), renderCtx as never);
+  }, [tableData, width, height, renderCtx]);
+
+  const frameContent = renderFrameContent(
+    content,
+    width,
+    height,
+    ctx,
+    chartSvgContent,
+    tableSvgContent,
+  );
 
   return (
     <g
@@ -80,13 +137,15 @@ function renderFrameContent(
   width: number,
   height: number,
   ctx: RenderContext,
+  chartSvgContent: string | null,
+  tableSvgContent: string | null,
 ): ReactNode {
   switch (content.type) {
     case "chart":
-      return renderChartContent(content.data, width, height, ctx);
+      return renderChartContent(width, height, chartSvgContent);
 
     case "table":
-      return renderTableContent(content.data, width, height, ctx);
+      return renderTableContent(width, height, tableSvgContent);
 
     case "diagram":
       return renderDiagramContent(content.data, width, height, ctx);
@@ -104,22 +163,13 @@ function renderFrameContent(
  * Render chart content
  */
 function renderChartContent(
-  data: { resourceId: string; parsedChart?: unknown },
   width: number,
   height: number,
-  ctx: RenderContext,
+  svgContent: string | null,
 ): ReactNode {
-  if (data.parsedChart !== undefined) {
-    const chartHtml = renderChart(data.parsedChart as never, width, height, ctx as never);
-    const svgContent = extractSvgContent(chartHtml as string);
-    // Use dangerouslySetInnerHTML for chart SVG (complex content)
-    return <g dangerouslySetInnerHTML={{ __html: svgContent }} />;
+  if (svgContent !== null) {
+    return <SvgInnerHtml html={svgContent} />;
   }
-
-  ctx.warnings.add({
-    type: "fallback",
-    message: `Chart not pre-parsed: ${data.resourceId}`,
-  });
   return renderPlaceholder(width, height, "Chart");
 }
 
@@ -127,14 +177,14 @@ function renderChartContent(
  * Render table content
  */
 function renderTableContent(
-  data: { table: unknown },
   width: number,
   height: number,
-  ctx: RenderContext,
+  svgContent: string | null,
 ): ReactNode {
-  const tableSvg = renderTableSvg(data.table as never, px(width), px(height), ctx as never);
-  // Use dangerouslySetInnerHTML for table SVG (complex content)
-  return <g dangerouslySetInnerHTML={{ __html: tableSvg }} />;
+  if (svgContent === null) {
+    return renderPlaceholder(width, height, "Table");
+  }
+  return <SvgInnerHtml html={svgContent} />;
 }
 
 /**
@@ -252,3 +302,15 @@ function extractSvgContent(svg: string): string {
   }
   return svg;
 }
+
+// =============================================================================
+// Components
+// =============================================================================
+
+type SvgInnerHtmlProps = {
+  readonly html: string;
+};
+
+const SvgInnerHtml = memo(function SvgInnerHtml({ html }: SvgInnerHtmlProps) {
+  return <g dangerouslySetInnerHTML={{ __html: html }} />;
+});

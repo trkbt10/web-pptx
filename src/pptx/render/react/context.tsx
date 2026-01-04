@@ -73,23 +73,57 @@ export function RenderProvider({
     [resources],
   );
 
+  const resolvedColorContext = useMemo<ColorContext>(
+    () => colorContext ?? { colorScheme: {}, colorMap: {} },
+    [colorContext],
+  );
+
+  const resolvedOptions = useMemo<RenderOptions>(
+    () => ({ ...DEFAULT_RENDER_OPTIONS, ...options }),
+    [options],
+  );
+
+  const warnings = useMemo(
+    () => createWarningCollector(),
+    [
+      slideSize,
+      resolvedResources,
+      resolvedColorContext,
+      resolvedOptions,
+      resolvedBackground,
+      fontScheme,
+      layoutShapes,
+    ],
+  );
+
   // Shape ID counter for unique IDs
   const shapeIdRef = useMemo(() => ({ value: 0 }), []);
 
   const ctx = useMemo<ReactRenderContext>(
     () => ({
       slideSize,
-      options: { ...DEFAULT_RENDER_OPTIONS, ...options },
-      colorContext: colorContext ?? { colorScheme: {}, colorMap: {} },
+      options: resolvedOptions,
+      colorContext: resolvedColorContext,
       resources: resolvedResources,
-      warnings: createWarningCollector(),
+      warnings,
       getNextShapeId: () => `shape-${shapeIdRef.value++}`,
       resolvedBackground,
       fontScheme,
       editingShapeId,
       layoutShapes,
     }),
-    [slideSize, colorContext, resolvedResources, fontScheme, options, resolvedBackground, editingShapeId, layoutShapes, shapeIdRef],
+    [
+      slideSize,
+      resolvedOptions,
+      resolvedColorContext,
+      resolvedResources,
+      warnings,
+      fontScheme,
+      resolvedBackground,
+      editingShapeId,
+      layoutShapes,
+      shapeIdRef,
+    ],
   );
 
   return (
