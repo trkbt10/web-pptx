@@ -17,7 +17,7 @@ export {
   isTextEditActive,
 } from "./state";
 
-// Cursor position mapping and text utilities
+// Cursor position mapping
 export {
   type CursorPosition,
   type TextSelection,
@@ -31,9 +31,13 @@ export {
   isSamePosition,
   isBefore,
   normalizeSelection,
+} from "./cursor";
+
+// Text body merge utilities
+export {
   mergeTextIntoBody,
   extractDefaultRunProperties,
-} from "./cursor";
+} from "./text-body-merge";
 
 // Text edit controller component
 export { TextEditController } from "./TextEditController";

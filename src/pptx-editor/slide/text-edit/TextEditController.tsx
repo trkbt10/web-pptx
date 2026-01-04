@@ -24,9 +24,8 @@ import {
   offsetToCursorPosition,
   cursorPositionToCoordinates,
   selectionToRects,
-  mergeTextIntoBody,
-  extractDefaultRunProperties,
 } from "./cursor";
+import { mergeTextIntoBody, extractDefaultRunProperties } from "./text-body-merge";
 import { colorTokens } from "../../ui/design-tokens";
 import { TextOverlay } from "./TextOverlay";
 import { CursorCaret } from "./CursorCaret";

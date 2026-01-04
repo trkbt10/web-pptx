@@ -1,8 +1,6 @@
 /**
  * @file Unit tests for text edit styles
  */
-
-import { describe, expect, it } from "bun:test";
 import type { Pixels } from "../../../pptx/domain/types";
 import {
   EMPTY_COLOR_CONTEXT,
