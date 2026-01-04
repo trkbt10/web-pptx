@@ -13,10 +13,11 @@ import { parseTheme, parseMasterTextStyles } from "../../pptx/core/dml/parser/th
 import { DEFAULT_RENDER_OPTIONS } from "../../pptx/render/render-options";
 import { createRenderContext as createCoreRenderContext } from "../../pptx/render/core/context";
 import { getBackgroundFillData } from "../../pptx/core/dml/render/background";
+import { parseShapeTree } from "../../pptx/parser/shape-parser";
 import type { XmlElement, XmlDocument } from "../../xml";
-import { getByPath } from "../../xml";
+import { getByPath, getChild } from "../../xml";
 import type { FileCache } from "./types";
-import type { SlideSize } from "../../pptx/domain";
+import type { SlideSize, Shape, SpShape } from "../../pptx/domain";
 import type { ResolvedBackgroundFill } from "../../pptx/render/core";
 import type { HtmlRenderContext } from "../../pptx/render/html/context";
 import { createStyleCollector } from "../../pptx/render/html/context";
@@ -203,4 +204,48 @@ export function createRenderContextFromApiSlide(
     ...coreCtx,
     styles: createStyleCollector(),
   };
+}
+
+// =============================================================================
+// Layout Shape Extraction
+// =============================================================================
+
+/**
+ * Check if a shape is a placeholder.
+ * Only SpShape can be a placeholder.
+ */
+function isPlaceholder(shape: Shape): boolean {
+  if (shape.type !== "sp") {
+    return false;
+  }
+  return (shape as SpShape).placeholder !== undefined;
+}
+
+/**
+ * Get non-placeholder shapes from slide layout.
+ * These are decorative shapes that should be rendered behind slide content.
+ *
+ * @param apiSlide - The API slide containing layout data
+ * @returns Array of non-placeholder shapes from the layout
+ *
+ * @see ECMA-376 Part 1, Section 19.3.1.39 (sldLayout)
+ */
+export function getLayoutNonPlaceholderShapes(apiSlide: ApiSlide): readonly Shape[] {
+  const layoutContent = getByPath(apiSlide.layout, ["p:sldLayout"]);
+  if (layoutContent === undefined) {
+    return [];
+  }
+
+  const cSld = getChild(layoutContent, "p:cSld");
+  if (cSld === undefined) {
+    return [];
+  }
+
+  const spTree = getChild(cSld, "p:spTree");
+  if (spTree === undefined) {
+    return [];
+  }
+
+  const layoutShapes = parseShapeTree(spTree);
+  return layoutShapes.filter((shape) => !isPlaceholder(shape));
 }

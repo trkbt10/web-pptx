@@ -35,7 +35,7 @@ import { isTopLevelShape } from "../shape/query";
 import { clientToSlideCoords } from "../shape/coords";
 import { withUpdatedTransform } from "../shape/transform";
 import { calculateAlignedBounds } from "../shape/alignment";
-import { createRenderContextFromApiSlide } from "./slide-render-context-builder";
+import { createRenderContextFromApiSlide, getLayoutNonPlaceholderShapes } from "./slide-render-context-builder";
 
 // =============================================================================
 // Types
@@ -225,6 +225,15 @@ function EditorContent({
 
     return undefined;
   }, [width, height, activeSlide?.apiSlide, document.fileCache]);
+
+  // Get non-placeholder shapes from layout for rendering behind slide content
+  const layoutShapes = useMemo(() => {
+    const apiSlide = activeSlide?.apiSlide;
+    if (apiSlide === undefined) {
+      return undefined;
+    }
+    return getLayoutNonPlaceholderShapes(apiSlide);
+  }, [activeSlide?.apiSlide]);
 
   // Get the editing shape ID when in text edit mode
   const editingShapeId = isTextEditActive(textEdit) ? textEdit.shapeId : undefined;
@@ -587,6 +596,7 @@ function EditorContent({
                 fontScheme={renderContext?.fontScheme ?? document.fontScheme}
                 resolvedBackground={renderContext?.resolvedBackground ?? activeSlide?.resolvedBackground}
                 editingShapeId={editingShapeId}
+                layoutShapes={layoutShapes}
                 onSelect={handleSelect}
                 onClearSelection={handleClearSelection}
                 onStartMove={handleStartMove}

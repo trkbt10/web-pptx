@@ -158,6 +158,21 @@ const TEST_CASES: TestCase[] = [
       maxDiffPercent: 10,
     },
   },
+  {
+    name: "portfolio",
+    pptxPath: "fixtures/samples/portfolio.pptx",
+    slides: [], // All slides (auto-detected from snapshots)
+    options: {
+      // Layout shape inheritance tests - verifying correct:
+      // - Non-placeholder shapes from slideLayout rendered behind slide content
+      // - Connector shapes (p:cxnSp) from layout
+      // - Background decorative rectangles and triangles
+      // - Two-column layout split (slide 7)
+      // @see ECMA-376 Part 1, Section 19.3.1.38 (sld)
+      // @see ECMA-376 Part 1, Section 19.3.1.39 (sldLayout)
+      maxDiffPercent: 5,
+    },
+  },
 ];
 
 describe("Visual Regression Tests", () => {

@@ -6,10 +6,12 @@
  */
 
 import type { XmlDocument } from "../../../xml/index";
+import { getChild } from "../../../xml/index";
 import type { SlideRenderContext } from "./accessor";
-import type { SlideSize } from "../../domain/index";
+import type { Slide, SlideSize, Shape, SpShape } from "../../domain/index";
 import type { ResolvedBackgroundFill } from "../../render/context";
 import { parseSlide } from "../../parser/slide/slide-parser";
+import { parseShapeTree } from "../../parser/shape-parser/index";
 import { createParseContext } from "../../parser/context";
 import { renderSlide } from "../../render/html/slide";
 import { renderSlideSvg } from "../../render/svg/renderer";
@@ -58,12 +60,39 @@ export type IntegratedSvgRenderResult = {
 // =============================================================================
 
 /**
+ * Parse and get non-placeholder shapes from slide layout.
+ * These are decorative shapes that should be rendered behind slide content.
+ */
+function getLayoutNonPlaceholderShapes(ctx: SlideRenderContext): readonly Shape[] {
+  const layoutContent = ctx.layout.content;
+  if (layoutContent === undefined) {
+    return [];
+  }
+
+  // Get the shape tree from p:sldLayout/p:cSld/p:spTree
+  const cSld = getChild(layoutContent, "p:cSld");
+  if (cSld === undefined) {
+    return [];
+  }
+
+  const spTree = getChild(cSld, "p:spTree");
+  if (spTree === undefined) {
+    return [];
+  }
+
+  const layoutShapes = parseShapeTree(spTree);
+  return getNonPlaceholderShapes(layoutShapes);
+}
+
+/**
  * Render a slide using the new Parse → Domain → Render architecture.
  *
  * This function:
  * 1. Parses XmlDocument to Slide domain object (parser)
- * 2. Resolves background from slide/layout/master hierarchy
- * 3. Renders Slide domain object to HTML (render)
+ * 2. Parses layout to get non-placeholder decorative shapes
+ * 3. Resolves background from slide/layout/master hierarchy
+ * 4. Merges layout shapes with slide shapes
+ * 5. Renders Slide domain object to HTML (render)
  *
  * No `as unknown as` casts are needed because all layers use
  * well-defined types.
@@ -75,9 +104,9 @@ export function renderSlideIntegrated(
 ): IntegratedRenderResult {
   // Step 1: Parse XmlDocument → Slide domain object
   const parseCtx = createParseContext(ctx);
-  const slide = parseSlide(content, parseCtx);
+  const parsedSlide = parseSlide(content, parseCtx);
 
-  if (slide === undefined) {
+  if (parsedSlide === undefined) {
     return {
       html: createEmptySlideHtml(slideSize),
       styles: "",
@@ -85,12 +114,22 @@ export function renderSlideIntegrated(
     };
   }
 
-  // Step 2: Resolve background from hierarchy (slide → layout → master)
+  // Step 2: Parse layout to get non-placeholder shapes
+  const layoutNonPlaceholderShapes = getLayoutNonPlaceholderShapes(ctx);
+
+  // Step 3: Merge layout shapes with slide shapes
+  const mergedShapes = mergeLayoutShapes(parsedSlide.shapes, layoutNonPlaceholderShapes);
+  const slide: Slide = {
+    ...parsedSlide,
+    shapes: mergedShapes,
+  };
+
+  // Step 4: Resolve background from hierarchy (slide → layout → master)
   // This uses the legacy background resolution which properly handles ECMA-376 inheritance
   const bgFillData = getBackgroundFillData(ctx);
   const resolvedBackground = toResolvedBackgroundFill(bgFillData);
 
-  // Step 3: Render Slide domain object → HTML
+  // Step 5: Render Slide domain object → HTML
   // Pass resolved background through render context
   // Note: HTML rendering requires StyleCollector, so we add it to CoreRenderContext
   const coreCtx = createRenderContext(ctx, slideSize, {
@@ -172,12 +211,54 @@ function toResolvedBackgroundFill(
 }
 
 /**
+ * Check if a shape is a placeholder.
+ * Only SpShape can be a placeholder.
+ */
+function isPlaceholder(shape: Shape): boolean {
+  if (shape.type !== "sp") {
+    return false;
+  }
+  return (shape as SpShape).placeholder !== undefined;
+}
+
+/**
+ * Get non-placeholder shapes from an array of shapes.
+ * These are decorative shapes that should be rendered behind slide content.
+ */
+function getNonPlaceholderShapes(shapes: readonly Shape[]): readonly Shape[] {
+  return shapes.filter((shape) => !isPlaceholder(shape));
+}
+
+/**
+ * Merge layout shapes with slide shapes.
+ * Layout non-placeholder shapes are rendered before slide shapes.
+ *
+ * Per ECMA-376 Part 1, Section 19.3.1.38 (sld):
+ * - showMasterSp controls whether master shapes are shown
+ * - Layout shapes (non-placeholder) provide visual decoration
+ *
+ * @param slideShapes - Shapes from the slide
+ * @param layoutShapes - Shapes from the slide layout (non-placeholder only)
+ * @returns Merged shapes array with layout shapes first
+ */
+function mergeLayoutShapes(
+  slideShapes: readonly Shape[],
+  layoutShapes: readonly Shape[],
+): readonly Shape[] {
+  // Layout non-placeholder shapes come first (background decoration)
+  // Then slide shapes on top
+  return [...layoutShapes, ...slideShapes];
+}
+
+/**
  * Render a slide to SVG using the new Parse → Domain → Render architecture.
  *
  * This function:
  * 1. Parses XmlDocument to Slide domain object (parser)
- * 2. Resolves background from slide/layout/master hierarchy
- * 3. Renders Slide domain object to SVG (render)
+ * 2. Parses layout to get non-placeholder decorative shapes
+ * 3. Resolves background from slide/layout/master hierarchy
+ * 4. Merges layout shapes with slide shapes
+ * 5. Renders Slide domain object to SVG (render)
  *
  * No `as unknown as` casts are needed because all layers use
  * well-defined types.
@@ -198,7 +279,11 @@ export function renderSlideSvgIntegrated(
     };
   }
 
-  // Step 2: Enrich slide with pre-parsed chart/diagram content
+  // Step 2: Parse layout to get non-placeholder shapes
+  // Layout shapes provide decorative elements (lines, rectangles, etc.)
+  const layoutNonPlaceholderShapes = getLayoutNonPlaceholderShapes(ctx);
+
+  // Step 3: Enrich slide with pre-parsed chart/diagram content
   // This allows render to render without directly calling parser
   const fileReader: FileReader = {
     readFile: (path: string) => ctx.readFile(path),
@@ -208,14 +293,22 @@ export function renderSlideSvgIntegrated(
       return ctx.slide.resources.getTargetByType(relType);
     },
   };
-  const slide = enrichSlideContent(parsedSlide, fileReader);
+  const enrichedSlide = enrichSlideContent(parsedSlide, fileReader);
 
-  // Step 3: Resolve background from hierarchy (slide → layout → master)
+  // Step 4: Merge layout shapes with slide shapes
+  // Layout non-placeholder shapes come first (behind slide content)
+  const mergedShapes = mergeLayoutShapes(enrichedSlide.shapes, layoutNonPlaceholderShapes);
+  const slide: Slide = {
+    ...enrichedSlide,
+    shapes: mergedShapes,
+  };
+
+  // Step 5: Resolve background from hierarchy (slide → layout → master)
   // This uses the legacy background resolution which properly handles ECMA-376 inheritance
   const bgFillData = getBackgroundFillData(ctx);
   const resolvedBackground = toResolvedBackgroundFill(bgFillData);
 
-  // Step 4: Render Slide domain object → SVG
+  // Step 6: Render Slide domain object → SVG
   // Pass resolved background through render context
   // Note: SVG rendering doesn't use StyleCollector but type requires it
   const coreCtx = createRenderContext(ctx, slideSize, {

@@ -67,6 +67,11 @@ export type SlideCanvasProps = {
   readonly renderOptions?: Partial<RenderOptions>;
   /** ID of shape currently being edited (its text will be hidden) */
   readonly editingShapeId?: ShapeId;
+  /**
+   * Non-placeholder shapes from slide layout.
+   * These are rendered before slide shapes (behind slide content).
+   */
+  readonly layoutShapes?: readonly Shape[];
 
   // Callbacks
   readonly onSelect: (shapeId: ShapeId, addToSelection: boolean) => void;
@@ -279,6 +284,7 @@ export function SlideCanvas({
   resolvedBackground,
   renderOptions,
   editingShapeId,
+  layoutShapes,
   onSelect,
   onClearSelection,
   onStartMove,
@@ -514,6 +520,7 @@ export function SlideCanvas({
             options={renderOptions}
             resolvedBackground={resolvedBackground}
             editingShapeId={editingShapeId}
+            layoutShapes={layoutShapes}
           />
 
           {/* Hit areas for each shape */}

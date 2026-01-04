@@ -38,6 +38,12 @@ export type SlideRendererProps = {
   readonly resolvedBackground?: ResolvedBackgroundFill;
   /** ID of shape currently being edited (its text will be hidden) */
   readonly editingShapeId?: ShapeId;
+  /**
+   * Non-placeholder shapes from slide layout.
+   * These are rendered before slide shapes (behind slide content).
+   * @see ECMA-376 Part 1, Section 19.3.1.39 (sldLayout)
+   */
+  readonly layoutShapes?: readonly Shape[];
 };
 
 /**
@@ -48,6 +54,7 @@ type SlideContentProps = {
   readonly slideSize: SlideSize;
   readonly resolvedBackground?: ResolvedBackgroundFill;
   readonly editingShapeId?: ShapeId;
+  readonly layoutShapes?: readonly Shape[];
 };
 
 // =============================================================================
@@ -85,6 +92,7 @@ export function SlideRenderer({
   options,
   resolvedBackground,
   editingShapeId,
+  layoutShapes,
 }: SlideRendererProps) {
   return (
     <RenderProvider
@@ -102,6 +110,7 @@ export function SlideRenderer({
           slideSize={slideSize}
           resolvedBackground={resolvedBackground}
           editingShapeId={editingShapeId}
+          layoutShapes={layoutShapes}
         />
       </SvgDefsProvider>
     </RenderProvider>
@@ -117,6 +126,7 @@ function SlideContent({
   slideSize,
   resolvedBackground,
   editingShapeId,
+  layoutShapes,
 }: SlideContentProps) {
   return (
     <>
@@ -127,10 +137,18 @@ function SlideContent({
         resolvedBackground={resolvedBackground}
       />
 
-      {/* Shapes (each renders its own defs for gradients/patterns) */}
+      {/* Layout shapes (decorative, rendered behind slide content) */}
+      {layoutShapes?.map((shape, index) => (
+        <ShapeRenderer
+          key={getShapeKey(shape, index, "layout")}
+          shape={shape}
+        />
+      ))}
+
+      {/* Slide shapes (each renders its own defs for gradients/patterns) */}
       {slide.shapes.map((shape, index) => (
         <ShapeRenderer
-          key={getShapeKey(shape, index)}
+          key={getShapeKey(shape, index, "slide")}
           shape={shape}
           editingShapeId={editingShapeId}
         />
@@ -161,12 +179,12 @@ function SlideBackground({ slide, slideSize, resolvedBackground }: SlideBackgrou
 /**
  * Get a unique key for a shape
  */
-function getShapeKey(shape: Shape, index: number): string {
+function getShapeKey(shape: Shape, index: number, prefix: string = "shape"): string {
   // ContentPartShape doesn't have nonVisual, so we check if the property exists
   if ("nonVisual" in shape && shape.nonVisual?.id !== undefined) {
-    return `shape-${shape.nonVisual.id}`;
+    return `${prefix}-${shape.nonVisual.id}`;
   }
-  return `shape-${index}`;
+  return `${prefix}-${index}`;
 }
 
 // =============================================================================
@@ -197,6 +215,7 @@ export function SlideRendererSvg({
   options,
   resolvedBackground,
   editingShapeId,
+  layoutShapes,
   className,
   style,
 }: SlideRendererSvgProps) {
@@ -221,6 +240,7 @@ export function SlideRendererSvg({
         options={options}
         resolvedBackground={resolvedBackground}
         editingShapeId={editingShapeId}
+        layoutShapes={layoutShapes}
       />
     </svg>
   );
