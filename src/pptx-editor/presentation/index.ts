@@ -38,7 +38,7 @@ export {
 export {
   createPresentationEditorState,
   presentationEditorReducer,
-} from "./reducer";
+} from "./reducer/reducer";
 
 // =============================================================================
 // Context
