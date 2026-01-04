@@ -7,13 +7,14 @@
 import type { Fill, Line } from "../../domain";
 import type { ColorContext } from "../../domain/resolution";
 import {
-  formatRgba,
   getDashArrayPattern,
   resolveFill,
   resolveLine,
   type ResolvedFill,
   type ResolvedGradientFill,
   type ResolvedLine,
+  ooxmlAngleToSvgLinearGradient,
+  getRadialGradientCoords,
 } from "../core";
 import type { ResolvedImageFill } from "../core/fill";
 
@@ -188,18 +189,12 @@ function resolvedGradientToSvgDef(fill: ResolvedGradientFill, gradientId: string
     .join("");
 
   if (fill.isRadial) {
-    const cx = fill.radialCenter?.cx ?? 50;
-    const cy = fill.radialCenter?.cy ?? 50;
-    return `<radialGradient id="${gradientId}" cx="${cx}%" cy="${cy}%" r="50%">${stops}</radialGradient>`;
+    const { cx, cy, r } = getRadialGradientCoords(fill.radialCenter);
+    return `<radialGradient id="${gradientId}" cx="${cx}%" cy="${cy}%" r="${r}%">${stops}</radialGradient>`;
   }
 
-  // Linear gradient
-  // Convert OOXML angle (clockwise from top) to SVG coordinates
-  const rad = ((fill.angle - 90) * Math.PI) / 180;
-  const x1 = 50 - 50 * Math.cos(rad);
-  const y1 = 50 - 50 * Math.sin(rad);
-  const x2 = 50 + 50 * Math.cos(rad);
-  const y2 = 50 + 50 * Math.sin(rad);
+  // Linear gradient - use shared utility for angle conversion
+  const { x1, y1, x2, y2 } = ooxmlAngleToSvgLinearGradient(fill.angle);
 
   return `<linearGradient id="${gradientId}" x1="${x1}%" y1="${y1}%" x2="${x2}%" y2="${y2}%">${stops}</linearGradient>`;
 }

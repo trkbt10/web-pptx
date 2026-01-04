@@ -8,8 +8,10 @@ import { px, deg } from "../../pptx/domain/types";
 import {
   getShapeBounds,
   getCombinedBounds,
+  getCombinedBoundsWithRotation,
   collectBoundsForIds,
   getCombinedCenter,
+  type RotatedBoundsInput,
 } from "./bounds";
 
 // =============================================================================
@@ -255,5 +257,97 @@ describe("getCombinedCenter", () => {
     expect(center).toBeDefined();
     expect(center?.centerX).toBe(-50);
     expect(center?.centerY).toBe(-25);
+  });
+});
+
+// =============================================================================
+// getCombinedBoundsWithRotation Tests
+// =============================================================================
+
+describe("getCombinedBoundsWithRotation", () => {
+  it("returns undefined for empty array", () => {
+    const result = getCombinedBoundsWithRotation([]);
+    expect(result).toBeUndefined();
+  });
+
+  it("returns bounds unchanged for single non-rotated shape", () => {
+    const boundsList: RotatedBoundsInput[] = [
+      { x: 10, y: 20, width: 100, height: 50, rotation: 0 },
+    ];
+    const result = getCombinedBoundsWithRotation(boundsList);
+
+    expect(result).toBeDefined();
+    expect(result?.x).toBe(10);
+    expect(result?.y).toBe(20);
+    expect(result?.width).toBe(100);
+    expect(result?.height).toBe(50);
+  });
+
+  it("calculates combined bounds for multiple non-rotated shapes", () => {
+    const boundsList: RotatedBoundsInput[] = [
+      { x: 0, y: 0, width: 50, height: 50, rotation: 0 },
+      { x: 100, y: 100, width: 50, height: 50, rotation: 0 },
+    ];
+    const result = getCombinedBoundsWithRotation(boundsList);
+
+    expect(result).toBeDefined();
+    expect(result?.x).toBe(0);
+    expect(result?.y).toBe(0);
+    expect(result?.width).toBe(150);
+    expect(result?.height).toBe(150);
+  });
+
+  it("expands bounds for rotated rectangle", () => {
+    // Square at (0, 0) size 100x100 rotated 45 degrees
+    // The rotated square's AABB will be larger
+    const boundsList: RotatedBoundsInput[] = [
+      { x: 0, y: 0, width: 100, height: 100, rotation: 45 },
+    ];
+    const result = getCombinedBoundsWithRotation(boundsList);
+
+    expect(result).toBeDefined();
+    // For a 45-degree rotated square, the diagonal expands
+    // Original corners: (0,0), (100,0), (100,100), (0,100)
+    // Center: (50, 50)
+    // The AABB should be approximately sqrt(2) times larger in each dimension
+    const expectedHalf = 50 * Math.sqrt(2);
+    expect(result?.x).toBeCloseTo(50 - expectedHalf, 1);
+    expect(result?.y).toBeCloseTo(50 - expectedHalf, 1);
+    expect(result?.width).toBeCloseTo(expectedHalf * 2, 1);
+    expect(result?.height).toBeCloseTo(expectedHalf * 2, 1);
+  });
+
+  it("handles 90 degree rotation correctly", () => {
+    // Rectangle 100x50 at (0, 0) rotated 90 degrees
+    // Center: (50, 25)
+    // After 90 degree rotation, it becomes 50x100
+    const boundsList: RotatedBoundsInput[] = [
+      { x: 0, y: 0, width: 100, height: 50, rotation: 90 },
+    ];
+    const result = getCombinedBoundsWithRotation(boundsList);
+
+    expect(result).toBeDefined();
+    // Center stays at (50, 25), but dimensions swap
+    expect(result?.x).toBeCloseTo(25, 1); // 50 - 50/2
+    expect(result?.y).toBeCloseTo(-25, 1); // 25 - 100/2
+    expect(result?.width).toBeCloseTo(50, 1);
+    expect(result?.height).toBeCloseTo(100, 1);
+  });
+
+  it("combines rotated and non-rotated shapes", () => {
+    const boundsList: RotatedBoundsInput[] = [
+      { x: 0, y: 0, width: 50, height: 50, rotation: 0 },
+      { x: 100, y: 0, width: 50, height: 50, rotation: 45 },
+    ];
+    const result = getCombinedBoundsWithRotation(boundsList);
+
+    expect(result).toBeDefined();
+    // First shape: (0,0) to (50,50)
+    // Second shape: rotated 45 degrees around (125, 25)
+    // AABB should encompass both
+    expect(result?.x).toBe(0);
+    expect(result?.y).toBeLessThan(0); // Rotated shape extends above y=0
+    expect(result?.width).toBeGreaterThan(150);
+    expect(result?.height).toBeGreaterThan(50);
   });
 });

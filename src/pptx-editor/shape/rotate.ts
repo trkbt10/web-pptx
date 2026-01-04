@@ -36,8 +36,8 @@ export type RotationResult = {
  * Normalize angle to 0-360 range.
  */
 export function normalizeAngle(angle: number): number {
-  let normalized = angle % 360;
-  if (normalized < 0) normalized += 360;
+  const remainder = angle % 360;
+  const normalized = remainder < 0 ? remainder + 360 : remainder;
   // Handle -0 edge case
   return normalized === 0 ? 0 : normalized;
 }
@@ -148,6 +148,69 @@ export function calculateShapeCenter(
     x: x + width / 2,
     y: y + height / 2,
   };
+}
+
+/**
+ * Get the four corners of a rotated rectangle.
+ *
+ * Returns corners in order: top-left, top-right, bottom-right, bottom-left
+ * after rotation around the rectangle's center.
+ */
+export function getRotatedCorners(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  rotation: number
+): readonly Point[] {
+  const center = calculateShapeCenter(x, y, width, height);
+  const rad = degreesToRadians(rotation);
+
+  const corners: Point[] = [
+    { x, y },
+    { x: x + width, y },
+    { x: x + width, y: y + height },
+    { x, y: y + height },
+  ];
+
+  return corners.map((corner) => rotatePointAroundCenter(corner, center, rad));
+}
+
+/**
+ * Generate SVG transform attribute string for rotation.
+ *
+ * @returns SVG rotate transform string, or undefined if rotation is 0
+ */
+export function getSvgRotationTransform(
+  rotation: number,
+  centerX: number,
+  centerY: number
+): string | undefined {
+  if (rotation === 0) {
+    return undefined;
+  }
+  return `rotate(${rotation}, ${centerX}, ${centerY})`;
+}
+
+/**
+ * Generate SVG transform attribute string for rotation around a shape's center.
+ *
+ * Convenience function that calculates the center from bounds.
+ *
+ * @returns SVG rotate transform string, or undefined if rotation is 0
+ */
+export function getSvgRotationTransformForBounds(
+  rotation: number,
+  x: number,
+  y: number,
+  width: number,
+  height: number
+): string | undefined {
+  if (rotation === 0) {
+    return undefined;
+  }
+  const center = calculateShapeCenter(x, y, width, height);
+  return `rotate(${rotation}, ${center.x}, ${center.y})`;
 }
 
 // =============================================================================

@@ -23,6 +23,7 @@ import { layoutTextBody, toLayoutInput } from "../text-layout";
 import { escapeXml } from "../../../xml";
 import { px, deg } from "../../domain/types";
 import { PT_TO_PX } from "../../core/units/conversion";
+import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../core/gradient";
 
 // =============================================================================
 // Main Text Rendering
@@ -439,19 +440,12 @@ function createTextGradientDef(
     .join("\n");
 
   if (fill.isRadial) {
-    const cx = fill.radialCenter?.cx ?? 50;
-    const cy = fill.radialCenter?.cy ?? 50;
-    return `<radialGradient id="${gradId}" cx="${cx}%" cy="${cy}%" r="50%">\n${stops}\n</radialGradient>`;
+    const { cx, cy, r } = getRadialGradientCoords(fill.radialCenter);
+    return `<radialGradient id="${gradId}" cx="${cx}%" cy="${cy}%" r="${r}%">\n${stops}\n</radialGradient>`;
   }
 
-  // Linear gradient: convert angle to SVG coordinates
-  // ECMA-376 angle is in degrees, 0 = right, 90 = down
-  // SVG uses x1,y1,x2,y2 with 0,0 at top-left
-  const angleRad = (fill.angle * Math.PI) / 180;
-  const x1 = 50 - 50 * Math.cos(angleRad);
-  const y1 = 50 - 50 * Math.sin(angleRad);
-  const x2 = 50 + 50 * Math.cos(angleRad);
-  const y2 = 50 + 50 * Math.sin(angleRad);
+  // Linear gradient: use shared utility for angle conversion
+  const { x1, y1, x2, y2 } = ooxmlAngleToSvgLinearGradient(fill.angle);
 
   return `<linearGradient id="${gradId}" x1="${x1}%" y1="${y1}%" x2="${x2}%" y2="${y2}%">\n${stops}\n</linearGradient>`;
 }

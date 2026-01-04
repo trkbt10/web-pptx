@@ -14,6 +14,7 @@ import {
   type ResolvedGradientFill,
   type ResolvedImageFill,
 } from "../../core/fill";
+import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../../core/gradient";
 import { useSvgDefs } from "../hooks/useSvgDefs";
 import { useRenderContext } from "../context";
 
@@ -113,22 +114,16 @@ function createGradientDef(fill: ResolvedGradientFill, id: string): ReactNode {
   ));
 
   if (fill.isRadial) {
-    const cx = fill.radialCenter?.cx ?? 50;
-    const cy = fill.radialCenter?.cy ?? 50;
+    const { cx, cy, r } = getRadialGradientCoords(fill.radialCenter);
     return (
-      <radialGradient id={id} cx={`${cx}%`} cy={`${cy}%`} r="50%">
+      <radialGradient id={id} cx={`${cx}%`} cy={`${cy}%`} r={`${r}%`}>
         {stops}
       </radialGradient>
     );
   }
 
-  // Linear gradient
-  // Convert OOXML angle (clockwise from top) to SVG coordinates
-  const rad = ((fill.angle - 90) * Math.PI) / 180;
-  const x1 = 50 - 50 * Math.cos(rad);
-  const y1 = 50 - 50 * Math.sin(rad);
-  const x2 = 50 + 50 * Math.cos(rad);
-  const y2 = 50 + 50 * Math.sin(rad);
+  // Linear gradient - use shared utility for angle conversion
+  const { x1, y1, x2, y2 } = ooxmlAngleToSvgLinearGradient(fill.angle);
 
   return (
     <linearGradient
@@ -174,12 +169,53 @@ function createImagePatternDef(
 // =============================================================================
 
 /**
+ * Result of resolving a fill with defs
+ */
+export type FillWithDefsResult = {
+  /** SVG fill props */
+  readonly props: SvgFillProps;
+  /** Def element to render in <defs> */
+  readonly defElement?: ReactNode;
+};
+
+/**
+ * Hook to resolve fill and return both props and def element.
+ * The caller is responsible for rendering the defElement in a <defs> block.
+ *
+ * @param fill - Domain fill object
+ * @param width - Shape width (needed for image patterns)
+ * @param height - Shape height (needed for image patterns)
+ * @returns SVG fill props and optional def element
+ */
+export function useFillWithDefs(
+  fill: Fill | undefined,
+  width?: number,
+  height?: number,
+): FillWithDefsResult {
+  const { colorContext } = useRenderContext();
+  const { getNextId } = useSvgDefs();
+
+  if (fill === undefined || fill.type === "noFill") {
+    return { props: { fill: "none" } };
+  }
+
+  const resolved = resolveFill(fill, colorContext);
+  const result = resolvedFillToResult(resolved, getNextId, width, height);
+
+  return {
+    props: result.props,
+    defElement: result.defElement,
+  };
+}
+
+/**
  * Hook to resolve fill and register defs if needed.
  *
  * @param fill - Domain fill object
  * @param width - Shape width (needed for image patterns)
  * @param height - Shape height (needed for image patterns)
  * @returns SVG fill props
+ * @deprecated Use useFillWithDefs instead and render defElement directly
  */
 export function useFill(
   fill: Fill | undefined,

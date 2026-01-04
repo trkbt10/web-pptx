@@ -11,6 +11,9 @@ import {
   snapAngle,
   rotatePointAroundCenter,
   calculateShapeCenter,
+  getRotatedCorners,
+  getSvgRotationTransform,
+  getSvgRotationTransformForBounds,
   rotateShapeAroundCenter,
   calculateRotationDelta,
   DEFAULT_SNAP_ANGLES,
@@ -290,5 +293,101 @@ describe("constants", () => {
 
   it("has correct default snap threshold", () => {
     expect(DEFAULT_SNAP_THRESHOLD).toBe(5);
+  });
+});
+
+// =============================================================================
+// getRotatedCorners Tests
+// =============================================================================
+
+describe("getRotatedCorners", () => {
+  it("returns original corners when rotation is 0", () => {
+    const corners = getRotatedCorners(0, 0, 100, 50, 0);
+
+    expect(corners.length).toBe(4);
+    expect(corners[0]).toEqual({ x: 0, y: 0 }); // top-left
+    expect(corners[1]).toEqual({ x: 100, y: 0 }); // top-right
+    expect(corners[2]).toEqual({ x: 100, y: 50 }); // bottom-right
+    expect(corners[3]).toEqual({ x: 0, y: 50 }); // bottom-left
+  });
+
+  it("rotates corners 90 degrees around center", () => {
+    // Rectangle at (0, 0) size 100x100, center at (50, 50)
+    const corners = getRotatedCorners(0, 0, 100, 100, 90);
+
+    // After 90 degree rotation:
+    // (0, 0) -> rotated around (50, 50) -> (100, 0)
+    // (100, 0) -> (100, 100)
+    // (100, 100) -> (0, 100)
+    // (0, 100) -> (0, 0)
+    expect(corners[0].x).toBeCloseTo(100, 5);
+    expect(corners[0].y).toBeCloseTo(0, 5);
+    expect(corners[1].x).toBeCloseTo(100, 5);
+    expect(corners[1].y).toBeCloseTo(100, 5);
+    expect(corners[2].x).toBeCloseTo(0, 5);
+    expect(corners[2].y).toBeCloseTo(100, 5);
+    expect(corners[3].x).toBeCloseTo(0, 5);
+    expect(corners[3].y).toBeCloseTo(0, 5);
+  });
+
+  it("handles offset rectangle", () => {
+    // Rectangle at (100, 200) size 50x30
+    const corners = getRotatedCorners(100, 200, 50, 30, 0);
+
+    expect(corners[0]).toEqual({ x: 100, y: 200 });
+    expect(corners[1]).toEqual({ x: 150, y: 200 });
+    expect(corners[2]).toEqual({ x: 150, y: 230 });
+    expect(corners[3]).toEqual({ x: 100, y: 230 });
+  });
+
+  it("rotates 180 degrees", () => {
+    const corners = getRotatedCorners(0, 0, 100, 100, 180);
+
+    // After 180 degree rotation around (50, 50):
+    // (0, 0) -> (100, 100)
+    expect(corners[0].x).toBeCloseTo(100, 5);
+    expect(corners[0].y).toBeCloseTo(100, 5);
+  });
+});
+
+// =============================================================================
+// getSvgRotationTransform Tests
+// =============================================================================
+
+describe("getSvgRotationTransform", () => {
+  it("returns undefined for rotation 0", () => {
+    expect(getSvgRotationTransform(0, 50, 50)).toBeUndefined();
+  });
+
+  it("returns correct transform string for 90 degrees", () => {
+    const result = getSvgRotationTransform(90, 50, 100);
+    expect(result).toBe("rotate(90, 50, 100)");
+  });
+
+  it("returns correct transform string for negative rotation", () => {
+    const result = getSvgRotationTransform(-45, 25, 30);
+    expect(result).toBe("rotate(-45, 25, 30)");
+  });
+});
+
+// =============================================================================
+// getSvgRotationTransformForBounds Tests
+// =============================================================================
+
+describe("getSvgRotationTransformForBounds", () => {
+  it("returns undefined for rotation 0", () => {
+    expect(getSvgRotationTransformForBounds(0, 0, 0, 100, 100)).toBeUndefined();
+  });
+
+  it("calculates center and returns correct transform", () => {
+    // Rectangle at (0, 0) size 100x100, center is (50, 50)
+    const result = getSvgRotationTransformForBounds(45, 0, 0, 100, 100);
+    expect(result).toBe("rotate(45, 50, 50)");
+  });
+
+  it("handles offset rectangle", () => {
+    // Rectangle at (100, 200) size 50x30, center is (125, 215)
+    const result = getSvgRotationTransformForBounds(90, 100, 200, 50, 30);
+    expect(result).toBe("rotate(90, 125, 215)");
   });
 });

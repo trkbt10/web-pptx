@@ -12,6 +12,7 @@ import type { ResolvedBackgroundFill } from "../context";
 import { useRenderContext } from "./context";
 import { useSvgDefs } from "./hooks/useSvgDefs";
 import { resolveFill } from "../core/fill";
+import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../core/gradient";
 
 // =============================================================================
 // Types
@@ -50,7 +51,7 @@ export function ResolvedBackgroundRenderer({
   slideSize,
 }: ResolvedBackgroundRendererProps) {
   const { width, height } = slideSize;
-  const { getNextId, addDef, hasDef } = useSvgDefs();
+  const { getNextId } = useSvgDefs();
 
   switch (resolvedBackground.type) {
     case "solid":
@@ -64,15 +65,16 @@ export function ResolvedBackgroundRenderer({
 
     case "gradient": {
       const gradId = getNextId("bg-grad");
-      if (!hasDef(gradId)) {
-        addDef(gradId, createGradientDef(resolvedBackground, gradId));
-      }
+      const gradientDef = createGradientDef(resolvedBackground, gradId);
       return (
-        <rect
-          width={width as number}
-          height={height as number}
-          fill={`url(#${gradId})`}
-        />
+        <>
+          <defs>{gradientDef}</defs>
+          <rect
+            width={width as number}
+            height={height as number}
+            fill={`url(#${gradId})`}
+          />
+        </>
       );
     }
 
@@ -99,7 +101,7 @@ export function BackgroundRenderer({
 }: BackgroundRendererProps) {
   const { width, height } = slideSize;
   const { colorContext, resources, warnings } = useRenderContext();
-  const { getNextId, addDef, hasDef } = useSvgDefs();
+  const { getNextId } = useSvgDefs();
 
   // Default white background
   if (background === undefined || background.fill === undefined) {
@@ -140,15 +142,16 @@ export function BackgroundRenderer({
       const resolved = resolveFill(fill, colorContext);
       if (resolved.type === "gradient" && resolved.stops.length > 0) {
         const gradId = getNextId("bg-grad");
-        if (!hasDef(gradId)) {
-          addDef(gradId, createCoreGradientDef(resolved, gradId));
-        }
+        const gradientDef = createCoreGradientDef(resolved, gradId);
         return (
-          <rect
-            width={width as number}
-            height={height as number}
-            fill={`url(#${gradId})`}
-          />
+          <>
+            <defs>{gradientDef}</defs>
+            <rect
+              width={width as number}
+              height={height as number}
+              fill={`url(#${gradId})`}
+            />
+          </>
         );
       }
       return (
@@ -217,27 +220,23 @@ function createGradientDef(
   ));
 
   if (resolved.isRadial === true) {
-    const cx = resolved.radialCenter?.cx ?? 50;
-    const cy = resolved.radialCenter?.cy ?? 50;
+    const { cx, cy, r, fx, fy } = getRadialGradientCoords(resolved.radialCenter, true);
     return (
       <radialGradient
         id={id}
         cx={`${cx}%`}
         cy={`${cy}%`}
-        r="70.7%"
-        fx={`${cx}%`}
-        fy={`${cy}%`}
+        r={`${r}%`}
+        fx={`${fx}%`}
+        fy={`${fy}%`}
       >
         {stops}
       </radialGradient>
     );
   }
 
-  // Linear gradient
-  const x1 = 50 - 50 * Math.cos((resolved.angle * Math.PI) / 180);
-  const y1 = 50 - 50 * Math.sin((resolved.angle * Math.PI) / 180);
-  const x2 = 50 + 50 * Math.cos((resolved.angle * Math.PI) / 180);
-  const y2 = 50 + 50 * Math.sin((resolved.angle * Math.PI) / 180);
+  // Linear gradient - use shared utility for angle conversion
+  const { x1, y1, x2, y2 } = ooxmlAngleToSvgLinearGradient(resolved.angle);
 
   return (
     <linearGradient
@@ -269,28 +268,23 @@ function createCoreGradientDef(
   ));
 
   if (resolved.isRadial) {
-    const cx = resolved.radialCenter?.cx ?? 50;
-    const cy = resolved.radialCenter?.cy ?? 50;
+    const { cx, cy, r, fx, fy } = getRadialGradientCoords(resolved.radialCenter, true);
     return (
       <radialGradient
         id={id}
         cx={`${cx}%`}
         cy={`${cy}%`}
-        r="70.7%"
-        fx={`${cx}%`}
-        fy={`${cy}%`}
+        r={`${r}%`}
+        fx={`${fx}%`}
+        fy={`${fy}%`}
       >
         {stops}
       </radialGradient>
     );
   }
 
-  // Linear gradient - convert OOXML angle to SVG coordinates
-  const rad = ((resolved.angle - 90) * Math.PI) / 180;
-  const x1 = 50 - 50 * Math.cos(rad);
-  const y1 = 50 - 50 * Math.sin(rad);
-  const x2 = 50 + 50 * Math.cos(rad);
-  const y2 = 50 + 50 * Math.sin(rad);
+  // Linear gradient - use shared utility for angle conversion
+  const { x1, y1, x2, y2 } = ooxmlAngleToSvgLinearGradient(resolved.angle);
 
   return (
     <linearGradient

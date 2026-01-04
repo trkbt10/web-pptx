@@ -7,7 +7,7 @@
 
 import type { Geometry, Fill, Line } from "../../../domain";
 import { renderGeometryData } from "../../svg/geometry";
-import { useFill, type SvgFillProps } from "./Fill";
+import { useFillWithDefs, type SvgFillProps } from "./Fill";
 import { useStroke, type SvgStrokeProps } from "./Stroke";
 
 // =============================================================================
@@ -64,21 +64,24 @@ export function GeometryPath({
   line,
   className,
 }: GeometryPathProps) {
-  const fillProps = useFill(fill, width, height);
+  const { props: fillProps, defElement } = useFillWithDefs(fill, width, height);
   const strokeProps = useStroke(line);
 
   if (geometry === undefined) {
     // No geometry - render as rectangle (default shape)
     return (
-      <rect
-        x={0}
-        y={0}
-        width={width}
-        height={height}
-        className={className}
-        {...fillProps}
-        {...strokeProps}
-      />
+      <>
+        {defElement && <defs>{defElement}</defs>}
+        <rect
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          className={className}
+          {...fillProps}
+          {...strokeProps}
+        />
+      </>
     );
   }
 
@@ -86,12 +89,15 @@ export function GeometryPath({
   const pathData = renderGeometryData(geometry, width, height);
 
   return (
-    <path
-      d={pathData}
-      className={className}
-      {...fillProps}
-      {...strokeProps}
-    />
+    <>
+      {defElement && <defs>{defElement}</defs>}
+      <path
+        d={pathData}
+        className={className}
+        {...fillProps}
+        {...strokeProps}
+      />
+    </>
   );
 }
 
@@ -105,19 +111,22 @@ export function RectPath({
   line,
   className,
 }: RectPathProps) {
-  const fillProps = useFill(fill, width, height);
+  const { props: fillProps, defElement } = useFillWithDefs(fill, width, height);
   const strokeProps = useStroke(line);
 
   return (
-    <rect
-      x={0}
-      y={0}
-      width={width}
-      height={height}
-      className={className}
-      {...fillProps}
-      {...strokeProps}
-    />
+    <>
+      {defElement && <defs>{defElement}</defs>}
+      <rect
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        className={className}
+        {...fillProps}
+        {...strokeProps}
+      />
+    </>
   );
 }
 

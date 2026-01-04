@@ -21,6 +21,8 @@ import { clientToSlideCoords } from "../shape/coords";
 import { collectShapeRenderData } from "../shape/traverse";
 import { findShapeByIdWithParents } from "../shape/query";
 import { getAbsoluteBounds } from "../shape/transform";
+import { getCombinedBoundsWithRotation } from "../shape/bounds";
+import { getSvgRotationTransformForBounds, normalizeAngle } from "../shape/rotate";
 import { SlideContextMenu, type ContextMenuActions } from "./context-menu/SlideContextMenu";
 import { SelectionBox } from "../selection/SelectionBox";
 import { SlideRenderer } from "../../pptx/render/react";
@@ -88,86 +90,6 @@ type ShapeBounds = {
   readonly rotation: number;
   readonly isPrimary: boolean;
 };
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-function getRotationTransform(
-  rotation: number,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-): string | undefined {
-  if (rotation === 0) return undefined;
-  return `rotate(${rotation}, ${x + width / 2}, ${y + height / 2})`;
-}
-
-function getRotatedCorners(
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  rotation: number,
-): Array<{ x: number; y: number }> {
-  const centerX = x + width / 2;
-  const centerY = y + height / 2;
-  const rad = (rotation * Math.PI) / 180;
-  const cos = Math.cos(rad);
-  const sin = Math.sin(rad);
-
-  const corners = [
-    { x, y },
-    { x: x + width, y },
-    { x: x + width, y: y + height },
-    { x, y: y + height },
-  ];
-
-  return corners.map((corner) => {
-    const dx = corner.x - centerX;
-    const dy = corner.y - centerY;
-    return {
-      x: centerX + dx * cos - dy * sin,
-      y: centerY + dx * sin + dy * cos,
-    };
-  });
-}
-
-function calculateCombinedBounds(
-  bounds: readonly ShapeBounds[],
-): { x: number; y: number; width: number; height: number } | undefined {
-  if (bounds.length === 0) return undefined;
-
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-
-  for (const b of bounds) {
-    if (b.rotation !== 0) {
-      const corners = getRotatedCorners(b.x, b.y, b.width, b.height, b.rotation);
-      for (const corner of corners) {
-        minX = Math.min(minX, corner.x);
-        minY = Math.min(minY, corner.y);
-        maxX = Math.max(maxX, corner.x);
-        maxY = Math.max(maxY, corner.y);
-      }
-    } else {
-      minX = Math.min(minX, b.x);
-      minY = Math.min(minY, b.y);
-      maxX = Math.max(maxX, b.x + b.width);
-      maxY = Math.max(maxY, b.y + b.height);
-    }
-  }
-
-  return {
-    x: minX,
-    y: minY,
-    width: maxX - minX,
-    height: maxY - minY,
-  };
-}
 
 // =============================================================================
 // Component
@@ -297,8 +219,7 @@ export function SlideCanvas({
         const angleDelta = drag.previewAngleDelta as number;
         const initialRotation = drag.initialRotationsMap.get(id);
         if (initialRotation !== undefined) {
-          rotation = ((initialRotation as number) + angleDelta) % 360;
-          if (rotation < 0) rotation += 360;
+          rotation = normalizeAngle((initialRotation as number) + angleDelta);
         }
       }
 
@@ -318,7 +239,7 @@ export function SlideCanvas({
 
   const combinedBounds = useMemo(() => {
     if (selectedBounds.length <= 1) return undefined;
-    return calculateCombinedBounds(selectedBounds);
+    return getCombinedBoundsWithRotation(selectedBounds);
   }, [selectedBounds]);
 
   const isMultiSelection = selectedBounds.length > 1;
@@ -494,7 +415,7 @@ export function SlideCanvas({
           {shapeRenderData.map((shape) => (
             <g
               key={`hit-${shape.id}`}
-              transform={getRotationTransform(shape.rotation, shape.x, shape.y, shape.width, shape.height)}
+              transform={getSvgRotationTransformForBounds(shape.rotation, shape.x, shape.y, shape.width, shape.height)}
             >
               <rect
                 x={shape.x}

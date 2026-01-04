@@ -13,6 +13,7 @@ import type { Background, SlideSize } from "../../domain";
 import type { RenderContext, ResolvedBackgroundFill } from "../context";
 import type { SvgDefsCollector } from "./slide-utils";
 import { renderFillToSvgDef, renderFillToSvgStyle } from "./fill";
+import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../core/gradient";
 
 // =============================================================================
 // Resolved Background Rendering
@@ -47,17 +48,13 @@ export function renderResolvedBackgroundSvg(
         // Radial gradient - use radialGradient SVG element
         // Per ECMA-376 Part 1, Section 20.1.8.46 (a:path):
         // path="circle" creates a circular radial gradient
-        const cx = resolved.radialCenter?.cx ?? 50;
-        const cy = resolved.radialCenter?.cy ?? 50;
+        const { cx, cy, r, fx, fy } = getRadialGradientCoords(resolved.radialCenter, true);
         defsCollector.addDef(
-          `<radialGradient id="${gradId}" cx="${cx}%" cy="${cy}%" r="70.7%" fx="${cx}%" fy="${cy}%">\n${stops}\n</radialGradient>`,
+          `<radialGradient id="${gradId}" cx="${cx}%" cy="${cy}%" r="${r}%" fx="${fx}%" fy="${fy}%">\n${stops}\n</radialGradient>`,
         );
       } else {
-        // Linear gradient - calculate direction from angle
-        const x1 = 50 - 50 * Math.cos((resolved.angle * Math.PI) / 180);
-        const y1 = 50 - 50 * Math.sin((resolved.angle * Math.PI) / 180);
-        const x2 = 50 + 50 * Math.cos((resolved.angle * Math.PI) / 180);
-        const y2 = 50 + 50 * Math.sin((resolved.angle * Math.PI) / 180);
+        // Linear gradient - calculate direction from angle using shared utility
+        const { x1, y1, x2, y2 } = ooxmlAngleToSvgLinearGradient(resolved.angle);
         defsCollector.addDef(
           `<linearGradient id="${gradId}" x1="${x1}%" y1="${y1}%" x2="${x2}%" y2="${y2}%">\n${stops}\n</linearGradient>`,
         );

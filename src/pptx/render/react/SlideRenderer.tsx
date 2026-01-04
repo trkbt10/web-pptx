@@ -110,6 +110,7 @@ export function SlideRenderer({
 
 /**
  * Inner component that renders slide content with access to contexts.
+ * Each component (background, shapes) renders its own defs inline.
  */
 function SlideContent({
   slide,
@@ -119,17 +120,14 @@ function SlideContent({
 }: SlideContentProps) {
   return (
     <>
-      {/* SVG defs will be collected and rendered here */}
-      <DefsRenderer />
-
-      {/* Background */}
+      {/* Background (renders its own defs for gradients) */}
       <SlideBackground
         slide={slide}
         slideSize={slideSize}
         resolvedBackground={resolvedBackground}
       />
 
-      {/* Shapes */}
+      {/* Shapes (each renders its own defs for gradients/patterns) */}
       {slide.shapes.map((shape, index) => (
         <ShapeRenderer
           key={getShapeKey(shape, index)}
@@ -139,16 +137,6 @@ function SlideContent({
       ))}
     </>
   );
-}
-
-/**
- * Renders collected SVG defs.
- */
-function DefsRenderer() {
-  // Access the defs store to render collected defs
-  // This is a bit of a workaround since we need to render defs after they're collected
-  // In practice, defs are registered during shape rendering
-  return null; // Defs are rendered inline by the components that create them
 }
 
 /**

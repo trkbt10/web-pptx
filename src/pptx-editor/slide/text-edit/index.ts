@@ -40,3 +40,20 @@ export {
   type TextEditControllerProps,
   type CursorState,
 } from "./TextEditController";
+
+// Text geometry utilities (shared between cursor and rendering)
+export {
+  type TextVisualBounds,
+  TEXT_ASCENDER_RATIO,
+  DEFAULT_FONT_SIZE_PT,
+  fontSizeToPixels,
+  getLineFontSize,
+  getFontSizeAtOffset,
+  getTextVisualBounds,
+  getLineVisualBounds,
+  getVisualBoundsAtOffset,
+  getTextWidthForChars,
+  getXPositionInLine,
+  getLineEndX,
+  getLineTextLength,
+} from "./text-geometry";

@@ -27,7 +27,6 @@ import type { CreationMode } from "./types";
 import { createShapeFromMode, getDefaultBoundsForMode } from "../shape/factory";
 import { SlideCanvas } from "../slide/SlideCanvas";
 import { TextEditController, isTextEditActive, mergeTextIntoBody } from "../slide/text-edit";
-import { toLayoutInput, layoutTextBody } from "../../pptx/render/text-layout";
 import { PropertyPanel } from "../panels/PropertyPanel";
 import { ShapeToolbar } from "../panels/ShapeToolbar";
 import { LayerPanel } from "../panels/LayerPanel";
@@ -169,15 +168,6 @@ function EditorContent({
     [dispatch]
   );
 
-  const handleTextChange = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    (_newText: string) => {
-      // Update text body reactively (for live preview if needed)
-      // Currently unused - text is merged on complete
-    },
-    []
-  );
-
   const handleTextEditComplete = useCallback(
     (newText: string) => {
       if (isTextEditActive(textEdit)) {
@@ -234,26 +224,6 @@ function EditorContent({
 
     return undefined;
   }, [width, height, activeSlide?.apiSlide, document.fileCache]);
-
-  // Compute LayoutResult for text editing
-  const textEditLayoutResult = useMemo(() => {
-    if (!isTextEditActive(textEdit)) {
-      return undefined;
-    }
-
-    const colorContext = renderContext?.colorContext ?? document.colorContext;
-    const fontScheme = renderContext?.fontScheme ?? document.fontScheme;
-
-    const layoutInput = toLayoutInput({
-      body: textEdit.initialTextBody,
-      width: textEdit.bounds.width,
-      height: textEdit.bounds.height,
-      colorContext,
-      fontScheme,
-    });
-
-    return layoutTextBody(layoutInput);
-  }, [textEdit, renderContext, document.colorContext, document.fontScheme]);
 
   // Get the editing shape ID when in text edit mode
   const editingShapeId = isTextEditActive(textEdit) ? textEdit.shapeId : undefined;
@@ -630,10 +600,10 @@ function EditorContent({
                 <TextEditController
                   bounds={textEdit.bounds}
                   textBody={textEdit.initialTextBody}
-                  layoutResult={textEditLayoutResult}
+                  colorContext={renderContext?.colorContext ?? document.colorContext}
+                  fontScheme={renderContext?.fontScheme ?? document.fontScheme}
                   slideWidth={width as number}
                   slideHeight={height as number}
-                  onChange={handleTextChange}
                   onComplete={handleTextEditComplete}
                   onCancel={handleTextEditCancel}
                 />

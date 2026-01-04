@@ -7,7 +7,16 @@
 
 import type { TextBody } from "../../../pptx/domain";
 import type { Pixels } from "../../../pptx/domain/types";
-import type { LayoutResult, LayoutLine, PositionedSpan } from "../../../pptx/render/text-layout";
+import type { LayoutResult, LayoutLine } from "../../../pptx/render/text-layout";
+import {
+  getVisualBoundsAtOffset,
+  getLineVisualBounds,
+  getXPositionInLine,
+  getLineEndX,
+  getLineTextLength,
+  DEFAULT_FONT_SIZE_PT,
+  fontSizeToPixels,
+} from "./text-geometry";
 
 // =============================================================================
 // Types
@@ -196,32 +205,13 @@ function getCursorInLineCoordinates(
   line: LayoutLine,
   charOffset: number,
 ): CursorCoordinates {
-  // eslint-disable-next-line no-restricted-syntax -- early return in loop
-  let cursorX = line.x as number;
-  // eslint-disable-next-line no-restricted-syntax -- early return in loop
-  let remaining = charOffset;
+  const x = getXPositionInLine(line, charOffset);
+  const bounds = getVisualBoundsAtOffset(line, charOffset);
 
-  for (const span of line.spans) {
-    const spanLength = span.text.length;
-
-    if (remaining <= spanLength) {
-      const x = cursorX + getTextWidthForChars(span, remaining);
-      return {
-        x: x as Pixels,
-        y: (line.y as number) - (line.height as number) * 0.8 as Pixels,
-        height: line.height,
-      };
-    }
-
-    remaining -= spanLength;
-    cursorX += (span.width as number) + (span.dx as number);
-  }
-
-  // End of line
   return {
-    x: cursorX as Pixels,
-    y: (line.y as number) - (line.height as number) * 0.8 as Pixels,
-    height: line.height,
+    x,
+    y: bounds.topY,
+    height: bounds.height,
   };
 }
 
@@ -229,15 +219,13 @@ function getCursorInLineCoordinates(
  * Get coordinates for end of a line.
  */
 function getEndOfLineCoordinates(line: LayoutLine): CursorCoordinates {
-  const endX = line.spans.reduce(
-    (x, span) => x + (span.width as number) + (span.dx as number),
-    line.x as number,
-  );
+  const endX = getLineEndX(line);
+  const bounds = getLineVisualBounds(line);
 
   return {
-    x: endX as Pixels,
-    y: (line.y as number) - (line.height as number) * 0.8 as Pixels,
-    height: line.height,
+    x: endX,
+    y: bounds.topY,
+    height: bounds.height,
   };
 }
 
@@ -248,16 +236,18 @@ function getEmptyParagraphCoordinates(
   paragraphIndex: number,
   layoutResult: LayoutResult,
 ): CursorCoordinates | undefined {
+  const defaultHeight = fontSizeToPixels(DEFAULT_FONT_SIZE_PT);
+
   // Try to find previous paragraph's end
   for (let i = paragraphIndex - 1; i >= 0; i--) {
     const prevPara = layoutResult.paragraphs[i];
     if (prevPara.lines.length > 0) {
       const lastLine = prevPara.lines[prevPara.lines.length - 1];
+      const bounds = getLineVisualBounds(lastLine);
       // Position at start of next line
-      const defaultHeight = 14 as Pixels; // Default line height
       return {
         x: lastLine.x,
-        y: (lastLine.y as number) + (lastLine.height as number) as Pixels,
+        y: ((bounds.baselineY as number) + (bounds.height as number) * 0.2) as Pixels,
         height: defaultHeight,
       };
     }
@@ -267,7 +257,7 @@ function getEmptyParagraphCoordinates(
   return {
     x: 0 as Pixels,
     y: 0 as Pixels,
-    height: 14 as Pixels,
+    height: defaultHeight,
   };
 }
 
@@ -286,35 +276,12 @@ function getEndOfTextCoordinates(
   }
 
   // Empty text
+  const defaultHeight = fontSizeToPixels(DEFAULT_FONT_SIZE_PT);
   return {
     x: 0 as Pixels,
     y: 0 as Pixels,
-    height: 14 as Pixels,
+    height: defaultHeight,
   };
-}
-
-/**
- * Get text length of a line.
- */
-function getLineTextLength(line: LayoutLine): number {
-  return line.spans.reduce((sum, span) => sum + span.text.length, 0);
-}
-
-/**
- * Estimate width for a given number of characters.
- * Uses average character width approximation.
- */
-function getTextWidthForChars(span: PositionedSpan, charCount: number): number {
-  if (charCount === 0) {
-    return 0;
-  }
-  if (charCount >= span.text.length) {
-    return span.width as number;
-  }
-
-  // Proportional width estimation
-  const avgCharWidth = (span.width as number) / span.text.length;
-  return avgCharWidth * charCount;
 }
 
 // =============================================================================
@@ -408,14 +375,15 @@ function getSelectionRectsInParagraph(
       const selStart = Math.max(startOffset - lineStart, 0);
       const selEnd = Math.min(endOffset - lineStart, lineLength);
 
-      const startX = getCursorXInLine(line, selStart);
-      const endX = getCursorXInLine(line, selEnd);
+      const startX = getXPositionInLine(line, selStart);
+      const endX = getXPositionInLine(line, selEnd);
+      const bounds = getLineVisualBounds(line);
 
       rects.push({
-        x: startX as Pixels,
-        y: (line.y as number) - (line.height as number) * 0.8 as Pixels,
-        width: (endX - startX) as Pixels,
-        height: line.height,
+        x: startX,
+        y: bounds.topY,
+        width: ((endX as number) - (startX as number)) as Pixels,
+        height: bounds.height,
       });
     }
 
@@ -423,26 +391,6 @@ function getSelectionRectsInParagraph(
   }
 
   return rects;
-}
-
-/**
- * Get x position for cursor at given offset in line.
- */
-function getCursorXInLine(line: LayoutLine, charOffset: number): number {
-  // eslint-disable-next-line no-restricted-syntax -- early return in loop
-  let x = line.x as number;
-  // eslint-disable-next-line no-restricted-syntax -- early return in loop
-  let remaining = charOffset;
-
-  for (const span of line.spans) {
-    if (remaining <= span.text.length) {
-      return x + getTextWidthForChars(span, remaining);
-    }
-    remaining -= span.text.length;
-    x += (span.width as number) + (span.dx as number);
-  }
-
-  return x;
 }
 
 /**

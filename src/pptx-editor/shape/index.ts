@@ -49,9 +49,11 @@ export type { AbsoluteBounds } from "./transform";
 export {
   getShapeBounds,
   getCombinedBounds,
+  getCombinedBoundsWithRotation,
   collectBoundsForIds,
   getCombinedCenter,
 } from "./bounds";
+export type { RotatedBoundsInput, SimpleBounds } from "./bounds";
 
 // =============================================================================
 // Capabilities
@@ -137,6 +139,9 @@ export {
   snapAngle,
   rotatePointAroundCenter,
   calculateShapeCenter,
+  getRotatedCorners,
+  getSvgRotationTransform,
+  getSvgRotationTransformForBounds,
   rotateShapeAroundCenter,
   calculateRotationDelta,
 } from "./rotate";

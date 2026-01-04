@@ -56,3 +56,12 @@ export type {
 } from "./fill";
 
 export { resolveColorWithAlpha, hexToRgb, formatRgba, resolveFill, resolveLine, getDashArrayPattern } from "./fill";
+
+// Gradient utilities
+export type { LinearGradientCoords, RadialGradientCoords } from "./gradient";
+
+export {
+  ooxmlAngleToSvgLinearGradient,
+  fillToRectToRadialCenter,
+  getRadialGradientCoords,
+} from "./gradient";
