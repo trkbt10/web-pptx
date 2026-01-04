@@ -11,17 +11,6 @@ import { readFileSync } from "node:fs";
 import { parseXml } from "./parser";
 import { getChild, getChildren, getTextContent, isXmlElement, isXmlText } from "./ast";
 import type { XmlElement, XmlDocument } from "./ast";
-import {
-  isAP,
-  isAPPr,
-  isPPic,
-  isABlip,
-  getTypedAttr,
-  getShapeProperties,
-  getTransform,
-  getOffset,
-  getExtent,
-} from "../pptx/ooxml/ecma376";
 
 const FIXTURE_PATH = "fixtures/extracted/2411-Performance_Up/ppt/slides";
 
@@ -334,88 +323,3 @@ describe("XML Parser with actual PPTX files", () => {
   });
 });
 
-describe("Integration with ECMA-376 type system", () => {
-  it("extracts paragraph properties using typed accessors", () => {
-    const doc = parseSlide(2);
-
-    // Find paragraphs using type guard
-    const paragraphs = findElements(doc, (el) => isAP(el));
-    expect(paragraphs.length).toBeGreaterThan(0);
-
-    // Get paragraph properties
-    const pWithAlign = paragraphs.find((p) => {
-      const pPr = getChild(p, "a:pPr");
-      if (!pPr) {
-        return false;
-      }
-      if (!isAPPr(pPr)) {
-        return false;
-      }
-      return pPr.attrs.algn === "ctr";
-    });
-
-    expect(pWithAlign).toBeDefined();
-
-    if (pWithAlign) {
-      const pPr = getChild(pWithAlign, "a:pPr");
-      if (pPr) {
-        if (isAPPr(pPr)) {
-          expect(getTypedAttr(pPr, "algn")).toBe("ctr");
-        }
-      }
-    }
-  });
-
-  it("extracts picture properties using typed accessors", () => {
-    const doc = parseSlide(10);
-
-    // Find pictures using type guard
-    const pictures = findElements(doc, (el) => isPPic(el));
-    expect(pictures.length).toBeGreaterThan(0);
-
-    const pic = pictures[0];
-
-    // Get shape properties
-    const spPr = getShapeProperties(pic);
-    expect(spPr).toBeDefined();
-
-    if (spPr) {
-      const xfrm = getTransform(spPr);
-      expect(xfrm).toBeDefined();
-
-      if (xfrm) {
-        const off = getOffset(xfrm);
-        const ext = getExtent(xfrm);
-
-        expect(off).toBeDefined();
-        expect(ext).toBeDefined();
-
-        // Position should be positive EMU values
-        expect(Number(off?.attrs.x)).toBeGreaterThan(0);
-        expect(Number(off?.attrs.y)).toBeGreaterThan(0);
-
-        // Size should be positive EMU values
-        expect(Number(ext?.attrs.cx)).toBeGreaterThan(0);
-        expect(Number(ext?.attrs.cy)).toBeGreaterThan(0);
-      }
-    }
-  });
-
-  it("extracts blip reference using typed accessors", () => {
-    const doc = parseSlide(10);
-
-    // Find pictures
-    const pictures = findElements(doc, (el) => isPPic(el));
-    const pic = pictures[0];
-
-    // Find blip element
-    const blips = findElements(pic, (el) => isABlip(el));
-    expect(blips.length).toBeGreaterThan(0);
-
-    const blip = blips[0];
-    const embedId = getTypedAttr(blip, "r:embed");
-
-    expect(embedId).toBeDefined();
-    expect(embedId).toMatch(/^rId\d+$/);
-  });
-});

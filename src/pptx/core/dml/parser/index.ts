@@ -28,12 +28,10 @@ export {
 
 // Background parsing (re-exported from render/background.ts)
 export {
-  xmlElementToFillElements,
-  xmlElementToBlipFill,
   getBackgroundElement,
   getBgPrFromElement,
   getBgRefFromElement,
-  resolveBgRefToFillElements,
+  resolveBgRefToXmlElement,
   extractPhClrFromBgRef,
   parseBackgroundProperties,
   findBackgroundRef,

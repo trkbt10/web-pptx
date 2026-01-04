@@ -230,8 +230,8 @@ describe("getSlideBackgroundFill", () => {
               minorFont: { latin: undefined, eastAsian: undefined, complexScript: undefined },
             },
             colorScheme: {
-              // bg1 should resolve to white (#FFFFFF)
-              bg1: "FFFFFF",
+              // bg1 maps to lt1 via DEFAULT_SCHEME_MAPPING, so lt1 must be in colorScheme
+              lt1: "FFFFFF",
             },
             formatScheme: {
               lineStyles: [],
@@ -264,7 +264,7 @@ describe("getSlideBackgroundFill", () => {
         resolveResource: () => undefined,
         toColorContext: () => ({
           colorMap: {},
-          colorScheme: { bg1: "FFFFFF" },
+          colorScheme: { lt1: "FFFFFF" },
         }),
         toPlaceholderContext: () => ({
           layoutPlaceholders: emptyPlaceholders,
@@ -365,7 +365,7 @@ describe("getSlideBackgroundFill", () => {
         resolveResource: () => undefined,
         toColorContext: () => ({
           colorMap: {},
-          colorScheme: { bg1: "FFFFFF" },
+          colorScheme: { lt1: "FFFFFF" },
         }),
         toPlaceholderContext: () => ({
           layoutPlaceholders: emptyPlaceholders,

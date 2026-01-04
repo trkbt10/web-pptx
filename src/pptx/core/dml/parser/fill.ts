@@ -1,17 +1,12 @@
 /**
  * @file Fill processing (solid, gradient, pattern, picture)
  *
- * @see src/pptx/ooxml/color.ts - Fill type definitions
+ * @see ECMA-376 Part 1, Section 20.1.8 - Fill Properties
  */
 
+import type { XmlElement } from "../../../../xml/index";
+import { isXmlElement, getChild, getChildren, getAttr } from "../../../../xml/index";
 import type { FillType, GradientFill, FillResult } from "./types";
-import type {
-  FillElements,
-  GradientFillElement,
-  PatternFillElement,
-  BlipFillElement,
-  PathGradientElement,
-} from "../../../ooxml/index";
 import type { ColorResolveContext } from "../../../domain/resolution";
 import type { ResourceContext } from "../../../reader/slide/accessor";
 import { angleToDegrees } from "../../units/conversion";
@@ -19,6 +14,24 @@ import { base64ArrayBuffer } from "../../../../buffer/index";
 import { getMimeType } from "../../../../files/index";
 import { escapeHtml } from "../../../../html/index";
 import { getSolidFill } from "./color";
+
+// =============================================================================
+// Fill Element Keys (ECMA-376)
+// =============================================================================
+
+/**
+ * All fill element keys per ECMA-376 Part 1, Section 20.1.8
+ */
+export const FILL_ELEMENT_KEYS = [
+  "a:noFill",
+  "a:solidFill",
+  "a:gradFill",
+  "a:pattFill",
+  "a:blipFill",
+  "a:grpFill",
+] as const;
+
+export type FillElementKey = (typeof FILL_ELEMENT_KEYS)[number];
 
 // =============================================================================
 // Fill Handler Interface
@@ -45,14 +58,31 @@ export function getFillType(node: unknown): FillType {
     return "";
   }
 
-  const nodeObj = node as FillElements;
-  const handler = findHandlerByXmlKey(nodeObj);
+  if (!isXmlElement(node)) {
+    return "";
+  }
 
+  const handler = findHandlerByXmlKey(node);
   if (handler === undefined) {
     return "";
   }
 
   return handler.type;
+}
+
+/**
+ * Find fill element in XmlElement
+ */
+export function findFillElement(
+  node: XmlElement,
+): { key: FillElementKey; element: XmlElement } | undefined {
+  for (const key of FILL_ELEMENT_KEYS) {
+    const element = getChild(node, key);
+    if (element !== undefined) {
+      return { key, element };
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -69,27 +99,27 @@ export function getGradientFill(
   colorCtx: ColorResolveContext,
   phClr?: string,
 ): GradientFill {
-  const gradFill = node as GradientFillElement;
-  const gsLst = gradFill["a:gsLst"];
-  const gsNodes = gsLst?.["a:gs"];
+  if (!isXmlElement(node)) {
+    return { color: [], rot: 0 };
+  }
+
+  const gsLst = getChild(node, "a:gsLst");
+  const gsNodes = gsLst !== undefined ? getChildren(gsLst, "a:gs") : [];
 
   const colorArray: Array<{ pos: string; color: string }> = [];
 
-  if (gsNodes !== undefined) {
-    const stops = Array.isArray(gsNodes) ? gsNodes : [gsNodes];
-    for (let i = 0; i < stops.length; i++) {
-      const gsNode = stops[i];
-      const color = getSolidFill(gsNode, phClr, colorCtx) ?? "";
-      const pos = gsNode.attrs?.pos;
-      colorArray.push({
-        pos: pos ?? String((i / (stops.length - 1)) * 100000),
-        color,
-      });
-    }
+  for (let i = 0; i < gsNodes.length; i++) {
+    const gsNode = gsNodes[i];
+    const color = getSolidFill(gsNode, phClr, colorCtx) ?? "";
+    const pos = getAttr(gsNode, "pos");
+    colorArray.push({
+      pos: pos ?? String((i / (gsNodes.length - 1)) * 100000),
+      color,
+    });
   }
 
   // Check for path gradient (radial/shape)
-  const pathGradient = parsePathGradient(gradFill);
+  const pathGradient = parsePathGradient(node);
   if (pathGradient !== null) {
     return {
       color: colorArray,
@@ -101,7 +131,7 @@ export function getGradientFill(
   }
 
   // Linear gradient
-  const rot = getGradientRotation(gradFill);
+  const rot = getGradientRotation(node);
 
   return {
     color: colorArray,
@@ -110,16 +140,17 @@ export function getGradientFill(
   };
 }
 
-function parsePathGradient(gradFill: GradientFillElement): {
+function parsePathGradient(gradFill: XmlElement): {
   pathShadeType: "circle" | "rect" | "shape";
   fillToRect?: { l: number; t: number; r: number; b: number };
 } | null {
-  const pathNode = gradFill["a:path"];
+  const pathNode = getChild(gradFill, "a:path");
   if (pathNode === undefined) {
     return null;
   }
 
-  const pathShadeType = (pathNode.attrs?.path as "circle" | "rect" | "shape" | undefined) ?? "circle";
+  const pathAttr = getAttr(pathNode, "path");
+  const pathShadeType = (pathAttr as "circle" | "rect" | "shape" | undefined) ?? "circle";
 
   // Get fill-to-rect if present
   const fillToRect = parseFillToRect(pathNode);
@@ -128,27 +159,26 @@ function parsePathGradient(gradFill: GradientFillElement): {
 }
 
 function parseFillToRect(
-  pathNode: PathGradientElement,
+  pathNode: XmlElement,
 ): { l: number; t: number; r: number; b: number } | undefined {
-  const fillToRectNode = pathNode["a:fillToRect"];
-  const attrs = fillToRectNode?.attrs;
-  if (attrs === undefined) {
+  const fillToRectNode = getChild(pathNode, "a:fillToRect");
+  if (fillToRectNode === undefined) {
     return undefined;
   }
   return {
-    l: parseInt(attrs.l ?? "0", 10),
-    t: parseInt(attrs.t ?? "0", 10),
-    r: parseInt(attrs.r ?? "0", 10),
-    b: parseInt(attrs.b ?? "0", 10),
+    l: parseInt(getAttr(fillToRectNode, "l") ?? "0", 10),
+    t: parseInt(getAttr(fillToRectNode, "t") ?? "0", 10),
+    r: parseInt(getAttr(fillToRectNode, "r") ?? "0", 10),
+    b: parseInt(getAttr(fillToRectNode, "b") ?? "0", 10),
   };
 }
 
-function getGradientRotation(gradFill: GradientFillElement): number {
-  const lin = gradFill["a:lin"];
+function getGradientRotation(gradFill: XmlElement): number {
+  const lin = getChild(gradFill, "a:lin");
   if (lin === undefined) {
     return 0;
   }
-  return angleToDegrees(lin.attrs?.ang ?? "0") + 90;
+  return angleToDegrees(getAttr(lin, "ang") ?? "0") + 90;
 }
 
 /**
@@ -158,9 +188,12 @@ export function getPicFillFromContext(
   node: unknown,
   resourceCtx: ResourceContext,
 ): string | undefined {
-  const blipFill = node as BlipFillElement;
-  const blip = blipFill["a:blip"];
-  const rId = blip?.attrs?.["r:embed"];
+  if (!isXmlElement(node)) {
+    return undefined;
+  }
+
+  const blip = getChild(node, "a:blip");
+  const rId = blip !== undefined ? getAttr(blip, "r:embed") : undefined;
   if (rId === undefined) {
     return undefined;
   }
@@ -192,15 +225,41 @@ export function getPatternFill(
   node: unknown,
   colorCtx: ColorResolveContext,
 ): [string, string?, string?] {
-  const pattFill = node as PatternFillElement;
-  const bgClr = pattFill["a:bgClr"];
-  const fgClr = pattFill["a:fgClr"];
-  const prst = pattFill.attrs?.prst ?? "";
+  if (!isXmlElement(node)) {
+    return [""];
+  }
+
+  const bgClr = getChild(node, "a:bgClr");
+  const fgClr = getChild(node, "a:fgClr");
+  const prst = getAttr(node, "prst") ?? "";
 
   const fgColor = getSolidFill(fgClr, undefined, colorCtx) ?? "";
   const bgColor = getSolidFill(bgClr, undefined, colorCtx) ?? "";
 
   return getLinearGradient(prst, bgColor, fgColor);
+}
+
+/**
+ * Detect image fill mode from blipFill element
+ * - a:stretch → "stretch" (fill without preserving aspect ratio)
+ * - a:tile → "tile" (tile the image)
+ * - default → "cover" (scale to cover)
+ */
+export function detectImageFillMode(node: unknown): "stretch" | "tile" | "cover" {
+  if (!isXmlElement(node)) {
+    return "cover";
+  }
+
+  // Check for stretch mode
+  if (getChild(node, "a:stretch") !== undefined) {
+    return "stretch";
+  }
+  // Check for tile mode
+  if (getChild(node, "a:tile") !== undefined) {
+    return "tile";
+  }
+  // Default to cover
+  return "cover";
 }
 
 type PatternRenderer = (fg: string, bg: string) => [string, string?, string?];
@@ -441,8 +500,6 @@ const FILL_HANDLERS_BY_TYPE: Record<string, FillHandler> = {
   GROUP_FILL: GROUP_FILL_HANDLER,
 };
 
-const FILL_XML_KEYS = Object.keys(FILL_HANDLERS_BY_XML_KEY);
-
 // =============================================================================
 // Public Handler Access
 // =============================================================================
@@ -473,10 +530,25 @@ export function formatFillResult(
 // Internal Helper Functions
 // =============================================================================
 
-function findHandlerByXmlKey(nodeObj: FillElements): FillHandler | undefined {
-  const foundKey = FILL_XML_KEYS.find((key) => (nodeObj as Record<string, unknown>)[key] !== undefined);
-  if (foundKey === undefined) {
-    return undefined;
+/**
+ * Find fill handler by examining the node.
+ *
+ * Handles two cases:
+ * 1. Node is a container (e.g., p:bgPr) with fill element as child
+ * 2. Node IS the fill element itself (e.g., from theme bgFillStyleLst)
+ */
+function findHandlerByXmlKey(nodeObj: XmlElement): FillHandler | undefined {
+  // Check if the node itself is a fill element (case 2: from theme)
+  const selfHandler = FILL_HANDLERS_BY_XML_KEY[nodeObj.name as FillElementKey];
+  if (selfHandler !== undefined) {
+    return selfHandler;
   }
-  return FILL_HANDLERS_BY_XML_KEY[foundKey];
+
+  // Check for fill element as child (case 1: container like p:bgPr)
+  for (const key of FILL_ELEMENT_KEYS) {
+    if (getChild(nodeObj, key) !== undefined) {
+      return FILL_HANDLERS_BY_XML_KEY[key];
+    }
+  }
+  return undefined;
 }

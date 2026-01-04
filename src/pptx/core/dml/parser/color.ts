@@ -2,27 +2,13 @@
  * @file Solid fill color extraction
  *
  * Extracts color values from DrawingML (a:) color elements.
- * Handles all OOXML color types: sRGB, scheme, scRGB, preset, HSL, and system colors.
+ * Handles all ECMA-376 color types: sRGB, scheme, scRGB, preset, HSL, and system colors.
  *
- * @see src/pptx/ooxml/color.ts - Type definitions for color elements
  * @see ECMA-376 Part 1, Section 20.1.2.3 - Color Types
  */
 
 import type { XmlElement } from "../../../../xml/index";
 import { isXmlElement, getChild, getAttr } from "../../../../xml/index";
-import type {
-  ColorContainerNode,
-  SolidFillInputNode,
-  ColorTransformChildren,
-  SrgbColorElement,
-  SchemeColorElement,
-  ScrgbColorElement,
-  PrstColorElement,
-  HslColorElement,
-  SysColorElement,
-  ColorElementKey,
-} from "../../../ooxml/index";
-import { findColorElement, COLOR_ELEMENT_KEYS } from "../../../ooxml/index";
 import { OOXML_PERCENT_FACTOR } from "../../ecma376/defaults";
 import type { ColorResolveContext } from "../../../domain/resolution";
 import {
@@ -38,6 +24,24 @@ import {
   parseColorToHsl,
   hslToHexString,
 } from "../../../../color/index";
+
+// =============================================================================
+// Color Element Keys (ECMA-376)
+// =============================================================================
+
+/**
+ * All color element keys per ECMA-376 Part 1, Section 20.1.2.3
+ */
+export const COLOR_ELEMENT_KEYS = [
+  "a:srgbClr",
+  "a:schemeClr",
+  "a:scrgbClr",
+  "a:prstClr",
+  "a:hslClr",
+  "a:sysClr",
+] as const;
+
+export type ColorElementKey = (typeof COLOR_ELEMENT_KEYS)[number];
 
 // =============================================================================
 // Scheme Color Mapping (ECMA-376 compliant)
@@ -132,99 +136,9 @@ type ColorExtractContext = {
 };
 
 /**
- * Color extractor function type.
- * Each color type has a specific extractor that knows its element structure.
+ * Color extractor function type for XmlElement.
  */
-type ColorExtractor<T> = (element: T, ctx: ColorExtractContext) => string;
-
-// =============================================================================
-// Individual Color Type Extractors
-// =============================================================================
-
-/**
- * Extract color from a:srgbClr element.
- * Direct hex color value in the `val` attribute.
- */
-function extractSrgbColor(element: SrgbColorElement): string {
-  return element.attrs?.val ?? "";
-}
-
-/**
- * Extract color from a:schemeClr element.
- * References theme color scheme, needs lookup.
- */
-function extractSchemeColor(element: SchemeColorElement, ctx: ColorExtractContext): string {
-  const schemeClr = element.attrs?.val;
-  if (schemeClr === undefined) {
-    return "";
-  }
-  return getSchemeColor("a:" + schemeClr, ctx.phClr, ctx.colorCtx) ?? "";
-}
-
-/**
- * Extract color from a:scrgbClr element.
- * RGB in percentage values (0-100%).
- */
-function extractScrgbColor(element: ScrgbColorElement): string {
-  const attrs = element.attrs;
-  if (attrs === undefined) {return "";}
-  const red = parsePercentageValue(attrs.r ?? "0");
-  const green = parsePercentageValue(attrs.g ?? "0");
-  const blue = parsePercentageValue(attrs.b ?? "0");
-  return toHex(255 * (red / 100)) + toHex(255 * (green / 100)) + toHex(255 * (blue / 100));
-}
-
-/**
- * Extract color from a:prstClr element.
- * Named color from predefined list (e.g., "red", "blue").
- */
-function extractPrstColor(element: PrstColorElement): string {
-  const prstClr = element.attrs?.val;
-  if (prstClr === undefined) {return "";}
-  return getColorName2Hex(prstClr) ?? "";
-}
-
-/**
- * Extract color from a:hslClr element.
- * HSL color specification.
- */
-function extractHslColor(element: HslColorElement): string {
-  const attrs = element.attrs;
-  if (attrs === undefined) {return "";}
-  const hue = Number(attrs.hue ?? "0") / OOXML_PERCENT_FACTOR;
-  const sat = parsePercentageValue(attrs.sat ?? "0") / 100;
-  const lum = parsePercentageValue(attrs.lum ?? "0") / 100;
-  const rgb = hslToRgb(hue, sat, lum);
-  return toHex(rgb.r) + toHex(rgb.g) + toHex(rgb.b);
-}
-
-/**
- * Extract color from a:sysClr element.
- * System-defined color, uses lastClr as fallback.
- */
-function extractSysColor(element: SysColorElement): string {
-  return element.attrs?.lastClr ?? "";
-}
-
-// =============================================================================
-// Color Extractor Registry
-// =============================================================================
-
-/**
- * Map of color element keys to their extractors.
- * Uses proper typed extractors for each color type.
- */
-const COLOR_EXTRACTORS: Record<
-  ColorElementKey,
-  ColorExtractor<ColorTransformChildren>
-> = {
-  "a:srgbClr": extractSrgbColor as ColorExtractor<ColorTransformChildren>,
-  "a:schemeClr": extractSchemeColor as ColorExtractor<ColorTransformChildren>,
-  "a:scrgbClr": extractScrgbColor as ColorExtractor<ColorTransformChildren>,
-  "a:prstClr": extractPrstColor as ColorExtractor<ColorTransformChildren>,
-  "a:hslClr": extractHslColor as ColorExtractor<ColorTransformChildren>,
-  "a:sysClr": extractSysColor as ColorExtractor<ColorTransformChildren>,
-};
+type ColorExtractor = (element: XmlElement, ctx: ColorExtractContext) => string;
 
 // =============================================================================
 // Main Entry Point
@@ -241,7 +155,7 @@ const COLOR_EXTRACTORS: Record<
  * - A node containing a:solidFill (e.g., a:rPr, a:defRPr)
  * - A solidFill element containing a color element
  *
- * @param node - The OOXML node to extract color from (ColorContainerNode or parent)
+ * @param node - The XmlElement to extract color from
  * @param phClr - Placeholder color for phClr scheme references
  * @param colorCtx - Color resolution context
  * @returns Hex color string (without #) or undefined if no color found
@@ -255,31 +169,18 @@ export function getSolidFill(
     return undefined;
   }
 
-  const ctx: ColorExtractContext = { colorCtx, phClr };
-
-  // Handle XmlElement format (new AST)
-  if (isXmlElement(node)) {
-    // If node has a:solidFill child, use that; otherwise use node directly
-    const solidFillChild = getChild(node, "a:solidFill");
-    const targetNode = solidFillChild ?? node;
-
-    // Find color element in XmlElement format
-    const found = findColorElementXml(targetNode);
-    if (found === undefined) {
-      return undefined;
-    }
-
-    const extractor = COLOR_EXTRACTORS_XML[found.key];
-    const baseColor = extractor(found.element, ctx);
-
-    return applyColorTransformationsXml(found.element, baseColor);
+  // Only handle XmlElement format
+  if (!isXmlElement(node)) {
+    return undefined;
   }
 
-  // Legacy: OoxmlElement format (bracket notation)
-  const nodeObj = node as SolidFillInputNode;
-  const solidFillNode = nodeObj["a:solidFill"];
-  const targetNode: ColorContainerNode = solidFillNode ?? nodeObj;
+  const ctx: ColorExtractContext = { colorCtx, phClr };
 
+  // If node has a:solidFill child, use that; otherwise use node directly
+  const solidFillChild = getChild(node, "a:solidFill");
+  const targetNode = solidFillChild ?? node;
+
+  // Find color element
   const found = findColorElement(targetNode);
   if (found === undefined) {
     return undefined;
@@ -292,31 +193,37 @@ export function getSolidFill(
 }
 
 /**
- * Find color element in XmlElement format
+ * Find color element in XmlElement
  */
-function findColorElementXml(
+export function findColorElement(
   node: XmlElement,
 ): { key: ColorElementKey; element: XmlElement } | undefined {
   for (const key of COLOR_ELEMENT_KEYS) {
     const element = getChild(node, key);
     if (element !== undefined) {
-      return { key: key as ColorElementKey, element };
+      return { key, element };
     }
   }
   return undefined;
 }
 
 // =============================================================================
-// XmlElement Color Extractors
+// Color Extractors
 // =============================================================================
 
-type XmlColorExtractor = (element: XmlElement, ctx: ColorExtractContext) => string;
-
-function extractSrgbColorXml(element: XmlElement): string {
+/**
+ * Extract color from a:srgbClr element.
+ * Direct hex color value in the `val` attribute.
+ */
+function extractSrgbColor(element: XmlElement): string {
   return getAttr(element, "val") ?? "";
 }
 
-function extractSchemeColorXml(element: XmlElement, ctx: ColorExtractContext): string {
+/**
+ * Extract color from a:schemeClr element.
+ * References theme color scheme, needs lookup.
+ */
+function extractSchemeColor(element: XmlElement, ctx: ColorExtractContext): string {
   const schemeClr = getAttr(element, "val");
   if (schemeClr === undefined) {
     return "";
@@ -324,28 +231,46 @@ function extractSchemeColorXml(element: XmlElement, ctx: ColorExtractContext): s
   return getSchemeColor("a:" + schemeClr, ctx.phClr, ctx.colorCtx) ?? "";
 }
 
-function extractScrgbColorXml(element: XmlElement): string {
+/**
+ * Extract color from a:scrgbClr element.
+ * RGB in percentage values (0-100%).
+ */
+function extractScrgbColor(element: XmlElement): string {
   const r = getAttr(element, "r");
   const g = getAttr(element, "g");
   const b = getAttr(element, "b");
-  if (r === undefined || g === undefined || b === undefined) {return "";}
+  if (r === undefined || g === undefined || b === undefined) {
+    return "";
+  }
   const rVal = Math.round((Number(r) / OOXML_PERCENT_FACTOR) * 255);
   const gVal = Math.round((Number(g) / OOXML_PERCENT_FACTOR) * 255);
   const bVal = Math.round((Number(b) / OOXML_PERCENT_FACTOR) * 255);
   return toHex(rVal) + toHex(gVal) + toHex(bVal);
 }
 
-function extractPrstColorXml(element: XmlElement): string {
+/**
+ * Extract color from a:prstClr element.
+ * Named color from predefined list (e.g., "red", "blue").
+ */
+function extractPrstColor(element: XmlElement): string {
   const val = getAttr(element, "val");
-  if (val === undefined) {return "";}
+  if (val === undefined) {
+    return "";
+  }
   return getColorName2Hex(val) ?? "";
 }
 
-function extractHslColorXml(element: XmlElement): string {
+/**
+ * Extract color from a:hslClr element.
+ * HSL color specification.
+ */
+function extractHslColor(element: XmlElement): string {
   const h = getAttr(element, "hue");
   const s = getAttr(element, "sat");
   const l = getAttr(element, "lum");
-  if (h === undefined || s === undefined || l === undefined) {return "";}
+  if (h === undefined || s === undefined || l === undefined) {
+    return "";
+  }
   const hue = Number(h) / 60000;
   const sat = Number(s) / OOXML_PERCENT_FACTOR;
   const lum = Number(l) / OOXML_PERCENT_FACTOR;
@@ -353,27 +278,54 @@ function extractHslColorXml(element: XmlElement): string {
   return toHex(rgb.r) + toHex(rgb.g) + toHex(rgb.b);
 }
 
-function extractSysColorXml(element: XmlElement): string {
+/**
+ * Extract color from a:sysClr element.
+ * System-defined color, uses lastClr as fallback.
+ */
+function extractSysColor(element: XmlElement): string {
   const lastClr = getAttr(element, "lastClr");
-  if (lastClr !== undefined) {return lastClr;}
+  if (lastClr !== undefined) {
+    return lastClr;
+  }
   const val = getAttr(element, "val");
-  if (val === undefined) {return "";}
+  if (val === undefined) {
+    return "";
+  }
   return val === "windowText" ? "000000" : (val === "window" ? "FFFFFF" : "");
 }
 
-const COLOR_EXTRACTORS_XML: Record<ColorElementKey, XmlColorExtractor> = {
-  "a:srgbClr": extractSrgbColorXml,
-  "a:schemeClr": extractSchemeColorXml,
-  "a:scrgbClr": extractScrgbColorXml,
-  "a:prstClr": extractPrstColorXml,
-  "a:hslClr": extractHslColorXml,
-  "a:sysClr": extractSysColorXml,
+/**
+ * Color extractor registry
+ */
+const COLOR_EXTRACTORS: Record<ColorElementKey, ColorExtractor> = {
+  "a:srgbClr": extractSrgbColor,
+  "a:schemeClr": extractSchemeColor,
+  "a:scrgbClr": extractScrgbColor,
+  "a:prstClr": extractPrstColor,
+  "a:hslClr": extractHslColor,
+  "a:sysClr": extractSysColor,
 };
 
+// =============================================================================
+// Color Transformations
+// =============================================================================
+
 /**
- * Apply color transformations for XmlElement format
+ * Parse percentage value (handles both "50%" and "50" formats)
  */
-function applyColorTransformationsXml(element: XmlElement, baseColor: string | undefined): string | undefined {
+function parsePercentageValue(value: string): number {
+  if (value.indexOf("%") !== -1) {
+    return Number(value.split("%").shift());
+  }
+  return Number(value);
+}
+
+/**
+ * Apply all color transformations to a base color.
+ *
+ * @see ECMA-376 Part 1, Section 20.1.2.3 - Color Transforms
+ */
+function applyColorTransformations(element: XmlElement, baseColor: string | undefined): string | undefined {
   if (baseColor === undefined || baseColor === "") {
     return undefined;
   }
@@ -455,109 +407,4 @@ function applyColorTransformationsXml(element: XmlElement, baseColor: string | u
   }
 
   return result;
-}
-
-/**
- * Parse percentage value (handles both "50%" and "50" formats)
- */
-function parsePercentageValue(value: string): number {
-  if (value.indexOf("%") !== -1) {
-    return Number(value.split("%").shift());
-  }
-  return Number(value);
-}
-
-// =============================================================================
-// Color Transformations
-// =============================================================================
-
-type ColorTransformState = {
-  color: string;
-  hasAlpha: boolean;
-};
-
-/**
- * Transform specification - defines how to extract and apply a color transformation.
- * Uses typed key access instead of path-based traversal.
- */
-type TransformSpec = {
-  /** Key of the transformation element in ColorTransformChildren */
-  key: keyof ColorTransformChildren;
-  /** Function to apply the transformation */
-  apply: (color: string, value: number, hasAlpha: boolean) => string;
-};
-
-/**
- * List of color transformations to apply in order.
- * Each transformation reads its value from the color element's child.
- */
-const TRANSFORM_SPECS: TransformSpec[] = [
-  { key: "a:hueMod", apply: applyHueMod },
-  { key: "a:lumMod", apply: applyLumMod },
-  { key: "a:lumOff", apply: applyLumOff },
-  { key: "a:satMod", apply: applySatMod },
-  { key: "a:shade", apply: applyShade },
-  { key: "a:tint", apply: applyTint },
-];
-
-/**
- * Parse transformation value from a color element's child.
- * Values are in 1/100000 units (OOXML_PERCENT_FACTOR).
- * @see ECMA-376-1:2016, Section 20.1.10.40 (ST_TextSpacingPercentOrPercentString)
- */
-function parseTransformValue(
-  element: ColorTransformChildren,
-  key: keyof ColorTransformChildren,
-): number | undefined {
-  const child = element[key];
-  if (child === undefined) {return undefined;}
-
-  const rawValue = child.attrs?.val;
-  if (rawValue === undefined) {return undefined;}
-
-  const parsed = parseInt(rawValue, 10) / OOXML_PERCENT_FACTOR;
-  if (isNaN(parsed)) {return undefined;}
-
-  return parsed;
-}
-
-/**
- * Apply alpha transformation if present.
- */
-function applyAlphaTransform(
-  element: ColorTransformChildren,
-  color: string,
-): ColorTransformState {
-  const alpha = parseTransformValue(element, "a:alpha");
-  if (alpha === undefined) {
-    return { color, hasAlpha: false };
-  }
-
-  const hsl = parseColorToHsl(color);
-  hsl.a = alpha;
-  return { color: hslToHexString(hsl, true), hasAlpha: true };
-}
-
-/**
- * Apply all color transformations in order.
- */
-function applyTransformPipeline(
-  element: ColorTransformChildren,
-  state: ColorTransformState,
-): string {
-  return TRANSFORM_SPECS.reduce((currentColor, spec) => {
-    const value = parseTransformValue(element, spec.key);
-    if (value === undefined) {
-      return currentColor;
-    }
-    return spec.apply(currentColor, value, state.hasAlpha);
-  }, state.color);
-}
-
-/**
- * Apply all color transformations (alpha, shade, tint, etc.) to a base color.
- */
-function applyColorTransformations(element: ColorTransformChildren, color: string): string {
-  const stateAfterAlpha = applyAlphaTransform(element, color);
-  return applyTransformPipeline(element, stateAfterAlpha);
 }

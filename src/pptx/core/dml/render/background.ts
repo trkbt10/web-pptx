@@ -8,12 +8,17 @@
  */
 
 import type { XmlElement } from "../../../../xml";
-import { isXmlElement, getChild } from "../../../../xml";
-import type { BackgroundFill, ImageFillMode } from "./types";
+import { getChild } from "../../../../xml";
+import type { BackgroundFill } from "./types";
 import type { FillType } from "../parser/types";
-import type { FillElements, BlipFillElement } from "../../../ooxml";
 import type { SlideRenderContext } from "../../../reader/slide/accessor";
-import { getFillType, getGradientFill, getPicFillFromContext, formatFillResult } from "../parser/fill";
+import {
+  getFillType,
+  getGradientFill,
+  getPicFillFromContext,
+  formatFillResult,
+  detectImageFillMode,
+} from "../parser/fill";
 import { getSolidFill } from "../parser/color";
 
 // =============================================================================
@@ -32,7 +37,10 @@ export type BackgroundElement = {
  * Result of finding background properties.
  */
 export type BackgroundParseResult = {
-  fill: FillElements;
+  /**
+   * Fill element (XmlElement containing a:solidFill, a:gradFill, a:blipFill, etc.)
+   */
+  fill: XmlElement;
   /**
    * Placeholder color resolved from p:bgRef child element.
    * This is the hex color (without #) to substitute for phClr in theme styles.
@@ -50,60 +58,7 @@ export type BackgroundParseResult = {
 }
 
 // =============================================================================
-// XmlElement to OoxmlElement Conversion (moved from parser/background.ts)
-// =============================================================================
-
-/**
- * Convert XmlElement to OoxmlElement-like object for fill type detection.
- * This allows existing fill processing code to work with XmlElement data.
- */
-export function xmlElementToFillElements(element: XmlElement): FillElements {
-  const result: Record<string, unknown> = {};
-
-  for (const child of element.children) {
-    if (isXmlElement(child)) {
-      // Convert child element recursively
-      result[child.name] = xmlElementToBlipFill(child);
-    }
-  }
-
-  return result as FillElements;
-}
-
-/**
- * Convert XmlElement to BlipFillElement-like object.
- *
- * Handles multiple child elements with the same name by collecting them into arrays.
- * This is critical for gradient stops (a:gs) where PPTX can have multiple stops.
- */
-export function xmlElementToBlipFill(element: XmlElement): BlipFillElement {
-  const result: Record<string, unknown> = {
-    attrs: element.attrs,
-  };
-
-  for (const child of element.children) {
-    if (isXmlElement(child)) {
-      const converted = xmlElementToBlipFill(child);
-      const existing = result[child.name];
-
-      if (existing === undefined) {
-        // First occurrence - store as single value
-        result[child.name] = converted;
-      } else if (Array.isArray(existing)) {
-        // Already an array - push to it
-        existing.push(converted);
-      } else {
-        // Second occurrence - convert to array
-        result[child.name] = [existing, converted];
-      }
-    }
-  }
-
-  return result as BlipFillElement;
-}
-
-// =============================================================================
-// Background Element Extraction (moved from parser/background.ts)
+// Background Element Extraction
 // =============================================================================
 
 /**
@@ -131,14 +86,12 @@ export function getBackgroundElement(element: XmlElement | undefined): Backgroun
 }
 
 /**
- * Get background properties from an XmlElement using the standard path
+ * Get background properties from an XmlElement using the standard path.
+ * Returns the p:bgPr element directly as XmlElement.
  */
-export function getBgPrFromElement(element: XmlElement | undefined): FillElements | undefined {
+export function getBgPrFromElement(element: XmlElement | undefined): XmlElement | undefined {
   const bgElement = getBackgroundElement(element);
-  if (bgElement?.bgPr === undefined) {
-    return undefined;
-  }
-  return xmlElementToFillElements(bgElement.bgPr);
+  return bgElement?.bgPr;
 }
 
 /**
@@ -150,19 +103,21 @@ export function getBgRefFromElement(element: XmlElement | undefined): XmlElement
 }
 
 /**
- * Resolve p:bgRef to fill elements from theme.
+ * Resolve p:bgRef to fill element from theme.
  *
  * Per ECMA-376 Part 1, Section 19.3.1.4 (p:bgRef):
  * - idx 1-999: use a:fillStyleLst[idx-1]
  * - idx 1001+: use a:bgFillStyleLst[idx-1001]
  *
+ * Returns the fill element directly as XmlElement.
+ *
  * @see ECMA-376 Part 1, Section 19.3.1.4 (p:bgRef)
  * @see ECMA-376 Part 1, Section 20.1.4.1.7 (a:bgFillStyleLst)
  */
-export function resolveBgRefToFillElements(
+export function resolveBgRefToXmlElement(
   bgRef: XmlElement,
   ctx: SlideRenderContext,
-): FillElements | undefined {
+): XmlElement | undefined {
   const idxAttr = bgRef.attrs?.idx;
   if (idxAttr === undefined) {
     return undefined;
@@ -175,29 +130,15 @@ export function resolveBgRefToFillElements(
 
   const formatScheme = ctx.presentation.theme.formatScheme;
 
-  let fillStyle: XmlElement | undefined;
-
   if (idx >= 1001) {
     // Background fill style list (idx 1001+)
     const bgStyleIndex = idx - 1001;
-    fillStyle = formatScheme.bgFillStyles[bgStyleIndex];
-  } else {
-    // Regular fill style list (idx 1-999)
-    const styleIndex = idx - 1;
-    fillStyle = formatScheme.fillStyles[styleIndex];
+    return formatScheme.bgFillStyles[bgStyleIndex];
   }
 
-  if (fillStyle === undefined) {
-    return undefined;
-  }
-
-  // The fill style is the fill element itself (a:solidFill, a:gradFill, a:blipFill, etc.)
-  // Wrap it in a FillElements-like structure using the element name as key
-  const fillElements: Record<string, unknown> = {
-    [fillStyle.name]: xmlElementToBlipFill(fillStyle),
-  };
-
-  return fillElements as FillElements;
+  // Regular fill style list (idx 1-999)
+  const styleIndex = idx - 1;
+  return formatScheme.fillStyles[styleIndex];
 }
 
 /**
@@ -223,7 +164,7 @@ export function parseBackgroundProperties(ctx: SlideRenderContext): BackgroundPa
   }
   const slideBgRef = getBgRefFromElement(ctx.slide.content);
   if (slideBgRef !== undefined) {
-    const resolved = resolveBgRefToFillElements(slideBgRef, ctx);
+    const resolved = resolveBgRefToXmlElement(slideBgRef, ctx);
     if (resolved !== undefined) {
       const phClr = extractPhClrFromBgRef(slideBgRef, ctx);
       return { fill: resolved, phClr, fromTheme: true };
@@ -237,7 +178,7 @@ export function parseBackgroundProperties(ctx: SlideRenderContext): BackgroundPa
   }
   const layoutBgRef = getBgRefFromElement(ctx.layout.content);
   if (layoutBgRef !== undefined) {
-    const resolved = resolveBgRefToFillElements(layoutBgRef, ctx);
+    const resolved = resolveBgRefToXmlElement(layoutBgRef, ctx);
     if (resolved !== undefined) {
       const phClr = extractPhClrFromBgRef(layoutBgRef, ctx);
       return { fill: resolved, phClr, fromTheme: true };
@@ -251,7 +192,7 @@ export function parseBackgroundProperties(ctx: SlideRenderContext): BackgroundPa
   }
   const masterBgRef = getBgRefFromElement(ctx.master.content);
   if (masterBgRef !== undefined) {
-    const resolved = resolveBgRefToFillElements(masterBgRef, ctx);
+    const resolved = resolveBgRefToXmlElement(masterBgRef, ctx);
     if (resolved !== undefined) {
       const phClr = extractPhClrFromBgRef(masterBgRef, ctx);
       return { fill: resolved, phClr, fromTheme: true };
@@ -309,10 +250,10 @@ type BackgroundFillHandler = {
   readonly xmlKey: string;
   /** Fill type identifier */
   readonly type: FillType;
-  /** Extract fill data from bgPr and return CSS string */
-  extractAndFormat: (bgPr: FillElements, ctx: SlideRenderContext, phClr?: string, fromTheme?: boolean) => string;
+  /** Extract fill data from fill element and return CSS string */
+  extractAndFormat: (fill: XmlElement, ctx: SlideRenderContext, phClr?: string, fromTheme?: boolean) => string;
   /** Extract fill data and return structured BackgroundFill */
-  extractData: (bgPr: FillElements, ctx: SlideRenderContext, phClr?: string, fromTheme?: boolean) => BackgroundFill | null;
+  extractData: (fill: XmlElement, ctx: SlideRenderContext, phClr?: string, fromTheme?: boolean) => BackgroundFill | null;
 };
 
 // =============================================================================
@@ -368,21 +309,25 @@ function generateGradientCSS(gradResult: ReturnType<typeof getGradientFill>): st
 // =============================================================================
 
 /**
- * Solid fill handler for backgrounds
+ * Solid fill handler for backgrounds.
+ * The fill element is expected to be either:
+ * - p:bgPr containing a:solidFill child
+ * - a:solidFill element directly (from theme style)
  */
 const SOLID_FILL_BG_HANDLER: BackgroundFillHandler = {
   xmlKey: "a:solidFill",
   type: "SOLID_FILL",
-  extractAndFormat: (bgPr, ctx, phClr) => {
-    const solidFill = bgPr["a:solidFill"];
+  extractAndFormat: (fill, ctx, phClr) => {
+    // Try to get a:solidFill child first (for p:bgPr case)
+    const solidFill = getChild(fill, "a:solidFill") ?? fill;
     const colorHex = getSolidFill(solidFill, phClr, ctx.toColorContext());
     if (colorHex === undefined) {
       return "";
     }
     return formatFillResult("SOLID_FILL", colorHex, false) as string;
   },
-  extractData: (bgPr, ctx, phClr) => {
-    const solidFill = bgPr["a:solidFill"];
+  extractData: (fill, ctx, phClr) => {
+    const solidFill = getChild(fill, "a:solidFill") ?? fill;
     const colorHex = getSolidFill(solidFill, phClr, ctx.toColorContext());
     if (colorHex === undefined) {
       return null;
@@ -396,25 +341,23 @@ const SOLID_FILL_BG_HANDLER: BackgroundFillHandler = {
 };
 
 /**
- * Gradient fill handler for backgrounds
+ * Gradient fill handler for backgrounds.
+ * The fill element is expected to be either:
+ * - p:bgPr containing a:gradFill child
+ * - a:gradFill element directly (from theme style)
  */
 const GRADIENT_FILL_BG_HANDLER: BackgroundFillHandler = {
   xmlKey: "a:gradFill",
   type: "GRADIENT_FILL",
-  extractAndFormat: (bgPr, ctx, phClr) => {
-    const gradFill = bgPr["a:gradFill"];
-    if (gradFill === undefined) {
-      return "";
-    }
+  extractAndFormat: (fill, ctx, phClr) => {
+    // Try to get a:gradFill child first (for p:bgPr case)
+    const gradFill = getChild(fill, "a:gradFill") ?? fill;
     const gradResult = getGradientFill(gradFill, ctx.toColorContext(), phClr);
     const gradient = generateGradientCSS(gradResult);
     return `background: ${gradient};`;
   },
-  extractData: (bgPr, ctx, phClr) => {
-    const gradFill = bgPr["a:gradFill"];
-    if (gradFill === undefined) {
-      return null;
-    }
+  extractData: (fill, ctx, phClr) => {
+    const gradFill = getChild(fill, "a:gradFill") ?? fill;
     const gradResult = getGradientFill(gradFill, ctx.toColorContext(), phClr);
     const gradient = generateGradientCSS(gradResult);
 
@@ -447,6 +390,17 @@ const GRADIENT_FILL_BG_HANDLER: BackgroundFillHandler = {
 };
 
 /**
+ * Get resource context for blipFill resolution.
+ * Theme fills use theme resources, others use slide resources.
+ */
+function getBlipResourceContext(ctx: SlideRenderContext, fromTheme?: boolean) {
+  if (fromTheme === true) {
+    return ctx.toThemeResourceContext();
+  }
+  return ctx.toResourceContext();
+}
+
+/**
  * Try to get picture fill using resource context.
  *
  * When `fromTheme` is true, uses theme resources to resolve r:embed references.
@@ -455,33 +409,12 @@ const GRADIENT_FILL_BG_HANDLER: BackgroundFillHandler = {
  * @see ECMA-376 Part 1, Section 20.1.4.1.7 (a:bgFillStyleLst)
  */
 function tryGetPicFill(
-  blipFill: BlipFillElement,
+  blipFill: unknown,
   ctx: SlideRenderContext,
   fromTheme?: boolean,
 ): string | undefined {
-  const resourceContext = fromTheme === true
-    ? ctx.toThemeResourceContext()
-    : ctx.toResourceContext();
+  const resourceContext = getBlipResourceContext(ctx, fromTheme);
   return getPicFillFromContext(blipFill, resourceContext);
-}
-
-/**
- * Detect image fill mode from blipFill element
- * - a:stretch → "stretch" (fill without preserving aspect ratio)
- * - a:tile → "tile" (tile the image)
- * - default → "cover" (scale to cover)
- */
-function detectImageFillMode(blipFill: BlipFillElement): ImageFillMode {
-  // Check for stretch mode
-  if (blipFill["a:stretch"] !== undefined) {
-    return "stretch";
-  }
-  // Check for tile mode
-  if (blipFill["a:tile"] !== undefined) {
-    return "tile";
-  }
-  // Default to cover
-  return "cover";
 }
 
 /**
@@ -490,16 +423,18 @@ function detectImageFillMode(blipFill: BlipFillElement): ImageFillMode {
  * When `fromTheme` is true, resolves blipFill r:embed from theme resources
  * instead of slide/layout/master resources.
  *
+ * The fill element is expected to be either:
+ * - p:bgPr containing a:blipFill child
+ * - a:blipFill element directly (from theme style)
+ *
  * @see ECMA-376 Part 1, Section 20.1.4.1.7 (a:bgFillStyleLst)
  */
 const PIC_FILL_BG_HANDLER: BackgroundFillHandler = {
   xmlKey: "a:blipFill",
   type: "PIC_FILL",
-  extractAndFormat: (bgPr, ctx, _phClr, fromTheme) => {
-    const blipFill = bgPr["a:blipFill"];
-    if (blipFill === undefined) {
-      return "";
-    }
+  extractAndFormat: (fill, ctx, _phClr, fromTheme) => {
+    // Try to get a:blipFill child first (for p:bgPr case)
+    const blipFill = getChild(fill, "a:blipFill") ?? fill;
     const imgPath = tryGetPicFill(blipFill, ctx, fromTheme);
     if (imgPath === undefined) {
       return "";
@@ -509,11 +444,8 @@ const PIC_FILL_BG_HANDLER: BackgroundFillHandler = {
     const bgSize = fillMode === "stretch" ? "100% 100%" : "cover";
     return `background-image: url(${imgPath}); background-size: ${bgSize};`;
   },
-  extractData: (bgPr, ctx, _phClr, fromTheme) => {
-    const blipFill = bgPr["a:blipFill"];
-    if (blipFill === undefined) {
-      return null;
-    }
+  extractData: (fill, ctx, _phClr, fromTheme) => {
+    const blipFill = getChild(fill, "a:blipFill") ?? fill;
     const imgPath = tryGetPicFill(blipFill, ctx, fromTheme);
     if (imgPath === undefined) {
       return null;
