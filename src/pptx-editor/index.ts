@@ -230,9 +230,9 @@ export { slideEditorReducer } from "./slide/reducer";
 
 // Slide Editor Components
 export { SlideCanvas, type SlideCanvasProps } from "./slide/SlideCanvas";
-export { PropertyPanel, type PropertyPanelProps } from "./slide/PropertyPanel";
+export { PropertyPanel, type PropertyPanelProps } from "./panels/PropertyPanel";
 export { ShapeToolbar, type ShapeToolbarProps } from "./slide/ShapeToolbar";
-export { LayerPanel, type LayerPanelProps } from "./slide/LayerPanel";
+export { LayerPanel, type LayerPanelProps } from "./panels/LayerPanel";
 
 // Slide Editor Sub-components
 export { SelectionBox, type SelectionBoxProps } from "./slide/components/SelectionBox";
@@ -289,7 +289,7 @@ export {
 
 // Presentation Editor Components
 export { PresentationEditor, type PresentationEditorProps } from "./presentation/PresentationEditor";
-export { SlideThumbnailPanel } from "./presentation/SlideThumbnailPanel";
+export { SlideThumbnailPanel } from "./panels/SlideThumbnailPanel";
 
 // Context Menu Types
 export type { ContextMenuActions } from "./slide/context-menu/SlideContextMenu";

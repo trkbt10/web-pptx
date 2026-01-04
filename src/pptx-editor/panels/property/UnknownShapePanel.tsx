@@ -4,7 +4,7 @@
  * Displays a fallback message for unrecognized shape types.
  */
 
-import type { Shape } from "../../../pptx/domain";
+import type { Shape } from "../../../pptx/domain/index";
 
 // =============================================================================
 // Types

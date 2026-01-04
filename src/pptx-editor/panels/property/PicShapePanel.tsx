@@ -4,17 +4,17 @@
  * Displays property editors for PicShape (picture/image) elements.
  */
 
-import type { PicShape } from "../../../pptx/domain";
+import type { PicShape } from "../../../pptx/domain/index";
 import type { Percent } from "../../../pptx/domain/types";
 import { Accordion } from "../../ui/layout/Accordion";
-import { FieldGroup, FieldRow } from "../../ui/layout";
-import { Toggle } from "../../ui/primitives";
+import { FieldGroup, FieldRow } from "../../ui/layout/index";
+import { Toggle } from "../../ui/primitives/index";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,
   EffectsEditor,
   PercentEditor,
-} from "../../editors";
+} from "../../editors/index";
 
 // =============================================================================
 // Types

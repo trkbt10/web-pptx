@@ -16,8 +16,8 @@ import type {
   DragState,
   ClipboardContent,
   ResizeHandlePosition,
-  TextEditState,
 } from "../state";
+import type { TextEditState } from "../slide/text-edit";
 
 // =============================================================================
 // Presentation Document Types

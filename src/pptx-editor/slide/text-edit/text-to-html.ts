@@ -2,10 +2,11 @@
  * @file TextBody to HTML conversion
  *
  * Converts PPTX TextBody to editable HTML for contentEditable elements.
+ * Properly resolves scheme colors using ColorContext.
  */
 
-import type { TextBody, Paragraph, TextRun, RunProperties } from "../../../pptx/domain";
-import { runPropertiesToStyle } from "./styles";
+import type { TextBody, Paragraph, TextRun } from "../../../pptx/domain";
+import { runPropertiesToStyle, type StyleResolutionContext } from "./styles";
 
 // =============================================================================
 // Types
@@ -17,6 +18,8 @@ import { runPropertiesToStyle } from "./styles";
 export type TextToHtmlOptions = {
   /** Whether to include styling */
   readonly includeStyles?: boolean;
+  /** Style resolution context for color/font resolution */
+  readonly styleContext?: StyleResolutionContext;
 };
 
 // =============================================================================
@@ -39,7 +42,7 @@ function runToHtml(run: TextRun, options: TextToHtmlOptions): string {
       if (!options.includeStyles || !run.properties) {
         return `<span>${escapedText}</span>`;
       }
-      const style = runPropertiesToStyle(run.properties);
+      const style = runPropertiesToStyle(run.properties, options.styleContext);
       const styleAttr = style ? ` style="${style}"` : "";
       return `<span${styleAttr}>${escapedText}</span>`;
     }
@@ -64,20 +67,19 @@ function paragraphToHtml(paragraph: Paragraph, options: TextToHtmlOptions): stri
 // =============================================================================
 
 /**
- * Convert TextBody to HTML string
+ * Convert TextBody to HTML string.
+ * Pass styleContext for proper scheme color resolution.
  */
 export function textBodyToHtml(
   textBody: TextBody,
-  options: TextToHtmlOptions = {}
+  options: TextToHtmlOptions = {},
 ): string {
   const opts: TextToHtmlOptions = {
     includeStyles: true,
     ...options,
   };
 
-  return textBody.paragraphs
-    .map((p) => paragraphToHtml(p, opts))
-    .join("");
+  return textBody.paragraphs.map((p) => paragraphToHtml(p, opts)).join("");
 }
 
 /**
@@ -97,7 +99,7 @@ export function textBodyToPlainText(textBody: TextBody): string {
               return run.text ?? "";
           }
         })
-        .join("")
+        .join(""),
     )
     .join("\n");
 }

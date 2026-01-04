@@ -6,7 +6,7 @@
 
 import type { Background, SlideTransition } from "../../../pptx/domain/slide";
 import { Accordion } from "../../ui/layout/Accordion";
-import { BackgroundEditor, TransitionEditor } from "../../editors";
+import { BackgroundEditor, TransitionEditor } from "../../editors/index";
 
 // =============================================================================
 // Types

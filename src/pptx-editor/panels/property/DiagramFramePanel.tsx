@@ -4,14 +4,14 @@
  * Displays property editors for GraphicFrame elements containing diagrams (SmartArt).
  */
 
-import type { GraphicFrame } from "../../../pptx/domain";
+import type { GraphicFrame } from "../../../pptx/domain/index";
 import type { DiagramDataModel } from "../../../pptx/domain/diagram";
 import { Accordion } from "../../ui/layout/Accordion";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,
   DiagramEditor,
-} from "../../editors";
+} from "../../editors/index";
 
 // =============================================================================
 // Types

@@ -6,20 +6,20 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import type { Slide, Shape } from "../../pptx/domain";
+import type { Slide, Shape } from "../../pptx/domain/index";
 import type { Background, SlideTransition } from "../../pptx/domain/slide";
 import type { ShapeId } from "../../pptx/domain/types";
-import { SlidePropertiesPanel } from "./property-panels/SlidePropertiesPanel";
-import { MultiSelectState } from "./property-panels/MultiSelectState";
-import { SpShapePanel } from "./property-panels/SpShapePanel";
-import { PicShapePanel } from "./property-panels/PicShapePanel";
-import { CxnShapePanel } from "./property-panels/CxnShapePanel";
-import { GrpShapePanel } from "./property-panels/GrpShapePanel";
-import { TableFramePanel } from "./property-panels/TableFramePanel";
-import { ChartFramePanel } from "./property-panels/ChartFramePanel";
-import { DiagramFramePanel } from "./property-panels/DiagramFramePanel";
-import { OleFramePanel } from "./property-panels/OleFramePanel";
-import { UnknownShapePanel } from "./property-panels/UnknownShapePanel";
+import { SlidePropertiesPanel } from "./property/SlidePropertiesPanel";
+import { MultiSelectState } from "./property/MultiSelectState";
+import { SpShapePanel } from "./property/SpShapePanel";
+import { PicShapePanel } from "./property/PicShapePanel";
+import { CxnShapePanel } from "./property/CxnShapePanel";
+import { GrpShapePanel } from "./property/GrpShapePanel";
+import { TableFramePanel } from "./property/TableFramePanel";
+import { ChartFramePanel } from "./property/ChartFramePanel";
+import { DiagramFramePanel } from "./property/DiagramFramePanel";
+import { OleFramePanel } from "./property/OleFramePanel";
+import { UnknownShapePanel } from "./property/UnknownShapePanel";
 
 // =============================================================================
 // Types

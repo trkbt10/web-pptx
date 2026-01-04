@@ -4,8 +4,8 @@
  * Manages state for editing text within shapes.
  */
 
-import type { TextBody } from "../../pptx/domain";
-import type { ShapeId, Pixels } from "../../pptx/domain/types";
+import type { TextBody } from "../../../pptx/domain";
+import type { ShapeId, Pixels } from "../../../pptx/domain/types";
 
 // =============================================================================
 // Types

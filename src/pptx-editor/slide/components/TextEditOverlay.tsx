@@ -2,6 +2,7 @@
  * @file Text edit overlay component
  *
  * Provides inline text editing with contentEditable.
+ * Properly resolves scheme colors using ColorContext.
  */
 
 import {
@@ -12,9 +13,8 @@ import {
   type KeyboardEvent,
 } from "react";
 import type { TextBody } from "../../../pptx/domain";
-import type { TextEditBounds } from "../../state";
-import { textBodyToHtml, textBodyToPlainText } from "../text-edit/text-to-html";
-import { mergeTextIntoBody } from "../text-edit/html-to-text";
+import type { ColorContext, FontScheme } from "../../../pptx/domain/resolution";
+import { textBodyToHtml, textBodyToPlainText, mergeTextIntoBody, type TextEditBounds } from "../text-edit";
 import { colorTokens } from "../../ui/design-tokens";
 
 // =============================================================================
@@ -29,6 +29,10 @@ export type TextEditOverlayProps = {
   /** Slide dimensions for positioning */
   readonly slideWidth: number;
   readonly slideHeight: number;
+  /** Color context for resolving scheme colors */
+  readonly colorContext?: ColorContext;
+  /** Font scheme for resolving theme fonts */
+  readonly fontScheme?: FontScheme;
   /** Called when editing is complete */
   readonly onComplete: (newTextBody: TextBody) => void;
   /** Called when editing is cancelled */
@@ -42,7 +46,7 @@ export type TextEditOverlayProps = {
 function getOverlayStyle(
   bounds: TextEditBounds,
   slideWidth: number,
-  slideHeight: number
+  slideHeight: number,
 ): CSSProperties {
   // Calculate percentage-based position
   const left = ((bounds.x as number) / slideWidth) * 100;
@@ -75,13 +79,16 @@ function getOverlayStyle(
 // =============================================================================
 
 /**
- * Overlay for inline text editing
+ * Overlay for inline text editing.
+ * Renders text with proper styling by resolving scheme colors.
  */
 export function TextEditOverlay({
   bounds,
   textBody,
   slideWidth,
   slideHeight,
+  colorContext,
+  fontScheme,
   onComplete,
   onCancel,
 }: TextEditOverlayProps) {
@@ -148,11 +155,16 @@ export function TextEditOverlay({
         handleComplete();
       }
     },
-    [onCancel, handleComplete]
+    [onCancel, handleComplete],
   );
 
   const style = getOverlayStyle(bounds, slideWidth, slideHeight);
-  const initialHtml = textBodyToHtml(textBody, { includeStyles: true });
+
+  // Pass style context for proper color/font resolution
+  const initialHtml = textBodyToHtml(textBody, {
+    includeStyles: true,
+    styleContext: { colorContext, fontScheme },
+  });
 
   return (
     <div

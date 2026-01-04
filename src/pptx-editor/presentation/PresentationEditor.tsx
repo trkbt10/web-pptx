@@ -19,7 +19,7 @@ import type { ResizeHandlePosition } from "../state";
 import type { PresentationDocument, SlideWithId } from "./types";
 import type { ContextMenuActions } from "../slide/context-menu/SlideContextMenu";
 import { PresentationEditorProvider, usePresentationEditor } from "./context";
-import { SlideThumbnailPanel } from "./SlideThumbnailPanel";
+import { SlideThumbnailPanel } from "../panels/SlideThumbnailPanel";
 import { useSlideThumbnails } from "./use-slide-thumbnails";
 import { SlideThumbnailPreview } from "./SlideThumbnailPreview";
 import { CreationToolbar } from "../slide/CreationToolbar";
@@ -27,17 +27,16 @@ import type { CreationMode } from "./types";
 import { createShapeFromMode, getDefaultBoundsForMode } from "../shape/factory";
 import { SlideCanvas } from "../slide/SlideCanvas";
 import { TextEditOverlay } from "../slide/components/TextEditOverlay";
-import { isTextEditActive } from "../state";
-import { PropertyPanel } from "../slide/PropertyPanel";
+import { isTextEditActive } from "../slide/text-edit";
+import { PropertyPanel } from "../panels/PropertyPanel";
 import { ShapeToolbar } from "../slide/ShapeToolbar";
-import { LayerPanel } from "../slide/LayerPanel";
+import { LayerPanel } from "../panels/LayerPanel";
 import { Panel } from "../ui/layout";
 import { isTopLevelShape } from "../shape/query";
 import { clientToSlideCoords } from "../shape/coords";
 import { withUpdatedTransform } from "../shape/transform";
 import { calculateAlignedBounds } from "../shape/alignment";
 import { createRenderContextFromApiSlide } from "./slide-render-context-builder";
-import { isTextEditActive as checkTextEditActive } from "../state";
 
 // =============================================================================
 // Types
@@ -226,7 +225,7 @@ function EditorContent({
   }, [width, height, activeSlide?.apiSlide, document.fileCache]);
 
   // Get the editing shape ID when in text edit mode
-  const editingShapeId = checkTextEditActive(textEdit) ? textEdit.shapeId : undefined;
+  const editingShapeId = isTextEditActive(textEdit) ? textEdit.shapeId : undefined;
 
   // ==========================================================================
   // Drag handlers
@@ -602,6 +601,8 @@ function EditorContent({
                   textBody={textEdit.initialTextBody}
                   slideWidth={width as number}
                   slideHeight={height as number}
+                  colorContext={renderContext?.colorContext ?? document.colorContext}
+                  fontScheme={renderContext?.fontScheme ?? document.fontScheme}
                   onComplete={handleTextEditComplete}
                   onCancel={handleTextEditCancel}
                 />

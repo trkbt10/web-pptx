@@ -4,16 +4,16 @@
  * Displays property editors for GrpShape (group) elements.
  */
 
-import type { GrpShape, Shape } from "../../../pptx/domain";
+import type { GrpShape, Shape } from "../../../pptx/domain/index";
 import type { Transform } from "../../../pptx/domain/types";
 import { Accordion } from "../../ui/layout/Accordion";
-import { FieldGroup } from "../../ui/layout";
+import { FieldGroup } from "../../ui/layout/index";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,
   FillEditor,
   EffectsEditor,
-} from "../../editors";
+} from "../../editors/index";
 
 // =============================================================================
 // Types

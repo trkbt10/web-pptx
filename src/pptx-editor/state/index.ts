@@ -62,18 +62,3 @@ export type {
 export { createClipboardContent, incrementPasteCount } from "./clipboard";
 export type { ClipboardContent } from "./clipboard";
 
-// =============================================================================
-// Text Edit
-// =============================================================================
-export {
-  createInactiveTextEditState,
-  createActiveTextEditState,
-  isTextEditInactive,
-  isTextEditActive,
-} from "./text-edit";
-export type {
-  TextEditBounds,
-  InactiveTextEditState,
-  ActiveTextEditState,
-  TextEditState,
-} from "./text-edit";

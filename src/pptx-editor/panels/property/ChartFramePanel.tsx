@@ -1,24 +1,25 @@
 /**
- * @file OLE Object GraphicFrame property panel component
+ * @file Chart GraphicFrame property panel component
  *
- * Displays property editors for GraphicFrame elements containing OLE objects.
+ * Displays property editors for GraphicFrame elements containing charts.
  */
 
-import type { GraphicFrame } from "../../../pptx/domain";
-import type { OleReference } from "../../../pptx/domain/shape";
+import type { GraphicFrame } from "../../../pptx/domain/index";
+import type { Chart } from "../../../pptx/domain/chart";
 import { Accordion } from "../../ui/layout/Accordion";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,
-  OleObjectEditor,
-} from "../../editors";
+  ChartEditor,
+} from "../../editors/index";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export type OleFramePanelProps = {
+export type ChartFramePanelProps = {
   readonly shape: GraphicFrame;
+  readonly chart: Chart;
   readonly onChange: (shape: GraphicFrame) => void;
 };
 
@@ -27,26 +28,30 @@ export type OleFramePanelProps = {
 // =============================================================================
 
 /**
- * GraphicFrame (OLE object) editor panel.
+ * GraphicFrame (chart) editor panel.
  *
  * Displays editors for:
  * - Identity (NonVisual properties)
  * - Transform
- * - OLE Object content
+ * - Chart content
  */
-export function OleFramePanel({ shape, onChange }: OleFramePanelProps) {
-  const oleData =
-    shape.content.type === "oleObject" ? shape.content.data : undefined;
-
-  const handleOleDataChange = (newOleData: OleReference) => {
-    if (shape.content.type !== "oleObject") {
+export function ChartFramePanel({
+  shape,
+  chart,
+  onChange,
+}: ChartFramePanelProps) {
+  const handleChartChange = (newChart: Chart) => {
+    if (shape.content.type !== "chart") {
       return;
     }
     onChange({
       ...shape,
       content: {
         ...shape.content,
-        data: newOleData,
+        data: {
+          ...shape.content.data,
+          parsedChart: newChart,
+        },
       },
     });
   };
@@ -60,7 +65,7 @@ export function OleFramePanel({ shape, onChange }: OleFramePanelProps) {
         />
       </Accordion>
 
-      <Accordion title="Transform" defaultExpanded>
+      <Accordion title="Transform" defaultExpanded={false}>
         {shape.transform && (
           <TransformEditor
             value={shape.transform}
@@ -69,21 +74,8 @@ export function OleFramePanel({ shape, onChange }: OleFramePanelProps) {
         )}
       </Accordion>
 
-      <Accordion title="OLE Object" defaultExpanded>
-        {oleData ? (
-          <OleObjectEditor value={oleData} onChange={handleOleDataChange} />
-        ) : (
-          <div
-            style={{
-              padding: "12px",
-              textAlign: "center",
-              color: "var(--text-tertiary, #737373)",
-              fontSize: "12px",
-            }}
-          >
-            OLE object data not available
-          </div>
-        )}
+      <Accordion title="Chart" defaultExpanded>
+        <ChartEditor value={chart} onChange={handleChartChange} />
       </Accordion>
     </>
   );

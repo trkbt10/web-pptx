@@ -4,14 +4,14 @@
  * Displays property editors for GraphicFrame elements containing tables.
  */
 
-import type { GraphicFrame } from "../../../pptx/domain";
+import type { GraphicFrame } from "../../../pptx/domain/index";
 import type { Table } from "../../../pptx/domain/table";
 import { Accordion } from "../../ui/layout/Accordion";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,
   TableEditor,
-} from "../../editors";
+} from "../../editors/index";
 
 // =============================================================================
 // Types

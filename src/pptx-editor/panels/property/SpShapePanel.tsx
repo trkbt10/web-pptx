@@ -4,7 +4,7 @@
  * Displays property editors for SpShape (general shape) elements.
  */
 
-import type { SpShape } from "../../../pptx/domain";
+import type { SpShape } from "../../../pptx/domain/index";
 import { Accordion } from "../../ui/layout/Accordion";
 import {
   NonVisualPropertiesEditor,
@@ -14,7 +14,7 @@ import {
   FillEditor,
   EffectsEditor,
   GeometryEditor,
-} from "../../editors";
+} from "../../editors/index";
 
 // =============================================================================
 // Types

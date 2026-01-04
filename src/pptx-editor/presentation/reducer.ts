@@ -19,12 +19,14 @@ import {
   createHistory,
   createEmptySelection,
   createIdleDragState,
-  createInactiveTextEditState,
-  createActiveTextEditState,
   pushHistory,
   undoHistory,
   redoHistory,
 } from "../state";
+import {
+  createInactiveTextEditState,
+  createActiveTextEditState,
+} from "../slide/text-edit";
 import {
   findSlideById,
   updateSlide,

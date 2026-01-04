@@ -2,34 +2,50 @@
  * @file Run properties to CSS style conversion
  *
  * Converts PPTX RunProperties to CSS style strings.
+ * Properly resolves scheme colors using ColorContext.
  */
 
 import type { RunProperties, Color } from "../../../pptx/domain";
+import type { ColorContext, FontScheme } from "../../../pptx/domain/resolution";
+import { resolveColor } from "../../../pptx/core/dml/render/color";
+import { resolveThemeFont } from "../../../pptx/domain/resolution";
+
+// =============================================================================
+// Types
+// =============================================================================
+
+/**
+ * Context for style resolution
+ */
+export type StyleResolutionContext = {
+  readonly colorContext?: ColorContext;
+  readonly fontScheme?: FontScheme;
+};
 
 // =============================================================================
 // Color Resolution
 // =============================================================================
 
 /**
- * Convert Color to CSS color string
- * Simplified version - full resolution would require theme context
+ * Convert Color to CSS color string using full resolution.
+ * Properly resolves scheme colors using ColorContext.
  */
-function colorToCss(color: Color): string | undefined {
-  const spec = color.spec;
-  switch (spec.type) {
-    case "srgb":
-      return `#${spec.value}`;
-    case "preset":
-      return spec.value;
-    case "scheme":
-      // Scheme colors need theme context - return a fallback
-      return undefined;
-    case "system":
-      return spec.lastColor ? `#${spec.lastColor}` : undefined;
-    case "hsl":
-      // HSL to CSS
-      return `hsl(${spec.hue}, ${spec.saturation}%, ${spec.luminance}%)`;
+function colorToCss(color: Color, context: StyleResolutionContext): string | undefined {
+  const hex = resolveColor(color, context.colorContext);
+  if (hex === undefined) {
+    return undefined;
   }
+
+  // Apply alpha if present
+  const alpha = color.transform?.alpha !== undefined ? color.transform.alpha / 100 : 1;
+  if (alpha < 1) {
+    const r = parseInt(hex.slice(0, 2), 16);
+    const g = parseInt(hex.slice(2, 4), 16);
+    const b = parseInt(hex.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  return `#${hex}`;
 }
 
 // =============================================================================
@@ -41,7 +57,10 @@ type StyleEntry = {
   readonly value: string;
 };
 
-function buildStyleEntries(props: RunProperties): readonly StyleEntry[] {
+function buildStyleEntries(
+  props: RunProperties,
+  context: StyleResolutionContext,
+): readonly StyleEntry[] {
   const entries: StyleEntry[] = [];
 
   // Font size
@@ -71,24 +90,25 @@ function buildStyleEntries(props: RunProperties): readonly StyleEntry[] {
       // Combine with underline
       entries.push({
         property: "text-decoration",
-        value: existing.value + " line-through"
+        value: existing.value + " line-through",
       });
     } else {
       entries.push({ property: "text-decoration", value: "line-through" });
     }
   }
 
-  // Color
+  // Color - now properly resolves scheme colors
   if (props.color) {
-    const cssColor = colorToCss(props.color);
+    const cssColor = colorToCss(props.color, context);
     if (cssColor) {
       entries.push({ property: "color", value: cssColor });
     }
   }
 
-  // Font family
+  // Font family - resolve theme fonts
   if (props.fontFamily) {
-    entries.push({ property: "font-family", value: `"${props.fontFamily}"` });
+    const resolvedFont = resolveThemeFont(props.fontFamily, context.fontScheme) ?? props.fontFamily;
+    entries.push({ property: "font-family", value: `"${resolvedFont}"` });
   }
 
   // Caps
@@ -117,10 +137,14 @@ function buildStyleEntries(props: RunProperties): readonly StyleEntry[] {
 // =============================================================================
 
 /**
- * Convert RunProperties to CSS style string
+ * Convert RunProperties to CSS style string.
+ * Uses ColorContext for proper scheme color resolution.
  */
-export function runPropertiesToStyle(props: RunProperties): string {
-  const entries = buildStyleEntries(props);
+export function runPropertiesToStyle(
+  props: RunProperties,
+  context: StyleResolutionContext = {},
+): string {
+  const entries = buildStyleEntries(props, context);
   if (entries.length === 0) {
     return "";
   }
@@ -128,18 +152,20 @@ export function runPropertiesToStyle(props: RunProperties): string {
 }
 
 /**
- * Convert RunProperties to style object for React
+ * Convert RunProperties to style object for React.
+ * Uses ColorContext for proper scheme color resolution.
  */
 export function runPropertiesToStyleObject(
-  props: RunProperties
+  props: RunProperties,
+  context: StyleResolutionContext = {},
 ): Record<string, string> {
-  const entries = buildStyleEntries(props);
+  const entries = buildStyleEntries(props, context);
   const result: Record<string, string> = {};
 
   for (const entry of entries) {
     // Convert kebab-case to camelCase
     const camelCase = entry.property.replace(/-([a-z])/g, (_, letter) =>
-      letter.toUpperCase()
+      letter.toUpperCase(),
     );
     result[camelCase] = entry.value;
   }

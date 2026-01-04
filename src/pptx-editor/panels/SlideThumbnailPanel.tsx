@@ -6,11 +6,11 @@
  */
 
 import { useCallback, useState, useEffect, useRef, type CSSProperties } from "react";
-import type { Slide } from "../../pptx/domain";
-import type { SlideWithId, SlideId } from "./types";
-import { usePresentationEditor } from "./context";
-import { AddIcon, CopyIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon } from "../ui/icons";
-import { colorTokens, radiusTokens, fontTokens, iconTokens } from "../ui/design-tokens";
+import type { Slide } from "../../pptx/domain/index";
+import type { SlideWithId, SlideId } from "../presentation/types";
+import { usePresentationEditor } from "../presentation/context";
+import { AddIcon, CopyIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon } from "../ui/icons/index";
+import { colorTokens, radiusTokens, fontTokens, iconTokens } from "../ui/design-tokens/index";
 
 // =============================================================================
 // Types

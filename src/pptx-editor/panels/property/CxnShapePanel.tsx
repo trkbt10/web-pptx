@@ -4,16 +4,16 @@
  * Displays property editors for CxnShape (connector) elements.
  */
 
-import type { CxnShape } from "../../../pptx/domain";
+import type { CxnShape } from "../../../pptx/domain/index";
 import { Accordion } from "../../ui/layout/Accordion";
-import { FieldGroup } from "../../ui/layout";
+import { FieldGroup } from "../../ui/layout/index";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,
   LineEditor,
   EffectsEditor,
   GeometryEditor,
-} from "../../editors";
+} from "../../editors/index";
 
 // =============================================================================
 // Types

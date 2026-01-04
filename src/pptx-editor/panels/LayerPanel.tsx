@@ -19,12 +19,12 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
-import type { Slide, Shape, GrpShape } from "../../pptx/domain";
+import type { Slide, Shape, GrpShape } from "../../pptx/domain/index";
 import type { ShapeId } from "../../pptx/domain/types";
-import type { SelectionState } from "../state";
+import type { SelectionState } from "../state/index";
 import { getShapeId, hasShapeId } from "../shape/identity";
 import { isTopLevelShape } from "../shape/query";
-import { Button } from "../ui/primitives";
+import { Button } from "../ui/primitives/index";
 import {
   RectIcon,
   EllipseIcon,
@@ -42,8 +42,8 @@ import {
   OleObjectIcon,
   ChevronRightIcon,
   UnknownShapeIcon,
-} from "../ui/icons";
-import { colorTokens, fontTokens, iconTokens } from "../ui/design-tokens";
+} from "../ui/icons/index";
+import { colorTokens, fontTokens, iconTokens } from "../ui/design-tokens/index";
 
 // =============================================================================
 // Types
