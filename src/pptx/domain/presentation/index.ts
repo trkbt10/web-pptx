@@ -24,3 +24,12 @@ export type {
   SmartTags,
   Presentation,
 } from "./types";
+
+export type {
+  SlideSizeEmu,
+  NotesSizeEmu,
+  SlideIdEntry,
+  SlideMasterIdEntry,
+  NotesMasterIdEntry,
+  HandoutMasterIdEntry,
+} from "./structure";
