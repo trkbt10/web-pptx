@@ -11,12 +11,12 @@ import type { PresentationDocument, SlideWithId } from "@lib/pptx-editor";
 import type { Presentation as DomainPresentation } from "@lib/pptx/domain";
 import type { ColorContext, FontScheme, ColorScheme, ColorMap } from "@lib/pptx/domain/resolution";
 import type { ResourceResolver } from "@lib/pptx/render/core";
-import type { Slide as ApiSlide } from "@lib/pptx/types/api";
+import type { Slide as ApiSlide } from "@lib/pptx/app/types";
 import { parseSlide } from "@lib/pptx/parser/slide/slide-parser";
 import { createParseContext } from "@lib/pptx/parser/context";
-import { parseColorScheme, parseFontScheme, parseColorMap } from "@lib/pptx/core/dml/parser/theme";
+import { parseColorScheme, parseFontScheme, parseColorMap } from "@lib/pptx/parser/drawing-ml";
 import { getByPath } from "@lib/xml";
-import { createSlideRenderContextFromApiSlide } from "@lib/pptx-editor/presentation/slide-render-context-builder";
+import { createSlideRenderContextFromApiSlide } from "@lib/pptx-editor/render-context/slide-render-context-builder";
 import { getMimeTypeFromPath } from "@lib/pptx/opc";
 
 // =============================================================================

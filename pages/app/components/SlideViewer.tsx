@@ -4,10 +4,23 @@
  * Uses the shared SlideList component for the sidebar thumbnails.
  */
 
-import { useState, useMemo, useCallback, useEffect, useRef, type CSSProperties } from "react";
+import { useMemo, useCallback, useRef, type CSSProperties } from "react";
 import type { LoadedPresentation } from "../lib/pptx-loader";
 import { SlideList } from "../../../src/pptx-editor/slide-list";
-import type { SlideWithId } from "../../../src/pptx-editor/presentation/types";
+import type { SlideWithId } from "../../../src/pptx-editor/context/presentation/editor/types";
+import { useLazySvgCache, SvgContentRenderer } from "../../../src/pptx/render/react";
+import { useSlideNavigation, useViewerKeyboard } from "../hooks";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PlayIcon,
+  EditIcon,
+  SidebarIcon,
+  ProgressBar,
+  KeyboardHints,
+  IconButton,
+} from "./ui";
+import { useState } from "react";
 
 type Props = {
   presentation: LoadedPresentation;
@@ -85,15 +98,6 @@ const headerRightStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: "8px",
-};
-
-const headerActionStyle: CSSProperties = {
-  padding: "6px",
-  background: "none",
-  border: "none",
-  borderRadius: "4px",
-  color: "#a1a1a1",
-  cursor: "pointer",
 };
 
 const editButtonStyle: CSSProperties = {
@@ -232,14 +236,6 @@ const slideContentStyle: CSSProperties = {
   height: "100%",
 };
 
-const loadingStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "100%",
-  height: "100%",
-};
-
 const footerStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
@@ -258,33 +254,6 @@ const footerCenterStyle: CSSProperties = {
   justifyContent: "center",
 };
 
-const progressBarStyle: CSSProperties = {
-  width: "200px",
-  height: "4px",
-  backgroundColor: "#333",
-  borderRadius: "2px",
-  overflow: "hidden",
-};
-
-const progressFillStyle: CSSProperties = {
-  height: "100%",
-  backgroundColor: "#3b82f6",
-  transition: "width 0.2s ease",
-};
-
-const keyboardHintStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-};
-
-const kbdStyle: CSSProperties = {
-  padding: "2px 6px",
-  backgroundColor: "#1a1a1a",
-  borderRadius: "3px",
-  fontSize: "11px",
-  fontFamily: "monospace",
-};
 
 const thumbnailPreviewStyle: CSSProperties = {
   width: "100%",
@@ -309,15 +278,32 @@ export function SlideViewer({
   onStartSlideshow,
   onStartEditor,
 }: Props) {
-  const [currentSlide, setCurrentSlide] = useState(1);
-  const [renderedContent, setRenderedContent] = useState<string>("");
-  const [isRendering, setIsRendering] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const slideContainerRef = useRef<HTMLDivElement>(null);
 
   const { presentation: pres } = presentation;
   const totalSlides = pres.count;
   const slideSize = pres.size;
+
+  // Slide navigation state and actions
+  const nav = useSlideNavigation({ totalSlides });
+
+  // Keyboard navigation
+  const keyboardActions = useMemo(
+    () => ({
+      goToNext: nav.goToNext,
+      goToPrev: nav.goToPrev,
+      goToFirst: nav.goToFirst,
+      goToLast: nav.goToLast,
+      onStartSlideshow: () => onStartSlideshow(nav.currentSlide),
+      onExit: onBack,
+    }),
+    [nav, onStartSlideshow, onBack]
+  );
+  useViewerKeyboard(keyboardActions);
+
+  // Lazy SVG cache for thumbnails (generates on demand, LRU eviction)
+  const svgCache = useLazySvgCache(100);
 
   // Create SlideWithId-compatible data for SlideList
   const slides = useMemo((): readonly SlideWithId[] => {
@@ -331,185 +317,83 @@ export function SlideViewer({
     return result;
   }, [totalSlides]);
 
-  // Pre-render thumbnails
-  const thumbnailSvgs = useMemo(() => {
-    const svgs: Map<string, string> = new Map();
-    for (let i = 1; i <= totalSlides; i++) {
-      const slide = pres.getSlide(i);
-      svgs.set(`slide-${i}`, slide.renderSVG());
-    }
-    return svgs;
-  }, [pres, totalSlides]);
-
-  // Render current slide
-  useEffect(() => {
-    const cancelled = { current: false };
-    setIsRendering(true);
-
-    const slide = pres.getSlide(currentSlide);
-    const svg = slide.renderSVG();
-
-    if (!cancelled.current) {
-      setRenderedContent(svg);
-      setIsRendering(false);
-    }
-
-    return () => {
-      cancelled.current = true;
-    };
-  }, [pres, currentSlide]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-        e.preventDefault();
-        setCurrentSlide((s) => Math.max(1, s - 1));
-      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-        e.preventDefault();
-        setCurrentSlide((s) => Math.min(totalSlides, s + 1));
-      } else if (e.key === "Home") {
-        e.preventDefault();
-        setCurrentSlide(1);
-      } else if (e.key === "End") {
-        e.preventDefault();
-        setCurrentSlide(totalSlides);
-      } else if (e.key === "f" || e.key === "F") {
-        e.preventDefault();
-        onStartSlideshow(currentSlide);
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        onBack();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [totalSlides, currentSlide, onStartSlideshow, onBack]);
-
-  const handlePrev = useCallback(() => {
-    setCurrentSlide((s) => Math.max(1, s - 1));
-  }, []);
-
-  const handleNext = useCallback(() => {
-    setCurrentSlide((s) => Math.min(totalSlides, s + 1));
-  }, [totalSlides]);
+  // Memoize main slide content (synchronous, no useEffect needed)
+  const renderedContent = useMemo(
+    () => pres.getSlide(nav.currentSlide).renderSVG(),
+    [pres, nav.currentSlide],
+  );
 
   const handleSlideClick = useCallback((slideId: string) => {
     const slideNumber = parseInt(slideId.replace("slide-", ""), 10);
-    setCurrentSlide(slideNumber);
-  }, []);
+    nav.setCurrentSlide(slideNumber);
+  }, [nav]);
 
   const renderThumbnail = useCallback(
     (slideWithId: SlideWithId) => {
-      const svg = thumbnailSvgs.get(slideWithId.id);
-      if (!svg) return null;
-      // Wrap in div with CSS that makes SVG scale to fill container
-      // SVG elements from PPTX rendering have explicit dimensions, so we need
-      // to force them to scale using width/height: 100%
+      const slideNum = parseInt(slideWithId.id.replace("slide-", ""), 10);
+      // Lazy generation: only renders when thumbnail becomes visible
+      const svg = svgCache.getOrGenerate(slideWithId.id, () =>
+        pres.getSlide(slideNum).renderSVG(),
+      );
       return (
-        <div
+        <SvgContentRenderer
+          svg={svg}
+          width={slideSize.width}
+          height={slideSize.height}
+          mode="inner"
           style={thumbnailPreviewStyle}
-          className="slide-list-thumbnail-svg"
-          dangerouslySetInnerHTML={{ __html: svg }}
         />
       );
     },
-    [thumbnailSvgs]
+    [pres, slideSize, svgCache],
   );
 
   const renderSlideContent = () => {
-    if (isRendering) {
-      return (
-        <div style={loadingStyle}>
-          <div className="loading-spinner" />
-        </div>
-      );
-    }
-
     return (
-      <div
+      <SvgContentRenderer
+        svg={renderedContent}
+        width={slideSize.width}
+        height={slideSize.height}
+        mode="full"
         style={slideContentStyle}
-        dangerouslySetInnerHTML={{ __html: renderedContent }}
       />
     );
   };
 
-  const activeSlideId = `slide-${currentSlide}`;
+  const activeSlideId = `slide-${nav.currentSlide}`;
 
   return (
     <div style={containerStyle}>
-      {/* CSS for SVG scaling in thumbnails */}
-      <style>{`
-        .slide-list-thumbnail-svg > svg {
-          width: 100% !important;
-          height: 100% !important;
-          display: block;
-        }
-      `}</style>
       {/* Header */}
       <header style={headerStyle}>
         <div style={headerLeftStyle}>
           <button style={backButtonStyle} onClick={onBack}>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
+            <ChevronLeftIcon size={16} />
             <span>Back</span>
           </button>
           <div style={headerDividerStyle} />
           <div style={fileInfoStyle}>
             <span style={fileNameStyle}>{fileName}</span>
             <span style={slideCounterStyle}>
-              {currentSlide} / {totalSlides}
+              {nav.currentSlide} / {totalSlides}
             </span>
           </div>
         </div>
 
         <div style={headerRightStyle}>
-          <button
-            style={headerActionStyle}
+          <IconButton
+            icon={<SidebarIcon size={18} />}
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" />
-              <path d="M9 3v18" />
-            </svg>
-          </button>
+          />
           <button style={editButtonStyle} onClick={onStartEditor}>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
+            <EditIcon size={16} />
             <span>Edit</span>
           </button>
           <button
             style={presentButtonStyle}
-            onClick={() => onStartSlideshow(currentSlide)}
+            onClick={() => onStartSlideshow(nav.currentSlide)}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5 3 19 12 5 21 5 3" />
-            </svg>
+            <PlayIcon size={16} />
             <span>Present</span>
           </button>
         </div>
@@ -541,22 +425,13 @@ export function SlideViewer({
           <button
             style={{
               ...navPrevStyle,
-              opacity: currentSlide === 1 ? 0.3 : 0.7,
-              cursor: currentSlide === 1 ? "default" : "pointer",
+              opacity: nav.isFirst ? 0.3 : 0.7,
+              cursor: nav.isFirst ? "default" : "pointer",
             }}
-            onClick={handlePrev}
-            disabled={currentSlide === 1}
+            onClick={nav.goToPrev}
+            disabled={nav.isFirst}
           >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
+            <ChevronLeftIcon size={24} />
           </button>
 
           <div style={slideWrapperStyle}>
@@ -574,22 +449,13 @@ export function SlideViewer({
           <button
             style={{
               ...navNextStyle,
-              opacity: currentSlide === totalSlides ? 0.3 : 0.7,
-              cursor: currentSlide === totalSlides ? "default" : "pointer",
+              opacity: nav.isLast ? 0.3 : 0.7,
+              cursor: nav.isLast ? "default" : "pointer",
             }}
-            onClick={handleNext}
-            disabled={currentSlide === totalSlides}
+            onClick={nav.goToNext}
+            disabled={nav.isLast}
           >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-            >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
+            <ChevronRightIcon size={24} />
           </button>
         </main>
       </div>
@@ -600,23 +466,15 @@ export function SlideViewer({
           {slideSize.width} x {slideSize.height}
         </div>
         <div style={footerCenterStyle}>
-          <div style={progressBarStyle}>
-            <div
-              style={{
-                ...progressFillStyle,
-                width: `${(currentSlide / totalSlides) * 100}%`,
-              }}
-            />
-          </div>
+          <ProgressBar progress={nav.progress} variant="dark" />
         </div>
-        <div style={keyboardHintStyle}>
-          <span style={kbdStyle}>←</span>
-          <span style={kbdStyle}>→</span>
-          Navigate
-          <span style={{ margin: "0 4px" }}>·</span>
-          <span style={kbdStyle}>F</span>
-          Present
-        </div>
+        <KeyboardHints
+          hints={[
+            { keys: ["←", "→"], label: "Navigate" },
+            { keys: ["F"], label: "Present" },
+          ]}
+          variant="dark"
+        />
       </footer>
     </div>
   );
