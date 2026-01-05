@@ -10,7 +10,7 @@ import { useMemo, type CSSProperties } from "react";
 import { Accordion } from "../../ui/layout/Accordion";
 import { MixedRunPropertiesEditor } from "../../editors/text/MixedRunPropertiesEditor";
 import { MixedParagraphPropertiesEditor } from "../../editors/text/MixedParagraphPropertiesEditor";
-import { useTextEditContext } from "../../context/TextEditContext";
+import { useTextEditContext } from "../../context/slide/TextEditContext";
 import type { RunProperties, ParagraphProperties } from "../../../pptx/domain/text";
 
 // =============================================================================
@@ -175,7 +175,7 @@ export function TextPropertyPanel({ className, style }: TextPropertyPanelProps) 
 // Helper Functions
 // =============================================================================
 
-import type { TextEditContextValue } from "../../context/TextEditContext";
+import type { TextEditContextValue } from "../../context/slide/TextEditContext";
 import type { MixedRunProperties, MixedParagraphProperties } from "../../editors/text/mixed-properties";
 import { extractTextProperties } from "../../editors/text/text-property-extractor";
 

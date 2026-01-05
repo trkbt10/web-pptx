@@ -5,7 +5,7 @@
  * Uses design tokens for consistent styling.
  */
 
-import type { ResizeHandlePosition } from "../state/index";
+import type { ResizeHandlePosition } from "../context/slide/state";
 import { colorTokens } from "../ui/design-tokens/index";
 
 // =============================================================================

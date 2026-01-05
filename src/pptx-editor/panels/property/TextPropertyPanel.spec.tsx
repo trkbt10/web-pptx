@@ -9,8 +9,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { TextPropertyPanel } from "./TextPropertyPanel";
-import { TextEditContextProvider } from "../../context/TextEditContext";
-import type { TextEditContextValue } from "../../context/TextEditContext";
+import { TextEditContextProvider } from "../../context/slide/TextEditContext";
+import type { TextEditContextValue } from "../../context/slide/TextEditContext";
 import type { TextBody } from "../../../pptx/domain/text";
 import type { TextEditState } from "../../slide/text-edit/state";
 

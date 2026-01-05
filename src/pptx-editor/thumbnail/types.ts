@@ -4,7 +4,7 @@
  * Type definitions for the slide thumbnail components.
  */
 
-import type { SlideWithId, SlideId } from "../presentation/types";
+import type { SlideWithId, SlideId } from "../context/presentation/editor/types";
 
 /**
  * Props for individual thumbnail item

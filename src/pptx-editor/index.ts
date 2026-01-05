@@ -37,7 +37,7 @@ export {
   EditorConfigProvider,
   useEditorConfig,
   type EditorConfig,
-} from "./context/EditorConfigContext";
+} from "./context/editor/EditorConfigContext";
 
 // UI Primitives
 export {
@@ -208,7 +208,7 @@ export type {
   DragState,
   UndoRedoHistory,
   ClipboardContent,
-} from "./state";
+} from "./context/slide/state";
 export {
   createEmptySelection,
   createIdleDragState,
@@ -216,17 +216,17 @@ export {
   pushHistory,
   undoHistory,
   redoHistory,
-} from "./state";
+} from "./context/slide/state";
 
 // Slide Editor Types
 export type {
   SlideEditorState,
   SlideEditorAction,
-} from "./slide/types";
-export { createSlideEditorState } from "./slide/types";
+} from "./context/slide/editor/types";
+export { createSlideEditorState } from "./context/slide/editor/types";
 
 // Slide Editor Reducer
-export { slideEditorReducer } from "./slide/reducer";
+export { slideEditorReducer } from "./context/slide/editor/reducer";
 
 // Slide Editor Components
 export { SlideCanvas, type SlideCanvasProps } from "./slide/SlideCanvas";
@@ -271,20 +271,20 @@ export type {
   SlideWithId,
   SlideId,
   PresentationEditorContextValue,
-} from "./presentation/types";
+} from "./context/presentation/editor/types";
 
 // Presentation Editor Context
 export {
   PresentationEditorProvider,
   usePresentationEditor,
   usePresentationEditorOptional,
-} from "./presentation/context";
+} from "./context/presentation/PresentationEditorContext";
 
 // Presentation Editor Reducer
 export {
   presentationEditorReducer,
   createPresentationEditorState,
-} from "./presentation/reducer/reducer";
+} from "./context/presentation/editor/reducer/reducer";
 
 // Presentation Editor Components
 export { PresentationEditor, type PresentationEditorProps } from "./presentation/PresentationEditor";

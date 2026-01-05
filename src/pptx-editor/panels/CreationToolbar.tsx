@@ -7,7 +7,7 @@
 
 import { useCallback, type CSSProperties } from "react";
 import type { LucideIcon } from "lucide-react";
-import type { CreationMode } from "../presentation/types";
+import type { CreationMode } from "../context/presentation/editor/types";
 import { ToolbarButton } from "../ui/toolbar/index";
 import {
   SelectIcon,

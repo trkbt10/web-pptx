@@ -7,7 +7,7 @@
 import { render, act } from "@testing-library/react";
 import type { Slide } from "../../pptx/domain";
 import { px } from "../../pptx/domain/types";
-import { createIdleDragState, createEmptySelection } from "../state";
+import { createIdleDragState, createEmptySelection } from "../context/slide/state";
 import { createInactiveTextEditState } from "../slide/text-edit/state";
 import { triggerResizeObservers } from "../../../spec/test-utils/resize-observer";
 import { CanvasStage } from "./CanvasStage";

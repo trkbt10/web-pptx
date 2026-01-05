@@ -4,7 +4,7 @@
  * Pure functions for calculating shape resize transformations.
  */
 
-import type { ResizeHandlePosition } from "../state";
+import type { ResizeHandlePosition } from "../context/slide/state";
 
 // =============================================================================
 // Types

@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import type { SlideWithId } from "../presentation/types";
+import type { SlideWithId } from "../context/presentation/editor/types";
 import { createIdleDragState } from "./types";
 import {
   getDraggingIds,

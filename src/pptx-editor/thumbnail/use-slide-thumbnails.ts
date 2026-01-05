@@ -10,8 +10,9 @@ import type { ColorContext, FontScheme } from "../../pptx/domain/resolution";
 import type { ResourceResolver } from "../../pptx/render/core/index";
 import { renderSlideSvg } from "../../pptx/render/svg/renderer";
 import { createRenderContext } from "../../pptx/render/context";
-import type { SlideWithId, FileCache } from "../presentation/types";
-import { createRenderContextFromApiSlide } from "../presentation/slide-render-context-builder";
+import type { SlideWithId } from "../context/presentation/editor/types";
+import type { FileCache } from "../render-context/types";
+import { createRenderContextFromApiSlide } from "../render-context/slide-render-context-builder";
 import {
   createThumbnailCache,
   getCachedThumbnail,

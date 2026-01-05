@@ -5,7 +5,7 @@
  * readonly and editable modes with vertical/horizontal orientation.
  */
 
-import type { SlideId, SlideWithId } from "../presentation/types";
+import type { SlideId, SlideWithId } from "../context/presentation/editor/types";
 
 /**
  * Scroll orientation for the slide list
@@ -138,6 +138,9 @@ export type SlideListProps = {
 
 /**
  * Props for individual slide list item
+ *
+ * Callbacks receive slideId/index as arguments to enable stable references.
+ * This allows SlideListItem to be memoized effectively.
  */
 export type SlideListItemProps = {
   readonly slideWithId: SlideWithId;
@@ -160,19 +163,17 @@ export type SlideListItemProps = {
     index: number
   ) => React.ReactNode;
 
-  // Event handlers
-  readonly onClick: (e: React.MouseEvent) => void;
-  readonly onContextMenu: (e: React.MouseEvent) => void;
-  readonly onDelete: () => void;
-  readonly onPointerEnter: () => void;
-  readonly onPointerLeave: () => void;
+  // Event handlers (stable callbacks - item creates its own closures)
+  readonly onItemClick: (slideId: SlideId, index: number, e: React.MouseEvent) => void;
+  readonly onItemContextMenu: (slideId: SlideId, e: React.MouseEvent) => void;
+  readonly onItemDelete: (slideId: SlideId) => void;
+  readonly onItemPointerEnter: (slideId: SlideId) => void;
+  readonly onItemPointerLeave: (slideId: SlideId) => void;
 
-  // Drag handlers
-  readonly onDragStart: (e: React.DragEvent) => void;
-  /** Handle drag over this item (for determining drop gap) */
-  readonly onDragOver: (e: React.DragEvent) => void;
-  /** Handle drop on this item */
-  readonly onDrop: (e: React.DragEvent) => void;
+  // Drag handlers (stable callbacks)
+  readonly onItemDragStart: (e: React.DragEvent, slideId: SlideId) => void;
+  readonly onItemDragOver: (e: React.DragEvent, index: number) => void;
+  readonly onItemDrop: (e: React.DragEvent, index: number) => void;
 
   /** Ref for scroll-into-view */
   readonly itemRef?: React.RefObject<HTMLDivElement | null>;

@@ -6,6 +6,7 @@
  */
 
 import { useMemo, type CSSProperties } from "react";
+import { extractSvgContent } from "../../pptx/render/svg/svg-utils";
 
 // =============================================================================
 // Types
@@ -45,10 +46,7 @@ const svgStyle: CSSProperties = {
  */
 export function SlideThumbnailPreview({ svg, slideWidth, slideHeight }: SlideThumbnailPreviewProps) {
   // Extract inner content from full SVG document
-  const innerContent = useMemo(() => {
-    const match = svg.match(/<svg[^>]*>([\s\S]*)<\/svg>/i);
-    return match?.[1] ?? "";
-  }, [svg]);
+  const innerContent = useMemo(() => extractSvgContent(svg), [svg]);
 
   // Use provided dimensions for viewBox (fallback to extraction if needed)
   const viewBox = `0 0 ${slideWidth} ${slideHeight}`;

@@ -260,14 +260,14 @@ export function SlideList({
               isAnyDragging={dragState.isDragging}
               isHovered={isItemHovered(slideWithId.id)}
               renderThumbnail={renderThumbnail}
-              onClick={(e) => handleItemClick(slideWithId.id, index, e)}
-              onContextMenu={(e) => handleContextMenu(slideWithId.id, e)}
-              onDelete={() => handleDelete(slideWithId.id)}
-              onPointerEnter={() => handleItemEnter(slideWithId.id)}
-              onPointerLeave={() => handleItemLeave(slideWithId.id)}
-              onDragStart={(e) => handleDragStart(e, slideWithId.id)}
-              onDragOver={(e) => handleItemDragOver(e, index)}
-              onDrop={(e) => handleItemDrop(e, index)}
+              onItemClick={handleItemClick}
+              onItemContextMenu={handleContextMenu}
+              onItemDelete={handleDelete}
+              onItemPointerEnter={handleItemEnter}
+              onItemPointerLeave={handleItemLeave}
+              onItemDragStart={handleDragStart}
+              onItemDragOver={handleItemDragOver}
+              onItemDrop={handleItemDrop}
               itemRef={isActive ? activeItemRef : undefined}
             />
           </div>

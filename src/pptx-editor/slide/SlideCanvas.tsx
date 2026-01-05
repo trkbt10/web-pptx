@@ -14,10 +14,10 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import type { Slide, Shape } from "../../pptx/domain";
 import type { ColorContext, FontScheme } from "../../pptx/domain/resolution";
 import type { Pixels, ShapeId } from "../../pptx/domain/types";
-import type { DragState, SelectionState, ResizeHandlePosition, PathEditState } from "../state";
-import { isPathEditEditing } from "../state";
-import type { CreationMode } from "../presentation/types";
-import { isPenMode, isPencilMode } from "../presentation/types";
+import type { DragState, SelectionState, ResizeHandlePosition, PathEditState } from "../context/slide/state";
+import { isPathEditEditing } from "../context/slide/state";
+import type { CreationMode } from "../context/presentation/editor/types";
+import { isPenMode, isPencilMode } from "../context/presentation/editor/types";
 import type { ResourceResolver, ResolvedBackgroundFill, RenderOptions } from "../../pptx/render/core/types";
 import type { DrawingPath } from "../path-tools/types";
 import { PenToolOverlay } from "../path-tools/components/PenToolOverlay";

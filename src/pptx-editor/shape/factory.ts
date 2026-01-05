@@ -7,7 +7,7 @@
 import type { SpShape, CxnShape, GraphicFrame, PicShape, Shape, Table, TableRow, TableCell, TableColumn, Chart, CustomGeometry } from "../../pptx/domain";
 import type { ShapeId, Pixels, ResourceId } from "../../pptx/domain/types";
 import { px, deg, pct } from "../../pptx/domain/types";
-import type { CreationPresetShape, CreationMode } from "../presentation/types";
+import type { CreationPresetShape, CreationMode } from "../context/presentation/editor/types";
 import type { DrawingPath } from "../path-tools/types";
 import { drawingPathToCommands, calculatePathBounds } from "../path-tools/utils/path-commands";
 

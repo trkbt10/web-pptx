@@ -6,6 +6,7 @@
  * item is hovered at any time.
  */
 
+import { memo } from "react";
 import type { SlideListItemProps } from "./types";
 import { SlideNumberBadge } from "./SlideNumberBadge";
 import {
@@ -18,8 +19,11 @@ import {
 
 /**
  * Individual slide item in the list
+ *
+ * Memoized to prevent unnecessary re-renders when hovering other items.
+ * Receives stable callbacks and creates its own closures internally.
  */
-export function SlideListItem({
+export const SlideListItem = memo(function SlideListItem({
   slideWithId,
   index,
   aspectRatio,
@@ -33,24 +37,54 @@ export function SlideListItem({
   isAnyDragging,
   isHovered,
   renderThumbnail,
-  onClick,
-  onContextMenu,
-  onDelete,
-  onPointerEnter,
-  onPointerLeave,
-  onDragStart,
-  onDragOver,
-  onDrop,
+  onItemClick,
+  onItemContextMenu,
+  onItemDelete,
+  onItemPointerEnter,
+  onItemPointerLeave,
+  onItemDragStart,
+  onItemDragOver,
+  onItemDrop,
   itemRef,
 }: SlideListItemProps) {
   const isEditable = mode === "editable";
+  const slideId = slideWithId.id;
 
   // Show delete button when hovered and not dragging
   const showDeleteButton = isEditable && canDelete && isHovered && !isAnyDragging;
 
+  // Create item-specific handlers (closures are fine since component is memoized)
+  const handleClick = (e: React.MouseEvent) => {
+    onItemClick(slideId, index, e);
+  };
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    onItemContextMenu(slideId, e);
+  };
+
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onDelete();
+    onItemDelete(slideId);
+  };
+
+  const handlePointerEnter = () => {
+    onItemPointerEnter(slideId);
+  };
+
+  const handlePointerLeave = () => {
+    onItemPointerLeave(slideId);
+  };
+
+  const handleDragStart = (e: React.DragEvent) => {
+    onItemDragStart(e, slideId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    onItemDragOver(e, index);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    onItemDrop(e, index);
   };
 
   return (
@@ -69,11 +103,11 @@ export function SlideListItem({
           transition: "opacity 0.1s ease",
         }}
         draggable={isEditable}
-        onDragStart={isEditable ? onDragStart : undefined}
-        onDragOver={isEditable ? onDragOver : undefined}
-        onDrop={isEditable ? onDrop : undefined}
-        onPointerEnter={onPointerEnter}
-        onPointerLeave={onPointerLeave}
+        onDragStart={isEditable ? handleDragStart : undefined}
+        onDragOver={isEditable ? handleDragOver : undefined}
+        onDrop={isEditable ? handleDrop : undefined}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
       >
         {/* Thumbnail */}
         <div
@@ -83,21 +117,21 @@ export function SlideListItem({
             isPrimary,
             isActive
           )}
-          onClick={onClick}
-          onContextMenu={isEditable ? onContextMenu : undefined}
+          onClick={handleClick}
+          onContextMenu={isEditable ? handleContextMenu : undefined}
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              onClick(e as unknown as React.MouseEvent);
+              handleClick(e as unknown as React.MouseEvent);
             }
           }}
           aria-label={`Slide ${index + 1}`}
           aria-selected={isSelected || isActive}
         >
           <div style={thumbnailContentStyle}>
-            {renderThumbnail ? (
+            {renderThumbnail !== undefined ? (
               renderThumbnail(slideWithId, index)
             ) : (
               <span style={thumbnailFallbackStyle}>
@@ -122,4 +156,4 @@ export function SlideListItem({
       </div>
     </div>
   );
-}
+});

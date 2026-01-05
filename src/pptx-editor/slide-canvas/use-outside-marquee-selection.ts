@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import type { Shape } from "../../pptx/domain";
 import type { ShapeId } from "../../pptx/domain/types";
-import type { SelectionState } from "../state";
+import type { SelectionState } from "../context/slide/state";
 import { clientToSlideCoords } from "../shape/coords";
 import { collectShapeRenderData } from "../shape/traverse";
 import { colorTokens } from "../ui/design-tokens";

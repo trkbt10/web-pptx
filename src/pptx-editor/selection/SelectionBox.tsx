@@ -10,7 +10,7 @@
  * - multi: Dashed line "6 3", secondary color, handles always shown
  */
 
-import type { ResizeHandlePosition } from "../state/index";
+import type { ResizeHandlePosition } from "../context/slide/state";
 import { ResizeHandle } from "./ResizeHandle";
 import { RotateHandle } from "./RotateHandle";
 import { colorTokens } from "../ui/design-tokens/index";
