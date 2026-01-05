@@ -1,3 +1,7 @@
+/**
+ * @file Vite config for the pages demo build.
+ */
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
