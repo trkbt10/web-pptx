@@ -431,7 +431,7 @@ function EditorContent({
 
     // Use full context from API slide if available
     if (apiSlide && zip) {
-      return createRenderContext({ apiSlide, zip, slideSize: { width, height } });
+      return createRenderContext(apiSlide, zip, { width, height }).renderContext;
     }
 
     return undefined;

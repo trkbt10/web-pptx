@@ -11,7 +11,8 @@ import type { ResourceResolver } from "../../pptx/render/core/index";
 import type { ZipFile } from "../../pptx/domain";
 import { renderSlideSvg } from "../../pptx/render/svg/renderer";
 import type { SlideWithId } from "../../pptx/app";
-import { createRenderContext } from "../../pptx/app";
+import { createRenderContext as createApiRenderContext } from "../../pptx/app";
+import { createRenderContext as createBaseRenderContext } from "../../pptx/render/context";
 import {
   createThumbnailCache,
   getCachedThumbnail,
@@ -88,8 +89,8 @@ export function useSlideThumbnails(
       // Build render context with full theme/master/layout context if available
       // Layout shapes are now included in context and rendered by renderSlideSvg
       const ctx = apiSlide && zipFile
-        ? createRenderContext({ apiSlide, zip: zipFile, slideSize })
-        : createRenderContext({
+        ? createApiRenderContext(apiSlide, zipFile, slideSize).renderContext
+        : createBaseRenderContext({
             slideSize,
             colorContext,
             resources,

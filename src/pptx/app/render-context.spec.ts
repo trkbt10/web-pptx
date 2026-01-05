@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { createRenderContextFromApiSlide, createSlideRenderContextFromApiSlide } from "./render-context";
+import { createRenderContext } from "./render-context";
 import type { Slide as ApiSlide } from "./types";
 import type { XmlElement, XmlDocument } from "../../xml";
 import type { ResourceMap } from "../opc";
@@ -155,25 +155,27 @@ function createMockZip(): ZipFile {
 // Tests
 // =============================================================================
 
-describe("createSlideRenderContextFromApiSlide", () => {
+describe("createRenderContext", () => {
   it("should create SlideRenderContext from API slide", () => {
     const apiSlide = createMockApiSlide();
     const zip = createMockZip();
+    const slideSize = { width: px(960), height: px(540) };
 
-    const ctx = createSlideRenderContextFromApiSlide(apiSlide, zip);
+    const { slideRenderContext } = createRenderContext(apiSlide, zip, slideSize);
 
-    expect(ctx).toBeDefined();
-    expect(ctx.master).toBeDefined();
-    expect(ctx.presentation).toBeDefined();
-    expect(ctx.presentation.theme).toBeDefined();
+    expect(slideRenderContext).toBeDefined();
+    expect(slideRenderContext.master).toBeDefined();
+    expect(slideRenderContext.presentation).toBeDefined();
+    expect(slideRenderContext.presentation.theme).toBeDefined();
   });
 
   it("should parse theme color scheme correctly", () => {
     const apiSlide = createMockApiSlide();
     const zip = createMockZip();
+    const slideSize = { width: px(960), height: px(540) };
 
-    const ctx = createSlideRenderContextFromApiSlide(apiSlide, zip);
-    const colorScheme = ctx.presentation.theme.colorScheme;
+    const { slideRenderContext } = createRenderContext(apiSlide, zip, slideSize);
+    const colorScheme = slideRenderContext.presentation.theme.colorScheme;
 
     // Verify color scheme has expected colors
     expect(colorScheme.dk1).toBeDefined();
@@ -185,9 +187,10 @@ describe("createSlideRenderContextFromApiSlide", () => {
   it("should parse master color map correctly", () => {
     const apiSlide = createMockApiSlide();
     const zip = createMockZip();
+    const slideSize = { width: px(960), height: px(540) };
 
-    const ctx = createSlideRenderContextFromApiSlide(apiSlide, zip);
-    const colorMap = ctx.master.colorMap;
+    const { slideRenderContext } = createRenderContext(apiSlide, zip, slideSize);
+    const colorMap = slideRenderContext.master.colorMap;
 
     // Verify color map mappings
     expect(colorMap.tx1).toBe("dk1");
@@ -196,18 +199,18 @@ describe("createSlideRenderContextFromApiSlide", () => {
   });
 });
 
-describe("createRenderContextFromApiSlide", () => {
+describe("createRenderContext output", () => {
   it("should create HtmlRenderContext with color context", () => {
     const apiSlide = createMockApiSlide();
     const zip = createMockZip();
     const slideSize = { width: px(960), height: px(540) };
 
-    const ctx = createRenderContextFromApiSlide(apiSlide, zip, slideSize);
+    const { renderContext } = createRenderContext(apiSlide, zip, slideSize);
 
-    expect(ctx).toBeDefined();
-    expect(ctx.colorContext).toBeDefined();
-    expect(ctx.colorContext.colorScheme).toBeDefined();
-    expect(ctx.colorContext.colorMap).toBeDefined();
+    expect(renderContext).toBeDefined();
+    expect(renderContext.colorContext).toBeDefined();
+    expect(renderContext.colorContext.colorScheme).toBeDefined();
+    expect(renderContext.colorContext.colorMap).toBeDefined();
   });
 
   it("should be usable with renderSlideSvg for domain slide rendering", async () => {
@@ -215,7 +218,7 @@ describe("createRenderContextFromApiSlide", () => {
     const zip = createMockZip();
     const slideSize = { width: px(960), height: px(540) };
 
-    const ctx = createRenderContextFromApiSlide(apiSlide, zip, slideSize);
+    const { renderContext } = createRenderContext(apiSlide, zip, slideSize);
 
     // Import renderSlideSvg dynamically
     const { renderSlideSvg } = await import("../render/svg/renderer");
@@ -226,7 +229,7 @@ describe("createRenderContextFromApiSlide", () => {
     };
 
     // This should not throw
-    const result = renderSlideSvg(domainSlide, ctx);
+    const result = renderSlideSvg(domainSlide, renderContext);
 
     expect(result.svg).toBeDefined();
     expect(result.svg).toContain("<svg");
@@ -237,8 +240,8 @@ describe("createRenderContextFromApiSlide", () => {
     const zip = createMockZip();
     const slideSize = { width: px(960), height: px(540) };
 
-    const ctx = createRenderContextFromApiSlide(apiSlide, zip, slideSize);
-    const colorContext = ctx.colorContext;
+    const { renderContext } = createRenderContext(apiSlide, zip, slideSize);
+    const colorContext = renderContext.colorContext;
 
 
     // Create Color objects with spec structure
@@ -265,8 +268,8 @@ describe("createRenderContextFromApiSlide", () => {
     const zip = createMockZip();
     const slideSize = { width: px(960), height: px(540) };
 
-    const ctx = createRenderContextFromApiSlide(apiSlide, zip, slideSize);
-    const { colorScheme } = ctx.colorContext;
+    const { renderContext } = createRenderContext(apiSlide, zip, slideSize);
+    const { colorScheme } = renderContext.colorContext;
 
     // Theme colors should be populated
     expect(colorScheme.accent1).toBe("4472C4");
@@ -280,8 +283,8 @@ describe("createRenderContextFromApiSlide", () => {
     const zip = createMockZip();
     const slideSize = { width: px(960), height: px(540) };
 
-    const ctx = createRenderContextFromApiSlide(apiSlide, zip, slideSize);
-    const { colorMap } = ctx.colorContext;
+    const { renderContext } = createRenderContext(apiSlide, zip, slideSize);
+    const { colorMap } = renderContext.colorContext;
 
     // Color map should have proper mappings
     expect(colorMap.tx1).toBe("dk1");
@@ -294,11 +297,11 @@ describe("createRenderContextFromApiSlide", () => {
     const zip = createMockZip();
     const slideSize = { width: px(960), height: px(540) };
 
-    const ctx = createRenderContextFromApiSlide(apiSlide, zip, slideSize);
+    const { renderContext } = createRenderContext(apiSlide, zip, slideSize);
 
-    expect(ctx.fontScheme).toBeDefined();
-    expect(ctx.fontScheme?.majorFont.latin).toBe("Calibri Light");
-    expect(ctx.fontScheme?.minorFont.latin).toBe("Calibri");
+    expect(renderContext.fontScheme).toBeDefined();
+    expect(renderContext.fontScheme?.majorFont.latin).toBe("Calibri Light");
+    expect(renderContext.fontScheme?.minorFont.latin).toBe("Calibri");
   });
 
   it("should have resource resolver", () => {
@@ -306,9 +309,9 @@ describe("createRenderContextFromApiSlide", () => {
     const zip = createMockZip();
     const slideSize = { width: px(960), height: px(540) };
 
-    const ctx = createRenderContextFromApiSlide(apiSlide, zip, slideSize);
+    const { renderContext } = createRenderContext(apiSlide, zip, slideSize);
 
-    expect(ctx.resources).toBeDefined();
-    expect(typeof ctx.resources.resolve).toBe("function");
+    expect(renderContext.resources).toBeDefined();
+    expect(typeof renderContext.resources.resolve).toBe("function");
   });
 });

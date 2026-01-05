@@ -44,6 +44,24 @@ import { extractSvgContent } from "./svg-utils";
 // =============================================================================
 
 /**
+ * Get data-ooxml-id attribute for animation targeting.
+ * This attribute allows the animation player to find elements.
+ *
+ * @see src/pptx/render/react/hooks/useSlideAnimation.ts
+ */
+function getOoxmlIdAttr(shape: Shape): string {
+  // ContentPartShape doesn't have nonVisual
+  if (shape.type === "contentPart") {
+    return "";
+  }
+  const id = shape.nonVisual?.id;
+  if (id !== undefined) {
+    return ` data-ooxml-id="${id}"`;
+  }
+  return "";
+}
+
+/**
  * Render a single shape to SVG
  */
 export function renderShapeSvg(shape: Shape, ctx: RenderContext, defsCollector: SvgDefsCollector): string {
@@ -55,22 +73,23 @@ export function renderShapeSvg(shape: Shape, ctx: RenderContext, defsCollector: 
   const w = transform !== undefined ? (transform.width as number) : 0;
   const h = transform !== undefined ? (transform.height as number) : 0;
   const transformAttr = buildTransformAttr(transform, w, h);
+  const ooxmlIdAttr = getOoxmlIdAttr(shape);
 
   switch (shape.type) {
     case "sp":
-      return renderSpShapeSvg(shape, ctx, defsCollector, transformAttr, w, h);
+      return renderSpShapeSvg(shape, ctx, defsCollector, transformAttr, ooxmlIdAttr, w, h);
 
     case "pic":
-      return renderPictureSvg(shape, ctx, transformAttr, w, h);
+      return renderPictureSvg(shape, ctx, transformAttr, ooxmlIdAttr, w, h);
 
     case "grpSp":
-      return renderGroupSvg(shape, ctx, defsCollector);
+      return renderGroupSvg(shape, ctx, defsCollector, ooxmlIdAttr);
 
     case "cxnSp":
-      return renderConnectorSvg(shape, ctx, defsCollector, transformAttr, w, h);
+      return renderConnectorSvg(shape, ctx, defsCollector, transformAttr, ooxmlIdAttr, w, h);
 
     case "graphicFrame":
-      return renderGraphicFrameSvg(shape, ctx, defsCollector, transformAttr, w, h);
+      return renderGraphicFrameSvg(shape, ctx, defsCollector, transformAttr, ooxmlIdAttr, w, h);
 
     default:
       return "";
@@ -181,6 +200,7 @@ function renderSpShapeSvg(
   ctx: RenderContext,
   defsCollector: SvgDefsCollector,
   transformAttr: string,
+  ooxmlIdAttr: string,
   w: number,
   h: number,
 ): string {
@@ -196,7 +216,7 @@ function renderSpShapeSvg(
   // Render text if present
   const textSvg = renderShapeTextSvg(shape, ctx, w, h, defsCollector);
 
-  return `<g${transformAttr}>${shapePath}${textSvg}</g>`;
+  return `<g${transformAttr}${ooxmlIdAttr}>${shapePath}${textSvg}</g>`;
 }
 
 function renderShapeTextSvg(
@@ -289,7 +309,7 @@ function calculateCroppedImageLayout(
  *
  * @see ECMA-376 Part 1, Section 19.3.1.37 (p:pic)
  */
-function renderPictureSvg(shape: PicShape, ctx: RenderContext, transformAttr: string, w: number, h: number): string {
+function renderPictureSvg(shape: PicShape, ctx: RenderContext, transformAttr: string, ooxmlIdAttr: string, w: number, h: number): string {
   const imagePath = ctx.resources.resolve(shape.blipFill.resourceId);
   if (imagePath === undefined) {
     return "";
@@ -316,7 +336,7 @@ function renderPictureSvg(shape: PicShape, ctx: RenderContext, transformAttr: st
     const aspectRatio = shape.blipFill.stretch ? "none" : "xMidYMid meet";
 
     return (
-      `<g${transformAttr}>` +
+      `<g${transformAttr}${ooxmlIdAttr}>` +
       `<defs><clipPath id="${clipId}"><rect x="0" y="0" width="${w}" height="${h}"/></clipPath></defs>` +
       `<g clip-path="url(#${clipId})">` +
       `<image href="${imagePath}" x="${layout.x}" y="${layout.y}" ` +
@@ -329,7 +349,7 @@ function renderPictureSvg(shape: PicShape, ctx: RenderContext, transformAttr: st
   // ECMA-376 Part 1, Section 20.1.8.56 (a:stretch):
   // When stretch is specified, use preserveAspectRatio="none" to fill container
   const aspectRatio = shape.blipFill.stretch ? "none" : "xMidYMid meet";
-  return `<g${transformAttr}><image href="${imagePath}" width="${w}" height="${h}" preserveAspectRatio="${aspectRatio}"/></g>`;
+  return `<g${transformAttr}${ooxmlIdAttr}><image href="${imagePath}" width="${w}" height="${h}" preserveAspectRatio="${aspectRatio}"/></g>`;
 }
 
 // =============================================================================
@@ -356,6 +376,7 @@ function renderGroupSvg(
   shape: GrpShape,
   ctx: RenderContext,
   defsCollector: SvgDefsCollector,
+  ooxmlIdAttr: string,
 ): string {
   // Use group-specific transform that handles childOffset/childExtent scaling
   const transformAttr = buildGroupTransformAttr(shape.properties.transform);
@@ -365,7 +386,7 @@ function renderGroupSvg(
     .filter((svg) => svg !== "")
     .join("\n");
 
-  return `<g${transformAttr}>${childrenSvg}</g>`;
+  return `<g${transformAttr}${ooxmlIdAttr}>${childrenSvg}</g>`;
 }
 
 // =============================================================================
@@ -409,6 +430,7 @@ function renderConnectorSvg(
   ctx: RenderContext,
   defsCollector: SvgDefsCollector,
   transformAttr: string,
+  ooxmlIdAttr: string,
   w: number,
   h: number,
 ): string {
@@ -470,7 +492,7 @@ function renderConnectorSvg(
   // from (0,0) to (w,h), not as horizontal/vertical line through center.
   const pathData = getConnectorPathData(properties.geometry, w, h);
 
-  return `<g${transformAttr}><path d="${pathData}" fill="none" ${strokeAttr}${markerAttr}/></g>`;
+  return `<g${transformAttr}${ooxmlIdAttr}><path d="${pathData}" fill="none" ${strokeAttr}${markerAttr}/></g>`;
 }
 
 // =============================================================================
@@ -485,6 +507,7 @@ function renderGraphicFrameSvg(
   ctx: RenderContext,
   defsCollector: SvgDefsCollector,
   transformAttr: string,
+  ooxmlIdAttr: string,
   w: number,
   h: number,
 ): string {
@@ -495,9 +518,9 @@ function renderGraphicFrameSvg(
       // Try to render the chart using pre-parsed data if available
       const chartSvg = renderChartFromRef(content.data, w, h, ctx);
       if (chartSvg !== undefined) {
-        return `<g${transformAttr}>${chartSvg}</g>`;
+        return `<g${transformAttr}${ooxmlIdAttr}>${chartSvg}</g>`;
       }
-      return renderPlaceholder(transformAttr, w, h, "Chart");
+      return renderPlaceholder(transformAttr, ooxmlIdAttr, w, h, "Chart");
     }
 
     case "table": {
@@ -505,39 +528,39 @@ function renderGraphicFrameSvg(
       // Render at origin, transformAttr handles positioning (like chart)
       // Pass frame dimensions for scaling options (width/height only, not full Transform)
       const { table } = content.data;
-      return `<g${transformAttr}>${renderTableSvg(table, px(w), px(h), ctx)}</g>`;
+      return `<g${transformAttr}${ooxmlIdAttr}>${renderTableSvg(table, px(w), px(h), ctx)}</g>`;
     }
 
     case "diagram": {
       // Try to render diagram shapes from pre-parsed data
       const diagramSvg = renderDiagramShapesSvg(content.data, w, h, ctx);
       if (diagramSvg !== undefined) {
-        return `<g${transformAttr}>${diagramSvg}</g>`;
+        return `<g${transformAttr}${ooxmlIdAttr}>${diagramSvg}</g>`;
       }
       // Fallback to placeholder if diagram content not available
       ctx.warnings.add({
         type: "fallback",
         message: "Diagram drawing content not available",
       });
-      return renderPlaceholder(transformAttr, w, h, "Diagram");
+      return renderPlaceholder(transformAttr, ooxmlIdAttr, w, h, "Diagram");
     }
 
     case "oleObject": {
       const oleImage = renderOleObjectImage(content.data, w, h, ctx);
       if (oleImage !== undefined) {
-        return `<g${transformAttr}>${oleImage}</g>`;
+        return `<g${transformAttr}${ooxmlIdAttr}>${oleImage}</g>`;
       }
       // Fallback to placeholder if no preview image available
       ctx.warnings.add({
         type: "fallback",
         message: `OLE object preview not available: ${content.data.progId ?? "unknown"}`,
       });
-      return renderPlaceholder(transformAttr, w, h, "OLE Object");
+      return renderPlaceholder(transformAttr, ooxmlIdAttr, w, h, "OLE Object");
     }
 
     case "unknown":
     default: {
-      return renderPlaceholder(transformAttr, w, h, "Unknown");
+      return renderPlaceholder(transformAttr, ooxmlIdAttr, w, h, "Unknown");
     }
   }
 }
@@ -545,8 +568,8 @@ function renderGraphicFrameSvg(
 /**
  * Render a placeholder for unsupported content
  */
-function renderPlaceholder(transformAttr: string, w: number, h: number, label: string): string {
-  return `<g${transformAttr}>
+function renderPlaceholder(transformAttr: string, ooxmlIdAttr: string, w: number, h: number, label: string): string {
+  return `<g${transformAttr}${ooxmlIdAttr}>
   <rect x="0" y="0" width="${w}" height="${h}" fill="#f0f0f0" stroke="#cccccc"/>
   <text x="${w / 2}" y="${h / 2}" text-anchor="middle" dominant-baseline="middle" fill="#999999">[${label}]</text>
 </g>`;

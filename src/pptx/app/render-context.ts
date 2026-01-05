@@ -12,7 +12,6 @@ import { createPlaceholderTable, createColorMap } from "../parser/slide/resource
 import { parseTheme, parseMasterTextStyles } from "../parser/drawing-ml";
 import { DEFAULT_RENDER_OPTIONS, type RenderOptions } from "../render/render-options";
 import { createRenderContextFromSlideContext } from "../render/core/context";
-import { createRenderContext as createBaseRenderContext, type RenderContextConfig } from "../render/context";
 import { getBackgroundFillData } from "../render/core/drawing-ml";
 import { parseShapeTree } from "../parser/shape-parser";
 import type { XmlElement, XmlDocument } from "../../xml";
@@ -30,60 +29,6 @@ import type { ResolvedBackgroundFill, RenderContext } from "../render/context";
  * This replicates the logic in slide-builder.ts's buildSlideRenderContext,
  * but works with API Slide (which has the same structure as SlideData).
  */
-export function createSlideRenderContextFromApiSlide(
-  apiSlide: ApiSlide,
-  zip: ZipFile,
-  defaultTextStyle: XmlElement | null = null,
-  renderOptions?: RenderOptions,
-): SlideRenderContext {
-  // Extract color map from master
-  const masterClrMap = getByPath(apiSlide.master, ["p:sldMaster", "p:clrMap"]);
-
-  // Extract color map override from slide (if present)
-  const slideClrMapOvr = getByPath(apiSlide.content, ["p:sld", "p:clrMapOvr", "a:overrideClrMapping"]);
-
-  // Get slide content element
-  const slideContent = getByPath(apiSlide.content, ["p:sld"]);
-
-  const slide = {
-    content: slideContent as XmlElement,
-    resources: apiSlide.relationships,
-    colorMapOverride: slideClrMapOvr !== undefined ? createColorMap(slideClrMapOvr) : undefined,
-  };
-
-  // Get layout content element for background lookup
-  const layoutContent = getByPath(apiSlide.layout, ["p:sldLayout"]);
-
-  // Get master content element for background lookup
-  const masterContent = getByPath(apiSlide.master, ["p:sldMaster"]);
-
-  const layout = {
-    placeholders: createPlaceholderTable(apiSlide.layoutTables),
-    resources: apiSlide.layoutRelationships,
-    content: layoutContent as XmlElement | undefined,
-  };
-
-  const master = {
-    textStyles: parseMasterTextStyles(apiSlide.masterTextStyles as XmlElement | undefined),
-    placeholders: createPlaceholderTable(apiSlide.masterTables),
-    colorMap: createColorMap(masterClrMap),
-    resources: apiSlide.masterRelationships,
-    content: masterContent as XmlElement | undefined,
-  };
-
-  const theme = parseTheme(apiSlide.theme as XmlDocument, undefined);
-
-  const presentation = {
-    theme,
-    defaultTextStyle,
-    zip,
-    renderOptions: renderOptions ?? DEFAULT_RENDER_OPTIONS,
-    themeResources: apiSlide.themeRelationships,
-  };
-
-  return createSlideRenderContext(slide, layout, master, presentation);
-}
-
 // =============================================================================
 // Background Resolution
 // =============================================================================
@@ -152,20 +97,67 @@ function toResolvedBackgroundFill(
  * - Resolved background (from slide → layout → master hierarchy)
  * - Layout shapes (non-placeholder shapes from layout)
  */
-export function createRenderContextFromApiSlide(
+export type ApiSlideRenderContext = {
+  readonly renderContext: RenderContext;
+  readonly slideRenderContext: SlideRenderContext;
+};
+
+export function createRenderContext(
   apiSlide: ApiSlide,
   zip: ZipFile,
   slideSize: SlideSize,
   defaultTextStyle: XmlElement | null = null,
-  renderOptions?: RenderOptions,
-): RenderContext {
+  renderOptions?: RenderOptions
+): ApiSlideRenderContext {
   // Build SlideRenderContext
-  const slideRenderCtx = createSlideRenderContextFromApiSlide(
-    apiSlide,
-    zip,
-    defaultTextStyle,
-    renderOptions
-  );
+  const slideRenderCtx = (() => {
+    // Extract color map from master
+    const masterClrMap = getByPath(apiSlide.master, ["p:sldMaster", "p:clrMap"]);
+
+    // Extract color map override from slide (if present)
+    const slideClrMapOvr = getByPath(apiSlide.content, ["p:sld", "p:clrMapOvr", "a:overrideClrMapping"]);
+
+    // Get slide content element
+    const slideContent = getByPath(apiSlide.content, ["p:sld"]);
+
+    const slide = {
+      content: slideContent as XmlElement,
+      resources: apiSlide.relationships,
+      colorMapOverride: slideClrMapOvr !== undefined ? createColorMap(slideClrMapOvr) : undefined,
+    };
+
+    // Get layout content element for background lookup
+    const layoutContent = getByPath(apiSlide.layout, ["p:sldLayout"]);
+
+    // Get master content element for background lookup
+    const masterContent = getByPath(apiSlide.master, ["p:sldMaster"]);
+
+    const layout = {
+      placeholders: createPlaceholderTable(apiSlide.layoutTables),
+      resources: apiSlide.layoutRelationships,
+      content: layoutContent as XmlElement | undefined,
+    };
+
+    const master = {
+      textStyles: parseMasterTextStyles(apiSlide.masterTextStyles as XmlElement | undefined),
+      placeholders: createPlaceholderTable(apiSlide.masterTables),
+      colorMap: createColorMap(masterClrMap),
+      resources: apiSlide.masterRelationships,
+      content: masterContent as XmlElement | undefined,
+    };
+
+    const theme = parseTheme(apiSlide.theme as XmlDocument, undefined);
+
+    const presentation = {
+      theme,
+      defaultTextStyle,
+      zip,
+      renderOptions: renderOptions ?? DEFAULT_RENDER_OPTIONS,
+      themeResources: apiSlide.themeRelationships,
+    };
+
+    return createSlideRenderContext(slide, layout, master, presentation);
+  })();
 
   // Resolve background from hierarchy
   const bgFillData = getBackgroundFillData(slideRenderCtx);
@@ -175,40 +167,15 @@ export function createRenderContextFromApiSlide(
   const layoutShapes = getLayoutNonPlaceholderShapes(apiSlide);
 
   // Create RenderContext with all resolved data
-  return createRenderContextFromSlideContext(slideRenderCtx, slideSize, {
+  const renderContext = createRenderContextFromSlideContext(slideRenderCtx, slideSize, {
     resolvedBackground,
     layoutShapes,
   });
-}
 
-// =============================================================================
-// Unified Render Context Factory
-// =============================================================================
-
-export type ApiSlideRenderContextOptions = {
-  readonly apiSlide: ApiSlide;
-  readonly zip: ZipFile;
-  readonly slideSize: SlideSize;
-  readonly defaultTextStyle?: XmlElement | null;
-  readonly renderOptions?: RenderOptions;
-};
-
-export function createRenderContext(options: RenderContextConfig): RenderContext;
-export function createRenderContext(options: ApiSlideRenderContextOptions): RenderContext;
-export function createRenderContext(
-  options: RenderContextConfig | ApiSlideRenderContextOptions
-): RenderContext {
-  if ("apiSlide" in options) {
-    return createRenderContextFromApiSlide(
-      options.apiSlide,
-      options.zip,
-      options.slideSize,
-      options.defaultTextStyle ?? null,
-      options.renderOptions
-    );
-  }
-
-  return createBaseRenderContext(options);
+  return {
+    renderContext,
+    slideRenderContext: slideRenderCtx,
+  };
 }
 
 // =============================================================================

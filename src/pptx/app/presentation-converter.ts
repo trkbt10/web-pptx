@@ -16,7 +16,7 @@ import { parseSlide } from "../parser/slide/slide-parser";
 import { createParseContext } from "../parser/context";
 import { parseColorScheme, parseFontScheme, parseColorMap } from "../parser/drawing-ml";
 import { getByPath } from "../../xml";
-import { createSlideRenderContextFromApiSlide } from "./render-context";
+import { createRenderContext } from "./render-context";
 import { getMimeTypeFromPath } from "../opc";
 import { createZipAdapter } from "../domain";
 
@@ -202,10 +202,10 @@ export function convertToPresentationDocument(loaded: LoadedPresentation): Prese
     const apiSlide = presentation.getSlide(i);
 
     // Build SlideRenderContext for proper parsing with style inheritance
-    const slideRenderCtx = createSlideRenderContextFromApiSlide(apiSlide, zipFile);
+    const { slideRenderContext } = createRenderContext(apiSlide, zipFile, slideSize);
 
     // Create ParseContext with placeholder tables, master styles, format scheme
-    const parseCtx = createParseContext(slideRenderCtx);
+    const parseCtx = createParseContext(slideRenderContext);
 
     // Parse the XML content with full context
     const domainSlide = parseSlide(apiSlide.content, parseCtx);
