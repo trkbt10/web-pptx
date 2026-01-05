@@ -5,7 +5,8 @@
  * from PPTX files for the editor.
  */
 
-import { describe, it, expect, beforeAll } from "bun:test";
+import { describe, it, expect, beforeAll } from "vitest";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import JSZip from "jszip";
@@ -30,14 +31,14 @@ function extractColorScheme(apiSlide: { theme?: unknown }): ColorScheme {
   if (!apiSlide.theme) {
     return {};
   }
-  return parseColorScheme(apiSlide.theme);
+  return parseColorScheme(apiSlide.theme as import("../../src/xml").XmlDocument);
 }
 
 function extractColorMap(apiSlide: { master?: unknown }): ColorMap {
   if (!apiSlide.master) {
     return {};
   }
-  const clrMapElement = getByPath(apiSlide.master, ["p:sldMaster", "p:clrMap"]);
+  const clrMapElement = getByPath(apiSlide.master as import("../../src/xml").XmlElement, ["p:sldMaster", "p:clrMap"]);
   return parseColorMap(clrMapElement);
 }
 
@@ -52,7 +53,7 @@ function extractFontScheme(apiSlide: { theme?: unknown }): FontScheme | undefine
   if (!apiSlide.theme) {
     return undefined;
   }
-  return parseFontScheme(apiSlide.theme);
+  return parseFontScheme(apiSlide.theme as import("../../src/xml").XmlDocument);
 }
 
 // =============================================================================
@@ -68,7 +69,7 @@ describe("convertToPresentationDocument", () => {
     beforeAll(async () => {
       // Load a PPTX with theme colors
       const fixturePath = path.join(FIXTURE_DIR, "decompressed-pptx/Sample_demo1.pptx");
-      const buffer = await Bun.file(fixturePath).arrayBuffer();
+      const buffer = fs.readFileSync(fixturePath);
 
       // Load using JSZip
       const jszip = await JSZip.loadAsync(buffer);
@@ -155,7 +156,7 @@ describe("convertToPresentationDocument", () => {
     it("extracts image relationships correctly", async () => {
       // Find a PPTX with images
       const fixturePath = path.join(FIXTURE_DIR, "decompressed-pptx/Sample_demo1.pptx");
-      const buffer = await Bun.file(fixturePath).arrayBuffer();
+      const buffer = fs.readFileSync(fixturePath);
       const jszip = await JSZip.loadAsync(buffer);
 
       // Check for media files

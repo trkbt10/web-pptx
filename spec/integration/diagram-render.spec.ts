@@ -193,7 +193,7 @@ describe("Diagram rendering - other PPTX files", () => {
     const presentation = openPresentation(presentationFile);
 
     // Should render all slides without throwing errors
-    const slideCount = presentation.slideCount;
+    const slideCount = presentation.count;
     for (let i = 1; i <= slideCount; i++) {
       const slide = presentation.getSlide(i);
       const svg = slide.renderSVG();

@@ -67,7 +67,7 @@ describe("2411-Performance_Up.pptx slide 1", () => {
       return;
     }
     expect(svg.length).toBeGreaterThan(0);
-    expect(svg).toStartWith("<svg");
+    expect(svg).toMatch(/^<svg/);
   });
 
   describe("background image", () => {
@@ -203,7 +203,7 @@ describe("2411-Performance_Up.pptx - multiple slides", () => {
       const slide = presentation.getSlide(info.number);
       const svg = slide.renderSVG();
       expect(svg.length).toBeGreaterThan(0);
-      expect(svg).toStartWith("<svg");
+      expect(svg).toMatch(/^<svg/);
     }
   });
 
@@ -225,7 +225,7 @@ describe("2411-Performance_Up.pptx - multiple slides", () => {
       const slide = presentation.getSlide(info.number);
       const svg = slide.renderSVG();
       expect(svg.length).toBeGreaterThan(0);
-      expect(svg).toStartWith("<svg");
+      expect(svg).toMatch(/^<svg/);
     }
   });
 });

@@ -12,7 +12,7 @@ import * as path from "node:path";
 import JSZip from "jszip";
 import type { PresentationFile, Presentation } from "../../src/pptx";
 import { openPresentation } from "../../src/pptx";
-import { getByPath, getChild, getChildren, isXmlElement, getAttr } from "../../src/xml";
+import { getByPath, getChild, getChildren, isXmlElement, getAttr, type XmlElement } from "../../src/xml";
 
 const FIXTURE_PATH = "fixtures/poi-test-data/test-data/slideshow/shapes.pptx";
 
