@@ -4,12 +4,13 @@
  * Edits SlideTransition: type, duration, advanceOnClick, advanceAfter.
  */
 
-import type { CSSProperties } from "react";
+import { useCallback, type CSSProperties } from "react";
 import type { SlideTransition, TransitionType } from "../../../pptx/domain/transition";
 import type { EditorProps } from "../../types";
-import type { SelectOption } from "../../types";
 import { FieldGroup, FieldRow } from "../../ui/layout";
-import { Select, Toggle, Input } from "../../ui/primitives";
+import { Toggle, Input, SearchableSelect } from "../../ui/primitives";
+import type { SearchableSelectOption, SearchableSelectItemProps } from "../../ui/primitives/SearchableSelect";
+import { TransitionPreview } from "../../ui/transition-preview";
 
 export type TransitionEditorProps = EditorProps<SlideTransition | undefined> & {
   readonly style?: CSSProperties;
@@ -33,34 +34,104 @@ const infoStyle: CSSProperties = {
   color: "var(--text-tertiary, #737373)",
 };
 
+const transitionItemStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+};
+
+const transitionLabelStyle: CSSProperties = {
+  flex: 1,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+
 // =============================================================================
 // Constants
 // =============================================================================
 
-const TRANSITION_TYPE_OPTIONS: readonly SelectOption[] = [
-  { value: "none", label: "None" },
-  { value: "fade", label: "Fade" },
-  { value: "dissolve", label: "Dissolve" },
-  { value: "wipe", label: "Wipe" },
-  { value: "push", label: "Push" },
-  { value: "pull", label: "Pull" },
-  { value: "cover", label: "Cover" },
-  { value: "cut", label: "Cut" },
-  { value: "blinds", label: "Blinds" },
-  { value: "checker", label: "Checker" },
-  { value: "circle", label: "Circle" },
-  { value: "comb", label: "Comb" },
-  { value: "diamond", label: "Diamond" },
-  { value: "newsflash", label: "Newsflash" },
-  { value: "plus", label: "Plus" },
-  { value: "random", label: "Random" },
-  { value: "randomBar", label: "Random Bar" },
-  { value: "split", label: "Split" },
-  { value: "strips", label: "Strips" },
-  { value: "wedge", label: "Wedge" },
-  { value: "wheel", label: "Wheel" },
-  { value: "zoom", label: "Zoom" },
-];
+/**
+ * Transition types organized by category
+ */
+const TRANSITION_CATEGORIES = {
+  "Basic": [
+    { value: "none", label: "None" },
+    { value: "cut", label: "Cut" },
+    { value: "fade", label: "Fade" },
+    { value: "dissolve", label: "Dissolve" },
+  ],
+  "Subtle": [
+    { value: "wipe", label: "Wipe" },
+    { value: "push", label: "Push" },
+    { value: "pull", label: "Pull" },
+    { value: "cover", label: "Cover" },
+    { value: "split", label: "Split" },
+  ],
+  "Exciting": [
+    { value: "blinds", label: "Blinds" },
+    { value: "checker", label: "Checker" },
+    { value: "comb", label: "Comb" },
+    { value: "strips", label: "Strips" },
+    { value: "randomBar", label: "Random Bar" },
+  ],
+  "Dynamic": [
+    { value: "circle", label: "Circle" },
+    { value: "diamond", label: "Diamond" },
+    { value: "plus", label: "Plus" },
+    { value: "wedge", label: "Wedge" },
+    { value: "wheel", label: "Wheel" },
+    { value: "zoom", label: "Zoom" },
+    { value: "newsflash", label: "Newsflash" },
+  ],
+  "Random": [
+    { value: "random", label: "Random" },
+  ],
+} as const;
+
+/**
+ * Build searchable select options from categories
+ */
+function buildTransitionOptions(): SearchableSelectOption<string>[] {
+  return Object.entries(TRANSITION_CATEGORIES).flatMap(([category, transitions]) =>
+    transitions.map((t) => ({
+      value: t.value,
+      label: t.label,
+      group: category,
+      keywords: [t.value],
+    }))
+  );
+}
+
+const transitionOptions = buildTransitionOptions();
+
+// =============================================================================
+// Render Functions
+// =============================================================================
+
+/**
+ * Render a transition item with preview
+ */
+function renderTransitionItem({ option }: SearchableSelectItemProps<string>) {
+  return (
+    <div style={transitionItemStyle}>
+      <TransitionPreview type={option.value as TransitionType} size={20} />
+      <span style={transitionLabelStyle}>{option.label}</span>
+    </div>
+  );
+}
+
+/**
+ * Render the selected transition value with preview
+ */
+function renderTransitionValue(option: SearchableSelectOption<string>) {
+  return (
+    <div style={transitionItemStyle}>
+      <TransitionPreview type={option.value as TransitionType} size={16} />
+      <span style={transitionLabelStyle}>{option.label}</span>
+    </div>
+  );
+}
 
 // =============================================================================
 // Main Component
@@ -70,7 +141,7 @@ const TRANSITION_TYPE_OPTIONS: readonly SelectOption[] = [
  * Editor for SlideTransition type.
  *
  * Features:
- * - Select transition type
+ * - Select transition type with animated preview
  * - Edit duration (ms)
  * - Toggle advanceOnClick
  * - Edit advanceAfter (ms)
@@ -86,36 +157,54 @@ export function TransitionEditor({
   // Handle undefined value
   const transition = value ?? createDefaultTransition();
 
-  const handleTypeChange = (type: string) => {
-    if (type === "none" || type === "") {
-      onChange(undefined);
-    } else {
-      onChange({ ...transition, type: type as TransitionType });
-    }
-  };
+  const handleTypeChange = useCallback(
+    (type: string) => {
+      if (type === "none" || type === "") {
+        onChange(undefined);
+      } else {
+        onChange({ ...transition, type: type as TransitionType });
+      }
+    },
+    [transition, onChange]
+  );
 
-  const handleDurationChange = (duration: string | number) => {
-    const numValue = typeof duration === "number" ? duration : parseInt(duration, 10);
-    onChange({ ...transition, duration: isNaN(numValue) ? undefined : numValue });
-  };
+  const handleDurationChange = useCallback(
+    (duration: string | number) => {
+      const numValue = typeof duration === "number" ? duration : parseInt(duration, 10);
+      onChange({ ...transition, duration: isNaN(numValue) ? undefined : numValue });
+    },
+    [transition, onChange]
+  );
 
-  const handleAdvanceOnClickChange = (advanceOnClick: boolean) => {
-    onChange({ ...transition, advanceOnClick });
-  };
+  const handleAdvanceOnClickChange = useCallback(
+    (advanceOnClick: boolean) => {
+      onChange({ ...transition, advanceOnClick });
+    },
+    [transition, onChange]
+  );
 
-  const handleAdvanceAfterChange = (advanceAfter: string | number) => {
-    const numValue = typeof advanceAfter === "number" ? advanceAfter : parseInt(advanceAfter, 10);
-    onChange({ ...transition, advanceAfter: isNaN(numValue) || numValue <= 0 ? undefined : numValue });
-  };
+  const handleAdvanceAfterChange = useCallback(
+    (advanceAfter: string | number) => {
+      const numValue = typeof advanceAfter === "number" ? advanceAfter : parseInt(advanceAfter, 10);
+      const resolvedValue = isNaN(numValue) || numValue <= 0 ? undefined : numValue;
+      onChange({ ...transition, advanceAfter: resolvedValue });
+    },
+    [transition, onChange]
+  );
 
   return (
     <div style={{ ...containerStyle, ...style }} className={className}>
       <FieldGroup label="Transition Type">
-        <Select
+        <SearchableSelect
           value={transition.type}
           onChange={handleTypeChange}
-          options={TRANSITION_TYPE_OPTIONS}
+          options={transitionOptions}
+          renderItem={renderTransitionItem}
+          renderValue={renderTransitionValue}
+          searchPlaceholder="Search transitions..."
           disabled={disabled}
+          dropdownWidth={240}
+          maxHeight={320}
         />
       </FieldGroup>
 

@@ -31,3 +31,18 @@ export {
   createDefaultTextBody,
   type TextBodyEditorProps,
 } from "./TextBodyEditor";
+
+export {
+  MixedTextBodyEditor,
+  type MixedTextBodyEditorProps,
+} from "./MixedTextBodyEditor";
+
+export {
+  MixedRunPropertiesEditor,
+  type MixedRunPropertiesEditorProps,
+} from "./MixedRunPropertiesEditor";
+
+export {
+  MixedParagraphPropertiesEditor,
+  type MixedParagraphPropertiesEditorProps,
+} from "./MixedParagraphPropertiesEditor";

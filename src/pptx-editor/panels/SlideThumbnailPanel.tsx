@@ -67,18 +67,17 @@ export function SlideThumbnailPanel({
   );
 
   // Handle add slide
+  // Gap index N = insert at position N (0 = before first slide)
   const handleAddSlide = useCallback(
-    (afterIndex: number) => {
+    (atIndex: number) => {
       const newSlide: Slide = { shapes: [] };
-      const afterSlideId =
-        afterIndex > 0 ? document.slides[afterIndex - 1]?.id : undefined;
       dispatch({
         type: "ADD_SLIDE",
         slide: newSlide,
-        afterSlideId,
+        atIndex,
       });
     },
-    [dispatch, document.slides]
+    [dispatch]
   );
 
   // Handle delete slides

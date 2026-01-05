@@ -4,8 +4,9 @@
  * Manages state for editing text within shapes.
  */
 
-import type { TextBody } from "../../../pptx/domain";
+import type { TextBody, RunProperties } from "../../../pptx/domain";
 import type { ShapeId, Pixels } from "../../../pptx/domain/types";
+import type { CursorPosition, TextSelection } from "./cursor";
 
 // =============================================================================
 // Types
@@ -20,6 +21,27 @@ export type TextEditBounds = {
   readonly width: Pixels;
   readonly height: Pixels;
   readonly rotation: number; // degrees
+};
+
+/**
+ * Sticky formatting state.
+ * Tracks formatting to apply to newly typed text.
+ */
+export type StickyFormattingState = {
+  /** Run properties to apply to new text */
+  readonly runProperties: RunProperties;
+  /** Whether sticky formatting is active */
+  readonly active: boolean;
+};
+
+/**
+ * Text cursor/selection state for property panel integration.
+ */
+export type TextCursorState = {
+  /** Current cursor position */
+  readonly cursorPosition: CursorPosition;
+  /** Current text selection (if any) */
+  readonly selection: TextSelection | undefined;
 };
 
 /**
@@ -91,4 +113,63 @@ export function isTextEditActive(
   state: TextEditState
 ): state is ActiveTextEditState {
   return state.type === "active";
+}
+
+// =============================================================================
+// Sticky Formatting Helpers
+// =============================================================================
+
+/**
+ * Create initial sticky formatting state (inactive)
+ */
+export function createInitialStickyFormatting(): StickyFormattingState {
+  return {
+    runProperties: {},
+    active: false,
+  };
+}
+
+/**
+ * Create active sticky formatting state
+ */
+export function createActiveStickyFormatting(
+  runProperties: RunProperties
+): StickyFormattingState {
+  return {
+    runProperties,
+    active: true,
+  };
+}
+
+/**
+ * Create inactive sticky formatting that preserves properties
+ * (used when cursor moves but properties are remembered)
+ */
+export function deactivateStickyFormatting(
+  state: StickyFormattingState
+): StickyFormattingState {
+  return {
+    ...state,
+    active: false,
+  };
+}
+
+/**
+ * Create initial cursor state
+ */
+export function createInitialCursorState(): TextCursorState {
+  return {
+    cursorPosition: { paragraphIndex: 0, charOffset: 0 },
+    selection: undefined,
+  };
+}
+
+/**
+ * Update cursor state with new position
+ */
+export function updateCursorState(
+  cursorPosition: CursorPosition,
+  selection: TextSelection | undefined
+): TextCursorState {
+  return { cursorPosition, selection };
 }

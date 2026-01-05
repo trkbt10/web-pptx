@@ -230,7 +230,7 @@ export function SlideList({
 
         return (
           <div key={slideWithId.id}>
-            {/* Gap before slide (index 0 = before first slide) */}
+            {/* Gap before slide - uses zero height with overflow for interactivity */}
             {isEditable && (
               <SlideListGap
                 index={index}

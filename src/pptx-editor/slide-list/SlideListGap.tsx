@@ -7,7 +7,7 @@
  */
 
 import type { SlideListGapProps } from "./types";
-import { getGapStyle, getAddButtonStyle, getGapDropIndicatorStyle } from "./styles";
+import { getGapStyle, getAddButtonStyle, getGapDropIndicatorStyle, getGapHoverZoneStyle } from "./styles";
 
 /**
  * Gap component with add button and drop indicator
@@ -25,9 +25,7 @@ export function SlideListGap({
 }: SlideListGapProps) {
   return (
     <div
-      style={getGapStyle(orientation, isDragTarget)}
-      onPointerEnter={onPointerEnter}
-      onPointerLeave={onPointerLeave}
+      style={getGapStyle(orientation)}
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
@@ -36,17 +34,23 @@ export function SlideListGap({
         <div style={getGapDropIndicatorStyle(orientation)} />
       )}
 
-      {/* Add button (only when not dragging) */}
+      {/* Hover zone with button inside - button is child so hovering it doesn't leave zone */}
       {!isDragTarget && (
-        <button
-          type="button"
-          style={getAddButtonStyle(isHovered)}
-          onClick={onClick}
-          aria-label={`Add slide at position ${index + 1}`}
-          tabIndex={isHovered ? 0 : -1}
+        <div
+          style={getGapHoverZoneStyle(orientation)}
+          onPointerEnter={onPointerEnter}
+          onPointerLeave={onPointerLeave}
         >
-          +
-        </button>
+          <button
+            type="button"
+            style={getAddButtonStyle(isHovered, orientation)}
+            onClick={onClick}
+            aria-label={`Add slide at position ${index + 1}`}
+            tabIndex={isHovered ? 0 : -1}
+          >
+            +
+          </button>
+        </div>
       )}
     </div>
   );

@@ -33,9 +33,17 @@ export function useCanvasViewport(): {
       return;
     }
 
-    setViewport({
-      width: container.clientWidth,
-      height: container.clientHeight,
+    const nextWidth = container.clientWidth;
+    const nextHeight = container.clientHeight;
+
+    setViewport((prev) => {
+      if (prev.width === nextWidth && prev.height === nextHeight) {
+        return prev;
+      }
+      return {
+        width: nextWidth,
+        height: nextHeight,
+      };
     });
   }, []);
 

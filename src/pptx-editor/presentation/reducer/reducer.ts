@@ -15,6 +15,8 @@ import {
   createHistory,
   createEmptySelection,
   createIdleDragState,
+  createIdlePathDrawState,
+  createInactivePathEditState,
 } from "../../state";
 import { createInactiveTextEditState } from "../../slide/text-edit";
 
@@ -27,6 +29,8 @@ import { HISTORY_HANDLERS } from "./history-handlers";
 import { CLIPBOARD_HANDLERS } from "./clipboard-handlers";
 import { CREATION_HANDLERS } from "./creation-handlers";
 import { TEXT_EDIT_HANDLERS } from "./text-edit-handlers";
+import { PATH_DRAW_HANDLERS } from "./path-draw-handlers";
+import { PATH_EDIT_HANDLERS } from "./path-edit-handlers";
 
 /**
  * Combined handler map from all domains
@@ -40,6 +44,8 @@ const ALL_HANDLERS: HandlerMap = {
   ...CLIPBOARD_HANDLERS,
   ...CREATION_HANDLERS,
   ...TEXT_EDIT_HANDLERS,
+  ...PATH_DRAW_HANDLERS,
+  ...PATH_EDIT_HANDLERS,
 };
 
 /**
@@ -57,6 +63,8 @@ export function createPresentationEditorState(
     clipboard: undefined,
     creationMode: createSelectMode(),
     textEdit: createInactiveTextEditState(),
+    pathDraw: createIdlePathDrawState(),
+    pathEdit: createInactivePathEditState(),
   };
 }
 

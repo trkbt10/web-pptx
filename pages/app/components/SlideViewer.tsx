@@ -289,6 +289,10 @@ const kbdStyle: CSSProperties = {
 const thumbnailPreviewStyle: CSSProperties = {
   width: "100%",
   height: "100%",
+  display: "block",
+  lineHeight: 0,
+  // Ensure inline SVG scales to fill container
+  overflow: "hidden",
 };
 
 // =============================================================================
@@ -400,9 +404,13 @@ export function SlideViewer({
     (slideWithId: SlideWithId) => {
       const svg = thumbnailSvgs.get(slideWithId.id);
       if (!svg) return null;
+      // Wrap in div with CSS that makes SVG scale to fill container
+      // SVG elements from PPTX rendering have explicit dimensions, so we need
+      // to force them to scale using width/height: 100%
       return (
         <div
           style={thumbnailPreviewStyle}
+          className="slide-list-thumbnail-svg"
           dangerouslySetInnerHTML={{ __html: svg }}
         />
       );
@@ -431,6 +439,14 @@ export function SlideViewer({
 
   return (
     <div style={containerStyle}>
+      {/* CSS for SVG scaling in thumbnails */}
+      <style>{`
+        .slide-list-thumbnail-svg > svg {
+          width: 100% !important;
+          height: 100% !important;
+          display: block;
+        }
+      `}</style>
       {/* Header */}
       <header style={headerStyle}>
         <div style={headerLeftStyle}>

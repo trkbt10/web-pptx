@@ -7,7 +7,9 @@
 import { useMemo, useCallback, useLayoutEffect, useEffect, useState, useRef, forwardRef, type CSSProperties } from "react";
 import type { Slide, Shape } from "../../pptx/domain";
 import type { ShapeId, Pixels } from "../../pptx/domain/types";
-import type { DragState, SelectionState, ResizeHandlePosition } from "../state";
+import type { SlideId } from "../presentation/types";
+import type { DrawingPath } from "../path-tools/types";
+import type { DragState, SelectionState, ResizeHandlePosition, PathEditState } from "../state";
 import type { CreationMode } from "../presentation/types";
 import type { ResourceResolver, ResolvedBackgroundFill, RenderOptions } from "../../pptx/render/core/types";
 import type { ColorContext, FontScheme } from "../../pptx/domain/resolution";
@@ -16,13 +18,14 @@ import { TextEditController, isTextEditActive, type TextEditState } from "../sli
 import type { ContextMenuActions } from "../slide/context-menu/SlideContextMenu";
 import { CanvasRulers } from "./CanvasRulers";
 import { useCanvasViewport } from "./use-canvas-viewport";
-import { getCanvasStageMetrics, getCenteredScrollTarget } from "./canvas-metrics";
+import { getAutoCenterScroll, getCanvasStageMetrics } from "./canvas-metrics";
 import { getNextZoomValue } from "./canvas-controls";
 import { useNonPassiveWheel } from "./use-non-passive-wheel";
 import { useOutsideMarqueeSelection } from "./use-outside-marquee-selection";
 
 export type CanvasStageProps = {
   readonly slide: Slide;
+  readonly slideId: SlideId;
   readonly selection: SelectionState;
   readonly drag: DragState;
   readonly width: Pixels;
@@ -49,6 +52,11 @@ export type CanvasStageProps = {
   readonly onCreate: (x: number, y: number) => void;
   readonly onTextEditComplete: (text: string) => void;
   readonly onTextEditCancel: () => void;
+  readonly onPathCommit?: (path: DrawingPath) => void;
+  readonly onPathCancel?: () => void;
+  readonly pathEdit?: PathEditState;
+  readonly onPathEditCommit?: (path: DrawingPath, shapeId: ShapeId) => void;
+  readonly onPathEditCancel?: () => void;
   readonly zoom: number;
   readonly onZoomChange: (value: number) => void;
   readonly showRulers: boolean;
@@ -69,6 +77,7 @@ const PAN_MARGIN = 120;
 export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function CanvasStage(
   {
     slide,
+    slideId,
     selection,
     drag,
     width,
@@ -95,6 +104,11 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
     onCreate,
     onTextEditComplete,
     onTextEditCancel,
+    onPathCommit,
+    onPathCancel,
+    pathEdit,
+    onPathEditCommit,
+    onPathEditCancel,
     zoom,
     onZoomChange,
     showRulers,
@@ -105,6 +119,8 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
   const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const { containerRef: scrollRef, viewport, handleScroll } = useCanvasViewport();
   const [zoomModifierDown, setZoomModifierDown] = useState(false);
+  const hasCenteredRef = useRef(false);
+  const lastSlideIdRef = useRef<SlideId | null>(null);
 
   const widthNum = width as number;
   const heightNum = height as number;
@@ -130,21 +146,34 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
       return;
     }
 
-    const target = getCenteredScrollTarget(viewport, stageMetrics);
-    const nextLeft = Math.abs(container.scrollLeft - target.scrollLeft) > 1 ? target.scrollLeft : container.scrollLeft;
-    const nextTop = Math.abs(container.scrollTop - target.scrollTop) > 1 ? target.scrollTop : container.scrollTop;
-    const needsUpdate = nextLeft !== container.scrollLeft || nextTop !== container.scrollTop;
+    if (lastSlideIdRef.current !== slideId) {
+      lastSlideIdRef.current = slideId;
+      hasCenteredRef.current = false;
+    }
 
-    if (nextLeft !== container.scrollLeft) {
-      container.scrollLeft = nextLeft;
+    if (hasCenteredRef.current) {
+      return;
     }
-    if (nextTop !== container.scrollTop) {
-      container.scrollTop = nextTop;
+
+    const nextScroll = getAutoCenterScroll(
+      viewport,
+      stageMetrics,
+      container.scrollLeft,
+      container.scrollTop
+    );
+
+    if (nextScroll.scrollLeft !== container.scrollLeft) {
+      container.scrollLeft = nextScroll.scrollLeft;
     }
-    if (needsUpdate) {
+    if (nextScroll.scrollTop !== container.scrollTop) {
+      container.scrollTop = nextScroll.scrollTop;
+    }
+    if (nextScroll.didCenter) {
       handleScroll();
     }
-  }, [viewport.width, viewport.height, stageMetrics, scrollRef, handleScroll, zoomedWidth, zoomedHeight]);
+
+    hasCenteredRef.current = true;
+  }, [viewport.width, viewport.height, stageMetrics, scrollRef, handleScroll, zoomedWidth, zoomedHeight, slideId]);
 
   useEffect(() => {
     const isMac = navigator.platform.toUpperCase().includes("MAC");
@@ -279,6 +308,11 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
               onDoubleClick={onDoubleClick}
               creationMode={creationMode}
               onCreate={onCreate}
+              onPathCommit={onPathCommit}
+              onPathCancel={onPathCancel}
+              pathEdit={pathEdit}
+              onPathEditCommit={onPathEditCommit}
+              onPathEditCancel={onPathEditCancel}
             />
             {isTextEditActive(textEdit) && (
               <TextEditController

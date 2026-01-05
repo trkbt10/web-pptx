@@ -27,6 +27,10 @@ export {
   Minus as LineIcon,
   Link2 as ConnectorIcon,
 
+  // Path drawing
+  PenTool as PenIcon,
+  Pencil as PencilIcon,
+
   // Text
   Type as TextBoxIcon,
 

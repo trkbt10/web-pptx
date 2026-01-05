@@ -15,6 +15,8 @@ export type ToggleButtonProps = {
   readonly disabled?: boolean;
   readonly className?: string;
   readonly style?: CSSProperties;
+  /** Show mixed indicator (for multi-selection with differing values) */
+  readonly mixed?: boolean;
 };
 
 const baseStyle: CSSProperties = {
@@ -47,6 +49,12 @@ const disabledStyle: CSSProperties = {
   cursor: "not-allowed",
 };
 
+const mixedStyle: CSSProperties = {
+  backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
+  borderStyle: "dashed",
+  color: `var(--text-tertiary, ${colorTokens.text.tertiary})`,
+};
+
 /**
  * Toggle button with pressed state styling.
  */
@@ -58,16 +66,18 @@ export function ToggleButton({
   disabled,
   className,
   style,
+  mixed,
 }: ToggleButtonProps) {
   const handleClick = useCallback(() => {
     if (!disabled) {
-      onChange(!pressed);
+      // When mixed, clicking always sets to true
+      onChange(mixed ? true : !pressed);
     }
-  }, [disabled, onChange, pressed]);
+  }, [disabled, onChange, pressed, mixed]);
 
   const combinedStyle: CSSProperties = {
     ...baseStyle,
-    ...(pressed ? pressedStyle : {}),
+    ...(mixed ? mixedStyle : pressed ? pressedStyle : {}),
     ...(disabled ? disabledStyle : {}),
     ...style,
   };
@@ -79,7 +89,7 @@ export function ToggleButton({
       disabled={disabled}
       className={className}
       style={combinedStyle}
-      aria-pressed={pressed}
+      aria-pressed={mixed ? "mixed" : pressed}
       aria-label={ariaLabel ?? label}
     >
       {label}

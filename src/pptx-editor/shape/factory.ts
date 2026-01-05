@@ -4,10 +4,12 @@
  * Creates new shapes with default properties for the editor.
  */
 
-import type { SpShape, CxnShape, GraphicFrame, PicShape, Shape, Table, TableRow, TableCell, TableColumn, Chart } from "../../pptx/domain";
+import type { SpShape, CxnShape, GraphicFrame, PicShape, Shape, Table, TableRow, TableCell, TableColumn, Chart, CustomGeometry } from "../../pptx/domain";
 import type { ShapeId, Pixels, ResourceId } from "../../pptx/domain/types";
 import { px, deg, pct } from "../../pptx/domain/types";
 import type { CreationPresetShape, CreationMode } from "../presentation/types";
+import type { DrawingPath } from "../path-tools/types";
+import { drawingPathToCommands, calculatePathBounds } from "../path-tools/utils/path-commands";
 
 // =============================================================================
 // Chart Type Definitions
@@ -168,6 +170,85 @@ export function createTextBox(id: ShapeId, bounds: ShapeBounds): SpShape {
           ],
         },
       ],
+    },
+  };
+}
+
+/**
+ * Create a custom path shape from a DrawingPath
+ *
+ * @param id - Shape ID
+ * @param drawingPath - The path drawn by the pen tool
+ * @returns SpShape with CustomGeometry
+ */
+export function createCustomPathShape(
+  id: ShapeId,
+  drawingPath: DrawingPath
+): SpShape {
+  // Calculate bounds from the path
+  const bounds = calculatePathBounds(drawingPath);
+
+  // Ensure minimum dimensions
+  const width = Math.max(bounds.width as number, 10);
+  const height = Math.max(bounds.height as number, 10);
+
+  // Convert to path commands
+  const commands = drawingPathToCommands(drawingPath);
+
+  // Create custom geometry
+  const geometry: CustomGeometry = {
+    type: "custom",
+    paths: [
+      {
+        width: px(width),
+        height: px(height),
+        fill: drawingPath.isClosed ? "norm" : "none",
+        stroke: true,
+        extrusionOk: false,
+        commands,
+      },
+    ],
+  };
+
+  return {
+    type: "sp",
+    nonVisual: {
+      id,
+      name: `Path ${id}`,
+    },
+    properties: {
+      transform: {
+        x: bounds.x,
+        y: bounds.y,
+        width: px(width),
+        height: px(height),
+        rotation: deg(0),
+        flipH: false,
+        flipV: false,
+      },
+      geometry,
+      fill: drawingPath.isClosed
+        ? {
+            type: "solidFill",
+            color: {
+              spec: { type: "srgb", value: DEFAULT_FILL_COLOR },
+            },
+          }
+        : { type: "noFill" },
+      line: {
+        width: px(2),
+        cap: "round",
+        compound: "sng",
+        alignment: "ctr",
+        fill: {
+          type: "solidFill",
+          color: {
+            spec: { type: "srgb", value: DEFAULT_STROKE_COLOR },
+          },
+        },
+        dash: "solid",
+        join: "round",
+      },
     },
   };
 }

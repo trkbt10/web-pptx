@@ -158,22 +158,37 @@ const groupHeaderStyle: CSSProperties = {
   userSelect: "none",
 };
 
+function getItemColor(isDisabled: boolean): string {
+  if (isDisabled) {
+    return `var(--text-tertiary, ${colorTokens.text.tertiary})`;
+  }
+  return `var(--text-primary, ${colorTokens.text.primary})`;
+}
+
+function getItemBackground(isSelected: boolean, isHighlighted: boolean): string {
+  if (isHighlighted) {
+    return `var(--bg-hover, ${colorTokens.background.hover})`;
+  }
+  if (isSelected) {
+    return "rgba(68, 114, 196, 0.15)";
+  }
+  return "transparent";
+}
+
+function getItemCursor(isDisabled: boolean): string {
+  return isDisabled ? "not-allowed" : "pointer";
+}
+
 const itemStyle = (isSelected: boolean, isHighlighted: boolean, isDisabled: boolean): CSSProperties => ({
   display: "flex",
   alignItems: "center",
   gap: spacingTokens.sm,
   padding: `${spacingTokens.xs} ${spacingTokens.sm}`,
   fontSize: fontTokens.size.md,
-  color: isDisabled
-    ? `var(--text-tertiary, ${colorTokens.text.tertiary})`
-    : `var(--text-primary, ${colorTokens.text.primary})`,
-  backgroundColor: isHighlighted
-    ? `var(--bg-hover, ${colorTokens.background.hover})`
-    : isSelected
-      ? "rgba(68, 114, 196, 0.15)"
-      : "transparent",
+  color: getItemColor(isDisabled),
+  backgroundColor: getItemBackground(isSelected, isHighlighted),
   borderRadius: radiusTokens.sm,
-  cursor: isDisabled ? "not-allowed" : "pointer",
+  cursor: getItemCursor(isDisabled),
   userSelect: "none",
 });
 
@@ -300,9 +315,8 @@ export function SearchableSelect<T extends string = string>({
     const spaceBelow = window.innerHeight - rect.bottom;
     const dropdownHeight = Math.min(maxHeight, 400);
 
-    const top = spaceBelow >= dropdownHeight
-      ? rect.bottom + 4
-      : rect.top - dropdownHeight - 4;
+    const hasSpaceBelow = spaceBelow >= dropdownHeight;
+    const top = hasSpaceBelow ? rect.bottom + 4 : rect.top - dropdownHeight - 4;
 
     setPosition({
       top: Math.max(8, top),
@@ -405,9 +419,15 @@ export function SearchableSelect<T extends string = string>({
   }, [searchQuery]);
 
   // Render trigger content
-  const triggerContent = selectedOption
-    ? (renderValue?.(selectedOption) ?? selectedOption.label)
-    : placeholder;
+  function getTriggerContent() {
+    if (!selectedOption) {
+      return placeholder;
+    }
+    return renderValue?.(selectedOption) ?? selectedOption.label;
+  }
+  const triggerContent = getTriggerContent();
+
+  const buttonBaseStyle = disabled ? triggerDisabledStyle : triggerStyle;
 
   return (
     <>
@@ -417,7 +437,7 @@ export function SearchableSelect<T extends string = string>({
         onClick={handleOpen}
         disabled={disabled}
         className={className}
-        style={{ ...(disabled ? triggerDisabledStyle : triggerStyle), ...style }}
+        style={{ ...buttonBaseStyle, ...style }}
       >
         <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {triggerContent}
@@ -453,9 +473,10 @@ export function SearchableSelect<T extends string = string>({
 
               {/* Options list */}
               <div ref={listRef} style={listStyle}>
-                {flatOptions.length === 0 ? (
+                {flatOptions.length === 0 && (
                   <div style={noResultsStyle}>No results found</div>
-                ) : (
+                )}
+                {flatOptions.length > 0 &&
                   Array.from(groupedOptions.entries()).map(([group, opts]) => (
                     <div key={group ?? "__ungrouped__"}>
                       {group && <div style={groupHeaderStyle}>{group}</div>}
@@ -476,15 +497,14 @@ export function SearchableSelect<T extends string = string>({
                             }}
                             onMouseEnter={() => setHighlightedIndex(globalIndex)}
                           >
-                            {renderItem
-                              ? renderItem({ option: opt, isSelected, isHighlighted })
-                              : opt.label}
+                            {renderItem?.(
+                              { option: opt, isSelected, isHighlighted }
+                            ) ?? opt.label}
                           </div>
                         );
                       })}
                     </div>
-                  ))
-                )}
+                  ))}
               </div>
             </div>
           </>,

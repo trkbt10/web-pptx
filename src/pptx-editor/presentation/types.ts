@@ -16,6 +16,9 @@ import type {
   DragState,
   ClipboardContent,
   ResizeHandlePosition,
+  PathDrawState,
+  PathEditState,
+  PathEditAction,
 } from "../state";
 import type { TextEditState } from "../slide/text-edit";
 
@@ -114,6 +117,11 @@ export type CreationPresetShape =
   | "line";
 
 /**
+ * Smoothing level for pencil tool
+ */
+export type SmoothingLevel = "low" | "medium" | "high";
+
+/**
  * Creation mode - determines what happens on canvas click/drag
  */
 export type CreationMode =
@@ -122,7 +130,10 @@ export type CreationMode =
   | { readonly type: "textbox" }
   | { readonly type: "picture" }
   | { readonly type: "connector" }
-  | { readonly type: "table"; readonly rows: number; readonly cols: number };
+  | { readonly type: "table"; readonly rows: number; readonly cols: number }
+  | { readonly type: "pen" }
+  | { readonly type: "pencil"; readonly smoothing: SmoothingLevel }
+  | { readonly type: "path-edit" };
 
 /**
  * Create default select mode
@@ -156,6 +167,10 @@ export type PresentationEditorState = {
   readonly creationMode: CreationMode;
   /** Text editing state */
   readonly textEdit: TextEditState;
+  /** Path drawing state (pen/pencil tool) */
+  readonly pathDraw: PathDrawState;
+  /** Path editing state (for editing existing paths) */
+  readonly pathEdit: PathEditState;
 };
 
 // =============================================================================
@@ -170,7 +185,7 @@ export type PresentationEditorAction =
   | { readonly type: "SET_DOCUMENT"; readonly document: PresentationDocument }
 
   // Slide management
-  | { readonly type: "ADD_SLIDE"; readonly slide: Slide; readonly afterSlideId?: SlideId }
+  | { readonly type: "ADD_SLIDE"; readonly slide: Slide; readonly afterSlideId?: SlideId; readonly atIndex?: number }
   | { readonly type: "DELETE_SLIDE"; readonly slideId: SlideId }
   | { readonly type: "DUPLICATE_SLIDE"; readonly slideId: SlideId }
   | { readonly type: "MOVE_SLIDE"; readonly slideId: SlideId; readonly toIndex: number }
@@ -285,7 +300,57 @@ export type PresentationEditorAction =
       readonly type: "UPDATE_TEXT_BODY";
       readonly shapeId: ShapeId;
       readonly textBody: TextBody;
-    };
+    }
+
+  // Text formatting (in-place, while editing)
+  | {
+      readonly type: "APPLY_RUN_FORMAT";
+      readonly shapeId: ShapeId;
+      readonly textBody: TextBody;
+    }
+  | {
+      readonly type: "APPLY_PARAGRAPH_FORMAT";
+      readonly shapeId: ShapeId;
+      readonly textBody: TextBody;
+    }
+
+  // Path drawing (pen/pencil tool)
+  | { readonly type: "START_PEN_DRAW" }
+  | {
+      readonly type: "ADD_PEN_POINT";
+      readonly x: Pixels;
+      readonly y: Pixels;
+      readonly pointType: "smooth" | "corner";
+    }
+  | {
+      readonly type: "UPDATE_PEN_POINT_HANDLES";
+      readonly pointIndex: number;
+      readonly handleIn?: { x: Pixels; y: Pixels };
+      readonly handleOut?: { x: Pixels; y: Pixels };
+    }
+  | { readonly type: "SET_PEN_HOVER_POINT"; readonly index: number | undefined }
+  | { readonly type: "SET_PEN_PREVIEW_POINT"; readonly point: { x: Pixels; y: Pixels } | undefined }
+  | { readonly type: "CLOSE_PEN_PATH" }
+  | { readonly type: "COMMIT_PEN_PATH" }
+  | { readonly type: "CANCEL_PEN_PATH" }
+  | {
+      readonly type: "START_PENCIL_DRAW";
+      readonly x: Pixels;
+      readonly y: Pixels;
+      readonly pressure: number;
+      readonly timestamp: number;
+    }
+  | {
+      readonly type: "ADD_PENCIL_POINT";
+      readonly x: Pixels;
+      readonly y: Pixels;
+      readonly pressure: number;
+      readonly timestamp: number;
+    }
+  | { readonly type: "END_PENCIL_DRAW" }
+
+  // Path editing (editing existing paths)
+  | PathEditAction;
 
 // =============================================================================
 // Context Value Types
@@ -313,4 +378,61 @@ export type PresentationEditorContextValue = {
   readonly creationMode: CreationMode;
   /** Text editing state */
   readonly textEdit: TextEditState;
+  /** Path drawing state */
+  readonly pathDraw: PathDrawState;
+  /** Path editing state */
+  readonly pathEdit: PathEditState;
 };
+
+// =============================================================================
+// Creation Mode Helpers
+// =============================================================================
+
+/**
+ * Create pen mode
+ */
+export function createPenMode(): CreationMode {
+  return { type: "pen" };
+}
+
+/**
+ * Create pencil mode with specified smoothing level
+ */
+export function createPencilMode(smoothing: SmoothingLevel = "medium"): CreationMode {
+  return { type: "pencil", smoothing };
+}
+
+/**
+ * Create path edit mode
+ */
+export function createPathEditMode(): CreationMode {
+  return { type: "path-edit" };
+}
+
+/**
+ * Check if creation mode is pen
+ */
+export function isPenMode(mode: CreationMode): mode is { type: "pen" } {
+  return mode.type === "pen";
+}
+
+/**
+ * Check if creation mode is pencil
+ */
+export function isPencilMode(mode: CreationMode): mode is { type: "pencil"; smoothing: SmoothingLevel } {
+  return mode.type === "pencil";
+}
+
+/**
+ * Check if creation mode is path edit
+ */
+export function isPathEditMode(mode: CreationMode): mode is { type: "path-edit" } {
+  return mode.type === "path-edit";
+}
+
+/**
+ * Check if creation mode is any path-related mode
+ */
+export function isPathMode(mode: CreationMode): boolean {
+  return mode.type === "pen" || mode.type === "pencil" || mode.type === "path-edit";
+}

@@ -29,6 +29,14 @@ type UpdateTextBodyAction = Extract<
   PresentationEditorAction,
   { type: "UPDATE_TEXT_BODY" }
 >;
+type ApplyRunFormatAction = Extract<
+  PresentationEditorAction,
+  { type: "APPLY_RUN_FORMAT" }
+>;
+type ApplyParagraphFormatAction = Extract<
+  PresentationEditorAction,
+  { type: "APPLY_PARAGRAPH_FORMAT" }
+>;
 
 /**
  * Get active slide for text editing
@@ -112,10 +120,70 @@ function handleUpdateTextBody(
 }
 
 /**
+ * Apply run formatting (e.g., bold, italic) without exiting text edit mode.
+ * Creates an undo history entry.
+ */
+function handleApplyRunFormat(
+  state: PresentationEditorState,
+  action: ApplyRunFormatAction
+): PresentationEditorState {
+  const newDoc = updateActiveSlideInDocument(
+    state.documentHistory.present,
+    state.activeSlideId,
+    (slide) => ({
+      ...slide,
+      shapes: updateShapeById(slide.shapes, action.shapeId, (shape) => {
+        if (shape.type !== "sp") {
+          return shape;
+        }
+        return { ...shape, textBody: action.textBody };
+      }),
+    })
+  );
+
+  // Stay in text edit mode (don't exit)
+  return {
+    ...state,
+    documentHistory: pushHistory(state.documentHistory, newDoc),
+  };
+}
+
+/**
+ * Apply paragraph formatting (e.g., alignment) without exiting text edit mode.
+ * Creates an undo history entry.
+ */
+function handleApplyParagraphFormat(
+  state: PresentationEditorState,
+  action: ApplyParagraphFormatAction
+): PresentationEditorState {
+  const newDoc = updateActiveSlideInDocument(
+    state.documentHistory.present,
+    state.activeSlideId,
+    (slide) => ({
+      ...slide,
+      shapes: updateShapeById(slide.shapes, action.shapeId, (shape) => {
+        if (shape.type !== "sp") {
+          return shape;
+        }
+        return { ...shape, textBody: action.textBody };
+      }),
+    })
+  );
+
+  // Stay in text edit mode (don't exit)
+  return {
+    ...state,
+    documentHistory: pushHistory(state.documentHistory, newDoc),
+  };
+}
+
+/**
  * Text edit handlers
  */
 export const TEXT_EDIT_HANDLERS: HandlerMap = {
   ENTER_TEXT_EDIT: handleEnterTextEdit,
   EXIT_TEXT_EDIT: handleExitTextEdit,
   UPDATE_TEXT_BODY: handleUpdateTextBody,
+  APPLY_RUN_FORMAT: handleApplyRunFormat,
+  APPLY_PARAGRAPH_FORMAT: handleApplyParagraphFormat,
 };

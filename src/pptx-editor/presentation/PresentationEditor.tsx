@@ -12,7 +12,7 @@
  */
 
 import { useRef, useEffect, useMemo, useCallback, useState, type CSSProperties } from "react";
-import type { Slide, Shape } from "../../pptx/domain";
+import type { Slide, Shape, RunProperties, ParagraphProperties } from "../../pptx/domain";
 import type { ShapeId } from "../../pptx/domain/types";
 import { px, deg } from "../../pptx/domain/types";
 import type { ResizeHandlePosition } from "../state";
@@ -24,7 +24,10 @@ import { useSlideThumbnails } from "../thumbnail/use-slide-thumbnails";
 import { SlideThumbnailPreview } from "../thumbnail/SlideThumbnailPreview";
 import { CreationToolbar } from "../panels/CreationToolbar";
 import type { CreationMode } from "./types";
-import { createShapeFromMode, getDefaultBoundsForMode } from "../shape/factory";
+import { createSelectMode } from "./types";
+import type { DrawingPath } from "../path-tools/types";
+import { isCustomGeometry } from "../path-tools/utils/path-commands";
+import { createShapeFromMode, getDefaultBoundsForMode, createCustomPathShape, generateShapeId } from "../shape/factory";
 import { isTextEditActive, mergeTextIntoBody, extractDefaultRunProperties } from "../slide/text-edit";
 import { PropertyPanel } from "../panels/PropertyPanel";
 import { ShapeToolbar } from "../panels/ShapeToolbar";
@@ -38,6 +41,9 @@ import { createRenderContextFromApiSlide, getLayoutNonPlaceholderShapes } from "
 import { CanvasControls } from "../slide-canvas/CanvasControls";
 import { CanvasStage } from "../slide-canvas/CanvasStage";
 import { snapValue } from "../slide-canvas/canvas-controls";
+import { TextEditContextProvider, useTextEditContextValue } from "../context/TextEditContext";
+import type { TextSelectionContext } from "../editors/text/text-property-extractor";
+import { applyRunPropertiesToSelection, applyParagraphPropertiesToSelection } from "../slide/text-edit/run-formatting";
 
 // =============================================================================
 // Types
@@ -144,7 +150,7 @@ function EditorContent({
   showLayerPanel: boolean;
   showToolbar: boolean;
 }) {
-  const { state, dispatch, document, activeSlide, selectedShapes, primaryShape, canUndo, canRedo, creationMode, textEdit } =
+  const { state, dispatch, document, activeSlide, selectedShapes, primaryShape, canUndo, canRedo, creationMode, textEdit, pathEdit } =
     usePresentationEditor();
   const canvasRef = useRef<HTMLDivElement>(null);
   const { shapeSelection: selection, drag } = state;
@@ -174,12 +180,25 @@ function EditorContent({
     [creationMode, dispatch]
   );
 
-  // Text editing handlers
+  // Double-click handlers - enters text edit for text shapes, path edit for custom geometry
   const handleDoubleClick = useCallback(
     (shapeId: ShapeId) => {
+      // Find the shape to determine its type
+      const shape = activeSlide?.slide.shapes.find((s) => {
+        if (s.type === "contentPart") return false;
+        return s.nonVisual.id === shapeId;
+      });
+
+      // Check if it's a custom geometry shape (editable path)
+      if (shape?.type === "sp" && isCustomGeometry(shape.properties.geometry)) {
+        dispatch({ type: "ENTER_PATH_EDIT", shapeId });
+        return;
+      }
+
+      // Default: enter text edit mode
       dispatch({ type: "ENTER_TEXT_EDIT", shapeId });
     },
-    [dispatch]
+    [dispatch, activeSlide]
   );
 
   const handleTextEditComplete = useCallback(
@@ -197,6 +216,177 @@ function EditorContent({
   const handleTextEditCancel = useCallback(() => {
     dispatch({ type: "EXIT_TEXT_EDIT" });
   }, [dispatch]);
+
+  // Path tool handlers
+  const handlePathCommit = useCallback(
+    (path: DrawingPath) => {
+      // Create shape from the drawing path
+      const shape = createCustomPathShape(generateShapeId(), path);
+      dispatch({ type: "ADD_SHAPE", shape });
+      // Reset to select mode
+      dispatch({ type: "SET_CREATION_MODE", mode: createSelectMode() });
+    },
+    [dispatch]
+  );
+
+  const handlePathCancel = useCallback(() => {
+    // Reset to select mode
+    dispatch({ type: "SET_CREATION_MODE", mode: createSelectMode() });
+  }, [dispatch]);
+
+  // Path edit handlers (for editing existing custom geometry shapes)
+  const handlePathEditCommit = useCallback(
+    (editedPath: DrawingPath, shapeId: ShapeId) => {
+      // Find the original shape to get its position
+      const originalShape = activeSlide?.slide.shapes.find((s) => {
+        if (s.type === "contentPart") return false;
+        return s.nonVisual.id === shapeId;
+      });
+
+      if (originalShape?.type === "sp") {
+        // Import drawingPathToCustomGeometry here to convert the edited path
+        import("../path-tools/utils/path-commands").then(({ drawingPathToCustomGeometry }) => {
+          // Convert the edited path back to custom geometry
+          // The path coordinates are already in shape-local space
+          const { geometry, bounds } = drawingPathToCustomGeometry(editedPath);
+
+          // Update the shape with new geometry and potentially new bounds
+          dispatch({
+            type: "UPDATE_SHAPE",
+            shapeId,
+            updater: (shape): Shape => {
+              if (shape.type !== "sp" || !shape.properties.transform) return shape;
+              const currentTransform = shape.properties.transform;
+              return {
+                ...shape,
+                properties: {
+                  ...shape.properties,
+                  geometry,
+                  transform: {
+                    x: bounds.x,
+                    y: bounds.y,
+                    width: bounds.width,
+                    height: bounds.height,
+                    rotation: currentTransform.rotation,
+                    flipH: currentTransform.flipH,
+                    flipV: currentTransform.flipV,
+                  },
+                },
+              };
+            },
+          });
+        });
+      }
+
+      dispatch({ type: "EXIT_PATH_EDIT", commit: true });
+    },
+    [dispatch, activeSlide]
+  );
+
+  const handlePathEditCancel = useCallback(() => {
+    dispatch({ type: "EXIT_PATH_EDIT", commit: false });
+  }, [dispatch]);
+
+  // ==========================================================================
+  // Text Edit Context - for PropertyPanel integration
+  // ==========================================================================
+
+  // Current text body for property extraction (use initial text body for now)
+  const currentTextBody = isTextEditActive(textEdit) ? textEdit.initialTextBody : undefined;
+
+  // Selection context - initially "shape" (entire text body) since we don't track cursor yet
+  const selectionContext = useMemo<TextSelectionContext>(() => {
+    if (!isTextEditActive(textEdit)) {
+      return { type: "none" };
+    }
+    // For now, use "shape" context (entire text body)
+    // TODO: Track cursor/selection position from TextEditController
+    return { type: "shape" };
+  }, [textEdit]);
+
+  // Apply run properties to the text body
+  const handleApplyRunProperties = useCallback(
+    (props: Partial<RunProperties>) => {
+      if (!isTextEditActive(textEdit)) return;
+
+      // For now, apply to entire text body since we don't track selection
+      // This creates a new text body with the properties applied to all runs
+      const updatedTextBody = applyRunPropertiesToSelection(
+        textEdit.initialTextBody,
+        {
+          start: { paragraphIndex: 0, charOffset: 0 },
+          end: {
+            paragraphIndex: textEdit.initialTextBody.paragraphs.length - 1,
+            charOffset: textEdit.initialTextBody.paragraphs[textEdit.initialTextBody.paragraphs.length - 1]?.runs
+              .reduce((acc, run) => acc + (run.type === "text" ? run.text.length : run.type === "break" ? 1 : 0), 0) ?? 0,
+          },
+        },
+        props
+      );
+
+      dispatch({
+        type: "APPLY_RUN_FORMAT",
+        shapeId: textEdit.shapeId,
+        textBody: updatedTextBody,
+      });
+    },
+    [dispatch, textEdit]
+  );
+
+  // Apply paragraph properties to selected paragraphs
+  const handleApplyParagraphProperties = useCallback(
+    (props: Partial<ParagraphProperties>) => {
+      if (!isTextEditActive(textEdit)) return;
+
+      // For now, apply to all paragraphs since we don't track selection
+      // Create an array of all paragraph indices
+      const paragraphIndices = textEdit.initialTextBody.paragraphs.map((_, i) => i);
+      const updatedTextBody = applyParagraphPropertiesToSelection(
+        textEdit.initialTextBody,
+        paragraphIndices,
+        props
+      );
+
+      dispatch({
+        type: "APPLY_PARAGRAPH_FORMAT",
+        shapeId: textEdit.shapeId,
+        textBody: updatedTextBody,
+      });
+    },
+    [dispatch, textEdit]
+  );
+
+  // Toggle a boolean run property
+  const handleToggleRunProperty = useCallback(
+    (propertyKey: keyof RunProperties, currentValue: boolean | undefined) => {
+      const newValue = !currentValue;
+      handleApplyRunProperties({ [propertyKey]: newValue ? true : undefined } as Partial<RunProperties>);
+    },
+    [handleApplyRunProperties]
+  );
+
+  // Sticky formatting (not implemented yet)
+  const handleSetStickyFormatting = useCallback((_props: RunProperties) => {
+    // TODO: Implement sticky formatting
+  }, []);
+
+  const handleClearStickyFormatting = useCallback(() => {
+    // TODO: Implement sticky formatting
+  }, []);
+
+  // Create the text edit context value
+  const textEditContextValue = useTextEditContextValue({
+    textEditState: textEdit,
+    currentTextBody,
+    selectionContext,
+    cursorState: undefined, // TODO: Track cursor state
+    stickyFormatting: undefined, // TODO: Implement sticky formatting
+    onApplyRunProperties: handleApplyRunProperties,
+    onApplyParagraphProperties: handleApplyParagraphProperties,
+    onToggleRunProperty: handleToggleRunProperty,
+    onSetStickyFormatting: handleSetStickyFormatting,
+    onClearStickyFormatting: handleClearStickyFormatting,
+  });
 
   const slide = activeSlide?.slide;
   const width = document.slideWidth;
@@ -600,14 +790,17 @@ function EditorContent({
 
   if (!activeSlide || !slide) {
     return (
-      <div style={{ ...containerStyle, alignItems: "center", justifyContent: "center" }}>
-        <span style={{ color: "#666" }}>No slide selected</span>
-      </div>
+      <TextEditContextProvider value={textEditContextValue}>
+        <div style={{ ...containerStyle, alignItems: "center", justifyContent: "center" }}>
+          <span style={{ color: "#666" }}>No slide selected</span>
+        </div>
+      </TextEditContextProvider>
     );
   }
 
   return (
-    <div style={containerStyle}>
+    <TextEditContextProvider value={textEditContextValue}>
+      <div style={containerStyle}>
       {/* Left: Slide Thumbnails */}
       <div style={thumbnailPanelStyle}>
         <SlideThumbnailPanel
@@ -662,6 +855,7 @@ function EditorContent({
             <CanvasStage
               ref={canvasRef}
               slide={slide}
+              slideId={activeSlide.id}
               selection={selection}
               drag={drag}
               width={width}
@@ -687,6 +881,11 @@ function EditorContent({
               onCreate={handleCanvasCreate}
               onTextEditComplete={handleTextEditComplete}
               onTextEditCancel={handleTextEditCancel}
+              onPathCommit={handlePathCommit}
+              onPathCancel={handlePathCancel}
+              pathEdit={pathEdit}
+              onPathEditCommit={handlePathEditCommit}
+              onPathEditCancel={handlePathEditCancel}
               zoom={zoom}
               onZoomChange={setZoom}
               showRulers={showRulers}
@@ -729,7 +928,8 @@ function EditorContent({
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </TextEditContextProvider>
   );
 }
 

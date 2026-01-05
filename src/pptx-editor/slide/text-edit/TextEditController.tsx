@@ -24,6 +24,8 @@ import {
   offsetToCursorPosition,
   cursorPositionToCoordinates,
   selectionToRects,
+  type CursorPosition,
+  type TextSelection,
 } from "./cursor";
 import { mergeTextIntoBody, extractDefaultRunProperties } from "./text-body-merge";
 import { colorTokens } from "../../ui/design-tokens";
@@ -70,6 +72,7 @@ export function TextEditController({
   slideHeight,
   onComplete,
   onCancel,
+  onSelectionChange,
 }: TextEditControllerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [currentText, setCurrentText] = useState(() => getPlainText(textBody));
@@ -112,7 +115,7 @@ export function TextEditController({
     }
   }, []);
 
-  // Update cursor position
+  // Update cursor position and report selection changes
   const updateCursorPosition = useCallback(() => {
     const textarea = textareaRef.current;
     if (!textarea) {
@@ -132,6 +135,16 @@ export function TextEditController({
         selectionRects: rects,
         isBlinking: false,
       });
+
+      // Report selection change
+      if (onSelectionChange) {
+        const selection: TextSelection = { start: startPos, end: endPos };
+        onSelectionChange({
+          textBody: currentTextBody,
+          cursorPosition: undefined,
+          selection,
+        });
+      }
     } else {
       const cursorPos = offsetToCursorPosition(currentTextBody, selectionStart);
       const coords = cursorPositionToCoordinates(cursorPos, layoutResult);
@@ -141,8 +154,17 @@ export function TextEditController({
         selectionRects: [],
         isBlinking: !composition.isComposing,
       });
+
+      // Report cursor position change
+      if (onSelectionChange) {
+        onSelectionChange({
+          textBody: currentTextBody,
+          cursorPosition: cursorPos,
+          selection: undefined,
+        });
+      }
     }
-  }, [currentTextBody, layoutResult, composition.isComposing]);
+  }, [currentTextBody, layoutResult, composition.isComposing, onSelectionChange]);
 
   // Handle selection changes
   useEffect(() => {

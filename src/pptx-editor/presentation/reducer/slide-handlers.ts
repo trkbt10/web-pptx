@@ -61,7 +61,8 @@ function handleAddSlide(
   const { document: newDoc, newSlideId } = addSlide(
     state.documentHistory.present,
     action.slide,
-    action.afterSlideId
+    action.afterSlideId,
+    action.atIndex
   );
   return {
     ...state,

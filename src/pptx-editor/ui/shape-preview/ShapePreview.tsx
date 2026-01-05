@@ -81,6 +81,31 @@ export function ShapePreview({
 
   // If no valid path, render a placeholder rect
   const hasValidPath = pathData.length > 0;
+  const innerSize = size - 4;
+
+  function renderShapeElement() {
+    if (hasValidPath) {
+      return (
+        <path
+          d={pathData}
+          fill={fillColor}
+          stroke={strokeColor}
+          strokeWidth={1}
+        />
+      );
+    }
+    return (
+      <rect
+        x={0}
+        y={0}
+        width={innerSize}
+        height={innerSize}
+        fill={fillColor}
+        stroke={strokeColor}
+        strokeWidth={1}
+      />
+    );
+  }
 
   return (
     <div
@@ -93,24 +118,7 @@ export function ShapePreview({
         viewBox={`0 0 ${size} ${size}`}
       >
         <g transform={`translate(2, 2)`}>
-          {hasValidPath ? (
-            <path
-              d={pathData}
-              fill={fillColor}
-              stroke={strokeColor}
-              strokeWidth={1}
-            />
-          ) : (
-            <rect
-              x={0}
-              y={0}
-              width={size - 4}
-              height={size - 4}
-              fill={fillColor}
-              stroke={strokeColor}
-              strokeWidth={1}
-            />
-          )}
+          {renderShapeElement()}
         </g>
       </svg>
     </div>

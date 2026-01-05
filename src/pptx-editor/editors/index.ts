@@ -46,6 +46,9 @@ export {
   BulletStyleEditor,
   ParagraphPropertiesEditor,
   TextBodyEditor,
+  MixedTextBodyEditor,
+  MixedRunPropertiesEditor,
+  MixedParagraphPropertiesEditor,
   createDefaultRunProperties,
   createDefaultLineSpacing,
   createDefaultBulletStyle,
@@ -56,6 +59,9 @@ export {
   type BulletStyleEditorProps,
   type ParagraphPropertiesEditorProps,
   type TextBodyEditorProps,
+  type MixedTextBodyEditorProps,
+  type MixedRunPropertiesEditorProps,
+  type MixedParagraphPropertiesEditorProps,
 } from "./text";
 
 // Shape editors

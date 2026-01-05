@@ -62,3 +62,59 @@ export type {
 export { createClipboardContent, incrementPasteCount } from "./clipboard";
 export type { ClipboardContent } from "./clipboard";
 
+// =============================================================================
+// Path Draw
+// =============================================================================
+export {
+  createIdlePathDrawState,
+  createDrawingPathDrawState,
+  createPencilDrawingState,
+  isPathDrawIdle,
+  isPathDrawDrawing,
+  isPathDrawDraggingHandle,
+  isPathDrawPencil,
+  updateDrawingPath,
+  setHoverPointIndex,
+  setPreviewPoint,
+  startHandleDrag,
+  updateHandleDrag,
+  addPencilPoint,
+} from "./path-draw";
+export type {
+  IdlePathDrawState,
+  DrawingPathDrawState,
+  HandleDragPathDrawState,
+  PencilDrawingPathDrawState,
+  PathDrawState,
+  PathDrawAction,
+} from "./path-draw";
+
+// =============================================================================
+// Path Edit
+// =============================================================================
+export {
+  createInactivePathEditState,
+  createActivePathEditState,
+  createDefaultPathEditTool,
+  isPathEditInactive,
+  isPathEditActive,
+  isPathEditMovingPoints,
+  isPathEditMovingHandle,
+  isPathEditEditing,
+  updatePathSelection,
+  updatePathEditTool,
+  startMovingPoints,
+  updateMovingPointsPreview,
+  startMovingHandle,
+  updateMovingHandle,
+  returnToActiveState,
+} from "./path-edit";
+export type {
+  InactivePathEditState,
+  ActivePathEditState,
+  MovingPointsPathEditState,
+  MovingHandlePathEditState,
+  PathEditState,
+  PathEditTool,
+  PathEditAction,
+} from "./path-edit";

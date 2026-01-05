@@ -9,6 +9,8 @@ import {
   getThumbnailContainerStyle,
   getDeleteButtonStyle,
   getNumberBadgeStyle,
+  getGapHoverZoneStyle,
+  getAddButtonStyle,
 } from "./styles";
 
 // =============================================================================
@@ -123,9 +125,10 @@ describe("getDeleteButtonStyle", () => {
       expect(style.backgroundColor).toMatch(/rgba?\s*\(\s*0\s*,\s*0\s*,\s*0/i);
     });
 
-    it("has white text", () => {
+    it("has light text (for contrast on dark background)", () => {
       const style = getDeleteButtonStyle(true);
-      expect(style.color).toBe("#fff");
+      // Should be white or near-white (design token: #fafafa)
+      expect(style.color).toMatch(/^#f/i);
     });
 
     it("is positioned inside thumbnail (not outside)", () => {
@@ -174,6 +177,123 @@ describe("getNumberBadgeStyle", () => {
     it("prevents text selection", () => {
       const style = getNumberBadgeStyle("vertical");
       expect(style.userSelect).toBe("none");
+    });
+  });
+});
+
+// =============================================================================
+// Gap hover zone styles
+// =============================================================================
+
+describe("getGapHoverZoneStyle", () => {
+  describe("vertical orientation", () => {
+    it("is absolutely positioned", () => {
+      const style = getGapHoverZoneStyle("vertical");
+      expect(style.position).toBe("absolute");
+    });
+
+    it("offsets from left to skip number badge", () => {
+      const style = getGapHoverZoneStyle("vertical");
+      expect(style.left).toBe("26px");
+    });
+
+    it("has height for reliable hover detection", () => {
+      const style = getGapHoverZoneStyle("vertical");
+      expect(parseInt(style.height as string)).toBeGreaterThanOrEqual(8);
+    });
+
+    it("uses flexbox to center button child", () => {
+      const style = getGapHoverZoneStyle("vertical");
+      expect(style.display).toBe("flex");
+      expect(style.alignItems).toBe("center");
+      expect(style.justifyContent).toBe("center");
+    });
+  });
+
+  describe("horizontal orientation", () => {
+    it("is absolutely positioned", () => {
+      const style = getGapHoverZoneStyle("horizontal");
+      expect(style.position).toBe("absolute");
+    });
+
+    it("has width for reliable hover detection", () => {
+      const style = getGapHoverZoneStyle("horizontal");
+      expect(parseInt(style.width as string)).toBeGreaterThanOrEqual(8);
+    });
+  });
+});
+
+// =============================================================================
+// Add button styles
+// =============================================================================
+
+describe("getAddButtonStyle", () => {
+  describe("visibility states", () => {
+    it("is visible when hovered", () => {
+      const style = getAddButtonStyle(true, "vertical");
+      expect(style.opacity).toBe(1);
+      expect(style.pointerEvents).toBe("auto");
+    });
+
+    it("is hidden when not hovered", () => {
+      const style = getAddButtonStyle(false, "vertical");
+      expect(style.opacity).toBe(0);
+      expect(style.pointerEvents).toBe("none");
+    });
+  });
+
+  describe("positioning", () => {
+    it("is NOT absolutely positioned (centered by parent flex)", () => {
+      const style = getAddButtonStyle(true, "vertical");
+      // Button should be centered by parent flexbox, not absolute positioning
+      expect(style.position).toBeUndefined();
+    });
+
+    it("prevents shrinking in flex container", () => {
+      const style = getAddButtonStyle(true, "vertical");
+      expect(style.flexShrink).toBe(0);
+    });
+  });
+
+  describe("appearance", () => {
+    it("has compact size", () => {
+      const style = getAddButtonStyle(true, "vertical");
+      expect(parseInt(style.width as string)).toBeLessThanOrEqual(20);
+      expect(parseInt(style.height as string)).toBeLessThanOrEqual(20);
+    });
+
+    it("has accent background when visible", () => {
+      const style = getAddButtonStyle(true, "vertical");
+      // Should be the accent color (PowerPoint blue)
+      expect(style.backgroundColor).toMatch(/^#[0-9a-fA-F]{3,6}$/);
+    });
+
+    it("has subtle shadow when visible", () => {
+      const style = getAddButtonStyle(true, "vertical");
+      expect(style.boxShadow).toBeDefined();
+      expect(style.boxShadow).not.toBe("none");
+    });
+
+    it("has no shadow when hidden", () => {
+      const style = getAddButtonStyle(false, "vertical");
+      expect(style.boxShadow).toBe("none");
+    });
+  });
+
+  describe("interaction", () => {
+    it("has pointer cursor", () => {
+      const style = getAddButtonStyle(true, "vertical");
+      expect(style.cursor).toBe("pointer");
+    });
+
+    it("prevents text selection", () => {
+      const style = getAddButtonStyle(true, "vertical");
+      expect(style.userSelect).toBe("none");
+    });
+
+    it("has smooth transition", () => {
+      const style = getAddButtonStyle(true, "vertical");
+      expect(style.transition).toBeDefined();
     });
   });
 });

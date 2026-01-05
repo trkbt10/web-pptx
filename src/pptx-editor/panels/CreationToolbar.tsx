@@ -18,6 +18,8 @@ import {
   RightArrowIcon,
   TextBoxIcon,
   LineIcon,
+  PenIcon,
+  PencilIcon,
 } from "../ui/icons/index";
 import { colorTokens, radiusTokens } from "../ui/design-tokens/index";
 
@@ -138,6 +140,19 @@ const TOOLS: readonly ToolDefinition[] = [
     label: "Line (L)",
     mode: { type: "connector" },
   },
+  // Path drawing
+  {
+    id: "pen",
+    icon: PenIcon,
+    label: "Pen Tool (P)",
+    mode: { type: "pen" },
+  },
+  {
+    id: "pencil",
+    icon: PencilIcon,
+    label: "Pencil Tool (N)",
+    mode: { type: "pencil", smoothing: "medium" },
+  },
 ];
 
 // Group tools by category for separators
@@ -147,6 +162,7 @@ const TOOL_GROUPS: readonly (readonly ToolDefinition[])[] = [
   TOOLS.slice(5, 6), // Arrows
   TOOLS.slice(6, 7), // Text
   TOOLS.slice(7, 8), // Connector
+  TOOLS.slice(8, 10), // Path drawing (Pen, Pencil)
 ];
 
 // =============================================================================
@@ -163,6 +179,8 @@ function isSameMode(a: CreationMode, b: CreationMode): boolean {
   if (a.type === "table" && b.type === "table") {
     return a.rows === b.rows && a.cols === b.cols;
   }
+  // For pencil mode, we only compare the type (smoothing can be different)
+  // This ensures the button stays active regardless of smoothing level
   return true;
 }
 

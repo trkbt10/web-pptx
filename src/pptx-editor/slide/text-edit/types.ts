@@ -4,14 +4,26 @@
  * Shared type definitions for text editing components.
  */
 
-import type { TextBody } from "../../../pptx/domain";
+import type { TextBody, RunProperties, ParagraphProperties } from "../../../pptx/domain";
 import type { ColorContext, FontScheme } from "../../../pptx/domain/resolution";
 import type { TextEditBounds } from "./state";
-import type { CursorCoordinates, SelectionRect } from "./cursor";
+import type { CursorCoordinates, SelectionRect, CursorPosition, TextSelection } from "./cursor";
 
 // =============================================================================
 // Component Props
 // =============================================================================
+
+/**
+ * Selection change event data.
+ */
+export type SelectionChangeEvent = {
+  /** Current text body (reflecting edits) */
+  readonly textBody: TextBody;
+  /** Cursor position (if no selection range) */
+  readonly cursorPosition: CursorPosition | undefined;
+  /** Selection range (if text is selected) */
+  readonly selection: TextSelection | undefined;
+};
 
 /**
  * Props for TextEditController component.
@@ -32,6 +44,26 @@ export type TextEditControllerProps = {
   readonly onComplete: (newText: string) => void;
   /** Called when editing is cancelled */
   readonly onCancel: () => void;
+
+  // === Extended props for property panel integration ===
+
+  /**
+   * Called when cursor position or selection changes.
+   * Used by TextEditContext to update property extraction.
+   */
+  readonly onSelectionChange?: (event: SelectionChangeEvent) => void;
+
+  /**
+   * Apply run properties to the current selection.
+   * If there's a selection, applies to selected runs (with run splitting).
+   * If cursor only, sets sticky formatting for next input.
+   */
+  readonly onApplyRunFormat?: (textBody: TextBody) => void;
+
+  /**
+   * Apply paragraph properties to paragraphs in the current selection.
+   */
+  readonly onApplyParagraphFormat?: (textBody: TextBody) => void;
 };
 
 // =============================================================================

@@ -11,6 +11,8 @@ export {
   type InactiveTextEditState,
   type ActiveTextEditState,
   type TextEditState,
+  type StickyFormattingState,
+  type TextCursorState,
   createInactiveTextEditState,
   createActiveTextEditState,
   isTextEditInactive,
@@ -47,6 +49,7 @@ export type {
   TextEditControllerProps,
   CursorState,
   CompositionState,
+  SelectionChangeEvent,
 } from "./types";
 
 // Text geometry utilities (shared between cursor and rendering)

@@ -14,9 +14,15 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import type { Slide, Shape } from "../../pptx/domain";
 import type { ColorContext, FontScheme } from "../../pptx/domain/resolution";
 import type { Pixels, ShapeId } from "../../pptx/domain/types";
-import type { DragState, SelectionState, ResizeHandlePosition } from "../state";
+import type { DragState, SelectionState, ResizeHandlePosition, PathEditState } from "../state";
+import { isPathEditEditing } from "../state";
 import type { CreationMode } from "../presentation/types";
+import { isPenMode, isPencilMode } from "../presentation/types";
 import type { ResourceResolver, ResolvedBackgroundFill, RenderOptions } from "../../pptx/render/core/types";
+import type { DrawingPath } from "../path-tools/types";
+import { PenToolOverlay } from "../path-tools/components/PenToolOverlay";
+import { PathEditOverlay } from "../path-tools/components/PathEditOverlay";
+import { customGeometryToDrawingPath, isCustomGeometry } from "../path-tools/utils/path-commands";
 import { clientToSlideCoords } from "../shape/coords";
 import { collectShapeRenderData } from "../shape/traverse";
 import { findShapeByIdWithParents } from "../shape/query";
@@ -86,6 +92,15 @@ export type SlideCanvasProps = {
   // Creation mode
   readonly creationMode?: CreationMode;
   readonly onCreate?: (x: number, y: number) => void;
+
+  // Path tool callbacks
+  readonly onPathCommit?: (path: DrawingPath) => void;
+  readonly onPathCancel?: () => void;
+
+  // Path edit state and callbacks
+  readonly pathEdit?: PathEditState;
+  readonly onPathEditCommit?: (path: DrawingPath, shapeId: ShapeId) => void;
+  readonly onPathEditCancel?: () => void;
 };
 
 type ShapeBounds = {
@@ -303,6 +318,11 @@ export function SlideCanvas({
   onDoubleClick,
   creationMode,
   onCreate,
+  onPathCommit,
+  onPathCancel,
+  pathEdit,
+  onPathEditCommit,
+  onPathEditCancel,
 }: SlideCanvasProps) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [marquee, setMarquee] = useState<MarqueeSelection | null>(null);
@@ -781,6 +801,58 @@ export function SlideCanvas({
             />
           )}
         </svg>
+
+        {/* Pen tool overlay */}
+        {creationMode && isPenMode(creationMode) && onPathCommit && onPathCancel && (
+          <PenToolOverlay
+            slideWidth={widthNum}
+            slideHeight={heightNum}
+            onCommit={onPathCommit}
+            onCancel={onPathCancel}
+            isActive={true}
+          />
+        )}
+
+        {/* Path edit overlay */}
+        {pathEdit && isPathEditEditing(pathEdit) && onPathEditCommit && onPathEditCancel && (() => {
+          // Find the shape being edited
+          const editingShape = slide.shapes.find((s) => {
+            if (s.type === "contentPart") return false;
+            return s.nonVisual.id === pathEdit.shapeId;
+          });
+
+          if (editingShape?.type !== "sp" || !isCustomGeometry(editingShape.properties.geometry)) {
+            return null;
+          }
+
+          const transform = editingShape.properties.transform;
+          if (!transform) return null;
+
+          const shapeWidth = transform.width as number;
+          const shapeHeight = transform.height as number;
+
+          // Convert custom geometry to drawing path
+          const drawingPath = customGeometryToDrawingPath(
+            editingShape.properties.geometry,
+            shapeWidth,
+            shapeHeight
+          );
+
+          if (!drawingPath) return null;
+
+          return (
+            <PathEditOverlay
+              initialPath={drawingPath}
+              offsetX={transform.x as number}
+              offsetY={transform.y as number}
+              slideWidth={widthNum}
+              slideHeight={heightNum}
+              onCommit={(editedPath) => onPathEditCommit(editedPath, pathEdit.shapeId)}
+              onCancel={onPathEditCancel}
+              isActive={true}
+            />
+          );
+        })()}
       </div>
 
       {/* Context menu */}

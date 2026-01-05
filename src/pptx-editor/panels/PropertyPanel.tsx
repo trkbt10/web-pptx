@@ -3,6 +3,8 @@
  *
  * Displays property editors for selected shapes.
  * Props-based component that can be used with any state management.
+ *
+ * When in text edit mode, shows TextPropertyPanel with Mixed value support.
  */
 
 import { useCallback, type CSSProperties } from "react";
@@ -11,7 +13,7 @@ import type { Background } from "../../pptx/domain/slide";
 import type { SlideTransition } from "../../pptx/domain/transition";
 import type { ShapeId } from "../../pptx/domain/types";
 import { SlidePropertiesPanel } from "./property/SlidePropertiesPanel";
-import { MultiSelectState } from "./property/MultiSelectState";
+import { MultiSelectPanel } from "./property/MultiSelectPanel";
 import { SpShapePanel } from "./property/SpShapePanel";
 import { PicShapePanel } from "./property/PicShapePanel";
 import { CxnShapePanel } from "./property/CxnShapePanel";
@@ -21,6 +23,9 @@ import { ChartFramePanel } from "./property/ChartFramePanel";
 import { DiagramFramePanel } from "./property/DiagramFramePanel";
 import { OleFramePanel } from "./property/OleFramePanel";
 import { UnknownShapePanel } from "./property/UnknownShapePanel";
+import { TextPropertyPanel } from "./property/TextPropertyPanel";
+import { useTextEditContext } from "../context/TextEditContext";
+import { isTextEditActive } from "../slide/text-edit";
 
 // =============================================================================
 // Types
@@ -158,6 +163,9 @@ function renderGraphicFramePanel(
  *
  * Props-based component that receives all state and callbacks as props.
  * Can be used with SlideEditor context or with PresentationEditor directly.
+ *
+ * When in text edit mode (TextEditContext is active), shows TextPropertyPanel
+ * for editing character and paragraph properties with Mixed value support.
  */
 export function PropertyPanel({
   slide,
@@ -170,6 +178,10 @@ export function PropertyPanel({
   className,
   style,
 }: PropertyPanelProps) {
+  // Check for text edit mode
+  const textEditContext = useTextEditContext();
+  const isInTextEditMode = textEditContext && isTextEditActive(textEditContext.textEditState);
+
   const handleShapeChange = useCallback(
     (newShape: Shape) => {
       const id = "nonVisual" in newShape ? newShape.nonVisual.id : undefined;
@@ -208,6 +220,15 @@ export function PropertyPanel({
     onSelect,
   };
 
+  // Text edit mode - show text property panel
+  if (isInTextEditMode) {
+    return (
+      <div className={className} style={containerStyle}>
+        <TextPropertyPanel />
+      </div>
+    );
+  }
+
   // No selection - show slide properties
   if (selectedShapes.length === 0) {
     return (
@@ -222,11 +243,14 @@ export function PropertyPanel({
     );
   }
 
-  // Multiple selection
+  // Multiple selection - show common property editors
   if (selectedShapes.length > 1) {
     return (
       <div className={className} style={containerStyle}>
-        <MultiSelectState count={selectedShapes.length} />
+        <MultiSelectPanel
+          shapes={selectedShapes}
+          onShapeChange={onShapeChange}
+        />
       </div>
     );
   }

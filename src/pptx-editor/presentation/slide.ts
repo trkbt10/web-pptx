@@ -66,11 +66,15 @@ function insertSlideAt(
 export function addSlide(
   document: PresentationDocument,
   slide: Slide,
-  afterSlideId?: SlideId
+  afterSlideId?: SlideId,
+  atIndex?: number
 ): { document: PresentationDocument; newSlideId: SlideId } {
   const newSlideId = generateSlideId(document);
   const newSlideWithId: SlideWithId = { id: newSlideId, slide };
-  const insertIndex = getInsertIndex(document, afterSlideId);
+  // atIndex takes precedence over afterSlideId
+  const insertIndex = atIndex !== undefined
+    ? Math.max(0, Math.min(atIndex, document.slides.length))
+    : getInsertIndex(document, afterSlideId);
   const newSlides = insertSlideAt(document.slides, newSlideWithId, insertIndex);
 
   return {

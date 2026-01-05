@@ -9,7 +9,7 @@ import { Accordion } from "../../ui/layout/Accordion";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,
-  TextBodyEditor,
+  MixedTextBodyEditor,
   LineEditor,
   FillEditor,
   EffectsEditor,
@@ -123,7 +123,7 @@ export function SpShapePanel({ shape, onChange }: SpShapePanelProps) {
 
       {shape.textBody && (
         <Accordion title="Text" defaultExpanded={false}>
-          <TextBodyEditor
+          <MixedTextBodyEditor
             value={shape.textBody}
             onChange={(textBody) => onChange({ ...shape, textBody })}
           />
