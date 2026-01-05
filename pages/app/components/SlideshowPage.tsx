@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import type { LoadedPresentation } from "@lib/pptx/app";
-import { useSlideAnimation, SvgContentRenderer } from "../../../src/pptx/render/react";
+import { useSlideAnimation, useSlideTransition, SvgContentRenderer } from "../../../src/pptx/render/react";
 import { useSlideshowKeyboard } from "../hooks/useSlideshowKeyboard";
 import { NavButton } from "./slideshow";
 import {
@@ -46,6 +46,7 @@ export function SlideshowPage({ presentation, startSlide, onExit }: Props) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const slideContentRef = useRef<HTMLDivElement>(null);
+  const slideRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<number | undefined>(undefined);
 
   // Get current slide (timing is accessed via slide.timing)
@@ -53,6 +54,13 @@ export function SlideshowPage({ presentation, startSlide, onExit }: Props) {
 
   // Memoize slide content (synchronous rendering)
   const renderedContent = useMemo(() => slide.renderSVG(), [slide]);
+
+  // Use slide transition hook for slide change effects
+  const { isTransitioning } = useSlideTransition({
+    slideIndex: currentSlide,
+    transition: slide.transition,
+    containerRef: slideRef,
+  });
 
   // Use slide animation hook for clean animation control
   const { isAnimating, skipAnimation, hasAnimations } = useSlideAnimation({
@@ -202,7 +210,8 @@ export function SlideshowPage({ presentation, startSlide, onExit }: Props) {
       {/* Slide content */}
       <div className="slideshow-stage">
         <div
-          className="slideshow-slide"
+          ref={slideRef}
+          className={`slideshow-slide ${isTransitioning ? "transitioning" : ""}`}
           style={{ aspectRatio: `${slideSize.width} / ${slideSize.height}` }}
         >
           <SvgContentRenderer

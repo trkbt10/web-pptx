@@ -287,3 +287,146 @@
     padding: 0 var(--space-3) var(--space-2);
   }
 }
+
+/* =============================================================================
+ * Slide Transitions
+ * CSS-based animations for slide transitions
+ * @see ECMA-376 Part 1, Section 19.5 (Transitions)
+ * ============================================================================= */
+
+/* Base transition setup */
+.slideshow-slide {
+  --transition-duration: 500ms;
+}
+
+/* Fade transition */
+.slide-transition-fade.slide-transition-active {
+  animation: slide-fade var(--transition-duration) ease-out forwards;
+}
+
+@keyframes slide-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Push transition (slide in from right) */
+.slide-transition-push.slide-transition-active {
+  animation: slide-push var(--transition-duration) ease-out forwards;
+}
+
+@keyframes slide-push {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* Cover transition (slide in from right, overlapping) */
+.slide-transition-cover.slide-transition-active {
+  animation: slide-cover var(--transition-duration) ease-out forwards;
+}
+
+@keyframes slide-cover {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* Pull transition (slide in from left) */
+.slide-transition-pull.slide-transition-active {
+  animation: slide-pull var(--transition-duration) ease-out forwards;
+}
+
+@keyframes slide-pull {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+/* Wipe transition (reveal from left) */
+.slide-transition-wipe.slide-transition-active {
+  animation: slide-wipe var(--transition-duration) ease-out forwards;
+  clip-path: inset(0 100% 0 0);
+}
+
+@keyframes slide-wipe {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+/* Blinds transition (horizontal stripes reveal) */
+.slide-transition-blinds.slide-transition-active {
+  animation: slide-blinds var(--transition-duration) ease-out forwards;
+}
+
+@keyframes slide-blinds {
+  from {
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% 0%, 0% 0%,
+      0% 20%, 100% 20%, 100% 20%, 0% 20%,
+      0% 40%, 100% 40%, 100% 40%, 0% 40%,
+      0% 60%, 100% 60%, 100% 60%, 0% 60%,
+      0% 80%, 100% 80%, 100% 80%, 0% 80%
+    );
+  }
+  to {
+    clip-path: polygon(
+      0% 0%, 100% 0%, 100% 20%, 0% 20%,
+      0% 20%, 100% 20%, 100% 40%, 0% 40%,
+      0% 40%, 100% 40%, 100% 60%, 0% 60%,
+      0% 60%, 100% 60%, 100% 80%, 0% 80%,
+      0% 80%, 100% 80%, 100% 100%, 0% 100%
+    );
+  }
+}
+
+/* Dissolve transition (fade with noise) */
+.slide-transition-dissolve.slide-transition-active {
+  animation: slide-dissolve var(--transition-duration) ease-out forwards;
+}
+
+@keyframes slide-dissolve {
+  from { opacity: 0; filter: blur(4px); }
+  to { opacity: 1; filter: blur(0); }
+}
+
+/* Circle transition (expand from center) */
+.slide-transition-circle.slide-transition-active {
+  animation: slide-circle var(--transition-duration) ease-out forwards;
+}
+
+@keyframes slide-circle {
+  from { clip-path: circle(0% at 50% 50%); }
+  to { clip-path: circle(75% at 50% 50%); }
+}
+
+/* Diamond transition (expand from center) */
+.slide-transition-diamond.slide-transition-active {
+  animation: slide-diamond var(--transition-duration) ease-out forwards;
+}
+
+@keyframes slide-diamond {
+  from { clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%); }
+  to { clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); }
+}
+
+/* Split transition (reveal from center horizontally) */
+.slide-transition-split.slide-transition-active {
+  animation: slide-split var(--transition-duration) ease-out forwards;
+}
+
+@keyframes slide-split {
+  from { clip-path: inset(0 50% 0 50%); }
+  to { clip-path: inset(0 0 0 0); }
+}
+
+/* Zoom transition (scale up from center) */
+.slide-transition-zoom.slide-transition-active {
+  animation: slide-zoom var(--transition-duration) ease-out forwards;
+}
+
+@keyframes slide-zoom {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Cut transition (instant, no animation) */
+.slide-transition-cut.slide-transition-active {
+  animation: none;
+}
