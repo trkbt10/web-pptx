@@ -13,7 +13,7 @@ import JSZip from "jszip";
 
 // Import directly from src instead of using @lib alias
 import { openPresentation } from "../../src/pptx";
-import { parseColorScheme, parseFontScheme, parseColorMap } from "../../src/pptx/core/dml/parser/theme";
+import { parseColorScheme, parseFontScheme, parseColorMap } from "../../src/pptx/parser/drawing-ml";
 import { getByPath } from "../../src/xml";
 import { getMimeTypeFromPath } from "../../src/pptx/opc";
 import type { ColorContext, FontScheme, ColorScheme, ColorMap } from "../../src/pptx/domain/resolution";

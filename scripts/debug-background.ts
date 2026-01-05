@@ -6,9 +6,9 @@
 import * as fs from "node:fs";
 import JSZip from "jszip";
 import { openPresentation } from "../src/pptx";
-import { getSlideBackgroundFill, getBackgroundFillData } from "../src/pptx/core/dml/render/background";
+import { getSlideBackgroundFill, getBackgroundFillData } from "../src/pptx/render/drawing-ml";
 import { getTextByPathList, getNode, getString } from "../src/pptx/parser/traverse";
-import { getSolidFill, getSchemeColorFromTheme } from "../src/pptx/core/dml/parser/color";
+import { getSolidFill, getSchemeColorFromTheme } from "../src/pptx/parser/drawing-ml";
 import { isXmlElement, getChild, getChildren, getByPath } from "../src/xml";
 
 async function main() {

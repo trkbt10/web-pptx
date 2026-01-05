@@ -9,11 +9,11 @@
 import { openPresentation } from "../../src/pptx";
 import { parseXml, type XmlElement } from "../../src/xml";
 import { createColorMap } from "../../src/pptx/parser/slide/resource-adapters";
-import { parseFormatScheme, parseColorScheme } from "../../src/pptx/core/dml/parser/theme";
+import { parseFormatScheme, parseColorScheme } from "../../src/pptx/parser/drawing-ml";
 import { loadLayoutData, loadMasterData, loadThemeData } from "../../src/pptx/parser/slide/loader";
 import { getRelationships, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS } from "../../src/pptx/parser/slide/xml-reader";
-import { getGradientFill } from "../../src/pptx/core/dml/parser/fill";
-import { getSolidFill } from "../../src/pptx/core/dml/parser/color";
+import { getGradientFill } from "../../src/pptx/parser/drawing-ml";
+import { getSolidFill } from "../../src/pptx/parser/drawing-ml";
 import { createPresentationFile, THEMES_PPTX_PATH } from "./test-utils";
 
 /**
