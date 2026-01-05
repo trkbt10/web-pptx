@@ -3,7 +3,7 @@
  */
 
 // File abstraction (allows any ZIP library)
-export type { PresentationFile } from "./types/file";
+export type { PresentationFile } from "./domain/resource";
 
 // Presentation reader API (from app layer)
 export { openPresentation } from "./app";

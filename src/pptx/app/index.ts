@@ -3,7 +3,7 @@
  * Main entry point for reading PPTX files
  */
 
-import type { PresentationFile } from "../types/file";
+import type { PresentationFile } from "../domain/resource";
 import type { Presentation, Slide, SlideInfo, ListOptions, PresentationOptions } from "./types";
 import type { SlideFileInfo, ZipFile } from "../opc";
 import type { SlideSize } from "../domain";

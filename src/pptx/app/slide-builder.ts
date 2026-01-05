@@ -5,7 +5,7 @@
  * This is the API layer that builds the public Slide interface.
  */
 
-import type { Slide } from "../types/api";
+import type { Slide } from "./types";
 import type { ZipFile, SlideSize } from "../domain";
 import type { XmlElement, XmlDocument } from "../../xml";
 import { getByPath } from "../../xml";

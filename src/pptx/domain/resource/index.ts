@@ -7,6 +7,7 @@
 
 // Types
 export type {
+  PresentationFile,
   ZipFile,
   ZipEntry,
   ResourceMap,
