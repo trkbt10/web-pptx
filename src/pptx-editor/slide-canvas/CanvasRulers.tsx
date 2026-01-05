@@ -4,7 +4,7 @@
  * Positions rulers relative to the centered canvas.
  */
 
-import type { CSSProperties } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, type CSSProperties, type RefObject } from "react";
 import { SlideRuler } from "../slide/SlideRuler";
 import type { CanvasViewport } from "./use-canvas-viewport";
 import type { CanvasStageMetrics } from "./canvas-metrics";
@@ -17,6 +17,7 @@ export type CanvasRulersProps = {
   readonly slideHeight: number;
   readonly stageMetrics: CanvasStageMetrics;
   readonly rulerThickness: number;
+  readonly scrollRef: RefObject<HTMLDivElement>;
 };
 
 const cornerStyle: CSSProperties = {
@@ -39,13 +40,64 @@ export function CanvasRulers({
   slideHeight,
   stageMetrics,
   rulerThickness,
+  scrollRef,
 }: CanvasRulersProps) {
   if (!showRulers) {
     return null;
   }
 
-  const offsetX = viewport.scrollLeft - stageMetrics.canvasOffsetX;
-  const offsetY = viewport.scrollTop - stageMetrics.canvasOffsetY;
+  const horizontalTrackRef = useRef<HTMLDivElement>(null);
+  const verticalTrackRef = useRef<HTMLDivElement>(null);
+
+  const updateTransforms = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container) {
+      return;
+    }
+    const translateX = -container.scrollLeft + stageMetrics.canvasOffsetX;
+    const translateY = -container.scrollTop + stageMetrics.canvasOffsetY;
+
+    if (horizontalTrackRef.current) {
+      horizontalTrackRef.current.style.transform = `translateX(${translateX}px)`;
+    }
+    if (verticalTrackRef.current) {
+      verticalTrackRef.current.style.transform = `translateY(${translateY}px)`;
+    }
+  }, [scrollRef, stageMetrics.canvasOffsetX, stageMetrics.canvasOffsetY]);
+
+  useLayoutEffect(() => {
+    updateTransforms();
+  }, [updateTransforms, viewport.width, viewport.height, zoom, slideWidth, slideHeight]);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) {
+      return;
+    }
+
+    container.addEventListener("scroll", updateTransforms, { passive: true });
+    return () => {
+      container.removeEventListener("scroll", updateTransforms);
+    };
+  }, [scrollRef, updateTransforms]);
+
+  const horizontalOuterStyle: CSSProperties = {
+    position: "absolute",
+    top: 0,
+    left: rulerThickness,
+    right: 0,
+    height: rulerThickness,
+    overflow: "hidden",
+  };
+
+  const verticalOuterStyle: CSSProperties = {
+    position: "absolute",
+    top: rulerThickness,
+    left: 0,
+    bottom: 0,
+    width: rulerThickness,
+    overflow: "hidden",
+  };
 
   return (
     <>
@@ -56,41 +108,29 @@ export function CanvasRulers({
           height: rulerThickness,
         }}
       />
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: rulerThickness,
-          right: 0,
-          height: rulerThickness,
-        }}
-      >
-        <SlideRuler
-          orientation="horizontal"
-          length={viewport.width}
-          thickness={rulerThickness}
-          zoom={zoom}
-          offsetPx={offsetX}
-          max={slideWidth}
-        />
+      <div style={horizontalOuterStyle}>
+        <div ref={horizontalTrackRef} style={{ width: slideWidth * zoom, willChange: "transform" }}>
+          <SlideRuler
+            orientation="horizontal"
+            length={slideWidth * zoom}
+            thickness={rulerThickness}
+            zoom={zoom}
+            offsetPx={0}
+            max={slideWidth}
+          />
+        </div>
       </div>
-      <div
-        style={{
-          position: "absolute",
-          top: rulerThickness,
-          left: 0,
-          bottom: 0,
-          width: rulerThickness,
-        }}
-      >
-        <SlideRuler
-          orientation="vertical"
-          length={viewport.height}
-          thickness={rulerThickness}
-          zoom={zoom}
-          offsetPx={offsetY}
-          max={slideHeight}
-        />
+      <div style={verticalOuterStyle}>
+        <div ref={verticalTrackRef} style={{ height: slideHeight * zoom, willChange: "transform" }}>
+          <SlideRuler
+            orientation="vertical"
+            length={slideHeight * zoom}
+            thickness={rulerThickness}
+            zoom={zoom}
+            offsetPx={0}
+            max={slideHeight}
+          />
+        </div>
       </div>
     </>
   );

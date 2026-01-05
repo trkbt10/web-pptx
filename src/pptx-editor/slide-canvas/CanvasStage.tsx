@@ -4,9 +4,9 @@
  * Handles canvas centering, rulers, scroll viewport, and wheel zoom.
  */
 
-import { useMemo, useCallback, useLayoutEffect, forwardRef, type CSSProperties } from "react";
+import { useMemo, useCallback, useLayoutEffect, useEffect, useState, forwardRef, type CSSProperties } from "react";
 import type { Slide, Shape } from "../../pptx/domain";
-import type { ShapeId } from "../../pptx/domain/types";
+import type { ShapeId, Pixels } from "../../pptx/domain/types";
 import type { DragState, SelectionState, ResizeHandlePosition } from "../state";
 import type { CreationMode } from "../presentation/types";
 import type { ResourceResolver, ResolvedBackgroundFill, RenderOptions } from "../../pptx/render/core/types";
@@ -24,8 +24,8 @@ export type CanvasStageProps = {
   readonly slide: Slide;
   readonly selection: SelectionState;
   readonly drag: DragState;
-  readonly width: number;
-  readonly height: number;
+  readonly width: Pixels;
+  readonly height: Pixels;
   readonly primaryShape: Shape | undefined;
   readonly selectedShapes: readonly Shape[];
   readonly contextMenuActions: ContextMenuActions;
@@ -100,17 +100,18 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
   canvasRef
 ) {
   const { containerRef: scrollRef, viewport, handleScroll } = useCanvasViewport();
+  const [zoomModifierDown, setZoomModifierDown] = useState(false);
 
-  const zoomedWidth = width * zoom;
-  const zoomedHeight = height * zoom;
+  const widthNum = width as number;
+  const heightNum = height as number;
+  const zoomedWidth = widthNum * zoom;
+  const zoomedHeight = heightNum * zoom;
   const stageMetrics = useMemo(
     () =>
       getCanvasStageMetrics(
         {
           width: viewport.width,
           height: viewport.height,
-          scrollLeft: viewport.scrollLeft,
-          scrollTop: viewport.scrollTop,
         },
         zoomedWidth,
         zoomedHeight,
@@ -141,31 +142,45 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
     }
   }, [viewport.width, viewport.height, stageMetrics, scrollRef, handleScroll, zoomedWidth, zoomedHeight]);
 
-  const handleWheel = useCallback(
-    (event: WheelEvent) => {
-      const isMac = navigator.platform.toUpperCase().includes("MAC");
+  useEffect(() => {
+    const isMac = navigator.platform.toUpperCase().includes("MAC");
+    const handleKeyDown = (event: KeyboardEvent) => {
       const zoomModifier = isMac ? event.metaKey : event.ctrlKey;
       if (zoomModifier) {
-        event.preventDefault();
-        const direction = event.deltaY < 0 ? "in" : "out";
-        onZoomChange(getNextZoomValue(zoom, direction));
-        return;
+        setZoomModifierDown(true);
       }
+    };
+    const handleKeyUp = (event: KeyboardEvent) => {
+      const zoomModifier = isMac ? event.metaKey : event.ctrlKey;
+      if (!zoomModifier) {
+        setZoomModifierDown(false);
+      }
+    };
+    const handleBlur = () => {
+      setZoomModifierDown(false);
+    };
 
-      if (event.shiftKey) {
-        event.preventDefault();
-        const container = scrollRef.current;
-        if (!container) {
-          return;
-        }
-        const delta = event.deltaX !== 0 ? event.deltaX : event.deltaY;
-        container.scrollLeft += delta;
-      }
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", handleBlur);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, []);
+
+  const handleWheel = useCallback(
+    (event: WheelEvent) => {
+      event.preventDefault();
+      const direction = event.deltaY < 0 ? "in" : "out";
+      onZoomChange(getNextZoomValue(zoom, direction));
     },
-    [zoom, onZoomChange, scrollRef]
+    [zoom, onZoomChange]
   );
 
-  useNonPassiveWheel(scrollRef, handleWheel);
+  useNonPassiveWheel(scrollRef, handleWheel, zoomModifierDown);
 
   const scrollContainerStyle: CSSProperties = {
     position: "absolute",
@@ -198,10 +213,11 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
         showRulers={showRulers}
         viewport={viewport}
         zoom={zoom}
-        slideWidth={width}
-        slideHeight={height}
+        slideWidth={widthNum}
+        slideHeight={heightNum}
         stageMetrics={stageMetrics}
         rulerThickness={rulerThickness}
+        scrollRef={scrollRef}
       />
       <div ref={scrollRef} style={scrollContainerStyle} onScroll={handleScroll}>
         <div style={stageStyle}>
@@ -237,8 +253,8 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
                 textBody={textEdit.initialTextBody}
                 colorContext={colorContext}
                 fontScheme={fontScheme}
-                slideWidth={width}
-                slideHeight={height}
+                slideWidth={widthNum}
+                slideHeight={heightNum}
                 onComplete={onTextEditComplete}
                 onCancel={onTextEditCancel}
               />

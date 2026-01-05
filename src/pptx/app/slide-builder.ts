@@ -1,25 +1,35 @@
 /**
  * @file Slide object factory
- * Creates Slide objects with rendering capabilities from SlideData
+ *
+ * Creates Slide objects with rendering capabilities from SlideData.
+ * This is the API layer that builds the public Slide interface.
  */
 
-import type { Slide } from "../../types/api";
-import type { ZipFile, SlideSize } from "../../domain";
-import type { XmlElement, XmlDocument } from "../../../xml";
-import { getByPath } from "../../../xml";
-import type { SlideData } from "../../domain/slide/data";
-import type { RenderOptions } from "../../render/render-options";
-import type { SlideRenderContext } from "./accessor";
-import { createSlideRenderContext } from "./accessor";
-import { createPlaceholderTable, createColorMap } from "../../parser/slide/resource-adapters";
-import { parseTheme, parseMasterTextStyles } from "../../core/dml/parser/theme";
-import { DEFAULT_RENDER_OPTIONS } from "../../render/render-options";
+import type { Slide } from "../types/api";
+import type { ZipFile, SlideSize } from "../domain";
+import type { XmlElement, XmlDocument } from "../../xml";
+import { getByPath } from "../../xml";
+import type { SlideData } from "../domain/slide/data";
+import type { RenderOptions } from "../render/render-options";
+import type { SlideRenderContext } from "../render/core/slide-context";
+import { createSlideRenderContext } from "../render/core/slide-context";
+import { createPlaceholderTable, createColorMap } from "../parser/slide/resource-adapters";
+import { parseTheme, parseMasterTextStyles } from "../core/dml/parser/theme";
+import { DEFAULT_RENDER_OPTIONS } from "../render/render-options";
 import { renderSlideIntegrated, renderSlideSvgIntegrated } from "./slide-render";
-import { parseSlideTimingData } from "../../parser/timing-parser";
+import { parseSlideTimingData } from "../parser/timing-parser";
 
 /**
  * Build SlideRenderContext directly from SlideData.
- * This is the new approach that replaces WarpObject.
+ *
+ * This function coordinates parser and render layer utilities to build
+ * the complete context needed for rendering.
+ *
+ * @param data - Complete slide data with all parsed XML
+ * @param zip - ZipFile adapter for reading resources
+ * @param defaultTextStyle - Default text style from presentation.xml
+ * @param renderOptions - Optional render options for dialect-specific behavior
+ * @returns SlideRenderContext for use in rendering
  */
 function buildSlideRenderContext(
   data: SlideData,
@@ -76,7 +86,11 @@ function buildSlideRenderContext(
 }
 
 /**
- * Create a Slide object from SlideData
+ * Create a Slide object from SlideData.
+ *
+ * This is the main factory function that builds the public Slide API object
+ * with rendering methods.
+ *
  * @param data - Complete slide data with all parsed XML
  * @param zip - ZipFile adapter for reading resources
  * @param defaultTextStyle - Default text style from presentation.xml

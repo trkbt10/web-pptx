@@ -9,15 +9,11 @@ import { useCallback, useLayoutEffect, useRef, useState, type RefObject } from "
 export type CanvasViewport = {
   readonly width: number;
   readonly height: number;
-  readonly scrollLeft: number;
-  readonly scrollTop: number;
 };
 
 const DEFAULT_VIEWPORT: CanvasViewport = {
   width: 0,
   height: 0,
-  scrollLeft: 0,
-  scrollTop: 0,
 };
 
 /**
@@ -40,8 +36,6 @@ export function useCanvasViewport(): {
     setViewport({
       width: container.clientWidth,
       height: container.clientHeight,
-      scrollLeft: container.scrollLeft,
-      scrollTop: container.scrollTop,
     });
   }, []);
 

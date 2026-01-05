@@ -14,7 +14,7 @@ import { parseSlide } from "../../src/pptx/parser/slide/slide-parser";
 import { resolveColor } from "../../src/pptx/core/dml/render/color";
 import { parseXml, getByPath } from "../../src/xml";
 import { createParseContext } from "../../src/pptx/parser/context";
-import { createSlideRenderContext } from "../../src/pptx/reader/slide/accessor";
+import { createSlideRenderContext } from "../../src/pptx/render/core/slide-context";
 import type { ZipFile } from "../../src/pptx/domain";
 import {
   createPlaceholderTable,
@@ -22,7 +22,7 @@ import {
 } from "../../src/pptx/parser/slide/resource-adapters";
 import { parseRelationships } from "../../src/pptx/opc";
 import { parseTheme, parseColorScheme, parseMasterTextStyles } from "../../src/pptx/core/dml/parser/theme";
-import { renderSlideSvgIntegrated } from "../../src/pptx/reader/slide/slide-render";
+import { renderSlideSvgIntegrated } from "../../src/pptx/app/slide-render";
 import type { SpShape, Color, Pixels } from "../../src/pptx/domain";
 import { createPresentationFile, THEMES_PPTX_PATH } from "./test-utils";
 

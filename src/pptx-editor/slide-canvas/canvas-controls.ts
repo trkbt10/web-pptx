@@ -9,6 +9,9 @@ import type { SelectOption } from "../types";
 export const ZOOM_STEPS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 3] as const;
 export const SNAP_STEPS = [1, 2, 5, 10, 20, 25, 50] as const;
 
+/**
+ * Find the nearest zoom step index for a value.
+ */
 export function getClosestZoomIndex(value: number): number {
   return ZOOM_STEPS.reduce((bestIndex, step, index) => {
     const bestDiff = Math.abs(ZOOM_STEPS[bestIndex] - value);
@@ -17,6 +20,9 @@ export function getClosestZoomIndex(value: number): number {
   }, 0);
 }
 
+/**
+ * Get the next zoom value for a direction.
+ */
 export function getNextZoomValue(value: number, direction: "in" | "out"): number {
   const currentIndex = getClosestZoomIndex(value);
   const delta = direction === "in" ? 1 : -1;
@@ -24,6 +30,9 @@ export function getNextZoomValue(value: number, direction: "in" | "out"): number
   return ZOOM_STEPS[nextIndex];
 }
 
+/**
+ * Build zoom selector options.
+ */
 export function getZoomOptions(): readonly SelectOption<string>[] {
   return ZOOM_STEPS.map((step) => ({
     value: `${Math.round(step * 100)}`,
@@ -31,6 +40,9 @@ export function getZoomOptions(): readonly SelectOption<string>[] {
   }));
 }
 
+/**
+ * Build snap step selector options.
+ */
 export function getSnapOptions(): readonly SelectOption<string>[] {
   return SNAP_STEPS.map((step) => ({
     value: `${step}`,
@@ -38,6 +50,9 @@ export function getSnapOptions(): readonly SelectOption<string>[] {
   }));
 }
 
+/**
+ * Snap a value to the nearest grid step.
+ */
 export function snapValue(value: number, step: number): number {
   if (step <= 0) {
     return value;

@@ -12,9 +12,9 @@ import type { SlideData } from "../domain/slide/data";
 import type { RenderOptions } from "../render/render-options";
 import { parseContentTypes, buildSlideFileInfoList } from "../opc";
 import { parseSlideSizeFromXml, parseDefaultTextStyle, parseAppVersion } from "../domain";
-import { createZipAdapter } from "../reader/zip-adapter";
+import { createZipAdapter } from "../domain/resource/zip-adapter";
 import { readXml, getRelationships, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS } from "../parser/slide/xml-reader";
-import { createSlide } from "../reader/slide/slide-builder";
+import { createSlide } from "./slide-builder";
 import { loadLayoutData, loadMasterData, loadThemeData, loadDiagramData } from "../parser/slide/loader";
 
 // Re-export types for convenience

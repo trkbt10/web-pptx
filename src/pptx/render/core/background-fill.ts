@@ -9,7 +9,25 @@
  */
 
 import type { ResolvedBackgroundFill } from "./types";
-import type { BackgroundFill } from "../../core/dml/render/types";
+import type { BackgroundFill, GradientData } from "../../core/dml/render/types";
+
+/**
+ * Calculate radial center from fillToRect.
+ * fillToRect values are in 1/100000 percentages (per ECMA-376).
+ * Convert to 0-100 percentage for SVG.
+ */
+function calculateRadialCenter(
+  gradientData: GradientData,
+): { cx: number; cy: number } | undefined {
+  if (gradientData.type !== "path" || gradientData.fillToRect === undefined) {
+    return undefined;
+  }
+  const { l, r, t, b } = gradientData.fillToRect;
+  return {
+    cx: (l + r) / 2000,
+    cy: (t + b) / 2000,
+  };
+}
 
 /**
  * Convert BackgroundFill from core/dml to ResolvedBackgroundFill.
@@ -34,18 +52,7 @@ export function toResolvedBackgroundFill(bgFillData: BackgroundFill): ResolvedBa
 
   if (bgFillData.gradientData !== undefined) {
     const isRadial = bgFillData.gradientData.type === "path";
-    const fillToRect = bgFillData.gradientData.fillToRect;
-
-    // Calculate radial center from fillToRect
-    // fillToRect values are in 1/100000 percentages (per ECMA-376)
-    // Convert to 0-100 percentage for SVG
-    let radialCenter: { cx: number; cy: number } | undefined;
-    if (isRadial && fillToRect !== undefined) {
-      radialCenter = {
-        cx: (fillToRect.l + fillToRect.r) / 2000,
-        cy: (fillToRect.t + fillToRect.b) / 2000,
-      };
-    }
+    const radialCenter = calculateRadialCenter(bgFillData.gradientData);
 
     return {
       type: "gradient",

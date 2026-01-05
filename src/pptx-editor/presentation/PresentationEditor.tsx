@@ -645,8 +645,8 @@ function EditorContent({
               slide={slide}
               selection={selection}
               drag={drag}
-              width={width as number}
-              height={height as number}
+              width={width}
+              height={height}
               primaryShape={primaryShape}
               selectedShapes={selectedShapes}
               contextMenuActions={contextMenuActions}

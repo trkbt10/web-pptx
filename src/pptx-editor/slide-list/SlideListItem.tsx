@@ -58,9 +58,9 @@ export function SlideListItem({
       <div
         style={{
           position: "relative",
-          flex: 1,
+          width: orientation === "vertical" ? "100%" : undefined,
           minWidth: orientation === "horizontal" ? "120px" : undefined,
-          maxWidth: orientation === "vertical" ? "100%" : "180px",
+          maxWidth: orientation === "horizontal" ? "160px" : undefined,
         }}
         draggable={isEditable}
         onDragStart={isEditable ? onDragStart : undefined}

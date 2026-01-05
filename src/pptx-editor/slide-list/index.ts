@@ -14,6 +14,32 @@ export { SlideListGap } from "./SlideListGap";
 export { SlideNumberBadge } from "./SlideNumberBadge";
 export { DeleteButton } from "./DeleteButton";
 
+// Selection functions
+export {
+  selectSingle,
+  selectRange,
+  toggleSelection,
+  addToSelection,
+  removeFromSelection,
+  isSelected as isSlideSelected,
+  isSelectionEmpty as isSlideSelectionEmpty,
+  selectAll as selectAllSlides,
+  handleSelectionClick,
+} from "./selection";
+
+// Drag-drop functions
+export {
+  getDraggingIds,
+  getVerticalDropPosition,
+  getHorizontalDropPosition,
+  calculateTargetIndex,
+  isValidDrop,
+  createDragStartState,
+  updateDragOverState,
+  isDragTarget,
+  getDragPositionForSlide,
+} from "./drag-drop";
+
 // Types
 export type {
   SlideListProps,

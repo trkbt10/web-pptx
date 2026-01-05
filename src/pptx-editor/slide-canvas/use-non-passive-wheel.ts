@@ -11,9 +11,13 @@ import { useEffect, type RefObject } from "react";
  */
 export function useNonPassiveWheel(
   targetRef: RefObject<HTMLElement>,
-  onWheel: (event: WheelEvent) => void
+  onWheel: (event: WheelEvent) => void,
+  enabled = true
 ): void {
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
     const target = targetRef.current;
     if (!target) {
       return;
@@ -24,5 +28,5 @@ export function useNonPassiveWheel(
     return () => {
       target.removeEventListener("wheel", onWheel);
     };
-  }, [targetRef, onWheel]);
+  }, [targetRef, onWheel, enabled]);
 }

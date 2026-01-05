@@ -62,11 +62,8 @@ export type SlideDragState = {
   readonly isDragging: boolean;
   /** IDs of slides being dragged */
   readonly draggingIds: readonly SlideId[];
-  /** Target position indicator */
-  readonly targetPosition: {
-    readonly slideId: SlideId;
-    readonly position: "before" | "after";
-  } | null;
+  /** Target gap index (0 = before first slide, n = after nth slide) */
+  readonly targetGapIndex: number | null;
 };
 
 /**
@@ -76,7 +73,7 @@ export function createIdleDragState(): SlideDragState {
   return {
     isDragging: false,
     draggingIds: [],
-    targetPosition: null,
+    targetGapIndex: null,
   };
 }
 
@@ -152,6 +149,7 @@ export type SlideListItemProps = {
   readonly isPrimary: boolean;
   readonly isActive: boolean;
   readonly canDelete: boolean;
+  readonly isDragging: boolean;
   readonly renderThumbnail?: (
     slide: SlideWithId,
     index: number
@@ -164,10 +162,6 @@ export type SlideListItemProps = {
 
   // Drag handlers
   readonly onDragStart: (e: React.DragEvent) => void;
-  readonly onDragOver: (e: React.DragEvent) => void;
-  readonly onDrop: (e: React.DragEvent) => void;
-  readonly isDragTarget: boolean;
-  readonly dragPosition: "before" | "after" | null;
 
   /** Ref for scroll-into-view */
   readonly itemRef?: React.RefObject<HTMLDivElement | null>;
@@ -180,9 +174,12 @@ export type SlideListGapProps = {
   readonly index: number;
   readonly orientation: SlideListOrientation;
   readonly isHovered: boolean;
+  readonly isDragTarget: boolean;
   readonly onMouseEnter: () => void;
   readonly onMouseLeave: () => void;
   readonly onClick: () => void;
+  readonly onDragOver: (e: React.DragEvent) => void;
+  readonly onDrop: (e: React.DragEvent) => void;
 };
 
 /**

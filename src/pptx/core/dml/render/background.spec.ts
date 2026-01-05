@@ -3,7 +3,7 @@
  */
 
 import { getSlideBackgroundFill, getBackgroundFillData } from "./background";
-import type { SlideRenderContext } from "../../../reader/slide/accessor";
+import type { SlideRenderContext } from "../../../render/core/slide-context";
 import type { XmlElement } from "../../../../xml/index";
 
 /**

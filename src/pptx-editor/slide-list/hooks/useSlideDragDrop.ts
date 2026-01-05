@@ -2,12 +2,24 @@
  * @file Slide drag-and-drop hook
  *
  * Manages multi-item drag-and-drop for slide reordering.
+ * Uses pure functions from drag-drop.ts for testable logic.
  */
 
 import { useCallback, useState } from "react";
 import type { SlideId, SlideWithId } from "../../presentation/types";
 import type { SlideDragState, SlideListOrientation } from "../types";
 import { createIdleDragState } from "../types";
+import {
+  getDraggingIds,
+  getVerticalDropPosition,
+  getHorizontalDropPosition,
+  calculateTargetIndex,
+  isValidDrop,
+  createDragStartState,
+  updateDragOverState,
+  isDragTarget as isDragTargetFn,
+  getDragPositionForSlide,
+} from "../drag-drop";
 
 export type UseSlideDragDropOptions = {
   /** Slides array */
@@ -67,11 +79,7 @@ export function useSlideDragDrop(
 
   const handleDragStart = useCallback(
     (e: React.DragEvent, slideId: SlideId) => {
-      // If dragging a selected item, drag all selected
-      // If dragging unselected item, drag only that item
-      const draggingIds = selectedIds.includes(slideId)
-        ? [...selectedIds]
-        : [slideId];
+      const draggingIds = getDraggingIds(selectedIds, slideId);
 
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData(
@@ -79,64 +87,42 @@ export function useSlideDragDrop(
         JSON.stringify(draggingIds)
       );
 
-      setDragState({
-        isDragging: true,
-        draggingIds,
-        targetPosition: null,
-      });
+      setDragState(createDragStartState(draggingIds));
     },
     [selectedIds]
   );
 
   const handleDragOver = useCallback(
-    (e: React.DragEvent, slideId: SlideId, index: number) => {
+    (e: React.DragEvent, slideId: SlideId, _index: number) => {
       e.preventDefault();
 
-      // Don't show indicator on items being dragged
-      if (dragState.draggingIds.includes(slideId)) {
-        setDragState((prev) => ({ ...prev, targetPosition: null }));
-        return;
-      }
-
       const rect = e.currentTarget.getBoundingClientRect();
-      const position = getDropPosition(e, rect, orientation);
+      const position =
+        orientation === "vertical"
+          ? getVerticalDropPosition(e.clientY, rect.top, rect.height)
+          : getHorizontalDropPosition(e.clientX, rect.left, rect.width);
 
-      setDragState((prev) => ({
-        ...prev,
-        targetPosition: { slideId, position },
-      }));
+      setDragState((prev) => updateDragOverState(prev, slideId, position));
     },
-    [dragState.draggingIds, orientation]
+    [orientation]
   );
 
   const handleDrop = useCallback(
     (e: React.DragEvent, slideId: SlideId, index: number) => {
       e.preventDefault();
 
-      if (!dragState.isDragging || dragState.draggingIds.length === 0) {
+      if (!isValidDrop(dragState, slideId)) {
         setDragState(createIdleDragState());
         return;
       }
 
-      // Don't drop on self
-      if (dragState.draggingIds.includes(slideId)) {
-        setDragState(createIdleDragState());
-        return;
-      }
-
-      // Calculate target index
-      let targetIndex = index;
-      if (dragState.targetPosition?.position === "after") {
-        targetIndex = index + 1;
-      }
-
-      // Adjust for items being moved from before target
-      const itemsMovingFromBefore = dragState.draggingIds.filter((id) => {
-        const idx = slides.findIndex((s) => s.id === id);
-        return idx < targetIndex;
-      }).length;
-
-      targetIndex -= itemsMovingFromBefore;
+      const position = dragState.targetPosition?.position ?? "before";
+      const targetIndex = calculateTargetIndex(
+        slides,
+        dragState.draggingIds,
+        index,
+        position
+      );
 
       onMoveSlides?.(dragState.draggingIds, targetIndex);
       setDragState(createIdleDragState());
@@ -154,18 +140,15 @@ export function useSlideDragDrop(
   );
 
   const isDragTarget = useCallback(
-    (slideId: SlideId) => dragState.targetPosition?.slideId === slideId,
-    [dragState.targetPosition]
+    (slideId: SlideId) => isDragTargetFn(dragState, slideId),
+    [dragState]
   );
 
   const getDragPosition = useCallback(
     (slideId: SlideId): "before" | "after" | null => {
-      if (dragState.targetPosition?.slideId === slideId) {
-        return dragState.targetPosition.position;
-      }
-      return null;
+      return getDragPositionForSlide(dragState, slideId);
     },
-    [dragState.targetPosition]
+    [dragState]
   );
 
   return {
@@ -178,21 +161,4 @@ export function useSlideDragDrop(
     isDragTarget,
     getDragPosition,
   };
-}
-
-/**
- * Calculate drop position based on cursor location
- */
-function getDropPosition(
-  e: React.DragEvent,
-  rect: DOMRect,
-  orientation: SlideListOrientation
-): "before" | "after" {
-  if (orientation === "vertical") {
-    const midY = rect.top + rect.height / 2;
-    return e.clientY < midY ? "before" : "after";
-  }
-  // horizontal
-  const midX = rect.left + rect.width / 2;
-  return e.clientX < midX ? "before" : "after";
 }

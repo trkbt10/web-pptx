@@ -23,8 +23,8 @@ export function getContainerStyle(
   return {
     display: "flex",
     flexDirection: orientation === "vertical" ? "column" : "row",
-    gap: spacingTokens.xs,
-    padding: spacingTokens.sm,
+    gap: orientation === "vertical" ? "12px" : "16px",
+    padding: orientation === "vertical" ? "16px 12px" : "12px 16px",
     overflow: "auto",
     height: "100%",
   };
@@ -41,7 +41,7 @@ export function getItemWrapperStyle(
     position: "relative",
     display: "flex",
     alignItems: "center",
-    gap: spacingTokens.sm,
+    gap: orientation === "vertical" ? "8px" : "4px",
     flexDirection: orientation === "vertical" ? "row" : "column",
     flexShrink: 0,
   };
@@ -55,25 +55,27 @@ export function getNumberBadgeStyle(
   orientation: SlideListOrientation
 ): CSSProperties {
   const base: CSSProperties = {
-    fontSize: fontTokens.size.xs,
-    fontWeight: fontTokens.weight.semibold,
-    color: colorTokens.text.tertiary,
+    fontSize: "11px",
+    fontWeight: 500,
+    fontVariantNumeric: "tabular-nums",
+    color: "rgba(0, 0, 0, 0.4)",
     textAlign: "center",
     userSelect: "none",
     flexShrink: 0,
+    lineHeight: 1,
   };
 
   if (orientation === "vertical") {
     return {
       ...base,
-      minWidth: "24px",
+      minWidth: "20px",
     };
   }
 
   // horizontal
   return {
     ...base,
-    minHeight: "16px",
+    marginBottom: "2px",
   };
 }
 
@@ -81,31 +83,46 @@ export function getNumberBadgeStyle(
 // Thumbnail styles
 // =============================================================================
 
+/**
+ * Selection ring color based on state.
+ * Uses box-shadow inset to avoid layout shift.
+ */
+function getSelectionRing(
+  isSelected: boolean,
+  isPrimary: boolean,
+  isActive: boolean
+): string {
+  if (isSelected) {
+    const color = isPrimary
+      ? colorTokens.selection.primary
+      : colorTokens.selection.secondary;
+    return `inset 0 0 0 2px ${color}`;
+  }
+  if (isActive) {
+    return `inset 0 0 0 2px ${colorTokens.accent.primary}`;
+  }
+  return "none";
+}
+
 export function getThumbnailContainerStyle(
   aspectRatio: string,
   isSelected: boolean,
   isPrimary: boolean,
   isActive: boolean
 ): CSSProperties {
-  let borderColor = "transparent";
-
-  if (isSelected) {
-    borderColor = isPrimary
-      ? colorTokens.selection.primary
-      : colorTokens.selection.secondary;
-  } else if (isActive) {
-    borderColor = colorTokens.accent.primary;
-  }
+  const selectionRing = getSelectionRing(isSelected, isPrimary, isActive);
+  const baseShadow = "0 1px 2px rgba(0, 0, 0, 0.08)";
 
   return {
     width: "100%",
     height: "auto",
     aspectRatio,
     backgroundColor: "#fff",
-    border: `2px solid ${borderColor}`,
-    borderRadius: radiusTokens.sm,
-    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.3)",
-    transition: "border-color 0.15s ease",
+    borderRadius: "3px",
+    boxShadow: selectionRing !== "none"
+      ? `${selectionRing}, ${baseShadow}`
+      : baseShadow,
+    transition: "box-shadow 0.12s ease",
     position: "relative",
     overflow: "hidden",
     cursor: "pointer",

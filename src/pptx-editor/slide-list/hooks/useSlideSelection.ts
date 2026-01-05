@@ -2,12 +2,21 @@
  * @file Slide selection hook
  *
  * Manages multi-select with Shift+click range selection and Ctrl/Cmd+click toggle.
+ * Uses pure functions from selection.ts for testable logic.
  */
 
 import { useCallback, useState } from "react";
 import type { SlideId, SlideWithId } from "../../presentation/types";
 import type { SlideSelectionState } from "../types";
-import { createEmptySlideSelection, createSingleSlideSelection } from "../types";
+import { createEmptySlideSelection } from "../types";
+import {
+  selectSingle as selectSingleFn,
+  selectRange as selectRangeFn,
+  toggleSelection as toggleSelectionFn,
+  selectAll as selectAllFn,
+  isSelected as isSelectedFn,
+  handleSelectionClick,
+} from "../selection";
 
 export type UseSlideSelectionOptions = {
   /** Slides array for index lookup */
@@ -65,47 +74,23 @@ export function useSlideSelection(
 
   const selectSingle = useCallback(
     (slideId: SlideId, index: number) => {
-      setSelection(createSingleSlideSelection(slideId, index));
+      setSelection(selectSingleFn(slideId, index));
     },
     [setSelection]
   );
 
   const selectRange = useCallback(
     (fromIndex: number, toIndex: number) => {
-      const start = Math.min(fromIndex, toIndex);
-      const end = Math.max(fromIndex, toIndex);
-      const rangeIds = slides.slice(start, end + 1).map((s) => s.id);
-      const primaryId = slides[toIndex]?.id;
-
-      setSelection({
-        selectedIds: rangeIds,
-        primaryId,
-        anchorIndex: fromIndex,
-      });
+      setSelection(selectRangeFn(slides, fromIndex, toIndex));
     },
     [slides, setSelection]
   );
 
   const toggleSelection = useCallback(
     (slideId: SlideId, index: number) => {
-      const isCurrentlySelected = selection.selectedIds.includes(slideId);
-
-      if (isCurrentlySelected) {
-        const newIds = selection.selectedIds.filter((id) => id !== slideId);
-        setSelection({
-          selectedIds: newIds,
-          primaryId: newIds.length > 0 ? newIds[newIds.length - 1] : undefined,
-          anchorIndex: newIds.length > 0 ? index : undefined,
-        });
-      } else {
-        setSelection({
-          selectedIds: [...selection.selectedIds, slideId],
-          primaryId: slideId,
-          anchorIndex: index,
-        });
-      }
+      setSelection(toggleSelectionFn(selection, slideId, index));
     },
-    [selection.selectedIds, setSelection]
+    [selection, setSelection]
   );
 
   const clearSelection = useCallback(() => {
@@ -113,36 +98,28 @@ export function useSlideSelection(
   }, [setSelection]);
 
   const selectAll = useCallback(() => {
-    if (slides.length === 0) return;
-
-    setSelection({
-      selectedIds: slides.map((s) => s.id),
-      primaryId: slides[0]?.id,
-      anchorIndex: 0,
-    });
+    setSelection(selectAllFn(slides));
   }, [slides, setSelection]);
 
   const handleClick = useCallback(
     (slideId: SlideId, index: number, event: React.MouseEvent) => {
       const isMetaOrCtrl = event.metaKey || event.ctrlKey;
-
-      if (event.shiftKey && selection.anchorIndex !== undefined) {
-        // Shift+click: range selection from anchor to current
-        selectRange(selection.anchorIndex, index);
-      } else if (isMetaOrCtrl) {
-        // Ctrl/Cmd+click: toggle selection
-        toggleSelection(slideId, index);
-      } else {
-        // Normal click: single selection
-        selectSingle(slideId, index);
-      }
+      const newSelection = handleSelectionClick(
+        slides,
+        selection,
+        slideId,
+        index,
+        event.shiftKey,
+        isMetaOrCtrl
+      );
+      setSelection(newSelection);
     },
-    [selection.anchorIndex, selectRange, toggleSelection, selectSingle]
+    [slides, selection, setSelection]
   );
 
   const isSelected = useCallback(
-    (slideId: SlideId) => selection.selectedIds.includes(slideId),
-    [selection.selectedIds]
+    (slideId: SlideId) => isSelectedFn(selection, slideId),
+    [selection]
   );
 
   return {
