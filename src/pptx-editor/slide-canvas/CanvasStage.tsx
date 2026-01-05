@@ -8,7 +8,7 @@ import { useMemo, useCallback, useLayoutEffect, forwardRef, type CSSProperties }
 import type { Slide, Shape } from "../../pptx/domain";
 import type { ShapeId } from "../../pptx/domain/types";
 import type { DragState, SelectionState, ResizeHandlePosition } from "../state";
-import type { CreationMode } from "./types";
+import type { CreationMode } from "../presentation/types";
 import type { ResourceResolver, ResolvedBackgroundFill, RenderOptions } from "../../pptx/render/core/types";
 import type { ColorContext, FontScheme } from "../../pptx/domain/resolution";
 import { SlideCanvas } from "../slide/SlideCanvas";

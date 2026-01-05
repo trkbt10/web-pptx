@@ -35,9 +35,9 @@ import { clientToSlideCoords } from "../shape/coords";
 import { withUpdatedTransform } from "../shape/transform";
 import { calculateAlignedBounds } from "../shape/alignment";
 import { createRenderContextFromApiSlide, getLayoutNonPlaceholderShapes } from "./slide-render-context-builder";
-import { CanvasControls } from "./CanvasControls";
-import { CanvasStage } from "./CanvasStage";
-import { snapValue } from "./canvas-controls";
+import { CanvasControls } from "../slide-canvas/CanvasControls";
+import { CanvasStage } from "../slide-canvas/CanvasStage";
+import { snapValue } from "../slide-canvas/canvas-controls";
 
 // =============================================================================
 // Types
