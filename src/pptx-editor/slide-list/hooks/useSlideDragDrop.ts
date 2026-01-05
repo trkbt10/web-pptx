@@ -2,7 +2,7 @@
  * @file Slide drag-and-drop hook
  *
  * Manages multi-item drag-and-drop for slide reordering.
- * Uses pure functions from drag-drop.ts for testable logic.
+ * Uses gap-based targeting: indicator appears between slides, not on them.
  */
 
 import { useCallback, useState } from "react";
@@ -11,14 +11,11 @@ import type { SlideDragState, SlideListOrientation } from "../types";
 import { createIdleDragState } from "../types";
 import {
   getDraggingIds,
-  getVerticalDropPosition,
-  getHorizontalDropPosition,
-  calculateTargetIndex,
-  isValidDrop,
   createDragStartState,
-  updateDragOverState,
-  isDragTarget as isDragTargetFn,
-  getDragPositionForSlide,
+  updateDragOverGap,
+  isValidGapDrop,
+  calculateTargetIndexFromGap,
+  isGapDragTarget,
 } from "../drag-drop";
 
 export type UseSlideDragDropOptions = {
@@ -38,40 +35,27 @@ export type UseSlideDragDropOptions = {
 export type UseSlideDragDropResult = {
   /** Current drag state */
   readonly dragState: SlideDragState;
-  /** Create drag start handler for a slide */
-  readonly handleDragStart: (
-    e: React.DragEvent,
-    slideId: SlideId
-  ) => void;
-  /** Create drag over handler for a slide */
-  readonly handleDragOver: (
-    e: React.DragEvent,
-    slideId: SlideId,
-    index: number
-  ) => void;
-  /** Create drop handler for a slide */
-  readonly handleDrop: (
-    e: React.DragEvent,
-    slideId: SlideId,
-    index: number
-  ) => void;
+  /** Handle drag start for a slide */
+  readonly handleDragStart: (e: React.DragEvent, slideId: SlideId) => void;
+  /** Handle drag over a gap */
+  readonly handleGapDragOver: (e: React.DragEvent, gapIndex: number) => void;
+  /** Handle drop on a gap */
+  readonly handleGapDrop: (e: React.DragEvent, gapIndex: number) => void;
   /** Handle drag end */
   readonly handleDragEnd: () => void;
   /** Check if a slide is being dragged */
   readonly isDragging: (slideId: SlideId) => boolean;
-  /** Check if a slide is a drag target */
-  readonly isDragTarget: (slideId: SlideId) => boolean;
-  /** Get drag position for a slide */
-  readonly getDragPosition: (slideId: SlideId) => "before" | "after" | null;
+  /** Check if a gap is the drag target */
+  readonly isGapTarget: (gapIndex: number) => boolean;
 };
 
 /**
- * Hook for managing slide drag-and-drop
+ * Hook for managing slide drag-and-drop with gap-based targeting
  */
 export function useSlideDragDrop(
   options: UseSlideDragDropOptions
 ): UseSlideDragDropResult {
-  const { slides, selectedIds, orientation, onMoveSlides } = options;
+  const { slides, selectedIds, onMoveSlides } = options;
 
   const [dragState, setDragState] = useState<SlideDragState>(
     createIdleDragState()
@@ -92,36 +76,28 @@ export function useSlideDragDrop(
     [selectedIds]
   );
 
-  const handleDragOver = useCallback(
-    (e: React.DragEvent, slideId: SlideId, _index: number) => {
+  const handleGapDragOver = useCallback(
+    (e: React.DragEvent, gapIndex: number) => {
       e.preventDefault();
-
-      const rect = e.currentTarget.getBoundingClientRect();
-      const position =
-        orientation === "vertical"
-          ? getVerticalDropPosition(e.clientY, rect.top, rect.height)
-          : getHorizontalDropPosition(e.clientX, rect.left, rect.width);
-
-      setDragState((prev) => updateDragOverState(prev, slideId, position));
+      e.dataTransfer.dropEffect = "move";
+      setDragState((prev) => updateDragOverGap(prev, gapIndex));
     },
-    [orientation]
+    []
   );
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent, slideId: SlideId, index: number) => {
+  const handleGapDrop = useCallback(
+    (e: React.DragEvent, gapIndex: number) => {
       e.preventDefault();
 
-      if (!isValidDrop(dragState, slideId)) {
+      if (!isValidGapDrop(dragState, gapIndex, slides)) {
         setDragState(createIdleDragState());
         return;
       }
 
-      const position = dragState.targetPosition?.position ?? "before";
-      const targetIndex = calculateTargetIndex(
+      const targetIndex = calculateTargetIndexFromGap(
         slides,
         dragState.draggingIds,
-        index,
-        position
+        gapIndex
       );
 
       onMoveSlides?.(dragState.draggingIds, targetIndex);
@@ -139,26 +115,18 @@ export function useSlideDragDrop(
     [dragState.draggingIds]
   );
 
-  const isDragTarget = useCallback(
-    (slideId: SlideId) => isDragTargetFn(dragState, slideId),
-    [dragState]
-  );
-
-  const getDragPosition = useCallback(
-    (slideId: SlideId): "before" | "after" | null => {
-      return getDragPositionForSlide(dragState, slideId);
-    },
+  const isGapTarget = useCallback(
+    (gapIndex: number) => isGapDragTarget(dragState, gapIndex),
     [dragState]
   );
 
   return {
     dragState,
     handleDragStart,
-    handleDragOver,
-    handleDrop,
+    handleGapDragOver,
+    handleGapDrop,
     handleDragEnd,
     isDragging,
-    isDragTarget,
-    getDragPosition,
+    isGapTarget,
   };
 }

@@ -1,7 +1,9 @@
 /**
  * @file Slide drag-and-drop tests
  *
- * Tests for D&D logic: drag start, drag over position, drop index calculation
+ * Tests for D&D logic with gap-based targeting:
+ * - Indicator appears between slides, not on them
+ * - Drop targets are gaps, not slides
  */
 
 import { describe, it, expect } from "vitest";
@@ -12,11 +14,11 @@ import {
   getVerticalDropPosition,
   getHorizontalDropPosition,
   calculateTargetIndex,
-  isValidDrop,
   createDragStartState,
-  updateDragOverState,
-  isDragTarget,
-  getDragPositionForSlide,
+  updateDragOverGap,
+  isValidGapDrop,
+  calculateTargetIndexFromGap,
+  isGapDragTarget,
 } from "./drag-drop";
 
 // =============================================================================
@@ -39,7 +41,7 @@ describe("createIdleDragState", () => {
     const state = createIdleDragState();
     expect(state.isDragging).toBe(false);
     expect(state.draggingIds).toEqual([]);
-    expect(state.targetPosition).toBeNull();
+    expect(state.targetGapIndex).toBeNull();
   });
 });
 
@@ -49,7 +51,7 @@ describe("createDragStartState", () => {
 
     expect(state.isDragging).toBe(true);
     expect(state.draggingIds).toEqual(["slide-1", "slide-2"]);
-    expect(state.targetPosition).toBeNull();
+    expect(state.targetGapIndex).toBeNull();
   });
 });
 
@@ -213,109 +215,123 @@ describe("calculateTargetIndex", () => {
 });
 
 // =============================================================================
-// Drop validation
+// Gap-based drop validation
 // =============================================================================
 
-describe("isValidDrop", () => {
+describe("isValidGapDrop", () => {
+  const slides = createTestSlides(5);
+
   it("returns false when not dragging", () => {
     const dragState = createIdleDragState();
 
-    const result = isValidDrop(dragState, "slide-2");
-
-    expect(result).toBe(false);
+    expect(isValidGapDrop(dragState, 2, slides)).toBe(false);
   });
 
-  it("returns false when dropping on dragged item", () => {
+  it("returns false when gap is adjacent to dragged slide (no-op)", () => {
+    // Dragging slide-2 (index 1)
     const dragState = createDragStartState(["slide-2"]);
 
-    const result = isValidDrop(dragState, "slide-2");
-
-    expect(result).toBe(false);
+    // Gap 1 is before slide-2, gap 2 is after slide-2 -> both are no-ops
+    expect(isValidGapDrop(dragState, 1, slides)).toBe(false);
+    expect(isValidGapDrop(dragState, 2, slides)).toBe(false);
   });
 
-  it("returns true for valid drop target", () => {
-    const dragState = createDragStartState(["slide-1"]);
+  it("returns true for valid gap that causes movement", () => {
+    // Dragging slide-2 (index 1)
+    const dragState = createDragStartState(["slide-2"]);
 
-    const result = isValidDrop(dragState, "slide-3");
-
-    expect(result).toBe(true);
+    // Gap 0 (before slide-1), gap 3+ are valid
+    expect(isValidGapDrop(dragState, 0, slides)).toBe(true);
+    expect(isValidGapDrop(dragState, 3, slides)).toBe(true);
+    expect(isValidGapDrop(dragState, 4, slides)).toBe(true);
   });
 
-  it("returns false when dropping on any slide in multi-select", () => {
-    const dragState = createDragStartState(["slide-1", "slide-2", "slide-3"]);
+  it("handles contiguous multi-select", () => {
+    // Dragging slides 2 and 3 (indices 1, 2)
+    const dragState = createDragStartState(["slide-2", "slide-3"]);
 
-    expect(isValidDrop(dragState, "slide-1")).toBe(false);
-    expect(isValidDrop(dragState, "slide-2")).toBe(false);
-    expect(isValidDrop(dragState, "slide-3")).toBe(false);
-    expect(isValidDrop(dragState, "slide-4")).toBe(true);
+    // Gaps 1, 2, 3 are adjacent to the selection
+    expect(isValidGapDrop(dragState, 1, slides)).toBe(false);
+    expect(isValidGapDrop(dragState, 3, slides)).toBe(false);
+
+    // Gaps 0 and 4+ are valid
+    expect(isValidGapDrop(dragState, 0, slides)).toBe(true);
+    expect(isValidGapDrop(dragState, 4, slides)).toBe(true);
   });
 });
 
 // =============================================================================
-// Drag over state
+// Gap drag state management
 // =============================================================================
 
-describe("updateDragOverState", () => {
-  it("sets target position for valid target", () => {
+describe("updateDragOverGap", () => {
+  it("sets target gap index", () => {
     const state = createDragStartState(["slide-1"]);
-    const result = updateDragOverState(state, "slide-3", "before");
+    const result = updateDragOverGap(state, 3);
 
-    expect(result.targetPosition).toEqual({
-      slideId: "slide-3",
-      position: "before",
-    });
+    expect(result.targetGapIndex).toBe(3);
   });
 
-  it("clears target position when over dragged item", () => {
-    const state = createDragStartState(["slide-1"]);
-    const result = updateDragOverState(state, "slide-1", "after");
+  it("updates target gap index", () => {
+    const state = {
+      ...createDragStartState(["slide-1"]),
+      targetGapIndex: 2,
+    };
+    const result = updateDragOverGap(state, 4);
 
-    expect(result.targetPosition).toBeNull();
+    expect(result.targetGapIndex).toBe(4);
   });
 });
 
-describe("isDragTarget", () => {
-  it("returns true when slide is the target", () => {
+describe("isGapDragTarget", () => {
+  it("returns true when gap is the target", () => {
     const state = {
       ...createDragStartState(["slide-1"]),
-      targetPosition: { slideId: "slide-3", position: "before" as const },
+      targetGapIndex: 3,
     };
 
-    expect(isDragTarget(state, "slide-3")).toBe(true);
+    expect(isGapDragTarget(state, 3)).toBe(true);
   });
 
-  it("returns false when slide is not the target", () => {
+  it("returns false when gap is not the target", () => {
     const state = {
       ...createDragStartState(["slide-1"]),
-      targetPosition: { slideId: "slide-3", position: "before" as const },
+      targetGapIndex: 3,
     };
 
-    expect(isDragTarget(state, "slide-2")).toBe(false);
+    expect(isGapDragTarget(state, 2)).toBe(false);
   });
 
-  it("returns false when no target", () => {
-    const state = createDragStartState(["slide-1"]);
+  it("returns false when not dragging", () => {
+    const state = createIdleDragState();
 
-    expect(isDragTarget(state, "slide-2")).toBe(false);
+    expect(isGapDragTarget(state, 2)).toBe(false);
   });
 });
 
-describe("getDragPositionForSlide", () => {
-  it("returns position for target slide", () => {
-    const state = {
-      ...createDragStartState(["slide-1"]),
-      targetPosition: { slideId: "slide-3", position: "after" as const },
-    };
+describe("calculateTargetIndexFromGap", () => {
+  const slides = createTestSlides(5);
 
-    expect(getDragPositionForSlide(state, "slide-3")).toBe("after");
+  it("returns gap index when dragging from after", () => {
+    // Dragging slide-5 (index 4) to gap 1 (before slide-2)
+    const result = calculateTargetIndexFromGap(slides, ["slide-5"], 1);
+
+    expect(result).toBe(1);
   });
 
-  it("returns null for non-target slide", () => {
-    const state = {
-      ...createDragStartState(["slide-1"]),
-      targetPosition: { slideId: "slide-3", position: "after" as const },
-    };
+  it("adjusts for items moving from before gap", () => {
+    // Dragging slide-1 (index 0) to gap 3 (after slide-3)
+    // Since slide-1 is removed, the effective index is 3-1=2
+    const result = calculateTargetIndexFromGap(slides, ["slide-1"], 3);
 
-    expect(getDragPositionForSlide(state, "slide-2")).toBeNull();
+    expect(result).toBe(2);
+  });
+
+  it("adjusts for multiple items from before", () => {
+    // Dragging slides 1 and 2 to gap 4 (after slide-4)
+    // Two items removed from before, so 4-2=2
+    const result = calculateTargetIndexFromGap(slides, ["slide-1", "slide-2"], 4);
+
+    expect(result).toBe(2);
   });
 });

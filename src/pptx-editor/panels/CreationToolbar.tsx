@@ -32,6 +32,8 @@ export type CreationToolbarProps = {
   readonly onModeChange: (mode: CreationMode) => void;
   /** Disabled state */
   readonly disabled?: boolean;
+  /** Visual style */
+  readonly appearance?: "panel" | "floating";
 };
 
 type ToolDefinition = {
@@ -53,6 +55,17 @@ const toolbarStyle: CSSProperties = {
   backgroundColor: `var(--bg-secondary, ${colorTokens.background.secondary})`,
   borderRadius: radiusTokens.md,
   border: `1px solid var(--border-strong, ${colorTokens.border.strong})`,
+};
+
+const floatingToolbarStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "2px",
+  padding: "6px",
+  backgroundColor: `var(--bg-secondary, ${colorTokens.background.secondary})`,
+  borderRadius: radiusTokens.lg,
+  border: `1px solid var(--border-strong, ${colorTokens.border.strong})`,
+  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.35)",
 };
 
 const separatorStyle: CSSProperties = {
@@ -164,6 +177,7 @@ export function CreationToolbar({
   mode,
   onModeChange,
   disabled = false,
+  appearance = "panel",
 }: CreationToolbarProps) {
   const handleClick = useCallback(
     (toolMode: CreationMode) => {
@@ -174,8 +188,10 @@ export function CreationToolbar({
     [disabled, onModeChange]
   );
 
+  const appliedStyle = appearance === "floating" ? floatingToolbarStyle : toolbarStyle;
+
   return (
-    <div style={toolbarStyle}>
+    <div style={appliedStyle}>
       {TOOL_GROUPS.map((group, groupIndex) => (
         <div key={groupIndex} style={groupStyle}>
           {groupIndex > 0 && <div style={separatorStyle} />}

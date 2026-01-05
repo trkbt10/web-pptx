@@ -89,15 +89,15 @@ export function SlideList({
     onExtendSelection: selectRange,
   });
 
-  // Drag and drop
+  // Drag and drop (gap-based targeting)
   const {
     dragState,
     handleDragStart,
-    handleDragOver,
-    handleDrop,
+    handleGapDragOver,
+    handleGapDrop,
     handleDragEnd,
-    isDragTarget,
-    getDragPosition,
+    isDragging,
+    isGapTarget,
   } = useSlideDragDrop({
     slides,
     selectedIds: selection.selectedIds,
@@ -208,18 +208,22 @@ export function SlideList({
         const isItemSelected = isSelected(slideWithId.id);
         const isPrimary = selection.primaryId === slideWithId.id;
         const canDelete = slides.length > 1;
+        const isItemDragging = isDragging(slideWithId.id);
 
         return (
           <div key={slideWithId.id}>
-            {/* Gap before first slide (index 0) or between slides */}
+            {/* Gap before slide (index 0 = before first slide) */}
             {isEditable && (
               <SlideListGap
                 index={index}
                 orientation={orientation}
-                isHovered={isGapHovered(index)}
+                isHovered={isGapHovered(index) && !dragState.isDragging}
+                isDragTarget={isGapTarget(index)}
                 onMouseEnter={() => handleGapEnter(index)}
                 onMouseLeave={handleGapLeave}
                 onClick={() => handleAddAtGap(index)}
+                onDragOver={(e) => handleGapDragOver(e, index)}
+                onDrop={(e) => handleGapDrop(e, index)}
               />
             )}
 
@@ -234,15 +238,12 @@ export function SlideList({
               isPrimary={isPrimary}
               isActive={isActive}
               canDelete={canDelete}
+              isDragging={isItemDragging}
               renderThumbnail={renderThumbnail}
               onClick={(e) => handleItemClick(slideWithId.id, index, e)}
               onContextMenu={(e) => handleContextMenu(slideWithId.id, e)}
               onDelete={() => handleDelete(slideWithId.id)}
               onDragStart={(e) => handleDragStart(e, slideWithId.id)}
-              onDragOver={(e) => handleDragOver(e, slideWithId.id, index)}
-              onDrop={(e) => handleDrop(e, slideWithId.id, index)}
-              isDragTarget={isDragTarget(slideWithId.id)}
-              dragPosition={getDragPosition(slideWithId.id)}
               itemRef={isActive ? activeItemRef : undefined}
             />
           </div>
@@ -254,10 +255,13 @@ export function SlideList({
         <SlideListGap
           index={slides.length}
           orientation={orientation}
-          isHovered={isGapHovered(slides.length)}
+          isHovered={isGapHovered(slides.length) && !dragState.isDragging}
+          isDragTarget={isGapTarget(slides.length)}
           onMouseEnter={() => handleGapEnter(slides.length)}
           onMouseLeave={handleGapLeave}
           onClick={() => handleAddAtGap(slides.length)}
+          onDragOver={(e) => handleGapDragOver(e, slides.length)}
+          onDrop={(e) => handleGapDrop(e, slides.length)}
         />
       )}
 

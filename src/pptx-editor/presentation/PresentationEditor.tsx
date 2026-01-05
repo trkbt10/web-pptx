@@ -107,6 +107,14 @@ const canvasContainerStyle: CSSProperties = {
   overflow: "hidden",
 };
 
+const floatingToolbarStyle: CSSProperties = {
+  position: "absolute",
+  left: "50%",
+  bottom: "16px",
+  transform: "translateX(-50%)",
+  zIndex: 10,
+};
+
 const sidePanelStyle: CSSProperties = {
   width: "280px",
   flexShrink: 0,
@@ -608,7 +616,6 @@ function EditorContent({
         {showToolbar && (
           <div style={toolbarStyle}>
             <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-              <CreationToolbar mode={creationMode} onModeChange={handleCreationModeChange} />
               <ShapeToolbar
                 canUndo={canUndo}
                 canRedo={canRedo}
@@ -640,6 +647,11 @@ function EditorContent({
         <div style={contentAreaStyle}>
           {/* Canvas */}
           <div style={canvasContainerStyle}>
+            {showToolbar && (
+              <div style={floatingToolbarStyle}>
+                <CreationToolbar mode={creationMode} onModeChange={handleCreationModeChange} appearance="floating" />
+              </div>
+            )}
             <CanvasStage
               ref={canvasRef}
               slide={slide}

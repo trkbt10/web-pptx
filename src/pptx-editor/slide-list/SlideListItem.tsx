@@ -1,7 +1,8 @@
 /**
  * @file Slide list item component
  *
- * Individual slide thumbnail with selection, drag-and-drop, and delete support.
+ * Individual slide thumbnail with selection and delete support.
+ * Drag indicator is now in SlideListGap, not here.
  */
 
 import { useState } from "react";
@@ -12,7 +13,6 @@ import {
   getThumbnailContainerStyle,
   thumbnailContentStyle,
   thumbnailFallbackStyle,
-  getDragIndicatorStyle,
   getDeleteButtonStyle,
 } from "./styles";
 
@@ -29,20 +29,17 @@ export function SlideListItem({
   isPrimary,
   isActive,
   canDelete,
+  isDragging,
   renderThumbnail,
   onClick,
   onContextMenu,
   onDelete,
   onDragStart,
-  onDragOver,
-  onDrop,
-  isDragTarget,
-  dragPosition,
   itemRef,
 }: SlideListItemProps) {
   const [isHovered, setIsHovered] = useState(false);
   const isEditable = mode === "editable";
-  const showDeleteButton = isEditable && canDelete && isHovered;
+  const showDeleteButton = isEditable && canDelete && isHovered && !isDragging;
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -54,26 +51,21 @@ export function SlideListItem({
       {/* Page number outside slide */}
       <SlideNumberBadge number={index + 1} orientation={orientation} />
 
-      {/* Thumbnail wrapper (draggable area) */}
+      {/* Thumbnail wrapper */}
       <div
         style={{
           position: "relative",
           width: orientation === "vertical" ? "100%" : undefined,
-          minWidth: orientation === "horizontal" ? "120px" : undefined,
-          maxWidth: orientation === "horizontal" ? "160px" : undefined,
+          minWidth: orientation === "horizontal" ? "100px" : undefined,
+          maxWidth: orientation === "horizontal" ? "140px" : undefined,
+          opacity: isDragging ? 0.4 : 1,
+          transition: "opacity 0.1s ease",
         }}
         draggable={isEditable}
         onDragStart={isEditable ? onDragStart : undefined}
-        onDragOver={isEditable ? onDragOver : undefined}
-        onDrop={isEditable ? onDrop : undefined}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Drag indicator before */}
-        {isDragTarget && dragPosition === "before" && (
-          <div style={getDragIndicatorStyle("before", orientation)} />
-        )}
-
         {/* Thumbnail */}
         <div
           style={getThumbnailContainerStyle(
@@ -118,11 +110,6 @@ export function SlideListItem({
             </button>
           )}
         </div>
-
-        {/* Drag indicator after */}
-        {isDragTarget && dragPosition === "after" && (
-          <div style={getDragIndicatorStyle("after", orientation)} />
-        )}
       </div>
     </div>
   );

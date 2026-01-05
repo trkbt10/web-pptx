@@ -27,17 +27,18 @@ export {
   handleSelectionClick,
 } from "./selection";
 
-// Drag-drop functions
+// Drag-drop functions (gap-based targeting)
 export {
   getDraggingIds,
+  createDragStartState,
+  updateDragOverGap,
+  isValidGapDrop,
+  calculateTargetIndexFromGap,
+  isGapDragTarget,
+  // Legacy exports for backwards compatibility
   getVerticalDropPosition,
   getHorizontalDropPosition,
   calculateTargetIndex,
-  isValidDrop,
-  createDragStartState,
-  updateDragOverState,
-  isDragTarget,
-  getDragPositionForSlide,
 } from "./drag-drop";
 
 // Types

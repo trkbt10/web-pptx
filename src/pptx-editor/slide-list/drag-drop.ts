@@ -2,11 +2,11 @@
  * @file Slide drag-and-drop operations
  *
  * Pure functions for D&D logic. These can be tested without React.
+ * Uses gap-based targeting: indicator appears between slides, not on them.
  */
 
 import type { SlideId, SlideWithId } from "../presentation/types";
-import type { SlideDragState, SlideListOrientation } from "./types";
-import { createIdleDragState } from "./types";
+import type { SlideDragState } from "./types";
 
 /**
  * Determine which slides to drag based on selection
@@ -23,86 +23,6 @@ export function getDraggingIds(
 }
 
 /**
- * Calculate drop position (before/after) based on cursor position
- */
-export function getDropPosition(
-  cursorPosition: number,
-  elementStart: number,
-  elementSize: number
-): "before" | "after" {
-  const mid = elementStart + elementSize / 2;
-  return cursorPosition < mid ? "before" : "after";
-}
-
-/**
- * Calculate drop position for vertical orientation
- */
-export function getVerticalDropPosition(
-  clientY: number,
-  rectTop: number,
-  rectHeight: number
-): "before" | "after" {
-  return getDropPosition(clientY, rectTop, rectHeight);
-}
-
-/**
- * Calculate drop position for horizontal orientation
- */
-export function getHorizontalDropPosition(
-  clientX: number,
-  rectLeft: number,
-  rectWidth: number
-): "before" | "after" {
-  return getDropPosition(clientX, rectLeft, rectWidth);
-}
-
-/**
- * Calculate the target index for a drop operation
- */
-export function calculateTargetIndex(
-  slides: readonly SlideWithId[],
-  draggingIds: readonly SlideId[],
-  dropIndex: number,
-  position: "before" | "after"
-): number {
-  // Start with the raw target index
-  let targetIndex = position === "after" ? dropIndex + 1 : dropIndex;
-
-  // Adjust for items being moved from before target
-  const itemsMovingFromBefore = draggingIds.filter((id) => {
-    const idx = slides.findIndex((s) => s.id === id);
-    return idx >= 0 && idx < targetIndex;
-  }).length;
-
-  return targetIndex - itemsMovingFromBefore;
-}
-
-/**
- * Check if a drop is valid
- */
-export function isValidDrop(
-  dragState: SlideDragState,
-  targetSlideId: SlideId
-): boolean {
-  // Can't drop if not dragging
-  if (!dragState.isDragging) {
-    return false;
-  }
-
-  // Can't drop if no slides being dragged
-  if (dragState.draggingIds.length === 0) {
-    return false;
-  }
-
-  // Can't drop on a slide that's being dragged
-  if (dragState.draggingIds.includes(targetSlideId)) {
-    return false;
-  }
-
-  return true;
-}
-
-/**
  * Create drag state for starting a drag operation
  */
 export function createDragStartState(
@@ -111,51 +31,138 @@ export function createDragStartState(
   return {
     isDragging: true,
     draggingIds,
-    targetPosition: null,
+    targetGapIndex: null,
   };
 }
 
 /**
- * Update drag state for drag over
+ * Update drag state when hovering over a gap
  */
-export function updateDragOverState(
+export function updateDragOverGap(
   currentState: SlideDragState,
-  targetSlideId: SlideId,
-  position: "before" | "after"
+  gapIndex: number
 ): SlideDragState {
-  // Don't update if dragging over a slide being dragged
-  if (currentState.draggingIds.includes(targetSlideId)) {
-    return {
-      ...currentState,
-      targetPosition: null,
-    };
-  }
-
   return {
     ...currentState,
-    targetPosition: { slideId: targetSlideId, position },
+    targetGapIndex: gapIndex,
   };
 }
 
 /**
- * Check if a slide is a valid drag target
+ * Check if a gap is a valid drop target
  */
-export function isDragTarget(
+export function isValidGapDrop(
   dragState: SlideDragState,
-  slideId: SlideId
+  gapIndex: number,
+  slides: readonly SlideWithId[]
 ): boolean {
-  return dragState.targetPosition?.slideId === slideId;
+  if (!dragState.isDragging || dragState.draggingIds.length === 0) {
+    return false;
+  }
+
+  // Check if dropping would result in no movement
+  // Gap index N means "insert before slide N" (or at end if N === slides.length)
+  const draggingIndices = dragState.draggingIds
+    .map((id) => slides.findIndex((s) => s.id === id))
+    .filter((idx) => idx >= 0)
+    .sort((a, b) => a - b);
+
+  if (draggingIndices.length === 0) return false;
+
+  // If all dragged slides are contiguous and the gap is adjacent to them, no-op
+  const firstDragging = draggingIndices[0];
+  const lastDragging = draggingIndices[draggingIndices.length - 1];
+
+  // Gap right before the first dragged slide or right after the last = no-op
+  if (gapIndex === firstDragging || gapIndex === lastDragging + 1) {
+    return false;
+  }
+
+  return true;
 }
 
 /**
- * Get the drag position for a slide (before/after indicator)
+ * Calculate the final target index for a drop on a gap
  */
-export function getDragPositionForSlide(
+export function calculateTargetIndexFromGap(
+  slides: readonly SlideWithId[],
+  draggingIds: readonly SlideId[],
+  gapIndex: number
+): number {
+  // Gap index is the position where items will be inserted
+  // We need to adjust for items being removed from before this position
+  const itemsMovingFromBefore = draggingIds.filter((id) => {
+    const idx = slides.findIndex((s) => s.id === id);
+    return idx >= 0 && idx < gapIndex;
+  }).length;
+
+  return gapIndex - itemsMovingFromBefore;
+}
+
+/**
+ * Check if a gap is the current drag target
+ */
+export function isGapDragTarget(
   dragState: SlideDragState,
-  slideId: SlideId
+  gapIndex: number
+): boolean {
+  return dragState.isDragging && dragState.targetGapIndex === gapIndex;
+}
+
+// Legacy exports for backwards compatibility with tests
+export function getVerticalDropPosition(
+  clientY: number,
+  rectTop: number,
+  rectHeight: number
+): "before" | "after" {
+  const mid = rectTop + rectHeight / 2;
+  return clientY < mid ? "before" : "after";
+}
+
+export function getHorizontalDropPosition(
+  clientX: number,
+  rectLeft: number,
+  rectWidth: number
+): "before" | "after" {
+  const mid = rectLeft + rectWidth / 2;
+  return clientX < mid ? "before" : "after";
+}
+
+export function calculateTargetIndex(
+  slides: readonly SlideWithId[],
+  draggingIds: readonly SlideId[],
+  dropIndex: number,
+  position: "before" | "after"
+): number {
+  const gapIndex = position === "after" ? dropIndex + 1 : dropIndex;
+  return calculateTargetIndexFromGap(slides, draggingIds, gapIndex);
+}
+
+export function isValidDrop(
+  dragState: SlideDragState,
+  _targetSlideId: SlideId
+): boolean {
+  return dragState.isDragging && dragState.draggingIds.length > 0;
+}
+
+export function updateDragOverState(
+  currentState: SlideDragState,
+  _targetSlideId: SlideId,
+  _position: "before" | "after"
+): SlideDragState {
+  return currentState;
+}
+
+export function isDragTarget(
+  _dragState: SlideDragState,
+  _slideId: SlideId
+): boolean {
+  return false;
+}
+
+export function getDragPositionForSlide(
+  _dragState: SlideDragState,
+  _slideId: SlideId
 ): "before" | "after" | null {
-  if (dragState.targetPosition?.slideId === slideId) {
-    return dragState.targetPosition.position;
-  }
   return null;
 }

@@ -385,6 +385,7 @@ export function SlideCanvas({
 
   const handleSvgBackgroundClick = useCallback(
     (e: MouseEvent<SVGRectElement>) => {
+      e.stopPropagation();
       // If in creation mode and onCreate is provided, create shape at click position
       if (creationMode && creationMode.type !== "select" && onCreate) {
         const svg = e.currentTarget.ownerSVGElement;
@@ -394,6 +395,24 @@ export function SlideCanvas({
           onCreate(coords.x, coords.y);
           return;
         }
+      }
+      onClearSelection();
+    },
+    [onClearSelection, creationMode, onCreate, widthNum, heightNum],
+  );
+
+  const handleSvgClick = useCallback(
+    (e: MouseEvent<SVGSVGElement>) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("[data-shape-id]")) {
+        return;
+      }
+      // If in creation mode and onCreate is provided, create shape at click position
+      if (creationMode && creationMode.type !== "select" && onCreate) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+        onCreate(coords.x, coords.y);
+        return;
       }
       onClearSelection();
     },
@@ -498,7 +517,12 @@ export function SlideCanvas({
   return (
     <div className={className} style={containerStyle} onClick={handleContainerClick}>
       <div style={innerContainerStyle}>
-        <svg style={svgStyle} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+        <svg
+          style={svgStyle}
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="xMidYMid meet"
+          onClick={handleSvgClick}
+        >
           {/* Background hit area for clicks */}
           <rect
             x={0}

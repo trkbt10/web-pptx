@@ -23,8 +23,8 @@ export function getContainerStyle(
   return {
     display: "flex",
     flexDirection: orientation === "vertical" ? "column" : "row",
-    gap: orientation === "vertical" ? "12px" : "16px",
-    padding: orientation === "vertical" ? "16px 12px" : "12px 16px",
+    // No gap here - gaps are handled by SlideListGap component
+    padding: orientation === "vertical" ? "8px 8px" : "8px 8px",
     overflow: "auto",
     height: "100%",
   };
@@ -41,7 +41,7 @@ export function getItemWrapperStyle(
     position: "relative",
     display: "flex",
     alignItems: "center",
-    gap: orientation === "vertical" ? "8px" : "4px",
+    gap: orientation === "vertical" ? "6px" : "3px",
     flexDirection: orientation === "vertical" ? "row" : "column",
     flexShrink: 0,
   };
@@ -130,16 +130,23 @@ export function getThumbnailContainerStyle(
 }
 
 export const thumbnailContentStyle: CSSProperties = {
-  width: "100%",
-  height: "100%",
+  position: "absolute",
+  inset: 0,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
 };
 
+/** Style for children of thumbnailContent to fill the container */
+export const thumbnailFillStyle: CSSProperties = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+};
+
 export const thumbnailFallbackStyle: CSSProperties = {
-  color: "#999",
-  fontSize: "11px",
+  color: "rgba(0, 0, 0, 0.3)",
+  fontSize: "10px",
 };
 
 // =============================================================================
@@ -169,74 +176,79 @@ export function getDeleteButtonStyle(visible: boolean): CSSProperties {
 }
 
 // =============================================================================
-// Gap styles (for add button)
+// Gap styles (for add button and drop indicator)
 // =============================================================================
 
-export function getGapStyle(orientation: SlideListOrientation): CSSProperties {
+/** Gap height/width for spacing between slides */
+const GAP_SIZE = 6;
+const GAP_SIZE_DRAG = 8;
+
+export function getGapStyle(
+  orientation: SlideListOrientation,
+  isDragTarget: boolean = false
+): CSSProperties {
+  const size = isDragTarget ? GAP_SIZE_DRAG : GAP_SIZE;
+
   return {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: orientation === "vertical" ? "12px" : undefined,
-    minWidth: orientation === "horizontal" ? "12px" : undefined,
+    height: orientation === "vertical" ? `${size}px` : undefined,
+    width: orientation === "horizontal" ? `${size}px` : undefined,
     position: "relative",
     flexShrink: 0,
+    // Must be above slides so the + button (which overflows) is clickable
+    zIndex: 1,
   };
 }
 
-export function getAddButtonStyle(visible: boolean): CSSProperties {
-  return {
-    width: "24px",
-    height: "24px",
-    borderRadius: "50%",
-    backgroundColor: visible
-      ? colorTokens.background.hover
-      : "transparent",
-    color: colorTokens.text.primary,
-    border: `1px solid ${visible ? colorTokens.border.strong : "transparent"}`,
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "16px",
-    fontWeight: fontTokens.weight.normal,
-    opacity: visible ? 1 : 0,
-    transition: "opacity 0.2s ease, background-color 0.15s ease",
-    position: "absolute",
-  };
-}
-
-// =============================================================================
-// Drag indicator styles
-// =============================================================================
-
-export function getDragIndicatorStyle(
-  position: "before" | "after",
+export function getGapDropIndicatorStyle(
   orientation: SlideListOrientation
 ): CSSProperties {
-  const base: CSSProperties = {
-    position: "absolute",
-    backgroundColor: colorTokens.selection.primary,
-    zIndex: 10,
-  };
-
   if (orientation === "vertical") {
     return {
-      ...base,
-      left: 0,
+      position: "absolute",
+      left: "26px", // align with slide (past number badge)
       right: 0,
       height: "2px",
-      ...(position === "before" ? { top: -4 } : { bottom: -4 }),
+      top: "50%",
+      transform: "translateY(-50%)",
+      backgroundColor: colorTokens.selection.primary,
+      borderRadius: "1px",
     };
   }
 
   // horizontal
   return {
-    ...base,
-    top: 0,
+    position: "absolute",
+    top: "16px", // below number
     bottom: 0,
     width: "2px",
-    ...(position === "before" ? { left: -4 } : { right: -4 }),
+    left: "50%",
+    transform: "translateX(-50%)",
+    backgroundColor: colorTokens.selection.primary,
+    borderRadius: "1px",
+  };
+}
+
+export function getAddButtonStyle(visible: boolean): CSSProperties {
+  return {
+    width: "20px",
+    height: "20px",
+    borderRadius: "50%",
+    backgroundColor: visible ? "rgba(0, 0, 0, 0.08)" : "transparent",
+    color: "rgba(0, 0, 0, 0.5)",
+    border: "none",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: "14px",
+    lineHeight: 1,
+    opacity: visible ? 1 : 0,
+    pointerEvents: visible ? "auto" : "none",
+    transition: "opacity 0.15s ease, background-color 0.1s ease",
+    position: "absolute",
   };
 }
 
