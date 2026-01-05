@@ -10,7 +10,7 @@ import type { CSSProperties } from "react";
 import { Button } from "../ui/primitives/Button";
 import { LinePickerPopover } from "../ui/line/index";
 import type { Line, Shape } from "../../pptx/domain/index";
-import type { ShapeId } from "../../pptx/domain/types";
+import type { Pixels, ShapeId } from "../../pptx/domain/types";
 import {
   TrashIcon,
   CopyIcon,
@@ -22,6 +22,27 @@ import {
   SendBackwardIcon,
 } from "../ui/icons/index";
 import { colorTokens, iconTokens } from "../ui/design-tokens/index";
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+// Default line for display when no line is available
+const defaultLine: Line = {
+  width: 1 as Pixels,
+  cap: "flat",
+  compound: "sng",
+  alignment: "ctr",
+  fill: {
+    type: "solidFill",
+    color: {
+      spec: { type: "srgb", value: "000000" },
+      transform: {},
+    },
+  },
+  dash: "solid",
+  join: "round",
+};
 
 // =============================================================================
 // Types
@@ -261,18 +282,14 @@ export function ShapeToolbar({
         <SendBackwardIcon size={iconSize} strokeWidth={strokeWidth} />
       </Button>
 
-      {/* Line style picker */}
-      {primaryLine && (
-        <>
-          <div style={separatorStyle} />
-          <LinePickerPopover
-            value={primaryLine}
-            onChange={handleLineChange}
-            size="md"
-            disabled={!hasSelection || isMultiSelect}
-          />
-        </>
-      )}
+      {/* Line style picker - always visible, disabled when no line */}
+      <div style={separatorStyle} />
+      <LinePickerPopover
+        value={primaryLine ?? defaultLine}
+        onChange={handleLineChange}
+        size="md"
+        disabled={!primaryLine || isMultiSelect}
+      />
     </div>
   );
 }
