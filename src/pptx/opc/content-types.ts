@@ -6,13 +6,22 @@
  * @see ECMA-376 Part 2 (Open Packaging Conventions)
  */
 
-import type { ContentTypes } from "../types";
 import type { XmlDocument } from "../../xml/index";
 import { getBasename, getByPath, getChildren } from "../../xml/index";
 
 // =============================================================================
 // Types
 // =============================================================================
+
+/**
+ * Content types from [Content_Types].xml
+ *
+ * @see ECMA-376 Part 2, Section 10.1.2 (Content Types)
+ */
+export type ContentTypes = {
+  slides: string[];
+  slideLayouts: string[];
+};
 
 /**
  * Slide file info extracted from content types
