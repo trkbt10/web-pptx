@@ -149,7 +149,10 @@ export type SlideListItemProps = {
   readonly isPrimary: boolean;
   readonly isActive: boolean;
   readonly canDelete: boolean;
+  /** This specific item is being dragged (for opacity) */
   readonly isDragging: boolean;
+  /** Any drag operation is active (for clearing hover) */
+  readonly isAnyDragging: boolean;
   readonly renderThumbnail?: (
     slide: SlideWithId,
     index: number

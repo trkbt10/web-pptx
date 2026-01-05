@@ -17,7 +17,7 @@ export type CanvasRulersProps = {
   readonly slideHeight: number;
   readonly stageMetrics: CanvasStageMetrics;
   readonly rulerThickness: number;
-  readonly scrollRef: RefObject<HTMLDivElement>;
+  readonly scrollRef: RefObject<HTMLDivElement | null>;
 };
 
 const cornerStyle: CSSProperties = {

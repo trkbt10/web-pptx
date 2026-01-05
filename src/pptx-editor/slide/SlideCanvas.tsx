@@ -10,7 +10,7 @@
  * This is a pure view component - all state is passed in as props.
  */
 
-import { useCallback, useMemo, useState, type CSSProperties, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import type { Slide, Shape } from "../../pptx/domain";
 import type { ColorContext, FontScheme } from "../../pptx/domain/resolution";
 import type { Pixels, ShapeId } from "../../pptx/domain/types";
@@ -26,6 +26,7 @@ import { getSvgRotationTransformForBounds, normalizeAngle } from "../shape/rotat
 import { SlideContextMenu, type ContextMenuActions } from "./context-menu/SlideContextMenu";
 import { SelectionBox } from "../selection/SelectionBox";
 import { SlideRenderer } from "../../pptx/render/react";
+import { colorTokens } from "../ui/design-tokens";
 
 // =============================================================================
 // Types
@@ -74,7 +75,8 @@ export type SlideCanvasProps = {
   readonly layoutShapes?: readonly Shape[];
 
   // Callbacks
-  readonly onSelect: (shapeId: ShapeId, addToSelection: boolean) => void;
+  readonly onSelect: (shapeId: ShapeId, addToSelection: boolean, toggle?: boolean) => void;
+  readonly onSelectMultiple: (shapeIds: readonly ShapeId[]) => void;
   readonly onClearSelection: () => void;
   readonly onStartMove: (startX: number, startY: number) => void;
   readonly onStartResize: (handle: ResizeHandlePosition, startX: number, startY: number, aspectLocked: boolean) => void;
@@ -93,7 +95,6 @@ type ShapeBounds = {
   readonly width: number;
   readonly height: number;
   readonly rotation: number;
-  readonly isPrimary: boolean;
 };
 
 type BaseBounds = {
@@ -102,6 +103,14 @@ type BaseBounds = {
   readonly width: number;
   readonly height: number;
   readonly rotation: number;
+};
+
+type MarqueeSelection = {
+  readonly startX: number;
+  readonly startY: number;
+  readonly currentX: number;
+  readonly currentY: number;
+  readonly additive: boolean;
 };
 
 // =============================================================================
@@ -286,6 +295,7 @@ export function SlideCanvas({
   editingShapeId,
   layoutShapes,
   onSelect,
+  onSelectMultiple,
   onClearSelection,
   onStartMove,
   onStartResize,
@@ -295,6 +305,10 @@ export function SlideCanvas({
   onCreate,
 }: SlideCanvasProps) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const [marquee, setMarquee] = useState<MarqueeSelection | null>(null);
+  const svgRef = useRef<SVGSVGElement | null>(null);
+  const marqueeRef = useRef<MarqueeSelection | null>(null);
+  const ignoreNextClickRef = useRef(false);
 
   const widthNum = width as number;
   const heightNum = height as number;
@@ -332,11 +346,10 @@ export function SlideCanvas({
         return {
           id,
           ...previewBounds,
-          isPrimary: id === selection.primaryId,
         };
       })
       .filter((b): b is ShapeBounds => b !== undefined);
-  }, [slide.shapes, selection.selectedIds, selection.primaryId, drag]);
+  }, [slide.shapes, selection.selectedIds, drag]);
 
   const combinedBounds = useMemo(() => {
     if (selectedBounds.length <= 1) {
@@ -356,8 +369,9 @@ export function SlideCanvas({
   const handleShapeClick = useCallback(
     (shapeId: ShapeId, e: MouseEvent) => {
       e.stopPropagation();
-      const addToSelection = e.shiftKey || e.metaKey || e.ctrlKey;
-      onSelect(shapeId, addToSelection);
+      const isModifierKey = e.shiftKey || e.metaKey || e.ctrlKey;
+      const isToggle = e.metaKey || e.ctrlKey; // Cmd/Ctrl = toggle
+      onSelect(shapeId, isModifierKey, isToggle);
     },
     [onSelect],
   );
@@ -386,6 +400,10 @@ export function SlideCanvas({
   const handleSvgBackgroundClick = useCallback(
     (e: MouseEvent<SVGRectElement>) => {
       e.stopPropagation();
+      if (ignoreNextClickRef.current) {
+        ignoreNextClickRef.current = false;
+        return;
+      }
       // If in creation mode and onCreate is provided, create shape at click position
       if (creationMode && creationMode.type !== "select" && onCreate) {
         const svg = e.currentTarget.ownerSVGElement;
@@ -403,6 +421,10 @@ export function SlideCanvas({
 
   const handleSvgClick = useCallback(
     (e: MouseEvent<SVGSVGElement>) => {
+      if (ignoreNextClickRef.current) {
+        ignoreNextClickRef.current = false;
+        return;
+      }
       const target = e.target as HTMLElement | null;
       if (target?.closest("[data-shape-id]")) {
         return;
@@ -419,6 +441,136 @@ export function SlideCanvas({
     [onClearSelection, creationMode, onCreate, widthNum, heightNum],
   );
 
+  const handleSvgPointerDown = useCallback(
+    (e: React.PointerEvent<SVGSVGElement>) => {
+      if (creationMode && creationMode.type !== "select") {
+        return;
+      }
+      if (e.button !== 0) {
+        return;
+      }
+      const target = e.target as HTMLElement | null;
+      if (target?.closest("[data-shape-id]")) {
+        return;
+      }
+      const rect = e.currentTarget.getBoundingClientRect();
+      const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+      const additive = e.shiftKey || e.metaKey || e.ctrlKey;
+      const nextMarquee: MarqueeSelection = {
+        startX: coords.x,
+        startY: coords.y,
+        currentX: coords.x,
+        currentY: coords.y,
+        additive,
+      };
+      marqueeRef.current = nextMarquee;
+      setMarquee(nextMarquee);
+      ignoreNextClickRef.current = false;
+      e.preventDefault();
+    },
+    [creationMode, widthNum, heightNum],
+  );
+
+  const finalizeMarqueeSelection = useCallback(
+    (current: MarqueeSelection) => {
+      const dx = Math.abs(current.currentX - current.startX);
+      const dy = Math.abs(current.currentY - current.startY);
+      const dragged = dx > 2 || dy > 2;
+
+      if (!dragged) {
+        return;
+      }
+
+      ignoreNextClickRef.current = true;
+
+      const rectX = Math.min(current.startX, current.currentX);
+      const rectY = Math.min(current.startY, current.currentY);
+      const rectW = Math.abs(current.currentX - current.startX);
+      const rectH = Math.abs(current.currentY - current.startY);
+
+      const idsInRect = shapeRenderData
+        .filter((shape) => {
+          const shapeRight = shape.x + shape.width;
+          const shapeBottom = shape.y + shape.height;
+          const rectRight = rectX + rectW;
+          const rectBottom = rectY + rectH;
+          return shapeRight >= rectX && shape.x <= rectRight && shapeBottom >= rectY && shape.y <= rectBottom;
+        })
+        .map((shape) => shape.id);
+
+      if (idsInRect.length === 0) {
+        if (!current.additive) {
+          onClearSelection();
+        }
+        return;
+      }
+
+      if (current.additive) {
+        const combinedIds = [...selection.selectedIds];
+        for (const id of idsInRect) {
+          if (!combinedIds.includes(id)) {
+            combinedIds.push(id);
+          }
+        }
+        onSelectMultiple(combinedIds);
+        return;
+      }
+
+      onSelectMultiple(idsInRect);
+    },
+    [onClearSelection, onSelectMultiple, selection.selectedIds, shapeRenderData],
+  );
+
+  const handleWindowPointerMove = useCallback(
+    (e: PointerEvent) => {
+      const current = marqueeRef.current;
+      if (!current) {
+        return;
+      }
+      const rect = svgRef.current?.getBoundingClientRect();
+      if (!rect) {
+        return;
+      }
+      const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+      const nextMarquee: MarqueeSelection = {
+        ...current,
+        currentX: coords.x,
+        currentY: coords.y,
+      };
+      marqueeRef.current = nextMarquee;
+      setMarquee(nextMarquee);
+    },
+    [widthNum, heightNum],
+  );
+
+  const handleWindowPointerUp = useCallback(() => {
+    const current = marqueeRef.current;
+    if (!current) {
+      return;
+    }
+    marqueeRef.current = null;
+    setMarquee(null);
+    finalizeMarqueeSelection(current);
+  }, [finalizeMarqueeSelection]);
+
+  useEffect(() => {
+    if (!marquee) {
+      return;
+    }
+    const handleWindowPointerCancel = () => {
+      marqueeRef.current = null;
+      setMarquee(null);
+    };
+    window.addEventListener("pointermove", handleWindowPointerMove);
+    window.addEventListener("pointerup", handleWindowPointerUp, { once: true });
+    window.addEventListener("pointercancel", handleWindowPointerCancel, { once: true });
+    return () => {
+      window.removeEventListener("pointermove", handleWindowPointerMove);
+      window.removeEventListener("pointerup", handleWindowPointerUp);
+      window.removeEventListener("pointercancel", handleWindowPointerCancel);
+    };
+  }, [marquee, handleWindowPointerMove, handleWindowPointerUp]);
+
   const handlePointerDown = useCallback(
     (shapeId: ShapeId, e: React.PointerEvent) => {
       if (e.button !== 0) {
@@ -428,8 +580,9 @@ export function SlideCanvas({
       e.preventDefault();
 
       if (!isSelected(shapeId)) {
-        const addToSelection = e.shiftKey || e.metaKey || e.ctrlKey;
-        onSelect(shapeId, addToSelection);
+        const isModifierKey = e.shiftKey || e.metaKey || e.ctrlKey;
+        const isToggle = e.metaKey || e.ctrlKey;
+        onSelect(shapeId, isModifierKey, isToggle);
       }
 
       const rect = (e.target as SVGElement).ownerSVGElement?.getBoundingClientRect();
@@ -514,14 +667,26 @@ export function SlideCanvas({
     cursor: drag.type !== "idle" ? "grabbing" : "default",
   };
 
+  const selectionRect =
+    marquee === null
+      ? null
+      : {
+          x: Math.min(marquee.startX, marquee.currentX),
+          y: Math.min(marquee.startY, marquee.currentY),
+          width: Math.abs(marquee.currentX - marquee.startX),
+          height: Math.abs(marquee.currentY - marquee.startY),
+        };
+
   return (
     <div className={className} style={containerStyle} onClick={handleContainerClick}>
       <div style={innerContainerStyle}>
         <svg
+          ref={svgRef}
           style={svgStyle}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           onClick={handleSvgClick}
+          onPointerDown={handleSvgPointerDown}
         >
           {/* Background hit area for clicks */}
           <rect
@@ -581,7 +746,7 @@ export function SlideCanvas({
                 width={bounds.width}
                 height={bounds.height}
                 rotation={bounds.rotation}
-                variant={bounds.isPrimary ? "primary" : "secondary"}
+                variant="primary"
                 showResizeHandles={!isMultiSelection}
                 showRotateHandle={!isMultiSelection}
                 onResizeStart={handleResizeStart}
@@ -601,6 +766,20 @@ export function SlideCanvas({
               />
             )}
           </g>
+
+          {selectionRect && (
+            <rect
+              x={selectionRect.x}
+              y={selectionRect.y}
+              width={selectionRect.width}
+              height={selectionRect.height}
+              fill={colorTokens.selection.primary}
+              fillOpacity={0.12}
+              stroke={colorTokens.selection.primary}
+              strokeWidth={1}
+              pointerEvents="none"
+            />
+          )}
         </svg>
       </div>
 

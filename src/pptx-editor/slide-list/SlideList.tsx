@@ -239,6 +239,7 @@ export function SlideList({
               isActive={isActive}
               canDelete={canDelete}
               isDragging={isItemDragging}
+              isAnyDragging={dragState.isDragging}
               renderThumbnail={renderThumbnail}
               onClick={(e) => handleItemClick(slideWithId.id, index, e)}
               onContextMenu={(e) => handleContextMenu(slideWithId.id, e)}

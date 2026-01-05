@@ -5,9 +5,11 @@
  * Pure content - no container styling. Consumer wraps in Section/Accordion.
  */
 
-import { useCallback } from "react";
-import { Input, Select, Toggle } from "../../ui/primitives";
+import { useCallback, useMemo } from "react";
+import { Input, Select, Toggle, SearchableSelect } from "../../ui/primitives";
+import type { SearchableSelectOption, SearchableSelectItemProps } from "../../ui/primitives/SearchableSelect";
 import { FieldGroup, FieldRow } from "../../ui/layout";
+import { ShapePreview } from "../../ui/shape-preview";
 import type {
   Geometry,
   PresetGeometry,
@@ -102,20 +104,39 @@ const PRESET_SHAPE_CATEGORIES = {
 } as const;
 
 /**
- * Flatten preset options for select
+ * Build searchable select options from categories
  */
-const presetShapeOptions: SelectOption<string>[] = Object.entries(PRESET_SHAPE_CATEGORIES).flatMap(
-  ([category, shapes]) => [
-    { value: `__category_${category}`, label: `── ${category} ──`, disabled: true },
-    ...shapes,
-  ]
-);
+function buildPresetShapeOptions(): SearchableSelectOption<string>[] {
+  return Object.entries(PRESET_SHAPE_CATEGORIES).flatMap(([category, shapes]) =>
+    shapes.map((shape) => ({
+      value: shape.value,
+      label: shape.label,
+      group: category,
+      keywords: [shape.value],
+    }))
+  );
+}
+
+const presetShapeOptions = buildPresetShapeOptions();
 
 const fieldStyle = { flex: 1 };
 
 const infoStyle = {
   color: "var(--text-tertiary)",
   fontSize: "12px",
+};
+
+const shapeItemStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+};
+
+const shapeLabelStyle = {
+  flex: 1,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap" as const,
 };
 
 function createDefaultPresetGeometry(): PresetGeometry {
@@ -144,6 +165,30 @@ function createGeometryForType(type: GeometryType): Geometry {
     case "custom":
       return createDefaultCustomGeometry();
   }
+}
+
+/**
+ * Render a preset shape item with preview
+ */
+function renderShapeItem({ option }: SearchableSelectItemProps<string>) {
+  return (
+    <div style={shapeItemStyle}>
+      <ShapePreview preset={option.value} size={20} />
+      <span style={shapeLabelStyle}>{option.label}</span>
+    </div>
+  );
+}
+
+/**
+ * Render the selected shape value with preview
+ */
+function renderShapeValue(option: SearchableSelectOption<string>) {
+  return (
+    <div style={shapeItemStyle}>
+      <ShapePreview preset={option.value} size={16} />
+      <span style={shapeLabelStyle}>{option.label}</span>
+    </div>
+  );
 }
 
 /**
@@ -250,6 +295,129 @@ function createDefaultTextRect(): TextRect {
 }
 
 /**
+ * Preset shape editor with searchable dropdown
+ */
+function PresetShapeEditor({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: PresetGeometry;
+  onChange: (v: Geometry) => void;
+  disabled?: boolean;
+}) {
+  const handlePresetChange = useCallback(
+    (newPreset: string) => {
+      onChange({ ...value, preset: newPreset });
+    },
+    [value, onChange]
+  );
+
+  return (
+    <>
+      <FieldGroup label="Shape">
+        <SearchableSelect
+          value={value.preset}
+          onChange={handlePresetChange}
+          options={presetShapeOptions}
+          renderItem={renderShapeItem}
+          renderValue={renderShapeValue}
+          searchPlaceholder="Search shapes..."
+          disabled={disabled}
+          dropdownWidth={260}
+          maxHeight={360}
+        />
+      </FieldGroup>
+      {value.adjustValues && value.adjustValues.length > 0 && (
+        <FieldGroup label="Adjust Values">
+          <AdjustValuesEditor
+            values={value.adjustValues}
+            onChange={(adjustValues) =>
+              onChange({ ...value, adjustValues })
+            }
+            disabled={disabled}
+          />
+        </FieldGroup>
+      )}
+    </>
+  );
+}
+
+/**
+ * Custom geometry editor (read-only info display)
+ */
+function CustomGeometryEditor({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: CustomGeometry;
+  onChange: (v: Geometry) => void;
+  disabled?: boolean;
+}) {
+  const infoSummary = useMemo(() => {
+    const infoParts = [`${value.paths?.length ?? 0} path(s)`];
+    if (value.guides?.length) {
+      infoParts.push(`${value.guides.length} guide(s)`);
+    }
+    if (value.connectionSites?.length) {
+      infoParts.push(`${value.connectionSites.length} site(s)`);
+    }
+    return infoParts.join(", ");
+  }, [value]);
+
+  const handleTextRectToggle = useCallback(
+    (enabled: boolean) => {
+      if (enabled) {
+        onChange({ ...value, textRect: createDefaultTextRect() });
+      } else {
+        const { textRect: _textRect, ...rest } = value;
+        void _textRect;
+        onChange(rest as CustomGeometry);
+      }
+    },
+    [value, onChange]
+  );
+
+  return (
+    <>
+      <FieldGroup label="Info">
+        <span style={infoStyle}>
+          {infoSummary}
+        </span>
+      </FieldGroup>
+
+      {value.adjustValues && value.adjustValues.length > 0 && (
+        <FieldGroup label="Adjust Values">
+          <AdjustValuesEditor
+            values={value.adjustValues}
+            onChange={(adjustValues) =>
+              onChange({ ...value, adjustValues })
+            }
+            disabled={disabled}
+          />
+        </FieldGroup>
+      )}
+
+      {/* TextRect */}
+      <Toggle
+        checked={!!value.textRect}
+        onChange={handleTextRectToggle}
+        label="Text Rectangle"
+        disabled={disabled}
+      />
+      {value.textRect && (
+        <TextRectEditor
+          value={value.textRect}
+          onChange={(textRect) => onChange({ ...value, textRect })}
+          disabled={disabled}
+        />
+      )}
+    </>
+  );
+}
+
+/**
  * Geometry editor. Pure content - no containers.
  */
 export function GeometryEditor({
@@ -264,94 +432,6 @@ export function GeometryEditor({
     [onChange]
   );
 
-  const renderPresetEditor = () => {
-    const preset = value as PresetGeometry;
-    return (
-      <>
-        <FieldGroup label="Shape">
-          <Select
-            value={preset.preset}
-            onChange={(newPreset) =>
-              onChange({ ...preset, preset: newPreset })
-            }
-            options={presetShapeOptions}
-            disabled={disabled}
-          />
-        </FieldGroup>
-        {preset.adjustValues && preset.adjustValues.length > 0 && (
-          <FieldGroup label="Adjust Values">
-            <AdjustValuesEditor
-              values={preset.adjustValues}
-              onChange={(adjustValues) =>
-                onChange({ ...preset, adjustValues })
-              }
-              disabled={disabled}
-            />
-          </FieldGroup>
-        )}
-      </>
-    );
-  };
-
-  const renderCustomEditor = () => {
-    const custom = value as CustomGeometry;
-    const infoParts = [`${custom.paths?.length ?? 0} path(s)`];
-    if (custom.guides?.length) {
-      infoParts.push(`${custom.guides.length} guide(s)`);
-    }
-    if (custom.connectionSites?.length) {
-      infoParts.push(`${custom.connectionSites.length} site(s)`);
-    }
-    const infoSummary = infoParts.join(", ");
-
-    const handleTextRectToggle = (enabled: boolean) => {
-      if (enabled) {
-        onChange({ ...custom, textRect: createDefaultTextRect() });
-      } else {
-        const { textRect: _textRect, ...rest } = custom;
-        void _textRect;
-        onChange(rest as CustomGeometry);
-      }
-    };
-
-    return (
-      <>
-        <FieldGroup label="Info">
-          <span style={infoStyle}>
-            {infoSummary}
-          </span>
-        </FieldGroup>
-
-        {custom.adjustValues && custom.adjustValues.length > 0 && (
-          <FieldGroup label="Adjust Values">
-            <AdjustValuesEditor
-              values={custom.adjustValues}
-              onChange={(adjustValues) =>
-                onChange({ ...custom, adjustValues })
-              }
-              disabled={disabled}
-            />
-          </FieldGroup>
-        )}
-
-        {/* TextRect */}
-        <Toggle
-          checked={!!custom.textRect}
-          onChange={handleTextRectToggle}
-          label="Text Rectangle"
-          disabled={disabled}
-        />
-        {custom.textRect && (
-          <TextRectEditor
-            value={custom.textRect}
-            onChange={(textRect) => onChange({ ...custom, textRect })}
-            disabled={disabled}
-          />
-        )}
-      </>
-    );
-  };
-
   return (
     <>
       <FieldGroup label="Type">
@@ -362,8 +442,20 @@ export function GeometryEditor({
           disabled={disabled}
         />
       </FieldGroup>
-      {value.type === "preset" && renderPresetEditor()}
-      {value.type === "custom" && renderCustomEditor()}
+      {value.type === "preset" && (
+        <PresetShapeEditor
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+        />
+      )}
+      {value.type === "custom" && (
+        <CustomGeometryEditor
+          value={value}
+          onChange={onChange}
+          disabled={disabled}
+        />
+      )}
     </>
   );
 }

@@ -4,7 +4,7 @@
  * Handles canvas centering, rulers, scroll viewport, and wheel zoom.
  */
 
-import { useMemo, useCallback, useLayoutEffect, useEffect, useState, forwardRef, type CSSProperties } from "react";
+import { useMemo, useCallback, useLayoutEffect, useEffect, useState, useRef, forwardRef, type CSSProperties } from "react";
 import type { Slide, Shape } from "../../pptx/domain";
 import type { ShapeId, Pixels } from "../../pptx/domain/types";
 import type { DragState, SelectionState, ResizeHandlePosition } from "../state";
@@ -19,6 +19,7 @@ import { useCanvasViewport } from "./use-canvas-viewport";
 import { getCanvasStageMetrics, getCenteredScrollTarget } from "./canvas-metrics";
 import { getNextZoomValue } from "./canvas-controls";
 import { useNonPassiveWheel } from "./use-non-passive-wheel";
+import { useOutsideMarqueeSelection } from "./use-outside-marquee-selection";
 
 export type CanvasStageProps = {
   readonly slide: Slide;
@@ -39,6 +40,7 @@ export type CanvasStageProps = {
   readonly creationMode: CreationMode;
   readonly textEdit: TextEditState;
   readonly onSelect: (shapeId: ShapeId, addToSelection: boolean) => void;
+  readonly onSelectMultiple: (shapeIds: readonly ShapeId[]) => void;
   readonly onClearSelection: () => void;
   readonly onStartMove: (startX: number, startY: number) => void;
   readonly onStartResize: (handle: ResizeHandlePosition, startX: number, startY: number, aspectLocked: boolean) => void;
@@ -84,6 +86,7 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
     creationMode,
     textEdit,
     onSelect,
+    onSelectMultiple,
     onClearSelection,
     onStartMove,
     onStartResize,
@@ -99,6 +102,7 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
   }: CanvasStageProps,
   canvasRef
 ) {
+  const canvasWrapperRef = useRef<HTMLDivElement>(null);
   const { containerRef: scrollRef, viewport, handleScroll } = useCanvasViewport();
   const [zoomModifierDown, setZoomModifierDown] = useState(false);
 
@@ -182,6 +186,33 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
 
   useNonPassiveWheel(scrollRef, handleWheel, zoomModifierDown);
 
+  const { marqueeStyle: outsideMarqueeStyle, onPointerDown: handleStagePointerDown } = useOutsideMarqueeSelection({
+    enabled: creationMode.type === "select",
+    containerRef: scrollRef,
+    canvasWrapperRef,
+    slideWidth: widthNum,
+    slideHeight: heightNum,
+    shapes: slide.shapes,
+    selection,
+    onClearSelection,
+    onSelectMultiple,
+  });
+
+  const handleCanvasWrapperRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      canvasWrapperRef.current = node;
+      if (!canvasRef) {
+        return;
+      }
+      if (typeof canvasRef === "function") {
+        canvasRef(node);
+        return;
+      }
+      canvasRef.current = node;
+    },
+    [canvasRef]
+  );
+
   const scrollContainerStyle: CSSProperties = {
     position: "absolute",
     top: showRulers ? rulerThickness : 0,
@@ -219,9 +250,10 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
         rulerThickness={rulerThickness}
         scrollRef={scrollRef}
       />
-      <div ref={scrollRef} style={scrollContainerStyle} onScroll={handleScroll}>
+      <div ref={scrollRef} style={scrollContainerStyle} onScroll={handleScroll} onPointerDown={handleStagePointerDown}>
+        {outsideMarqueeStyle && <div style={outsideMarqueeStyle} />}
         <div style={stageStyle}>
-          <div ref={canvasRef} style={canvasWrapperStyle}>
+          <div ref={handleCanvasWrapperRef} style={canvasWrapperStyle}>
             <SlideCanvas
               slide={slide}
               selection={selection}
@@ -239,6 +271,7 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
               editingShapeId={editingShapeId}
               layoutShapes={layoutShapes}
               onSelect={onSelect}
+              onSelectMultiple={onSelectMultiple}
               onClearSelection={onClearSelection}
               onStartMove={onStartMove}
               onStartResize={onStartResize}

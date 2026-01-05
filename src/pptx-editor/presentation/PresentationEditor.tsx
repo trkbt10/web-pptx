@@ -503,8 +503,15 @@ function EditorContent({
   // ==========================================================================
 
   const handleSelect = useCallback(
-    (shapeId: ShapeId, addToSelection: boolean) => {
-      dispatch({ type: "SELECT_SHAPE", shapeId, addToSelection });
+    (shapeId: ShapeId, addToSelection: boolean, toggle?: boolean) => {
+      dispatch({ type: "SELECT_SHAPE", shapeId, addToSelection, toggle });
+    },
+    [dispatch]
+  );
+
+  const handleSelectMultiple = useCallback(
+    (shapeIds: readonly ShapeId[]) => {
+      dispatch({ type: "SELECT_MULTIPLE_SHAPES", shapeIds });
     },
     [dispatch]
   );
@@ -671,6 +678,7 @@ function EditorContent({
               creationMode={creationMode}
               textEdit={textEdit}
               onSelect={handleSelect}
+              onSelectMultiple={handleSelectMultiple}
               onClearSelection={handleClearSelection}
               onStartMove={handleStartMove}
               onStartResize={handleStartResize}
@@ -695,7 +703,7 @@ function EditorContent({
                     slide={slide}
                     selection={selection}
                     primaryShape={primaryShape}
-                    onSelect={(id) => handleSelect(id, false)}
+                    onSelect={handleSelect}
                     onGroup={handleGroup}
                     onUngroup={handleUngroup}
                     onClearSelection={handleClearSelection}
@@ -712,7 +720,7 @@ function EditorContent({
                       onShapeChange={handleShapeChange}
                       onSlideChange={handleSlideChange}
                       onUngroup={handleUngroup}
-                      onSelect={(id) => handleSelect(id, false)}
+                      onSelect={handleSelect}
                     />
                   </Panel>
                 </div>

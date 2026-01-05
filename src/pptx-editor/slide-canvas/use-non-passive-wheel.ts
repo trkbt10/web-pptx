@@ -10,7 +10,7 @@ import { useEffect, type RefObject } from "react";
  * Attach a non-passive wheel listener to a target element.
  */
 export function useNonPassiveWheel(
-  targetRef: RefObject<HTMLElement>,
+  targetRef: RefObject<HTMLElement | null>,
   onWheel: (event: WheelEvent) => void,
   enabled = true
 ): void {

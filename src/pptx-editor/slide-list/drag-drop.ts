@@ -56,12 +56,12 @@ export function isValidGapDrop(
   gapIndex: number,
   slides: readonly SlideWithId[]
 ): boolean {
+  // Basic validation
   if (!dragState.isDragging || dragState.draggingIds.length === 0) {
     return false;
   }
 
-  // Check if dropping would result in no movement
-  // Gap index N means "insert before slide N" (or at end if N === slides.length)
+  // Get indices of dragged slides
   const draggingIndices = dragState.draggingIds
     .map((id) => slides.findIndex((s) => s.id === id))
     .filter((idx) => idx >= 0)
@@ -69,15 +69,22 @@ export function isValidGapDrop(
 
   if (draggingIndices.length === 0) return false;
 
-  // If all dragged slides are contiguous and the gap is adjacent to them, no-op
-  const firstDragging = draggingIndices[0];
-  const lastDragging = draggingIndices[draggingIndices.length - 1];
+  // Check for contiguous selection - only then check for no-op
+  const isContiguous = draggingIndices.every(
+    (idx, i) => i === 0 || idx === draggingIndices[i - 1] + 1
+  );
 
-  // Gap right before the first dragged slide or right after the last = no-op
-  if (gapIndex === firstDragging || gapIndex === lastDragging + 1) {
-    return false;
+  if (isContiguous) {
+    const firstDragging = draggingIndices[0];
+    const lastDragging = draggingIndices[draggingIndices.length - 1];
+
+    // Gap immediately before first or after last = no movement
+    if (gapIndex === firstDragging || gapIndex === lastDragging + 1) {
+      return false;
+    }
   }
 
+  // For non-contiguous selections, always allow (will consolidate them)
   return true;
 }
 

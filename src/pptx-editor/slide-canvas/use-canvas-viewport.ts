@@ -20,7 +20,7 @@ const DEFAULT_VIEWPORT: CanvasViewport = {
  * Hook for scroll container metrics.
  */
 export function useCanvasViewport(): {
-  readonly containerRef: RefObject<HTMLDivElement>;
+  readonly containerRef: RefObject<HTMLDivElement | null>;
   readonly viewport: CanvasViewport;
   readonly handleScroll: () => void;
 } {

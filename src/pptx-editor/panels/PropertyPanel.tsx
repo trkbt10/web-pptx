@@ -40,7 +40,7 @@ export type PropertyPanelProps = {
   /** Callback to ungroup a shape */
   readonly onUngroup: (shapeId: ShapeId) => void;
   /** Callback to select a shape */
-  readonly onSelect: (shapeId: ShapeId) => void;
+  readonly onSelect: (shapeId: ShapeId, addToSelection: boolean, toggle?: boolean) => void;
   /** Custom class name */
   readonly className?: string;
   /** Custom style */
@@ -54,7 +54,7 @@ export type PropertyPanelProps = {
 type ShapePanelContext = {
   readonly onShapeChange: (shape: Shape) => void;
   readonly onUngroup: (shapeId: ShapeId) => void;
-  readonly onSelect: (shapeId: ShapeId) => void;
+  readonly onSelect: (shapeId: ShapeId, addToSelection: boolean, toggle?: boolean) => void;
 };
 
 /**
@@ -77,7 +77,9 @@ function renderShapePanel(
           shape={shape}
           onChange={ctx.onShapeChange}
           onUngroup={() => ctx.onUngroup(shape.nonVisual.id)}
-          onSelectChild={(childId) => ctx.onSelect(childId)}
+          onSelectChild={(childId, addToSelection) =>
+            ctx.onSelect(childId, addToSelection)
+          }
         />
       );
     case "graphicFrame":

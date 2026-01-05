@@ -5,9 +5,9 @@
  * Drag indicator is now in SlideListGap, not here.
  */
 
-import { useState } from "react";
 import type { SlideListItemProps } from "./types";
 import { SlideNumberBadge } from "./SlideNumberBadge";
+import { useItemHover } from "./hooks";
 import {
   getItemWrapperStyle,
   getThumbnailContainerStyle,
@@ -30,6 +30,7 @@ export function SlideListItem({
   isActive,
   canDelete,
   isDragging,
+  isAnyDragging,
   renderThumbnail,
   onClick,
   onContextMenu,
@@ -37,9 +38,18 @@ export function SlideListItem({
   onDragStart,
   itemRef,
 }: SlideListItemProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const isEditable = mode === "editable";
-  const showDeleteButton = isEditable && canDelete && isHovered && !isDragging;
+
+  // Hover state with drag awareness (clears when ANY drag starts)
+  const {
+    isHovered,
+    onMouseEnter,
+    onMouseLeave,
+    onDragStart: handleDragStart,
+  } = useItemHover({ isDragging: isAnyDragging });
+
+  // Hide delete button when any drag is active or not hovered
+  const showDeleteButton = isEditable && canDelete && isHovered && !isAnyDragging;
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -62,9 +72,9 @@ export function SlideListItem({
           transition: "opacity 0.1s ease",
         }}
         draggable={isEditable}
-        onDragStart={isEditable ? onDragStart : undefined}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onDragStart={isEditable ? (e) => handleDragStart(e, onDragStart) : undefined}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
       >
         {/* Thumbnail */}
         <div

@@ -42,13 +42,13 @@ function handleSelectShape(
   action: SelectShapeAction
 ): PresentationEditorState {
   const textEditState = exitTextEditIfDifferentShape(state, action.shapeId);
+  const isAlreadySelected = state.shapeSelection.selectedIds.includes(
+    action.shapeId
+  );
 
   if (action.addToSelection) {
-    const isAlreadySelected = state.shapeSelection.selectedIds.includes(
-      action.shapeId
-    );
-    if (isAlreadySelected) {
-      // Deselect
+    // Toggle mode (Cmd/Ctrl+Click): deselect if already selected
+    if (action.toggle && isAlreadySelected) {
       const newSelectedIds = state.shapeSelection.selectedIds.filter(
         (id) => id !== action.shapeId
       );
@@ -63,6 +63,18 @@ function handleSelectShape(
         shapeSelection: {
           selectedIds: newSelectedIds,
           primaryId: newPrimaryId,
+        },
+      };
+    }
+    // Add mode (Shift+Click): add only if not already selected
+    if (isAlreadySelected) {
+      // Already selected, just update primary
+      return {
+        ...state,
+        textEdit: textEditState,
+        shapeSelection: {
+          ...state.shapeSelection,
+          primaryId: action.shapeId,
         },
       };
     }

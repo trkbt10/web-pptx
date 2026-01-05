@@ -57,7 +57,7 @@ export type LayerPanelProps = {
   /** Primary selected shape */
   readonly primaryShape: Shape | undefined;
   /** Callback when a shape is selected */
-  readonly onSelect: (shapeId: ShapeId, addToSelection: boolean) => void;
+  readonly onSelect: (shapeId: ShapeId, addToSelection: boolean, toggle?: boolean) => void;
   /** Callback to group shapes */
   readonly onGroup: (shapeIds: readonly ShapeId[]) => void;
   /** Callback to ungroup a shape */
@@ -74,9 +74,8 @@ type ShapeItemProps = {
   readonly shape: Shape;
   readonly depth: number;
   readonly isSelected: boolean;
-  readonly isPrimary: boolean;
   readonly isExpanded: boolean;
-  readonly onSelect: (shapeId: string, addToSelection: boolean) => void;
+  readonly onSelect: (shapeId: string, addToSelection: boolean, toggle?: boolean) => void;
   readonly onToggleExpand: (shapeId: string) => void;
   readonly expandedGroups: ReadonlySet<string>;
   readonly selectedIds: readonly string[];
@@ -195,7 +194,6 @@ function ShapeItem({
   shape,
   depth,
   isSelected,
-  isPrimary,
   isExpanded,
   onSelect,
   onToggleExpand,
@@ -211,7 +209,9 @@ function ShapeItem({
     if (!shapeId) {
       return;
     }
-    onSelect(shapeId, e.ctrlKey || e.metaKey);
+    const isModifierKey = e.shiftKey || e.metaKey || e.ctrlKey;
+    const isToggle = e.metaKey || e.ctrlKey; // Cmd/Ctrl = toggle
+    onSelect(shapeId, isModifierKey, isToggle);
   };
 
   const handleToggleExpand = (e: MouseEvent) => {
@@ -222,15 +222,16 @@ function ShapeItem({
   };
 
   const getItemBackground = (): string => {
-    if (isPrimary) { return `var(--selection-primary, ${colorTokens.selection.primary})`; }
-    if (isSelected) { return `var(--selection-secondary, ${colorTokens.selection.secondary})22`; } // 22 = 13% alpha
-    return "transparent";
+    if (!isSelected) { return "transparent"; }
+    // Multi-selection: all selected items use the same highlight (for common editing)
+    // Single selection: primary color
+    return `var(--selection-primary, ${colorTokens.selection.primary})`;
   };
 
   const getItemTextColor = (): string => {
-    if (isPrimary) { return "#ffffff"; }
-    if (isSelected) { return `var(--text-primary, ${colorTokens.text.primary})`; }
-    return `var(--text-secondary, ${colorTokens.text.secondary})`;
+    if (!isSelected) { return `var(--text-secondary, ${colorTokens.text.secondary})`; }
+    // Selected items (single or multi): white text on primary background
+    return "#ffffff";
   };
 
   const itemStyle: CSSProperties = {
@@ -254,7 +255,7 @@ function ShapeItem({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: isPrimary ? "#ffffff" : `var(--text-tertiary, ${colorTokens.text.tertiary})`,
+    color: isSelected ? "#ffffff" : `var(--text-tertiary, ${colorTokens.text.tertiary})`,
     transition: "transform 0.15s",
     transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
   };
@@ -265,7 +266,7 @@ function ShapeItem({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    color: isPrimary ? "#ffffff" : `var(--text-secondary, ${colorTokens.text.secondary})`,
+    color: isSelected ? "#ffffff" : `var(--text-secondary, ${colorTokens.text.secondary})`,
   };
 
   const nameStyle: CSSProperties = {
@@ -318,8 +319,6 @@ function ShapeItem({
           {(shape as GrpShape).children.map((child, idx) => {
             const childId = getShapeId(child) ?? `${shapeId}-${idx}`;
             const childSelected = selectedIds.includes(childId);
-            const childPrimary =
-              selectedIds.length > 0 && selectedIds[selectedIds.length - 1] === childId;
 
             return (
               <ShapeItem
@@ -327,7 +326,6 @@ function ShapeItem({
                 shape={child}
                 depth={depth + 1}
                 isSelected={childSelected}
-                isPrimary={childPrimary}
                 isExpanded={expandedGroups.has(childId)}
                 onSelect={onSelect}
                 onToggleExpand={onToggleExpand}
@@ -348,9 +346,8 @@ function ShapeItem({
 type ShapeListProps = {
   readonly shapes: readonly Shape[];
   readonly selectedIds: readonly string[];
-  readonly primaryId: string | undefined;
   readonly expandedGroups: ReadonlySet<string>;
-  readonly onSelect: (shapeId: string, addToSelection: boolean) => void;
+  readonly onSelect: (shapeId: string, addToSelection: boolean, toggle?: boolean) => void;
   readonly onToggleExpand: (shapeId: string) => void;
   readonly onEmptyClick: () => void;
 };
@@ -358,7 +355,6 @@ type ShapeListProps = {
 function ShapeList({
   shapes,
   selectedIds,
-  primaryId,
   expandedGroups,
   onSelect,
   onToggleExpand,
@@ -393,7 +389,6 @@ function ShapeList({
       {shapesReversed.map((shape, idx) => {
         const shapeId = getShapeId(shape) ?? `shape-${shapes.length - 1 - idx}`;
         const isSelected = selectedIds.includes(shapeId);
-        const isPrimary = primaryId === shapeId;
         const isExpanded = expandedGroups.has(shapeId);
 
         return (
@@ -402,7 +397,6 @@ function ShapeList({
             shape={shape}
             depth={0}
             isSelected={isSelected}
-            isPrimary={isPrimary}
             isExpanded={isExpanded}
             onSelect={onSelect}
             onToggleExpand={onToggleExpand}
@@ -501,8 +495,8 @@ export function LayerPanel({
 
   // Handle shape selection
   const handleSelect = useCallback(
-    (shapeId: string, addToSelection: boolean) => {
-      onSelect(shapeId as ShapeId, addToSelection);
+    (shapeId: string, addToSelection: boolean, toggle?: boolean) => {
+      onSelect(shapeId as ShapeId, addToSelection, toggle);
     },
     [onSelect]
   );
@@ -555,7 +549,6 @@ export function LayerPanel({
       <ShapeList
         shapes={slide.shapes}
         selectedIds={selectedIds}
-        primaryId={selection.primaryId}
         expandedGroups={expandedGroups}
         onSelect={handleSelect}
         onToggleExpand={handleToggleExpand}

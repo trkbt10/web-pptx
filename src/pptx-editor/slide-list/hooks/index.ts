@@ -28,3 +28,20 @@ export type {
   UseSlideContextMenuOptions,
   UseSlideContextMenuResult,
 } from "./useSlideContextMenu";
+
+export { useItemHover } from "./useItemHover";
+export type {
+  UseItemHoverOptions,
+  UseItemHoverResult,
+} from "./useItemHover";
+
+// Pure logic exports (for testing and advanced usage)
+export {
+  createInitialHoverState,
+  hoverReducer,
+  shouldShowHover,
+} from "./item-hover-logic";
+export type {
+  ItemHoverState,
+  ItemHoverAction,
+} from "./item-hover-logic";

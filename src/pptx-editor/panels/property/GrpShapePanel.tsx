@@ -23,7 +23,7 @@ export type GrpShapePanelProps = {
   readonly shape: GrpShape;
   readonly onChange: (shape: GrpShape) => void;
   readonly onUngroup: () => void;
-  readonly onSelectChild: (childId: string) => void;
+  readonly onSelectChild: (childId: string, addToSelection: boolean, toggle?: boolean) => void;
 };
 
 // =============================================================================
@@ -99,7 +99,7 @@ function ChildShapeButton({
 }: {
   readonly child: Shape;
   readonly index: number;
-  readonly onSelect: (childId: string) => void;
+  readonly onSelect: (childId: string, addToSelection: boolean, toggle?: boolean) => void;
 }) {
   const childId = "nonVisual" in child ? child.nonVisual.id : undefined;
   const childName =
@@ -108,11 +108,18 @@ function ChildShapeButton({
       : `Shape ${index + 1}`;
   const typeLabel = getShapeTypeLabel(child);
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (!childId) { return; }
+    const isModifierKey = e.shiftKey || e.metaKey || e.ctrlKey;
+    const isToggle = e.metaKey || e.ctrlKey;
+    onSelect(childId, isModifierKey, isToggle);
+  };
+
   return (
     <button
       key={childId ?? index}
       type="button"
-      onClick={() => childId && onSelect(childId)}
+      onClick={handleClick}
       disabled={!childId}
       style={{
         padding: "8px 12px",

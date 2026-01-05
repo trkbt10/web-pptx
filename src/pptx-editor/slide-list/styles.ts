@@ -179,25 +179,21 @@ export function getDeleteButtonStyle(visible: boolean): CSSProperties {
 // Gap styles (for add button and drop indicator)
 // =============================================================================
 
-/** Gap height/width for spacing between slides */
-const GAP_SIZE = 6;
-const GAP_SIZE_DRAG = 8;
+/** Fixed gap size - NEVER changes to prevent layout shift */
+const GAP_SIZE = 8;
 
 export function getGapStyle(
   orientation: SlideListOrientation,
-  isDragTarget: boolean = false
+  _isDragTarget: boolean = false
 ): CSSProperties {
-  const size = isDragTarget ? GAP_SIZE_DRAG : GAP_SIZE;
-
   return {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    height: orientation === "vertical" ? `${size}px` : undefined,
-    width: orientation === "horizontal" ? `${size}px` : undefined,
+    height: orientation === "vertical" ? `${GAP_SIZE}px` : undefined,
+    width: orientation === "horizontal" ? `${GAP_SIZE}px` : undefined,
     position: "relative",
     flexShrink: 0,
-    // Must be above slides so the + button (which overflows) is clickable
     zIndex: 1,
   };
 }
@@ -205,50 +201,55 @@ export function getGapStyle(
 export function getGapDropIndicatorStyle(
   orientation: SlideListOrientation
 ): CSSProperties {
+  // Simple line indicator - no layout impact
   if (orientation === "vertical") {
     return {
       position: "absolute",
-      left: "26px", // align with slide (past number badge)
+      left: "26px",
       right: 0,
       height: "2px",
       top: "50%",
       transform: "translateY(-50%)",
       backgroundColor: colorTokens.selection.primary,
       borderRadius: "1px",
+      pointerEvents: "none",
     };
   }
 
-  // horizontal
   return {
     position: "absolute",
-    top: "16px", // below number
+    top: "16px",
     bottom: 0,
     width: "2px",
     left: "50%",
     transform: "translateX(-50%)",
     backgroundColor: colorTokens.selection.primary,
     borderRadius: "1px",
+    pointerEvents: "none",
   };
 }
 
 export function getAddButtonStyle(visible: boolean): CSSProperties {
   return {
-    width: "20px",
-    height: "20px",
+    width: "16px",
+    height: "16px",
     borderRadius: "50%",
-    backgroundColor: visible ? "rgba(0, 0, 0, 0.08)" : "transparent",
-    color: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: visible ? colorTokens.accent.primary : "transparent",
+    color: "#fff",
     border: "none",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "14px",
+    fontSize: "11px",
+    fontWeight: 600,
     lineHeight: 1,
     opacity: visible ? 1 : 0,
     pointerEvents: visible ? "auto" : "none",
-    transition: "opacity 0.15s ease, background-color 0.1s ease",
+    transition: "opacity 0.15s ease, transform 0.15s ease",
+    transform: visible ? "scale(1)" : "scale(0.8)",
     position: "absolute",
+    boxShadow: visible ? "0 1px 3px rgba(0,0,0,0.3)" : "none",
   };
 }
 

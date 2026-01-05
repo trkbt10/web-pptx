@@ -202,7 +202,10 @@ export type PresentationEditorAction =
   | {
       readonly type: "SELECT_SHAPE";
       readonly shapeId: ShapeId;
+      /** Add to existing selection (Shift+Click) */
       readonly addToSelection: boolean;
+      /** Toggle selection state - deselect if already selected (Cmd/Ctrl+Click) */
+      readonly toggle?: boolean;
     }
   | { readonly type: "SELECT_MULTIPLE_SHAPES"; readonly shapeIds: readonly ShapeId[] }
   | { readonly type: "CLEAR_SHAPE_SELECTION" }

@@ -250,13 +250,22 @@ describe("isValidGapDrop", () => {
     // Dragging slides 2 and 3 (indices 1, 2)
     const dragState = createDragStartState(["slide-2", "slide-3"]);
 
-    // Gaps 1, 2, 3 are adjacent to the selection
+    // Gap 1 = before first dragged, Gap 3 = after last dragged = no-op
     expect(isValidGapDrop(dragState, 1, slides)).toBe(false);
     expect(isValidGapDrop(dragState, 3, slides)).toBe(false);
 
-    // Gaps 0 and 4+ are valid
+    // Gaps 0, 4, 5 are valid (cause actual movement)
     expect(isValidGapDrop(dragState, 0, slides)).toBe(true);
     expect(isValidGapDrop(dragState, 4, slides)).toBe(true);
+  });
+
+  it("allows non-contiguous selection drops", () => {
+    // Dragging slides 1 and 3 (indices 0, 2) - not contiguous
+    const dragState = createDragStartState(["slide-1", "slide-3"]);
+
+    // All gaps should be valid for non-contiguous (will consolidate)
+    expect(isValidGapDrop(dragState, 1, slides)).toBe(true);
+    expect(isValidGapDrop(dragState, 2, slides)).toBe(true);
   });
 });
 
