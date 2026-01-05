@@ -17,7 +17,7 @@ import { parseShapeTree } from "../parser/shape-parser";
 import type { XmlElement, XmlDocument } from "../../xml";
 import { getByPath, getChild } from "../../xml";
 import type { SlideSize, Shape, SpShape, ZipFile } from "../domain";
-import type { ResolvedBackgroundFill, RenderContext } from "../render/context";
+import type { ResolvedBackgroundFill, RenderContext as CoreRenderContext } from "../render/context";
 
 // =============================================================================
 // SlideRenderContext Builder
@@ -97,8 +97,7 @@ function toResolvedBackgroundFill(
  * - Resolved background (from slide → layout → master hierarchy)
  * - Layout shapes (non-placeholder shapes from layout)
  */
-export type ApiSlideRenderContext = {
-  readonly renderContext: RenderContext;
+export type RenderContext = CoreRenderContext & {
   readonly slideRenderContext: SlideRenderContext;
 };
 
@@ -108,7 +107,7 @@ export function createRenderContext(
   slideSize: SlideSize,
   defaultTextStyle: XmlElement | null = null,
   renderOptions?: RenderOptions
-): ApiSlideRenderContext {
+): RenderContext {
   // Build SlideRenderContext
   const slideRenderCtx = (() => {
     // Extract color map from master
@@ -173,8 +172,16 @@ export function createRenderContext(
   });
 
   return {
-    renderContext,
     slideRenderContext: slideRenderCtx,
+    slideSize: renderContext.slideSize,
+    options: renderContext.options,
+    colorContext: renderContext.colorContext,
+    resources: renderContext.resources,
+    warnings: renderContext.warnings,
+    getNextShapeId: renderContext.getNextShapeId,
+    fontScheme: renderContext.fontScheme,
+    resolvedBackground: renderContext.resolvedBackground,
+    layoutShapes: renderContext.layoutShapes,
   };
 }
 

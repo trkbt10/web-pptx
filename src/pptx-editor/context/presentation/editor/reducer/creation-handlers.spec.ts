@@ -216,4 +216,28 @@ describe("createShapeFromMode", () => {
     expect(shape).toBeDefined();
     expect(shape?.type).toBe("graphicFrame");
   });
+
+  it("should create a chart graphic frame", () => {
+    const mode: CreationMode = { type: "chart", chartType: "bar" };
+    const bounds = getDefaultBoundsForMode(mode, px(120), px(120));
+    const shape = createShapeFromMode(mode, bounds);
+
+    expect(shape).toBeDefined();
+    expect(shape?.type).toBe("graphicFrame");
+    if (shape?.type === "graphicFrame") {
+      expect(shape.content.type).toBe("chart");
+    }
+  });
+
+  it("should create a diagram graphic frame", () => {
+    const mode: CreationMode = { type: "diagram", diagramType: "process" };
+    const bounds = getDefaultBoundsForMode(mode, px(140), px(140));
+    const shape = createShapeFromMode(mode, bounds);
+
+    expect(shape).toBeDefined();
+    expect(shape?.type).toBe("graphicFrame");
+    if (shape?.type === "graphicFrame") {
+      expect(shape.content.type).toBe("diagram");
+    }
+  });
 });

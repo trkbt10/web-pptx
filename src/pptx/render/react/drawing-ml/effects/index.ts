@@ -29,3 +29,9 @@ export {
   SoftEdgeFilterDef,
   type SoftEdgeFilterDefProps,
 } from "./SoftEdgeFilter";
+
+export {
+  EffectsFilter,
+  EffectsWrapper,
+  EffectsFilterDef,
+} from "./EffectsFilter";

@@ -147,6 +147,7 @@ export function createRenderContextFromSlideContext(
   };
 }
 
+
 /**
  * Build ColorContext from SlideRenderContext.
  *

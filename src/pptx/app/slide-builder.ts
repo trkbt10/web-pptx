@@ -18,6 +18,7 @@ import { parseTheme, parseMasterTextStyles } from "../parser/drawing-ml";
 import { DEFAULT_RENDER_OPTIONS } from "../render/render-options";
 import { renderSlideIntegrated, renderSlideSvgIntegrated } from "./slide-render";
 import { parseSlideTimingData } from "../parser/timing-parser";
+import { parseSlideTransitionData } from "../parser/slide/transition-parser";
 
 /**
  * Build SlideRenderContext directly from SlideData.
@@ -121,6 +122,9 @@ export function createSlide(
   // Parse timing data (lazy, cached)
   const timing = parseSlideTimingData(data.content);
 
+  // Parse transition data
+  const transition = parseSlideTransitionData(data.content);
+
   return {
     number: data.number,
     filename: data.filename,
@@ -138,6 +142,7 @@ export function createSlide(
     diagram: data.diagram,
     diagramRelationships: data.diagramRelationships,
     timing,
+    transition,
     renderHTML,
     renderSVG,
   };

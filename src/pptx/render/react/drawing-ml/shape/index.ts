@@ -10,3 +10,9 @@ export {
   type ShapeStyleResult,
   type ShapeSvgProps,
 } from "./useShapeStyle";
+
+export {
+  StyledShape,
+  StyledShapeWithStyle,
+  type ShapeType,
+} from "./StyledShape";

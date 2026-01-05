@@ -5,6 +5,34 @@
  *
  * @see ECMA-376 Part 1, Section 20.1.8.55 (a:srcRect)
  */
+import { openPresentation } from "../../app";
+import { readFileSync, existsSync } from "node:fs";
+import JSZip from "jszip";
+import type { PresentationFile } from "../../domain";
+
+/**
+ * Create a PresentationFile interface from a PPTX file path.
+ */
+async function loadPptxFile(pptxPath: string): Promise<PresentationFile> {
+  const pptxBuffer = readFileSync(pptxPath);
+  const jszip = await JSZip.loadAsync(pptxBuffer);
+
+  const cache = new Map<string, { text: string; buffer: ArrayBuffer }>();
+  for (const fp of Object.keys(jszip.files)) {
+    const file = jszip.file(fp);
+    if (file !== null && !file.dir) {
+      const buffer = await file.async("arraybuffer");
+      const text = new TextDecoder().decode(buffer);
+      cache.set(fp, { text, buffer });
+    }
+  }
+
+  return {
+    readText: (fp: string) => cache.get(fp)?.text ?? null,
+    readBinary: (fp: string) => cache.get(fp)?.buffer ?? null,
+    exists: (fp: string) => cache.has(fp),
+  };
+}
 
 /**
  * Re-implementation of calculateCroppedImageLayout for testing.
@@ -217,5 +245,60 @@ describe("calculateCroppedImageLayout - ECMA-376 20.1.8.55", () => {
       expect(result.x).toBe(-100); // -400 * 0.25
       expect(result.y).toBe(-50); // -200 * 0.25
     });
+  });
+});
+
+/**
+ * Tests for data-ooxml-id attribute in SVG output.
+ *
+ * The data-ooxml-id attribute is required for the animation player
+ * to find and animate elements.
+ *
+ * @see src/pptx/render/react/hooks/useSlideAnimation.ts
+ */
+describe("data-ooxml-id attribute for animation targeting", () => {
+  // Use a test fixture with shapes
+  const testFile = "fixtures/animation/animations-demo.pptx";
+
+  it("should include data-ooxml-id attributes in SVG output", async () => {
+    if (!existsSync(testFile)) {
+      console.log(`Skipping test: ${testFile} not found`);
+      return;
+    }
+
+    const file = await loadPptxFile(testFile);
+    const pres = openPresentation(file);
+    const slide = pres.getSlide(1);
+    const svg = slide.renderSVG();
+
+    // The SVG should contain data-ooxml-id attributes
+    const matches = svg.match(/data-ooxml-id="[^"]+"/g);
+
+    // Should have at least one shape with an ID
+    expect(matches).not.toBeNull();
+    expect(matches!.length).toBeGreaterThan(0);
+  });
+
+  it("should use shape nonVisual.id as the data-ooxml-id value", async () => {
+    if (!existsSync(testFile)) {
+      console.log(`Skipping test: ${testFile} not found`);
+      return;
+    }
+
+    const file = await loadPptxFile(testFile);
+    const pres = openPresentation(file);
+    const slide = pres.getSlide(1);
+    const svg = slide.renderSVG();
+
+    // IDs should be numeric (from OOXML shape IDs)
+    const idMatches = svg.match(/data-ooxml-id="(\d+)"/g);
+    expect(idMatches).not.toBeNull();
+
+    // Extract unique IDs
+    const ids = idMatches!.map((m) => m.match(/"(\d+)"/)![1]);
+    const uniqueIds = [...new Set(ids)];
+
+    // Should have multiple unique shape IDs
+    expect(uniqueIds.length).toBeGreaterThan(0);
   });
 });

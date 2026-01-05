@@ -44,6 +44,16 @@ export type CreationPresetShape =
   | "line";
 
 /**
+ * Chart types for creation
+ */
+export type CreationChartType = "bar" | "line" | "pie";
+
+/**
+ * Diagram types for creation
+ */
+export type CreationDiagramType = "process" | "cycle" | "hierarchy" | "relationship";
+
+/**
  * Smoothing level for pencil tool
  */
 export type SmoothingLevel = "low" | "medium" | "high";
@@ -58,6 +68,8 @@ export type CreationMode =
   | { readonly type: "picture" }
   | { readonly type: "connector" }
   | { readonly type: "table"; readonly rows: number; readonly cols: number }
+  | { readonly type: "chart"; readonly chartType: CreationChartType }
+  | { readonly type: "diagram"; readonly diagramType: CreationDiagramType }
   | { readonly type: "pen" }
   | { readonly type: "pencil"; readonly smoothing: SmoothingLevel }
   | { readonly type: "path-edit" };
@@ -200,7 +212,7 @@ export type PresentationEditorAction =
   // Chart insertion
   | {
       readonly type: "ADD_CHART";
-      readonly chartType: "bar" | "line" | "pie";
+      readonly chartType: CreationChartType;
       readonly x: Pixels;
       readonly y: Pixels;
       readonly width: Pixels;
@@ -210,7 +222,7 @@ export type PresentationEditorAction =
   // Diagram insertion
   | {
       readonly type: "ADD_DIAGRAM";
-      readonly diagramType: "process" | "cycle" | "hierarchy" | "relationship";
+      readonly diagramType: CreationDiagramType;
       readonly x: Pixels;
       readonly y: Pixels;
       readonly width: Pixels;

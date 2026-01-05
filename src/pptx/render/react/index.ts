@@ -43,6 +43,13 @@ export type {
 } from "./hooks/useSlideAnimation";
 export { useSlideAnimation } from "./hooks/useSlideAnimation";
 
+// Hooks - Slide Transition
+export type {
+  UseSlideTransitionOptions,
+  UseSlideTransitionResult,
+} from "./hooks/useSlideTransition";
+export { useSlideTransition } from "./hooks/useSlideTransition";
+
 // Hooks - Lazy SVG Cache
 export type { UseLazySvgCacheResult } from "./hooks/useLazySvgCache";
 export { useLazySvgCache } from "./hooks/useLazySvgCache";

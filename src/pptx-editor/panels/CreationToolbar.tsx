@@ -5,10 +5,12 @@
  * Uses lucide-react icons for consistent visual design.
  */
 
-import { useCallback, type CSSProperties } from "react";
+import { useCallback, useState, type CSSProperties } from "react";
 import type { LucideIcon } from "lucide-react";
 import type { CreationMode } from "../context/presentation/editor/types";
 import { ToolbarButton } from "../ui/toolbar/index";
+import { Popover } from "../ui/primitives/Popover";
+import { Button } from "../ui/primitives/Button";
 import {
   SelectIcon,
   RectIcon,
@@ -20,6 +22,9 @@ import {
   LineIcon,
   PenIcon,
   PencilIcon,
+  TableIcon,
+  ChartIcon,
+  DiagramIcon,
 } from "../ui/icons/index";
 import { colorTokens, radiusTokens } from "../ui/design-tokens/index";
 
@@ -44,6 +49,23 @@ type ToolDefinition = {
   readonly label: string;
   readonly mode: CreationMode;
 };
+
+type PopoverOption = {
+  readonly id: string;
+  readonly label: string;
+  readonly mode: CreationMode;
+};
+
+type PopoverToolDefinition = {
+  readonly id: string;
+  readonly icon: LucideIcon;
+  readonly label: string;
+  readonly options: readonly PopoverOption[];
+};
+
+type ToolbarGroup =
+  | { readonly type: "tools"; readonly tools: readonly ToolDefinition[] }
+  | { readonly type: "popover"; readonly tools: readonly PopoverToolDefinition[] };
 
 // =============================================================================
 // Styles
@@ -80,6 +102,31 @@ const separatorStyle: CSSProperties = {
 const groupStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
+};
+
+const popoverContentStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+  minWidth: "180px",
+};
+
+const popoverSectionStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "6px",
+};
+
+const popoverHeaderStyle: CSSProperties = {
+  fontSize: "12px",
+  color: `var(--text-secondary, ${colorTokens.text.secondary})`,
+  textTransform: "uppercase",
+  letterSpacing: "0.08em",
+};
+
+const popoverButtonStyle: CSSProperties = {
+  justifyContent: "flex-start",
+  width: "100%",
 };
 
 // =============================================================================
@@ -140,6 +187,13 @@ const TOOLS: readonly ToolDefinition[] = [
     label: "Line (L)",
     mode: { type: "connector" },
   },
+  // Table
+  {
+    id: "table",
+    icon: TableIcon,
+    label: "Table",
+    mode: { type: "table", rows: 2, cols: 2 },
+  },
   // Path drawing
   {
     id: "pen",
@@ -155,14 +209,44 @@ const TOOLS: readonly ToolDefinition[] = [
   },
 ];
 
+const CHART_OPTIONS: readonly PopoverOption[] = [
+  { id: "bar", label: "Bar Chart", mode: { type: "chart", chartType: "bar" } },
+  { id: "line", label: "Line Chart", mode: { type: "chart", chartType: "line" } },
+  { id: "pie", label: "Pie Chart", mode: { type: "chart", chartType: "pie" } },
+];
+
+const DIAGRAM_OPTIONS: readonly PopoverOption[] = [
+  { id: "process", label: "Process", mode: { type: "diagram", diagramType: "process" } },
+  { id: "cycle", label: "Cycle", mode: { type: "diagram", diagramType: "cycle" } },
+  { id: "hierarchy", label: "Hierarchy", mode: { type: "diagram", diagramType: "hierarchy" } },
+  { id: "relationship", label: "Relationship", mode: { type: "diagram", diagramType: "relationship" } },
+];
+
+const POPOVER_TOOLS: readonly PopoverToolDefinition[] = [
+  {
+    id: "chart",
+    icon: ChartIcon,
+    label: "Chart",
+    options: CHART_OPTIONS,
+  },
+  {
+    id: "diagram",
+    icon: DiagramIcon,
+    label: "Diagram",
+    options: DIAGRAM_OPTIONS,
+  },
+];
+
 // Group tools by category for separators
-const TOOL_GROUPS: readonly (readonly ToolDefinition[])[] = [
-  TOOLS.slice(0, 1), // Select
-  TOOLS.slice(1, 5), // Basic shapes
-  TOOLS.slice(5, 6), // Arrows
-  TOOLS.slice(6, 7), // Text
-  TOOLS.slice(7, 8), // Connector
-  TOOLS.slice(8, 10), // Path drawing (Pen, Pencil)
+const TOOL_GROUPS: readonly ToolbarGroup[] = [
+  { type: "tools", tools: TOOLS.slice(0, 1) }, // Select
+  { type: "tools", tools: TOOLS.slice(1, 5) }, // Basic shapes
+  { type: "tools", tools: TOOLS.slice(5, 6) }, // Arrows
+  { type: "tools", tools: TOOLS.slice(6, 7) }, // Text
+  { type: "tools", tools: TOOLS.slice(7, 8) }, // Connector
+  { type: "tools", tools: TOOLS.slice(8, 9) }, // Table
+  { type: "popover", tools: POPOVER_TOOLS }, // Chart/Diagram
+  { type: "tools", tools: TOOLS.slice(9, 11) }, // Path drawing (Pen, Pencil)
 ];
 
 // =============================================================================
@@ -179,9 +263,25 @@ function isSameMode(a: CreationMode, b: CreationMode): boolean {
   if (a.type === "table" && b.type === "table") {
     return a.rows === b.rows && a.cols === b.cols;
   }
+  if (a.type === "chart" && b.type === "chart") {
+    return a.chartType === b.chartType;
+  }
+  if (a.type === "diagram" && b.type === "diagram") {
+    return a.diagramType === b.diagramType;
+  }
   // For pencil mode, we only compare the type (smoothing can be different)
   // This ensures the button stays active regardless of smoothing level
   return true;
+}
+
+function isPopoverActive(toolId: string, mode: CreationMode): boolean {
+  if (toolId === "chart") {
+    return mode.type === "chart";
+  }
+  if (toolId === "diagram") {
+    return mode.type === "diagram";
+  }
+  return false;
 }
 
 // =============================================================================
@@ -197,6 +297,8 @@ export function CreationToolbar({
   disabled = false,
   appearance = "panel",
 }: CreationToolbarProps) {
+  const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
+
   const handleClick = useCallback(
     (toolMode: CreationMode) => {
       if (!disabled) {
@@ -206,29 +308,87 @@ export function CreationToolbar({
     [disabled, onModeChange]
   );
 
+  const handlePopoverSelect = useCallback(
+    (toolMode: CreationMode) => {
+      if (!disabled) {
+        onModeChange(toolMode);
+        setOpenPopoverId(null);
+      }
+    },
+    [disabled, onModeChange]
+  );
+
   const appliedStyle = appearance === "floating" ? floatingToolbarStyle : toolbarStyle;
 
   return (
     <div style={appliedStyle}>
-      {TOOL_GROUPS.map((group, groupIndex) => (
-        <div key={groupIndex} style={groupStyle}>
-          {groupIndex > 0 && <div style={separatorStyle} />}
-          {group.map((tool) => {
-            const isActive = isSameMode(mode, tool.mode);
-            return (
-              <ToolbarButton
-                key={tool.id}
-                icon={tool.icon}
-                label={tool.label}
-                active={isActive}
-                disabled={disabled}
-                onClick={() => handleClick(tool.mode)}
-                size="lg"
-              />
-            );
-          })}
-        </div>
-      ))}
+      {TOOL_GROUPS.map((group, groupIndex) => {
+        if (group.type === "tools") {
+          return (
+            <div key={groupIndex} style={groupStyle}>
+              {groupIndex > 0 && <div style={separatorStyle} />}
+              {group.tools.map((tool) => {
+                const isActive = isSameMode(mode, tool.mode);
+                return (
+                  <ToolbarButton
+                    key={tool.id}
+                    icon={tool.icon}
+                    label={tool.label}
+                    active={isActive}
+                    disabled={disabled}
+                    onClick={() => handleClick(tool.mode)}
+                    size="lg"
+                  />
+                );
+              })}
+            </div>
+          );
+        }
+
+        return (
+          <div key={groupIndex} style={groupStyle}>
+            {groupIndex > 0 && <div style={separatorStyle} />}
+            {group.tools.map((tool) => {
+              const isActive = isPopoverActive(tool.id, mode);
+              const isOpen = openPopoverId === tool.id;
+              return (
+                <Popover
+                  key={tool.id}
+                  open={isOpen}
+                  onOpenChange={(open) => setOpenPopoverId(open ? tool.id : null)}
+                  disabled={disabled}
+                  trigger={
+                    <ToolbarButton
+                      icon={tool.icon}
+                      label={tool.label}
+                      active={isActive}
+                      disabled={disabled}
+                      onClick={() => setOpenPopoverId(tool.id)}
+                      size="lg"
+                    />
+                  }
+                >
+                  <div style={popoverContentStyle}>
+                    <div style={popoverHeaderStyle}>{tool.label}</div>
+                    <div style={popoverSectionStyle}>
+                      {tool.options.map((option) => (
+                        <Button
+                          key={option.id}
+                          variant="secondary"
+                          style={popoverButtonStyle}
+                          onClick={() => handlePopoverSelect(option.mode)}
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </Popover>
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 }

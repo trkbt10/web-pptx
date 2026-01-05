@@ -6,7 +6,7 @@
 import type { XmlDocument, XmlNode } from "../../xml";
 import type { IndexTables } from "../core/types";
 import type { ResourceMap } from "../opc";
-import type { SlideSize } from "../domain";
+import type { SlideSize, SlideTransition } from "../domain";
 import type { Timing } from "../domain/animation";
 import type { RenderOptions } from "../render/render-options";
 
@@ -94,6 +94,13 @@ export type Slide = {
    * @see ECMA-376 Part 1, Section 19.5 (Animation)
    */
   readonly timing: Timing | undefined;
+
+  /**
+   * Slide transition effect.
+   * Returns undefined if the slide has no transition.
+   * @see ECMA-376 Part 1, Section 19.5 (Transitions)
+   */
+  readonly transition: SlideTransition | undefined;
 
   /**
    * Render slide as HTML string

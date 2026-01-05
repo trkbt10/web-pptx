@@ -33,6 +33,8 @@ export {
 export {
   useBackground,
   resolveBackgroundForReact,
+  BackgroundFill,
+  BackgroundFillWithDefs,
   type BackgroundResult,
 } from "./background";
 
@@ -43,6 +45,9 @@ export {
   ShadowFilterDef,
   GlowFilterDef,
   SoftEdgeFilterDef,
+  EffectsFilter,
+  EffectsWrapper,
+  EffectsFilterDef,
   directionToOffset,
   resolveShadowProps,
   resolveGlowProps,
@@ -57,7 +62,10 @@ export {
 // Shape module
 export {
   useShapeStyle,
+  StyledShape,
+  StyledShapeWithStyle,
   type ShapeStyleInput,
   type ShapeStyleResult,
   type ShapeSvgProps,
+  type ShapeType,
 } from "./shape";

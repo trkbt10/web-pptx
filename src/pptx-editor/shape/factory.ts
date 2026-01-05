@@ -641,8 +641,15 @@ export function createShapeFromMode(mode: CreationMode, bounds: ShapeBounds): Sh
       return createConnector(id, bounds);
     case "table":
       return createTableGraphicFrame(id, bounds, mode.rows, mode.cols);
+    case "chart":
+      return createChartGraphicFrame(id, bounds, mode.chartType);
+    case "diagram":
+      return createDiagramGraphicFrame(id, bounds, mode.diagramType);
     case "select":
     case "picture":
+    case "pen":
+    case "pencil":
+    case "path-edit":
       // These require additional handling (file upload dialog)
       return undefined;
   }

@@ -16,6 +16,7 @@ import type { ColorContext, FontScheme } from "../../pptx/domain/resolution";
 import { SlideCanvas } from "../slide/SlideCanvas";
 import { TextEditController, isTextEditActive, type TextEditState } from "../slide/text-edit";
 import type { ContextMenuActions } from "../slide/context-menu/SlideContextMenu";
+import type { ShapeBounds as CreationBounds } from "../shape/factory";
 import { CanvasRulers } from "./CanvasRulers";
 import { useCanvasViewport } from "./use-canvas-viewport";
 import { getAutoCenterScroll, getCanvasStageMetrics } from "./canvas-metrics";
@@ -50,6 +51,7 @@ export type CanvasStageProps = {
   readonly onStartRotate: (startX: number, startY: number) => void;
   readonly onDoubleClick: (shapeId: ShapeId) => void;
   readonly onCreate: (x: number, y: number) => void;
+  readonly onCreateFromDrag?: (bounds: CreationBounds) => void;
   readonly onTextEditComplete: (text: string) => void;
   readonly onTextEditCancel: () => void;
   readonly onPathCommit?: (path: DrawingPath) => void;
@@ -102,6 +104,7 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
     onStartRotate,
     onDoubleClick,
     onCreate,
+    onCreateFromDrag,
     onTextEditComplete,
     onTextEditCancel,
     onPathCommit,
@@ -308,6 +311,7 @@ export const CanvasStage = forwardRef<HTMLDivElement, CanvasStageProps>(function
               onDoubleClick={onDoubleClick}
               creationMode={creationMode}
               onCreate={onCreate}
+              onCreateFromDrag={onCreateFromDrag}
               onPathCommit={onPathCommit}
               onPathCancel={onPathCancel}
               pathEdit={pathEdit}

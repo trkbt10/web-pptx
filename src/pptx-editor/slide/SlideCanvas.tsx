@@ -14,10 +14,11 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import type { Slide, Shape } from "../../pptx/domain";
 import type { ColorContext, FontScheme } from "../../pptx/domain/resolution";
 import type { Pixels, ShapeId } from "../../pptx/domain/types";
+import { px } from "../../pptx/domain/types";
 import type { DragState, SelectionState, ResizeHandlePosition, PathEditState } from "../context/slide/state";
 import { isPathEditEditing } from "../context/slide/state";
 import type { CreationMode } from "../context/presentation/editor/types";
-import { isPenMode, isPencilMode } from "../context/presentation/editor/types";
+import { isPenMode, isPathMode } from "../context/presentation/editor/types";
 import type { ResourceResolver, ResolvedBackgroundFill, RenderOptions } from "../../pptx/render/core/types";
 import type { DrawingPath } from "../path-tools/types";
 import { PenToolOverlay } from "../path-tools/components/PenToolOverlay";
@@ -29,6 +30,7 @@ import { findShapeByIdWithParents } from "../shape/query";
 import { getAbsoluteBounds } from "../shape/transform";
 import { getCombinedBoundsWithRotation } from "../shape/bounds";
 import { getSvgRotationTransformForBounds, normalizeAngle } from "../shape/rotate";
+import { createBoundsFromDrag, type ShapeBounds as CreationBounds } from "../shape/factory";
 import { SlideContextMenu, type ContextMenuActions } from "./context-menu/SlideContextMenu";
 import { SelectionBox } from "../selection/SelectionBox";
 import { SlideRenderer } from "../../pptx/render/react";
@@ -92,6 +94,7 @@ export type SlideCanvasProps = {
   // Creation mode
   readonly creationMode?: CreationMode;
   readonly onCreate?: (x: number, y: number) => void;
+  readonly onCreateFromDrag?: (bounds: CreationBounds) => void;
 
   // Path tool callbacks
   readonly onPathCommit?: (path: DrawingPath) => void;
@@ -126,6 +129,13 @@ type MarqueeSelection = {
   readonly currentX: number;
   readonly currentY: number;
   readonly additive: boolean;
+};
+
+type CreationDrag = {
+  readonly startX: number;
+  readonly startY: number;
+  readonly currentX: number;
+  readonly currentY: number;
 };
 
 // =============================================================================
@@ -318,6 +328,7 @@ export function SlideCanvas({
   onDoubleClick,
   creationMode,
   onCreate,
+  onCreateFromDrag,
   onPathCommit,
   onPathCancel,
   pathEdit,
@@ -326,8 +337,10 @@ export function SlideCanvas({
 }: SlideCanvasProps) {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [marquee, setMarquee] = useState<MarqueeSelection | null>(null);
+  const [creationDrag, setCreationDrag] = useState<CreationDrag | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const marqueeRef = useRef<MarqueeSelection | null>(null);
+  const creationDragRef = useRef<CreationDrag | null>(null);
   const ignoreNextClickRef = useRef(false);
 
   const widthNum = width as number;
@@ -463,14 +476,29 @@ export function SlideCanvas({
 
   const handleSvgPointerDown = useCallback(
     (e: React.PointerEvent<SVGSVGElement>) => {
-      if (creationMode && creationMode.type !== "select") {
-        return;
-      }
       if (e.button !== 0) {
         return;
       }
       const target = e.target as HTMLElement | null;
       if (target?.closest("[data-shape-id]")) {
+        return;
+      }
+      if (creationMode && creationMode.type !== "select") {
+        if (isPathMode(creationMode)) {
+          return;
+        }
+        const rect = e.currentTarget.getBoundingClientRect();
+        const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+        const nextDrag: CreationDrag = {
+          startX: coords.x,
+          startY: coords.y,
+          currentX: coords.x,
+          currentY: coords.y,
+        };
+        creationDragRef.current = nextDrag;
+        setCreationDrag(nextDrag);
+        ignoreNextClickRef.current = false;
+        e.preventDefault();
         return;
       }
       const rect = e.currentTarget.getBoundingClientRect();
@@ -541,6 +569,31 @@ export function SlideCanvas({
     [onClearSelection, onSelectMultiple, selection.selectedIds, shapeRenderData],
   );
 
+  const finalizeCreationDrag = useCallback(
+    (current: CreationDrag) => {
+      const dx = Math.abs(current.currentX - current.startX);
+      const dy = Math.abs(current.currentY - current.startY);
+      const dragged = dx > 2 || dy > 2;
+
+      if (!dragged) {
+        return;
+      }
+
+      ignoreNextClickRef.current = true;
+
+      if (onCreateFromDrag) {
+        const bounds = createBoundsFromDrag(
+          px(current.startX),
+          px(current.startY),
+          px(current.currentX),
+          px(current.currentY)
+        );
+        onCreateFromDrag(bounds);
+      }
+    },
+    [onCreateFromDrag],
+  );
+
   const handleWindowPointerMove = useCallback(
     (e: PointerEvent) => {
       const current = marqueeRef.current;
@@ -563,6 +616,28 @@ export function SlideCanvas({
     [widthNum, heightNum],
   );
 
+  const handleWindowCreationPointerMove = useCallback(
+    (e: PointerEvent) => {
+      const current = creationDragRef.current;
+      if (!current) {
+        return;
+      }
+      const rect = svgRef.current?.getBoundingClientRect();
+      if (!rect) {
+        return;
+      }
+      const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+      const nextDrag: CreationDrag = {
+        ...current,
+        currentX: coords.x,
+        currentY: coords.y,
+      };
+      creationDragRef.current = nextDrag;
+      setCreationDrag(nextDrag);
+    },
+    [widthNum, heightNum],
+  );
+
   const handleWindowPointerUp = useCallback(() => {
     const current = marqueeRef.current;
     if (!current) {
@@ -572,6 +647,16 @@ export function SlideCanvas({
     setMarquee(null);
     finalizeMarqueeSelection(current);
   }, [finalizeMarqueeSelection]);
+
+  const handleWindowCreationPointerUp = useCallback(() => {
+    const current = creationDragRef.current;
+    if (!current) {
+      return;
+    }
+    creationDragRef.current = null;
+    setCreationDrag(null);
+    finalizeCreationDrag(current);
+  }, [finalizeCreationDrag]);
 
   useEffect(() => {
     if (!marquee) {
@@ -590,6 +675,24 @@ export function SlideCanvas({
       window.removeEventListener("pointercancel", handleWindowPointerCancel);
     };
   }, [marquee, handleWindowPointerMove, handleWindowPointerUp]);
+
+  useEffect(() => {
+    if (!creationDrag) {
+      return;
+    }
+    const handleWindowPointerCancel = () => {
+      creationDragRef.current = null;
+      setCreationDrag(null);
+    };
+    window.addEventListener("pointermove", handleWindowCreationPointerMove);
+    window.addEventListener("pointerup", handleWindowCreationPointerUp, { once: true });
+    window.addEventListener("pointercancel", handleWindowPointerCancel, { once: true });
+    return () => {
+      window.removeEventListener("pointermove", handleWindowCreationPointerMove);
+      window.removeEventListener("pointerup", handleWindowCreationPointerUp);
+      window.removeEventListener("pointercancel", handleWindowPointerCancel);
+    };
+  }, [creationDrag, handleWindowCreationPointerMove, handleWindowCreationPointerUp]);
 
   const handlePointerDown = useCallback(
     (shapeId: ShapeId, e: React.PointerEvent) => {
@@ -697,6 +800,16 @@ export function SlideCanvas({
           height: Math.abs(marquee.currentY - marquee.startY),
         };
 
+  const creationRect =
+    creationDrag === null
+      ? null
+      : {
+          x: Math.min(creationDrag.startX, creationDrag.currentX),
+          y: Math.min(creationDrag.startY, creationDrag.currentY),
+          width: Math.abs(creationDrag.currentX - creationDrag.startX),
+          height: Math.abs(creationDrag.currentY - creationDrag.startY),
+        };
+
   return (
     <div className={className} style={containerStyle} onClick={handleContainerClick}>
       <div style={innerContainerStyle}>
@@ -797,6 +910,21 @@ export function SlideCanvas({
               fillOpacity={0.12}
               stroke={colorTokens.selection.primary}
               strokeWidth={1}
+              pointerEvents="none"
+            />
+          )}
+
+          {creationRect && (
+            <rect
+              x={creationRect.x}
+              y={creationRect.y}
+              width={creationRect.width}
+              height={creationRect.height}
+              fill={colorTokens.selection.primary}
+              fillOpacity={0.08}
+              stroke={colorTokens.selection.primary}
+              strokeWidth={1}
+              strokeDasharray="4 3"
               pointerEvents="none"
             />
           )}

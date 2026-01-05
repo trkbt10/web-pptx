@@ -9,3 +9,5 @@ export {
   resolveBackgroundForReact,
   type BackgroundResult,
 } from "./useBackground";
+
+export { BackgroundFill, BackgroundFillWithDefs } from "./BackgroundFill";

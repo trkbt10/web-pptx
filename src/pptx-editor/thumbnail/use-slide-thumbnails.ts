@@ -6,13 +6,10 @@
 
 import { useRef, useMemo, useCallback } from "react";
 import type { Pixels } from "../../pptx/domain/types";
-import type { ColorContext, FontScheme } from "../../pptx/domain/resolution";
-import type { ResourceResolver } from "../../pptx/render/core/index";
 import type { ZipFile } from "../../pptx/domain";
 import { renderSlideSvg } from "../../pptx/render/svg/renderer";
 import type { SlideWithId } from "../../pptx/app";
 import { createRenderContext as createApiRenderContext } from "../../pptx/app";
-import { createRenderContext as createBaseRenderContext } from "../../pptx/render/context";
 import {
   createThumbnailCache,
   getCachedThumbnail,
@@ -29,14 +26,8 @@ export type UseSlideThumbnailsOptions = {
   readonly slideWidth: Pixels;
   readonly slideHeight: Pixels;
   readonly slides: readonly SlideWithId[];
-  /** Color context for theme color resolution */
-  readonly colorContext?: ColorContext;
-  /** Resource resolver for images */
-  readonly resources?: ResourceResolver;
-  /** Font scheme for theme font resolution */
-  readonly fontScheme?: FontScheme;
-  /** ZipFile adapter for PPTX resources (for proper render context building) */
-  readonly zipFile?: ZipFile;
+  /** ZipFile adapter for PPTX resources (required for render context building) */
+  readonly zipFile: ZipFile;
 };
 
 export type SlideThumbnailRenderer = {
@@ -60,7 +51,7 @@ export type SlideThumbnailRenderer = {
 export function useSlideThumbnails(
   options: UseSlideThumbnailsOptions
 ): SlideThumbnailRenderer {
-  const { slideWidth, slideHeight, slides, colorContext, resources, fontScheme, zipFile } = options;
+  const { slideWidth, slideHeight, slides, zipFile } = options;
   const cacheRef = useRef<ThumbnailCache>(createThumbnailCache());
 
   // Base slide size for render context
@@ -88,22 +79,18 @@ export function useSlideThumbnails(
 
       // Build render context with full theme/master/layout context if available
       // Layout shapes are now included in context and rendered by renderSlideSvg
-      const ctx = apiSlide && zipFile
-        ? createApiRenderContext(apiSlide, zipFile, slideSize).renderContext
-        : createBaseRenderContext({
-            slideSize,
-            colorContext,
-            resources,
-            fontScheme,
-            resolvedBackground: slideWithId.resolvedBackground,
-          });
+      if (!apiSlide) {
+        throw new Error("useSlideThumbnails requires slideWithId.apiSlide");
+      }
+
+      const ctx = createApiRenderContext(apiSlide, zipFile, slideSize);
 
       // Render the edited domain slide and cache
       const result = renderSlideSvg(slide, ctx);
       setCachedThumbnail(cache, id, slide, result.svg);
       return result.svg;
     },
-    [slideSize, colorContext, resources, fontScheme, zipFile]
+    [slideSize, zipFile]
   );
 
   return { getThumbnailSvg };

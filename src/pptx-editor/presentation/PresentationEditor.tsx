@@ -11,7 +11,7 @@
  * This is the top-level component that manages all editing state.
  */
 
-import { useRef, useEffect, useMemo, useCallback, useState, type CSSProperties } from "react";
+import { useRef, useMemo, useCallback, useState, useEffect, type CSSProperties } from "react";
 import type { Slide, Shape, RunProperties, ParagraphProperties } from "../../pptx/domain";
 import type { ShapeId } from "../../pptx/domain/types";
 import { px, deg } from "../../pptx/domain/types";
@@ -27,7 +27,7 @@ import type { CreationMode } from "../context/presentation/editor/types";
 import { createSelectMode } from "../context/presentation/editor/types";
 import type { DrawingPath } from "../path-tools/types";
 import { isCustomGeometry } from "../path-tools/utils/path-commands";
-import { createShapeFromMode, getDefaultBoundsForMode, createCustomGeometryShape, generateShapeId } from "../shape/factory";
+import { createShapeFromMode, getDefaultBoundsForMode, createCustomGeometryShape, generateShapeId, type ShapeBounds } from "../shape/factory";
 import { drawingPathToCustomGeometry } from "../path-tools/utils/path-commands";
 import { isTextEditActive, mergeTextIntoBody, extractDefaultRunProperties } from "../slide/text-edit";
 import { PropertyPanel } from "../panels/PropertyPanel";
@@ -174,6 +174,18 @@ function EditorContent({
       if (creationMode.type === "select") return;
 
       const bounds = getDefaultBoundsForMode(creationMode, px(x), px(y));
+      const shape = createShapeFromMode(creationMode, bounds);
+      if (shape) {
+        dispatch({ type: "CREATE_SHAPE", shape });
+      }
+    },
+    [creationMode, dispatch]
+  );
+
+  const handleCanvasCreateFromDrag = useCallback(
+    (bounds: ShapeBounds) => {
+      if (creationMode.type === "select") return;
+
       const shape = createShapeFromMode(creationMode, bounds);
       if (shape) {
         dispatch({ type: "CREATE_SHAPE", shape });
@@ -400,13 +412,14 @@ function EditorContent({
   );
 
   // Thumbnail rendering hook (with theme context for proper rendering)
+  if (!zipFile) {
+    throw new Error("PresentationEditor requires document.presentationFile");
+  }
+
   const { getThumbnailSvg } = useSlideThumbnails({
     slideWidth: width,
     slideHeight: height,
     slides: document.slides,
-    colorContext: document.colorContext,
-    resources: document.resources,
-    fontScheme: document.fontScheme,
     zipFile,
   });
 
@@ -431,7 +444,7 @@ function EditorContent({
 
     // Use full context from API slide if available
     if (apiSlide && zip) {
-      return createRenderContext(apiSlide, zip, { width, height }).renderContext;
+      return createRenderContext(apiSlide, zip, { width, height });
     }
 
     return undefined;
@@ -886,6 +899,7 @@ function EditorContent({
               onStartRotate={handleStartRotate}
               onDoubleClick={handleDoubleClick}
               onCreate={handleCanvasCreate}
+              onCreateFromDrag={handleCanvasCreateFromDrag}
               onTextEditComplete={handleTextEditComplete}
               onTextEditCancel={handleTextEditCancel}
               onPathCommit={handlePathCommit}
