@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import type { LoadedPresentation } from "../lib/pptx-loader";
+import type { LoadedPresentation } from "@lib/pptx/app";
 import { useSlideAnimation, SvgContentRenderer } from "../../../src/pptx/render/react";
 import { useSlideshowKeyboard } from "../hooks/useSlideshowKeyboard";
 import { NavButton } from "./slideshow";

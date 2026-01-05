@@ -7,8 +7,24 @@
  * @see ECMA-376 Part 1, Section 19.5 (Animation)
  */
 
-import type { Timing } from "../../../domain/animation";
+import type {
+  Timing,
+  TimeNode,
+  AnimateBehavior,
+  AnimateMotionBehavior,
+  AnimateColorBehavior,
+  AnimateRotationBehavior,
+  AnimateScaleBehavior,
+  AnimateEffectBehavior,
+  SetBehavior,
+  ParallelTimeNode,
+  SequenceTimeNode,
+  ExclusiveTimeNode,
+  AnimationTarget,
+  ShapeTarget,
+} from "../../../domain/animation";
 import type { EffectConfig, PlayerOptions, PlayerState } from "./types";
+import type { AnimationController, EasingName } from "./engine";
 import {
   applyEffect,
   hideElement,
@@ -17,24 +33,83 @@ import {
   resetElementStyles,
   showElement,
 } from "./effects";
+import { animate } from "./engine";
+import { createAnimateFunction } from "./interpolate";
+import { createMotionPathFunction, parseMotionPath } from "./motion-path";
+import { createColorAnimationFunction } from "./color-interpolate";
+
+// =============================================================================
+// Helper Types
+// =============================================================================
+
+/**
+ * Animation update function type
+ */
+type AnimationUpdateFn = (progress: number) => void;
+
+/**
+ * Animation execution options
+ */
+type AnimationExecOptions = {
+  duration: number;
+  easing?: EasingName;
+  updateFn: AnimationUpdateFn;
+};
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
 
 /**
  * Parse duration value from timing node.
  * Handles "indefinite" string and numeric values.
  */
-function parseDuration(duration: unknown): number {
-  if (duration === "indefinite") {return 1000;}
-  if (typeof duration === "number") {return duration;}
+function parseDuration(duration: number | "indefinite" | undefined): number {
+  if (duration === "indefinite") return 1000;
+  if (typeof duration === "number") return duration;
   return 1000;
 }
 
 /**
- * Parse translation coordinate from animation "to" value.
+ * Extract shape ID from animation target.
+ * Returns undefined if target is not a shape target.
  */
-function parseTranslationCoord(to: unknown, axis: "x" | "y"): number {
-  if (typeof to === "string" && to.includes(axis)) {return parseFloat(to);}
-  return 0;
+function getShapeId(target: AnimationTarget | undefined): string | undefined {
+  if (!target) return undefined;
+  if (target.type === "shape") {
+    return target.shapeId;
+  }
+  return undefined;
 }
+
+/**
+ * Check if a time node has behavior target (is a behavior node).
+ */
+function isBehaviorNode(
+  node: TimeNode
+): node is
+  | AnimateBehavior
+  | AnimateMotionBehavior
+  | AnimateColorBehavior
+  | AnimateRotationBehavior
+  | AnimateScaleBehavior
+  | AnimateEffectBehavior
+  | SetBehavior {
+  return "target" in node;
+}
+
+/**
+ * Check if a time node is a container node (has children).
+ */
+function isContainerNode(
+  node: TimeNode
+): node is ParallelTimeNode | SequenceTimeNode | ExclusiveTimeNode {
+  return "children" in node;
+}
+
+// =============================================================================
+// Animation Player Instance
+// =============================================================================
 
 /**
  * Animation player instance (returned by createPlayer)
@@ -56,7 +131,6 @@ export type AnimationPlayerInstance = {
 
 /**
  * Internal state container for player lifecycle management.
- * Using object wrapper allows const declaration with mutable properties.
  */
 type PlayerStateContainer = {
   status: PlayerState;
@@ -77,6 +151,10 @@ export function createPlayer(options: PlayerOptions): AnimationPlayerInstance {
     abortController: null,
   };
 
+  // ---------------------------------------------------------------------------
+  // Internal Helpers
+  // ---------------------------------------------------------------------------
+
   function log(message: string): void {
     opts.onLog?.(message);
   }
@@ -89,6 +167,21 @@ export function createPlayer(options: PlayerOptions): AnimationPlayerInstance {
     return state.status === "stopping" || state.status === "stopped";
   }
 
+  /**
+   * Find element for a behavior node.
+   * Returns null if target is not a shape or element not found.
+   */
+  function findTargetElement(
+    target: AnimationTarget | undefined
+  ): HTMLElement | SVGElement | null {
+    const shapeId = getShapeId(target);
+    if (!shapeId) return null;
+    return findElement(shapeId);
+  }
+
+  /**
+   * Delay execution with abort support.
+   */
   async function delay(ms: number): Promise<void> {
     const adjustedMs = ms / (opts.speed ?? 1.0);
     return new Promise((resolve, reject) => {
@@ -102,105 +195,97 @@ export function createPlayer(options: PlayerOptions): AnimationPlayerInstance {
   }
 
   /**
-   * Process "set" animation
-   *
-   * Handles both formats:
-   * - attribute/value: single property (from timing parser)
-   * - attributeNames: array of properties (legacy)
+   * Execute a RAF-based animation with abort support.
+   * This is the common pattern extracted from multiple process functions.
    */
-  async function processSet(node: Record<string, unknown>): Promise<void> {
-    const target = node.target as Record<string, unknown> | undefined;
-    if (!target?.shapeId) {return;}
+  function runAnimation(execOpts: AnimationExecOptions): Promise<void> {
+    const { duration, easing = "ease-out", updateFn } = execOpts;
 
-    const el = findElement(String(target.shapeId));
+    return new Promise<void>((resolve) => {
+      const controller: AnimationController = animate({
+        duration: duration / (opts.speed ?? 1.0),
+        easing,
+        onUpdate: (progress) => {
+          if (shouldStop()) {
+            controller.cancel();
+            return;
+          }
+          updateFn(progress);
+        },
+        onComplete: resolve,
+        onCancel: resolve,
+      });
+
+      // Handle abort from player stop
+      state.abortController?.signal.addEventListener("abort", () => {
+        controller.cancel();
+      });
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Behavior Processors
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Process "set" behavior - instant property change.
+   */
+  async function processSet(node: SetBehavior): Promise<void> {
+    const el = findTargetElement(node.target);
     if (!el) {
-      log(`Set: shape ${target.shapeId} not found`);
+      log(`Set: shape not found`);
       return;
     }
 
-    // Handle single attribute/value pair
-    const attr = node.attribute as string | undefined;
-    const value = node.value as string | undefined;
+    const shapeId = getShapeId(node.target);
+    log(`Set: shape ${shapeId}, attr: ${node.attribute}, value: ${node.value}`);
 
-    // Handle attributeNames array (legacy)
-    const attrs = node.attributeNames as string[] | undefined;
-
-    log(`Set: shape ${target.shapeId}, attr: ${attr}, value: ${value}`);
-
-    // Check single attribute
-    if (attr === "style.visibility" && value === "visible") {
+    // Handle visibility
+    if (node.attribute === "style.visibility" && node.value === "visible") {
       showElement(el);
     }
 
-    // Check attributeNames array
-    if (attrs?.includes("style.visibility")) {
-      showElement(el);
-    }
-
-    const duration = typeof node.duration === "number" ? node.duration : 1;
+    const duration = parseDuration(node.duration);
     await delay(duration);
   }
 
   /**
-   * Process "animate" animation
+   * Process "animate" behavior - property animation.
    */
-  async function processAnimate(node: Record<string, unknown>): Promise<void> {
-    const target = node.target as Record<string, unknown> | undefined;
-    if (!target?.shapeId) {return;}
-
-    const el = findElement(String(target.shapeId));
+  async function processAnimate(node: AnimateBehavior): Promise<void> {
+    const el = findTargetElement(node.target);
     if (!el) {
-      log(`Animate: shape ${target.shapeId} not found`);
+      log(`Animate: shape not found`);
       return;
     }
 
+    const shapeId = getShapeId(node.target);
     const duration = parseDuration(node.duration);
-    const attrs = node.attributeNames as string[] | undefined;
-    log(`Animate: shape ${target.shapeId}, duration: ${duration}ms`);
+    log(`Animate: shape ${shapeId}, attr: ${node.attribute}, duration: ${duration}ms`);
 
-    el.style.transition = `all ${duration}ms ease-out`;
-
-    if (attrs?.includes("ppt_x") || attrs?.includes("ppt_y")) {
-      const toX = parseTranslationCoord(node.to, "x");
-      const toY = parseTranslationCoord(node.to, "y");
-      el.style.transform = `translate(${toX}px, ${toY}px)`;
-    }
-
-    if (attrs?.includes("style.opacity")) {
-      const toValue = node.to as string | number | undefined;
-      el.style.opacity = String(toValue ?? 1);
-    }
-
-    await delay(duration);
+    const updateFn = createAnimateFunction(node, el);
+    await runAnimation({ duration, easing: "ease-out", updateFn });
   }
 
   /**
-   * Process "animateEffect" animation
+   * Process "animateEffect" behavior - visual effect.
    */
-  async function processAnimateEffect(
-    node: Record<string, unknown>
-  ): Promise<void> {
-    const target = node.target as Record<string, unknown> | undefined;
-    if (!target?.shapeId) {return;}
-
-    const el = findElement(String(target.shapeId));
+  async function processAnimateEffect(node: AnimateEffectBehavior): Promise<void> {
+    const el = findTargetElement(node.target);
     if (!el) {
-      log(`AnimateEffect: shape ${target.shapeId} not found`);
+      log(`AnimateEffect: shape not found`);
       return;
     }
 
-    const filter = String(node.filter ?? "fade");
+    const shapeId = getShapeId(node.target);
     const duration = parseDuration(node.duration);
-
-    log(
-      `AnimateEffect: shape ${target.shapeId}, filter: ${filter}, duration: ${duration}ms`
-    );
+    log(`AnimateEffect: shape ${shapeId}, filter: ${node.filter}, duration: ${duration}ms`);
 
     const effectConfig: EffectConfig = {
-      type: parseFilterToEffectType(filter),
-      direction: parseFilterDirection(filter),
+      type: parseFilterToEffectType(node.filter),
+      direction: parseFilterDirection(node.filter),
       duration,
-      entrance: true,
+      entrance: node.transition === "in",
       easing: "ease-out",
     };
 
@@ -209,53 +294,61 @@ export function createPlayer(options: PlayerOptions): AnimationPlayerInstance {
   }
 
   /**
-   * Process "animateMotion" animation
+   * Process "animateMotion" behavior - motion path animation.
    */
-  async function processAnimateMotion(
-    node: Record<string, unknown>
-  ): Promise<void> {
-    const target = node.target as Record<string, unknown> | undefined;
-    if (!target?.shapeId) {return;}
-
-    const el = findElement(String(target.shapeId));
+  async function processAnimateMotion(node: AnimateMotionBehavior): Promise<void> {
+    const el = findTargetElement(node.target);
     if (!el) {
-      log(`AnimateMotion: shape ${target.shapeId} not found`);
+      log(`AnimateMotion: shape not found`);
       return;
     }
 
-    const path = String(node.path ?? "");
-    const duration = typeof node.duration === "number" ? node.duration : 2000;
+    const shapeId = getShapeId(node.target);
+    const duration = parseDuration(node.duration);
+    const pathLength = node.path?.length ?? 0;
+    log(`AnimateMotion: shape ${shapeId}, path length: ${pathLength}`);
 
-    log(`AnimateMotion: shape ${target.shapeId}, path length: ${path.length}`);
+    // Check if we have a valid path or from/to/by
+    if (node.path) {
+      const motionPath = parseMotionPath(node.path);
+      if (motionPath.totalLength > 0) {
+        const updateFn = createMotionPathFunction(node, el);
+        await runAnimation({ duration, easing: "ease-in-out", updateFn });
+        return;
+      }
+    }
 
-    const match = path.match(/L\s*([-\d.]+)\s+([-\d.]+)/);
-    if (match) {
-      const endX = parseFloat(match[1]) * 100;
-      const endY = parseFloat(match[2]) * 100;
+    if (node.from || node.to || node.by) {
+      const updateFn = createMotionPathFunction(node, el);
+      await runAnimation({ duration, easing: "ease-in-out", updateFn });
+      return;
+    }
 
-      el.style.transition = `transform ${duration}ms ease-in-out`;
-      el.style.transform = `translate(${endX}px, ${endY}px)`;
+    // Legacy fallback for simple path
+    if (node.path) {
+      const match = node.path.match(/L\s*([-\d.]+)\s+([-\d.]+)/);
+      if (match) {
+        const endX = parseFloat(match[1]) * 100;
+        const endY = parseFloat(match[2]) * 100;
+        el.style.transition = `transform ${duration}ms ease-in-out`;
+        el.style.transform = `translate(${endX}px, ${endY}px)`;
+      }
     }
 
     await delay(duration);
   }
 
   /**
-   * Process "animateRotation" animation
+   * Process "animateRotation" behavior - rotation animation.
    */
-  async function processAnimateRotation(
-    node: Record<string, unknown>
-  ): Promise<void> {
-    const target = node.target as Record<string, unknown> | undefined;
-    if (!target?.shapeId) {return;}
+  async function processAnimateRotation(node: AnimateRotationBehavior): Promise<void> {
+    const el = findTargetElement(node.target);
+    if (!el) return;
 
-    const el = findElement(String(target.shapeId));
-    if (!el) {return;}
-
-    const by = typeof node.by === "number" ? node.by : 360;
-    const duration = typeof node.duration === "number" ? node.duration : 1000;
-
-    log(`AnimateRotation: shape ${target.shapeId}, by: ${by}deg`);
+    const shapeId = getShapeId(node.target);
+    const by = node.by ?? 360;
+    const duration = parseDuration(node.duration);
+    log(`AnimateRotation: shape ${shapeId}, by: ${by}deg`);
 
     el.style.transition = `transform ${duration}ms ease-in-out`;
     el.style.transformOrigin = "center center";
@@ -265,22 +358,17 @@ export function createPlayer(options: PlayerOptions): AnimationPlayerInstance {
   }
 
   /**
-   * Process "animateScale" animation
+   * Process "animateScale" behavior - scale animation.
    */
-  async function processAnimateScale(
-    node: Record<string, unknown>
-  ): Promise<void> {
-    const target = node.target as Record<string, unknown> | undefined;
-    if (!target?.shapeId) {return;}
+  async function processAnimateScale(node: AnimateScaleBehavior): Promise<void> {
+    const el = findTargetElement(node.target);
+    if (!el) return;
 
-    const el = findElement(String(target.shapeId));
-    if (!el) {return;}
-
-    const toX = typeof node.toX === "number" ? node.toX : 1;
-    const toY = typeof node.toY === "number" ? node.toY : 1;
-    const duration = typeof node.duration === "number" ? node.duration : 1000;
-
-    log(`AnimateScale: shape ${target.shapeId}, scale: ${toX}x${toY}`);
+    const shapeId = getShapeId(node.target);
+    const toX = node.toX ?? 1;
+    const toY = node.toY ?? 1;
+    const duration = parseDuration(node.duration);
+    log(`AnimateScale: shape ${shapeId}, scale: ${toX}x${toY}`);
 
     el.style.transition = `transform ${duration}ms ease-in-out`;
     el.style.transformOrigin = "center center";
@@ -290,98 +378,112 @@ export function createPlayer(options: PlayerOptions): AnimationPlayerInstance {
   }
 
   /**
-   * Process "animateColor" animation
+   * Process "animateColor" behavior - color animation.
    */
-  async function processAnimateColor(
-    node: Record<string, unknown>
-  ): Promise<void> {
-    const target = node.target as Record<string, unknown> | undefined;
-    if (!target?.shapeId) {return;}
+  async function processAnimateColor(node: AnimateColorBehavior): Promise<void> {
+    const el = findTargetElement(node.target);
+    if (!el) return;
 
-    const el = findElement(String(target.shapeId));
-    if (!el) {return;}
+    const shapeId = getShapeId(node.target);
+    const duration = parseDuration(node.duration);
+    log(`AnimateColor: shape ${shapeId}, colorSpace: ${node.colorSpace ?? "rgb"}`);
 
-    const duration = typeof node.duration === "number" ? node.duration : 1000;
+    if (node.from && node.to) {
+      const updateFn = createColorAnimationFunction(node, el);
+      await runAnimation({ duration, easing: "ease-in-out", updateFn });
+      return;
+    }
 
-    log(`AnimateColor: shape ${target.shapeId}`);
-
+    // Legacy fallback
     el.style.transition = `background-color ${duration}ms ease-in-out`;
-
     await delay(duration);
   }
 
+  // ---------------------------------------------------------------------------
+  // Node Processing
+  // ---------------------------------------------------------------------------
+
   /**
-   * Process a time node and its children
+   * Process a time node and its children.
    */
-  async function processNode(node: unknown): Promise<void> {
-    if (!node || typeof node !== "object") {return;}
-    if (shouldStop()) {return;}
+  async function processNode(node: TimeNode): Promise<void> {
+    if (shouldStop()) return;
 
-    const n = node as Record<string, unknown>;
-    const nodeType = String(n.type ?? "unknown");
-    const children = Array.isArray(n.children) ? n.children : [];
+    log(`Processing node: ${node.type}`);
 
-    log(`Processing node: ${nodeType}`);
-
-    const nodeDelay = typeof n.delay === "number" ? n.delay : 0;
-    if (nodeDelay > 0) {
-      await delay(nodeDelay);
+    // Handle delay from startConditions if present
+    if (node.startConditions) {
+      for (const cond of node.startConditions) {
+        if (typeof cond.delay === "number" && cond.delay > 0) {
+          await delay(cond.delay);
+        }
+      }
     }
 
-    switch (nodeType) {
-      case "parallel":
+    switch (node.type) {
+      case "parallel": {
+        const children = node.children;
         await Promise.all(children.map((child) => processNode(child)));
         break;
+      }
 
-      case "sequence":
-        for (const child of children) {
-          if (shouldStop()) {break;}
+      case "sequence": {
+        for (const child of node.children) {
+          if (shouldStop()) break;
           await processNode(child);
         }
         break;
+      }
 
-      case "exclusive":
-        if (children.length > 0) {
-          await processNode(children[0]);
+      case "exclusive": {
+        // Only first child is active
+        if (node.children.length > 0) {
+          await processNode(node.children[0]);
         }
         break;
+      }
 
       case "set":
-        await processSet(n);
+        await processSet(node);
         break;
 
       case "animate":
-        await processAnimate(n);
+        await processAnimate(node);
         break;
 
       case "animateEffect":
-        await processAnimateEffect(n);
+        await processAnimateEffect(node);
         break;
 
       case "animateMotion":
-        await processAnimateMotion(n);
+        await processAnimateMotion(node);
         break;
 
       case "animateRotation":
-        await processAnimateRotation(n);
+        await processAnimateRotation(node);
         break;
 
       case "animateScale":
-        await processAnimateScale(n);
+        await processAnimateScale(node);
         break;
 
       case "animateColor":
-        await processAnimateColor(n);
+        await processAnimateColor(node);
         break;
 
-      default:
-        for (const child of children) {
-          await processNode(child);
-        }
+      case "audio":
+      case "video":
+      case "command":
+        // Not yet implemented
+        log(`Skipping unsupported node type: ${node.type}`);
+        break;
     }
   }
 
+  // ---------------------------------------------------------------------------
   // Public API
+  // ---------------------------------------------------------------------------
+
   return {
     getState(): PlayerState {
       return state.status;
@@ -420,7 +522,7 @@ export function createPlayer(options: PlayerOptions): AnimationPlayerInstance {
     },
 
     stop(): void {
-      if (state.status !== "playing") {return;}
+      if (state.status !== "playing") return;
 
       state.status = "stopping";
       state.abortController?.abort();
@@ -459,24 +561,28 @@ export function createPlayer(options: PlayerOptions): AnimationPlayerInstance {
   };
 }
 
+// =============================================================================
+// Utility Functions
+// =============================================================================
+
 /**
- * Extract all shape IDs from timing tree
+ * Extract all shape IDs from timing tree.
  */
 export function extractShapeIds(timing: Timing): string[] {
   const ids = new Set<string>();
 
-  function traverse(node: unknown): void {
-    if (!node || typeof node !== "object") {return;}
-    const n = node as Record<string, unknown>;
-
-    const target = n.target as Record<string, unknown> | undefined;
-    if (target?.shapeId) {
-      ids.add(String(target.shapeId));
+  function traverse(node: TimeNode): void {
+    // Extract shape ID from behavior nodes
+    if (isBehaviorNode(node)) {
+      const shapeId = getShapeId(node.target);
+      if (shapeId) {
+        ids.add(shapeId);
+      }
     }
 
-    const children = n.children as unknown[] | undefined;
-    if (Array.isArray(children)) {
-      for (const child of children) {
+    // Recurse into container nodes
+    if (isContainerNode(node)) {
+      for (const child of node.children) {
         traverse(child);
       }
     }
@@ -488,4 +594,3 @@ export function extractShapeIds(timing: Timing): string[] {
 
   return Array.from(ids);
 }
-

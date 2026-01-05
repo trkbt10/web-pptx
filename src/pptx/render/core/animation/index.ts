@@ -98,3 +98,42 @@ export {
 // Player - Timing tree processor
 export type { AnimationPlayerInstance } from "./player";
 export { createPlayer, extractShapeIds } from "./player";
+
+// Interpolation utilities - Keyframe and value interpolation
+export type { ParsedValue, InterpolatedValue } from "./interpolate";
+export {
+  parseAnimateValue,
+  parseCoordinateValue,
+  interpolateKeyframes,
+  interpolateValues,
+  mapAttributeToCSS,
+  applyAnimatedValue,
+  createAnimateFunction,
+} from "./interpolate";
+
+// Motion path - SVG path parsing and interpolation
+export type {
+  PathCommandType,
+  PathCommand,
+  MotionPath,
+  PathSegment,
+} from "./motion-path";
+export {
+  parsePathCommands,
+  parseMotionPath,
+  getPointAtProgress,
+  createMotionPathFunction,
+  toSVGPathString,
+} from "./motion-path";
+
+// Color interpolation - RGB/HSL color animation
+// Note: Uses src/color for base conversion utilities (no duplication)
+export type { RGBColor, HSLColor, ParsedColor } from "./color-interpolate";
+export {
+  parseColor,
+  lerpRGB,
+  lerpHSL,
+  interpolateColor,
+  rgbToHexString,
+  createColorAnimationFunction,
+} from "./color-interpolate";
