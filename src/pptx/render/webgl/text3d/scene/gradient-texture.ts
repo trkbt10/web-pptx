@@ -13,6 +13,8 @@
 
 import * as THREE from "three";
 import { createGradientCanvas } from "../utils/canvas";
+import type { TileRect } from "./tile-config";
+import { applyTileRect, DEFAULT_TILE_RECT } from "./tile-config";
 
 // =============================================================================
 // Internal Types (Resolved Colors for Rendering)
@@ -81,7 +83,17 @@ function parseHexColor(hex: string): string {
 }
 
 /**
- * Create a linear gradient texture
+ * Create a linear gradient texture.
+ *
+ * ECMA-376 gradient angle specification (Section 20.1.8.41):
+ * - 0 degrees = points right (vector 1, 0)
+ * - Measured counter-clockwise from that origin
+ * - Units in actual OOXML: 1/60,000ths of a degree
+ *
+ * Canvas coordinate system has Y-axis inverted (Y increases downward),
+ * so we negate the Y component to match ECMA-376's math coordinate system.
+ *
+ * @see ECMA-376 Part 1, Section 20.1.8.41 (a:lin)
  */
 function createLinearGradientTexture(
   config: ResolvedLinearGradient,
@@ -96,15 +108,23 @@ function createLinearGradientTexture(
     canvas.height = height;
   }
 
+  // Convert angle to radians
+  // ECMA-376: counter-clockwise from right (0° = right, 90° = up in math coords)
   const angleRad = (config.angle * Math.PI) / 180;
   const centerX = width / 2;
   const centerY = height / 2;
   const maxDist = Math.sqrt(centerX * centerX + centerY * centerY);
 
-  const startX = centerX - Math.cos(angleRad) * maxDist;
-  const startY = centerY - Math.sin(angleRad) * maxDist;
-  const endX = centerX + Math.cos(angleRad) * maxDist;
-  const endY = centerY + Math.sin(angleRad) * maxDist;
+  // Calculate gradient direction
+  // X: cos(angle) - positive = right
+  // Y: -sin(angle) - negated because canvas Y is inverted (down is positive)
+  const dirX = Math.cos(angleRad);
+  const dirY = -Math.sin(angleRad); // Negate for canvas Y-axis inversion
+
+  const startX = centerX - dirX * maxDist;
+  const startY = centerY - dirY * maxDist;
+  const endX = centerX + dirX * maxDist;
+  const endY = centerY + dirY * maxDist;
 
   const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
 

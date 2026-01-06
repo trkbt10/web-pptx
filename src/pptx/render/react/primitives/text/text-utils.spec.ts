@@ -2,7 +2,6 @@
  * @file Unit tests for text-utils
  */
 
-import { describe, it, expect } from "bun:test";
 import {
   buildFontFamily,
   applyTextTransform,
@@ -10,7 +9,7 @@ import {
   toSvgDominantBaseline,
 } from "./text-utils";
 import type { PositionedSpan } from "../../../text-layout";
-import type { Points, Pixels } from "../../../../domain/types";
+import { pt, px } from "../../../../domain/types";
 
 // =============================================================================
 // Test Helpers
@@ -23,16 +22,32 @@ function createTestSpan(overrides: Partial<PositionedSpan> = {}): PositionedSpan
   return {
     text: "test",
     fontFamily: "Arial",
-    fontSize: 12 as Points,
+    fontFamilyEastAsian: undefined,
+    fontFamilyComplexScript: undefined,
+    fontFamilySymbol: undefined,
+    fontSize: pt(12),
     fontWeight: 400,
     fontStyle: "normal" as const,
+    textDecoration: undefined,
     color: "#000000",
-    x: 0 as Pixels,
-    y: 0 as Pixels,
-    width: 100 as Pixels,
-    dx: 0 as Pixels,
     verticalAlign: "baseline" as const,
+    letterSpacing: px(0),
     isBreak: false,
+    direction: "ltr" as const,
+    highlightColor: undefined,
+    textTransform: undefined,
+    linkId: undefined,
+    linkTooltip: undefined,
+    mouseOverLinkId: undefined,
+    mouseOverLinkTooltip: undefined,
+    bookmark: undefined,
+    kerning: undefined,
+    textOutline: undefined,
+    textFill: undefined,
+    effects: undefined,
+    underlineColor: undefined,
+    width: px(100),
+    dx: px(0),
     ...overrides,
   };
 }

@@ -320,11 +320,19 @@ function createGlowLighting(primaryPosition: THREE.Vector3): LightConfig {
 }
 
 function createBrightRoomLighting(primaryPosition: THREE.Vector3): LightConfig {
+  // BrightRoom: Well-lit environment ideal for WordArt
+  // - Strong front light to illuminate text face
+  // - Fill light from above for depth
+  // - Moderate ambient to prevent harsh shadows
   return {
-    ambient: { color: 0x707070, intensity: 0.8 },
+    ambient: { color: 0x606060, intensity: 0.5 },
     lights: [
-      { type: "directional", color: 0xffffff, intensity: 0.5, position: primaryPosition },
-      { type: "directional", color: 0xffffff, intensity: 0.3, position: new THREE.Vector3(0, 1, 0) },
+      // Key light from front-ish direction (strong)
+      { type: "directional", color: 0xffffff, intensity: 1.0, position: new THREE.Vector3(0, 0.5, 1).normalize().multiplyScalar(10) },
+      // Primary position light (based on rig direction)
+      { type: "directional", color: 0xffffff, intensity: 0.6, position: primaryPosition },
+      // Fill light from above
+      { type: "directional", color: 0xffffff, intensity: 0.4, position: new THREE.Vector3(0, 1, 0.5).normalize().multiplyScalar(10) },
     ],
   };
 }

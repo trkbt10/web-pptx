@@ -48,7 +48,6 @@ export {
 export {
   extractGlyphContour,
   extractGlyphContours,
-  createFallbackGlyph,
 } from "./extractor";
 
 // Layout (sync)

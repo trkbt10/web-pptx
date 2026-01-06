@@ -7,6 +7,7 @@
 
 import type { GlyphContour, GlyphStyleKey, ContourPath } from "./types";
 import { getCachedGlyph, setCachedGlyph } from "./cache";
+import { formatFontFamily, GENERIC_FONT_FAMILIES } from "./font-family";
 
 // =============================================================================
 // Configuration
@@ -37,19 +38,15 @@ export function extractGlyphContour(
     return cached;
   }
 
+  if (typeof document === "undefined") {
+    throw new Error("Glyph extraction requires a browser canvas environment.");
+  }
+
   // Handle whitespace
   if (char === " " || char === "\t" || char === "\n") {
     const spaceGlyph = createWhitespaceGlyph(char, fontFamily, style);
     setCachedGlyph(fontFamily, char, style, spaceGlyph);
     return spaceGlyph;
-  }
-
-  // Check if we're in a browser environment
-  if (typeof document === "undefined") {
-    // Return fallback glyph for non-browser environments (SSR, tests)
-    const fallback = createFallbackGlyph(char, style);
-    setCachedGlyph(fontFamily, char, style, fallback);
-    return fallback;
   }
 
   try {
@@ -58,11 +55,8 @@ export function extractGlyphContour(
     setCachedGlyph(fontFamily, char, style, glyph);
     return glyph;
   } catch (error) {
-    // Return fallback on error
-    console.warn(`Failed to extract glyph for "${char}":`, error);
-    const fallback = createFallbackGlyph(char, style);
-    setCachedGlyph(fontFamily, char, style, fallback);
-    return fallback;
+    const message = error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Failed to extract glyph for "${char}": ${message}`);
   }
 }
 
@@ -87,23 +81,15 @@ function createWhitespaceGlyph(
   fontFamily: string,
   style: GlyphStyleKey,
 ): GlyphContour {
-  // Default width for whitespace
-  let advanceWidth = style.fontSize * 0.3;
-
-  // Try to measure using canvas if available
-  if (typeof document !== "undefined") {
-    try {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px "${fontFamily}"`;
-        const metrics = ctx.measureText(char);
-        advanceWidth = char === "\t" ? metrics.width * 4 : metrics.width;
-      }
-    } catch {
-      // Use default
-    }
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Canvas 2D context is unavailable for whitespace metrics.");
   }
+
+  ctx.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${formatFontFamily(fontFamily, GENERIC_FONT_FAMILIES)}`;
+  const metrics = ctx.measureText(char);
+  const advanceWidth = char === "\t" ? metrics.width * 4 : metrics.width;
 
   return {
     char,
@@ -121,34 +107,6 @@ function createWhitespaceGlyph(
 /**
  * Create fallback glyph when extraction fails or in non-browser environment
  */
-export function createFallbackGlyph(char: string, style: GlyphStyleKey): GlyphContour {
-  const width = style.fontSize * 0.6;
-  const height = style.fontSize * 0.8;
-
-  return {
-    char,
-    // Simple rectangle as fallback shape
-    paths: [
-      {
-        points: [
-          { x: 0, y: 0 },
-          { x: width, y: 0 },
-          { x: width, y: height },
-          { x: 0, y: height },
-        ],
-        isHole: false,
-      },
-    ],
-    bounds: { minX: 0, minY: 0, maxX: width, maxY: height },
-    metrics: {
-      advanceWidth: width,
-      leftBearing: 0,
-      ascent: height * 0.8,
-      descent: height * 0.2,
-    },
-  };
-}
-
 // =============================================================================
 // Glyph Rendering & Extraction
 // =============================================================================
@@ -165,14 +123,20 @@ function renderAndExtractGlyph(
   const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
 
   // Set font and measure
-  const fontString = `${style.fontStyle} ${style.fontWeight} ${scaledSize}px "${fontFamily}"`;
+  const fontString = `${style.fontStyle} ${style.fontWeight} ${scaledSize}px ${formatFontFamily(fontFamily, GENERIC_FONT_FAMILIES)}`;
   ctx.font = fontString;
   const textMetrics = ctx.measureText(char);
+  const ascent = textMetrics.actualBoundingBoxAscent;
+  const descent = textMetrics.actualBoundingBoxDescent;
+
+  if (!Number.isFinite(ascent) || !Number.isFinite(descent)) {
+    throw new Error("Canvas text metrics missing ascent/descent measurements.");
+  }
 
   // Calculate canvas size
   const padding = scaledSize * 0.3;
   const width = Math.ceil(Math.max(textMetrics.width, scaledSize * 0.5) + padding * 2);
-  const height = Math.ceil(scaledSize * 1.4 + padding * 2);
+  const height = Math.ceil((ascent as number) + (descent as number) + padding * 2);
 
   canvas.width = Math.min(width, 256); // Limit size
   canvas.height = Math.min(height, 256);
@@ -185,12 +149,20 @@ function renderAndExtractGlyph(
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "white";
-  ctx.fillText(char, padding, canvas.height - padding - scaledSize * 0.15);
+  const baselinePx = padding + (ascent as number);
+  ctx.fillText(char, padding, baselinePx);
 
   // Extract contours
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const rawContours = extractContours(imageData);
-  const paths = processContours(rawContours, RENDER_SCALE, padding);
+  const baselineOffset = (baselinePx - padding) / RENDER_SCALE;
+  const paths = processContours(rawContours, RENDER_SCALE, padding).map((path) => ({
+    ...path,
+    points: path.points.map((point) => ({
+      x: point.x,
+      y: point.y - baselineOffset,
+    })),
+  }));
 
   // Calculate bounds
   const bounds = calculateBounds(paths);
@@ -199,12 +171,13 @@ function renderAndExtractGlyph(
   const metrics = {
     advanceWidth: textMetrics.width / RENDER_SCALE,
     leftBearing: (textMetrics.actualBoundingBoxLeft ?? 0) / RENDER_SCALE,
-    ascent: (textMetrics.actualBoundingBoxAscent ?? scaledSize * 0.8) / RENDER_SCALE,
-    descent: (textMetrics.actualBoundingBoxDescent ?? scaledSize * 0.2) / RENDER_SCALE,
+    ascent: (ascent as number) / RENDER_SCALE,
+    descent: (descent as number) / RENDER_SCALE,
   };
 
   return { char, paths, bounds, metrics };
 }
+
 
 // =============================================================================
 // Contour Extraction (Moore Neighborhood)

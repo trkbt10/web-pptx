@@ -2,7 +2,6 @@
  * @file Unit tests for PatternDef
  */
 
-import { describe, it, expect } from "bun:test";
 import {
   getTextPatternSize,
   renderTextPatternContent,

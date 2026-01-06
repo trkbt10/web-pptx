@@ -2,7 +2,6 @@
  * @file Unit tests for bevel-filter
  */
 
-import { describe, it, expect } from "bun:test";
 import { getBevelOffsets } from "./bevel-filter";
 
 // =============================================================================

@@ -77,11 +77,6 @@ export function Text3DRenderer({
       return;
     }
 
-    // Check if we should use WebGL 3D
-    if (!shouldUseWebGL3D(scene3d, shape3d)) {
-      return;
-    }
-
     // Check WebGL support
     if (!isWebGLAvailable()) {
       console.warn("WebGL not available, 3D text rendering disabled");

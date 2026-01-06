@@ -2,7 +2,6 @@
  * @file Unit tests for extrusion
  */
 
-import { describe, it, expect } from "bun:test";
 import { getExtrusionOffset } from "./extrusion";
 
 // =============================================================================

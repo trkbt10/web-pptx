@@ -20,7 +20,6 @@ export type { Text3DRendererProps, Text3DRunConfig } from "./renderer/Text3DRend
 
 // Renderer core
 export {
-  createText3DRenderer,
   createText3DRendererAsync,
   shouldUseWebGL3D,
 } from "./renderer/core";
@@ -89,9 +88,8 @@ export {
 } from "./geometry/text-warp";
 
 // Geometry - From contours
-export { createTextGeometryFromCanvas, scaleGeometryToFit } from "./geometry/from-contours";
-export { createTextGeometryAsync } from "./geometry/from-contours-async";
-export type { TextGeometryConfig } from "./geometry/from-contours";
+export { createTextGeometryAsync, mergeExtrudeGeometries, scaleGeometryToFit } from "./geometry/from-contours-async";
+export type { TextGeometryConfig } from "./geometry/from-contours-async";
 
 // Effects
 export {

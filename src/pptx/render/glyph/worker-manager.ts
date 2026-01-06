@@ -2,12 +2,13 @@
  * @file Glyph Worker Manager
  *
  * Manages communication with the glyph extraction Web Worker.
- * Falls back to synchronous extraction when Worker is unavailable.
+ * Uses synchronous extraction when Worker is unavailable.
  */
 
 import type { GlyphContour, GlyphStyleKey } from "./types";
 import { getCachedGlyph, setCachedGlyph } from "./cache";
-import { createFallbackGlyph } from "./extractor";
+import { extractGlyphContour } from "./extractor";
+import { formatFontFamily, GENERIC_FONT_FAMILIES } from "./font-family";
 
 // =============================================================================
 // Types
@@ -21,11 +22,17 @@ type WorkerRequest = {
   style: GlyphStyleKey;
 };
 
-type WorkerResponse = {
-  id: number;
-  type: "glyphResult";
-  glyph: GlyphContour;
-};
+type WorkerResponse =
+  | {
+    id: number;
+    type: "glyphResult";
+    glyph: GlyphContour;
+  }
+  | {
+    id: number;
+    type: "glyphError";
+    message: string;
+  };
 
 type PendingRequest = {
   resolve: (glyph: GlyphContour) => void;
@@ -55,12 +62,16 @@ function initWorker(): Worker | null {
     const w = new Worker(workerUrl);
 
     w.onmessage = (event: MessageEvent<WorkerResponse>) => {
-      const { id, glyph } = event.data;
-      const pending = pendingRequests.get(id);
-      if (pending) {
-        pendingRequests.delete(id);
-        pending.resolve(glyph);
+      const pending = pendingRequests.get(event.data.id);
+      if (!pending) {
+        return;
       }
+      pendingRequests.delete(event.data.id);
+      if (event.data.type === "glyphResult") {
+        pending.resolve(event.data.glyph);
+        return;
+      }
+      pending.reject(new Error(event.data.message));
     };
 
     w.onerror = (error) => {
@@ -106,15 +117,14 @@ export async function extractGlyphAsync(
 
   // Handle whitespace synchronously (no heavy processing)
   if (char === " " || char === "\t" || char === "\n") {
-    const glyph = createWhitespaceGlyph(char, style);
+    const glyph = createWhitespaceGlyph(char, fontFamily, style);
     setCachedGlyph(fontFamily, char, style, glyph);
     return glyph;
   }
 
   const w = getWorker();
   if (!w) {
-    // Fallback to sync (uses fallback glyph in non-browser)
-    const glyph = createFallbackGlyph(char, style);
+    const glyph = extractGlyphContour(char, fontFamily, style);
     setCachedGlyph(fontFamily, char, style, glyph);
     return glyph;
   }
@@ -125,9 +135,7 @@ export async function extractGlyphAsync(
     // Timeout after 5 seconds
     const timeout = setTimeout(() => {
       pendingRequests.delete(id);
-      const fallback = createFallbackGlyph(char, style);
-      setCachedGlyph(fontFamily, char, style, fallback);
-      resolve(fallback);
+      reject(new Error("Glyph worker timeout."));
     }, 5000);
 
     pendingRequests.set(id, {
@@ -138,9 +146,7 @@ export async function extractGlyphAsync(
       },
       reject: (error) => {
         clearTimeout(timeout);
-        const fallback = createFallbackGlyph(char, style);
-        setCachedGlyph(fontFamily, char, style, fallback);
-        resolve(fallback);
+        reject(error);
       },
     });
 
@@ -182,8 +188,18 @@ export function terminateWorker(): void {
 // Fallback Glyphs
 // =============================================================================
 
-function createWhitespaceGlyph(char: string, style: GlyphStyleKey): GlyphContour {
-  const advanceWidth = char === "\t" ? style.fontSize * 1.2 : style.fontSize * 0.3;
+function createWhitespaceGlyph(char: string, fontFamily: string, style: GlyphStyleKey): GlyphContour {
+  if (typeof document === "undefined") {
+    throw new Error("Whitespace glyph extraction requires a browser canvas.");
+  }
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Canvas 2D context is unavailable for whitespace metrics.");
+  }
+  ctx.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${formatFontFamily(fontFamily, GENERIC_FONT_FAMILIES)}`;
+  const metrics = ctx.measureText(char);
+  const advanceWidth = char === "\t" ? metrics.width * 4 : metrics.width;
   return {
     char,
     paths: [],
@@ -197,6 +213,8 @@ function createWhitespaceGlyph(char: string, style: GlyphStyleKey): GlyphContour
   };
 }
 
+const formatFontFamilySource = formatFontFamily.toString();
+
 // =============================================================================
 // Inline Worker Code
 // =============================================================================
@@ -209,6 +227,15 @@ const SIMPLIFY_TOLERANCE = 0.8;
 const MIN_CONTOUR_POINTS = 4;
 const MAX_TRACE_ITERATIONS = 5000;
 const MAX_CONTOURS_PER_CHAR = 20;
+const GENERIC_FONT_FAMILIES = new Set(${JSON.stringify(GENERIC_FONT_FAMILIES)});
+const formatFontFamily = ${formatFontFamilySource};
+  "serif",
+  "sans-serif",
+  "monospace",
+  "cursive",
+  "fantasy",
+  "system-ui",
+]);
 
 self.onmessage = function(event) {
   const { id, type, char, fontFamily, style } = event.data;
@@ -217,8 +244,8 @@ self.onmessage = function(event) {
       const glyph = extractGlyphInWorker(char, fontFamily, style);
       self.postMessage({ id, type: "glyphResult", glyph });
     } catch (error) {
-      const fallback = createFallbackGlyph(char, style);
-      self.postMessage({ id, type: "glyphResult", glyph: fallback });
+      const message = error && error.message ? error.message : "Worker glyph extraction failed.";
+      self.postMessage({ id, type: "glyphError", message });
     }
   }
 };
@@ -231,15 +258,22 @@ function extractGlyphInWorker(char, fontFamily, style) {
   const scaledSize = style.fontSize * RENDER_SCALE;
   const canvas = new OffscreenCanvas(256, 256);
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) return createFallbackGlyph(char, style);
+  if (!ctx) {
+    throw new Error("Worker canvas context unavailable.");
+  }
 
-  const fontString = style.fontStyle + " " + style.fontWeight + " " + scaledSize + "px \\"" + fontFamily + "\\"";
+  const fontString = style.fontStyle + " " + style.fontWeight + " " + scaledSize + "px " + formatFontFamily(fontFamily, GENERIC_FONT_FAMILIES);
   ctx.font = fontString;
   const textMetrics = ctx.measureText(char);
+  const ascent = textMetrics.actualBoundingBoxAscent;
+  const descent = textMetrics.actualBoundingBoxDescent;
+  if (!Number.isFinite(ascent) || !Number.isFinite(descent)) {
+    throw new Error("Worker text metrics missing ascent/descent.");
+  }
 
   const padding = scaledSize * 0.3;
   const width = Math.ceil(Math.max(textMetrics.width, scaledSize * 0.5) + padding * 2);
-  const height = Math.ceil(scaledSize * 1.4 + padding * 2);
+  const height = Math.ceil(ascent + descent + padding * 2);
 
   canvas.width = Math.min(width, 256);
   canvas.height = Math.min(height, 256);
@@ -249,11 +283,20 @@ function extractGlyphInWorker(char, fontFamily, style) {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "white";
-  ctx.fillText(char, padding, canvas.height - padding - scaledSize * 0.15);
+  const baselinePx = padding + ascent;
+  ctx.fillText(char, padding, baselinePx);
 
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const rawContours = extractContours(imageData);
-  const paths = processContours(rawContours, RENDER_SCALE, padding);
+  const baselineOffset = (baselinePx - padding) / RENDER_SCALE;
+  const paths = processContours(rawContours, RENDER_SCALE, padding).map(function(path) {
+    return {
+      points: path.points.map(function(point) {
+        return { x: point.x, y: point.y - baselineOffset };
+      }),
+      isHole: path.isHole
+    };
+  });
   const bounds = calculateBounds(paths);
 
   return {
@@ -263,39 +306,26 @@ function extractGlyphInWorker(char, fontFamily, style) {
     metrics: {
       advanceWidth: textMetrics.width / RENDER_SCALE,
       leftBearing: (textMetrics.actualBoundingBoxLeft || 0) / RENDER_SCALE,
-      ascent: (textMetrics.actualBoundingBoxAscent || scaledSize * 0.8) / RENDER_SCALE,
-      descent: (textMetrics.actualBoundingBoxDescent || scaledSize * 0.2) / RENDER_SCALE,
+      ascent: ascent / RENDER_SCALE,
+      descent: descent / RENDER_SCALE,
     }
   };
 }
 
 function createWhitespaceGlyph(char, fontFamily, style) {
-  let advanceWidth = style.fontSize * 0.3;
-  try {
-    const canvas = new OffscreenCanvas(64, 64);
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      ctx.font = style.fontStyle + " " + style.fontWeight + " " + style.fontSize + "px \\"" + fontFamily + "\\"";
-      const metrics = ctx.measureText(char);
-      advanceWidth = char === "\\t" ? metrics.width * 4 : metrics.width;
-    }
-  } catch (e) {}
+  const canvas = new OffscreenCanvas(64, 64);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Worker canvas context unavailable for whitespace metrics.");
+  }
+  ctx.font = style.fontStyle + " " + style.fontWeight + " " + style.fontSize + "px " + formatFontFamily(fontFamily, GENERIC_FONT_FAMILIES);
+  const metrics = ctx.measureText(char);
+  const advanceWidth = char === "\\t" ? metrics.width * 4 : metrics.width;
   return {
     char,
     paths: [],
     bounds: { minX: 0, minY: 0, maxX: 0, maxY: 0 },
     metrics: { advanceWidth, leftBearing: 0, ascent: 0, descent: 0 }
-  };
-}
-
-function createFallbackGlyph(char, style) {
-  const width = style.fontSize * 0.6;
-  const height = style.fontSize * 0.8;
-  return {
-    char,
-    paths: [{ points: [{ x: 0, y: 0 }, { x: width, y: 0 }, { x: width, y: height }, { x: 0, y: height }], isHole: false }],
-    bounds: { minX: 0, minY: 0, maxX: width, maxY: height },
-    metrics: { advanceWidth: width, leftBearing: 0, ascent: height * 0.8, descent: height * 0.2 }
   };
 }
 
@@ -409,5 +439,6 @@ function calculateBounds(paths) {
   if (minX === Infinity) return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
   return { minX, minY, maxX, maxY };
 }
+
 `;
 }

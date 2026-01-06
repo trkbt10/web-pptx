@@ -13,7 +13,6 @@ import type { PositionedSpan } from "../../../text-layout/types";
 import { createCameraConfig, createCamera, type CameraConfig } from "../scene/camera";
 import { createLightingConfig, addLightsToScene } from "../scene/lighting";
 import { createMaterialFromFill, type Material3DFill } from "../scene/materials";
-import { createTextGeometryFromCanvas } from "../geometry/from-contours";
 import { createTextGeometryAsync } from "../geometry/from-contours-async";
 import { applyTextWarp } from "../geometry/text-warp";
 import type { TextWarp } from "../../../../domain/text";
@@ -163,7 +162,7 @@ export type Text3DRenderer = {
   /** Render a frame */
   render(): void;
   /** Update configuration */
-  update(config: Partial<Text3DRenderConfig>): void;
+  update(config: Partial<Text3DRenderConfig>): Promise<void>;
   /** Dispose resources */
   dispose(): void;
   /** Get the canvas element */
@@ -242,7 +241,7 @@ function buildRendererFromState(state: RendererState): Text3DRenderer {
     renderer.render(scene, camera);
   }
 
-  function update(newConfig: Partial<Text3DRenderConfig>) {
+  async function update(newConfig: Partial<Text3DRenderConfig>) {
     const mergedConfig = { ...config, ...newConfig };
 
     // Update size if changed
@@ -269,7 +268,7 @@ function buildRendererFromState(state: RendererState): Text3DRenderer {
       scene.remove(textMesh);
       disposeGroup(textMesh);
 
-      textMesh = createTextMesh(mergedConfig);
+      textMesh = await createTextMeshAsync(mergedConfig);
       scene.add(textMesh);
       fitCameraToObject(camera, textMesh, cameraConfig);
     }
@@ -316,20 +315,6 @@ function buildRendererFromState(state: RendererState): Text3DRenderer {
 // =============================================================================
 // Renderer Factory Functions
 // =============================================================================
-
-/**
- * Create a WebGL 3D text renderer (synchronous).
- */
-export function createText3DRenderer(config: Text3DRenderConfig): Text3DRenderer {
-  const state = initializeRendererState(config);
-
-  // Create 3D text mesh (sync)
-  const textMesh = createTextMesh(config);
-  state.scene.add(textMesh);
-  fitCameraToObject(state.camera, textMesh, state.cameraConfig);
-
-  return buildRendererFromState({ ...state, textMesh });
-}
 
 /**
  * Create a WebGL 3D text renderer (async - uses Web Worker for glyph extraction).
@@ -442,6 +427,16 @@ function getMeshBuildConfig(config: Text3DRenderConfig): MeshBuildConfig {
 }
 
 /**
+ * Scale factor to convert from pixel coordinates to normalized 3D units.
+ * This ensures geometry and positions use the same coordinate system.
+ *
+ * The geometry is created at font pixel size (e.g., 48px = ~48 units).
+ * Positions are at pixel coordinates.
+ * We normalize everything to a consistent scale for proper camera fitting.
+ */
+const COORDINATE_SCALE = 1 / 96;
+
+/**
  * Process a single run with its geometry, adding mesh to group.
  */
 function processRunWithGeometry(
@@ -459,10 +454,12 @@ function processRunWithGeometry(
   const fill: Material3DFill = run.fill ?? { type: "solid", color: run.color };
   const material = createMaterialFromFill(fill, buildConfig.preset, buildConfig.isWireframe);
 
-  // Create mesh and position it (Y inverted: SVG Y grows down, Three.js Y grows up)
+  // Create mesh and apply coordinate normalization
+  // Both geometry scale and position use the same coordinate system (pixels / 96)
   const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.x = run.x / 96;
-  mesh.position.y = -run.y / 96;
+  mesh.scale.set(COORDINATE_SCALE, COORDINATE_SCALE, COORDINATE_SCALE);
+  mesh.position.x = run.x * COORDINATE_SCALE;
+  mesh.position.y = -run.y * COORDINATE_SCALE;
 
   // Apply all effects to mesh
   // Contour comes from shape3d (shape-level), other effects from run (run-level)
@@ -477,12 +474,17 @@ function processRunWithGeometry(
 }
 
 /**
- * Finalize text mesh group (scale and position).
+ * Finalize text mesh group (center and apply z offset).
+ *
+ * Per ECMA-376, text is rendered at its specified font size.
+ * Camera positioning (via fitCameraToObject) handles viewport fitting.
+ * Text itself should NOT be scaled based on viewport size.
+ *
+ * @see ECMA-376 Part 1, Section 21.1.2.3.9 (sz - font size in 100ths of point)
  */
 function finalizeTextMeshGroup(group: THREE.Group, config: Text3DRenderConfig): void {
-  // Scale entire group to fit within bounds
-  const maxDimension = (Math.min(config.width, config.height) * 0.8) / 96;
-  scaleGroupToFit(group, maxDimension * 2, maxDimension);
+  // Center the group (camera will adjust to fit)
+  centerGroup(group);
 
   // Apply flatTextZ offset (ECMA-376 a:flatTx z attribute)
   if (config.scene3d?.flatTextZ !== undefined) {
@@ -492,70 +494,24 @@ function finalizeTextMeshGroup(group: THREE.Group, config: Text3DRenderConfig): 
 }
 
 /**
- * Scale a THREE.Group to fit within bounds
+ * Center a THREE.Group at origin.
+ *
+ * This only centers the group without scaling.
+ * The camera position is adjusted separately via fitCameraToObject.
  */
-function scaleGroupToFit(group: THREE.Group, maxWidth: number, maxHeight: number): void {
+function centerGroup(group: THREE.Group): void {
   const box = new THREE.Box3().setFromObject(group);
-  const size = new THREE.Vector3();
-  box.getSize(size);
-
-  console.log("[3D Text] scaleGroupToFit - original size:", size.toArray());
-
-  if (size.x === 0 || size.y === 0) {
-    return;
-  }
-
-  const scaleX = maxWidth / size.x;
-  const scaleY = maxHeight / size.y;
-  const scale = Math.min(scaleX, scaleY);
-
-  console.log("[3D Text] scaleGroupToFit - scale factor:", scale, "scaled Z:", size.z * scale);
-
-  group.scale.set(scale, scale, scale);
-
   const center = new THREE.Vector3();
   box.getCenter(center);
-  group.position.sub(center.multiplyScalar(scale));
+
+  // Move group so its center is at origin
+  group.position.x = -center.x;
+  group.position.y = -center.y;
 }
 
 // =============================================================================
 // Text Mesh Factory Functions
 // =============================================================================
-
-/**
- * Create 3D text mesh from configuration (synchronous).
- * Creates geometries sequentially using canvas-based contour extraction.
- */
-function createTextMesh(config: Text3DRenderConfig): THREE.Group {
-  const group = new THREE.Group();
-
-  if (config.runs.length === 0) {
-    return group;
-  }
-
-  const buildConfig = getMeshBuildConfig(config);
-
-  for (const run of config.runs) {
-    if (run.text.length === 0) {
-      continue;
-    }
-
-    const geometry = createTextGeometryFromCanvas({
-      text: run.text,
-      fontFamily: run.fontFamily,
-      fontSize: run.fontSize,
-      fontWeight: run.fontWeight,
-      fontStyle: run.fontStyle,
-      extrusionDepth: buildConfig.extrusionDepth,
-      bevel: buildConfig.bevel,
-    });
-
-    processRunWithGeometry(group, run, geometry, buildConfig);
-  }
-
-  finalizeTextMeshGroup(group, config);
-  return group;
-}
 
 /**
  * Create geometry for a run asynchronously, returns null for empty text.
@@ -613,7 +569,10 @@ async function createTextMeshAsync(config: Text3DRenderConfig): Promise<THREE.Gr
 }
 
 /**
- * Fit camera to object bounds
+ * Fit camera to object bounds.
+ *
+ * Calculates optimal camera distance to show the entire object with appropriate padding.
+ * For perspective cameras with extreme angles, uses a tighter fit to maximize text visibility.
  */
 function fitCameraToObject(
   camera: THREE.Camera,
@@ -627,34 +586,34 @@ function fitCameraToObject(
   box.getCenter(center);
 
   // Calculate distance to fit object
-  const maxDim = Math.max(size.x, size.y, size.z);
+  // Use the larger of X and Y dimensions (text is typically wider than tall)
+  const maxDim = Math.max(size.x, size.y);
   const fov = config.fov * (Math.PI / 180);
-  let distance: number;
 
   if (camera instanceof THREE.PerspectiveCamera) {
-    distance = maxDim / (2 * Math.tan(fov / 2));
-  } else {
-    // Orthographic camera
-    distance = maxDim * 2;
+    // For perspective: calculate distance based on FOV
+    // Using smaller multiplier (1.1) to get closer to text and maximize screen usage
+    const baseDistance = maxDim / (2 * Math.tan(fov / 2));
+    const distance = baseDistance * 1.1;
 
-    if (camera instanceof THREE.OrthographicCamera) {
-      const aspect = (camera.right - camera.left) / (camera.top - camera.bottom);
-      const viewHeight = maxDim * 1.5;
-      camera.top = viewHeight / 2;
-      camera.bottom = -viewHeight / 2;
-      camera.left = (-viewHeight * aspect) / 2;
-      camera.right = (viewHeight * aspect) / 2;
-      camera.updateProjectionMatrix();
-    }
-  }
+    // Position camera along its configured direction
+    const direction = config.position.clone().normalize();
+    camera.position.copy(center).add(direction.multiplyScalar(distance));
+    camera.lookAt(center);
+    camera.updateProjectionMatrix();
+  } else if (camera instanceof THREE.OrthographicCamera) {
+    // For orthographic: adjust frustum to fit object
+    const aspect = (camera.right - camera.left) / (camera.top - camera.bottom);
+    const viewHeight = maxDim * 1.2; // 20% padding
+    camera.top = viewHeight / 2;
+    camera.bottom = -viewHeight / 2;
+    camera.left = (-viewHeight * aspect) / 2;
+    camera.right = (viewHeight * aspect) / 2;
 
-  // Position camera
-  const direction = config.position.clone().normalize();
-  camera.position.copy(center).add(direction.multiplyScalar(distance * 1.5));
-  camera.lookAt(center);
-
-  // Update projection matrix (both camera types have this method)
-  if (camera instanceof THREE.PerspectiveCamera || camera instanceof THREE.OrthographicCamera) {
+    // Position camera
+    const direction = config.position.clone().normalize();
+    camera.position.copy(center).add(direction.multiplyScalar(maxDim * 2));
+    camera.lookAt(center);
     camera.updateProjectionMatrix();
   }
 }
