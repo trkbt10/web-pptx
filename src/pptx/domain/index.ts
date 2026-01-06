@@ -248,6 +248,14 @@ export type {
   LightRigType,
   PresetCameraType,
   PresetMaterialType,
+  BevelPresetType,
+  Rotation3d,
+  Camera3d,
+  LightRig,
+  Backdrop3d,
+  Scene3d,
+  Bevel3d,
+  Shape3d,
 } from "./three-d";
 
 // =============================================================================
@@ -435,14 +443,6 @@ export type {
   Geometry,
   // Shape properties
   ShapeProperties,
-  Scene3d,
-  Camera3d,
-  Rotation3d,
-  LightRig,
-  Backdrop3d,
-  Shape3d,
-  Bevel3d,
-  BevelPresetType,
   GraphicFrameLocks,
   // Concrete shapes
   SpShape,

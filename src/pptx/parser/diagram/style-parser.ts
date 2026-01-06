@@ -12,15 +12,18 @@ import type {
   DiagramStyleDefinitionHeaderList,
   DiagramStyleLabel,
 } from "../../domain/diagram";
-import type { Fill, Rotation3d, Scene3d, Shape3d } from "../../domain/index";
-import type { Color } from "../../domain/color";
-import type { BevelPresetType } from "../../domain/shape";
 import type {
+  Fill,
+  Rotation3d,
+  Scene3d,
+  Shape3d,
+  BevelPresetType,
   LightRigDirection,
   LightRigType,
   PresetCameraType,
   PresetMaterialType,
-} from "../../domain/types";
+} from "../../domain/index";
+import type { Color } from "../../domain/color";
 import type { XmlDocument, XmlElement } from "../../../xml/index";
 import { getAttr, getByPath, getChild, getChildren, isXmlElement } from "../../../xml/index";
 import { getAngleAttr, getEmuAttr, getIntAttr, getPercent100kAttr } from "../primitive";

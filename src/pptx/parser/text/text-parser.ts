@@ -24,6 +24,8 @@ import type {
   ParagraphProperties,
   RegularRun,
   RunProperties,
+  Scene3d,
+  Shape3d,
   StrikeStyle,
   TabStop,
   TextBody,
@@ -33,6 +35,7 @@ import type {
   TextWarpAdjustValue,
   UnderlineStyle,
 } from "../../domain/index";
+import { parseScene3d, parseShape3d } from "../shape-parser/three-d";
 import { px, pt } from "../../domain/types";
 import {
   getAttr,
@@ -200,6 +203,11 @@ export function parseBodyProperties(bodyPr: XmlElement | undefined): BodyPropert
     forceAntiAlias: getBoolAttr(bodyPr, "forceAA"),
     fromWordArt: getBoolAttr(bodyPr, "fromWordArt"),
     textWarp: parseTextWarp(bodyPr),
+    // 3D text properties
+    // @see ECMA-376 Part 1, Section 20.1.5.8 (a:scene3d)
+    // @see ECMA-376 Part 1, Section 20.1.5.9 (a:sp3d)
+    scene3d: parseScene3d(bodyPr),
+    shape3d: parseShape3d(bodyPr),
   };
 }
 

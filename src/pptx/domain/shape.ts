@@ -23,7 +23,20 @@ import type { GroupLocks, PictureLocks, ShapeLocks } from "./shape-locks";
 import type { ContentPart } from "./anchor";
 import type { BlipCompression } from "./appearance";
 import type { FontCollectionIndex, StyleMatrixColumnIndex, ShapeId } from "./style-ref";
-import type { LightRigDirection, LightRigType, PresetCameraType, PresetMaterialType } from "./three-d";
+import type {
+  LightRigDirection,
+  LightRigType,
+  PresetCameraType,
+  PresetMaterialType,
+  BevelPresetType,
+  Scene3d,
+  Shape3d,
+  Camera3d,
+  Rotation3d,
+  LightRig,
+  Backdrop3d,
+  Bevel3d,
+} from "./three-d";
 
 // =============================================================================
 // Shape Geometry Types
@@ -347,98 +360,6 @@ export type ShapeProperties = {
   readonly scene3d?: Scene3d;
   readonly shape3d?: Shape3d;
 };
-
-/**
- * 3D scene properties
- * @see ECMA-376 Part 1, Section 20.1.5.8 (scene3d)
- */
-export type Scene3d = {
-  readonly camera: Camera3d;
-  readonly lightRig: LightRig;
-  readonly backdrop?: Backdrop3d;
-  readonly flatTextZ?: Pixels;
-};
-
-/**
- * 3D camera
- * @see ECMA-376 Part 1, Section 20.1.5.2 (camera)
- */
-export type Camera3d = {
-  readonly preset: PresetCameraType;
-  readonly fov?: Degrees;
-  readonly zoom?: Percent;
-  readonly rotation?: Rotation3d;
-};
-
-/**
- * 3D rotation
- */
-export type Rotation3d = {
-  readonly latitude: Degrees;
-  readonly longitude: Degrees;
-  readonly revolution: Degrees;
-};
-
-/**
- * 3D light rig
- * @see ECMA-376 Part 1, Section 20.1.5.6 (lightRig)
- */
-export type LightRig = {
-  readonly rig: LightRigType;
-  readonly direction: LightRigDirection;
-  readonly rotation?: Rotation3d;
-};
-
-/**
- * 3D backdrop
- */
-export type Backdrop3d = {
-  readonly anchor: Point;
-  readonly normal: Point;
-  readonly up: Point;
-};
-
-/**
- * 3D shape properties
- * @see ECMA-376 Part 1, Section 20.1.5.9 (sp3d)
- */
-export type Shape3d = {
-  readonly z?: Pixels;
-  readonly extrusionHeight?: Pixels;
-  readonly contourWidth?: Pixels;
-  readonly preset?: PresetMaterialType;
-  readonly extrusionColor?: Fill;
-  readonly contourColor?: Fill;
-  readonly bevel?: Bevel3d;
-};
-
-/**
- * 3D bevel
- * @see ECMA-376 Part 1, Section 20.1.5.1 (bevelT/bevelB)
- */
-export type Bevel3d = {
-  readonly width: Pixels;
-  readonly height: Pixels;
-  readonly preset: BevelPresetType;
-};
-
-/**
- * Bevel preset types.
- * @see ECMA-376 Part 1, Section 20.1.10.9 (ST_BevelPresetType)
- */
-export type BevelPresetType =
-  | "angle"
-  | "artDeco"
-  | "circle"
-  | "convex"
-  | "coolSlant"
-  | "cross"
-  | "divot"
-  | "hardEdge"
-  | "relaxedInset"
-  | "riblet"
-  | "slope"
-  | "softRound";
 
 // =============================================================================
 // Concrete Shape Types

@@ -4,8 +4,12 @@
  * @see ECMA-376 Part 1, Section 20.1.5 - 3D Rendering
  */
 
+import type { Fill } from "./color";
+import type { Point } from "./geometry";
+import type { Degrees, Percent, Pixels } from "./types";
+
 // =============================================================================
-// 3D Types
+// 3D Enumeration Types
 // =============================================================================
 
 /**
@@ -143,3 +147,101 @@ export type PresetMaterialType =
   | "softmetal"
   | "translucentPowder"
   | "warmMatte";
+
+/**
+ * Bevel preset types.
+ * @see ECMA-376 Part 1, Section 20.1.10.9 (ST_BevelPresetType)
+ */
+export type BevelPresetType =
+  | "angle"
+  | "artDeco"
+  | "circle"
+  | "convex"
+  | "coolSlant"
+  | "cross"
+  | "divot"
+  | "hardEdge"
+  | "relaxedInset"
+  | "riblet"
+  | "slope"
+  | "softRound";
+
+// =============================================================================
+// 3D Structure Types
+// =============================================================================
+
+/**
+ * 3D rotation
+ * @see ECMA-376 Part 1, Section 20.1.5.7 (rot)
+ */
+export type Rotation3d = {
+  readonly latitude: Degrees;
+  readonly longitude: Degrees;
+  readonly revolution: Degrees;
+};
+
+/**
+ * 3D camera
+ * @see ECMA-376 Part 1, Section 20.1.5.2 (camera)
+ */
+export type Camera3d = {
+  readonly preset: PresetCameraType;
+  readonly fov?: Degrees;
+  readonly zoom?: Percent;
+  readonly rotation?: Rotation3d;
+};
+
+/**
+ * 3D light rig
+ * @see ECMA-376 Part 1, Section 20.1.5.6 (lightRig)
+ */
+export type LightRig = {
+  readonly rig: LightRigType;
+  readonly direction: LightRigDirection;
+  readonly rotation?: Rotation3d;
+};
+
+/**
+ * 3D backdrop
+ * @see ECMA-376 Part 1, Section 20.1.5.3 (backdrop)
+ */
+export type Backdrop3d = {
+  readonly anchor: Point;
+  readonly normal: Point;
+  readonly up: Point;
+};
+
+/**
+ * 3D scene properties
+ * @see ECMA-376 Part 1, Section 20.1.5.8 (scene3d)
+ */
+export type Scene3d = {
+  readonly camera: Camera3d;
+  readonly lightRig: LightRig;
+  readonly backdrop?: Backdrop3d;
+  readonly flatTextZ?: Pixels;
+};
+
+/**
+ * 3D bevel
+ * @see ECMA-376 Part 1, Section 20.1.5.1 (bevelT/bevelB)
+ */
+export type Bevel3d = {
+  readonly width: Pixels;
+  readonly height: Pixels;
+  readonly preset: BevelPresetType;
+};
+
+/**
+ * 3D shape properties
+ * @see ECMA-376 Part 1, Section 20.1.5.9 (sp3d)
+ */
+export type Shape3d = {
+  readonly z?: Pixels;
+  readonly extrusionHeight?: Pixels;
+  readonly contourWidth?: Pixels;
+  readonly preset?: PresetMaterialType;
+  readonly extrusionColor?: Fill;
+  readonly contourColor?: Fill;
+  readonly bevel?: Bevel3d;
+};

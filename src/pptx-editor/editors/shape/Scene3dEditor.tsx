@@ -13,7 +13,7 @@ import { Camera3dEditor, createDefaultCamera3d } from "./Camera3dEditor";
 import { LightRigEditor, createDefaultLightRig } from "./LightRigEditor";
 import { Backdrop3dEditor, createDefaultBackdrop3d } from "./Backdrop3dEditor";
 import { px } from "../../../pptx/domain/types";
-import type { Scene3d } from "../../../pptx/domain/shape";
+import type { Scene3d } from "../../../pptx/domain";
 import type { EditorProps } from "../../types";
 
 export type Scene3dEditorProps = EditorProps<Scene3d>;

@@ -11,7 +11,7 @@ import { DegreesEditor } from "../primitives/DegreesEditor";
 import { PercentEditor } from "../primitives/PercentEditor";
 import { Rotation3dEditor, createDefaultRotation3d } from "./Rotation3dEditor";
 import { deg, pct, type PresetCameraType } from "../../../pptx/domain/types";
-import type { Camera3d } from "../../../pptx/domain/shape";
+import type { Camera3d } from "../../../pptx/domain";
 import type { EditorProps, SelectOption } from "../../types";
 
 export type Camera3dEditorProps = EditorProps<Camera3d>;

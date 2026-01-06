@@ -9,13 +9,19 @@
 
 import type { ReactNode } from "react";
 import type { TextBody } from "../../../domain/text";
+import type { Scene3d, Shape3d } from "../../../domain/three-d";
 import type { LayoutResult, LayoutLine, PositionedSpan, LayoutParagraphResult } from "../../text-layout";
 import type { TextEffectsConfig, TextPatternFillConfig, TextImageFillConfig } from "../../../domain/drawing-ml";
+import type { Color } from "../../../domain/color";
+import type { ColorContext } from "../../../domain/resolution";
 import { layoutTextBody, toLayoutInput } from "../../text-layout";
 import { px, deg } from "../../../domain/types";
+import { resolveColor } from "../../core/drawing-ml/color";
 import { PT_TO_PX } from "../../../domain/unit-conversion";
 import { useRenderContext } from "../context";
 import { useSvgDefs } from "../hooks/useSvgDefs";
+import { calculateCameraTransform, has3dEffects } from "../../svg/effects3d";
+import { Text3DRenderer, shouldRender3DText } from "../../webgl/text3d";
 
 // =============================================================================
 // Types
@@ -39,6 +45,9 @@ export type TextRendererProps = {
 
 /**
  * Renders text content as React SVG elements.
+ *
+ * When complex 3D effects are present (bevel, extrusion, non-front camera),
+ * uses WebGL rendering via Three.js for true 3D output.
  */
 export function TextRenderer({ textBody, width, height }: TextRendererProps) {
   const { colorContext, fontScheme, options, resources } = useRenderContext();
@@ -46,6 +55,47 @@ export function TextRenderer({ textBody, width, height }: TextRendererProps) {
 
   if (textBody.paragraphs.length === 0) {
     return null;
+  }
+
+  // Check if WebGL 3D rendering should be used
+  const scene3d = textBody.bodyProperties.scene3d;
+  const shape3d = textBody.bodyProperties.shape3d;
+  const useWebGL3D = options?.enable3DText !== false && shouldRender3DText(scene3d, shape3d);
+
+  if (useWebGL3D) {
+    // Use WebGL 3D renderer for complex 3D text
+    const firstParagraph = textBody.paragraphs[0];
+    const firstRun = firstParagraph?.runs[0];
+    const text = textBody.paragraphs
+      .flatMap((p) => p.runs.map((r) => ("text" in r ? r.text : "")))
+      .join("");
+
+    // Get text styling from first run
+    const runProps = firstRun && "properties" in firstRun ? firstRun.properties : undefined;
+    const fontSize = runProps?.fontSize ? (runProps.fontSize as number) * PT_TO_PX : 24;
+    const fontFamily = runProps?.fontFamily ?? fontScheme?.majorFont?.latin ?? "Arial";
+    const fontWeight = runProps?.bold === true ? 700 : 400;
+    const fontStyle = runProps?.italic === true ? "italic" : "normal";
+    const color = runProps?.color
+      ? resolveColorForWebGL(runProps.color, colorContext)
+      : "#000000";
+
+    return (
+      <foreignObject x={0} y={0} width={width} height={height}>
+        <Text3DRenderer
+          text={text}
+          color={color}
+          fontSize={fontSize}
+          fontFamily={fontFamily}
+          fontWeight={fontWeight}
+          fontStyle={fontStyle}
+          scene3d={scene3d}
+          shape3d={shape3d}
+          width={width}
+          height={height}
+        />
+      </foreignObject>
+    );
   }
 
   // Convert TextBody to layout input
@@ -79,6 +129,23 @@ export function TextRenderer({ textBody, width, height }: TextRendererProps) {
         {content}
       </g>
     );
+  }
+
+  // Apply 3D transforms (scene3d/shape3d)
+  const scene3d = textBody.bodyProperties.scene3d;
+  const shape3d = textBody.bodyProperties.shape3d;
+  if (has3dEffects(scene3d, shape3d)) {
+    const text3dContent = render3dTextEffects(
+      wrappedContent,
+      scene3d,
+      shape3d,
+      width,
+      height,
+      getNextId,
+      addDef,
+      hasDef,
+    );
+    wrappedContent = text3dContent;
   }
 
   // Apply overflow clip
@@ -671,6 +738,259 @@ function createTextImageFillDef(
   );
 }
 
+// =============================================================================
+// 3D Text Effects
+// =============================================================================
+
+/**
+ * Render 3D effects for text body.
+ *
+ * Applies camera transform, bevel, and extrusion effects to simulate 3D text.
+ * Since SVG is 2D, this uses transforms and gradients to approximate 3D.
+ *
+ * @see ECMA-376 Part 1, Section 20.1.5 (3D Properties)
+ */
+function render3dTextEffects(
+  content: ReactNode,
+  scene3d: Scene3d | undefined,
+  shape3d: Shape3d | undefined,
+  width: number,
+  height: number,
+  getNextId: (prefix: string) => string,
+  addDef: (id: string, content: ReactNode) => void,
+  hasDef: (id: string) => boolean,
+): ReactNode {
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const elements: ReactNode[] = [];
+
+  // Get camera transform
+  const cameraPreset = scene3d?.camera?.preset ?? "orthographicFront";
+  const cameraTransform = calculateCameraTransform(cameraPreset, scene3d?.camera?.fov);
+
+  // Get light direction for bevel
+  const lightDirection = scene3d?.lightRig?.direction ?? "tl";
+
+  // Render extrusion effect (behind main text)
+  if (shape3d?.extrusionHeight && shape3d.extrusionHeight > 0) {
+    const extrusionLayers = renderTextExtrusion(
+      content,
+      shape3d.extrusionHeight as number,
+      cameraPreset,
+      centerX,
+      centerY,
+    );
+    elements.push(extrusionLayers);
+  }
+
+  // Main text content with camera transform
+  let mainContent = content;
+  if (cameraTransform.transform !== "") {
+    mainContent = (
+      <g transform={`translate(${centerX}, ${centerY}) ${cameraTransform.transform} translate(${-centerX}, ${-centerY})`}>
+        {content}
+      </g>
+    );
+  }
+
+  // Apply bevel effect (lighting gradient overlay)
+  if (shape3d?.bevel) {
+    const bevelFilterId = getNextId("text-bevel");
+    if (!hasDef(bevelFilterId)) {
+      addDef(bevelFilterId, createTextBevelFilterDef(shape3d.bevel, lightDirection, bevelFilterId));
+    }
+    mainContent = (
+      <g filter={`url(#${bevelFilterId})`}>
+        {mainContent}
+      </g>
+    );
+  }
+
+  elements.push(mainContent);
+
+  return <>{elements}</>;
+}
+
+/**
+ * Render extrusion layers for text.
+ *
+ * Creates multiple offset copies of the text to simulate depth.
+ */
+function renderTextExtrusion(
+  content: ReactNode,
+  extrusionHeight: number,
+  cameraPreset: string,
+  centerX: number,
+  centerY: number,
+): ReactNode {
+  // Calculate extrusion direction based on camera
+  const { offsetX, offsetY } = getExtrusionOffset(cameraPreset, extrusionHeight);
+
+  // Create multiple layers for depth effect
+  const layers = Math.min(Math.ceil(extrusionHeight / 3), 8);
+  const elements: ReactNode[] = [];
+
+  for (let i = layers; i > 0; i--) {
+    const layerOffset = i / layers;
+    const x = offsetX * layerOffset;
+    const y = offsetY * layerOffset;
+    const opacity = 0.4 + 0.3 * (1 - layerOffset);
+
+    elements.push(
+      <g
+        key={`extrusion-${i}`}
+        transform={`translate(${centerX}, ${centerY}) translate(${x}, ${y}) translate(${-centerX}, ${-centerY})`}
+        opacity={opacity}
+        style={{ fill: "#666666" }}
+      >
+        {content}
+      </g>,
+    );
+  }
+
+  return <>{elements}</>;
+}
+
+/**
+ * Get extrusion offset direction based on camera.
+ */
+function getExtrusionOffset(
+  camera: string,
+  height: number,
+): { offsetX: number; offsetY: number } {
+  const depth = height * 0.5;
+
+  switch (camera) {
+    case "isometricTopUp":
+    case "isometricTopDown":
+      return { offsetX: depth * 0.5, offsetY: depth * 0.5 };
+    case "obliqueTopLeft":
+    case "perspectiveAboveLeftFacing":
+      return { offsetX: -depth, offsetY: -depth };
+    case "obliqueTopRight":
+    case "perspectiveAboveRightFacing":
+      return { offsetX: depth, offsetY: -depth };
+    case "obliqueBottomLeft":
+      return { offsetX: -depth, offsetY: depth };
+    case "obliqueBottomRight":
+      return { offsetX: depth, offsetY: depth };
+    case "obliqueTop":
+    case "perspectiveAbove":
+      return { offsetX: 0, offsetY: -depth };
+    case "obliqueBottom":
+    case "perspectiveBelow":
+      return { offsetX: 0, offsetY: depth };
+    case "obliqueLeft":
+    case "perspectiveLeft":
+      return { offsetX: -depth, offsetY: 0 };
+    case "obliqueRight":
+    case "perspectiveRight":
+      return { offsetX: depth, offsetY: 0 };
+    default:
+      return { offsetX: depth * 0.3, offsetY: depth * 0.3 };
+  }
+}
+
+/**
+ * Create SVG filter for text bevel effect.
+ *
+ * Uses Gaussian blur and compositing to simulate bevel edges.
+ */
+function createTextBevelFilterDef(
+  bevel: { width: number; height: number; preset: string },
+  lightDirection: string,
+  id: string,
+): ReactNode {
+  const blurAmount = Math.min(bevel.width as number, bevel.height as number) / 3;
+
+  // Calculate highlight/shadow offsets based on light direction
+  const { highlightOffset, shadowOffset } = getBevelOffsets(lightDirection);
+
+  return (
+    <filter
+      id={id}
+      x="-20%"
+      y="-20%"
+      width="140%"
+      height="140%"
+    >
+      {/* Create highlight (light edge) */}
+      <feGaussianBlur in="SourceAlpha" stdDeviation={blurAmount / 2} result="blurAlpha" />
+      <feOffset dx={highlightOffset.x} dy={highlightOffset.y} in="blurAlpha" result="highlightOffset" />
+      <feFlood floodColor="white" floodOpacity="0.3" result="highlightColor" />
+      <feComposite in="highlightColor" in2="highlightOffset" operator="in" result="highlight" />
+
+      {/* Create shadow (dark edge) */}
+      <feOffset dx={shadowOffset.x} dy={shadowOffset.y} in="blurAlpha" result="shadowOffset" />
+      <feFlood floodColor="black" floodOpacity="0.25" result="shadowColor" />
+      <feComposite in="shadowColor" in2="shadowOffset" operator="in" result="shadow" />
+
+      {/* Merge all layers */}
+      <feMerge>
+        <feMergeNode in="shadow" />
+        <feMergeNode in="highlight" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  );
+}
+
+/**
+ * Get bevel highlight and shadow offsets based on light direction.
+ */
+function getBevelOffsets(direction: string): {
+  highlightOffset: { x: number; y: number };
+  shadowOffset: { x: number; y: number };
+} {
+  switch (direction) {
+    case "tl":
+      return {
+        highlightOffset: { x: -1, y: -1 },
+        shadowOffset: { x: 1, y: 1 },
+      };
+    case "t":
+      return {
+        highlightOffset: { x: 0, y: -1 },
+        shadowOffset: { x: 0, y: 1 },
+      };
+    case "tr":
+      return {
+        highlightOffset: { x: 1, y: -1 },
+        shadowOffset: { x: -1, y: 1 },
+      };
+    case "l":
+      return {
+        highlightOffset: { x: -1, y: 0 },
+        shadowOffset: { x: 1, y: 0 },
+      };
+    case "r":
+      return {
+        highlightOffset: { x: 1, y: 0 },
+        shadowOffset: { x: -1, y: 0 },
+      };
+    case "bl":
+      return {
+        highlightOffset: { x: -1, y: 1 },
+        shadowOffset: { x: 1, y: -1 },
+      };
+    case "b":
+      return {
+        highlightOffset: { x: 0, y: 1 },
+        shadowOffset: { x: 0, y: -1 },
+      };
+    case "br":
+      return {
+        highlightOffset: { x: 1, y: 1 },
+        shadowOffset: { x: -1, y: -1 },
+      };
+    default:
+      return {
+        highlightOffset: { x: -1, y: -1 },
+        shadowOffset: { x: 1, y: 1 },
+      };
+  }
+}
+
 /**
  * Create SVG filter definition for text effects.
  *
@@ -678,6 +998,21 @@ function createTextImageFillDef(
  *
  * @see ECMA-376 Part 1, Section 20.1.8 (Effects)
  */
+/**
+ * Resolve a Color to a hex string suitable for WebGL rendering.
+ *
+ * @param color - Color domain object
+ * @param context - Color resolution context
+ * @returns CSS hex color string with # prefix
+ */
+function resolveColorForWebGL(color: Color | undefined, context: ColorContext): string {
+  if (!color) {
+    return "#000000";
+  }
+  const resolved = resolveColor(color, context);
+  return resolved ? `#${resolved}` : "#000000";
+}
+
 function createTextEffectsFilterDef(
   effects: TextEffectsConfig,
   id: string,

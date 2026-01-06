@@ -7,7 +7,7 @@
 
 import { FieldGroup } from "../../ui/layout";
 import { px } from "../../../pptx/domain/types";
-import type { Backdrop3d } from "../../../pptx/domain/shape";
+import type { Backdrop3d } from "../../../pptx/domain";
 import type { EditorProps } from "../../types";
 import { PointEditor, createDefaultPoint } from "./PointEditor";
 

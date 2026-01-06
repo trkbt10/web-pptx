@@ -5,8 +5,8 @@
  */
 
 import type { Fill, Line } from "./color";
-import type { BevelPresetType } from "./shape";
 import type { TextBody } from "./text";
+import type { BevelPresetType } from "./three-d";
 import type {
   Effects,
   FontCollectionIndex,

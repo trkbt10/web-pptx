@@ -117,6 +117,16 @@ export type RenderOptions = {
    * @default "natural" for ecma376 dialect, "stretchToFit" for powerpoint dialect
    */
   readonly tableScalingMode: TableScalingMode;
+
+  /**
+   * Enable WebGL 3D text rendering
+   *
+   * When true, text with complex 3D effects (bevel, extrusion, non-orthographic camera)
+   * will be rendered using WebGL/Three.js instead of SVG approximations.
+   *
+   * @default true
+   */
+  readonly enable3DText?: boolean;
 };
 
 /**

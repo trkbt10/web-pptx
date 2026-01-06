@@ -7,6 +7,7 @@
 import type { Color, Fill, Line } from "./color";
 import type { Effects } from "./effects";
 import type { Hyperlink, HyperlinkSound } from "./resource";
+import type { Scene3d, Shape3d } from "./three-d";
 import type { Degrees, Percent, Pixels, Points } from "./types";
 
 // =============================================================================
@@ -200,6 +201,20 @@ export type BodyProperties = {
   readonly fromWordArt?: boolean;
   /** Text warp for curved/shaped text @see ECMA-376 21.1.2.1.28 */
   readonly textWarp?: TextWarp;
+  /**
+   * 3D scene properties for text body.
+   * Defines camera, lighting, and backdrop for 3D text effects.
+   *
+   * @see ECMA-376 Part 1, Section 20.1.5.8 (a:scene3d)
+   */
+  readonly scene3d?: Scene3d;
+  /**
+   * 3D shape properties for text body.
+   * Defines bevel, extrusion, contour, and material for 3D text effects.
+   *
+   * @see ECMA-376 Part 1, Section 20.1.5.9 (a:sp3d)
+   */
+  readonly shape3d?: Shape3d;
 };
 
 /**

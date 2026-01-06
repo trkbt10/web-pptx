@@ -9,7 +9,7 @@ import { Select } from "../../ui/primitives";
 import { FieldGroup, FieldRow } from "../../ui/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
 import { px } from "../../../pptx/domain/types";
-import type { Bevel3d, BevelPresetType } from "../../../pptx/domain/shape";
+import type { Bevel3d, BevelPresetType } from "../../../pptx/domain";
 import type { EditorProps, SelectOption } from "../../types";
 
 export type Bevel3dEditorProps = EditorProps<Bevel3d>;

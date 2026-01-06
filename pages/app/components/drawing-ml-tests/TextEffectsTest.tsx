@@ -218,10 +218,10 @@ export function TextEffectsTest() {
   ];
 
   const text3dItems: CheckItem[] = [
-    { label: "3D scene (scene3d)", status: "pending" },
-    { label: "3D shape (sp3d)", status: "pending" },
-    { label: "Flat text (flatTx)", status: "pending" },
-    { label: "Bevel effects", status: "pending" },
+    { label: "3D scene (scene3d)", status: "partial", notes: "camera transform supported" },
+    { label: "3D shape (sp3d)", status: "partial", notes: "extrusion, bevel via SVG" },
+    { label: "Flat text (flatTx)", status: "partial", notes: "parsed, Z-value support" },
+    { label: "Bevel effects", status: "pass", notes: "SVG filter simulation" },
   ];
 
   return (
@@ -337,7 +337,7 @@ export function TextEffectsTest() {
 
       <TestSubsection title="3D Text" items={text3dItems}>
         <p className="pattern-info">
-          3D text features (scene3d, sp3d, flatTx) are not yet implemented. These require complex SVG/WebGL rendering for proper 3D transforms, lighting, and materials.
+          3D text effects are approximated using SVG transforms and filters. Camera presets apply 2D skew/scale transforms, bevel effects use highlight/shadow filters, and extrusion creates layered depth illusions. Full 3D rendering would require WebGL.
         </p>
       </TestSubsection>
     </div>

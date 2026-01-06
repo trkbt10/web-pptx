@@ -8,8 +8,7 @@
 import { Select, Toggle } from "../../ui/primitives";
 import { FieldGroup, FieldRow } from "../../ui/layout";
 import { Rotation3dEditor, createDefaultRotation3d } from "./Rotation3dEditor";
-import type { LightRigType, LightRigDirection } from "../../../pptx/domain/types";
-import type { LightRig } from "../../../pptx/domain/shape";
+import type { LightRigType, LightRigDirection, LightRig } from "../../../pptx/domain";
 import type { EditorProps, SelectOption } from "../../types";
 
 export type LightRigEditorProps = EditorProps<LightRig>;

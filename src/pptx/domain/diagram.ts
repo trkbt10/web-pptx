@@ -6,12 +6,8 @@
  * colors1.xml) and are renderer-agnostic.
  */
 
-import type {
-  ShapeProperties,
-  ShapeStyle,
-  Scene3d,
-  Shape3d,
-} from "./shape";
+import type { ShapeProperties, ShapeStyle } from "./shape";
+import type { Scene3d, Shape3d } from "./three-d";
 import type { Percent, PresetShapeType } from "./types";
 import type { TextBody } from "./text";
 import type { Color } from "./color";

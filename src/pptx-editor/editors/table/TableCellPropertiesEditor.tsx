@@ -21,7 +21,7 @@ import type {
   CellBorders,
   Cell3d,
 } from "../../../pptx/domain/table";
-import type { BevelPresetType } from "../../../pptx/domain/shape";
+import type { BevelPresetType } from "../../../pptx/domain";
 import type { Line } from "../../../pptx/domain/color";
 import type {
   PresetMaterialType,
