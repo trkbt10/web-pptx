@@ -836,9 +836,14 @@ function paragraphToInput(
 
 /**
  * Check if a paragraph has an auto-numbered bullet.
+ *
+ * Per ECMA-376, a:pPr and its children are optional.
+ * Returns false if bulletStyle is not defined.
+ *
+ * @see ECMA-376 Part 1, Section 21.1.2.4.1 (a:buAutoNum)
  */
 function hasAutoNumberBullet(para: Paragraph): boolean {
-  const bulletStyle = para.properties.bulletStyle;
+  const bulletStyle = para.properties?.bulletStyle;
   return bulletStyle !== undefined && bulletStyle.bullet.type === "auto";
 }
 

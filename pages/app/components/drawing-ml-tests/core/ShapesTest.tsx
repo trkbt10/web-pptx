@@ -6,7 +6,7 @@
 
 import type { Fill } from "@lib/pptx/domain";
 import { px } from "@lib/pptx/domain/types";
-import { type CheckItem, TestSubsection, GeometryPreview, PresetShapePreview, TransformPreview } from "./common";
+import { type CheckItem, TestSubsection, GeometryPreview, PresetShapePreview, TransformPreview } from "../common";
 
 // =============================================================================
 // Preset Shape Path Data

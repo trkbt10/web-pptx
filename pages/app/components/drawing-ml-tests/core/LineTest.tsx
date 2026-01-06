@@ -6,7 +6,7 @@
 
 import type { Line, LineCap, DashStyle } from "@lib/pptx/domain";
 import { px, pct } from "@lib/pptx/domain/types";
-import { type CheckItem, TestSubsection, LinePreview } from "./common";
+import { type CheckItem, TestSubsection, LinePreview } from "../common";
 
 /**
  * Line test section component

@@ -7,7 +7,7 @@
 import { useMemo } from "react";
 import type { PatternType } from "@lib/pptx/domain";
 import { getSupportedPatterns } from "@lib/pptx/render/react/drawing-ml";
-import { type CheckItem, TestSubsection, ShapePreview, makeGradient } from "./common";
+import { type CheckItem, TestSubsection, ShapePreview, makeGradient } from "../common";
 
 /**
  * Fill test section component

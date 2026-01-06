@@ -6,7 +6,7 @@
 
 import { pct } from "@lib/pptx/domain/types";
 import { ColorSwatch, ColorSwatchRow } from "@lib/pptx/render/react/drawing-ml";
-import { type CheckItem, TestSubsection } from "./common";
+import { type CheckItem, TestSubsection } from "../common";
 
 /**
  * Color test section component

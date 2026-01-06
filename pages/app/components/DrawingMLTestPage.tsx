@@ -1,27 +1,17 @@
 /**
  * @file DrawingML Test Page
  *
- * Comprehensive test page for DrawingML rendering features.
- * Serves as a visual checklist for all DrawingML capabilities.
+ * Schema-driven test page for DrawingML rendering features.
+ * Uses HashRouter for navigation between categories and features.
  *
  * @see ECMA-376 Part 1, Section 20.1 - DrawingML
  */
 
-import { useState } from "react";
+import { HashRouter, Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
 import { RenderProvider } from "@lib/pptx/render/react/context";
 import { SvgDefsProvider } from "@lib/pptx/render/react/hooks/useSvgDefs";
-import {
-  ColorTest,
-  FillTest,
-  LineTest,
-  LineEndTest,
-  EffectsTest,
-  ShapesTest,
-  TextEffectsTest,
-  CombinedTest,
-  testSlideSize,
-  testColorContext,
-} from "./drawing-ml-tests";
+import { testSlideSize, testColorContext } from "./drawing-ml-tests";
+import { categories, findCategory, findFeature, getDefaultRoute } from "./drawing-ml-tests/routes";
 import "./DrawingMLTestPage.css";
 
 // =============================================================================
@@ -32,73 +22,93 @@ type DrawingMLTestPageProps = {
   readonly onBack: () => void;
 };
 
-type TestSection = "colors" | "fills" | "lines" | "lineEnds" | "effects" | "shapes" | "text" | "combined";
+// =============================================================================
+// Layout Component
+// =============================================================================
+
+function TestLayout({ onBack }: { onBack: () => void }) {
+  const { category: categoryId, feature: featureId } = useParams<{ category: string; feature: string }>();
+  const navigate = useNavigate();
+
+  const category = findCategory(categoryId ?? "");
+  const feature = findFeature(categoryId ?? "", featureId ?? "");
+
+  if (!category || !feature) {
+    const def = getDefaultRoute();
+    return <Navigate to={`/${def.category}/${def.feature}`} replace />;
+  }
+
+  const FeatureComponent = feature.component;
+
+  return (
+    <div className="drawingml-test-page">
+      {/* Header */}
+      <header className="test-header">
+        <button className="back-button" onClick={onBack}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Back
+        </button>
+        <div className="header-info">
+          <h1 className="test-title">DrawingML Test</h1>
+        </div>
+      </header>
+
+      {/* Navigation Bar */}
+      <nav className="test-navbar">
+        {/* Category Tabs (left) */}
+        <div className="category-tabs">
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              className={`category-tab ${cat.id === categoryId ? "active" : ""}`}
+              onClick={() => navigate(`/${cat.id}/${cat.features[0].id}`)}
+            >
+              <span className="category-icon">{cat.icon}</span>
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Feature Tabs (right) */}
+        <div className="feature-tabs">
+          {category.features.map((feat) => (
+            <button
+              key={feat.id}
+              className={`feature-tab ${feat.id === featureId ? "active" : ""}`}
+              onClick={() => navigate(`/${categoryId}/${feat.id}`)}
+            >
+              {feat.label}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      {/* Content */}
+      <main className="test-content">
+        <FeatureComponent />
+      </main>
+    </div>
+  );
+}
 
 // =============================================================================
 // Main Component
 // =============================================================================
 
-/**
- * DrawingML Test Page component.
- */
 export function DrawingMLTestPage({ onBack }: DrawingMLTestPageProps) {
-  const [activeSection, setActiveSection] = useState<TestSection>("colors");
-
-  const sections: { id: TestSection; label: string }[] = [
-    { id: "colors", label: "Colors" },
-    { id: "fills", label: "Fills" },
-    { id: "lines", label: "Lines" },
-    { id: "lineEnds", label: "Arrows" },
-    { id: "effects", label: "Effects" },
-    { id: "shapes", label: "Shapes" },
-    { id: "text", label: "WordArt" },
-    { id: "combined", label: "Combined" },
-  ];
+  const defaultRoute = getDefaultRoute();
 
   return (
     <RenderProvider slideSize={testSlideSize} colorContext={testColorContext}>
       <SvgDefsProvider>
-        <div className="drawingml-test-page">
-          <header className="test-header">
-            <button className="back-button" onClick={onBack}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-              <span>Back</span>
-            </button>
-            <div className="header-info">
-              <h1 className="test-title">DrawingML Coverage Checklist</h1>
-              <span className="section-indicator">
-                {sections.find((s) => s.id === activeSection)?.label} ({sections.findIndex((s) => s.id === activeSection) + 1}/{sections.length})
-              </span>
-            </div>
-          </header>
-
-          <nav className="test-nav" role="tablist" aria-label="Test sections">
-            {sections.map((section) => (
-              <button
-                key={section.id}
-                role="tab"
-                aria-selected={activeSection === section.id}
-                className={`nav-button ${activeSection === section.id ? "active" : ""}`}
-                onClick={() => setActiveSection(section.id)}
-              >
-                {section.label}
-              </button>
-            ))}
-          </nav>
-
-          <main className="test-content">
-            {activeSection === "colors" && <ColorTest />}
-            {activeSection === "fills" && <FillTest />}
-            {activeSection === "lines" && <LineTest />}
-            {activeSection === "lineEnds" && <LineEndTest />}
-            {activeSection === "effects" && <EffectsTest />}
-            {activeSection === "shapes" && <ShapesTest />}
-            {activeSection === "text" && <TextEffectsTest />}
-            {activeSection === "combined" && <CombinedTest />}
-          </main>
-        </div>
+        <HashRouter>
+          <Routes>
+            <Route path="/:category/:feature" element={<TestLayout onBack={onBack} />} />
+            <Route path="*" element={<Navigate to={`/${defaultRoute.category}/${defaultRoute.feature}`} replace />} />
+          </Routes>
+        </HashRouter>
       </SvgDefsProvider>
     </RenderProvider>
   );

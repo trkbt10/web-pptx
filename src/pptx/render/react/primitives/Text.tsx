@@ -8,8 +8,9 @@
  */
 
 import type { ReactNode } from "react";
-import type { TextBody, TextRun, RunProperties, Paragraph } from "../../../domain/text";
+import type { TextBody } from "../../../domain/text";
 import type { FontScheme } from "../../../domain/theme";
+import type { RenderOptions } from "../../core/types";
 import type { Scene3d, Shape3d } from "../../../domain/three-d";
 import type { LayoutResult, LayoutLine, PositionedSpan, LayoutParagraphResult } from "../../text-layout";
 import type { TextEffectsConfig, TextPatternFillConfig, TextImageFillConfig } from "../../../domain/drawing-ml";
@@ -65,8 +66,17 @@ export function TextRenderer({ textBody, width, height }: TextRendererProps) {
 
   if (useWebGL3D) {
     // Use WebGL 3D renderer for complex 3D text
-    // Convert all text runs to 3D run configurations
-    const runs = extractText3DRuns(textBody, colorContext, fontScheme);
+    // Use the same layout engine as SVG rendering to convert text runs
+    const resourceResolver = (resourceId: string) => resources.resolve(resourceId);
+    const runs = extractText3DRuns(
+      textBody,
+      width,
+      height,
+      colorContext,
+      fontScheme,
+      options,
+      resourceResolver,
+    );
 
     return (
       <foreignObject x={0} y={0} width={width} height={height}>
@@ -995,56 +1005,76 @@ function resolveColorForWebGL(color: Color | undefined, context: ColorContext): 
 }
 
 /**
- * Extract Text3DRunConfig array from TextBody.
+ * Extract Text3DRunConfig array from TextBody using the text-layout engine.
  *
- * Converts each text run to a 3D run configuration with its own styling.
- * This enables proper 3D rendering of text with mixed styles.
+ * Uses the same layout engine as SVG rendering to ensure:
+ * - Proper theme font resolution (+mj-lt, +mn-lt, etc.)
+ * - Correct style inheritance from paragraph defaults
+ * - Accurate position calculation for each span
+ * - Proper handling of line breaks and multiple lines
+ *
+ * @param textBody - Text body to convert
+ * @param width - Text box width in pixels
+ * @param height - Text box height in pixels
+ * @param colorContext - Color resolution context
+ * @param fontScheme - Font scheme for theme font resolution
+ * @param options - Render options
+ * @param resourceResolver - Resource resolver for images
  */
 function extractText3DRuns(
   textBody: TextBody,
+  width: number,
+  height: number,
   colorContext: ColorContext,
   fontScheme: FontScheme | undefined,
+  options: RenderOptions | undefined,
+  resourceResolver: (resourceId: string) => string | undefined,
 ): Text3DRunConfig[] {
+  // Use the same layout engine as SVG rendering
+  const layoutInput = toLayoutInput({
+    body: textBody,
+    width: px(width),
+    height: px(height),
+    colorContext,
+    fontScheme,
+    renderOptions: options,
+    resourceResolver,
+  });
+
+  // Run the layout engine
+  const layoutResult = layoutTextBody(layoutInput);
+
+  // Convert layout result to Text3DRunConfig array
   const runs: Text3DRunConfig[] = [];
-  const defaultFontFamily = fontScheme?.majorFont?.latin ?? "Arial";
 
-  for (const paragraph of textBody.paragraphs) {
-    const defaultRunProps = paragraph.properties.defaultRunProperties;
+  for (const para of layoutResult.paragraphs) {
+    for (const line of para.lines) {
+      let cursorX = line.x as number;
 
-    for (const run of paragraph.runs) {
-      // Skip line breaks for 3D rendering (TODO: handle multiline properly)
-      if (run.type === "break") {
-        continue;
+      for (const span of line.spans) {
+        // Skip empty spans and line breaks
+        if (span.text.length === 0 || span.isBreak) {
+          continue;
+        }
+
+        // Get font size in pixels (layout engine returns Points)
+        const fontSizePx = px((span.fontSize as number) * PT_TO_PX);
+
+        runs.push({
+          text: span.text,
+          color: span.color,
+          fontSize: fontSizePx,
+          fontFamily: span.fontFamily,
+          fontWeight: span.fontWeight,
+          fontStyle: span.fontStyle,
+          x: px(cursorX),
+          y: line.y,
+          width: span.width,
+        });
+
+        // Advance cursor for next span
+        cursorX += (span.width as number) + (span.dx as number);
       }
-
-      // Get text content
-      const text = run.type === "text" || run.type === "field" ? run.text : "";
-      if (text.length === 0) {
-        continue;
-      }
-
-      // Get run properties, falling back to paragraph defaults
-      const runProps = run.properties ?? defaultRunProps;
-
-      // Extract styling with fallbacks
-      const fontSize = runProps?.fontSize
-        ? (runProps.fontSize as number) * PT_TO_PX
-        : 24;
-      const fontFamily = runProps?.fontFamily ?? defaultFontFamily;
-      const fontWeight = runProps?.bold === true ? 700 : 400;
-      const fontStyle = runProps?.italic === true ? "italic" : "normal";
-      const color = runProps?.color
-        ? resolveColorForWebGL(runProps.color, colorContext)
-        : "#000000";
-
-      runs.push({
-        text,
-        color,
-        fontSize,
-        fontFamily,
-        fontWeight,
-        fontStyle,
-      });
     }
   }
 

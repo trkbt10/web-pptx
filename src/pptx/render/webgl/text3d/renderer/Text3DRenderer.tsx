@@ -66,9 +66,16 @@ export function Text3DRenderer({
   const rendererRef = useRef<IText3DRenderer | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Initialize renderer (async - uses Web Worker for glyph extraction)
+  // Initialize and update renderer
   useEffect(() => {
-    if (!containerRef.current) {return;}
+    if (!containerRef.current) {
+      return;
+    }
+
+    // Validate runs array
+    if (!runs || runs.length === 0) {
+      return;
+    }
 
     // Check if we should use WebGL 3D
     if (!shouldUseWebGL3D(scene3d, shape3d)) {
@@ -103,6 +110,15 @@ export function Text3DRenderer({
         if (!isMounted || !containerRef.current) {
           renderer.dispose();
           return;
+        }
+
+        // Dispose previous renderer if exists
+        if (rendererRef.current) {
+          const oldCanvas = rendererRef.current.getCanvas();
+          if (oldCanvas.parentNode) {
+            oldCanvas.parentNode.removeChild(oldCanvas);
+          }
+          rendererRef.current.dispose();
         }
 
         rendererRef.current = renderer;
@@ -149,21 +165,7 @@ export function Text3DRenderer({
         rendererRef.current = null;
       }
     };
-  }, []); // Only run on mount
-
-  // Update renderer when props change
-  useEffect(() => {
-    if (rendererRef.current) {
-      rendererRef.current.update({
-        runs,
-        scene3d,
-        shape3d,
-        width,
-        height,
-        pixelRatio: window.devicePixelRatio || 1,
-      });
-    }
-  }, [runs, scene3d, shape3d, width, height]);
+  }, [runs, scene3d, shape3d, width, height]); // Re-run when any prop changes
 
   return (
     <div

@@ -8,6 +8,8 @@
 
 import * as THREE from "three";
 import type { Scene3d, Shape3d, LightRig, PresetCameraType } from "../../../../domain/index";
+import type { Pixels } from "../../../../domain/types";
+import type { PositionedSpan } from "../../../text-layout/types";
 import { createCameraConfig, createCamera, type CameraConfig } from "../scene/camera";
 import { createLightingConfig, addLightsToScene, type LightConfig } from "../scene/lighting";
 import {
@@ -32,22 +34,72 @@ import {
 // =============================================================================
 
 /**
- * Configuration for a single text run with its styling.
+ * Configuration for a single text run with its styling and position.
  * Each run can have different font properties and color.
+ *
+ * Derived from:
+ * - PositionedSpan (text-layout/types.ts) - text, color, fontSize, fontFamily, fontWeight, fontStyle, width
+ * - LayoutLine (text-layout/types.ts) - x, y position
+ *
+ * The fontSize is converted from Points to Pixels via PT_TO_PX during extraction.
+ *
+ * @see ECMA-376 Part 1, Section 21.1.2.3.9 (a:r - text run)
+ * @see ECMA-376 Part 1, Section 21.1.2.3.9 (sz - font size in 100ths of point)
+ * @see ECMA-376 Part 1, Section 21.1.2.3.7 (a:latin - Latin font)
+ * @see ECMA-376 Part 1, Section 20.1.2.3.32 (srgbClr - color)
  */
 export type Text3DRunConfig = {
-  /** Text content */
-  readonly text: string;
-  /** Text color (hex string with #) */
-  readonly color: string;
-  /** Font size in pixels */
-  readonly fontSize: number;
-  /** Font family */
-  readonly fontFamily: string;
-  /** Font weight */
-  readonly fontWeight: number;
-  /** Font style */
-  readonly fontStyle: "normal" | "italic";
+  /**
+   * Text content from a:t element.
+   * @see ECMA-376 Part 1, Section 21.1.2.3.12 (a:t)
+   */
+  readonly text: PositionedSpan["text"];
+  /**
+   * Resolved text color (hex string with #).
+   * Derived from a:solidFill in a:rPr, resolved via ColorContext.
+   * @see ECMA-376 Part 1, Section 20.1.2.3.32 (srgbClr)
+   */
+  readonly color: PositionedSpan["color"];
+  /**
+   * Font size in pixels.
+   * Converted from Points (ECMA-376 sz attribute in 100ths of point) via PT_TO_PX.
+   * @see ECMA-376 Part 1, Section 21.1.2.3.9 (sz attribute)
+   */
+  readonly fontSize: Pixels;
+  /**
+   * Font family name (resolved from theme if +mj-lt/+mn-lt).
+   * @see ECMA-376 Part 1, Section 21.1.2.3.7 (a:latin typeface)
+   */
+  readonly fontFamily: PositionedSpan["fontFamily"];
+  /**
+   * Font weight (400=normal, 700=bold).
+   * Derived from b attribute in a:rPr.
+   * @see ECMA-376 Part 1, Section 21.1.2.3.9 (b attribute)
+   */
+  readonly fontWeight: PositionedSpan["fontWeight"];
+  /**
+   * Font style (normal/italic).
+   * Derived from i attribute in a:rPr.
+   * @see ECMA-376 Part 1, Section 21.1.2.3.9 (i attribute)
+   */
+  readonly fontStyle: PositionedSpan["fontStyle"];
+  /**
+   * X position in pixels from LayoutLine.
+   * Calculated by layout engine based on paragraph margins, indents, alignment.
+   * @see ECMA-376 Part 1, Section 21.1.2.2.7 (marL, indent)
+   */
+  readonly x: Pixels;
+  /**
+   * Y position (baseline) in pixels from LayoutLine.
+   * Calculated by layout engine based on line spacing, space before/after.
+   * @see ECMA-376 Part 1, Section 21.1.2.2.7 (a:lnSpc, a:spcBef, a:spcAft)
+   */
+  readonly y: Pixels;
+  /**
+   * Width in pixels from MeasuredSpan.
+   * Measured by text measurement engine.
+   */
+  readonly width: PositionedSpan["width"];
 };
 
 export type Text3DRenderConfig = {
@@ -305,7 +357,7 @@ function disposeGroup(group: THREE.Group): void {
  *
  * Creates a group containing meshes for each text run.
  * Each run is rendered with its own styling (font, color, size).
- * Runs are positioned sequentially along the x-axis.
+ * Runs are positioned using layout engine coordinates.
  *
  * Uses canvas-based contour extraction for universal font support.
  * Contours are cached by font namespace for performance.
@@ -324,9 +376,8 @@ function createTextMesh(config: Text3DRenderConfig): THREE.Group {
     : baseFontSize * 0.2;
 
   const isWireframe = config.shape3d?.preset === "legacyWireframe";
-  let cursorX = 0;
 
-  // Create mesh for each run
+  // Create mesh for each run using position from layout engine
   for (const run of config.runs) {
     if (run.text.length === 0) {
       continue;
@@ -343,24 +394,18 @@ function createTextMesh(config: Text3DRenderConfig): THREE.Group {
       bevel: config.shape3d?.bevel,
     });
 
-    // Get geometry bounds for positioning
-    geometry.computeBoundingBox();
-    const boundingBox = geometry.boundingBox;
-    const runWidth = boundingBox ? boundingBox.max.x - boundingBox.min.x : 0;
-
     // Create material with run's color
     const baseColor = parseColor(run.color);
     const materialConfig = createMaterialConfig(config.shape3d?.preset, baseColor);
     const material = createMaterial(materialConfig, isWireframe);
 
-    // Create mesh and position it
+    // Create mesh and position it using layout coordinates
+    // Note: Y is inverted (SVG Y grows down, Three.js Y grows up)
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.x = cursorX;
+    mesh.position.x = run.x / 96; // Convert pixels to scene units
+    mesh.position.y = -run.y / 96; // Invert Y axis
 
     group.add(mesh);
-
-    // Advance cursor for next run
-    cursorX += runWidth;
   }
 
   // Scale entire group to fit within bounds
@@ -408,6 +453,7 @@ function scaleGroupToFit(group: THREE.Group, maxWidth: number, maxHeight: number
  *
  * Creates a group containing meshes for each text run.
  * Each run is rendered with its own styling (font, color, size).
+ * Runs are positioned using layout engine coordinates.
  * Uses Web Worker for parallel glyph extraction.
  */
 async function createTextMeshAsync(config: Text3DRenderConfig): Promise<THREE.Group> {
@@ -442,9 +488,7 @@ async function createTextMeshAsync(config: Text3DRenderConfig): Promise<THREE.Gr
 
   const geometries = await Promise.all(geometryPromises);
 
-  let cursorX = 0;
-
-  // Create mesh for each run
+  // Create mesh for each run using position from layout engine
   for (let i = 0; i < config.runs.length; i++) {
     const run = config.runs[i];
     const geometry = geometries[i];
@@ -453,24 +497,18 @@ async function createTextMeshAsync(config: Text3DRenderConfig): Promise<THREE.Gr
       continue;
     }
 
-    // Get geometry bounds for positioning
-    geometry.computeBoundingBox();
-    const boundingBox = geometry.boundingBox;
-    const runWidth = boundingBox ? boundingBox.max.x - boundingBox.min.x : 0;
-
     // Create material with run's color
     const baseColor = parseColor(run.color);
     const materialConfig = createMaterialConfig(config.shape3d?.preset, baseColor);
     const material = createMaterial(materialConfig, isWireframe);
 
-    // Create mesh and position it
+    // Create mesh and position it using layout coordinates
+    // Note: Y is inverted (SVG Y grows down, Three.js Y grows up)
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.x = cursorX;
+    mesh.position.x = run.x / 96; // Convert pixels to scene units
+    mesh.position.y = -run.y / 96; // Invert Y axis
 
     group.add(mesh);
-
-    // Advance cursor for next run
-    cursorX += runWidth;
   }
 
   // Scale entire group to fit within bounds

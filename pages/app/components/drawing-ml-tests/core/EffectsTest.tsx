@@ -5,7 +5,7 @@
  */
 
 import { px, deg, pct } from "@lib/pptx/domain/types";
-import { type CheckItem, TestSubsection, EffectPreview } from "./common";
+import { type CheckItem, TestSubsection, EffectPreview } from "../common";
 
 /**
  * Effects test section component

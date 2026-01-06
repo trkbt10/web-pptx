@@ -1,18 +1,51 @@
 /**
- * @file Text Effects Test Section
+ * @file SVG Mode Text Effects Test
  *
- * Tests for ECMA-376 WordArt/text effects.
+ * Tests for ECMA-376 text effects rendered in SVG mode.
+ * SVG mode uses SVG elements, CSS filters, and transforms.
+ *
  * @see ECMA-376 Part 1, Section 20.1.10.76 (ST_TextShapeType)
  * @see ECMA-376 Part 1, Section 21.1.2.1.28 (prstTxWarp)
  */
 
-import { useState } from "react";
-import { type CheckItem, TestSubsection } from "./common";
-import { Text3DRenderer } from "@lib/pptx/render/webgl/text3d";
-import type { PresetCameraType, PresetMaterialType, BevelPresetType } from "@lib/pptx/domain/three-d";
+import { type CheckItem, TestSubsection } from "../common";
 
 // =============================================================================
-// Text Shape Types (40+ preset text warps)
+// Text Style Preview Component
+// =============================================================================
+
+/**
+ * Simple text preview with CSS styling
+ */
+function TextStylePreview({
+  label,
+  style,
+}: {
+  label: string;
+  style: React.CSSProperties;
+}) {
+  return (
+    <div className="shape-preview" style={{ minWidth: 120 }}>
+      <div
+        style={{
+          padding: "12px 16px",
+          background: "var(--bg-secondary)",
+          borderRadius: 8,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: 50,
+        }}
+      >
+        <span style={{ fontSize: 18, fontWeight: 600, ...style }}>Sample</span>
+      </div>
+      <span className="preview-label">{label}</span>
+    </div>
+  );
+}
+
+// =============================================================================
+// Text Warp Preview
 // =============================================================================
 
 const textWarpPresets = [
@@ -60,37 +93,7 @@ const textWarpPresets = [
 ];
 
 /**
- * Simple text preview with CSS styling
- */
-function TextStylePreview({
-  label,
-  style,
-}: {
-  label: string;
-  style: React.CSSProperties;
-}) {
-  return (
-    <div className="shape-preview" style={{ minWidth: 120 }}>
-      <div
-        style={{
-          padding: "12px 16px",
-          background: "var(--bg-secondary)",
-          borderRadius: 8,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          minHeight: 50,
-        }}
-      >
-        <span style={{ fontSize: 18, fontWeight: 600, ...style }}>Sample</span>
-      </div>
-      <span className="preview-label">{label}</span>
-    </div>
-  );
-}
-
-/**
- * Text warp preview (visual mockup since rendering is not implemented)
+ * Text warp preview (visual mockup)
  */
 function TextWarpPreview({
   warpType,
@@ -99,7 +102,6 @@ function TextWarpPreview({
   warpType: string;
   label: string;
 }) {
-  // SVG mockups for common warp types
   const getSvgPath = () => {
     switch (warpType) {
       case "textArchUp":
@@ -185,125 +187,22 @@ function TextWarpPreview({
   );
 }
 
-// Camera presets for selection
-const cameraPresets: PresetCameraType[] = [
-  "orthographicFront",
-  "isometricTopUp",
-  "isometricTopDown",
-  "obliqueTop",
-  "obliqueTopLeft",
-  "perspectiveAbove",
-  "perspectiveFront",
-  "perspectiveLeft",
-];
-
-// Material presets for selection
-const materialPresets: PresetMaterialType[] = [
-  "flat",
-  "matte",
-  "plastic",
-  "metal",
-  "softEdge",
-  "warmMatte",
-  "clear",
-];
-
-// Bevel presets for selection
-const bevelPresets: BevelPresetType[] = [
-  "relaxedInset",
-  "circle",
-  "slope",
-  "cross",
-  "angle",
-  "softRound",
-  "convex",
-];
+// =============================================================================
+// Main Component
+// =============================================================================
 
 /**
- * Interactive 3D text preview component
+ * SVG Mode Text Effects Test
+ *
+ * Tests text rendering capabilities in SVG mode:
+ * - Text fill (solid, gradient, pattern, image)
+ * - Text outline (stroke)
+ * - Text effects (shadow, glow, reflection, soft edge)
+ * - 3D approximation (CSS transforms)
+ * - Text warp presets
  */
-function Text3DPreview() {
-  const [camera, setCamera] = useState<PresetCameraType>("isometricTopUp");
-  const [material, setMaterial] = useState<PresetMaterialType>("plastic");
-  const [bevelPreset, setBevelPreset] = useState<BevelPresetType>("relaxedInset");
-  const [extrusion, setExtrusion] = useState(20);
-  const [text, setText] = useState("3D");
-
-  return (
-    <div className="text3d-preview-container">
-      <div className="text3d-controls">
-        <label>
-          Text:
-          <input
-            type="text"
-            value={text}
-            onChange={(e) => setText(e.target.value || "3D")}
-            maxLength={10}
-          />
-        </label>
-        <label>
-          Camera:
-          <select value={camera} onChange={(e) => setCamera(e.target.value as PresetCameraType)}>
-            {cameraPresets.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Material:
-          <select value={material} onChange={(e) => setMaterial(e.target.value as PresetMaterialType)}>
-            {materialPresets.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Bevel:
-          <select value={bevelPreset} onChange={(e) => setBevelPreset(e.target.value as BevelPresetType)}>
-            {bevelPresets.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Extrusion: {extrusion}px
-          <input
-            type="range"
-            min={0}
-            max={50}
-            value={extrusion}
-            onChange={(e) => setExtrusion(Number(e.target.value))}
-          />
-        </label>
-      </div>
-      <div className="text3d-canvas" style={{ width: 400, height: 200, background: "#1a1a2e", borderRadius: 8 }}>
-        <Text3DRenderer
-          text={text}
-          color="#4F81BD"
-          fontSize={48}
-          fontFamily="Arial"
-          fontWeight={700}
-          width={400}
-          height={200}
-          scene3d={{
-            camera: { preset: camera },
-            lightRig: { rig: "threePt", direction: "tl" },
-          }}
-          shape3d={{
-            extrusionHeight: extrusion,
-            preset: material,
-            bevel: { width: 8, height: 8, preset: bevelPreset },
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
-/**
- * Text effects test section component
- */
-export function TextEffectsTest() {
+export function SvgTextEffectsTest() {
+  // Text Warp items
   const textWarpItems: CheckItem[] = [
     { label: "Arch (up/down)", status: "pending", notes: "parsed only" },
     { label: "Wave (1-4)", status: "pending", notes: "parsed only" },
@@ -315,41 +214,47 @@ export function TextEffectsTest() {
     { label: "Cascade (up/down)", status: "pending", notes: "parsed only" },
   ];
 
+  // Text Fill items
   const textFillItems: CheckItem[] = [
-    { label: "Solid fill", status: "pass" },
-    { label: "Gradient fill", status: "pass" },
-    { label: "Pattern fill", status: "pass" },
-    { label: "Image fill", status: "pass" },
+    { label: "Solid fill (solidFill)", status: "pass", notes: "fill attribute" },
+    { label: "Gradient fill (gradFill)", status: "pass", notes: "linearGradient/radialGradient defs" },
+    { label: "Pattern fill (pattFill)", status: "pass", notes: "pattern defs" },
+    { label: "Image fill (blipFill)", status: "pass", notes: "pattern with image" },
   ];
 
+  // Text Outline items
   const textOutlineItems: CheckItem[] = [
-    { label: "Solid outline", status: "pass" },
-    { label: "Outline width", status: "pass" },
-    { label: "Outline color", status: "pass" },
+    { label: "Solid outline (ln)", status: "pass", notes: "stroke attribute" },
+    { label: "Outline width (w)", status: "pass", notes: "stroke-width" },
+    { label: "Outline color", status: "pass", notes: "stroke color" },
   ];
 
+  // Text Effects items
   const textEffectItems: CheckItem[] = [
-    { label: "Text shadow", status: "pass" },
-    { label: "Text glow", status: "pass" },
-    { label: "Text reflection", status: "partial", notes: "basic support" },
-    { label: "Text soft edge", status: "pass" },
+    { label: "Shadow (outerShdw)", status: "pass", notes: "feDropShadow filter" },
+    { label: "Glow (glow)", status: "pass", notes: "feGaussianBlur filter" },
+    { label: "Reflection (reflection)", status: "partial", notes: "CSS transform approximation" },
+    { label: "Soft edge (softEdge)", status: "pass", notes: "feGaussianBlur edge filter" },
   ];
 
+  // 3D Approximation items
   const text3dItems: CheckItem[] = [
-    { label: "3D scene (scene3d)", status: "pass", notes: "WebGL Three.js camera presets" },
-    { label: "3D shape (sp3d)", status: "pass", notes: "WebGL extrusion, bevel, materials" },
-    { label: "Flat text (flatTx)", status: "pass", notes: "Z-offset in WebGL scene" },
-    { label: "Bevel effects", status: "pass", notes: "WebGL + SVG fallback" },
+    { label: "3D scene (scene3d)", status: "partial", notes: "CSS perspective transform fallback" },
+    { label: "3D shape (sp3d)", status: "pending", notes: "No true 3D in SVG" },
+    { label: "Flat text (flatTx)", status: "pending", notes: "N/A for SVG" },
+    { label: "Bevel effects (bevel)", status: "partial", notes: "SVG gradient approximation" },
   ];
 
   return (
     <div className="test-section">
-      <h3>Text Effects (WordArt)</h3>
+      <h3>SVG Mode - Text Effects</h3>
       <p className="section-description">
-        ECMA-376 Section 20.1.10.76 / 21.1.2.1.28 - Text warp and effects for WordArt-style text.
+        ECMA-376 text effects rendered using SVG elements, CSS filters, and transforms.
+        <br />
+        Good for compatibility but limited 3D support.
       </p>
 
-      <TestSubsection title="Text Warp Presets" items={textWarpItems}>
+      <TestSubsection title="Text Warp Presets (prstTxWarp)" items={textWarpItems}>
         <div className="shape-row">
           <TextWarpPreview warpType="textArchUp" label="Arch Up" />
           <TextWarpPreview warpType="textArchDown" label="Arch Down" />
@@ -395,31 +300,19 @@ export function TextEffectsTest() {
         <div className="shape-row">
           <TextStylePreview
             label="Blue Outline"
-            style={{
-              color: "transparent",
-              WebkitTextStroke: "1px #4F81BD",
-            }}
+            style={{ color: "transparent", WebkitTextStroke: "1px #4F81BD" }}
           />
           <TextStylePreview
             label="Red Outline"
-            style={{
-              color: "transparent",
-              WebkitTextStroke: "2px #C0504D",
-            }}
+            style={{ color: "transparent", WebkitTextStroke: "2px #C0504D" }}
           />
           <TextStylePreview
             label="Fill + Outline"
-            style={{
-              color: "#FFFFFF",
-              WebkitTextStroke: "1px #1F497D",
-            }}
+            style={{ color: "#FFFFFF", WebkitTextStroke: "1px #1F497D" }}
           />
           <TextStylePreview
             label="Thick Outline"
-            style={{
-              color: "transparent",
-              WebkitTextStroke: "3px #9BBB59",
-            }}
+            style={{ color: "transparent", WebkitTextStroke: "3px #9BBB59" }}
           />
         </div>
       </TestSubsection>
@@ -427,18 +320,12 @@ export function TextEffectsTest() {
       <TestSubsection title="Text Effects" items={textEffectItems}>
         <div className="shape-row">
           <TextStylePreview
-            label="Shadow (CSS)"
-            style={{
-              color: "#4F81BD",
-              textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
-            }}
+            label="Shadow"
+            style={{ color: "#4F81BD", textShadow: "2px 2px 4px rgba(0,0,0,0.5)" }}
           />
           <TextStylePreview
-            label="Glow (CSS)"
-            style={{
-              color: "#9BBB59",
-              textShadow: "0 0 10px #9BBB59, 0 0 20px #9BBB59",
-            }}
+            label="Glow"
+            style={{ color: "#9BBB59", textShadow: "0 0 10px #9BBB59, 0 0 20px #9BBB59" }}
           />
           <TextStylePreview
             label="Multiple Shadows"
@@ -449,14 +336,14 @@ export function TextEffectsTest() {
           />
         </div>
         <p className="pattern-info">
-          Text effects (effectLst on rPr) are now rendered using SVG filters. Shadow, glow, and soft edge effects are fully supported. Reflection has basic support.
+          SVG filters: feDropShadow, feGaussianBlur, feFlood, feComposite.
         </p>
       </TestSubsection>
 
-      <TestSubsection title="3D Text" items={text3dItems}>
-        <Text3DPreview />
+      <TestSubsection title="3D Approximation" items={text3dItems}>
         <p className="pattern-info">
-          3D text effects use WebGL/Three.js for true 3D rendering. Camera presets (isometric, perspective, oblique), light rigs (threePt, balanced, harsh, etc.), materials (plastic, metal, matte), and bevel presets are fully supported. Falls back to SVG approximation when WebGL is unavailable.
+          SVG cannot render true 3D. Uses CSS perspective transforms and gradient approximations.
+          For true 3D rendering, use WebGL mode.
         </p>
       </TestSubsection>
     </div>

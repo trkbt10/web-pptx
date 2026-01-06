@@ -6,7 +6,7 @@
 
 import type { Line, LineEnd } from "@lib/pptx/domain";
 import { px } from "@lib/pptx/domain/types";
-import { type CheckItem, TestSubsection, LineMarkerPreview } from "./common";
+import { type CheckItem, TestSubsection, LineMarkerPreview } from "../common";
 
 /**
  * Helper to create a line with specific head/tail ends
