@@ -48,12 +48,22 @@ export function Shape3dEditor({
   onChange,
   disabled,
 }: Shape3dEditorProps) {
-  const handleBevelToggle = (enabled: boolean) => {
+  const handleBevelTopToggle = (enabled: boolean) => {
     if (enabled) {
-      onChange({ ...value, bevel: createDefaultBevel3d() });
+      onChange({ ...value, bevelTop: createDefaultBevel3d() });
     } else {
-      const { bevel: _bevel, ...rest } = value;
-      void _bevel;
+      const { bevelTop: _bevelTop, ...rest } = value;
+      void _bevelTop;
+      onChange(rest);
+    }
+  };
+
+  const handleBevelBottomToggle = (enabled: boolean) => {
+    if (enabled) {
+      onChange({ ...value, bevelBottom: createDefaultBevel3d() });
+    } else {
+      const { bevelBottom: _bevelBottom, ...rest } = value;
+      void _bevelBottom;
       onChange(rest);
     }
   };
@@ -145,17 +155,32 @@ export function Shape3dEditor({
         />
       )}
 
-      {/* Bevel */}
+      {/* Bevel Top (bevelT - front face) */}
       <Toggle
-        checked={!!value.bevel}
-        onChange={handleBevelToggle}
-        label="Enable Bevel"
+        checked={!!value.bevelTop}
+        onChange={handleBevelTopToggle}
+        label="Top Bevel (Front)"
         disabled={disabled}
       />
-      {value.bevel && (
+      {value.bevelTop && (
         <Bevel3dEditor
-          value={value.bevel}
-          onChange={(bevel) => onChange({ ...value, bevel })}
+          value={value.bevelTop}
+          onChange={(bevelTop) => onChange({ ...value, bevelTop })}
+          disabled={disabled}
+        />
+      )}
+
+      {/* Bevel Bottom (bevelB - back face) */}
+      <Toggle
+        checked={!!value.bevelBottom}
+        onChange={handleBevelBottomToggle}
+        label="Bottom Bevel (Back)"
+        disabled={disabled}
+      />
+      {value.bevelBottom && (
+        <Bevel3dEditor
+          value={value.bevelBottom}
+          onChange={(bevelBottom) => onChange({ ...value, bevelBottom })}
           disabled={disabled}
         />
       )}

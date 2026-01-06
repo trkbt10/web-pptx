@@ -123,17 +123,23 @@ function resolveSoftEdge(softEdge: SoftEdgeEffect): TextSoftEdgeConfig {
 
 /**
  * Resolve ReflectionEffect to TextReflectionConfig.
+ *
+ * @see ECMA-376 Part 1, Section 20.1.8.50 (reflection)
  */
 function resolveReflection(reflection: ReflectionEffect): TextReflectionConfig {
   return {
     blurRadius: reflection.blurRadius as number,
     startOpacity: reflection.startOpacity as number,
+    startPosition: reflection.startPosition as number,
     endOpacity: reflection.endOpacity as number,
+    endPosition: reflection.endPosition as number,
     distance: reflection.distance as number,
     direction: reflection.direction as number,
     fadeDirection: reflection.fadeDirection as number,
     scaleX: reflection.scaleX as number,
     scaleY: reflection.scaleY as number,
+    skewX: reflection.skewX as number | undefined,
+    skewY: reflection.skewY as number | undefined,
   };
 }
 

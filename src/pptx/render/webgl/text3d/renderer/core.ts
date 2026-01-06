@@ -374,7 +374,10 @@ function disposeGroup(group: THREE.Group): void {
 type MeshBuildConfig = {
   readonly extrusionDepth: number;
   readonly isWireframe: boolean;
-  readonly bevel?: Shape3d["bevel"];
+  /** Top bevel (bevelT) - front face bevel @see ECMA-376 bevelT */
+  readonly bevelTop?: Shape3d["bevelTop"];
+  /** Bottom bevel (bevelB) - back face bevel @see ECMA-376 bevelB */
+  readonly bevelBottom?: Shape3d["bevelBottom"];
   readonly textWarp?: TextWarp;
   readonly preset?: Shape3d["preset"];
   /** Contour configuration from sp3d contourW/contourClr */
@@ -428,7 +431,8 @@ function getMeshBuildConfig(config: Text3DRenderConfig): MeshBuildConfig {
   return {
     extrusionDepth: getExtrusionDepth(config),
     isWireframe: config.shape3d?.preset === "legacyWireframe",
-    bevel: config.shape3d?.bevel,
+    bevelTop: config.shape3d?.bevelTop,
+    bevelBottom: config.shape3d?.bevelBottom,
     textWarp: config.textWarp,
     preset: config.shape3d?.preset,
     contour: getContourConfig(config.shape3d),
@@ -539,7 +543,8 @@ function createGeometryForRunAsync(
     fontWeight: run.fontWeight,
     fontStyle: run.fontStyle,
     extrusionDepth: buildConfig.extrusionDepth,
-    bevel: buildConfig.bevel,
+    bevelTop: buildConfig.bevelTop,
+    bevelBottom: buildConfig.bevelBottom,
     letterSpacing: run.letterSpacing as number | undefined,
     opticalKerning: run.opticalKerning === true,
   });
@@ -643,7 +648,7 @@ export function shouldUseWebGL3D(scene3d?: Scene3d, shape3d?: Shape3d): boolean 
     return true;
   }
 
-  if (shape3d?.bevel) {
+  if (shape3d?.bevelTop || shape3d?.bevelBottom) {
     return true;
   }
 

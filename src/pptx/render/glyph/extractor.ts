@@ -8,17 +8,13 @@
 import type { GlyphContour, GlyphStyleKey, ContourPath } from "./types";
 import { getCachedGlyph, setCachedGlyph } from "./cache";
 import { formatFontFamily, GENERIC_FONT_FAMILIES } from "./font-family";
+import { extractContours, processContours } from "./contour-extraction";
 
 // =============================================================================
 // Configuration
 // =============================================================================
 
 const RENDER_SCALE = 2;
-const THRESHOLD = 128;
-const SIMPLIFY_TOLERANCE = 0.8;
-const MIN_CONTOUR_POINTS = 4;
-const MAX_TRACE_ITERATIONS = 5000;
-const MAX_CONTOURS_PER_CHAR = 20;
 
 // =============================================================================
 // Main API
@@ -179,175 +175,7 @@ function renderAndExtractGlyph(
 }
 
 
-// =============================================================================
-// Contour Extraction (Moore Neighborhood)
-// =============================================================================
-
-type Point = { x: number; y: number };
-type RawContour = Point[];
-
-function extractContours(imageData: ImageData): RawContour[] {
-  const { width, height, data } = imageData;
-  const contours: RawContour[] = [];
-
-  // Binary image
-  const binary = new Uint8Array(width * height);
-  for (let i = 0; i < width * height; i++) {
-    binary[i] = data[i * 4] >= THRESHOLD ? 1 : 0;
-  }
-
-  // Visited tracking
-  const visited = new Uint8Array(width * height);
-
-  // Find boundary pixels
-  for (let y = 1; y < height - 1 && contours.length < MAX_CONTOURS_PER_CHAR; y++) {
-    for (let x = 1; x < width - 1 && contours.length < MAX_CONTOURS_PER_CHAR; x++) {
-      const idx = y * width + x;
-
-      if (binary[idx] === 1 && visited[idx] === 0 && isBoundary(binary, x, y, width)) {
-        const contour = traceBoundary(binary, visited, x, y, width, height);
-        if (contour.length >= MIN_CONTOUR_POINTS) {
-          contours.push(contour);
-        }
-      }
-    }
-  }
-
-  return contours;
-}
-
-function isBoundary(binary: Uint8Array, x: number, y: number, width: number): boolean {
-  const idx = y * width + x;
-  if (binary[idx] === 0) return false;
-  return (
-    binary[idx - 1] === 0 ||
-    binary[idx + 1] === 0 ||
-    binary[idx - width] === 0 ||
-    binary[idx + width] === 0
-  );
-}
-
-function traceBoundary(
-  binary: Uint8Array,
-  visited: Uint8Array,
-  startX: number,
-  startY: number,
-  width: number,
-  height: number,
-): RawContour {
-  const contour: RawContour = [];
-  const dx = [1, 1, 0, -1, -1, -1, 0, 1];
-  const dy = [0, 1, 1, 1, 0, -1, -1, -1];
-
-  let x = startX;
-  let y = startY;
-  let dir = 0;
-  let iterations = 0;
-
-  do {
-    if (++iterations > MAX_TRACE_ITERATIONS) break;
-
-    const idx = y * width + x;
-    visited[idx] = 1;
-    contour.push({ x, y });
-
-    let found = false;
-    const startDir = (dir + 5) % 8;
-
-    for (let i = 0; i < 8; i++) {
-      const checkDir = (startDir + i) % 8;
-      const nx = x + dx[checkDir];
-      const ny = y + dy[checkDir];
-
-      if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-        if (binary[ny * width + nx] === 1) {
-          x = nx;
-          y = ny;
-          dir = checkDir;
-          found = true;
-          break;
-        }
-      }
-    }
-
-    if (!found) break;
-  } while (!(x === startX && y === startY) || contour.length < 3);
-
-  return contour;
-}
-
-// =============================================================================
-// Contour Processing
-// =============================================================================
-
-function processContours(
-  rawContours: RawContour[],
-  scale: number,
-  padding: number,
-): ContourPath[] {
-  return rawContours.map((raw) => {
-    // Subsample long contours
-    let points = raw;
-    if (raw.length > 300) {
-      const step = Math.ceil(raw.length / 300);
-      points = raw.filter((_, i) => i % step === 0);
-    }
-
-    // Simplify
-    const simplified = douglasPeucker(points, SIMPLIFY_TOLERANCE);
-
-    // Scale and offset (remove padding)
-    const scaledPoints = simplified.map((p) => ({
-      x: (p.x - padding) / scale,
-      y: (p.y - padding) / scale,
-    }));
-
-    const isHole = !isClockwise(scaledPoints);
-    return { points: scaledPoints, isHole };
-  });
-}
-
-function douglasPeucker(points: Point[], tolerance: number): Point[] {
-  if (points.length <= 2) return points;
-
-  let maxDist = 0;
-  let maxIdx = 0;
-  const first = points[0];
-  const last = points[points.length - 1];
-
-  for (let i = 1; i < points.length - 1; i++) {
-    const dist = perpDistance(points[i], first, last);
-    if (dist > maxDist) {
-      maxDist = dist;
-      maxIdx = i;
-    }
-  }
-
-  if (maxDist > tolerance) {
-    const left = douglasPeucker(points.slice(0, maxIdx + 1), tolerance);
-    const right = douglasPeucker(points.slice(maxIdx), tolerance);
-    return [...left.slice(0, -1), ...right];
-  }
-
-  return [first, last];
-}
-
-function perpDistance(p: Point, a: Point, b: Point): number {
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const len = Math.sqrt(dx * dx + dy * dy);
-  if (len === 0) return Math.sqrt((p.x - a.x) ** 2 + (p.y - a.y) ** 2);
-  return Math.abs(dy * p.x - dx * p.y + b.x * a.y - b.y * a.x) / len;
-}
-
-function isClockwise(points: readonly { x: number; y: number }[]): boolean {
-  let area = 0;
-  for (let i = 0; i < points.length; i++) {
-    const j = (i + 1) % points.length;
-    area += points[i].x * points[j].y - points[j].x * points[i].y;
-  }
-  return area > 0;
-}
+// Contour extraction is shared in contour-extraction.ts
 
 function calculateBounds(paths: readonly ContourPath[]): GlyphContour["bounds"] {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;

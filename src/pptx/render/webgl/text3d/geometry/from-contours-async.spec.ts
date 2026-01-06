@@ -17,6 +17,7 @@ vi.mock("./bevel", () => ({
 }));
 
 import { layoutTextAsync } from "../../../glyph";
+import { pathsToShapes } from "./from-contours-async";
 
 describe("from-contours-async", () => {
   const mockLayoutTextAsync = layoutTextAsync as ReturnType<typeof vi.fn>;
@@ -134,5 +135,122 @@ describe("from-contours-async", () => {
 
     expect(size.x).toBeLessThanOrEqual(5);
     expect(size.y).toBeLessThanOrEqual(10);
+  });
+
+  it("assigns holes to the correct outer paths", () => {
+    const outerA: ContourPath = {
+      points: [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 10 },
+        { x: 0, y: 10 },
+      ],
+      isHole: false,
+    };
+    const outerB: ContourPath = {
+      points: [
+        { x: 20, y: 0 },
+        { x: 30, y: 0 },
+        { x: 30, y: 10 },
+        { x: 20, y: 10 },
+      ],
+      isHole: false,
+    };
+    const holeB: ContourPath = {
+      points: [
+        { x: 22, y: 2 },
+        { x: 28, y: 2 },
+        { x: 28, y: 8 },
+        { x: 22, y: 8 },
+      ],
+      isHole: true,
+    };
+
+    const shapes = pathsToShapes([outerA, outerB, holeB]);
+
+    expect(shapes).toHaveLength(2);
+    expect(shapes[0].holes).toHaveLength(0);
+    expect(shapes[1].holes).toHaveLength(1);
+  });
+
+  it("treats contained contours as holes even when hole flags are missing", () => {
+    const outerA: ContourPath = {
+      points: [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 14 },
+        { x: 0, y: 14 },
+      ],
+      isHole: false,
+    };
+    const holeA: ContourPath = {
+      points: [
+        { x: 3, y: 4 },
+        { x: 7, y: 4 },
+        { x: 7, y: 10 },
+        { x: 3, y: 10 },
+      ],
+      isHole: false,
+    };
+    const outerB: ContourPath = {
+      points: [
+        { x: 20, y: 0 },
+        { x: 32, y: 0 },
+        { x: 32, y: 14 },
+        { x: 20, y: 14 },
+      ],
+      isHole: false,
+    };
+    const holeBTop: ContourPath = {
+      points: [
+        { x: 23, y: 2 },
+        { x: 29, y: 2 },
+        { x: 29, y: 6 },
+        { x: 23, y: 6 },
+      ],
+      isHole: false,
+    };
+    const holeBBottom: ContourPath = {
+      points: [
+        { x: 23, y: 8 },
+        { x: 29, y: 8 },
+        { x: 29, y: 12 },
+        { x: 23, y: 12 },
+      ],
+      isHole: false,
+    };
+    const outerD: ContourPath = {
+      points: [
+        { x: 40, y: 0 },
+        { x: 52, y: 0 },
+        { x: 52, y: 14 },
+        { x: 40, y: 14 },
+      ],
+      isHole: false,
+    };
+    const holeD: ContourPath = {
+      points: [
+        { x: 43, y: 3 },
+        { x: 49, y: 3 },
+        { x: 49, y: 11 },
+        { x: 43, y: 11 },
+      ],
+      isHole: false,
+    };
+
+    const shapes = pathsToShapes([
+      outerA,
+      holeA,
+      outerB,
+      holeBTop,
+      holeBBottom,
+      outerD,
+      holeD,
+    ]);
+
+    expect(shapes).toHaveLength(3);
+    expect(shapes[0].holes).toHaveLength(1);
+    expect(shapes[1].holes).toHaveLength(2);
+    expect(shapes[2].holes).toHaveLength(1);
   });
 });

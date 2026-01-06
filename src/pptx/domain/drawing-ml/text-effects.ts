@@ -58,25 +58,38 @@ export type TextSoftEdgeConfig = {
 /**
  * Resolved reflection effect for text rendering.
  *
+ * ECMA-376 reflection uses startPosition/endPosition to define the gradient range:
+ * - startPosition (stPos): where the fade gradient begins (default 0%)
+ * - endPosition (endPos): where the fade gradient ends (default 100%)
+ * - The opacity fades from startOpacity at startPosition to endOpacity at endPosition
+ *
  * @see ECMA-376 Part 1, Section 20.1.8.50 (reflection)
  */
 export type TextReflectionConfig = {
   /** Blur radius in pixels */
   readonly blurRadius: number;
-  /** Start opacity (0-100) */
+  /** Start opacity (0-100) @see ECMA-376 stA attribute */
   readonly startOpacity: number;
-  /** End opacity (0-100) */
+  /** Start position (0-100) where fade begins @see ECMA-376 stPos attribute */
+  readonly startPosition: number;
+  /** End opacity (0-100) @see ECMA-376 endA attribute */
   readonly endOpacity: number;
+  /** End position (0-100) where fade ends @see ECMA-376 endPos attribute */
+  readonly endPosition: number;
   /** Distance from source in pixels */
   readonly distance: number;
   /** Direction angle in degrees */
   readonly direction: number;
-  /** Fade direction angle in degrees */
+  /** Fade direction angle in degrees (default 90°) @see ECMA-376 fadeDir attribute */
   readonly fadeDirection: number;
   /** Horizontal scale percentage */
   readonly scaleX: number;
   /** Vertical scale percentage */
   readonly scaleY: number;
+  /** Horizontal skew angle in degrees @see ECMA-376 kx attribute */
+  readonly skewX?: number;
+  /** Vertical skew angle in degrees @see ECMA-376 ky attribute */
+  readonly skewY?: number;
 };
 
 /**

@@ -766,10 +766,13 @@ function buildBevelElements(
   height: number,
   lightDirection: LightDirection,
 ): string {
-  if (!shape3d?.bevel) {
+  // Use bevelTop (front face) for 2D SVG rendering
+  // ECMA-376: bevelT is the top/front face bevel
+  const bevel = shape3d?.bevelTop;
+  if (!bevel) {
     return "";
   }
-  return renderBevelEffect(shape3d.bevel, width, height, lightDirection);
+  return renderBevelEffect(bevel, width, height, lightDirection);
 }
 
 /**
@@ -789,7 +792,7 @@ export function has3dEffects(scene3d: Scene3d | undefined, shape3d: Shape3d | un
     return true;
   }
 
-  if (shape3d?.bevel) {
+  if (shape3d?.bevelTop || shape3d?.bevelBottom) {
     return true;
   }
 

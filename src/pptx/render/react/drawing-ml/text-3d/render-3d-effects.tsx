@@ -73,14 +73,14 @@ function applyCameraTransform(
  * Apply bevel effect to content.
  *
  * @param content - Content to apply bevel to
- * @param bevel - Bevel configuration
+ * @param bevel - Bevel configuration (bevelTop or bevelBottom)
  * @param lightDirection - Light direction for bevel
  * @param defs - SVG defs manager
  * @returns Content with bevel filter applied
  */
 function applyBevelEffect(
   content: ReactNode,
-  bevel: NonNullable<Shape3d["bevel"]>,
+  bevel: NonNullable<Shape3d["bevelTop"]>,
   lightDirection: string,
   defs: DefsManager,
 ): ReactNode {
@@ -165,7 +165,9 @@ export function render3dTextEffects(
 }
 
 /**
- * Apply bevel effect if shape3d has bevel defined.
+ * Apply bevel effect if shape3d has bevelTop defined.
+ * For SVG 2D rendering, we use bevelTop (front face bevel) as the primary visual.
+ * @see ECMA-376 Part 1, Section 20.1.5.1 (bevelT - top/front face bevel)
  */
 function applyBevelEffectIfNeeded(
   content: ReactNode,
@@ -173,9 +175,11 @@ function applyBevelEffectIfNeeded(
   lightDirection: string,
   defs: DefsManager,
 ): ReactNode {
-  if (shape3d?.bevel === undefined) {
+  // Use bevelTop (front face) for 2D SVG rendering
+  const bevel = shape3d?.bevelTop;
+  if (bevel === undefined) {
     return content;
   }
 
-  return applyBevelEffect(content, shape3d.bevel, lightDirection, defs);
+  return applyBevelEffect(content, bevel, lightDirection, defs);
 }

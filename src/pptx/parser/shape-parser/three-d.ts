@@ -307,10 +307,6 @@ export function parseScene3d(spPr: XmlElement | undefined): Scene3d | undefined 
  * - contourW: 0
  * - prstMaterial: "warmMatte"
  *
- * Note: ECMA-376 supports separate bevelT (top) and bevelB (bottom).
- * Currently we parse only one bevel (preferring bevelT) as Three.js
- * ExtrudeGeometry doesn't support asymmetric top/bottom bevels.
- *
  * @see ECMA-376 Part 1, Section 20.1.5.9 (sp3d)
  */
 export function parseShape3d(spPr: XmlElement | undefined): Shape3d | undefined {
@@ -325,8 +321,9 @@ export function parseShape3d(spPr: XmlElement | undefined): Shape3d | undefined 
   const extrusionColor = toSolidFill(parseColorFromParent(getChild(sp3d, "a:extrusionClr")));
   const contourColor = toSolidFill(parseColorFromParent(getChild(sp3d, "a:contourClr")));
 
-  // Parse bevel - prefer bevelT (top), fallback to bevelB (bottom)
-  const bevel = parseBevel(getChild(sp3d, "a:bevelT")) ?? parseBevel(getChild(sp3d, "a:bevelB"));
+  // Parse both bevelT and bevelB per ECMA-376
+  const bevelTop = parseBevel(getChild(sp3d, "a:bevelT"));
+  const bevelBottom = parseBevel(getChild(sp3d, "a:bevelB"));
 
   // Apply ECMA-376 default: prstMaterial="warmMatte"
   const materialAttr = getAttr(sp3d, "prstMaterial");
@@ -339,6 +336,7 @@ export function parseShape3d(spPr: XmlElement | undefined): Shape3d | undefined 
     preset: material,
     extrusionColor,
     contourColor,
-    bevel,
+    bevelTop,
+    bevelBottom,
   };
 }

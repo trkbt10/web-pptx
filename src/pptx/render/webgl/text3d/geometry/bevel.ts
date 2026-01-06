@@ -99,6 +99,25 @@ export function getBevelConfig(bevel: Bevel3d | undefined): BevelConfig | undefi
   }
 }
 
+/**
+ * Get asymmetric bevel configuration from Shape3d.
+ *
+ * Returns separate top (front) and bottom (back) bevel configs
+ * per ECMA-376 bevelT/bevelB specification.
+ *
+ * @see ECMA-376 Part 1, Section 20.1.5.9 (sp3d)
+ */
+export function getAsymmetricBevelConfig(shape3d: Shape3d | undefined): AsymmetricBevelConfig {
+  if (!shape3d) {
+    return { top: undefined, bottom: undefined };
+  }
+
+  return {
+    top: getBevelConfig(shape3d.bevelTop),
+    bottom: getBevelConfig(shape3d.bevelBottom),
+  };
+}
+
 // =============================================================================
 // Text to Shape Conversion
 // =============================================================================
@@ -376,15 +395,83 @@ function createFallbackShape(fontSize: number): THREE.Shape {
 // =============================================================================
 
 /**
- * Create extruded 3D geometry from shapes
+ * Asymmetric bevel configuration for ECMA-376 compliant extrusion.
+ * Supports separate top (front) and bottom (back) bevels.
+ */
+export type AsymmetricBevelConfig = {
+  /** Front face bevel (bevelT) */
+  readonly top?: BevelConfig;
+  /** Back face bevel (bevelB) */
+  readonly bottom?: BevelConfig;
+};
+
+/**
+ * Create extruded 3D geometry from shapes (legacy single bevel)
  */
 export function createExtrudedGeometry(
   shapes: THREE.Shape[],
   extrusionDepth: number,
   bevel: BevelConfig | undefined,
 ): THREE.BufferGeometry {
+  return createAsymmetricExtrudedGeometry(shapes, extrusionDepth, {
+    top: bevel,
+    bottom: bevel,
+  });
+}
+
+/**
+ * Create extruded 3D geometry with asymmetric top/bottom bevels.
+ *
+ * ECMA-376 supports separate bevelT (front) and bevelB (back) configurations.
+ * This implementation handles asymmetric bevels by:
+ * 1. Generating geometry with the larger bevel
+ * 2. Post-processing back-face bevel vertices to use bevelBottom settings
+ *
+ * @see ECMA-376 Part 1, Section 20.1.5.1 (bevelT/bevelB)
+ */
+export function createAsymmetricExtrudedGeometry(
+  shapes: THREE.Shape[],
+  extrusionDepth: number,
+  bevel: AsymmetricBevelConfig,
+): THREE.BufferGeometry {
+  const topBevel = bevel.top;
+  const bottomBevel = bevel.bottom;
+
+  // If bevels are identical or only one exists, use standard extrusion
+  const areBevelsIdentical =
+    topBevel?.thickness === bottomBevel?.thickness &&
+    topBevel?.size === bottomBevel?.size &&
+    topBevel?.segments === bottomBevel?.segments;
+
+  if (areBevelsIdentical || (!topBevel && !bottomBevel)) {
+    return createSymmetricExtrudedGeometry(shapes, extrusionDepth, topBevel ?? bottomBevel);
+  }
+
+  // Use the larger bevel for initial generation
+  const primaryBevel = selectLargerBevel(topBevel, bottomBevel);
+  const secondaryBevel = primaryBevel === topBevel ? bottomBevel : topBevel;
+  const isPrimaryTop = primaryBevel === topBevel;
+
+  // Generate with primary (larger) bevel
+  const geometry = createSymmetricExtrudedGeometry(shapes, extrusionDepth, primaryBevel);
+
+  // Post-process to adjust secondary bevel vertices
+  if (secondaryBevel && primaryBevel) {
+    adjustBevelVertices(geometry, extrusionDepth, primaryBevel, secondaryBevel, isPrimaryTop);
+  }
+
+  return geometry;
+}
+
+/**
+ * Create geometry with symmetric bevels (standard Three.js approach)
+ */
+function createSymmetricExtrudedGeometry(
+  shapes: THREE.Shape[],
+  extrusionDepth: number,
+  bevel: BevelConfig | undefined,
+): THREE.BufferGeometry {
   const extrudeSettings: THREE.ExtrudeGeometryOptions = {
-    // Keep in pixel units - scaleGroupToFit handles final sizing
     depth: extrusionDepth,
     bevelEnabled: bevel !== undefined,
     bevelThickness: bevel?.thickness ?? 0,
@@ -400,7 +487,6 @@ export function createExtrudedGeometry(
     geometries.push(geometry);
   }
 
-  // Merge all character geometries
   if (geometries.length === 0) {
     return new THREE.BufferGeometry();
   }
@@ -409,8 +495,93 @@ export function createExtrudedGeometry(
     return geometries[0];
   }
 
-  // Merge geometries
   return mergeGeometries(geometries);
+}
+
+/**
+ * Select the larger bevel for primary geometry generation
+ */
+function selectLargerBevel(
+  top: BevelConfig | undefined,
+  bottom: BevelConfig | undefined,
+): BevelConfig | undefined {
+  if (!top) return bottom;
+  if (!bottom) return top;
+
+  const topSize = top.thickness + top.size;
+  const bottomSize = bottom.thickness + bottom.size;
+
+  return topSize >= bottomSize ? top : bottom;
+}
+
+/**
+ * Adjust bevel vertices to achieve asymmetric bevel effect.
+ *
+ * This modifies vertices in the secondary bevel region (front or back)
+ * to match the secondary bevel configuration.
+ */
+function adjustBevelVertices(
+  geometry: THREE.BufferGeometry,
+  extrusionDepth: number,
+  primaryBevel: BevelConfig,
+  secondaryBevel: BevelConfig,
+  isPrimaryTop: boolean,
+): void {
+  const positions = geometry.getAttribute("position") as THREE.BufferAttribute;
+  const normals = geometry.getAttribute("normal") as THREE.BufferAttribute;
+
+  const primaryThickness = primaryBevel.thickness;
+  const secondaryThickness = secondaryBevel.thickness;
+
+  // Scale factor for the secondary bevel
+  const thicknessRatio = secondaryThickness / primaryThickness;
+  const sizeRatio = secondaryBevel.size / primaryBevel.size;
+
+  // Determine z-range for secondary bevel vertices
+  // If primary is top, secondary is bottom (back face, high z values)
+  // If primary is bottom, secondary is top (front face, low z values)
+  const zThreshold = isPrimaryTop
+    ? extrusionDepth - primaryThickness // Back face threshold
+    : primaryThickness; // Front face threshold
+
+  for (let i = 0; i < positions.count; i++) {
+    const z = positions.getZ(i);
+
+    const isSecondaryRegion = isPrimaryTop
+      ? z > zThreshold // Back face region
+      : z < zThreshold; // Front face region
+
+    if (isSecondaryRegion) {
+      // Calculate how far into the bevel region this vertex is
+      const bevelProgress = isPrimaryTop
+        ? (z - zThreshold) / primaryThickness
+        : (zThreshold - z) / primaryThickness;
+
+      if (bevelProgress >= 0 && bevelProgress <= 1) {
+        // Adjust z position based on thickness ratio
+        const newZ = isPrimaryTop
+          ? zThreshold + bevelProgress * secondaryThickness
+          : zThreshold - bevelProgress * secondaryThickness;
+
+        positions.setZ(i, newZ);
+
+        // Adjust xy based on size ratio (bevel inset)
+        const x = positions.getX(i);
+        const y = positions.getY(i);
+        const nx = normals.getX(i);
+        const ny = normals.getY(i);
+
+        // Scale the bevel inset
+        const insetAdjustment = (1 - sizeRatio) * bevelProgress * primaryBevel.size;
+        positions.setX(i, x + nx * insetAdjustment);
+        positions.setY(i, y + ny * insetAdjustment);
+      }
+    }
+  }
+
+  positions.needsUpdate = true;
+  normals.needsUpdate = true;
+  geometry.computeVertexNormals();
 }
 
 /**

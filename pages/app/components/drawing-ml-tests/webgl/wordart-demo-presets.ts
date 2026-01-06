@@ -44,7 +44,14 @@ export type DemoWordArtPreset = {
     readonly rig: LightRigType;
     readonly direction: LightRigDirection;
   };
-  readonly bevel?: {
+  /** Front face bevel @see ECMA-376 bevelT */
+  readonly bevelTop?: {
+    readonly width: number;
+    readonly height: number;
+    readonly preset: BevelPresetType;
+  };
+  /** Back face bevel @see ECMA-376 bevelB */
+  readonly bevelBottom?: {
     readonly width: number;
     readonly height: number;
     readonly preset: BevelPresetType;
@@ -487,7 +494,7 @@ const row5: DemoWordArtPreset[] = [
     material: "metal",
     camera: "perspectiveHeroicLeftFacing",
     lightRig: { rig: "brightRoom", direction: "t" },
-    bevel: { width: 6, height: 4, preset: "relaxedInset" },
+    bevelTop: { width: 6, height: 4, preset: "relaxedInset" },
   },
   // 5-2: Dark 3D
   {
@@ -542,7 +549,7 @@ const row5: DemoWordArtPreset[] = [
     material: "metal",
     camera: "perspectiveHeroicRightFacing",
     lightRig: { rig: "brightRoom", direction: "t" },
-    bevel: { width: 8, height: 6, preset: "circle" },
+    bevelTop: { width: 8, height: 6, preset: "circle" },
   },
   // 5-5: Rainbow 3D (The Beautiful One!)
   {
@@ -557,7 +564,7 @@ const row5: DemoWordArtPreset[] = [
     material: "plastic",
     camera: "perspectiveContrastingRightFacing",
     lightRig: { rig: "brightRoom", direction: "t" },
-    bevel: { width: 4, height: 3, preset: "softRound" },
+    bevelTop: { width: 4, height: 3, preset: "softRound" },
   },
 ];
 
@@ -637,7 +644,7 @@ const row6: DemoWordArtPreset[] = [
     material: "metal",
     camera: "perspectiveHeroicExtremeRightFacing",
     lightRig: { rig: "brightRoom", direction: "t" },
-    bevel: { width: 6, height: 5, preset: "artDeco" },
+    bevelTop: { width: 6, height: 5, preset: "artDeco" },
   },
   // 6-5: Rainbow 3D Alt (Beautiful finale!)
   {
@@ -652,7 +659,7 @@ const row6: DemoWordArtPreset[] = [
     material: "plastic",
     camera: "perspectiveRelaxed",
     lightRig: { rig: "brightRoom", direction: "t" },
-    bevel: { width: 5, height: 4, preset: "convex" },
+    bevelTop: { width: 5, height: 4, preset: "convex" },
   },
 ];
 

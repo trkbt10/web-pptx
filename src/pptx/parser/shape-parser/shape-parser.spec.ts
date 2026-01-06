@@ -381,9 +381,9 @@ describe("parseShapeElement - p:sp (ECMA-376 Section 19.3.1.43)", () => {
       const result = parseShapeElement(sp);
 
       if (result?.type === "sp") {
-        expect(result.properties.shape3d?.bevel?.preset).toBe("circle");
-        expect(result.properties.shape3d?.bevel?.width).toBeCloseTo(96, 0);
-        expect(result.properties.shape3d?.bevel?.height).toBeCloseTo(96, 0);
+        expect(result.properties.shape3d?.bevelTop?.preset).toBe("circle");
+        expect(result.properties.shape3d?.bevelTop?.width).toBeCloseTo(96, 0);
+        expect(result.properties.shape3d?.bevelTop?.height).toBeCloseTo(96, 0);
       }
     });
 
@@ -416,7 +416,7 @@ describe("parseShapeElement - p:sp (ECMA-376 Section 19.3.1.43)", () => {
 
       if (result?.type === "sp") {
         // ECMA-376: invalid preset falls back to default "circle"
-        expect(result.properties.shape3d?.bevel).toEqual({
+        expect(result.properties.shape3d?.bevelTop).toEqual({
           width: 96, // 914400 EMU = 1 inch = 96px
           height: 96,
           preset: "circle", // ECMA-376 default

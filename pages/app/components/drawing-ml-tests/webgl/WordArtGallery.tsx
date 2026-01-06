@@ -135,7 +135,7 @@ function WordArtPreview({
         <span className="wordart-preview-name">{preset.name}</span>
         <span className="wordart-preview-details">
           {preset.material} / {preset.camera} / extrusion: {preset.extrusion}px
-          {preset.bevel && ` / bevel: ${preset.bevel.preset}`}
+          {preset.bevelTop && ` / bevel: ${preset.bevelTop.preset}`}
         </span>
       </div>
     </div>
@@ -163,10 +163,10 @@ export function WordArtGallery() {
   const [lightRig, setLightRig] = useState<LightRigType>(selectedPreset.lightRig.rig);
   const [lightDirection, setLightDirection] = useState<LightRigDirection>(selectedPreset.lightRig.direction);
   const [extrusion, setExtrusion] = useState(selectedPreset.extrusion);
-  const [bevelEnabled, setBevelEnabled] = useState(selectedPreset.bevel !== undefined);
-  const [bevelPreset, setBevelPreset] = useState<BevelPresetType>(selectedPreset.bevel?.preset ?? "relaxedInset");
-  const [bevelWidth, setBevelWidth] = useState(selectedPreset.bevel?.width ?? 6);
-  const [bevelHeight, setBevelHeight] = useState(selectedPreset.bevel?.height ?? 6);
+  const [bevelEnabled, setBevelEnabled] = useState(selectedPreset.bevelTop !== undefined);
+  const [bevelPreset, setBevelPreset] = useState<BevelPresetType>(selectedPreset.bevelTop?.preset ?? "relaxedInset");
+  const [bevelWidth, setBevelWidth] = useState(selectedPreset.bevelTop?.width ?? 6);
+  const [bevelHeight, setBevelHeight] = useState(selectedPreset.bevelTop?.height ?? 6);
 
   // Disable thumbnail generation for now to debug main preview
   // const thumbnails = useWordArtThumbnails(allDemoWordArtPresets);
@@ -187,10 +187,10 @@ export function WordArtGallery() {
     setLightRig(selectedPreset.lightRig.rig);
     setLightDirection(selectedPreset.lightRig.direction);
     setExtrusion(selectedPreset.extrusion);
-    setBevelEnabled(selectedPreset.bevel !== undefined);
-    setBevelPreset(selectedPreset.bevel?.preset ?? "relaxedInset");
-    setBevelWidth(selectedPreset.bevel?.width ?? 6);
-    setBevelHeight(selectedPreset.bevel?.height ?? 6);
+    setBevelEnabled(selectedPreset.bevelTop !== undefined);
+    setBevelPreset(selectedPreset.bevelTop?.preset ?? "relaxedInset");
+    setBevelWidth(selectedPreset.bevelTop?.width ?? 6);
+    setBevelHeight(selectedPreset.bevelTop?.height ?? 6);
   }, [selectedPreset]);
 
   const scene3d = useMemo(() => buildScene3d({

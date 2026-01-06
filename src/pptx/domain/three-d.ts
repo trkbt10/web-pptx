@@ -250,10 +250,6 @@ export type Bevel3d = {
  * - contourW: 0
  * - prstMaterial: "warmMatte"
  *
- * Note: ECMA-376 supports separate bevelT (top) and bevelB (bottom).
- * Currently we use a single bevel field (preferring bevelT) as Three.js
- * ExtrudeGeometry doesn't support asymmetric top/bottom bevels.
- *
  * @see ECMA-376 Part 1, Section 20.1.5.9 (sp3d)
  */
 export type Shape3d = {
@@ -269,6 +265,8 @@ export type Shape3d = {
   readonly extrusionColor?: Fill;
   /** Contour color (contourClr) */
   readonly contourColor?: Fill;
-  /** Bevel (bevelT preferred, bevelB fallback) */
-  readonly bevel?: Bevel3d;
+  /** Top bevel (bevelT) - front face bevel @see ECMA-376 bevelT */
+  readonly bevelTop?: Bevel3d;
+  /** Bottom bevel (bevelB) - back face bevel @see ECMA-376 bevelB */
+  readonly bevelBottom?: Bevel3d;
 };

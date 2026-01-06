@@ -191,7 +191,7 @@ describe("effects3d - ECMA-376 compliance", () => {
 
     it("generates bevel when specified", () => {
       const shape3d: Shape3d = {
-        bevel: { width: px(10), height: px(10), preset: "circle" },
+        bevelTop: { width: px(10), height: px(10), preset: "circle" },
       };
       const result = render3dEffects(undefined, shape3d, testPath, 100, 100, "test");
 
@@ -227,7 +227,7 @@ describe("effects3d - ECMA-376 compliance", () => {
       };
       const shape3d: Shape3d = {
         extrusionHeight: px(15),
-        bevel: { width: px(5), height: px(5), preset: "softRound" },
+        bevelTop: { width: px(5), height: px(5), preset: "softRound" },
       };
       const result = render3dEffects(scene3d, shape3d, testPath, 100, 100, "test");
 
@@ -248,9 +248,16 @@ describe("effects3d - ECMA-376 compliance", () => {
       expect(has3dEffects(undefined, shape3d)).toBe(true);
     });
 
-    it("returns true when bevel is specified", () => {
+    it("returns true when bevelTop is specified", () => {
       const shape3d: Shape3d = {
-        bevel: { width: px(5), height: px(5), preset: "circle" },
+        bevelTop: { width: px(5), height: px(5), preset: "circle" },
+      };
+      expect(has3dEffects(undefined, shape3d)).toBe(true);
+    });
+
+    it("returns true when bevelBottom is specified", () => {
+      const shape3d: Shape3d = {
+        bevelBottom: { width: px(5), height: px(5), preset: "circle" },
       };
       expect(has3dEffects(undefined, shape3d)).toBe(true);
     });

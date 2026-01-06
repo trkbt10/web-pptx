@@ -7,7 +7,7 @@
 import * as THREE from "three";
 import type { ContourPath } from "../../../glyph";
 import { layoutTextAsync } from "../../../glyph";
-import { getBevelConfig } from "./bevel";
+import { getBevelConfig, createAsymmetricExtrudedGeometry, type AsymmetricBevelConfig } from "./bevel";
 import type { Bevel3d } from "../../../../domain/three-d";
 
 // =============================================================================
@@ -21,7 +21,10 @@ export type TextGeometryConfig = {
   readonly fontWeight: number;
   readonly fontStyle: "normal" | "italic";
   readonly extrusionDepth: number;
-  readonly bevel?: Bevel3d;
+  /** Top bevel (bevelT) - front face bevel @see ECMA-376 bevelT */
+  readonly bevelTop?: Bevel3d;
+  /** Bottom bevel (bevelB) - back face bevel @see ECMA-376 bevelB */
+  readonly bevelBottom?: Bevel3d;
   readonly letterSpacing?: number;
   readonly enableKerning?: boolean;
   readonly opticalKerning?: boolean;
@@ -74,30 +77,18 @@ export async function createTextGeometryAsync(
     throw new Error("No valid shapes were created from contour paths.");
   }
 
-  // Get bevel configuration
-  const bevelConfig = getBevelConfig(config.bevel);
-
-  // Create extrude settings
-  const extrudeSettings: THREE.ExtrudeGeometryOptions = {
-    depth: Math.max(config.extrusionDepth, 1),
-    bevelEnabled: bevelConfig !== undefined,
-    bevelThickness: bevelConfig?.thickness ?? 0,
-    bevelSize: bevelConfig?.size ?? 0,
-    bevelSegments: bevelConfig?.segments ?? 1,
-    curveSegments: 8,
+  // Get asymmetric bevel configuration (ECMA-376 bevelT/bevelB)
+  const bevelConfig: AsymmetricBevelConfig = {
+    top: getBevelConfig(config.bevelTop),
+    bottom: getBevelConfig(config.bevelBottom),
   };
 
-  // Create geometry - process one shape at a time
-  let geometry: THREE.ExtrudeGeometry;
-  if (validShapes.length === 1) {
-    geometry = new THREE.ExtrudeGeometry(validShapes[0], extrudeSettings);
-  } else {
-    geometry = new THREE.ExtrudeGeometry(validShapes[0], extrudeSettings);
-    for (let i = 1; i < validShapes.length; i++) {
-      const shapeGeom = new THREE.ExtrudeGeometry(validShapes[i], extrudeSettings);
-      geometry = mergeExtrudeGeometries(geometry, shapeGeom);
-    }
-  }
+  // Create geometry with asymmetric bevel support
+  const geometry = createAsymmetricExtrudedGeometry(
+    validShapes,
+    Math.max(config.extrusionDepth, 1),
+    bevelConfig,
+  ) as THREE.ExtrudeGeometry;
 
   // Normalize UV coordinates to 0-1 range for proper texture mapping
   normalizeUVs(geometry);
@@ -172,35 +163,92 @@ function normalizeUVs(geometry: THREE.BufferGeometry): void {
 // Path to Shape Conversion
 // =============================================================================
 
-function pathsToShapes(paths: readonly ContourPath[]): THREE.Shape[] {
+type PathMeta = {
+  readonly contour: ContourPath;
+  readonly area: number;
+};
+
+export function pathsToShapes(paths: readonly ContourPath[]): THREE.Shape[] {
   if (!paths || !Array.isArray(paths)) {
     return [];
   }
 
-  const outerPaths = paths.filter((p) => p && !p.isHole);
-  const holePaths = paths.filter((p) => p && p.isHole);
+  const metas = paths
+    .filter((path) => isValidContour(path))
+    .map((contour) => ({
+      contour,
+      area: Math.abs(calculatePolygonArea(contour.points)),
+    }));
 
-  const shapes: THREE.Shape[] = [];
+  const parentIndices = metas.map((child, childIndex) => {
+    const candidateParents = metas
+      .map((parent, parentIndex) => ({ parent, parentIndex }))
+      .filter(({ parentIndex }) => parentIndex !== childIndex)
+      .filter(({ parent }) => parent.area > child.area)
+      .filter(({ parent }) => isPathContainedIn(child.contour, parent.contour));
 
-  for (const outerPath of outerPaths) {
-    const shape = new THREE.Shape();
-    if (!applyContourPoints(shape, outerPath)) {
-      continue;
+    if (candidateParents.length === 0) {
+      return null;
     }
 
-    for (const holePath of holePaths) {
-      if (isPathContainedIn(holePath, outerPath)) {
-        const hole = createHolePath(holePath);
-        if (hole) {
-          shape.holes.push(hole);
-        }
+    const bestParent = candidateParents.reduce((currentBest, candidate) => {
+      if (!currentBest) {
+        return candidate;
       }
+      return candidate.parent.area < currentBest.parent.area ? candidate : currentBest;
+    }, null as { parent: PathMeta; parentIndex: number } | null);
+
+    return bestParent?.parentIndex ?? null;
+  });
+
+  const shapes = metas.reduce<THREE.Shape[]>((acc, meta, index) => {
+    if (parentIndices[index] !== null) {
+      return acc;
     }
 
-    shapes.push(shape);
-  }
+    const shape = new THREE.Shape();
+    if (!applyContourPoints(shape, meta.contour)) {
+      return acc;
+    }
+
+    acc.push(shape);
+    return acc;
+  }, []);
+
+  const shapeIndexByMetaIndex = parentIndices.reduce<Map<number, number>>((acc, parentIndex, metaIndex) => {
+    if (parentIndex === null) {
+      acc.set(metaIndex, acc.size);
+    }
+    return acc;
+  }, new Map());
+
+  parentIndices.forEach((parentIndex, metaIndex) => {
+    if (parentIndex === null) {
+      return;
+    }
+    const shapeIndex = shapeIndexByMetaIndex.get(parentIndex);
+    if (shapeIndex === undefined) {
+      return;
+    }
+    const hole = createHolePath(metas[metaIndex].contour);
+    if (hole) {
+      shapes[shapeIndex].holes.push(hole);
+    }
+  });
 
   return shapes;
+}
+
+function isValidContour(contour: ContourPath): boolean {
+  return Array.isArray(contour?.points) && contour.points.length >= 3;
+}
+
+function calculatePolygonArea(points: readonly { x: number; y: number }[]): number {
+  const total = points.reduce((acc, point, index) => {
+    const next = points[(index + 1) % points.length];
+    return acc + point.x * next.y - next.x * point.y;
+  }, 0);
+  return total / 2;
 }
 
 function applyContourPoints(

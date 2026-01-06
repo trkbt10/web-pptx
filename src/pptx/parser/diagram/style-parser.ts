@@ -186,8 +186,9 @@ function parseDiagramShape3d(element: XmlElement | undefined): Shape3d | undefin
   const extrusionColor = toSolidFill(parseColorFromParent(getChild(element, "a:extrusionClr")));
   const contourColor = toSolidFill(parseColorFromParent(getChild(element, "a:contourClr")));
 
-  const bevel = parseBevel(getChild(element, "a:bevelT"))
-    ?? parseBevel(getChild(element, "a:bevelB"));
+  // Parse both bevelT and bevelB per ECMA-376
+  const bevelTop = parseBevel(getChild(element, "a:bevelT"));
+  const bevelBottom = parseBevel(getChild(element, "a:bevelB"));
 
   return {
     z: getEmuAttr(element, "z"),
@@ -196,11 +197,12 @@ function parseDiagramShape3d(element: XmlElement | undefined): Shape3d | undefin
     preset: parsePresetMaterialType(getAttr(element, "prstMaterial")),
     extrusionColor,
     contourColor,
-    bevel,
+    bevelTop,
+    bevelBottom,
   };
 }
 
-function parseBevel(element: XmlElement | undefined): Shape3d["bevel"] | undefined {
+function parseBevel(element: XmlElement | undefined): Shape3d["bevelTop"] | undefined {
   if (!element) return undefined;
   const width = getEmuAttr(element, "w");
   const height = getEmuAttr(element, "h");

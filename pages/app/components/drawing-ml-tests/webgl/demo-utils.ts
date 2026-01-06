@@ -135,14 +135,19 @@ export function createTextBody(paragraphs: Paragraph[]): TextBody {
 // Shape3d Construction Helpers
 // =============================================================================
 
+type BevelParams = {
+  width: number;
+  height: number;
+  preset: BevelPresetType;
+};
+
 type Shape3dParams = {
   extrusionHeight?: number;
   preset?: PresetMaterialType;
-  bevel?: {
-    width: number;
-    height: number;
-    preset: BevelPresetType;
-  };
+  /** Front face bevel @see ECMA-376 bevelT */
+  bevelTop?: BevelParams;
+  /** Back face bevel @see ECMA-376 bevelB */
+  bevelBottom?: BevelParams;
   contourWidth?: number;
   contourColor?: string;
 };
@@ -154,20 +159,22 @@ type Shape3dParams = {
 export function buildShape3d(params: Shape3dParams): Shape3d {
   const hasContour = params.contourWidth !== undefined && params.contourWidth > 0;
   const extrusionHeight = params.extrusionHeight !== undefined ? px(params.extrusionHeight) : undefined;
-  const bevel = buildBevelFromParams(params.bevel);
+  const bevelTop = buildBevelFromParams(params.bevelTop);
+  const bevelBottom = buildBevelFromParams(params.bevelBottom);
   const contourWidth = hasContour ? px(params.contourWidth) : undefined;
   const contourColor = hasContour && params.contourColor ? createSolidFill(params.contourColor) : undefined;
 
   return {
     extrusionHeight,
     preset: params.preset,
-    bevel,
+    bevelTop,
+    bevelBottom,
     contourWidth,
     contourColor,
   };
 }
 
-function buildBevelFromParams(bevel: Shape3dParams["bevel"]) {
+function buildBevelFromParams(bevel: BevelParams | undefined) {
   if (!bevel) {return undefined;}
   return {
     width: px(bevel.width),
@@ -237,12 +244,14 @@ export function buildShape3dFromPreset(
   const maxExtrusion = options?.maxExtrusion;
   const extrusionHeight = clampValue(preset.extrusion, maxExtrusion);
 
-  const bevel = buildClampedBevel(preset.bevel, options?.maxBevelWidth, options?.maxBevelHeight);
+  const bevelTop = buildClampedBevel(preset.bevelTop, options?.maxBevelWidth, options?.maxBevelHeight);
+  const bevelBottom = buildClampedBevel(preset.bevelBottom, options?.maxBevelWidth, options?.maxBevelHeight);
 
   return buildShape3d({
     extrusionHeight,
     preset: preset.material,
-    bevel,
+    bevelTop,
+    bevelBottom,
     contourWidth: preset.contour?.width,
     contourColor: preset.contour?.color,
   });
@@ -253,7 +262,7 @@ function clampValue(value: number, max: number | undefined): number {
 }
 
 function buildClampedBevel(
-  bevel: DemoWordArtPreset["bevel"],
+  bevel: DemoWordArtPreset["bevelTop"],
   maxWidth: number | undefined,
   maxHeight: number | undefined,
 ) {

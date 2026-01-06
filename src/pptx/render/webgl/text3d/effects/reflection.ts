@@ -14,26 +14,42 @@ import { createEffectCanvas } from "../utils/canvas";
 // =============================================================================
 
 /**
+ * Reflection alignment values
+ * @see ECMA-376 Part 1, Section 20.1.10.3 (ST_RectAlignment)
+ */
+export type ReflectionAlignment = "tl" | "t" | "tr" | "l" | "ctr" | "r" | "bl" | "b" | "br";
+
+/**
  * Reflection configuration for 3D text
  * @see ECMA-376 Part 1, Section 20.1.8.50 (reflection)
  */
 export type ReflectionConfig = {
   /** Blur radius of reflection */
   readonly blurRadius: number;
-  /** Start opacity (0-100) */
+  /** Start opacity (0-100) @see ECMA-376 stA attribute */
   readonly startOpacity: number;
-  /** End opacity (0-100) */
+  /** Start position (0-100) where fade begins @see ECMA-376 stPos attribute */
+  readonly startPosition: number;
+  /** End opacity (0-100) @see ECMA-376 endA attribute */
   readonly endOpacity: number;
+  /** End position (0-100) where fade ends @see ECMA-376 endPos attribute */
+  readonly endPosition: number;
   /** Distance from object in pixels */
   readonly distance: number;
   /** Direction in degrees */
   readonly direction: number;
-  /** Fade direction in degrees */
+  /** Fade direction in degrees (default 90°) @see ECMA-376 fadeDir attribute */
   readonly fadeDirection: number;
   /** Scale X (percentage) */
   readonly scaleX: number;
   /** Scale Y (percentage) */
   readonly scaleY: number;
+  /** Horizontal skew in degrees @see ECMA-376 kx attribute */
+  readonly skewX?: number;
+  /** Vertical skew in degrees @see ECMA-376 ky attribute */
+  readonly skewY?: number;
+  /** Reflection alignment (default "b") @see ECMA-376 algn attribute */
+  readonly alignment?: ReflectionAlignment;
 };
 
 // =============================================================================
@@ -160,6 +176,14 @@ export function createGradientReflection(
 
 /**
  * Create a fade plane for the reflection gradient.
+ *
+ * ECMA-376 reflection uses startPosition/endPosition to define the gradient range:
+ * - stPos: where the fade gradient begins (0-100%)
+ * - endPos: where the fade gradient ends (0-100%)
+ * - stA: opacity at start position
+ * - endA: opacity at end position
+ *
+ * @see ECMA-376 Part 1, Section 20.1.8.50 (reflection)
  */
 function createFadePlane(
   size: THREE.Vector3,
@@ -168,10 +192,31 @@ function createFadePlane(
   // Create gradient texture
   const { canvas, ctx } = createEffectCanvas();
 
-  // Create vertical gradient (top = transparent, bottom = opaque)
+  // Convert ECMA-376 positions (0-100) to gradient stops (0-1)
+  const stPos = config.startPosition / 100;
+  const endPos = config.endPosition / 100;
+  const stA = config.startOpacity / 100;
+  const endA = config.endOpacity / 100;
+
+  // Create vertical gradient with ECMA-376 stPos/endPos
+  // Note: Canvas gradient uses 0=top, 1=bottom
   const gradient = ctx.createLinearGradient(0, 0, 0, 256);
-  gradient.addColorStop(0, `rgba(255, 255, 255, ${1 - config.startOpacity / 100})`);
-  gradient.addColorStop(1, `rgba(255, 255, 255, ${1 - config.endOpacity / 100})`);
+
+  // Before startPosition: use startOpacity
+  if (stPos > 0) {
+    gradient.addColorStop(0, `rgba(255, 255, 255, ${1 - stA})`);
+  }
+
+  // At startPosition: startOpacity
+  gradient.addColorStop(stPos, `rgba(255, 255, 255, ${1 - stA})`);
+
+  // At endPosition: endOpacity
+  gradient.addColorStop(endPos, `rgba(255, 255, 255, ${1 - endA})`);
+
+  // After endPosition: use endOpacity
+  if (endPos < 1) {
+    gradient.addColorStop(1, `rgba(255, 255, 255, ${1 - endA})`);
+  }
 
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 256, 256);

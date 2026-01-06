@@ -28,6 +28,12 @@ export type ShadowFilterDefProps = {
 };
 
 /**
+ * Shadow alignment values
+ * @see ECMA-376 Part 1, Section 20.1.10.3 (ST_RectAlignment)
+ */
+export type ShadowAlignment = "tl" | "t" | "tr" | "l" | "ctr" | "r" | "bl" | "b" | "br";
+
+/**
  * Resolved shadow properties for SVG rendering
  */
 export type ResolvedShadowProps = {
@@ -43,6 +49,16 @@ export type ResolvedShadowProps = {
   readonly opacity: number;
   /** Whether this is an inner shadow */
   readonly isInner: boolean;
+  /** Horizontal scale (default 100%) @see ECMA-376 sx attribute */
+  readonly scaleX: number;
+  /** Vertical scale (default 100%) @see ECMA-376 sy attribute */
+  readonly scaleY: number;
+  /** Horizontal skew in degrees @see ECMA-376 kx attribute */
+  readonly skewX: number;
+  /** Vertical skew in degrees @see ECMA-376 ky attribute */
+  readonly skewY: number;
+  /** Shadow alignment (default "b") @see ECMA-376 algn attribute */
+  readonly alignment: ShadowAlignment;
 };
 
 // =============================================================================
@@ -76,6 +92,35 @@ export function directionToOffset(
 }
 
 /**
+ * Get alignment offset multipliers for shadow positioning.
+ *
+ * ECMA-376 alignment affects where the shadow is anchored when scale is applied.
+ * When scale != 100%, the alignment determines the anchor point:
+ * - "ctr" = center anchor (no offset adjustment)
+ * - "tl" = top-left anchor (shadow expands down-right)
+ * - "br" = bottom-right anchor (shadow expands up-left)
+ * etc.
+ *
+ * Returns multipliers (-1, 0, or 1) for X and Y axes.
+ *
+ * @see ECMA-376 Part 1, Section 20.1.10.3 (ST_RectAlignment)
+ */
+function getAlignmentMultipliers(alignment: ShadowAlignment): { mx: number; my: number } {
+  const alignmentMap: Record<ShadowAlignment, { mx: number; my: number }> = {
+    tl: { mx: 1, my: 1 },    // top-left: expand right and down
+    t: { mx: 0, my: 1 },     // top: expand down
+    tr: { mx: -1, my: 1 },   // top-right: expand left and down
+    l: { mx: 1, my: 0 },     // left: expand right
+    ctr: { mx: 0, my: 0 },   // center: no offset adjustment
+    r: { mx: -1, my: 0 },    // right: expand left
+    bl: { mx: 1, my: -1 },   // bottom-left: expand right and up
+    b: { mx: 0, my: -1 },    // bottom: expand up
+    br: { mx: -1, my: -1 },  // bottom-right: expand left and up
+  };
+  return alignmentMap[alignment];
+}
+
+/**
  * Resolve shadow effect to SVG-ready properties
  */
 export function resolveShadowProps(
@@ -94,6 +139,13 @@ export function resolveShadowProps(
   // Convert direction and distance to dx/dy
   const { dx, dy } = directionToOffset(shadow.direction as number, shadow.distance as number);
 
+  // Parse alignment - default is "b" (bottom) for outerShdw per ECMA-376
+  const alignmentStr = shadow.alignment ?? "b";
+  const validAlignments = ["tl", "t", "tr", "l", "ctr", "r", "bl", "b", "br"] as const;
+  const alignment = validAlignments.includes(alignmentStr as ShadowAlignment)
+    ? (alignmentStr as ShadowAlignment)
+    : "b";
+
   return {
     blurRadius: shadow.blurRadius as number,
     dx,
@@ -101,6 +153,12 @@ export function resolveShadowProps(
     color: `#${hex}`,
     opacity: alpha,
     isInner: shadow.type === "inner",
+    // ECMA-376 scale/skew attributes (defaults: 100%, 0°)
+    scaleX: (shadow.scaleX as number | undefined) ?? 100,
+    scaleY: (shadow.scaleY as number | undefined) ?? 100,
+    skewX: (shadow.skewX as number | undefined) ?? 0,
+    skewY: (shadow.skewY as number | undefined) ?? 0,
+    alignment,
   };
 }
 
@@ -121,8 +179,11 @@ function extractAlpha(color: ShadowEffect["color"]): number {
 /**
  * SVG filter definition for shadow effects.
  *
- * For outer shadows, uses feDropShadow.
+ * For outer shadows without skew/scale, uses simple feDropShadow.
+ * For outer shadows with skew/scale, uses a complex filter chain.
  * For inner shadows, uses a combination of filters to create inset effect.
+ *
+ * @see ECMA-376 Part 1, Section 20.1.8.49 (outerShdw)
  *
  * @example
  * ```tsx
@@ -143,20 +204,50 @@ export const ShadowFilterDef = memo(function ShadowFilterDef({
     return null;
   }
 
-  // Outer shadow - use feDropShadow
+  // Outer shadow - use feDropShadow with scale/skew/alignment adjustments
+  // ECMA-376 kx/ky (skew) and sx/sy (scale) affect shadow shape.
+  // SVG filters can't directly apply skew transforms to the shadow shape,
+  // so we approximate by applying scale to offset and blur values.
   if (!props.isInner) {
+    // Apply scale factors to offset values (approximation of ECMA-376 sx/sy)
+    const scaleX = props.scaleX / 100;
+    const scaleY = props.scaleY / 100;
+    const scaledDx = props.dx * scaleX;
+    const scaledDy = props.dy * scaleY;
+
+    // Apply skew to offset (approximation - adds shear effect to shadow position)
+    // kx affects horizontal position based on vertical offset
+    // ky affects vertical position based on horizontal offset
+    const tanKx = Math.tan((props.skewX * Math.PI) / 180);
+    const tanKy = Math.tan((props.skewY * Math.PI) / 180);
+    const skewedDx = scaledDx + scaledDy * tanKx;
+    const skewedDy = scaledDy + scaledDx * tanKy;
+
+    // Scale blur radius based on average scale factor
+    const avgScale = (scaleX + scaleY) / 2;
+    const scaledBlur = (props.blurRadius / 2) * avgScale;
+
+    // Apply alignment adjustment
+    // When scale != 100%, alignment affects where the shadow is anchored.
+    // The blur radius is used as a proxy for the shadow's visual extent.
+    const { mx, my } = getAlignmentMultipliers(props.alignment);
+    const scaleOffsetX = (scaleX - 1) * props.blurRadius * mx;
+    const scaleOffsetY = (scaleY - 1) * props.blurRadius * my;
+    const alignedDx = skewedDx + scaleOffsetX;
+    const alignedDy = skewedDy + scaleOffsetY;
+
     return (
       <filter
         id={id}
-        x="-50%"
-        y="-50%"
-        width="200%"
-        height="200%"
+        x="-100%"
+        y="-100%"
+        width="300%"
+        height="300%"
       >
         <feDropShadow
-          dx={props.dx}
-          dy={props.dy}
-          stdDeviation={props.blurRadius / 2}
+          dx={alignedDx}
+          dy={alignedDy}
+          stdDeviation={scaledBlur}
           floodColor={props.color}
           floodOpacity={props.opacity}
         />
