@@ -1,64 +1,28 @@
 /**
- * @file Tile Configuration for 3D Material Textures
+ * @file Tile Configuration Utilities for 3D Material Textures
  *
- * ECMA-376 compliant tile configuration for gradient and image fills.
+ * Provides THREE.js texture configuration utilities for ECMA-376 tile settings.
+ * Types are imported from domain layer - this file only contains render utilities.
  *
  * @see ECMA-376 Part 1, Section 20.1.8.58 (tile)
  * @see ECMA-376 Part 1, Section 20.1.10.66 (ST_TileFlipMode)
  */
 
 import * as THREE from "three";
+import type { TileFlipMode, TileFill, GradientFill } from "../../../../domain/color";
+import type { Percent, Pixels } from "../../../../domain/types";
 
 // =============================================================================
-// Types
+// Re-export Domain Types for Convenience
 // =============================================================================
 
-/**
- * Tile flip mode per ECMA-376 20.1.10.66 (ST_TileFlipMode)
- *
- * Controls how tiles are flipped when repeated:
- * - "none": No flipping (standard repeat)
- * - "x": Flip horizontally on alternate columns
- * - "y": Flip vertically on alternate rows
- * - "xy": Flip both horizontally and vertically
- */
-export type TileFlipMode = "none" | "x" | "y" | "xy";
+// Note: Consumers should import directly from domain when possible.
+// These are re-exported only for internal render layer use.
 
 /**
- * Tile rectangle for gradient tiling per ECMA-376 20.1.8.33
- *
- * Defines the region where the gradient is rendered before tiling.
- * Values are percentages (-100 to 100).
+ * Tile rectangle from domain (GradientFill.tileRect)
  */
-export type TileRect = {
-  readonly left: number;
-  readonly top: number;
-  readonly right: number;
-  readonly bottom: number;
-};
-
-/**
- * Tile fill configuration per ECMA-376 20.1.8.58
- */
-export type TileFillConfig = {
-  /** Horizontal offset in pixels */
-  readonly tx: number;
-  /** Vertical offset in pixels */
-  readonly ty: number;
-  /** Horizontal scale as percentage (100 = 100%) */
-  readonly sx: number;
-  /** Vertical scale as percentage (100 = 100%) */
-  readonly sy: number;
-  /** Flip mode */
-  readonly flip: TileFlipMode;
-  /** Alignment anchor */
-  readonly alignment: RectAlignment;
-};
-
-/**
- * Rectangle alignment values per ECMA-376
- */
-export type RectAlignment = "tl" | "t" | "tr" | "l" | "ctr" | "r" | "bl" | "b" | "br";
+export type TileRect = NonNullable<GradientFill["tileRect"]>;
 
 // =============================================================================
 // Flip Mode Implementation
@@ -121,11 +85,11 @@ export function calculateTileRectTransform(tileRect: TileRect): {
   offsetY: number;
 } {
   // Calculate the tile region size (as fraction of 1.0)
-  // tileRect values are percentages: -50 means 50% outside, +50 means 50% inward
-  const left = tileRect.left / 100;
-  const right = tileRect.right / 100;
-  const top = tileRect.top / 100;
-  const bottom = tileRect.bottom / 100;
+  // tileRect values are Percent branded: -50 means 50% outside, +50 means 50% inward
+  const left = (tileRect.left as number) / 100;
+  const right = (tileRect.right as number) / 100;
+  const top = (tileRect.top as number) / 100;
+  const bottom = (tileRect.bottom as number) / 100;
 
   // Width and height of the tile region
   const tileWidth = 1 - left - right;
@@ -162,16 +126,16 @@ export function applyTileRect(texture: THREE.Texture, tileRect: TileRect): void 
 // =============================================================================
 
 /**
- * Calculate texture transform from TileFillConfig.
+ * Calculate texture transform from TileFill (domain type).
  *
- * @param config - ECMA-376 tile fill configuration
+ * @param config - ECMA-376 tile fill configuration from domain
  * @param geometryWidth - Width of the geometry in pixels
  * @param geometryHeight - Height of the geometry in pixels
  * @param textureWidth - Original texture width
  * @param textureHeight - Original texture height
  */
 export function calculateTileFillTransform(
-  config: TileFillConfig,
+  config: TileFill,
   geometryWidth: number,
   geometryHeight: number,
   textureWidth: number,
@@ -182,9 +146,9 @@ export function calculateTileFillTransform(
   offsetX: number;
   offsetY: number;
 } {
-  // Scale factors (percentage to decimal)
-  const scaleX = config.sx / 100;
-  const scaleY = config.sy / 100;
+  // Scale factors (Percent to decimal)
+  const scaleX = (config.sx as number) / 100;
+  const scaleY = (config.sy as number) / 100;
 
   // Scaled tile size
   const tileWidth = textureWidth * scaleX;
@@ -195,10 +159,16 @@ export function calculateTileFillTransform(
   const repeatY = tileHeight > 0 ? geometryHeight / tileHeight : 1;
 
   // Calculate offset based on alignment and tx/ty
-  const { alignOffsetX, alignOffsetY } = getAlignmentOffset(config.alignment, geometryWidth, geometryHeight, tileWidth, tileHeight);
+  const { alignOffsetX, alignOffsetY } = getAlignmentOffset(
+    config.alignment,
+    geometryWidth,
+    geometryHeight,
+    tileWidth,
+    tileHeight,
+  );
 
-  const offsetX = (config.tx + alignOffsetX) / geometryWidth;
-  const offsetY = (config.ty + alignOffsetY) / geometryHeight;
+  const offsetX = ((config.tx as number) + alignOffsetX) / geometryWidth;
+  const offsetY = ((config.ty as number) + alignOffsetY) / geometryHeight;
 
   return { repeatX, repeatY, offsetX, offsetY };
 }
@@ -207,13 +177,13 @@ export function calculateTileFillTransform(
  * Get alignment offset based on RectAlignment.
  */
 function getAlignmentOffset(
-  alignment: RectAlignment,
+  alignment: TileFill["alignment"],
   geoWidth: number,
   geoHeight: number,
   tileWidth: number,
   tileHeight: number,
 ): { alignOffsetX: number; alignOffsetY: number } {
-  const alignmentOffsets: Record<RectAlignment, { x: number; y: number }> = {
+  const alignmentOffsets: Record<TileFill["alignment"], { x: number; y: number }> = {
     tl: { x: 0, y: 0 },
     t: { x: (geoWidth - tileWidth) / 2, y: 0 },
     tr: { x: geoWidth - tileWidth, y: 0 },
@@ -233,7 +203,7 @@ function getAlignmentOffset(
  * Apply tile fill configuration to a texture.
  *
  * @param texture - Three.js texture to configure
- * @param config - ECMA-376 tile fill configuration
+ * @param config - ECMA-376 tile fill configuration from domain
  * @param geometryWidth - Width of the geometry
  * @param geometryHeight - Height of the geometry
  * @param textureWidth - Original texture width
@@ -241,7 +211,7 @@ function getAlignmentOffset(
  */
 export function applyTileFillConfig(
   texture: THREE.Texture,
-  config: TileFillConfig,
+  config: TileFill,
   geometryWidth: number,
   geometryHeight: number,
   textureWidth: number,
@@ -264,27 +234,45 @@ export function applyTileFillConfig(
 }
 
 // =============================================================================
-// Default Values
+// Default Values (matching domain defaults)
 // =============================================================================
 
 /**
- * Default tile fill configuration per ECMA-376 defaults.
+ * Create default TileFill configuration.
+ * Uses domain branded types.
  */
-export const DEFAULT_TILE_FILL: TileFillConfig = {
-  tx: 0,
-  ty: 0,
-  sx: 100,
-  sy: 100,
-  flip: "none",
-  alignment: "tl",
-};
+export function createDefaultTileFill(): TileFill {
+  return {
+    tx: 0 as Pixels,
+    ty: 0 as Pixels,
+    sx: 100 as Percent,
+    sy: 100 as Percent,
+    flip: "none",
+    alignment: "tl",
+  };
+}
 
 /**
- * Default tile rectangle (no tiling - single gradient fill).
+ * Create default TileRect configuration (no tiling).
+ * Uses domain branded types.
  */
-export const DEFAULT_TILE_RECT: TileRect = {
-  left: 0,
-  top: 0,
-  right: 0,
-  bottom: 0,
-};
+export function createDefaultTileRect(): TileRect {
+  return {
+    left: 0 as Percent,
+    top: 0 as Percent,
+    right: 0 as Percent,
+    bottom: 0 as Percent,
+  };
+}
+
+/**
+ * Check if tileRect is the default (no tiling).
+ */
+export function isTileRectDefault(tileRect: TileRect): boolean {
+  return (
+    (tileRect.left as number) === 0 &&
+    (tileRect.top as number) === 0 &&
+    (tileRect.right as number) === 0 &&
+    (tileRect.bottom as number) === 0
+  );
+}

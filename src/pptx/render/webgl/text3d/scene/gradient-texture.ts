@@ -14,7 +14,7 @@
 import * as THREE from "three";
 import { createGradientCanvas } from "../utils/canvas";
 import type { TileRect } from "./tile-config";
-import { applyTileRect, DEFAULT_TILE_RECT } from "./tile-config";
+import { applyTileRect, isTileRectDefault } from "./tile-config";
 
 // =============================================================================
 // Internal Types (Resolved Colors for Rendering)
@@ -67,8 +67,13 @@ type ResolvedGradientConfig = ResolvedLinearGradient | ResolvedRadialGradient;
 
 const textureCache = new Map<string, THREE.CanvasTexture>();
 
-function getGradientCacheKey(config: ResolvedGradientConfig, width: number, height: number): string {
-  return JSON.stringify({ config, width, height });
+function getGradientCacheKey(
+  config: ResolvedGradientConfig,
+  width: number,
+  height: number,
+  tileRect?: TileRect,
+): string {
+  return JSON.stringify({ config, width, height, tileRect });
 }
 
 // =============================================================================
@@ -183,6 +188,20 @@ function createRadialGradientTexture(
 }
 
 /**
+ * Create gradient texture based on type.
+ */
+function createGradientTexture(
+  config: ResolvedGradientConfig,
+  width: number,
+  height: number,
+): THREE.CanvasTexture {
+  if (config.type === "linear") {
+    return createLinearGradientTexture(config, width, height);
+  }
+  return createRadialGradientTexture(config, width, height);
+}
+
+/**
  * Create a gradient texture from resolved gradient configuration.
  * Textures are cached for performance.
  *
@@ -192,16 +211,20 @@ function createGradientTextureInternal(
   config: ResolvedGradientConfig,
   width: number = DEFAULT_TEXTURE_SIZE,
   height: number = DEFAULT_TEXTURE_SIZE,
+  tileRect?: TileRect,
 ): THREE.CanvasTexture {
-  const cacheKey = getGradientCacheKey(config, width, height);
+  const cacheKey = getGradientCacheKey(config, width, height, tileRect);
   const cached = textureCache.get(cacheKey);
   if (cached) {
     return cached;
   }
 
-  const texture = config.type === "linear"
-    ? createLinearGradientTexture(config, width, height)
-    : createRadialGradientTexture(config, width, height);
+  const texture = createGradientTexture(config, width, height);
+
+  // Apply tileRect if specified (ECMA-376 20.1.8.33)
+  if (tileRect && !isTileRectDefault(tileRect)) {
+    applyTileRect(texture, tileRect);
+  }
 
   textureCache.set(cacheKey, texture);
   return texture;
@@ -216,19 +239,29 @@ function createGradientTextureInternal(
  *
  * @param angle - Gradient angle in degrees
  * @param stops - Array of {position: 0-100, color: hex string}
- * @param width - Texture width (default 256)
- * @param height - Texture height (default 256)
+ * @param options - Optional configuration
+ * @param options.width - Texture width (default 256)
+ * @param options.height - Texture height (default 256)
+ * @param options.tileRect - ECMA-376 tileRect for gradient tiling
+ *
+ * @see ECMA-376 Part 1, Section 20.1.8.33 (gradFill with tileRect)
  */
 export function createLinearGradientTextureFromResolved(
   angle: number,
   stops: readonly { readonly position: number; readonly color: string }[],
-  width: number = DEFAULT_TEXTURE_SIZE,
-  height: number = DEFAULT_TEXTURE_SIZE,
+  options?: {
+    readonly width?: number;
+    readonly height?: number;
+    readonly tileRect?: TileRect;
+  },
 ): THREE.CanvasTexture {
+  const width = options?.width ?? DEFAULT_TEXTURE_SIZE;
+  const height = options?.height ?? DEFAULT_TEXTURE_SIZE;
   return createGradientTextureInternal(
     { type: "linear", angle, stops },
     width,
     height,
+    options?.tileRect,
   );
 }
 
@@ -237,25 +270,36 @@ export function createLinearGradientTextureFromResolved(
  *
  * @param path - Gradient path type
  * @param stops - Array of {position: 0-100, color: hex string}
- * @param centerX - Center X position 0-100 (optional)
- * @param centerY - Center Y position 0-100 (optional)
- * @param width - Texture width (default 256)
- * @param height - Texture height (default 256)
+ * @param options - Optional configuration
+ * @param options.centerX - Center X position 0-100
+ * @param options.centerY - Center Y position 0-100
+ * @param options.width - Texture width (default 256)
+ * @param options.height - Texture height (default 256)
+ * @param options.tileRect - ECMA-376 tileRect for gradient tiling
+ *
+ * @see ECMA-376 Part 1, Section 20.1.8.33 (gradFill with tileRect)
  */
 export function createRadialGradientTextureFromResolved(
   path: "circle" | "rect" | "shape",
   stops: readonly { readonly position: number; readonly color: string }[],
-  centerX?: number,
-  centerY?: number,
-  width: number = DEFAULT_TEXTURE_SIZE,
-  height: number = DEFAULT_TEXTURE_SIZE,
+  options?: {
+    readonly centerX?: number;
+    readonly centerY?: number;
+    readonly width?: number;
+    readonly height?: number;
+    readonly tileRect?: TileRect;
+  },
 ): THREE.CanvasTexture {
+  const width = options?.width ?? DEFAULT_TEXTURE_SIZE;
+  const height = options?.height ?? DEFAULT_TEXTURE_SIZE;
   return createGradientTextureInternal(
-    { type: "radial", path, stops, centerX, centerY },
+    { type: "radial", path, stops, centerX: options?.centerX, centerY: options?.centerY },
     width,
     height,
+    options?.tileRect,
   );
 }
+
 
 /**
  * Clear the texture cache.

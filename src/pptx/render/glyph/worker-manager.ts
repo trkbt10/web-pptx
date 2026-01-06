@@ -24,15 +24,15 @@ type WorkerRequest = {
 
 type WorkerResponse =
   | {
-    id: number;
-    type: "glyphResult";
-    glyph: GlyphContour;
-  }
+      id: number;
+      type: "glyphResult";
+      glyph: GlyphContour;
+    }
   | {
-    id: number;
-    type: "glyphError";
-    message: string;
-  };
+      id: number;
+      type: "glyphError";
+      message: string;
+    };
 
 type PendingRequest = {
   resolve: (glyph: GlyphContour) => void;
@@ -104,11 +104,7 @@ function getWorker(): Worker | null {
 /**
  * Extract glyph using worker (async)
  */
-export async function extractGlyphAsync(
-  char: string,
-  fontFamily: string,
-  style: GlyphStyleKey,
-): Promise<GlyphContour> {
+export async function extractGlyphAsync(char: string, fontFamily: string, style: GlyphStyleKey): Promise<GlyphContour> {
   // Check cache first
   const cached = getCachedGlyph(fontFamily, char, style);
   if (cached) {
@@ -229,13 +225,6 @@ const MAX_TRACE_ITERATIONS = 5000;
 const MAX_CONTOURS_PER_CHAR = 20;
 const GENERIC_FONT_FAMILIES = new Set(${JSON.stringify(GENERIC_FONT_FAMILIES)});
 const formatFontFamily = ${formatFontFamilySource};
-  "serif",
-  "sans-serif",
-  "monospace",
-  "cursive",
-  "fantasy",
-  "system-ui",
-]);
 
 self.onmessage = function(event) {
   const { id, type, char, fontFamily, style } = event.data;

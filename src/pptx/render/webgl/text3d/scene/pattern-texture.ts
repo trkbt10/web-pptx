@@ -10,6 +10,8 @@
 
 import * as THREE from "three";
 import { createPatternCanvas } from "../utils/canvas";
+import type { TileFlipMode } from "../../../../domain/color";
+import { applyTileFlipMode } from "./tile-config";
 
 // =============================================================================
 // Pattern Types
@@ -37,15 +39,40 @@ export type PatternPreset =
 
 const patternTextureCache = new Map<string, THREE.CanvasTexture>();
 
-function getPatternCacheKey(preset: PatternPreset, fgColor: string, bgColor: string, size: number): string {
-  return `${preset}-${fgColor}-${bgColor}-${size}`;
+/**
+ * Pattern tile configuration for dynamic scaling
+ */
+export type PatternTileConfig = {
+  /** Number of horizontal repeats */
+  readonly repeatX: number;
+  /** Number of vertical repeats */
+  readonly repeatY: number;
+  /** Flip mode per ECMA-376 */
+  readonly flip?: TileFlipMode;
+};
+
+/**
+ * Default pattern tile configuration
+ */
+export const DEFAULT_PATTERN_TILE: PatternTileConfig = {
+  repeatX: 4,
+  repeatY: 4,
+  flip: "none",
+};
+
+function getPatternCacheKey(
+  preset: PatternPreset,
+  fgColor: string,
+  bgColor: string,
+  size: number,
+  tileConfig?: PatternTileConfig,
+): string {
+  return `${preset}-${fgColor}-${bgColor}-${size}-${JSON.stringify(tileConfig)}`;
 }
 
 // =============================================================================
 // Pattern Drawing Functions
 // =============================================================================
-
-const PATTERN_SIZE = 16; // Base pattern tile size
 
 type PatternDrawer = (ctx: CanvasRenderingContext2D, fg: string, bg: string, size: number) => void;
 
@@ -229,19 +256,44 @@ function drawBrickPattern(ctx: CanvasRenderingContext2D, fg: string, bg: string,
   const brickH = size / 4;
   const brickW = size / 2;
 
-  for (let y = 0; y < size; y += brickH) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(size, y);
-    ctx.stroke();
-
-    const offset = Math.floor(y / brickH) % 2 === 0 ? 0 : brickW / 2;
-    for (let x = offset; x < size; x += brickW) {
+  if (horizontal) {
+    // Horizontal brick pattern
+    for (let y = 0; y < size; y += brickH) {
       ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x, y + brickH);
+      ctx.moveTo(0, y);
+      ctx.lineTo(size, y);
       ctx.stroke();
+
+      const offset = Math.floor(y / brickH) % 2 === 0 ? 0 : brickW / 2;
+      for (let x = offset; x < size; x += brickW) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, y + brickH);
+        ctx.stroke();
+      }
     }
+  } else {
+    // Diagonal brick pattern
+    ctx.save();
+    ctx.translate(size / 2, size / 2);
+    ctx.rotate(Math.PI / 4);
+    ctx.translate(-size, -size);
+
+    for (let y = 0; y < size * 2; y += brickH) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(size * 2, y);
+      ctx.stroke();
+
+      const offset = Math.floor(y / brickH) % 2 === 0 ? 0 : brickW / 2;
+      for (let x = offset; x < size * 2; x += brickW) {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x, y + brickH);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
   }
 }
 
@@ -253,7 +305,6 @@ function drawDiamondPattern(ctx: CanvasRenderingContext2D, fg: string, bg: strin
   ctx.fillRect(0, 0, size, size);
 
   const half = size / 2;
-  const quarter = size / 4;
 
   ctx.beginPath();
   ctx.moveTo(half, 0);
@@ -511,15 +562,25 @@ const patternDrawers: Record<PatternPreset, PatternDrawer> = {
  * @param preset - Pattern preset from ECMA-376
  * @param fgColor - Foreground color (hex string)
  * @param bgColor - Background color (hex string)
- * @param size - Texture size (default 64)
+ * @param options - Optional configuration
+ * @param options.size - Texture size (default 64)
+ * @param options.tileConfig - Tile configuration for repeat and flip
+ *
+ * @see ECMA-376 Part 1, Section 20.1.8.47 (pattFill)
  */
 export function createPatternTextureFromResolved(
   preset: PatternPreset,
   fgColor: string,
   bgColor: string,
-  size: number = 64,
+  options?: {
+    readonly size?: number;
+    readonly tileConfig?: PatternTileConfig;
+  },
 ): THREE.CanvasTexture {
-  const cacheKey = getPatternCacheKey(preset, fgColor, bgColor, size);
+  const size = options?.size ?? 64;
+  const tileConfig = options?.tileConfig ?? DEFAULT_PATTERN_TILE;
+
+  const cacheKey = getPatternCacheKey(preset, fgColor, bgColor, size, tileConfig);
   const cached = patternTextureCache.get(cacheKey);
   if (cached) {
     return cached;
@@ -543,9 +604,12 @@ export function createPatternTextureFromResolved(
 
   // Create texture with tiling
   const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(4, 4); // Tile the pattern
+
+  // Apply flip mode (ECMA-376 compliant)
+  applyTileFlipMode(texture, tileConfig.flip ?? "none");
+
+  // Apply dynamic repeat
+  texture.repeat.set(tileConfig.repeatX, tileConfig.repeatY);
   texture.needsUpdate = true;
 
   patternTextureCache.set(cacheKey, texture);
