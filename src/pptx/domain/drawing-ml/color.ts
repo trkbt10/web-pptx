@@ -7,8 +7,8 @@
  * @see ECMA-376 Part 1, Section 20.1.2.3 - Color Types
  */
 
-import type { Color, ColorTransform } from "../../../domain/color";
-import type { ColorContext } from "../../../domain/resolution";
+import type { Color, ColorTransform } from "../color";
+import type { ColorContext } from "../resolution";
 import {
   hexToRgb as hexToRgbObj,
   rgbToHex as rgbToHexBase,
@@ -16,7 +16,7 @@ import {
   hslToRgb,
   applySrgbGamma,
   applySrgbInvGamma,
-} from "../../../../color/index";
+} from "../../../color/index";
 
 // =============================================================================
 // Preset Colors
@@ -398,7 +398,7 @@ function applyColorTransforms(hex: string, transform: ColorTransform): string {
 
   if (transform.green !== undefined) {
     const green = Math.max(0, Math.min(100, transform.green)) / 100;
-    const [gr, gg, gb] = hexToRgb(result);
+    const [gr, , gb] = hexToRgb(result);
     result = rgbToHex(gr, Math.round(255 * green), gb);
   }
 

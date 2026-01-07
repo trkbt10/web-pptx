@@ -11,7 +11,7 @@ import type { ColorContext, FontScheme } from "../../domain/resolution";
 import { resolveThemeFont } from "../../domain/resolution";
 import type { Color, Line, Fill } from "../../domain/color";
 
-import { resolveColor as resolveColorRaw } from "../core/drawing-ml";
+import { resolveColor as resolveColorRaw } from "../../domain/drawing-ml";
 import { resolveTextFill, resolveTextEffects } from "../../parser/drawing-ml";
 import type { ResourceResolver } from "../../parser/drawing-ml";
 import { px, pt, pct } from "../../domain/types";

@@ -9,7 +9,7 @@
 import { useMemo } from "react";
 import type { Color, ColorTransform } from "../../../../domain/color";
 import type { ColorContext } from "../../../../domain/resolution";
-import { resolveColor } from "../../../core/drawing-ml";
+import { resolveColor } from "../../../../domain/drawing-ml";
 import { useRenderContext } from "../../context";
 
 // =============================================================================

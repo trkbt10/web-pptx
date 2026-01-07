@@ -14,7 +14,7 @@ import { createDefaultSrgbColor } from "./ColorSpecEditor";
 import type { Color, ColorSpec, ColorTransform, SrgbColor, SchemeColor } from "../../../pptx/domain/color";
 import type { EditorProps, SelectOption } from "../../types";
 import type { ColorContext } from "../../../pptx/domain/resolution";
-import { resolveColor } from "../../../pptx/render/core/drawing-ml";
+import { resolveColor } from "../../../pptx/domain/drawing-ml";
 import { useEditorConfig } from "../../context/editor/EditorConfigContext";
 
 export type ColorEditorProps = EditorProps<Color> & {

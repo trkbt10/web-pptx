@@ -4,7 +4,7 @@
  * Tests font family formatting for CSS font strings.
  */
 
-import { formatFontFamily, GENERIC_FONT_FAMILIES } from "./font-family";
+import { formatFontFamily, GENERIC_FONT_FAMILIES } from "./font-format";
 
 describe("font-family", () => {
   describe("GENERIC_FONT_FAMILIES", () => {

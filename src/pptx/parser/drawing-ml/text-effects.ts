@@ -16,7 +16,7 @@ import type {
   TextSoftEdgeConfig,
   TextReflectionConfig,
 } from "../../domain/drawing-ml";
-import { resolveColor } from "../../render/core/drawing-ml/color";
+import { resolveColor } from "../../domain/drawing-ml";
 
 // =============================================================================
 // Resolution Functions

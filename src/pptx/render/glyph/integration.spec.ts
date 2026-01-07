@@ -3,19 +3,19 @@
  *
  * Tests the full pipeline WITHOUT mocks to verify actual behavior.
  */
-import { clearAllGlyphCache } from "./cache";
+import { clearGlyphCache } from "./extraction/glyph-cache";
 
 // Note: This test runs in Node/Bun environment without real canvas.
 // It validates error paths for glyph extraction.
 
 describe("glyph integration", () => {
   beforeEach(() => {
-    clearAllGlyphCache();
+    clearGlyphCache();
   });
 
   describe("extractor", () => {
     it("should throw in non-browser environment", async () => {
-      const { extractGlyphContour } = await import("./extractor");
+      const { extractGlyphContour } = await import("./extraction/glyph");
 
       expect(() => extractGlyphContour("A", "Arial", {
         fontSize: 24,
@@ -25,7 +25,7 @@ describe("glyph integration", () => {
     });
 
     it("should throw for whitespace in non-browser environment", async () => {
-      const { extractGlyphContour } = await import("./extractor");
+      const { extractGlyphContour } = await import("./extraction/glyph");
 
       expect(() => extractGlyphContour(" ", "Arial", {
         fontSize: 24,
@@ -37,7 +37,7 @@ describe("glyph integration", () => {
 
   describe("layout", () => {
     it("should throw when layout needs glyph extraction in non-browser environment", async () => {
-      const { layoutText } = await import("./layout");
+      const { layoutText } = await import("./layout/text");
 
       expect(() => layoutText("AB", {
         fontFamily: "Arial",
@@ -48,7 +48,7 @@ describe("glyph integration", () => {
     });
 
     it("should handle empty text", async () => {
-      const { layoutText } = await import("./layout");
+      const { layoutText } = await import("./layout/text");
 
       const result = layoutText("", {
         fontFamily: "Arial",

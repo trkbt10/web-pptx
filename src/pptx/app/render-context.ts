@@ -12,7 +12,7 @@ import { createPlaceholderTable, createColorMap } from "../parser/slide/resource
 import { parseTheme, parseMasterTextStyles } from "../parser/drawing-ml";
 import { DEFAULT_RENDER_OPTIONS, type RenderOptions } from "../render/render-options";
 import { createRenderContextFromSlideContext } from "../render/core/context";
-import { getBackgroundFillData } from "../render/core/drawing-ml";
+import { getBackgroundFillData } from "../parser/drawing-ml";
 import { parseShapeTree } from "../parser/shape-parser";
 import type { XmlElement, XmlDocument } from "../../xml";
 import { getByPath, getChild } from "../../xml";

@@ -9,7 +9,7 @@
 import { memo, type ReactNode } from "react";
 import type { GlowEffect } from "../../../../domain/effects";
 import type { ColorContext } from "../../../../domain/resolution";
-import { resolveColor } from "../../../core/drawing-ml";
+import { resolveColor } from "../../../../domain/drawing-ml";
 
 // =============================================================================
 // Types

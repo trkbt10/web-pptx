@@ -42,6 +42,7 @@ export {
   parseBackgroundProperties,
   findBackgroundRef,
   hasOwnBackground,
+  getBackgroundFillData,
 } from "./background";
 
 // Theme parsing

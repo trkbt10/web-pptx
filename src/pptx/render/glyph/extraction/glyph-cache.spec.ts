@@ -1,20 +1,17 @@
 /**
  * @file Tests for glyph-cache.ts
  *
- * Tests character-level caching and kerning table support.
+ * Tests character-level glyph caching for extraction results.
  */
 import {
   getCachedGlyph,
   setCachedGlyph,
   hasGlyphCache,
   clearFontGlyphCache,
-  clearAllGlyphCache,
+  clearGlyphCache,
   getGlyphCacheStats,
-  setKerningTable,
-  getKerningAdjustment,
-  hasKerningTable,
-} from "./cache";
-import type { GlyphContour, GlyphStyleKey, KerningTable } from "./types";
+} from "./glyph-cache";
+import type { GlyphContour, GlyphStyleKey } from "../types";
 
 describe("glyph-cache", () => {
   const testStyle: GlyphStyleKey = {
@@ -45,7 +42,7 @@ describe("glyph-cache", () => {
   };
 
   beforeEach(() => {
-    clearAllGlyphCache();
+    clearGlyphCache();
   });
 
   describe("getCachedGlyph / setCachedGlyph", () => {
@@ -116,12 +113,12 @@ describe("glyph-cache", () => {
     });
   });
 
-  describe("clearAllGlyphCache", () => {
+  describe("clearGlyphCache", () => {
     it("should clear all caches", () => {
       setCachedGlyph("Arial", "A", testStyle, testGlyph);
       setCachedGlyph("Times New Roman", "B", testStyle, testGlyph);
 
-      clearAllGlyphCache();
+      clearGlyphCache();
 
       expect(getCachedGlyph("Arial", "A", testStyle)).toBeUndefined();
       expect(getCachedGlyph("Times New Roman", "B", testStyle)).toBeUndefined();
@@ -150,53 +147,6 @@ describe("glyph-cache", () => {
       expect(stats.fonts).toBe(2);
       expect(stats.characters).toBe(3); // Arial A, Arial B, Times A
       expect(stats.totalGlyphs).toBe(4); // Arial A normal, Arial A bold, Arial B, Times A
-    });
-  });
-
-  describe("kerning support", () => {
-    describe("setKerningTable / getKerningAdjustment", () => {
-      it("should return 0 for missing kerning table", () => {
-        expect(getKerningAdjustment("Arial", "A", "V")).toBe(0);
-      });
-
-      it("should return 0 for missing kerning pair", () => {
-        const table: KerningTable = {
-          pairs: new Map([["AV", -0.5]]),
-        };
-        setKerningTable("Arial", table);
-
-        expect(getKerningAdjustment("Arial", "T", "o")).toBe(0);
-      });
-
-      it("should return kerning adjustment for known pair", () => {
-        const table: KerningTable = {
-          pairs: new Map([
-            ["AV", -0.5],
-            ["To", -0.3],
-            ["WA", -0.4],
-          ]),
-        };
-        setKerningTable("Arial", table);
-
-        expect(getKerningAdjustment("Arial", "A", "V")).toBe(-0.5);
-        expect(getKerningAdjustment("Arial", "T", "o")).toBe(-0.3);
-        expect(getKerningAdjustment("Arial", "W", "A")).toBe(-0.4);
-      });
-    });
-
-    describe("hasKerningTable", () => {
-      it("should return false when no kerning table exists", () => {
-        expect(hasKerningTable("Arial")).toBe(false);
-      });
-
-      it("should return true when kerning table exists", () => {
-        const table: KerningTable = {
-          pairs: new Map([["AV", -0.5]]),
-        };
-        setKerningTable("Arial", table);
-
-        expect(hasKerningTable("Arial")).toBe(true);
-      });
     });
   });
 });

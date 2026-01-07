@@ -9,7 +9,7 @@
 import type { Fill, Color } from "../../domain/color";
 import type { ColorContext } from "../../domain/resolution";
 import type { TextFillConfig } from "../../domain/drawing-ml";
-import { resolveColor } from "../../render/core/drawing-ml/color";
+import { resolveColor } from "../../domain/drawing-ml";
 
 // =============================================================================
 // Resource Resolver Type

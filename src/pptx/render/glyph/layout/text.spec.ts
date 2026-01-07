@@ -5,10 +5,11 @@
  * Uses dependency injection with simple fakes instead of mocks.
  */
 
-import { clearAllGlyphCache, setKerningTable } from "./cache";
-import type { GlyphContour, TextLayoutConfig } from "./types";
-import type { LayoutDeps } from "./layout";
-import { layoutText, getTextBounds, measureTextWidth, splitTextIntoLines } from "./layout";
+import { clearGlyphCache } from "../extraction/glyph-cache";
+import { setKerningTable } from "./kerning-table";
+import type { GlyphContour, TextLayoutConfig } from "../types";
+import type { LayoutDeps } from "./text";
+import { layoutText, getTextBounds, measureTextWidth, splitTextIntoLines } from "./text";
 
 // =============================================================================
 // Simple Fake Implementation
@@ -82,7 +83,7 @@ describe("text-layout", () => {
   };
 
   beforeEach(() => {
-    clearAllGlyphCache();
+    clearGlyphCache();
   });
 
   describe("layoutText", () => {

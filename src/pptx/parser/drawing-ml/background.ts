@@ -9,9 +9,10 @@
 
 import type { XmlElement } from "../../../xml";
 import { getChild } from "../../../xml";
-import type { BackgroundElement, BackgroundParseResult } from "../../domain/drawing-ml";
+import type { BackgroundElement, BackgroundParseResult, BackgroundFill, FillType, GradientFill } from "../../domain/drawing-ml";
 import type { SlideRenderContext } from "../../render/core/slide-context";
 import { getSolidFill } from "./color";
+import { getGradientFill, getFillType, formatFillResult, getPicFillFromContext, detectImageFillMode } from "./fill";
 
 // =============================================================================
 // Background Element Extraction
@@ -191,4 +192,213 @@ export function hasOwnBackground(ctx: SlideRenderContext): boolean {
   const bgRef = getChild(bg, "p:bgRef");
 
   return bgPr !== undefined || bgRef !== undefined;
+}
+
+// =============================================================================
+// Background Fill Data Resolution
+// =============================================================================
+
+/**
+ * Background fill handler for a specific fill type.
+ * Each handler extracts fill data and returns structured BackgroundFill.
+ */
+type BackgroundFillHandler = {
+  /** XML element key (e.g., "a:solidFill") */
+  readonly xmlKey: string;
+  /** Fill type identifier */
+  readonly type: FillType;
+  /** Extract fill data and return structured BackgroundFill */
+  extractData: (fill: XmlElement, ctx: SlideRenderContext, phClr?: string, fromTheme?: boolean) => BackgroundFill | null;
+};
+
+/**
+ * Generate CSS gradient string from gradient result.
+ *
+ * Per ECMA-376 Part 1, Section 20.1.8.33 (a:gradFill):
+ * - Linear gradient: a:lin element with ang attribute
+ * - Path gradient: a:path element with path attribute (circle, rect, shape)
+ *
+ * @see ECMA-376 Part 1, Section 20.1.8.33 (a:gradFill)
+ * @see ECMA-376 Part 1, Section 20.1.8.46 (a:path)
+ */
+function generateGradientCSS(gradResult: GradientFill): string {
+  // Sort colors by position - PPTX may have them in arbitrary order
+  const sortedColors = [...gradResult.color].sort((a, b) => {
+    const posA = parseInt(a.pos, 10);
+    const posB = parseInt(b.pos, 10);
+    return posA - posB;
+  });
+
+  // Create CSS gradient stops with positions
+  const stopsWithPos = sortedColors.map((c) => {
+    const pos = parseInt(c.pos, 10) / 1000; // Convert from 1/100000 to percentage
+    return `#${c.color} ${pos}%`;
+  }).join(", ");
+
+  // Handle path gradient (radial/circle)
+  if (gradResult.type === "path") {
+    // Per ECMA-376, a:path with path="circle" creates a radial gradient
+    // fillToRect defines the center and size of the gradient
+    const fillToRect = gradResult.fillToRect;
+    if (fillToRect !== undefined) {
+      // Convert fillToRect from 1/100000 to percentage
+      // Center position: (l + r) / 2, (t + b) / 2 (in percentage)
+      const centerX = (fillToRect.l + fillToRect.r) / 2000;
+      const centerY = (fillToRect.t + fillToRect.b) / 2000;
+      return `radial-gradient(circle at ${centerX}% ${centerY}%, ${stopsWithPos})`;
+    }
+    // Default radial gradient centered
+    return `radial-gradient(circle at 50% 50%, ${stopsWithPos})`;
+  }
+
+  // Linear gradient
+  return `linear-gradient(${gradResult.rot}deg, ${stopsWithPos})`;
+}
+
+/**
+ * Solid fill handler for backgrounds.
+ */
+const SOLID_FILL_BG_HANDLER: BackgroundFillHandler = {
+  xmlKey: "a:solidFill",
+  type: "SOLID_FILL",
+  extractData: (fill, ctx, phClr) => {
+    const solidFill = getChild(fill, "a:solidFill") ?? fill;
+    const colorHex = getSolidFill(solidFill, phClr, ctx.toColorContext());
+    if (colorHex === undefined) {
+      return null;
+    }
+    return {
+      css: formatFillResult("SOLID_FILL", colorHex, false) as string,
+      isSolid: true,
+      color: `#${colorHex}`,
+    };
+  },
+};
+
+/**
+ * Gradient fill handler for backgrounds.
+ */
+const GRADIENT_FILL_BG_HANDLER: BackgroundFillHandler = {
+  xmlKey: "a:gradFill",
+  type: "GRADIENT_FILL",
+  extractData: (fill, ctx, phClr) => {
+    const gradFill = getChild(fill, "a:gradFill") ?? fill;
+    const gradResult = getGradientFill(gradFill, ctx.toColorContext(), phClr);
+    const gradient = generateGradientCSS(gradResult);
+
+    // Sort colors by position for structured data
+    const sortedColors = [...gradResult.color].sort((a, b) => {
+      const posA = parseInt(a.pos, 10);
+      const posB = parseInt(b.pos, 10);
+      return posA - posB;
+    });
+
+    // Create structured gradient data for SVG rendering
+    const gradientData = {
+      angle: gradResult.rot,
+      type: gradResult.type,
+      pathShadeType: gradResult.type === "path" ? gradResult.pathShadeType : undefined,
+      fillToRect: gradResult.type === "path" ? gradResult.fillToRect : undefined,
+      stops: sortedColors.map((c) => ({
+        position: parseInt(c.pos, 10) / 1000, // Convert to percentage
+        color: c.color,
+      })),
+    };
+
+    return {
+      css: `background: ${gradient};`,
+      isSolid: false,
+      gradient,
+      gradientData,
+    };
+  },
+};
+
+/**
+ * Get resource context for blipFill resolution.
+ * Theme fills use theme resources, others use slide resources.
+ */
+function getBlipResourceContext(ctx: SlideRenderContext, fromTheme?: boolean) {
+  if (fromTheme === true) {
+    return ctx.toThemeResourceContext();
+  }
+  return ctx.toResourceContext();
+}
+
+/**
+ * Try to get picture fill using resource context.
+ *
+ * @see ECMA-376 Part 1, Section 20.1.4.1.7 (a:bgFillStyleLst)
+ */
+function tryGetPicFill(
+  blipFill: unknown,
+  ctx: SlideRenderContext,
+  fromTheme?: boolean,
+): string | undefined {
+  const resourceContext = getBlipResourceContext(ctx, fromTheme);
+  return getPicFillFromContext(blipFill, resourceContext);
+}
+
+/**
+ * Picture fill handler for backgrounds.
+ *
+ * @see ECMA-376 Part 1, Section 20.1.4.1.7 (a:bgFillStyleLst)
+ */
+const PIC_FILL_BG_HANDLER: BackgroundFillHandler = {
+  xmlKey: "a:blipFill",
+  type: "PIC_FILL",
+  extractData: (fill, ctx, _phClr, fromTheme) => {
+    const blipFill = getChild(fill, "a:blipFill") ?? fill;
+    const imgPath = tryGetPicFill(blipFill, ctx, fromTheme);
+    if (imgPath === undefined) {
+      return null;
+    }
+    const fillMode = detectImageFillMode(blipFill);
+    const bgSize = fillMode === "stretch" ? "100% 100%" : "cover";
+    return {
+      css: `background-image: url(${imgPath}); background-size: ${bgSize};`,
+      isSolid: false,
+      image: imgPath,
+      imageFillMode: fillMode,
+    };
+  },
+};
+
+/** Background fill handlers indexed by fill type */
+const BG_FILL_HANDLERS: Record<string, BackgroundFillHandler> = {
+  SOLID_FILL: SOLID_FILL_BG_HANDLER,
+  GRADIENT_FILL: GRADIENT_FILL_BG_HANDLER,
+  PIC_FILL: PIC_FILL_BG_HANDLER,
+};
+
+/** Default background fill result */
+const DEFAULT_BACKGROUND_FILL: BackgroundFill = {
+  css: "",
+  isSolid: true,
+};
+
+/**
+ * Get background fill as structured data
+ *
+ * Resolves background from slide/layout/master hierarchy and returns
+ * structured BackgroundFill data for rendering.
+ *
+ * @param ctx - Slide render context
+ * @returns Background fill object
+ *
+ * @see ECMA-376 Part 1, Section 19.3.1.2 (p:bg)
+ */
+export function getBackgroundFillData(ctx: SlideRenderContext): BackgroundFill {
+  const bgResult = parseBackgroundProperties(ctx);
+
+  if (bgResult === undefined) {
+    return DEFAULT_BACKGROUND_FILL;
+  }
+
+  // Pass bgPr directly to getFillType since it contains the fill elements
+  const bgFillType = getFillType(bgResult.fill);
+  const handler = BG_FILL_HANDLERS[bgFillType];
+  const result = handler?.extractData(bgResult.fill, ctx, bgResult.phClr, bgResult.fromTheme);
+
+  return result ?? DEFAULT_BACKGROUND_FILL;
 }

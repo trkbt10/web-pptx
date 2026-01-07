@@ -1,10 +1,8 @@
 /**
- * @file Character-level glyph contour cache
+ * @file Glyph contour extraction cache
  *
- * Caches contours for individual characters, enabling:
- * - Efficient reuse of repeated characters
- * - Character-by-character text layout
- * - Kerning support through layout layer
+ * Caches extracted glyph contours for performance optimization.
+ * Prevents redundant re-extraction of the same characters.
  *
  * Architecture:
  * ```
@@ -14,7 +12,7 @@
  * ```
  */
 
-import type { GlyphContour, GlyphStyleKey, KerningTable } from "./types";
+import type { GlyphContour, GlyphStyleKey } from "../types";
 
 // =============================================================================
 // Cache Implementation
@@ -105,11 +103,10 @@ export function clearFontGlyphCache(fontFamily: string): void {
 }
 
 /**
- * Clear all glyph caches (includes kerning tables)
+ * Clear all glyph caches
  */
-export function clearAllGlyphCache(): void {
+export function clearGlyphCache(): void {
   fontCaches.clear();
-  kerningTables.clear();
 }
 
 /**
@@ -138,40 +135,4 @@ export function getGlyphCacheStats(): {
     fonts: fontCaches.size,
     ...stats,
   };
-}
-
-// =============================================================================
-// Kerning Support
-// =============================================================================
-
-const kerningTables = new Map<string, KerningTable>();
-
-/**
- * Set kerning table for a font
- */
-export function setKerningTable(fontFamily: string, table: KerningTable): void {
-  kerningTables.set(fontFamily, table);
-}
-
-/**
- * Get kerning adjustment for a character pair
- */
-export function getKerningAdjustment(
-  fontFamily: string,
-  first: string,
-  second: string,
-): number {
-  const table = kerningTables.get(fontFamily);
-  if (!table) {
-    return 0;
-  }
-
-  return table.pairs.get(first + second) ?? 0;
-}
-
-/**
- * Check if font has kerning table
- */
-export function hasKerningTable(fontFamily: string): boolean {
-  return kerningTables.has(fontFamily);
 }

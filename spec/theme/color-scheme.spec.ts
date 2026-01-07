@@ -8,7 +8,7 @@
  */
 
 import { openPresentation } from "../../src/pptx";
-import { resolveColor } from "../../src/pptx/render/core/drawing-ml";
+import { resolveColor } from "../../src/pptx/domain/drawing-ml";
 import type { Color } from "../../src/pptx/domain";
 import type { ColorContext } from "../../src/pptx/domain/resolution";
 import { createPresentationFile, THEMES_PPTX_PATH } from "./test-utils";

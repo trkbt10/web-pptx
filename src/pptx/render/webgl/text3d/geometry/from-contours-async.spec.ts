@@ -14,7 +14,7 @@ vi.mock("../../../glyph/layout-async", () => ({
   layoutTextAsync: vi.fn(),
 }));
 
-import { layoutTextAsync } from "../../../glyph/layout-async";
+import { layoutTextAsync } from "../../../glyph/layout/text-async";
 import { pathsToShapes } from "./from-contours-async";
 
 describe("from-contours-async", () => {

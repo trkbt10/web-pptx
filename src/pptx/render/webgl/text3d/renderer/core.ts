@@ -17,7 +17,7 @@ import { createTextGeometryWithShapesAsync, type TextGeometryResult } from "../g
 import { applyTextWarp } from "../geometry/text-warp";
 import type { TextWarp } from "../../../../domain/text";
 // Color resolution (shared with React renderer)
-import { resolveColor } from "../../../core/drawing-ml";
+import { resolveColor } from "../../../../domain/drawing-ml";
 // Effects imports
 import {
   applyAllEffects,
@@ -436,7 +436,7 @@ const DEFAULT_CONTOUR_COLOR = "#000000";
 /**
  * Extract contour configuration from shape3d if available.
  *
- * Uses shared color resolution from render/core/drawing-ml to properly
+ * Uses shared color resolution from domain/drawing-ml to properly
  * handle all ECMA-376 color types (srgb, scheme, hsl, etc.).
  *
  * @param shape3d - Shape 3D properties

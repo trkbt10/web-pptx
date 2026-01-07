@@ -4,11 +4,11 @@
  * Tests optical kerning calculations based on glyph contours.
  */
 
-import type { GlyphContour } from "./types";
+import type { GlyphContour } from "../types";
 import {
   calculateOpticalAdvance,
   calculateOpticalKerningAdjustment,
-} from "./optical-kerning";
+} from "./kerning";
 
 // =============================================================================
 // Test Fixtures

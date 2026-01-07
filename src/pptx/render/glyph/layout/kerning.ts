@@ -4,7 +4,7 @@
  * Computes pair spacing based on measured glyph contours instead of font kerning tables.
  */
 
-import type { GlyphContour } from "./types";
+import type { GlyphContour } from "../types";
 
 function hasInk(glyph: GlyphContour): boolean {
   if (glyph.paths.length === 0) {

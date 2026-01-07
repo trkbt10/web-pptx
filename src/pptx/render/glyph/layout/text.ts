@@ -15,10 +15,10 @@ import type {
   PositionedGlyph,
   TextLayoutConfig,
   TextLayoutResult,
-} from "./types";
-import { getKerningAdjustment } from "./cache";
-import { extractGlyphContour as defaultExtractGlyphContour } from "./extractor";
-import { calculateOpticalKerningAdjustment } from "./optical-kerning";
+} from "../types";
+import { getKerningAdjustment } from "./kerning-table";
+import { extractGlyphContour as defaultExtractGlyphContour } from "../extraction/glyph";
+import { calculateOpticalKerningAdjustment } from "./kerning";
 
 // =============================================================================
 // Types

@@ -1,11 +1,13 @@
 /**
- * @file DrawingML domain types
+ * @file DrawingML domain types and utilities
  *
- * Type definitions for DrawingML parsing and rendering.
- * This module contains only types - no runtime code.
+ * Type definitions and pure functions for DrawingML parsing and rendering.
  *
  * @see ECMA-376 Part 1, Chapter 20 (DrawingML)
  */
+
+// Color resolution (pure domain transformation)
+export { resolveColor } from "./color";
 
 // Fill types
 export type {

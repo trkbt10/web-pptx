@@ -22,7 +22,7 @@ import type {
 } from "../../../pptx/domain/color";
 import type { EditorProps, SelectOption } from "../../types";
 import type { ColorContext } from "../../../pptx/domain/resolution";
-import { resolveColor } from "../../../pptx/render/core/drawing-ml";
+import { resolveColor } from "../../../pptx/domain/drawing-ml";
 import { useEditorConfig } from "../../context/editor/EditorConfigContext";
 
 export type ColorSpecEditorProps = EditorProps<ColorSpec> & {

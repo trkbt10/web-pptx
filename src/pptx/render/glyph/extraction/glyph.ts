@@ -5,11 +5,11 @@
  * Works with cache for efficient character-level caching.
  */
 
-import type { GlyphContour, GlyphStyleKey, ContourPath } from "./types";
-import { getCachedGlyph, setCachedGlyph } from "./cache";
-import { formatFontFamily, GENERIC_FONT_FAMILIES } from "./font-family";
-import { extractContours, processContours } from "./contour-extraction";
-import { createWhitespaceGlyph } from "./whitespace-glyph";
+import type { GlyphContour, GlyphStyleKey, ContourPath } from "../types";
+import { getCachedGlyph, setCachedGlyph } from "./glyph-cache";
+import { formatFontFamily, GENERIC_FONT_FAMILIES } from "./font-format";
+import { extractContours, processContours } from "./contour";
+import { createWhitespaceGlyph } from "./whitespace";
 
 // =============================================================================
 // Configuration

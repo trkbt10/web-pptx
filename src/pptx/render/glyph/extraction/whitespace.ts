@@ -5,8 +5,8 @@
  * Shared by extractor.ts and worker-manager.ts.
  */
 
-import type { GlyphContour, GlyphStyleKey } from "./types";
-import { formatFontFamily, GENERIC_FONT_FAMILIES } from "./font-family";
+import type { GlyphContour, GlyphStyleKey } from "../types";
+import { formatFontFamily, GENERIC_FONT_FAMILIES } from "./font-format";
 
 /**
  * Create a glyph contour for whitespace characters.

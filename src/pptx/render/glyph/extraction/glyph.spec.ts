@@ -1,7 +1,7 @@
 /**
  * @file Tests for contour extraction with hole preservation
  */
-import { extractContours, processContours, type ImageDataLike } from "./contour-extraction";
+import { extractContours, processContours, type ImageDataLike } from "./contour";
 
 type Rect = {
   readonly x: number;

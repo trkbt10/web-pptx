@@ -102,8 +102,8 @@ const dropdownStyle: CSSProperties = {
   overflow: "hidden",
   display: "flex",
   flexDirection: "column",
-  width: "280px",
-  maxHeight: "320px",
+  width: "320px",
+  maxHeight: "360px",
 };
 
 const searchContainerStyle: CSSProperties = {
@@ -137,8 +137,8 @@ const gridContainerStyle: CSSProperties = {
 
 const gridStyle: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
-  gap: spacingTokens.xs,
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: spacingTokens.sm,
 };
 
 const cardBaseStyle: CSSProperties = {
@@ -151,6 +151,8 @@ const cardBaseStyle: CSSProperties = {
   cursor: "pointer",
   transition: "all 0.15s ease",
   border: "2px solid transparent",
+  minWidth: 0,
+  overflow: "hidden",
 };
 
 const cardSelectedStyle: CSSProperties = {
@@ -261,7 +263,7 @@ function LayoutSelectorGrid({
             onMouseLeave={() => onHover(null)}
             title={layout.value}
           >
-            <LayoutThumbnail shapes={layout.shapes} slideSize={slideSize} width={55} />
+            <LayoutThumbnail shapes={layout.shapes} slideSize={slideSize} width={70} />
             <div style={labelStyle}>{layout.label}</div>
           </div>
         );

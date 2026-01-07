@@ -17,7 +17,7 @@ import type { ResourceMap } from "../opc";
 import type { IndexTables } from "../domain/slide";
 import { px } from "../domain/types";
 import type { ZipFile } from "../domain";
-import { resolveColor } from "../render/core/drawing-ml";
+import { resolveColor } from "../domain/drawing-ml";
 
 // =============================================================================
 // Test Fixtures
