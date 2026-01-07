@@ -78,43 +78,33 @@ type WordArtPreviewProps = {
   background: BackgroundType;
 };
 
-function WordArtPreview({
-  preset,
-  text,
-  fontFamily,
-  bold,
-  italic,
-  scene3d,
-  shape3d,
-  background,
-}: WordArtPreviewProps) {
+function WordArtPreview({ preset, text, fontFamily, bold, italic, scene3d, shape3d, background }: WordArtPreviewProps) {
   const primaryColor = getPrimaryColor(preset);
   const fill = useMemo(() => demoFillToMaterial3DFill(preset.fill), [preset.fill]);
   const shadow = useMemo(() => getShadowConfigFromPreset(preset), [preset]);
 
-  const textBody = useMemo(() => createTextBody([
-    createParagraph([
-      createTextRun(text, createRunProperties({
-        fontSize: 48,
-        fontFamily,
-        bold,
-        italic,
-        color: primaryColor,
-      })),
-    ]),
-  ]), [text, fontFamily, bold, italic, primaryColor]);
+  const textBody = useMemo(
+    () =>
+      createTextBody([
+        createParagraph([
+          createTextRun(
+            text,
+            createRunProperties({
+              fontSize: 48,
+              fontFamily,
+              bold,
+              italic,
+              color: primaryColor,
+            }),
+          ),
+        ]),
+      ]),
+    [text, fontFamily, bold, italic, primaryColor],
+  );
 
   // Use library function and apply fill and shadow overrides
   const runs = useMemo(() => {
-    const baseRuns = extractText3DRuns(
-      textBody,
-      400,
-      150,
-      demoColorContext,
-      undefined,
-      undefined,
-      () => undefined,
-    );
+    const baseRuns = extractText3DRuns(textBody, 400, 150, demoColorContext, undefined, undefined, () => undefined);
     return baseRuns.map((run) => ({ ...run, fill, shadow }));
   }, [textBody, fill, shadow]);
 
@@ -123,13 +113,7 @@ function WordArtPreview({
   return (
     <div className="wordart-preview">
       <div className={canvasClass}>
-        <Text3DRenderer
-          runs={runs}
-          width={400}
-          height={150}
-          scene3d={scene3d}
-          shape3d={shape3d}
-        />
+        <Text3DRenderer runs={runs} width={400} height={150} scene3d={scene3d} shape3d={shape3d} />
       </div>
       <div className="wordart-preview-info">
         <span className="wordart-preview-name">{preset.name}</span>
@@ -193,18 +177,26 @@ export function WordArtGallery() {
     setBevelHeight(selectedPreset.bevelTop?.height ?? 6);
   }, [selectedPreset]);
 
-  const scene3d = useMemo(() => buildScene3d({
-    camera,
-    lightRig: { rig: lightRig, direction: lightDirection },
-  }), [camera, lightRig, lightDirection]);
+  const scene3d = useMemo(
+    () =>
+      buildScene3d({
+        camera,
+        lightRig: { rig: lightRig, direction: lightDirection },
+      }),
+    [camera, lightRig, lightDirection],
+  );
 
-  const shape3d = useMemo(() => buildShape3d({
-    extrusionHeight: extrusion,
-    preset: material,
-    bevel: bevelEnabled ? { width: bevelWidth, height: bevelHeight, preset: bevelPreset } : undefined,
-    contourWidth: selectedPreset.contour?.width,
-    contourColor: selectedPreset.contour?.color,
-  }), [extrusion, material, bevelEnabled, bevelWidth, bevelHeight, bevelPreset, selectedPreset.contour]);
+  const shape3d = useMemo(
+    () =>
+      buildShape3d({
+        extrusionHeight: extrusion,
+        preset: material,
+        bevelTop: bevelEnabled ? { width: bevelWidth, height: bevelHeight, preset: bevelPreset } : undefined,
+        contourWidth: selectedPreset.contour?.width,
+        contourColor: selectedPreset.contour?.color,
+      }),
+    [extrusion, material, bevelEnabled, bevelWidth, bevelHeight, bevelPreset, selectedPreset.contour],
+  );
 
   return (
     <div className="wordart-gallery">

@@ -586,30 +586,34 @@ function adjustBevelVertices(
 
 /**
  * Merge multiple geometries into one
+ *
+ * Preserves UV attributes for texture mapping (gradients, patterns).
  */
 function mergeGeometries(geometries: THREE.BufferGeometry[]): THREE.BufferGeometry {
   // Calculate total vertex count
   let totalVertices = 0;
-  let totalIndices = 0;
+  let hasUVs = true;
 
   for (const geom of geometries) {
     totalVertices += geom.attributes.position.count;
-    if (geom.index) {
-      totalIndices += geom.index.count;
+    // Check if all geometries have UVs
+    if (!geom.attributes.uv) {
+      hasUVs = false;
     }
   }
 
   // Create merged arrays
   const positions = new Float32Array(totalVertices * 3);
   const normals = new Float32Array(totalVertices * 3);
+  const uvs = hasUVs ? new Float32Array(totalVertices * 2) : null;
   const indices: number[] = [];
 
   let vertexOffset = 0;
-  let indexOffset = 0;
 
   for (const geom of geometries) {
     const posAttr = geom.attributes.position;
     const normalAttr = geom.attributes.normal;
+    const uvAttr = geom.attributes.uv;
 
     // Copy positions
     for (let i = 0; i < posAttr.count * 3; i++) {
@@ -620,6 +624,13 @@ function mergeGeometries(geometries: THREE.BufferGeometry[]): THREE.BufferGeomet
     if (normalAttr) {
       for (let i = 0; i < normalAttr.count * 3; i++) {
         normals[vertexOffset * 3 + i] = normalAttr.array[i];
+      }
+    }
+
+    // Copy UVs
+    if (uvs && uvAttr) {
+      for (let i = 0; i < uvAttr.count * 2; i++) {
+        uvs[vertexOffset * 2 + i] = uvAttr.array[i];
       }
     }
 
@@ -637,6 +648,9 @@ function mergeGeometries(geometries: THREE.BufferGeometry[]): THREE.BufferGeomet
   const merged = new THREE.BufferGeometry();
   merged.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   merged.setAttribute("normal", new THREE.BufferAttribute(normals, 3));
+  if (uvs) {
+    merged.setAttribute("uv", new THREE.BufferAttribute(uvs, 2));
+  }
   if (indices.length > 0) {
     merged.setIndex(indices);
   }

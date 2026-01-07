@@ -228,7 +228,7 @@ function Text3DPreview() {
           shape3d={buildShape3d({
             extrusionHeight: extrusion,
             preset: material,
-            bevel: { width: 8, height: 8, preset: bevelPreset },
+            bevelTop: { width: 8, height: 8, preset: bevelPreset },
             contourWidth: contourWidth > 0 ? contourWidth : undefined,
             contourColor: contourWidth > 0 ? contourColor : undefined,
           })}
