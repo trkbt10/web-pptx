@@ -28,6 +28,8 @@ export function createTestDocument(): PresentationDocument {
     slideHeight: px(540),
     colorContext: { colorScheme: {}, colorMap: {} },
     resources: {
+      getTarget: () => undefined,
+      getType: () => undefined,
       resolve: () => undefined,
       getMimeType: () => undefined,
       getFilePath: () => undefined,

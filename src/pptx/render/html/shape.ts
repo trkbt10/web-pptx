@@ -17,10 +17,10 @@ import {
   buildCssPositionStyles,
   getDashArrayPattern,
 } from "../core/index";
-import type { ResolvedImageFill } from "../core/fill";
+import type { ResolvedImageFill } from "../../domain/drawing-ml/fill-resolution";
 import { renderTextBody } from "./text";
-import { renderChart } from "../core/chart/index";
-import { renderDiagram, renderDiagramPlaceholder } from "../core/diagram";
+import { renderChart } from "../chart/index";
+import { renderDiagram, renderDiagramPlaceholder } from "./diagram";
 import { renderTable } from "../core/table";
 import type { ChartReference, DiagramReference, Fill } from "../../domain/index";
 import { createDefsCollector, isShapeHidden } from "../svg/slide-utils";

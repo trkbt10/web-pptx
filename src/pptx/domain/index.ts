@@ -491,7 +491,7 @@ export type {
   TablePartStyle,
   Cell3d,
   TableTextProperties,
-} from "./table";
+} from "./table/types";
 
 // =============================================================================
 // Chart Types
@@ -917,3 +917,20 @@ export type {
 // =============================================================================
 
 export { isPlaceholder, getNonPlaceholderShapes } from "./shape-utils";
+
+// =============================================================================
+// Resource Resolution Types
+// =============================================================================
+
+export type {
+  ResourceRelationshipResolver,
+  ResourceResolverFn,
+  ResourceResolver,
+} from "./resource-resolver";
+
+export {
+  createEmptyResourceResolver,
+  createEmptyRelationshipResolver,
+  toResolverFn,
+  toRelationshipResolver,
+} from "./resource-resolver";

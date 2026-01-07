@@ -14,9 +14,9 @@ import {
   type ResolvedGradientFill,
   type ResolvedImageFill,
   type ResolvedPatternFill,
-} from "../../core/fill";
+} from "../../../domain/drawing-ml/fill-resolution";
 import { PatternDef } from "../drawing-ml/fill";
-import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../../core/gradient";
+import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../../svg/gradient-utils";
 import { useSvgDefs } from "../hooks/useSvgDefs";
 import { useRenderContext } from "../context";
 

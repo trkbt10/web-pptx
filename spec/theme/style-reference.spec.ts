@@ -13,7 +13,7 @@ import { parseSlide } from "../../src/pptx/parser/slide/slide-parser";
 import { resolveColor } from "../../src/pptx/domain/drawing-ml";
 import { parseXml, getByPath } from "../../src/xml";
 import { createParseContext } from "../../src/pptx/parser/context";
-import { createSlideRenderContext } from "../../src/pptx/render/core/slide-context";
+import { createSlideRenderContext } from "../../src/pptx/render/slide-context";
 import type { ZipFile } from "../../src/pptx/domain";
 import {
   createPlaceholderTable,

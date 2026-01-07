@@ -10,7 +10,7 @@
 import type { XmlElement } from "../../../xml";
 import { getChild } from "../../../xml";
 import type { BackgroundElement, BackgroundParseResult, BackgroundFill, FillType, GradientFill } from "../../domain/drawing-ml";
-import type { SlideRenderContext } from "../../render/core/slide-context";
+import type { SlideRenderContext } from "../../render/slide-context";
 import { getSolidFill } from "./color";
 import { getGradientFill, getFillType, formatFillResult, getPicFillFromContext, detectImageFillMode } from "./fill";
 

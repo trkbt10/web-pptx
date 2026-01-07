@@ -11,8 +11,8 @@ import type {
   AnimationPlayerInstance,
   ElementFinder,
   PlayerState,
-} from "../../core/animation";
-import { createPlayer, extractShapeIds } from "../../core/animation";
+} from "../../animation";
+import { createPlayer, extractShapeIds } from "../../animation";
 
 // =============================================================================
 // Types

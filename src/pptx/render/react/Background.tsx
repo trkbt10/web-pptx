@@ -11,8 +11,8 @@ import type { Background as BackgroundType, SlideSize } from "../../domain";
 import type { ResolvedBackgroundFill } from "../context";
 import { useRenderContext } from "./context";
 import { useSvgDefs } from "./hooks/useSvgDefs";
-import { resolveFill } from "../core/fill";
-import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../core/gradient";
+import { resolveFill } from "../../domain/drawing-ml/fill-resolution";
+import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../svg/gradient-utils";
 
 // =============================================================================
 // Types

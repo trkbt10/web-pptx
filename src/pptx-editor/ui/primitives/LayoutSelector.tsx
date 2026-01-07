@@ -4,7 +4,7 @@
  * Displays layouts in a dropdown with grid-based SVG previews for selection.
  */
 
-import { type CSSProperties, useCallback, useState, useRef, useEffect } from "react";
+import { type CSSProperties, useCallback, useState, useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import type { SlideSize, PresentationFile, Shape } from "../../../pptx/domain";
 import type { SlideLayoutOption } from "../../../pptx/app";
@@ -121,12 +121,6 @@ const searchInputStyle: CSSProperties = {
   border: "none",
   borderRadius: radiusTokens.sm,
   outline: "none",
-};
-
-const containerStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  height: "100%",
 };
 
 const gridContainerStyle: CSSProperties = {
@@ -293,9 +287,10 @@ export function LayoutSelector({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [hoveredPath, setHoveredPath] = useState<string | null>(null);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
 
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Load layout shapes for preview
@@ -320,22 +315,28 @@ export function LayoutSelector({
     );
   });
 
-  // Calculate dropdown position
+  // Calculate dropdown position with viewport boundary clamping
   const updatePosition = useCallback(() => {
-    if (!triggerRef.current) {
+    if (!triggerRef.current || !dropdownRef.current) {
       return;
     }
-    const rect = triggerRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const dropdownHeight = 320;
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const dropdownRect = dropdownRef.current.getBoundingClientRect();
+    const padding = 8;
 
-    const hasSpaceBelow = spaceBelow >= dropdownHeight;
-    const top = hasSpaceBelow ? rect.bottom + 4 : rect.top - dropdownHeight - 4;
+    // Use actual rendered size
+    const { width: dropdownWidth, height: dropdownHeight } = dropdownRect;
 
-    setPosition({
-      top: Math.max(8, top),
-      left: Math.max(8, rect.left),
-    });
+    // Vertical positioning
+    const spaceBelow = window.innerHeight - triggerRect.bottom;
+    const hasSpaceBelow = spaceBelow >= dropdownHeight + padding;
+    const rawTop = hasSpaceBelow ? triggerRect.bottom + 4 : triggerRect.top - dropdownHeight - 4;
+    const top = Math.max(padding, Math.min(rawTop, window.innerHeight - dropdownHeight - padding));
+
+    // Horizontal positioning - clamp to viewport
+    const left = Math.max(padding, Math.min(triggerRect.left, window.innerWidth - dropdownWidth - padding));
+
+    setPosition({ top, left });
   }, []);
 
   const handleOpen = useCallback(() => {
@@ -350,6 +351,7 @@ export function LayoutSelector({
   const handleClose = useCallback(() => {
     setIsOpen(false);
     setSearchTerm("");
+    setPosition(null);
   }, []);
 
   const handleSelect = useCallback(
@@ -394,8 +396,8 @@ export function LayoutSelector({
     return cardUnselectedStyle;
   };
 
-  // Focus search input when opened
-  useEffect(() => {
+  // Calculate position after render and focus search input
+  useLayoutEffect(() => {
     if (isOpen) {
       updatePosition();
       requestAnimationFrame(() => {
@@ -405,7 +407,7 @@ export function LayoutSelector({
   }, [isOpen, updatePosition]);
 
   // Update position on scroll/resize
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isOpen) {
       return;
     }
@@ -445,10 +447,12 @@ export function LayoutSelector({
           <>
             <div style={overlayStyle} onClick={handleClose} />
             <div
+              ref={dropdownRef}
               style={{
                 ...dropdownStyle,
-                top: position.top,
-                left: position.left,
+                top: position?.top ?? 0,
+                left: position?.left ?? 0,
+                visibility: position ? "visible" : "hidden",
               }}
               onClick={handleDropdownClick}
               onPointerDown={handleDropdownPointerDown}

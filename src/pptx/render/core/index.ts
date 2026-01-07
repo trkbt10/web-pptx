@@ -31,7 +31,7 @@ export {
 export type { CoreRenderContextConfig, RenderContextFromSlideOptions } from "./context";
 
 // Transform utilities
-export type { TransformData } from "./transform";
+export type { TransformData } from "../transform";
 
 export {
   extractTransformData,
@@ -41,7 +41,7 @@ export {
   buildCssPositionStyles,
   buildSvgTransform,
   buildSvgTransformAttr,
-} from "./transform";
+} from "../transform";
 
 // Fill utilities
 export type {
@@ -53,28 +53,26 @@ export type {
   PresetDashStyle,
   DashStyle,
   ResolvedLine,
-} from "./fill";
+} from "../../domain/drawing-ml/fill-resolution";
 
-export { resolveColorWithAlpha, hexToRgb, formatRgba, resolveFill, resolveLine, getDashArrayPattern } from "./fill";
+export { resolveColorWithAlpha, hexToRgb, formatRgba, resolveFill, resolveLine, getDashArrayPattern } from "../../domain/drawing-ml/fill-resolution";
 
 // Background fill conversion
-export { toResolvedBackgroundFill } from "./background-fill";
+export { toResolvedBackgroundFill } from "../background-fill";
 
 // Gradient utilities
-export type { LinearGradientCoords, RadialGradientCoords } from "./gradient";
+export type { LinearGradientCoords, RadialGradientCoords } from "../svg/gradient-utils";
 
 export {
   ooxmlAngleToSvgLinearGradient,
   fillToRectToRadialCenter,
   getRadialGradientCoords,
-} from "./gradient";
+} from "../svg/gradient-utils";
 
 // Animation utilities
 export type {
   RuntimeAnimationTarget,
   EffectConfig,
-  EffectDirection,
-  EffectType,
   ElementFinder,
   RuntimeKeyframe,
   PlayerOptions,
@@ -90,7 +88,7 @@ export type {
   BrowserEffectType,
   BrowserEffectDirection,
   ParsedFilter,
-} from "./animation";
+} from "../animation";
 
 export {
   // Player
@@ -154,4 +152,4 @@ export {
   animateRandombar,
   animateWedge,
   animateCheckerboard,
-} from "./animation";
+} from "../animation";

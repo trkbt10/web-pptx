@@ -60,6 +60,8 @@ function createMockContextWithDiagram(diagramXml: string, slideWidth = 960, slid
   const encoder = new TextEncoder();
 
   const resourceResolver: ResourceResolver = {
+    getTarget: () => undefined,
+    getType: () => undefined,
     resolve: () => undefined,
     getMimeType: () => undefined,
     getFilePath: () => undefined,
@@ -118,6 +120,8 @@ function createMockContextWithDiagram(diagramXml: string, slideWidth = 960, slid
  */
 function createMockContextNoDiagram(slideWidth = 960, slideHeight = 720): RenderContext {
   const resourceResolver: ResourceResolver = {
+    getTarget: () => undefined,
+    getType: () => undefined,
     resolve: () => undefined,
     getMimeType: () => undefined,
     getFilePath: () => undefined,

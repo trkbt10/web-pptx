@@ -5,7 +5,7 @@
  */
 
 import type { ColorContext, FontScheme } from "../../domain/resolution";
-import type { SlideSize, Shape } from "../../domain";
+import type { SlideSize, Shape, ResourceResolver } from "../../domain";
 
 // =============================================================================
 // Render Options
@@ -68,39 +68,10 @@ export const DEFAULT_RENDER_OPTIONS: RenderOptions = {
 };
 
 // =============================================================================
-// Resource Resolution
+// Resource Resolution (re-exported from domain)
 // =============================================================================
 
-/**
- * Resource resolver for looking up embedded resources
- */
-export type ResourceResolver = {
-  /**
-   * Resolve a resource ID to a data URL or path
-   */
-  readonly resolve: (id: string) => string | undefined;
-
-  /**
-   * Get MIME type for a resource
-   */
-  readonly getMimeType: (id: string) => string | undefined;
-
-  /**
-   * Get raw file path for a resource ID (without converting to data URL)
-   */
-  readonly getFilePath: (id: string) => string | undefined;
-
-  /**
-   * Read raw file content from path
-   */
-  readonly readFile: (path: string) => Uint8Array | null;
-
-  /**
-   * Get the first resource path matching a relationship type
-   * @see ECMA-376 Part 2 (Open Packaging Conventions)
-   */
-  readonly getResourceByType?: (relType: string) => string | undefined;
-};
+export type { ResourceResolver };
 
 // =============================================================================
 // Warning Collection

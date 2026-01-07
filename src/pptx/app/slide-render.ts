@@ -9,7 +9,7 @@
 
 import type { XmlDocument } from "../../xml/index";
 import { getChild } from "../../xml/index";
-import type { SlideRenderContext } from "../render/core/slide-context";
+import type { SlideRenderContext } from "../render/slide-context";
 import type { Shape, SlideSize } from "../domain/index";
 import { getNonPlaceholderShapes } from "../domain/shape-utils";
 import { parseSlide } from "../parser/slide/slide-parser";

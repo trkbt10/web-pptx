@@ -34,7 +34,7 @@ import { renderGeometryData } from "./geometry";
 import { generateLineMarkers } from "./marker";
 import { resolveFill, formatRgba } from "../core";
 import { renderTextSvg, getDashArray } from "./slide-text";
-import { renderChart } from "../core/chart";
+import { renderChart } from "../chart";
 import { renderTableSvg } from "../core/table";
 import { px } from "../../domain/types";
 import { extractSvgContent } from "./svg-utils";

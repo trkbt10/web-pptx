@@ -16,7 +16,7 @@ import {
   ooxmlAngleToSvgLinearGradient,
   getRadialGradientCoords,
 } from "../core";
-import type { ResolvedImageFill } from "../core/fill";
+import type { ResolvedImageFill } from "../../domain/drawing-ml/fill-resolution";
 
 // =============================================================================
 // Fill Style Types

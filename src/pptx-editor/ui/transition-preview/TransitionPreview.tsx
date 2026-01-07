@@ -10,7 +10,7 @@ import type { TransitionType } from "../../../pptx/domain/transition";
 import {
   applyBrowserEffect,
   type BrowserEffectType,
-} from "../../../pptx/render/core/animation/browser-effects";
+} from "../../../pptx/render/animation/browser-effects";
 import { colorTokens } from "../design-tokens";
 
 // =============================================================================

@@ -16,7 +16,7 @@ import type {
   WarningCollector,
 } from "./types";
 import { DEFAULT_RENDER_OPTIONS } from "./types";
-import type { SlideRenderContext } from "./slide-context";
+import type { SlideRenderContext } from "../slide-context";
 import { getMimeTypeFromPath, createDataUrl } from "../../opc";
 
 // =============================================================================
@@ -28,6 +28,8 @@ import { getMimeTypeFromPath, createDataUrl } from "../../opc";
  */
 export function createEmptyResourceResolver(): ResourceResolver {
   return {
+    getTarget: () => undefined,
+    getType: () => undefined,
     resolve: () => undefined,
     getMimeType: () => undefined,
     getFilePath: () => undefined,
@@ -201,6 +203,8 @@ function buildColorContext(ctx: SlideRenderContext): ColorContext {
  */
 function buildResourceResolver(ctx: SlideRenderContext): ResourceResolver {
   return {
+    getTarget: (id: string) => ctx.slide.resources.getTarget(id),
+    getType: (id: string) => ctx.slide.resources.getType(id),
     resolve: (id: string) => {
       const target = ctx.resolveResource(id);
       if (target === undefined) {

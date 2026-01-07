@@ -12,7 +12,7 @@ import {
   TableCellPropertiesEditor,
   createDefaultTableCellProperties,
 } from "./TableCellPropertiesEditor";
-import type { TableCell, TableCellProperties } from "../../../pptx/domain/table";
+import type { TableCell, TableCellProperties } from "../../../pptx/domain/table/types";
 import type { TextBody } from "../../../pptx/domain/text";
 import type { EditorProps } from "../../types";
 

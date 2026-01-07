@@ -5,7 +5,7 @@
  * including edge cases with empty tables or incomplete data.
  */
 
-import type { Table, TableRow, TableCell } from "../../../pptx/domain/table";
+import type { Table, TableRow, TableCell } from "../../../pptx/domain/table/types";
 import { px } from "../../../pptx/domain/types";
 
 // =============================================================================

@@ -13,7 +13,7 @@ import type { ShapeId } from "../../../domain/types";
 import { px } from "../../../domain/types";
 import { useRenderContext } from "../context";
 import { buildTransformAttr } from "./transform";
-import { renderChart } from "../../core/chart";
+import { renderChart } from "../../chart";
 import { renderTableSvg } from "../../core/table";
 import { renderDiagramShapesSvg } from "../../svg/slide-shapes";
 import { extractSvgContent } from "../../svg/svg-utils";

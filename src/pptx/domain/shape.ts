@@ -13,7 +13,7 @@ import type {
   DiagramLayoutDefinition,
   DiagramStyleDefinition,
 } from "./diagram";
-import type { Table } from "./table";
+import type { Table } from "./table/types";
 import type { TextBody } from "./text";
 import type { Degrees, Percent, Pixels } from "./types";
 import type { Point, Transform, GroupTransform } from "./geometry";

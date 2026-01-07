@@ -1,10 +1,21 @@
 /**
  * @file Table renderer
  *
- * Converts Table domain objects to HTML output.
+ * Converts Table domain objects to HTML and SVG output.
+ *
+ * @see ECMA-376 Part 1, Section 21.1.3 - DrawingML Tables
  */
 
-import type { Table, TableCell, TableRow } from "../../domain/table";
+import type { Table, TableCell, TableRow } from "../../domain/table/types";
+import {
+  resolveRowHeight,
+  resolveSvgRowHeight,
+  resolveTableScale,
+  resolveSpanCount,
+  resolveSpanWidth,
+  resolveSpanHeight,
+  isFlagEnabled,
+} from "../../domain/table/resolver";
 import type { HtmlString } from "../html/primitives";
 import { createElement, buildStyle, EMPTY_HTML } from "../html/primitives";
 import { fillToBackground, lineToBorder } from "../html/fill";
@@ -414,20 +425,6 @@ function escapeXmlText(text: string): string {
     .replace(/'/g, "&apos;");
 }
 
-function resolveRowHeight(row: TableRow): number | undefined {
-  if (row.height !== undefined && (row.height as number) > 0) {
-    return row.height as number;
-  }
-  return undefined;
-}
-
-function isFlagEnabled(flag: boolean | undefined, condition: boolean): boolean {
-  if (!flag) {
-    return false;
-  }
-  return condition;
-}
-
 function renderTableCellContent(
   textBody: TableCell["textBody"],
   width: number,
@@ -449,73 +446,6 @@ function renderTableCellContent(
     flipV: false,
   };
   return renderTextBody(textBody, cellTransform, ctx);
-}
-
-function resolveSvgRowHeight(row: TableRow, defaultHeight: number): number {
-  const height = row.height as number;
-  if (height > 0) {
-    return height;
-  }
-  return defaultHeight;
-}
-
-function resolveTableScale(
-  mode: NonNullable<HtmlRenderContext["options"]>["tableScalingMode"],
-  totalWidth: number,
-  totalHeight: number,
-  frameWidth: number,
-  frameHeight: number
-): { scaleX: number; scaleY: number } {
-  if (mode === "stretchToFit") {
-    const scaleX = totalWidth > 0 ? frameWidth / totalWidth : 1;
-    const scaleY = totalHeight > 0 ? frameHeight / totalHeight : 1;
-    return { scaleX, scaleY };
-  }
-
-  if (mode === "uniformFit") {
-    if (totalWidth > 0 && totalHeight > 0) {
-      const scale = Math.min(frameWidth / totalWidth, frameHeight / totalHeight);
-      return { scaleX: scale, scaleY: scale };
-    }
-    return { scaleX: 1, scaleY: 1 };
-  }
-
-  return { scaleX: 1, scaleY: 1 };
-}
-
-function resolveSpanCount(span: number | undefined): number {
-  if (span !== undefined && span > 0) {
-    return span;
-  }
-  return 1;
-}
-
-function resolveSpanWidth(
-  columnWidths: number[],
-  colIdx: number,
-  span: number,
-  fallbackWidth: number
-): number {
-  const spanWidths = columnWidths.slice(colIdx, colIdx + span);
-  const summed = spanWidths.reduce((total, width) => total + width, 0);
-  if (summed > 0) {
-    return summed;
-  }
-  return fallbackWidth;
-}
-
-function resolveSpanHeight(
-  rowHeights: number[],
-  rowIdx: number,
-  span: number,
-  fallbackHeight: number
-): number {
-  const spanHeights = rowHeights.slice(rowIdx, rowIdx + span);
-  const summed = spanHeights.reduce((total, height) => total + height, 0);
-  if (summed > 0) {
-    return summed;
-  }
-  return fallbackHeight;
 }
 
 function resolveCellFillStyle(

@@ -6,7 +6,7 @@
 
 import type { Line } from "../../../domain";
 import type { ColorContext } from "../../../domain/resolution";
-import { resolveLine, getDashArrayPattern } from "../../core/fill";
+import { resolveLine, getDashArrayPattern } from "../../../domain/drawing-ml/fill-resolution";
 import { useRenderContext } from "../context";
 
 // =============================================================================

@@ -7,7 +7,7 @@
 
 import { useCallback, useLayoutEffect, useRef } from "react";
 import type { Timing } from "../../../domain/animation";
-import type { ElementFinder } from "../../core/animation";
+import type { ElementFinder } from "../../animation";
 import { useAnimationPlayer } from "./useAnimationPlayer";
 
 // =============================================================================

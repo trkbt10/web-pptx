@@ -11,25 +11,17 @@ import type {
   ColorContext,
   FontScheme,
 } from "../domain/resolution";
+import type { ResourceRelationshipResolver } from "../domain";
 
 // =============================================================================
-// Resource Resolution
+// Resource Resolution (re-exported from domain)
 // =============================================================================
 
 /**
- * Resource resolver interface for looking up relationship targets
+ * Resource resolver interface for looking up relationship targets.
+ * Re-exported from domain for backward compatibility.
  */
-export type ResourceResolver = {
-  /**
-   * Get target path for a relationship ID
-   */
-  readonly getTarget: (id: string) => string | undefined;
-
-  /**
-   * Get relationship type for an ID
-   */
-  readonly getType: (id: string) => string | undefined;
-};
+export type ResourceResolver = ResourceRelationshipResolver;
 
 /**
  * Create a resource resolver from ResourceMap
@@ -234,7 +226,7 @@ export function createEmptyParseContext(): ParseContext {
 // Parse Context Builder (from SlideRenderContext)
 // =============================================================================
 
-import type { SlideRenderContext } from "../render/core/slide-context";
+import type { SlideRenderContext } from "../render/slide-context";
 
 /**
  * Create ParseContext from SlideRenderContext.

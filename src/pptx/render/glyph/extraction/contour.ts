@@ -9,7 +9,12 @@ export type ImageDataLike = {
 };
 
 const THRESHOLD = 128;
-const SIMPLIFY_TOLERANCE = 0.8;
+/**
+ * Douglas-Peucker simplification tolerance in pixels (at RENDER_SCALE).
+ * Lower values preserve more detail but increase vertex count.
+ * With RENDER_SCALE=2, 0.4px ≈ 0.2 font units of tolerance.
+ */
+const SIMPLIFY_TOLERANCE = 0.4;
 const MIN_CONTOUR_POINTS = 4;
 const MAX_TRACE_ITERATIONS = 5000;
 const MAX_CONTOURS_PER_CHAR = 20;
@@ -61,28 +66,6 @@ function subsampleIfNeeded(points: Point[], maxLength: number): Point[] {
   }
   const step = Math.ceil(points.length / maxLength);
   return points.filter((_, i) => i % step === 0);
-}
-
-export function getContourExtractionWorkerCode(): string {
-  return [
-    `const THRESHOLD = ${THRESHOLD};`,
-    `const SIMPLIFY_TOLERANCE = ${SIMPLIFY_TOLERANCE};`,
-    `const MIN_CONTOUR_POINTS = ${MIN_CONTOUR_POINTS};`,
-    `const MAX_TRACE_ITERATIONS = ${MAX_TRACE_ITERATIONS};`,
-    `const MAX_CONTOURS_PER_CHAR = ${MAX_CONTOURS_PER_CHAR};`,
-    extractContoursFromBinary.toString(),
-    extractHoleMask.toString(),
-    fillHoles.toString(),
-    extractContours.toString(),
-    isBoundary.toString(),
-    traceBoundary.toString(),
-    subsampleIfNeeded.toString(),
-    processContours.toString(),
-    findFarthestPoint.toString(),
-    douglasPeucker.toString(),
-    perpDistance.toString(),
-    isClockwise.toString(),
-  ].join("\n");
 }
 
 function extractContoursFromBinary(

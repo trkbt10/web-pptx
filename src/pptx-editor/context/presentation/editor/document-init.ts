@@ -20,6 +20,8 @@ const EMPTY_COLOR_CONTEXT: ColorContext = {
 };
 
 const EMPTY_RESOURCE_RESOLVER: ResourceResolver = {
+  getTarget: () => undefined,
+  getType: () => undefined,
   resolve: () => undefined,
   getMimeType: () => undefined,
   getFilePath: () => undefined,

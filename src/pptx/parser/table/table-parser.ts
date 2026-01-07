@@ -19,7 +19,7 @@ import type {
   TableGrid,
   TableProperties,
   TableRow,
-} from "../../domain/table";
+} from "../../domain/table/types";
 import { px } from "../../domain/types";
 import {
   getAttr,

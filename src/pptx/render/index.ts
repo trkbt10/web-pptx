@@ -205,7 +205,7 @@ export { hasMedia, renderAudio, renderMedia, renderVideo } from "./html/media";
 // Diagram Rendering
 // =============================================================================
 
-export { renderDiagram, renderDiagramPlaceholder } from "./core/diagram";
+export { renderDiagram, renderDiagramPlaceholder } from "./html/diagram";
 
 // =============================================================================
 // Table Rendering

@@ -20,7 +20,7 @@ import type {
   CellVerticalType,
   CellBorders,
   Cell3d,
-} from "../../../pptx/domain/table";
+} from "../../../pptx/domain/table/types";
 import type { BevelPresetType } from "../../../pptx/domain";
 import type { Line } from "../../../pptx/domain/color";
 import type {

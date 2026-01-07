@@ -6,7 +6,7 @@
  * @see ECMA-376 Part 1, Section 20.1.4.2
  */
 
-import type { CellBorders, TablePartStyle, TableStyle } from "../../domain/table";
+import type { CellBorders, TablePartStyle, TableStyle } from "../../domain/table/types";
 import { getAttr, getChild, getChildren, type XmlElement } from "../../../xml/index";
 import { parseFillFromParent } from "../graphics/fill-parser";
 import { parseLine } from "../graphics/line-parser";

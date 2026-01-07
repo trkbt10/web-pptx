@@ -6,7 +6,7 @@
 
 import type { XmlElement } from "../xml";
 import type { ColorResolveContext } from "./domain/resolution";
-import type { SlideRenderContext, ResourceContext } from "./render/core/slide-context";
+import type { SlideRenderContext, ResourceContext } from "./render/slide-context";
 import type {
   ColorMap,
   ColorScheme,

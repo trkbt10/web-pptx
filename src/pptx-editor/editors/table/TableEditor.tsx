@@ -17,7 +17,7 @@ import type {
   TableRow,
   TableCell,
   TableColumn,
-} from "../../../pptx/domain/table";
+} from "../../../pptx/domain/table/types";
 import type { EditorProps } from "../../types";
 
 export type TableEditorProps = EditorProps<Table> & {

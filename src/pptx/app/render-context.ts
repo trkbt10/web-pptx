@@ -6,8 +6,8 @@
  */
 
 import type { Slide as ApiSlide } from "./types";
-import type { SlideRenderContext } from "../render/core/slide-context";
-import { createSlideRenderContext } from "../render/core/slide-context";
+import type { SlideRenderContext } from "../render/slide-context";
+import { createSlideRenderContext } from "../render/slide-context";
 import { createPlaceholderTable, createColorMap } from "../parser/slide/resource-adapters";
 import { parseTheme, parseMasterTextStyles } from "../parser/drawing-ml";
 import { DEFAULT_RENDER_OPTIONS, type RenderOptions } from "../render/render-options";

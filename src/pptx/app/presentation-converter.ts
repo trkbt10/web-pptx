@@ -85,6 +85,12 @@ function createResourceResolverFromFile(file: PresentationFile, apiSlide: ApiSli
     ?? apiSlide.masterRelationships.getTarget(id)
     ?? apiSlide.themeRelationships.getTarget(id);
 
+  const resolveType = (id: string): string | undefined =>
+    apiSlide.relationships.getType(id)
+    ?? apiSlide.layoutRelationships.getType(id)
+    ?? apiSlide.masterRelationships.getType(id)
+    ?? apiSlide.themeRelationships.getType(id);
+
   const resolveTargetByType = (relType: string): string | undefined =>
     apiSlide.relationships.getTargetByType(relType)
     ?? apiSlide.layoutRelationships.getTargetByType(relType)
@@ -92,6 +98,8 @@ function createResourceResolverFromFile(file: PresentationFile, apiSlide: ApiSli
     ?? apiSlide.themeRelationships.getTargetByType(relType);
 
   return {
+    getTarget: resolveTarget,
+    getType: resolveType,
     resolve: (id: string) => {
       const target = resolveTarget(id);
       if (!target) {
@@ -249,6 +257,8 @@ function buildResourceResolver(file: PresentationFile, firstApiSlide: ApiSlide |
  */
 function createEmptyResourceResolver(): ResourceResolver {
   return {
+    getTarget: () => undefined,
+    getType: () => undefined,
     resolve: () => undefined,
     getMimeType: () => undefined,
     getFilePath: () => undefined,

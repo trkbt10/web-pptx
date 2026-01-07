@@ -4,7 +4,7 @@
  * Parses DrawingML a:cell3D elements for table cells and table styles.
  */
 
-import type { Cell3d } from "../domain/table";
+import type { Cell3d } from "../domain/table/types";
 import type { LightRigDirection, LightRigType, PresetMaterialType } from "../domain/types";
 import { getAttr, getChild, type XmlElement } from "../../xml";
 import { getEmuAttr } from "./primitive";

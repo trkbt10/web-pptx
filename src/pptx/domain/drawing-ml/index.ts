@@ -45,3 +45,24 @@ export type {
   TextReflectionConfig,
   TextEffectsConfig,
 } from "./text-effects";
+
+// Fill resolution (domain Fill → ResolvedFill transformation)
+export type {
+  ResolvedColor,
+  ResolvedSolidFill,
+  ResolvedGradientStop,
+  ResolvedGradientFill,
+  ResolvedFill,
+  PresetDashStyle,
+  DashStyle,
+  ResolvedLine,
+} from "./fill-resolution";
+
+export {
+  resolveColorWithAlpha,
+  hexToRgb,
+  formatRgba,
+  resolveFill,
+  resolveLine,
+  getDashArrayPattern,
+} from "./fill-resolution";

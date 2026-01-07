@@ -23,7 +23,7 @@ import type {
   Shape,
 } from "../../pptx/domain";
 import type { PresetGeometry } from "../../pptx/domain/shape";
-import type { Table, TableRow, TableCell, TableGrid } from "../../pptx/domain/table";
+import type { Table, TableRow, TableCell, TableGrid } from "../../pptx/domain/table/types";
 import { px, deg, pct } from "../../pptx/domain/types";
 
 // =============================================================================

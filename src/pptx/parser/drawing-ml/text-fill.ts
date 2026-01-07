@@ -9,16 +9,18 @@
 import type { Fill, Color } from "../../domain/color";
 import type { ColorContext } from "../../domain/resolution";
 import type { TextFillConfig } from "../../domain/drawing-ml";
+import type { ResourceResolverFn } from "../../domain";
 import { resolveColor } from "../../domain/drawing-ml";
 
 // =============================================================================
-// Resource Resolver Type
+// Resource Resolver Type (re-exported from domain)
 // =============================================================================
 
 /**
  * Resource resolver function for converting resource IDs to URLs.
+ * Re-exported from domain for backward compatibility.
  */
-export type ResourceResolver = (resourceId: string) => string | undefined;
+export type ResourceResolver = ResourceResolverFn;
 
 // =============================================================================
 // Resolution Functions
