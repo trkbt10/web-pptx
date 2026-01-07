@@ -3,8 +3,6 @@
  *
  * Tests the full pipeline WITHOUT mocks to verify actual behavior.
  */
-
-import { describe, it, expect, beforeEach } from "vitest";
 import { clearAllGlyphCache } from "./cache";
 
 // Note: This test runs in Node/Bun environment without real canvas.

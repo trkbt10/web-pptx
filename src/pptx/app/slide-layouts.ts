@@ -10,14 +10,18 @@
 import type { PresentationFile } from "../domain";
 import type { XmlDocument, XmlElement } from "../../xml";
 import type { IndexTables } from "../domain/slide";
-import type { ResourceMap } from "../opc";
+import type { ResourceMap } from "../domain/opc";
 import { parseContentTypes } from "../opc";
 import { getByPath } from "../../xml";
 import { parseAppVersion } from "./presentation-info";
-import { readXml, getRelationships, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS } from "../parser/slide/xml-reader";
+import { readXml, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS } from "../parser/slide/xml-reader";
 import { indexShapeTreeNodes } from "../parser/slide/shape-tree-indexer";
-import { findMasterFilename, findThemeFilename } from "../opc";
-import { parseRelationships } from "../opc/relationships";
+import {
+  loadRelationships,
+  findMasterPath,
+  findThemePath,
+} from "../parser/relationships";
+import { createEmptyResourceMap } from "../domain/relationships";
 import { getSlideLayoutAttributes } from "../domain/slide/layout";
 
 export type SlideLayoutOption = {
@@ -148,28 +152,28 @@ export function loadSlideLayoutBundle(
     throw new Error(`Failed to read slide layout XML: ${layoutPath}`);
   }
 
-  const layoutRelationships = getRelationships(file, layoutPath, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS);
+  const layoutRelationships = loadRelationships(file, layoutPath);
   const layoutTables = indexShapeTreeNodes(layout);
 
-  const masterPath = findMasterFilename(layoutRelationships);
+  const masterPath = findMasterPath(layoutRelationships);
   const master = masterPath
     ? readXml(file, masterPath, appVersion, false, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS)
     : null;
   const masterRelationships = masterPath
-    ? getRelationships(file, masterPath, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS)
-    : parseRelationships(null);
+    ? loadRelationships(file, masterPath)
+    : createEmptyResourceMap();
   const masterTables = indexShapeTreeNodes(master);
   const masterTextStyles = master
     ? getByPath(master, ["p:sldMaster", "p:txStyles"])
     : undefined;
 
-  const themePath = masterPath ? findThemeFilename(masterRelationships) : undefined;
+  const themePath = masterPath ? findThemePath(masterRelationships) : undefined;
   const theme = themePath
     ? readXml(file, themePath, appVersion, false, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS)
     : null;
   const themeRelationships = themePath
-    ? getRelationships(file, themePath, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS)
-    : parseRelationships(null);
+    ? loadRelationships(file, themePath)
+    : createEmptyResourceMap();
 
   return {
     layout,

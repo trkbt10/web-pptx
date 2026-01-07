@@ -5,9 +5,9 @@
 
 import type { PresentationFile } from "../../domain";
 import type { XmlDocument } from "../../../xml";
-import type { ResourceMap } from "../../opc";
+import type { ResourceMap } from "../../domain/opc";
 import { stripCdata, parseXml, applyMarkupCompatibility, type MarkupCompatibilityOptions } from "../../../xml";
-import { getRelationshipPath, parseRelationships } from "../../opc";
+import { loadRelationships } from "../relationships";
 
 export const DEFAULT_MARKUP_COMPATIBILITY_OPTIONS: MarkupCompatibilityOptions = {
   supportedPrefixes: [
@@ -73,16 +73,19 @@ export function readXml(
 
 /**
  * Get relationships for a file by reading its .rels file
+ *
  * @param file - The presentation file to read from
  * @param path - Path to the file whose relationships to get
+ * @param _markupCompatibility - Unused, kept for API compatibility
  * @returns ResourceMap for querying relationships
+ *
+ * @see ECMA-376 Part 2, Section 9.3 (Relationships)
  */
 export function getRelationships(
   file: PresentationFile,
   path: string,
-  markupCompatibility: MarkupCompatibilityOptions,
+  _markupCompatibility: MarkupCompatibilityOptions,
 ): ResourceMap {
-  const relsPath = getRelationshipPath(path);
-  const relsXml = readXml(file, relsPath, 16, false, markupCompatibility);
-  return parseRelationships(relsXml);
+  // Delegate to unified loadRelationships which handles RFC 3986 path resolution
+  return loadRelationships(file, path);
 }

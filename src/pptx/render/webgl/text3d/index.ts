@@ -214,4 +214,4 @@ export type {
   PositionedGlyph,
   TextLayoutConfig,
   TextLayoutResult,
-} from "../../glyph";
+} from "../../glyph/types";

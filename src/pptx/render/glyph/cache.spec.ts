@@ -3,8 +3,6 @@
  *
  * Tests character-level caching and kerning table support.
  */
-
-import { describe, it, expect, beforeEach } from "vitest";
 import {
   getCachedGlyph,
   setCachedGlyph,

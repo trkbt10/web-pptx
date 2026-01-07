@@ -5,8 +5,8 @@
  */
 
 import * as THREE from "three";
-import type { ContourPath } from "../../../glyph";
-import { layoutTextAsync } from "../../../glyph";
+import type { ContourPath } from "../../../glyph/types";
+import { layoutTextAsync } from "../../../glyph/layout-async";
 import { getBevelConfig, type AsymmetricBevelConfig } from "./bevel";
 import { mergeExtrudeGeometriesLegacy } from "./merge-geometries";
 import type { Bevel3d } from "../../../../domain/three-d";

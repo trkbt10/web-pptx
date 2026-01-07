@@ -21,6 +21,7 @@ import { getBasename, getByPath, getChildren } from "../../xml/index";
 export type ContentTypes = {
   slides: string[];
   slideLayouts: string[];
+  slideMasters: string[];
 };
 
 /**
@@ -82,11 +83,12 @@ export const RELATIONSHIP_TYPES = {
 export function parseContentTypes(contentTypesXml: XmlDocument): ContentTypes {
   const slidesLocArray: string[] = [];
   const slideLayoutsLocArray: string[] = [];
+  const slideMastersLocArray: string[] = [];
 
   // Get Types element from document
   const typesElement = getByPath(contentTypesXml, ["Types"]);
   if (!typesElement) {
-    return { slides: slidesLocArray, slideLayouts: slideLayoutsLocArray };
+    return { slides: slidesLocArray, slideLayouts: slideLayoutsLocArray, slideMasters: slideMastersLocArray };
   }
 
   // Get all Override elements
@@ -100,13 +102,18 @@ export function parseContentTypes(contentTypesXml: XmlDocument): ContentTypes {
       continue;
     }
 
+    // Remove leading slash from part name
+    const normalizedPath = partName.startsWith("/") ? partName.substring(1) : partName;
+
     switch (contentType) {
       case CONTENT_TYPES.SLIDE:
-        // Remove leading slash
-        slidesLocArray.push(partName.startsWith("/") ? partName.substring(1) : partName);
+        slidesLocArray.push(normalizedPath);
         break;
       case CONTENT_TYPES.SLIDE_LAYOUT:
-        slideLayoutsLocArray.push(partName.startsWith("/") ? partName.substring(1) : partName);
+        slideLayoutsLocArray.push(normalizedPath);
+        break;
+      case CONTENT_TYPES.SLIDE_MASTER:
+        slideMastersLocArray.push(normalizedPath);
         break;
     }
   }
@@ -121,6 +128,7 @@ export function parseContentTypes(contentTypesXml: XmlDocument): ContentTypes {
   return {
     slides: slidesLocArray,
     slideLayouts: slideLayoutsLocArray,
+    slideMasters: slideMastersLocArray,
   };
 }
 

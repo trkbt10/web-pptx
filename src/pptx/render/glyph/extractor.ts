@@ -9,6 +9,7 @@ import type { GlyphContour, GlyphStyleKey, ContourPath } from "./types";
 import { getCachedGlyph, setCachedGlyph } from "./cache";
 import { formatFontFamily, GENERIC_FONT_FAMILIES } from "./font-family";
 import { extractContours, processContours } from "./contour-extraction";
+import { createWhitespaceGlyph } from "./whitespace-glyph";
 
 // =============================================================================
 // Configuration
@@ -68,41 +69,8 @@ export function extractGlyphContours(
   return chars.map((char) => extractGlyphContour(char, fontFamily, style));
 }
 
-// =============================================================================
-// Whitespace Handling
-// =============================================================================
+// createWhitespaceGlyph imported from ./whitespace-glyph
 
-function createWhitespaceGlyph(
-  char: string,
-  fontFamily: string,
-  style: GlyphStyleKey,
-): GlyphContour {
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    throw new Error("Canvas 2D context is unavailable for whitespace metrics.");
-  }
-
-  ctx.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${formatFontFamily(fontFamily, GENERIC_FONT_FAMILIES)}`;
-  const metrics = ctx.measureText(char);
-  const advanceWidth = char === "\t" ? metrics.width * 4 : metrics.width;
-
-  return {
-    char,
-    paths: [],
-    bounds: { minX: 0, minY: 0, maxX: 0, maxY: 0 },
-    metrics: {
-      advanceWidth,
-      leftBearing: 0,
-      ascent: 0,
-      descent: 0,
-    },
-  };
-}
-
-/**
- * Create fallback glyph when extraction fails or in non-browser environment
- */
 // =============================================================================
 // Glyph Rendering & Extraction
 // =============================================================================

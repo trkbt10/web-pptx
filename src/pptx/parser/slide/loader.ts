@@ -4,20 +4,21 @@
  */
 
 import type { PresentationFile } from "../../domain";
-import type { ResourceMap } from "../../opc";
+import type { ResourceMap } from "../../domain/opc";
 import type { LayoutData, MasterData, ThemeData, DiagramData } from "../../domain/slide/data";
 import {
-  findLayoutFilename,
-  findMasterFilename,
-  findThemeFilename,
-  findDiagramDrawingFilename,
-  parseRelationships,
+  loadRelationships,
+  findLayoutPath,
+  findMasterPath,
+  findThemePath,
+  findDiagramDrawingPath,
   RELATIONSHIP_TYPES,
-} from "../../opc";
+} from "../relationships";
+import { createEmptyResourceMap } from "../../domain/relationships";
 import { getByPath } from "../../../xml";
 import { indexShapeTreeNodes } from "./shape-tree-indexer";
 import { transformDiagramNamespace } from "../diagram/transform";
-import { readXml, getRelationships, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS } from "./xml-reader";
+import { readXml, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS } from "./xml-reader";
 
 /**
  * Load layout data for a slide
@@ -26,19 +27,19 @@ import { readXml, getRelationships, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS } from 
  * @returns Layout data with parsed XML, index tables, and relationships
  */
 export function loadLayoutData(file: PresentationFile, relationships: ResourceMap): LayoutData {
-  const layoutPath = findLayoutFilename(relationships);
+  const layoutPath = findLayoutPath(relationships);
   if (layoutPath === undefined) {
     return {
       layout: null,
       layoutTables: indexShapeTreeNodes(null),
-      layoutRelationships: parseRelationships(null),
+      layoutRelationships: createEmptyResourceMap(),
     };
   }
   const layout = readXml(file, layoutPath, 16, false, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS);
   return {
     layout,
     layoutTables: indexShapeTreeNodes(layout),
-    layoutRelationships: getRelationships(file, layoutPath, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS),
+    layoutRelationships: loadRelationships(file, layoutPath),
   };
 }
 
@@ -49,13 +50,13 @@ export function loadLayoutData(file: PresentationFile, relationships: ResourceMa
  * @returns Master data with parsed XML, index tables, text styles, and relationships
  */
 export function loadMasterData(file: PresentationFile, layoutRelationships: ResourceMap): MasterData {
-  const masterPath = findMasterFilename(layoutRelationships);
+  const masterPath = findMasterPath(layoutRelationships);
   if (masterPath === undefined) {
     return {
       master: null,
       masterTables: indexShapeTreeNodes(null),
       masterTextStyles: undefined,
-      masterRelationships: parseRelationships(null),
+      masterRelationships: createEmptyResourceMap(),
     };
   }
   const master = readXml(file, masterPath, 16, false, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS);
@@ -63,7 +64,7 @@ export function loadMasterData(file: PresentationFile, layoutRelationships: Reso
     master,
     masterTables: indexShapeTreeNodes(master),
     masterTextStyles: getByPath(master, ["p:sldMaster", "p:txStyles"]),
-    masterRelationships: getRelationships(file, masterPath, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS),
+    masterRelationships: loadRelationships(file, masterPath),
   };
 }
 
@@ -74,11 +75,11 @@ export function loadMasterData(file: PresentationFile, layoutRelationships: Reso
  * @returns Theme data with parsed XML and relationships
  */
 export function loadThemeData(file: PresentationFile, masterRelationships: ResourceMap): ThemeData {
-  const themePath = findThemeFilename(masterRelationships);
+  const themePath = findThemePath(masterRelationships);
   if (themePath === undefined) {
     return {
       theme: null,
-      themeRelationships: parseRelationships(null),
+      themeRelationships: createEmptyResourceMap(),
       themeOverrides: [],
     };
   }
@@ -89,7 +90,7 @@ export function loadThemeData(file: PresentationFile, masterRelationships: Resou
     .filter((doc): doc is NonNullable<ThemeData["theme"]> => doc !== null);
   return {
     theme,
-    themeRelationships: getRelationships(file, themePath, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS),
+    themeRelationships: loadRelationships(file, themePath),
     themeOverrides,
   };
 }
@@ -101,23 +102,23 @@ export function loadThemeData(file: PresentationFile, masterRelationships: Resou
  * @returns Diagram data with parsed XML and relationships
  */
 export function loadDiagramData(file: PresentationFile, relationships: ResourceMap): DiagramData {
-  const diagramPath = findDiagramDrawingFilename(relationships);
+  const diagramPath = findDiagramDrawingPath(relationships);
   if (diagramPath === undefined) {
-    return { diagram: null, diagramRelationships: parseRelationships(null) };
+    return { diagram: null, diagramRelationships: createEmptyResourceMap() };
   }
 
   const rawDiagram = readXml(file, diagramPath, 16, false, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS);
   if (rawDiagram === null) {
-    return { diagram: null, diagramRelationships: parseRelationships(null) };
+    return { diagram: null, diagramRelationships: createEmptyResourceMap() };
   }
 
   const diagram = transformDiagramNamespace(rawDiagram);
   if (diagram === null) {
-    return { diagram: null, diagramRelationships: parseRelationships(null) };
+    return { diagram: null, diagramRelationships: createEmptyResourceMap() };
   }
 
   return {
     diagram,
-    diagramRelationships: getRelationships(file, diagramPath, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS),
+    diagramRelationships: loadRelationships(file, diagramPath),
   };
 }

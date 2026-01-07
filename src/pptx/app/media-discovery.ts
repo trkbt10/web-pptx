@@ -8,10 +8,9 @@
  */
 
 import type { PresentationFile } from "../domain";
-import { parseContentTypes, RELATIONSHIP_TYPES } from "../opc";
-import { parseRelationships } from "../opc/relationships";
-import { resolveRelativePath } from "../opc/utils";
-import { readXml, getRelationships, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS } from "../parser/slide/xml-reader";
+import { parseContentTypes } from "../opc";
+import { readXml, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS } from "../parser/slide/xml-reader";
+import { loadRelationships, RELATIONSHIP_TYPES } from "../parser/relationships";
 import { parseAppVersion } from "./presentation-info";
 
 // =============================================================================
@@ -69,6 +68,11 @@ export function discoverMediaPaths(file: PresentationFile): readonly string[] {
     collectMediaFromRelationships(file, layoutPath, mediaPaths);
   }
 
+  // Traverse masters (for background images, etc.)
+  for (const masterPath of contentTypes.slideMasters) {
+    collectMediaFromRelationships(file, masterPath, mediaPaths);
+  }
+
   // Sort and return
   return Array.from(mediaPaths).sort();
 }
@@ -106,6 +110,11 @@ export function discoverMedia(file: PresentationFile): readonly MediaInfo[] {
     collectMediaInfoFromRelationships(file, layoutPath, mediaMap);
   }
 
+  // Traverse masters (for background images, etc.)
+  for (const masterPath of contentTypes.slideMasters) {
+    collectMediaInfoFromRelationships(file, masterPath, mediaMap);
+  }
+
   // Sort by path and return
   return Array.from(mediaMap.values()).sort((a, b) => a.path.localeCompare(b.path));
 }
@@ -127,20 +136,21 @@ function resolveAppVersion(file: PresentationFile): number {
 
 /**
  * Collect media paths from a part's relationships.
+ *
+ * Uses loadRelationships which handles RFC 3986 path resolution.
  */
 function collectMediaFromRelationships(
   file: PresentationFile,
   partPath: string,
   mediaPaths: Set<string>,
 ): void {
-  const relationships = getRelationships(file, partPath, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS);
+  const relationships = loadRelationships(file, partPath);
 
-  // Get all image targets
+  // Get all image targets (resolved by loadRelationships)
   const imageTargets = relationships.getAllTargetsByType(RELATIONSHIP_TYPES.IMAGE);
 
   for (const target of imageTargets) {
-    const resolvedPath = resolveRelativePath(partPath, target);
-    mediaPaths.add(resolvedPath);
+    mediaPaths.add(target);
   }
 
   // Also check for other media types if needed
@@ -149,24 +159,24 @@ function collectMediaFromRelationships(
 
 /**
  * Collect media info with relationship details.
+ *
+ * Uses loadRelationships which handles RFC 3986 path resolution.
  */
 function collectMediaInfoFromRelationships(
   file: PresentationFile,
   partPath: string,
   mediaMap: Map<string, MediaInfo>,
 ): void {
-  const relationships = getRelationships(file, partPath, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS);
+  const relationships = loadRelationships(file, partPath);
 
-  // Get all image targets
+  // Get all image targets (resolved by loadRelationships)
   const imageTargets = relationships.getAllTargetsByType(RELATIONSHIP_TYPES.IMAGE);
 
   for (const target of imageTargets) {
-    const resolvedPath = resolveRelativePath(partPath, target);
-
     // Only add if not already present (keeps first reference)
-    if (!mediaMap.has(resolvedPath)) {
-      mediaMap.set(resolvedPath, {
-        path: resolvedPath,
+    if (!mediaMap.has(target)) {
+      mediaMap.set(target, {
+        path: target,
         relationType: RELATIONSHIP_TYPES.IMAGE,
         referencedFrom: partPath,
       });

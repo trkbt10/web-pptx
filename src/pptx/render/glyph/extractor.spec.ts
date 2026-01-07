@@ -1,8 +1,6 @@
 /**
  * @file Tests for contour extraction with hole preservation
  */
-
-import { describe, it, expect } from "vitest";
 import { extractContours, processContours, type ImageDataLike } from "./contour-extraction";
 
 type Rect = {

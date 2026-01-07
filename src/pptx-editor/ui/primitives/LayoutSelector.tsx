@@ -1,15 +1,16 @@
 /**
- * @file LayoutSelector - Grid-based layout selection component
+ * @file LayoutSelector - Dropdown-based layout selection component
  *
- * Displays layouts in a grid with SVG previews for selection.
+ * Displays layouts in a dropdown with grid-based SVG previews for selection.
  */
 
-import { type CSSProperties, useCallback, useState } from "react";
+import { type CSSProperties, useCallback, useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { SlideSize, PresentationFile, Shape } from "../../../pptx/domain";
 import type { SlideLayoutOption } from "../../../pptx/app";
 import { px } from "../../../pptx/domain/types";
 import { LayoutThumbnail, useLayoutThumbnails } from "../../thumbnail";
-import { colorTokens, fontTokens, spacingTokens } from "../design-tokens";
+import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../design-tokens";
 
 // =============================================================================
 // Types
@@ -40,35 +41,110 @@ export type LayoutSelectorProps = {
 
 const DEFAULT_SLIDE_SIZE: SlideSize = { width: px(9144000 / 914.4), height: px(6858000 / 914.4) };
 
-const containerStyle: CSSProperties = {
+// Trigger button styles
+const triggerStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  padding: "5px 8px",
+  fontSize: fontTokens.size.md,
+  fontFamily: "inherit",
+  color: `var(--text-primary, ${colorTokens.text.primary})`,
+  backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
+  border: "none",
+  borderRadius: radiusTokens.sm,
+  outline: "none",
+  cursor: "pointer",
+  width: "100%",
+  minHeight: "28px",
+  textAlign: "left",
+};
+
+const triggerDisabledStyle: CSSProperties = {
+  ...triggerStyle,
+  cursor: "not-allowed",
+  opacity: 0.5,
+};
+
+const triggerPreviewStyle: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: spacingTokens.sm,
+  flex: 1,
+  overflow: "hidden",
+};
+
+const triggerLabelStyle: CSSProperties = {
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+};
+
+const chevronStyle: CSSProperties = {
+  marginLeft: "4px",
+  flexShrink: 0,
+};
+
+// Dropdown styles
+const overlayStyle: CSSProperties = {
+  position: "fixed",
+  inset: 0,
+  zIndex: 999,
+};
+
+const dropdownStyle: CSSProperties = {
+  position: "fixed",
+  zIndex: 1000,
+  backgroundColor: `var(--bg-secondary, ${colorTokens.background.secondary})`,
+  borderRadius: radiusTokens.md,
+  border: `1px solid var(--border-primary, ${colorTokens.border.primary})`,
+  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4)",
+  overflow: "hidden",
   display: "flex",
   flexDirection: "column",
-  gap: spacingTokens.sm,
+  width: "280px",
+  maxHeight: "320px",
+};
+
+const searchContainerStyle: CSSProperties = {
+  padding: spacingTokens.sm,
+  borderBottom: `1px solid var(--border-subtle, ${colorTokens.border.subtle})`,
 };
 
 const searchInputStyle: CSSProperties = {
   width: "100%",
-  padding: "8px 12px",
-  backgroundColor: "var(--bg-secondary, #111111)",
-  border: "1px solid var(--border-subtle, #333)",
-  borderRadius: "6px",
-  color: "var(--text-primary, #fff)",
+  padding: "6px 8px",
   fontSize: fontTokens.size.sm,
+  fontFamily: "inherit",
+  color: `var(--text-primary, ${colorTokens.text.primary})`,
+  backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
+  border: "none",
+  borderRadius: radiusTokens.sm,
   outline: "none",
+};
+
+const containerStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  height: "100%",
+};
+
+const gridContainerStyle: CSSProperties = {
+  flex: 1,
+  overflow: "auto",
+  padding: spacingTokens.sm,
 };
 
 const gridStyle: CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(3, 1fr)",
   gap: spacingTokens.xs,
-  maxHeight: "200px",
-  overflow: "auto",
-  padding: "2px",
 };
 
 const cardBaseStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
+  alignItems: "center",
   gap: "4px",
   padding: spacingTokens.xs,
   borderRadius: "6px",
@@ -100,12 +176,13 @@ const cardDisabledStyle: CSSProperties = {
 };
 
 const labelStyle: CSSProperties = {
-  fontSize: fontTokens.size.xs,
+  fontSize: "10px",
   color: colorTokens.text.secondary,
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
   textAlign: "center",
+  width: "100%",
 };
 
 const emptyStyle: CSSProperties = {
@@ -119,12 +196,32 @@ const emptyStyle: CSSProperties = {
 // Subcomponents
 // =============================================================================
 
+function ChevronDown() {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+      style={chevronStyle}
+    >
+      <path
+        d="M2.5 4.5L6 8L9.5 4.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function LayoutSelectorEmpty({ hasOptions }: { hasOptions: boolean }) {
   const message = hasOptions ? "No matching layouts" : "No layouts available";
   return <div style={emptyStyle}>{message}</div>;
 }
 
-type LayoutSelectorContentProps = {
+type LayoutSelectorGridProps = {
   readonly layouts: readonly { value: string; label: string; shapes: readonly Shape[] }[];
   readonly hasOptions: boolean;
   readonly value?: string;
@@ -135,7 +232,7 @@ type LayoutSelectorContentProps = {
   readonly onHover: (path: string | null) => void;
 };
 
-function LayoutSelectorContent({
+function LayoutSelectorGrid({
   layouts,
   hasOptions,
   value,
@@ -144,7 +241,7 @@ function LayoutSelectorContent({
   getCardStyle,
   onSelect,
   onHover,
-}: LayoutSelectorContentProps) {
+}: LayoutSelectorGridProps) {
   if (layouts.length === 0) {
     return <LayoutSelectorEmpty hasOptions={hasOptions} />;
   }
@@ -178,7 +275,8 @@ function LayoutSelectorContent({
 // =============================================================================
 
 /**
- * Grid-based layout selector with SVG previews.
+ * Dropdown-based layout selector with SVG previews.
+ * Displays a trigger button that opens a popover with layout grid.
  */
 export function LayoutSelector({
   value,
@@ -190,8 +288,13 @@ export function LayoutSelector({
   className,
   style,
 }: LayoutSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [hoveredPath, setHoveredPath] = useState<string | null>(null);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Load layout shapes for preview
   const layoutThumbnails = useLayoutThumbnails({
@@ -199,6 +302,9 @@ export function LayoutSelector({
     layoutOptions: options,
     slideSize,
   });
+
+  // Find selected layout
+  const selectedLayout = layoutThumbnails.find((l) => l.value === value);
 
   // Filter layouts by search term
   const filteredLayouts = layoutThumbnails.filter((layout) => {
@@ -212,19 +318,66 @@ export function LayoutSelector({
     );
   });
 
+  // Calculate dropdown position
+  const updatePosition = useCallback(() => {
+    if (!triggerRef.current) {
+      return;
+    }
+    const rect = triggerRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const dropdownHeight = 320;
+
+    const hasSpaceBelow = spaceBelow >= dropdownHeight;
+    const top = hasSpaceBelow ? rect.bottom + 4 : rect.top - dropdownHeight - 4;
+
+    setPosition({
+      top: Math.max(8, top),
+      left: Math.max(8, rect.left),
+    });
+  }, []);
+
+  const handleOpen = useCallback(() => {
+    if (disabled) {
+      return;
+    }
+    setIsOpen(true);
+    setSearchTerm("");
+    setHoveredPath(null);
+  }, [disabled]);
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+    setSearchTerm("");
+  }, []);
+
   const handleSelect = useCallback(
     (layoutPath: string) => {
       if (disabled) {
         return;
       }
       onChange(layoutPath);
+      handleClose();
     },
-    [disabled, onChange],
+    [disabled, onChange, handleClose],
   );
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   }, []);
+
+  const handleDropdownPointerDown = useCallback(
+    (event: React.PointerEvent) => {
+      event.stopPropagation();
+    },
+    []
+  );
+
+  const handleDropdownClick = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+    },
+    []
+  );
 
   const getCardStyle = (isSelected: boolean, isHovered: boolean): CSSProperties => {
     if (disabled) {
@@ -239,27 +392,94 @@ export function LayoutSelector({
     return cardUnselectedStyle;
   };
 
-  return (
-    <div className={className} style={{ ...containerStyle, ...style }}>
-      <input
-        type="text"
-        placeholder="Search layouts..."
-        value={searchTerm}
-        onChange={handleSearchChange}
-        style={searchInputStyle}
-        disabled={disabled}
-      />
+  // Focus search input when opened
+  useEffect(() => {
+    if (isOpen) {
+      updatePosition();
+      requestAnimationFrame(() => {
+        searchInputRef.current?.focus();
+      });
+    }
+  }, [isOpen, updatePosition]);
 
-      <LayoutSelectorContent
-        layouts={filteredLayouts}
-        hasOptions={options.length > 0}
-        value={value}
-        hoveredPath={hoveredPath}
-        slideSize={slideSize}
-        getCardStyle={getCardStyle}
-        onSelect={handleSelect}
-        onHover={setHoveredPath}
-      />
-    </div>
+  // Update position on scroll/resize
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [isOpen, updatePosition]);
+
+  const buttonBaseStyle = disabled ? triggerDisabledStyle : triggerStyle;
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={handleOpen}
+        disabled={disabled}
+        className={className}
+        style={{ ...buttonBaseStyle, ...style }}
+      >
+        <div style={triggerPreviewStyle}>
+          {selectedLayout && (
+            <LayoutThumbnail shapes={selectedLayout.shapes} slideSize={slideSize} width={32} />
+          )}
+          <span style={triggerLabelStyle}>
+            {selectedLayout?.label ?? "Select layout..."}
+          </span>
+        </div>
+        <ChevronDown />
+      </button>
+
+      {isOpen &&
+        createPortal(
+          <>
+            <div style={overlayStyle} onClick={handleClose} />
+            <div
+              style={{
+                ...dropdownStyle,
+                top: position.top,
+                left: position.left,
+              }}
+              onClick={handleDropdownClick}
+              onPointerDown={handleDropdownPointerDown}
+            >
+              {/* Search input */}
+              <div style={searchContainerStyle}>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  placeholder="Search layouts..."
+                  style={searchInputStyle}
+                />
+              </div>
+
+              {/* Layout grid */}
+              <div style={gridContainerStyle}>
+                <LayoutSelectorGrid
+                  layouts={filteredLayouts}
+                  hasOptions={options.length > 0}
+                  value={value}
+                  hoveredPath={hoveredPath}
+                  slideSize={slideSize}
+                  getCardStyle={getCardStyle}
+                  onSelect={handleSelect}
+                  onHover={setHoveredPath}
+                />
+              </div>
+            </div>
+          </>,
+          document.body
+        )}
+    </>
   );
 }

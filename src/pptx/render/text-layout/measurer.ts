@@ -12,7 +12,7 @@ import { PT_TO_PX } from "../../domain/unit-conversion";
 import { isCjkCodePoint } from "../../../text/cjk";
 import { getCharWidth, getKerningAdjustment } from "../../../text/font-metrics";
 import { isMonospace } from "../../../text/fonts";
-import { measureTextWidth as measureGlyphTextWidth } from "../glyph";
+import { measureTextWidth as measureGlyphTextWidth } from "../glyph/layout";
 
 // =============================================================================
 // Character Width Calculation

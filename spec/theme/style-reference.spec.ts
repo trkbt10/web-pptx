@@ -19,7 +19,7 @@ import {
   createPlaceholderTable,
   createColorMap,
 } from "../../src/pptx/parser/slide/resource-adapters";
-import { parseRelationships } from "../../src/pptx/opc";
+import { createEmptyResourceMap } from "../../src/pptx/opc";
 import { parseTheme, parseColorScheme, parseMasterTextStyles } from "../../src/pptx/parser/drawing-ml";
 import { renderSlideSvgIntegrated } from "../../src/pptx/app/slide-render";
 import type { SpShape, Color, Pixels } from "../../src/pptx/domain";
@@ -102,12 +102,12 @@ describe("a:fontRef schemeClr application", () => {
 
     const slide = {
       content: parseXml("<p:sld></p:sld>"),
-      resources: parseRelationships(null),
+      resources: createEmptyResourceMap(),
       colorMapOverride: undefined,
     };
     const layout = {
       placeholders: createPlaceholderTable({ idTable: {}, idxTable: new Map(), typeTable: {} }),
-      resources: parseRelationships(null),
+      resources: createEmptyResourceMap(),
       content: undefined,
     };
 
@@ -117,7 +117,7 @@ describe("a:fontRef schemeClr application", () => {
       textStyles: { titleStyle: undefined, bodyStyle: undefined, otherStyle: undefined },
       placeholders: createPlaceholderTable({ idTable: {}, idxTable: new Map(), typeTable: {} }),
       colorMap: createColorMap(masterClrMap),
-      resources: parseRelationships(null),
+      resources: createEmptyResourceMap(),
       content: undefined,
     };
 
@@ -173,13 +173,13 @@ describe("a:fontRef schemeClr application", () => {
 
     const slide = {
       content: getByPath(slideDoc, ["p:sld"]),
-      resources: parseRelationships(null),
+      resources: createEmptyResourceMap(),
       colorMapOverride: undefined,
     };
 
     const layout = {
       placeholders: createPlaceholderTable({ idTable: {}, idxTable: new Map(), typeTable: {} }),
-      resources: parseRelationships(null),
+      resources: createEmptyResourceMap(),
       content: getByPath(layoutDoc, ["p:sldLayout"]),
     };
 
@@ -190,7 +190,7 @@ describe("a:fontRef schemeClr application", () => {
       textStyles: parseMasterTextStyles(masterTxStyles),
       placeholders: createPlaceholderTable({ idTable: {}, idxTable: new Map(), typeTable: {} }),
       colorMap: createColorMap(masterClrMap),
-      resources: parseRelationships(null),
+      resources: createEmptyResourceMap(),
       content: getByPath(masterDoc, ["p:sldMaster"]),
     };
 

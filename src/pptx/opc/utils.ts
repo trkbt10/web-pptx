@@ -28,12 +28,23 @@ const MIME_TYPES: Record<string, string> = {
   webp: "image/webp",
   wmf: "image/x-wmf",
   emf: "image/x-emf",
+  tif: "image/tiff",
+  tiff: "image/tiff",
+  bmp: "image/bmp",
   // Video
   mp4: "video/mp4",
   webm: "video/webm",
+  avi: "video/x-msvideo",
+  mov: "video/quicktime",
+  wmv: "video/x-ms-wmv",
   // Audio
   mp3: "audio/mpeg",
   wav: "audio/wav",
+  m4a: "audio/mp4",
+  wma: "audio/x-ms-wma",
+  aac: "audio/aac",
+  // Documents (embedded in PPTX)
+  pdf: "application/pdf",
 };
 
 /**

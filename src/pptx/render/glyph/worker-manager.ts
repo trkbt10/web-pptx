@@ -10,6 +10,7 @@ import { getCachedGlyph, setCachedGlyph } from "./cache";
 import { extractGlyphContour } from "./extractor";
 import { formatFontFamily, GENERIC_FONT_FAMILIES } from "./font-family";
 import { getContourExtractionWorkerCode } from "./contour-extraction";
+import { createWhitespaceGlyph } from "./whitespace-glyph";
 
 // =============================================================================
 // Types
@@ -181,34 +182,7 @@ export function terminateWorker(): void {
   pendingRequests.clear();
 }
 
-// =============================================================================
-// Fallback Glyphs
-// =============================================================================
-
-function createWhitespaceGlyph(char: string, fontFamily: string, style: GlyphStyleKey): GlyphContour {
-  if (typeof document === "undefined") {
-    throw new Error("Whitespace glyph extraction requires a browser canvas.");
-  }
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
-    throw new Error("Canvas 2D context is unavailable for whitespace metrics.");
-  }
-  ctx.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${formatFontFamily(fontFamily, GENERIC_FONT_FAMILIES)}`;
-  const metrics = ctx.measureText(char);
-  const advanceWidth = char === "\t" ? metrics.width * 4 : metrics.width;
-  return {
-    char,
-    paths: [],
-    bounds: { minX: 0, minY: 0, maxX: 0, maxY: 0 },
-    metrics: {
-      advanceWidth,
-      leftBearing: 0,
-      ascent: 0,
-      descent: 0,
-    },
-  };
-}
+// createWhitespaceGlyph imported from ./whitespace-glyph
 
 const formatFontFamilySource = formatFontFamily.toString();
 const contourExtractionWorkerCode = getContourExtractionWorkerCode();

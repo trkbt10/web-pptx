@@ -29,17 +29,19 @@ import { parseDiagramColorsDefinition } from "../diagram/color-parser";
 import { parseDiagramDataModel } from "../diagram/data-parser";
 import { parseDiagramLayoutDefinition } from "../diagram/layout-parser";
 import { parseDiagramStyleDefinition } from "../diagram/style-parser";
-import type { ResourceMap } from "../../opc";
+import type { ResourceMap } from "../../domain/opc";
 import {
-  parseRelationships,
   getRelationshipPath,
   RELATIONSHIP_TYPES,
   getMimeTypeFromPath,
   arrayBufferToBase64,
   createDataUrl,
-  resolveRelativePath,
-  normalizePath,
 } from "../../opc";
+import {
+  parseRelationships,
+  resolvePartPath,
+} from "../relationships";
+import { createEmptyResourceMap } from "../../domain/relationships";
 import { findVmlShapeImage, getVmlRelsPath, normalizeVmlImagePath } from "../external/vml-parser";
 import { emfToSvg } from "../external/emf-parser";
 
@@ -190,11 +192,9 @@ function enrichDiagramFrame(frame: GraphicFrame, fileReader: FileReader): Graphi
     return frame;
   }
 
-  // Normalize diagram path (handle relative paths like ../diagrams/drawing1.xml)
-  const normalizedDiagramPath = normalizePath(diagramPath);
-
+  // diagramPath is already normalized by relationship resolution (RFC 3986)
   // Read diagram drawing XML file
-  const diagramData = fileReader.readFile(normalizedDiagramPath);
+  const diagramData = fileReader.readFile(diagramPath);
   if (diagramData === null) {
     return frame;
   }
@@ -214,15 +214,15 @@ function enrichDiagramFrame(frame: GraphicFrame, fileReader: FileReader): Graphi
   }
 
   // Load diagram-specific relationships for blipFill resolution
-  const diagramRelsPath = getRelationshipPath(normalizedDiagramPath);
+  const diagramRelsPath = getRelationshipPath(diagramPath);
   const diagramRelsData = fileReader.readFile(diagramRelsPath);
-  const diagramResources = loadDiagramResources(diagramRelsData);
+  const diagramResources = loadDiagramResources(diagramRelsData, diagramPath);
 
   // Resolve blipFill resourceIds in diagram shapes using diagram relationships
   const resolvedShapes = resolveDiagramShapeResources(
     parsedContent.shapes,
     diagramResources,
-    normalizedDiagramPath,
+    diagramPath,
     fileReader,
   );
 
@@ -245,20 +245,23 @@ function enrichDiagramFrame(frame: GraphicFrame, fileReader: FileReader): Graphi
 
 /**
  * Load diagram resources from relationship file.
+ *
+ * @param relsData - Raw relationship file data
+ * @param sourcePath - Source part path for RFC 3986 path resolution
  */
-function loadDiagramResources(relsData: ArrayBuffer | null): ResourceMap {
+function loadDiagramResources(relsData: ArrayBuffer | null, sourcePath: string): ResourceMap {
   if (relsData === null) {
-    return parseRelationships(null);
+    return createEmptyResourceMap();
   }
 
   const decoder = new TextDecoder();
   const relsXmlText = decoder.decode(relsData);
   const relsDoc = parseXml(relsXmlText);
   if (relsDoc === undefined) {
-    return parseRelationships(null);
+    return createEmptyResourceMap();
   }
 
-  return parseRelationships(relsDoc);
+  return parseRelationships(relsDoc, sourcePath);
 }
 
 function loadDiagramDataModel(resourceId: string | undefined, fileReader: FileReader): DiagramDataModel | undefined {
@@ -471,13 +474,15 @@ function resolveResourceToDataUrl(
   }
 
   // Look up in diagram relationships
+  // Note: targets should already be resolved by parseRelationships (RFC 3986)
+  // but we use resolvePartPath as a safety fallback for any relative paths
   const target = resources.getTarget(resourceId);
   if (target === undefined) {
     return undefined;
   }
 
-  // Resolve relative path (e.g., "../media/image1.jpeg")
-  const targetPath = resolveRelativePath(baseDir, target);
+  // Target should be absolute, but resolve if relative
+  const targetPath = target.startsWith("ppt/") ? target : resolvePartPath(baseDir, target);
 
   // Read the resource file
   const data = fileReader.readFile(targetPath);

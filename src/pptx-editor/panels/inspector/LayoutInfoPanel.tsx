@@ -34,9 +34,12 @@ const containerStyle: CSSProperties = {
   overflow: "auto",
 };
 
+/** Layout thumbnail width - compact size for narrow panels */
+const LAYOUT_THUMBNAIL_WIDTH = 70;
+
 const layoutGridStyle: CSSProperties = {
   display: "grid",
-  gridTemplateColumns: "repeat(3, 1fr)",
+  gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))",
   gap: spacingTokens.xs,
   padding: spacingTokens.sm,
 };
@@ -44,7 +47,8 @@ const layoutGridStyle: CSSProperties = {
 const layoutCardStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: "4px",
+  alignItems: "center",
+  gap: "2px",
   padding: spacingTokens.xs,
   borderRadius: "6px",
   cursor: "default",
@@ -54,22 +58,24 @@ const layoutCardStyle: CSSProperties = {
 const layoutCardActiveStyle: CSSProperties = {
   ...layoutCardStyle,
   backgroundColor: `var(--accent-primary, ${colorTokens.accent.primary})20`,
-  border: `1px solid var(--accent-primary, ${colorTokens.accent.primary})`,
+  border: `2px solid var(--accent-primary, ${colorTokens.accent.primary})`,
 };
 
 const layoutCardInactiveStyle: CSSProperties = {
   ...layoutCardStyle,
-  backgroundColor: "transparent",
-  border: "1px solid transparent",
+  backgroundColor: colorTokens.background.secondary,
+  border: "2px solid transparent",
 };
 
 const layoutLabelStyle: CSSProperties = {
-  fontSize: fontTokens.size.xs,
+  fontSize: "10px",
   color: colorTokens.text.secondary,
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
   textAlign: "center",
+  width: "100%",
+  marginTop: "2px",
 };
 
 const attributeRowStyle: CSSProperties = {
@@ -128,7 +134,7 @@ function LayoutGrid({
             <LayoutThumbnail
               shapes={layout.shapes}
               slideSize={slideSize}
-              width={60}
+              width={LAYOUT_THUMBNAIL_WIDTH}
             />
             <div style={layoutLabelStyle}>{layout.label}</div>
           </div>

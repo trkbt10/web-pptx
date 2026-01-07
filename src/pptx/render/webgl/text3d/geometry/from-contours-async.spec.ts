@@ -6,15 +6,15 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as THREE from "three";
-import type { TextLayoutResult, ContourPath } from "../../../glyph";
+import type { TextLayoutResult, ContourPath } from "../../../glyph/types";
 
 // Mock only the glyph module for layoutTextAsync
 // Note: Do NOT mock ./bevel - it causes test isolation issues
-vi.mock("../../../glyph", () => ({
+vi.mock("../../../glyph/layout-async", () => ({
   layoutTextAsync: vi.fn(),
 }));
 
-import { layoutTextAsync } from "../../../glyph";
+import { layoutTextAsync } from "../../../glyph/layout-async";
 import { pathsToShapes } from "./from-contours-async";
 
 describe("from-contours-async", () => {
