@@ -282,6 +282,64 @@ describe("generateExtrusion", () => {
       // Should have side wall geometry for both outer and hole
       expect(result.positions.length).toBeGreaterThan(0);
     });
+
+    it("cap triangles do not cover the hole area (KEY TEST)", () => {
+      // Shape: 100x100 square with 50x50 hole in center (25-75)
+      const shape = createShapeWithHole();
+      const depth = 10;
+      const result = generateExtrusion(shape, {
+        depth,
+        includeFrontCap: true,
+        includeBackCap: true,
+      });
+
+      // Extract front cap triangles (at Z=depth)
+      const frontCapTriangles: { cx: number; cy: number }[] = [];
+      for (let i = 0; i < result.indices.length; i += 3) {
+        const i0 = result.indices[i];
+        const i1 = result.indices[i + 1];
+        const i2 = result.indices[i + 2];
+
+        const z0 = result.positions[i0 * 3 + 2];
+        const z1 = result.positions[i1 * 3 + 2];
+        const z2 = result.positions[i2 * 3 + 2];
+
+        // Check if this is a front cap triangle (all vertices at Z=depth)
+        if (Math.abs(z0 - depth) < 0.1 && Math.abs(z1 - depth) < 0.1 && Math.abs(z2 - depth) < 0.1) {
+          const cx = (result.positions[i0 * 3] + result.positions[i1 * 3] + result.positions[i2 * 3]) / 3;
+          const cy = (result.positions[i0 * 3 + 1] + result.positions[i1 * 3 + 1] + result.positions[i2 * 3 + 1]) / 3;
+          frontCapTriangles.push({ cx, cy });
+        }
+      }
+
+      // Check that NO triangle centroid is inside the hole (25-75 range with margin)
+      const holeMinX = 30; // Add margin to avoid edge cases
+      const holeMaxX = 70;
+      const holeMinY = 30;
+      const holeMaxY = 70;
+
+      const trianglesInsideHole = frontCapTriangles.filter(
+        (t) => t.cx > holeMinX && t.cx < holeMaxX && t.cy > holeMinY && t.cy < holeMaxY,
+      );
+
+      // This is the KEY verification: no triangles should be inside the hole
+      expect(trianglesInsideHole.length).toBe(0);
+    });
+
+    it("generates correct number of side wall faces for outer and hole", () => {
+      const shape = createShapeWithHole();
+      const result = generateExtrusion(shape, {
+        depth: 10,
+        includeFrontCap: false,
+        includeBackCap: false,
+      });
+
+      // Outer: 4 edges * 2 triangles = 8 triangles
+      // Hole: 4 edges * 2 triangles = 8 triangles
+      // Total: 16 triangles = 48 indices
+      const expectedMinIndices = 48;
+      expect(result.indices.length).toBeGreaterThanOrEqual(expectedMinIndices);
+    });
   });
 
   describe("edge cases", () => {

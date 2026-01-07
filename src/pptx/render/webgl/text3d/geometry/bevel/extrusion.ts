@@ -144,16 +144,21 @@ function isPointInTriangle(
 }
 
 // =============================================================================
-// Shape with Holes Triangulation
+// Shape with Holes Triangulation (Bridge Algorithm)
 // =============================================================================
 
 /**
  * Triangulate a shape with holes by bridging holes to the outer contour.
- * This is a simplified approach that works for most common cases.
  *
- * @param outer - Outer contour points
- * @param holes - Array of hole contours
- * @returns Array of triangle indices
+ * Algorithm:
+ * 1. For each hole, find the rightmost point
+ * 2. Find the closest visible point on the outer contour or previous holes
+ * 3. Create a bridge (duplicate vertices) connecting the hole to the outer
+ * 4. Triangulate the resulting simple polygon
+ *
+ * @param outer - Outer contour points (CCW winding)
+ * @param holes - Array of hole contours (CW winding)
+ * @returns Combined points and triangle indices
  */
 function triangulateShapeWithHoles(
   outer: readonly Vector2[],
@@ -164,34 +169,240 @@ function triangulateShapeWithHoles(
     return { points: [...outer], indices };
   }
 
-  // For shapes with holes, we use a simple approach:
-  // Create separate triangulations and combine them with proper winding
-  // This is less optimal than bridging but more robust
+  // Build combined polygon by bridging holes into outer contour
+  const bridgedPolygon = bridgeHolesToOuter(outer, holes);
 
-  const allPoints: Vector2[] = [...outer];
-  const allIndices: number[] = [];
+  // Triangulate the bridged polygon (now a simple polygon without holes)
+  const indices = triangulatePolygon(bridgedPolygon);
 
-  // Triangulate outer contour
-  const outerIndices = triangulatePolygon(outer);
-  allIndices.push(...outerIndices);
+  return { points: bridgedPolygon, indices };
+}
 
-  // For each hole, add its triangles with reversed winding
-  for (const hole of holes) {
-    const holeOffset = allPoints.length;
-    allPoints.push(...hole);
+/**
+ * Bridge all holes into the outer contour to create a simple polygon.
+ *
+ * Process:
+ * 1. Sort holes by their rightmost X coordinate (descending)
+ * 2. For each hole, find the best bridge point on the current polygon
+ * 3. Insert the hole into the polygon with duplicate vertices for the bridge
+ */
+function bridgeHolesToOuter(
+  outer: readonly Vector2[],
+  holes: readonly (readonly Vector2[])[],
+): Vector2[] {
+  // Start with the outer contour
+  let polygon: Vector2[] = [...outer];
 
-    const holeIndices = triangulatePolygon(hole);
-    // Reverse winding for holes
-    for (let i = 0; i < holeIndices.length; i += 3) {
-      allIndices.push(
-        holeOffset + holeIndices[i],
-        holeOffset + holeIndices[i + 2],
-        holeOffset + holeIndices[i + 1],
-      );
+  // Sort holes by rightmost point (process rightmost first for better bridging)
+  const sortedHoles = holes
+    .map((hole, index) => ({
+      hole,
+      index,
+      rightmostX: Math.max(...hole.map(p => p.x)),
+    }))
+    .sort((a, b) => b.rightmostX - a.rightmostX)
+    .map(h => h.hole);
+
+  // Bridge each hole into the polygon
+  for (const hole of sortedHoles) {
+    polygon = bridgeSingleHole(polygon, hole);
+  }
+
+  return polygon;
+}
+
+/**
+ * Bridge a single hole into the polygon.
+ *
+ * Algorithm:
+ * 1. Find the rightmost point in the hole
+ * 2. Cast a ray to the right and find intersection with polygon
+ * 3. Find the best bridge point (either the intersection or a reflex vertex)
+ * 4. Insert hole vertices into polygon at the bridge point
+ */
+function bridgeSingleHole(
+  polygon: Vector2[],
+  hole: readonly Vector2[],
+): Vector2[] {
+  // Find rightmost point in hole
+  let rightmostIdx = 0;
+  let rightmostX = hole[0].x;
+  for (let i = 1; i < hole.length; i++) {
+    if (hole[i].x > rightmostX) {
+      rightmostX = hole[i].x;
+      rightmostIdx = i;
+    }
+  }
+  const holePoint = hole[rightmostIdx];
+
+  // Find the bridge point on the polygon
+  const bridgeResult = findBridgePoint(polygon, holePoint);
+  if (bridgeResult === null) {
+    // Fallback: couldn't find bridge, return polygon unchanged
+    // This shouldn't happen for valid input
+    return polygon;
+  }
+
+  const { polygonIndex, bridgePoint } = bridgeResult;
+
+  // Check if bridge point is on an edge or at a vertex
+  const isAtVertex =
+    Math.abs(bridgePoint.x - polygon[polygonIndex].x) < 0.0001 &&
+    Math.abs(bridgePoint.y - polygon[polygonIndex].y) < 0.0001;
+
+  // Build new polygon with hole bridged in
+  // The bridge creates duplicate vertices: polygon[i] -> hole -> polygon[i]
+  const newPolygon: Vector2[] = [];
+
+  for (let i = 0; i <= polygonIndex; i++) {
+    newPolygon.push(polygon[i]);
+  }
+
+  if (!isAtVertex) {
+    // Bridge point is on an edge, add it
+    newPolygon.push(bridgePoint);
+  }
+
+  // Add hole vertices starting from rightmost, going around
+  for (let i = 0; i < hole.length; i++) {
+    const idx = (rightmostIdx + i) % hole.length;
+    newPolygon.push(hole[idx]);
+  }
+
+  // Close the bridge back to polygon
+  newPolygon.push(hole[rightmostIdx]); // Duplicate for bridge
+
+  if (!isAtVertex) {
+    newPolygon.push(bridgePoint); // Duplicate for bridge
+  }
+
+  // Add remaining polygon vertices
+  for (let i = polygonIndex + 1; i < polygon.length; i++) {
+    newPolygon.push(polygon[i]);
+  }
+
+  return newPolygon;
+}
+
+/**
+ * Find the best bridge point on the polygon for connecting to holePoint.
+ *
+ * Casts a ray from holePoint to the right (+X direction) and finds:
+ * 1. The closest intersection with the polygon
+ * 2. Check for reflex vertices in the "visibility triangle"
+ * 3. Return the best bridge point
+ */
+function findBridgePoint(
+  polygon: readonly Vector2[],
+  holePoint: Vector2,
+): { polygonIndex: number; bridgePoint: Vector2 } | null {
+  const n = polygon.length;
+
+  // Find closest edge intersection to the right
+  let closestDist = Infinity;
+  let closestEdgeIdx = -1;
+  let closestIntersection: Vector2 | null = null;
+
+  for (let i = 0; i < n; i++) {
+    const p1 = polygon[i];
+    const p2 = polygon[(i + 1) % n];
+
+    // Check if edge crosses the horizontal ray from holePoint to the right
+    const intersection = rayEdgeIntersection(holePoint, p1, p2);
+    if (intersection !== null) {
+      const dist = intersection.x - holePoint.x;
+      if (dist > 0 && dist < closestDist) {
+        closestDist = dist;
+        closestEdgeIdx = i;
+        closestIntersection = intersection;
+      }
     }
   }
 
-  return { points: allPoints, indices: allIndices };
+  if (closestIntersection === null || closestEdgeIdx === -1) {
+    return null;
+  }
+
+  // The initial bridge point is the intersection
+  // But we need to check if there's a better reflex vertex
+  const p1 = polygon[closestEdgeIdx];
+  const p2 = polygon[(closestEdgeIdx + 1) % n];
+
+  // Determine which endpoint is to the right (potential bridge vertex)
+  let bridgeVertex: Vector2;
+  let bridgeVertexIdx: number;
+
+  if (p1.x > p2.x || (p1.x === p2.x && p1.y < p2.y)) {
+    bridgeVertex = p1;
+    bridgeVertexIdx = closestEdgeIdx;
+  } else {
+    bridgeVertex = p2;
+    bridgeVertexIdx = (closestEdgeIdx + 1) % n;
+  }
+
+  // Check for reflex vertices inside the triangle (holePoint, intersection, bridgeVertex)
+  // that might be better bridge points
+  let bestVertex = bridgeVertex;
+  let bestVertexIdx = bridgeVertexIdx;
+  let bestAngle = angleTo(holePoint, bridgeVertex);
+
+  for (let i = 0; i < n; i++) {
+    const v = polygon[i];
+
+    // Skip if not to the right of holePoint
+    if (v.x <= holePoint.x) continue;
+
+    // Check if inside the visibility triangle
+    if (isPointInTriangle(v, holePoint, closestIntersection, bridgeVertex)) {
+      // Check if this vertex has a smaller angle (more directly to the right)
+      const angle = angleTo(holePoint, v);
+      if (Math.abs(angle) < Math.abs(bestAngle)) {
+        bestAngle = angle;
+        bestVertex = v;
+        bestVertexIdx = i;
+      }
+    }
+  }
+
+  return {
+    polygonIndex: bestVertexIdx,
+    bridgePoint: bestVertex,
+  };
+}
+
+/**
+ * Calculate horizontal ray intersection with an edge.
+ * Ray goes from point to the right (+X direction).
+ */
+function rayEdgeIntersection(
+  point: Vector2,
+  edgeStart: Vector2,
+  edgeEnd: Vector2,
+): Vector2 | null {
+  const { x: px, y: py } = point;
+  const { x: x1, y: y1 } = edgeStart;
+  const { x: x2, y: y2 } = edgeEnd;
+
+  // Check if edge crosses the horizontal line at py
+  if ((y1 <= py && y2 > py) || (y2 <= py && y1 > py)) {
+    // Calculate x coordinate of intersection
+    const t = (py - y1) / (y2 - y1);
+    const ix = x1 + t * (x2 - x1);
+
+    // Only count intersections to the right
+    if (ix > px) {
+      return { x: ix, y: py };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Calculate angle from p1 to p2 relative to horizontal.
+ */
+function angleTo(p1: Vector2, p2: Vector2): number {
+  return Math.atan2(p2.y - p1.y, p2.x - p1.x);
 }
 
 // =============================================================================

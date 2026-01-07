@@ -1,19 +1,15 @@
 /**
- * @file Tests for bevel configuration and geometry generation
+ * @file Tests for bevel configuration
  *
- * Tests ECMA-376 bevel value handling, clamping, and edge cases.
+ * Tests ECMA-376 bevel preset configuration mapping.
+ * For geometry generation tests, see ./bevel/*.spec.ts
  *
  * @see ECMA-376 Part 1, Section 20.1.5.1 (bevelT/bevelB)
  */
 
 import { describe, it, expect } from "vitest";
-import * as THREE from "three";
-import {
-  getBevelConfig,
-  createAsymmetricExtrudedGeometry,
-  type AsymmetricBevelConfig,
-} from "./bevel";
-import type { Bevel3d, BevelPresetType, Pixels } from "../../../../domain/index";
+import { getBevelConfig, getAsymmetricBevelConfig } from "./bevel";
+import type { Bevel3d, BevelPresetType, Pixels, Shape3d } from "../../../../domain/index";
 
 // =============================================================================
 // Test Helpers
@@ -28,15 +24,15 @@ function createBevel(width: number, height: number, preset: BevelPresetType = "c
   };
 }
 
-/** Create a simple square shape */
-function createSquareShape(size = 100): THREE.Shape {
-  const shape = new THREE.Shape();
-  shape.moveTo(0, 0);
-  shape.lineTo(size, 0);
-  shape.lineTo(size, size);
-  shape.lineTo(0, size);
-  shape.closePath();
-  return shape;
+/** Create test Shape3d with bevels */
+function createShape3d(
+  bevelTop?: Bevel3d,
+  bevelBottom?: Bevel3d,
+): Shape3d {
+  return {
+    bevelTop,
+    bevelBottom,
+  } as Shape3d;
 }
 
 // =============================================================================
@@ -49,30 +45,27 @@ describe("getBevelConfig", () => {
       expect(getBevelConfig(undefined)).toBeUndefined();
     });
 
-    it("uses ECMA-376 w/h values directly", () => {
-      const bevel = createBevel(10, 15, "circle");
-      const config = getBevelConfig(bevel);
+    it("uses baseSize = min(width, height) for calculations", () => {
+      // When width < height
+      const bevelWide = createBevel(10, 15, "circle");
+      const configWide = getBevelConfig(bevelWide);
+      expect(configWide).toBeDefined();
+      // For circle preset, thickness = baseSize * 1.0, size = baseSize * 1.0
+      expect(configWide!.thickness).toBe(10); // min(10, 15) * 1.0
+      expect(configWide!.size).toBe(10);
 
-      expect(config).toBeDefined();
-      // w (width) maps to size (inset distance)
-      expect(config!.size).toBe(10);
-      // h (height) maps to thickness (Z depth)
-      expect(config!.thickness).toBe(15);
+      // When height < width
+      const bevelTall = createBevel(20, 8, "circle");
+      const configTall = getBevelConfig(bevelTall);
+      expect(configTall!.thickness).toBe(8); // min(20, 8) * 1.0
+      expect(configTall!.size).toBe(8);
     });
 
-    it("preserves preset name", () => {
-      const bevel = createBevel(8, 8, "softRound");
+    it("returns correct segment count for circle preset", () => {
+      const bevel = createBevel(10, 10, "circle");
       const config = getBevelConfig(bevel);
 
-      expect(config!.preset).toBe("softRound");
-    });
-
-    it("applies minimum size of 0.5px", () => {
-      const bevel = createBevel(0.1, 0.2, "angle");
-      const config = getBevelConfig(bevel);
-
-      expect(config!.size).toBe(0.5);
-      expect(config!.thickness).toBe(0.5);
+      expect(config!.segments).toBe(8);
     });
   });
 
@@ -102,340 +95,163 @@ describe("getBevelConfig", () => {
     }
   });
 
-  describe("offset for inset bevels", () => {
-    it("sets offset = -size for inset behavior", () => {
-      const bevel = createBevel(10, 8, "circle");
-      const config = getBevelConfig(bevel);
+  describe("preset multipliers", () => {
+    const baseSize = 10;
 
-      expect(config!.offset).toBe(-10);
-    });
-  });
-});
-
-// =============================================================================
-// createAsymmetricExtrudedGeometry Tests
-// =============================================================================
-
-describe("createAsymmetricExtrudedGeometry", () => {
-  describe("bevel clamping", () => {
-    it("clamps bevel thickness to 40% of extrusion when both bevels present", () => {
-      const shape = createSquareShape(100);
-      const extrusionDepth = 20;
-      const maxBevelThickness = extrusionDepth * 0.4; // 8px each
-
-      // Bevel thickness (50) > 40% of extrusion (8)
-      const bevel: AsymmetricBevelConfig = {
-        top: {
-          thickness: 50, // Way too large - will be clamped to 8
-          size: 10,
-          offset: -10,
-          segments: 8,
-          preset: "circle",
-        },
-        bottom: {
-          thickness: 50, // Way too large - will be clamped to 8
-          size: 10,
-          offset: -10,
-          segments: 8,
-          preset: "circle",
-        },
-      };
-
-      const geometry = createAsymmetricExtrudedGeometry([shape], extrusionDepth, bevel);
-
-      // Geometry should still be created
-      expect(geometry.attributes.position.count).toBeGreaterThan(0);
-
-      // Check Z range - bevels should be clamped
-      const positions = geometry.attributes.position.array as Float32Array;
-      let minZ = Infinity;
-      let maxZ = -Infinity;
-
-      for (let i = 2; i < positions.length; i += 3) {
-        minZ = Math.min(minZ, positions[i]);
-        maxZ = Math.max(maxZ, positions[i]);
-      }
-
-      // After Z-orientation fix:
-      // - Front face is at Z=0 (closest to camera)
-      // - Back face is at Z=-extrusionDepth
-      // - Front bevel (bevelT) extends towards positive Z from Z=0
-      // - Back bevel (bevelB) extends towards negative Z from Z=-extrusionDepth
-      //
-      // Expected Z range: [-extrusionDepth - backBevelThickness, frontBevelThickness]
-      const expectedMinZ = -extrusionDepth - maxBevelThickness;
-      const expectedMaxZ = maxBevelThickness;
-
-      expect(minZ).toBeGreaterThanOrEqual(expectedMinZ - 1);
-      expect(maxZ).toBeLessThanOrEqual(expectedMaxZ + 1);
-
-      // Verify clamping actually happened (not using original 50px)
-      const totalZRange = maxZ - minZ;
-      const unclamepedRange = extrusionDepth + 50 + 50; // Would be 120 if not clamped
-      expect(totalZRange).toBeLessThan(unclamepedRange);
+    it("angle: thickness=0.5x, size=1.0x", () => {
+      const config = getBevelConfig(createBevel(baseSize, baseSize, "angle"));
+      expect(config!.thickness).toBe(5);
+      expect(config!.size).toBe(10);
     });
 
-    it("skips bevel if clamped thickness would be too small", () => {
-      const shape = createSquareShape(100);
-      const extrusionDepth = 1; // Very small extrusion
-
-      // Bevel at default size (8px) is way larger than extrusion
-      const bevel: AsymmetricBevelConfig = {
-        top: {
-          thickness: 8,
-          size: 8,
-          offset: -8,
-          segments: 8,
-          preset: "circle",
-        },
-      };
-
-      const geometry = createAsymmetricExtrudedGeometry([shape], extrusionDepth, bevel);
-
-      // Should still create valid geometry (base extrusion only)
-      expect(geometry.attributes.position.count).toBeGreaterThan(0);
+    it("artDeco: thickness=0.8x, size=0.6x", () => {
+      const config = getBevelConfig(createBevel(baseSize, baseSize, "artDeco"));
+      expect(config!.thickness).toBe(8);
+      expect(config!.size).toBe(6);
     });
 
-    it("allows larger bevel ratio when only one bevel present", () => {
-      const shape = createSquareShape(100);
-      const extrusionDepth = 20;
-
-      // Single bevel gets 45% limit instead of 40%
-      const bevelSingle: AsymmetricBevelConfig = {
-        top: {
-          thickness: 9, // 45% of 20 = 9
-          size: 9,
-          offset: -9,
-          segments: 4,
-          preset: "relaxedInset",
-        },
-      };
-
-      const geometry = createAsymmetricExtrudedGeometry([shape], extrusionDepth, bevelSingle);
-      expect(geometry.attributes.position.count).toBeGreaterThan(0);
+    it("circle: thickness=1.0x, size=1.0x", () => {
+      const config = getBevelConfig(createBevel(baseSize, baseSize, "circle"));
+      expect(config!.thickness).toBe(10);
+      expect(config!.size).toBe(10);
     });
-  });
 
-  describe("no bevel", () => {
-    it("creates base extrusion without bevels", () => {
-      const shape = createSquareShape(100);
-      const bevel: AsymmetricBevelConfig = {
-        top: undefined,
-        bottom: undefined,
-      };
+    it("convex: thickness=1.2x, size=0.8x", () => {
+      const config = getBevelConfig(createBevel(baseSize, baseSize, "convex"));
+      expect(config!.thickness).toBe(12);
+      expect(config!.size).toBe(8);
+    });
 
-      const geometry = createAsymmetricExtrudedGeometry([shape], 20, bevel);
+    it("coolSlant: thickness=0.4x, size=1.2x", () => {
+      const config = getBevelConfig(createBevel(baseSize, baseSize, "coolSlant"));
+      expect(config!.thickness).toBe(4);
+      expect(config!.size).toBe(12);
+    });
 
-      expect(geometry.attributes.position.count).toBeGreaterThan(0);
-      expect(geometry.attributes.normal).toBeDefined();
+    it("divot: thickness=0.3x, size=0.5x", () => {
+      const config = getBevelConfig(createBevel(baseSize, baseSize, "divot"));
+      expect(config!.thickness).toBe(3);
+      expect(config!.size).toBe(5);
+    });
+
+    it("hardEdge: thickness=0.2x, size=0.3x", () => {
+      const config = getBevelConfig(createBevel(baseSize, baseSize, "hardEdge"));
+      expect(config!.thickness).toBe(2);
+      expect(config!.size).toBe(3);
     });
   });
 
   describe("edge cases", () => {
-    it("handles zero extrusion depth", () => {
-      const shape = createSquareShape(100);
-      const bevel: AsymmetricBevelConfig = {
-        top: {
-          thickness: 5,
-          size: 5,
-          offset: -5,
-          segments: 4,
-          preset: "angle",
-        },
-      };
-
-      // Should not throw
-      const geometry = createAsymmetricExtrudedGeometry([shape], 0, bevel);
-      expect(geometry).toBeInstanceOf(THREE.BufferGeometry);
-    });
-
-    it("handles empty shapes array", () => {
-      const bevel: AsymmetricBevelConfig = {
-        top: {
-          thickness: 5,
-          size: 5,
-          offset: -5,
-          segments: 4,
-          preset: "angle",
-        },
-      };
-
-      const geometry = createAsymmetricExtrudedGeometry([], 20, bevel);
-      expect(geometry).toBeInstanceOf(THREE.BufferGeometry);
-    });
-
-    it("handles very small extrusion with default bevel", () => {
-      const shape = createSquareShape(100);
-      // Default bevel is 8px, extrusion is 2px
-      const bevel: AsymmetricBevelConfig = {
-        top: {
-          thickness: 8,
-          size: 8,
-          offset: -8,
-          segments: 8,
-          preset: "circle",
-        },
-      };
-
-      const geometry = createAsymmetricExtrudedGeometry([shape], 2, bevel);
-
-      // Should create geometry (bevel will be clamped or skipped)
-      expect(geometry).toBeInstanceOf(THREE.BufferGeometry);
-      expect(geometry.attributes.position.count).toBeGreaterThan(0);
-    });
-
-    it("handles bevel exactly at 40% of extrusion", () => {
-      const shape = createSquareShape(100);
-      const extrusionDepth = 20;
-      const exactLimit = extrusionDepth * 0.4; // 8px
-
-      const bevel: AsymmetricBevelConfig = {
-        top: {
-          thickness: exactLimit,
-          size: exactLimit,
-          offset: -exactLimit,
-          segments: 4,
-          preset: "angle",
-        },
-        bottom: {
-          thickness: exactLimit,
-          size: exactLimit,
-          offset: -exactLimit,
-          segments: 4,
-          preset: "angle",
-        },
-      };
-
-      const geometry = createAsymmetricExtrudedGeometry([shape], extrusionDepth, bevel);
-      expect(geometry.attributes.position.count).toBeGreaterThan(0);
-    });
-
-    it("handles asymmetric width and height", () => {
-      // Width much larger than height
-      const bevelWide = createBevel(20, 2, "angle");
-      const configWide = getBevelConfig(bevelWide);
-      expect(configWide!.size).toBe(20);
-      expect(configWide!.thickness).toBe(2);
-
-      // Height much larger than width
-      const bevelTall = createBevel(2, 20, "angle");
-      const configTall = getBevelConfig(bevelTall);
-      expect(configTall!.size).toBe(2);
-      expect(configTall!.thickness).toBe(20);
-    });
-
-    it("handles extremely large bevel values", () => {
-      // ECMA-376 ST_PositiveCoordinate max is ~27 trillion EMU
-      // In pixels (at 96 DPI), this is much larger but we test reasonable large values
-      const bevel = createBevel(1000, 1000, "circle");
+    it("handles zero width", () => {
+      const bevel = createBevel(0, 10, "angle");
       const config = getBevelConfig(bevel);
 
-      expect(config!.size).toBe(1000);
-      expect(config!.thickness).toBe(1000);
+      // baseSize = min(0, 10) = 0
+      expect(config!.thickness).toBe(0);
+      expect(config!.size).toBe(0);
     });
 
-    it("preserves bevel ratios when clamping", () => {
-      const shape = createSquareShape(100);
-      const extrusionDepth = 10;
+    it("handles zero height", () => {
+      const bevel = createBevel(10, 0, "angle");
+      const config = getBevelConfig(bevel);
 
-      // 2:1 ratio (width:height) bevel that needs clamping
-      const bevel: AsymmetricBevelConfig = {
-        top: {
-          thickness: 20, // Will be clamped
-          size: 40,      // Should maintain 2:1 ratio after clamping
-          offset: -40,
-          segments: 4,
-          preset: "angle",
-        },
-      };
-
-      // Should not throw and should create valid geometry
-      const geometry = createAsymmetricExtrudedGeometry([shape], extrusionDepth, bevel);
-      expect(geometry).toBeInstanceOf(THREE.BufferGeometry);
+      // baseSize = min(10, 0) = 0
+      expect(config!.thickness).toBe(0);
+      expect(config!.size).toBe(0);
     });
 
-    it("handles negative extrusion depth gracefully", () => {
-      const shape = createSquareShape(100);
-      const bevel: AsymmetricBevelConfig = {
-        top: {
-          thickness: 5,
-          size: 5,
-          offset: -5,
-          segments: 4,
-          preset: "angle",
-        },
-      };
+    it("handles fractional pixel values", () => {
+      const bevel = createBevel(3.7, 5.2, "circle");
+      const config = getBevelConfig(bevel);
 
-      // Negative depth - bevels should be skipped
-      const geometry = createAsymmetricExtrudedGeometry([shape], -10, bevel);
-      expect(geometry).toBeInstanceOf(THREE.BufferGeometry);
+      // baseSize = min(3.7, 5.2) = 3.7
+      expect(config!.thickness).toBe(3.7);
+      expect(config!.size).toBe(3.7);
+    });
+
+    it("handles unknown preset with default segments", () => {
+      const bevel: Bevel3d = {
+        width: 8 as Pixels,
+        height: 8 as Pixels,
+        preset: "unknownPreset" as BevelPresetType,
+      };
+      const config = getBevelConfig(bevel);
+
+      // Unknown preset falls through to default case
+      expect(config).toBeDefined();
+      expect(config!.segments).toBe(3); // default segments
     });
   });
 });
 
 // =============================================================================
-// getBevelConfig Edge Cases
+// getAsymmetricBevelConfig Tests
 // =============================================================================
 
-describe("getBevelConfig edge cases", () => {
-  it("handles zero width", () => {
-    const bevel = createBevel(0, 10, "angle");
-    const config = getBevelConfig(bevel);
+describe("getAsymmetricBevelConfig", () => {
+  it("returns empty config for undefined shape3d", () => {
+    const config = getAsymmetricBevelConfig(undefined);
 
-    // Should clamp to minimum 0.5px
-    expect(config!.size).toBe(0.5);
-    expect(config!.thickness).toBe(10);
+    expect(config.top).toBeUndefined();
+    expect(config.bottom).toBeUndefined();
   });
 
-  it("handles zero height", () => {
-    const bevel = createBevel(10, 0, "angle");
-    const config = getBevelConfig(bevel);
+  it("returns empty config for shape3d without bevels", () => {
+    const shape3d = createShape3d(undefined, undefined);
+    const config = getAsymmetricBevelConfig(shape3d);
 
-    // Should clamp to minimum 0.5px
-    expect(config!.size).toBe(10);
-    expect(config!.thickness).toBe(0.5);
+    expect(config.top).toBeUndefined();
+    expect(config.bottom).toBeUndefined();
   });
 
-  it("handles both zero width and height", () => {
-    const bevel = createBevel(0, 0, "angle");
-    const config = getBevelConfig(bevel);
+  it("returns top bevel only when only bevelTop is set", () => {
+    const topBevel = createBevel(10, 10, "circle");
+    const shape3d = createShape3d(topBevel, undefined);
+    const config = getAsymmetricBevelConfig(shape3d);
 
-    // Should clamp both to minimum 0.5px
-    expect(config!.size).toBe(0.5);
-    expect(config!.thickness).toBe(0.5);
+    expect(config.top).toBeDefined();
+    expect(config.top!.thickness).toBe(10);
+    expect(config.top!.size).toBe(10);
+    expect(config.top!.segments).toBe(8);
+    expect(config.bottom).toBeUndefined();
   });
 
-  it("handles fractional pixel values", () => {
-    const bevel = createBevel(3.7, 5.2, "circle");
-    const config = getBevelConfig(bevel);
+  it("returns bottom bevel only when only bevelBottom is set", () => {
+    const bottomBevel = createBevel(8, 8, "angle");
+    const shape3d = createShape3d(undefined, bottomBevel);
+    const config = getAsymmetricBevelConfig(shape3d);
 
-    // Should preserve fractional values (above minimum)
-    expect(config!.size).toBe(3.7);
-    expect(config!.thickness).toBe(5.2);
+    expect(config.top).toBeUndefined();
+    expect(config.bottom).toBeDefined();
+    expect(config.bottom!.segments).toBe(1); // angle has 1 segment
   });
 
-  it("defaults to circle preset when preset is undefined", () => {
-    const bevel: Bevel3d = {
-      width: 8 as Pixels,
-      height: 8 as Pixels,
-      preset: undefined as unknown as BevelPresetType,
-    };
-    const config = getBevelConfig(bevel);
+  it("returns both bevels when both are set", () => {
+    const topBevel = createBevel(10, 10, "circle");
+    const bottomBevel = createBevel(5, 5, "angle");
+    const shape3d = createShape3d(topBevel, bottomBevel);
+    const config = getAsymmetricBevelConfig(shape3d);
 
-    // Should default to circle (8 segments)
-    expect(config!.segments).toBe(8);
+    expect(config.top).toBeDefined();
+    expect(config.bottom).toBeDefined();
+    expect(config.top!.segments).toBe(8); // circle
+    expect(config.bottom!.segments).toBe(1); // angle
   });
 
-  it("handles unknown preset gracefully", () => {
-    const bevel: Bevel3d = {
-      width: 8 as Pixels,
-      height: 8 as Pixels,
-      preset: "unknownPreset" as BevelPresetType,
-    };
-    const config = getBevelConfig(bevel);
+  it("returns asymmetric configs when bevels differ", () => {
+    const topBevel = createBevel(20, 20, "softRound");
+    const bottomBevel = createBevel(5, 5, "hardEdge");
+    const shape3d = createShape3d(topBevel, bottomBevel);
+    const config = getAsymmetricBevelConfig(shape3d);
 
-    // Unknown preset should fall back to default segments (8 for circle)
-    expect(config).toBeDefined();
-    expect(config!.size).toBe(8);
+    // Top: softRound with baseSize=20
+    expect(config.top!.thickness).toBe(18); // 20 * 0.9
+    expect(config.top!.size).toBe(18); // 20 * 0.9
+    expect(config.top!.segments).toBe(6);
+
+    // Bottom: hardEdge with baseSize=5
+    expect(config.bottom!.thickness).toBe(1); // 5 * 0.2
+    expect(config.bottom!.size).toBe(1.5); // 5 * 0.3
+    expect(config.bottom!.segments).toBe(1);
   });
 });

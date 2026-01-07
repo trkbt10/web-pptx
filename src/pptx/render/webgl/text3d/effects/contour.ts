@@ -26,11 +26,10 @@ import { expandShapesForContour } from "../geometry/bevel/shape-expansion";
 import {
   threeShapeToShapeInput,
   shapeInputsToThreeShapes,
+  createExtrudedGeometryWithBevel,
+  type AsymmetricBevelSpec,
 } from "../geometry/bevel/three-adapter";
-import {
-  createAsymmetricExtrudedGeometry,
-  type AsymmetricBevelConfig,
-} from "../geometry/bevel";
+import { type AsymmetricBevelConfig } from "../geometry/bevel";
 
 // =============================================================================
 // Types
@@ -255,11 +254,15 @@ export function createContourFromShapes(
   // Convert back to THREE.Shape for extrusion
   const expandedShapes = shapeInputsToThreeShapes(expandedInputs);
 
+  // Convert bevel config to new spec format
+  const bevelSpec: AsymmetricBevelSpec = convertBevelConfigToSpec(config.bevel);
+
   // Create extruded geometry with same bevel as main geometry
-  const contourGeometry = createAsymmetricExtrudedGeometry(
+  // Uses Three.js independent core to avoid z-fighting
+  const contourGeometry = createExtrudedGeometryWithBevel(
     expandedShapes,
     config.extrusionDepth,
-    config.bevel ?? {},
+    bevelSpec,
   );
 
   // Create contour material
@@ -287,6 +290,40 @@ export function createContourFromShapes(
 // =============================================================================
 // Utilities
 // =============================================================================
+
+/**
+ * Convert AsymmetricBevelConfig to AsymmetricBevelSpec.
+ * The old config uses BevelConfig with thickness/size/segments,
+ * while the new spec uses width/height/preset directly.
+ */
+function convertBevelConfigToSpec(
+  bevel: AsymmetricBevelConfig | undefined,
+): AsymmetricBevelSpec {
+  if (!bevel) {
+    return { top: undefined, bottom: undefined };
+  }
+
+  // Note: BevelConfig has { thickness, size, segments }
+  // BevelSpec expects { width, height, preset }
+  // Since we don't have the original preset, we approximate using "circle"
+  // and use the thickness as height, size as width
+  return {
+    top: bevel.top
+      ? {
+          width: bevel.top.size,
+          height: bevel.top.thickness,
+          preset: "circle", // Default preset
+        }
+      : undefined,
+    bottom: bevel.bottom
+      ? {
+          width: bevel.bottom.size,
+          height: bevel.bottom.thickness,
+          preset: "circle",
+        }
+      : undefined,
+  };
+}
 
 /**
  * Update contour color

@@ -12,7 +12,8 @@
 import { describe, it, expect } from "vitest";
 import * as THREE from "three";
 import { createContourMesh, createContourMeshExpanded, createContourFromShapes } from "./contour";
-import { createAsymmetricExtrudedGeometry, getBevelConfig, type BevelConfig } from "../geometry/bevel";
+import { getBevelConfig, type BevelConfig } from "../geometry/bevel";
+import { createExtrudedGeometryWithBevel, type AsymmetricBevelSpec } from "../geometry/bevel/three-adapter";
 import { px } from "../../../../domain/types";
 
 /**
@@ -97,17 +98,16 @@ describe("Contour + Bevel Coexistence Issue", () => {
       const extrusionDepth = 20;
       const bevelHeight = 10;
 
-      // Create geometry with bevel
-      const bevelConfig = getBevelConfig({
-        width: px(8),
-        height: px(bevelHeight),
-        preset: "circle",
-      });
+      // Create geometry with bevel using new function
+      const bevelSpec: AsymmetricBevelSpec = {
+        top: { width: 8, height: bevelHeight, preset: "circle" },
+        bottom: undefined,
+      };
 
-      const baseGeometry = createAsymmetricExtrudedGeometry(
+      const baseGeometry = createExtrudedGeometryWithBevel(
         [shape],
         extrusionDepth,
-        { top: bevelConfig, bottom: undefined },
+        bevelSpec,
       );
 
       // Apply contour using current (flawed) method
@@ -155,17 +155,16 @@ describe("Contour + Bevel Coexistence Issue", () => {
       const shape = createSquareShape(100);
       const extrusionDepth = 20;
 
-      // Create geometry with significant bevel
-      const bevelConfig = getBevelConfig({
-        width: px(15),
-        height: px(12),
-        preset: "circle",
-      });
+      // Create geometry with significant bevel using new function
+      const bevelSpec: AsymmetricBevelSpec = {
+        top: { width: 15, height: 12, preset: "circle" },
+        bottom: undefined,
+      };
 
-      const baseGeometry = createAsymmetricExtrudedGeometry(
+      const baseGeometry = createExtrudedGeometryWithBevel(
         [shape],
         extrusionDepth,
-        { top: bevelConfig },
+        bevelSpec,
       );
 
       const baseBounds = getGeometryBounds(baseGeometry);
@@ -208,17 +207,16 @@ describe("Contour + Bevel Coexistence Issue", () => {
       const extrusionDepth = 20;
       const bevelHeight = 10;
 
-      // Create geometry with bevel
-      const bevelConfig = getBevelConfig({
-        width: px(8),
-        height: px(bevelHeight),
-        preset: "circle",
-      });
+      // Create geometry with bevel using new function
+      const bevelSpec: AsymmetricBevelSpec = {
+        top: { width: 8, height: bevelHeight, preset: "circle" },
+        bottom: undefined,
+      };
 
-      const baseGeometry = createAsymmetricExtrudedGeometry(
+      const baseGeometry = createExtrudedGeometryWithBevel(
         [shape],
         extrusionDepth,
-        { top: bevelConfig, bottom: undefined },
+        bevelSpec,
       );
 
       // Apply contour using normal expansion method
@@ -265,19 +263,25 @@ describe("Contour + Bevel Coexistence Issue", () => {
       const extrusionDepth = 20;
       const bevelHeight = 10;
 
-      // Create bevel config
+      // Create bevel spec for new function
+      const bevelSpec = {
+        top: { width: 8, height: bevelHeight, preset: "circle" },
+        bottom: undefined,
+      };
+
+      // Create base geometry using NEW function (same as contour uses)
+      const baseGeometry = createExtrudedGeometryWithBevel(
+        [shape],
+        extrusionDepth,
+        bevelSpec,
+      );
+
+      // Create bevel config for contour (legacy format)
       const bevelConfig = getBevelConfig({
         width: px(8),
         height: px(bevelHeight),
         preset: "circle",
       });
-
-      // Create base geometry for comparison
-      const baseGeometry = createAsymmetricExtrudedGeometry(
-        [shape],
-        extrusionDepth,
-        { top: bevelConfig, bottom: undefined },
-      );
 
       // Create contour using shape expansion method
       const contourWidth = 5;
@@ -326,18 +330,25 @@ describe("Contour + Bevel Coexistence Issue", () => {
       const extrusionDepth = 20;
       const contourWidth = 10;
 
-      // Create beveled geometry
+      // Create bevel spec for new function
+      const bevelSpec = {
+        top: { width: 15, height: 12, preset: "circle" },
+        bottom: undefined,
+      };
+
+      // Create base geometry using NEW function
+      const baseGeometry = createExtrudedGeometryWithBevel(
+        [shape],
+        extrusionDepth,
+        bevelSpec,
+      );
+
+      // Create bevel config for contour (legacy format)
       const bevelConfig = getBevelConfig({
         width: px(15),
         height: px(12),
         preset: "circle",
       }) as BevelConfig;
-
-      const baseGeometry = createAsymmetricExtrudedGeometry(
-        [shape],
-        extrusionDepth,
-        { top: bevelConfig },
-      );
 
       // Create contour with same bevel
       const contourMesh = createContourFromShapes(

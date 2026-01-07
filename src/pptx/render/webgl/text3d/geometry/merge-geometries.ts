@@ -1,33 +1,102 @@
 /**
- * @file Unified Geometry Merging for WebGL 3D Text
+ * @file Three.js Adapter for Geometry Merging
  *
- * Provides a single, well-tested function for merging multiple THREE.BufferGeometry
- * instances while properly handling all standard attributes.
+ * Provides THREE.BufferGeometry API for the pure geometry merge module.
+ * This is the adapter layer that converts between Three.js types and
+ * the renderer-agnostic pure geometry types.
+ *
+ * ## Architecture
+ *
+ * - Pure logic: `./pure/merge.ts` (no dependencies)
+ * - This file: Three.js adapter (converts THREE.BufferGeometry ↔ GeometryData)
  *
  * ## ECMA-376 Compliance
  *
- * This module ensures proper attribute preservation for:
+ * Preserves attributes required for:
  * - **gradFill** (Section 20.1.8.33): UV coordinates for gradient texture mapping
  * - **sp3d** (Section 20.1.5.9): Normals for proper 3D lighting
  * - **bevelT/bevelB** (Section 20.1.5.1): Position integrity for bevel rendering
  *
- * ## Attributes Handled
- *
- * | Attribute | Components | Required | Notes |
- * |-----------|------------|----------|-------|
- * | position  | 3 (x,y,z)  | Yes      | Concatenated in order |
- * | normal    | 3 (nx,ny,nz) | No     | Zeros if missing |
- * | uv        | 2 (u,v)    | No       | Omitted if ANY geometry lacks UVs |
- * | index     | 1          | No       | Offset-adjusted |
- *
  * @see ECMA-376 Part 1, Section 20.1.5 (3D Properties)
- * @see ECMA-376 Part 1, Section 20.1.8.33 (gradFill)
  */
 
 import * as THREE from "three";
+import type { GeometryData } from "./pure/types";
+import { mergeGeometries as mergeGeometriesPure } from "./pure/merge";
 
 // =============================================================================
-// Types
+// Type Conversion: THREE.BufferGeometry ↔ GeometryData
+// =============================================================================
+
+/**
+ * Convert THREE.BufferGeometry to GeometryData
+ *
+ * @param geometry - Three.js BufferGeometry
+ * @returns Pure GeometryData
+ */
+export function threeGeometryToGeometryData(
+  geometry: THREE.BufferGeometry,
+): GeometryData {
+  const posAttr = geometry.attributes.position;
+  const normalAttr = geometry.attributes.normal;
+  const uvAttr = geometry.attributes.uv;
+  const indexAttr = geometry.index;
+
+  return {
+    positions: posAttr
+      ? new Float32Array(posAttr.array as Float32Array)
+      : new Float32Array(0),
+    normals: normalAttr
+      ? new Float32Array(normalAttr.array as Float32Array)
+      : new Float32Array(0),
+    uvs: uvAttr
+      ? new Float32Array(uvAttr.array as Float32Array)
+      : new Float32Array(0),
+    indices: indexAttr
+      ? new Uint32Array(indexAttr.array)
+      : new Uint32Array(0),
+  };
+}
+
+/**
+ * Convert GeometryData to THREE.BufferGeometry
+ *
+ * @param data - Pure GeometryData
+ * @returns Three.js BufferGeometry
+ */
+export function geometryDataToThreeGeometry(
+  data: GeometryData,
+): THREE.BufferGeometry {
+  const geometry = new THREE.BufferGeometry();
+
+  geometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(data.positions, 3),
+  );
+
+  if (data.normals.length > 0) {
+    geometry.setAttribute(
+      "normal",
+      new THREE.BufferAttribute(data.normals, 3),
+    );
+  }
+
+  if (data.uvs.length > 0) {
+    geometry.setAttribute(
+      "uv",
+      new THREE.BufferAttribute(data.uvs, 2),
+    );
+  }
+
+  if (data.indices.length > 0) {
+    geometry.setIndex(new THREE.BufferAttribute(data.indices, 1));
+  }
+
+  return geometry;
+}
+
+// =============================================================================
+// Options Types
 // =============================================================================
 
 /**
@@ -49,293 +118,25 @@ export type MergeGeometriesOptions = {
   readonly preserveCustomAttributes?: boolean;
 };
 
-/**
- * Result of analyzing geometries before merge
- */
-type GeometryAnalysis = {
-  readonly totalVertices: number;
-  readonly totalIndices: number;
-  readonly hasAllUVs: boolean;
-  readonly hasAllNormals: boolean;
-  readonly hasAnyIndex: boolean;
-  readonly customAttributeNames: readonly string[];
-};
-
 // =============================================================================
-// Analysis
-// =============================================================================
-
-/**
- * Analyze geometries to determine merge strategy
- */
-function analyzeGeometries(
-  geometries: readonly THREE.BufferGeometry[],
-  preserveCustomAttributes: boolean,
-): GeometryAnalysis {
-  let totalVertices = 0;
-  let totalIndices = 0;
-  let hasAllUVs = true;
-  let hasAllNormals = true;
-  let hasAnyIndex = false;
-  const customAttrSets: Set<string>[] = [];
-
-  for (const geom of geometries) {
-    const posAttr = geom.attributes.position;
-    if (!posAttr) {
-      continue;
-    }
-
-    totalVertices += posAttr.count;
-
-    if (!geom.attributes.uv) {
-      hasAllUVs = false;
-    }
-
-    if (!geom.attributes.normal) {
-      hasAllNormals = false;
-    }
-
-    if (geom.index) {
-      hasAnyIndex = true;
-      totalIndices += geom.index.count;
-    }
-
-    // Collect custom attributes
-    if (preserveCustomAttributes) {
-      const customAttrs = new Set<string>();
-      for (const name of Object.keys(geom.attributes)) {
-        if (name !== "position" && name !== "normal" && name !== "uv") {
-          customAttrs.add(name);
-        }
-      }
-      customAttrSets.push(customAttrs);
-    }
-  }
-
-  // Find common custom attributes (present in ALL geometries)
-  const customAttributeNames: string[] = [];
-  if (preserveCustomAttributes && customAttrSets.length > 0) {
-    const firstSet = customAttrSets[0];
-    for (const name of firstSet) {
-      const inAll = customAttrSets.every((set) => set.has(name));
-      if (inAll) {
-        customAttributeNames.push(name);
-      }
-    }
-  }
-
-  return {
-    totalVertices,
-    totalIndices,
-    hasAllUVs,
-    hasAllNormals,
-    hasAnyIndex,
-    customAttributeNames,
-  };
-}
-
-// =============================================================================
-// Attribute Merging
-// =============================================================================
-
-/**
- * Merge position attributes from all geometries
- */
-function mergePositions(
-  geometries: readonly THREE.BufferGeometry[],
-  totalVertices: number,
-): THREE.BufferAttribute {
-  const merged = new Float32Array(totalVertices * 3);
-  let offset = 0;
-
-  for (const geom of geometries) {
-    const posAttr = geom.attributes.position;
-    if (!posAttr) {
-      continue;
-    }
-
-    const array = posAttr.array as Float32Array;
-    merged.set(array, offset * 3);
-    offset += posAttr.count;
-  }
-
-  return new THREE.BufferAttribute(merged, 3);
-}
-
-/**
- * Merge normal attributes from all geometries
- * Fills with zeros for geometries without normals
- */
-function mergeNormals(
-  geometries: readonly THREE.BufferGeometry[],
-  totalVertices: number,
-): THREE.BufferAttribute {
-  const merged = new Float32Array(totalVertices * 3);
-  let offset = 0;
-
-  for (const geom of geometries) {
-    const posAttr = geom.attributes.position;
-    if (!posAttr) {
-      continue;
-    }
-
-    const normalAttr = geom.attributes.normal;
-    if (normalAttr) {
-      const array = normalAttr.array as Float32Array;
-      merged.set(array, offset * 3);
-    }
-    // If no normals, the array segment remains zeros (Float32Array default)
-
-    offset += posAttr.count;
-  }
-
-  return new THREE.BufferAttribute(merged, 3);
-}
-
-/**
- * Merge UV attributes from all geometries
- * Returns null if any geometry lacks UVs
- */
-function mergeUVs(
-  geometries: readonly THREE.BufferGeometry[],
-  totalVertices: number,
-  hasAllUVs: boolean,
-): THREE.BufferAttribute | null {
-  if (!hasAllUVs) {
-    return null;
-  }
-
-  const merged = new Float32Array(totalVertices * 2);
-  let offset = 0;
-
-  for (const geom of geometries) {
-    const posAttr = geom.attributes.position;
-    const uvAttr = geom.attributes.uv;
-    if (!posAttr || !uvAttr) {
-      continue;
-    }
-
-    const array = uvAttr.array as Float32Array;
-    merged.set(array, offset * 2);
-    offset += posAttr.count;
-  }
-
-  return new THREE.BufferAttribute(merged, 2);
-}
-
-/**
- * Merge index buffers with proper offset adjustment
- */
-function mergeIndices(
-  geometries: readonly THREE.BufferGeometry[],
-  totalIndices: number,
-): number[] | null {
-  if (totalIndices === 0) {
-    return null;
-  }
-
-  const merged: number[] = [];
-  let vertexOffset = 0;
-
-  for (const geom of geometries) {
-    const posAttr = geom.attributes.position;
-    if (!posAttr) {
-      continue;
-    }
-
-    const index = geom.index;
-    if (index) {
-      const array = index.array;
-      for (let i = 0; i < array.length; i++) {
-        merged.push(array[i] + vertexOffset);
-      }
-    }
-
-    vertexOffset += posAttr.count;
-  }
-
-  return merged.length > 0 ? merged : null;
-}
-
-/**
- * Merge a custom attribute from all geometries
- */
-function mergeCustomAttribute(
-  geometries: readonly THREE.BufferGeometry[],
-  attrName: string,
-  totalVertices: number,
-): THREE.BufferAttribute | null {
-  // Get item size from first geometry that has this attribute
-  let itemSize = 0;
-  for (const geom of geometries) {
-    const attr = geom.attributes[attrName];
-    if (attr) {
-      itemSize = attr.itemSize;
-      break;
-    }
-  }
-
-  if (itemSize === 0) {
-    return null;
-  }
-
-  const merged = new Float32Array(totalVertices * itemSize);
-  let offset = 0;
-
-  for (const geom of geometries) {
-    const posAttr = geom.attributes.position;
-    const customAttr = geom.attributes[attrName];
-    if (!posAttr) {
-      continue;
-    }
-
-    if (customAttr && customAttr.itemSize === itemSize) {
-      const array = customAttr.array as Float32Array;
-      merged.set(array, offset * itemSize);
-    }
-    // If no attribute or different item size, segment remains zeros
-
-    offset += posAttr.count;
-  }
-
-  return new THREE.BufferAttribute(merged, itemSize);
-}
-
-// =============================================================================
-// Main API
+// Three.js API (uses pure module internally)
 // =============================================================================
 
 /**
  * Merge multiple BufferGeometry instances into a single geometry.
  *
- * This is the unified geometry merge function that handles all standard
- * attributes (position, normal, uv) and optionally custom attributes.
- *
- * ## Usage
- *
- * ```typescript
- * const merged = mergeBufferGeometries([geomA, geomB, geomC]);
- *
- * // With options
- * const merged = mergeBufferGeometries(geometries, {
- *   disposeInputs: true,  // Free memory from input geometries
- *   preserveCustomAttributes: true,  // Keep custom attributes
- * });
- * ```
+ * Uses the pure geometry merge algorithm internally.
  *
  * ## Attribute Handling
  *
  * - **position**: Always preserved and concatenated
  * - **normal**: Preserved if present; zeros for missing
- * - **uv**: Only preserved if ALL geometries have UVs (for gradient consistency)
+ * - **uv**: Only preserved if ALL geometries have UVs
  * - **index**: Merged with proper vertex offset adjustment
- * - **custom**: Only if preserveCustomAttributes is true and present in ALL geometries
  *
  * @param geometries - Array of geometries to merge
  * @param options - Merge options
  * @returns New BufferGeometry containing all merged data
- *
- * @see ECMA-376 Part 1, Section 20.1.8.33 (gradFill - UV requirement)
  */
 export function mergeBufferGeometries(
   geometries: readonly THREE.BufferGeometry[],
@@ -359,37 +160,52 @@ export function mergeBufferGeometries(
     return clone;
   }
 
-  // Analyze geometries
-  const analysis = analyzeGeometries(geometries, preserveCustomAttributes);
-
-  // Create merged geometry
-  const merged = new THREE.BufferGeometry();
-
-  // Merge position (required)
-  merged.setAttribute("position", mergePositions(geometries, analysis.totalVertices));
-
-  // Merge normals
-  merged.setAttribute("normal", mergeNormals(geometries, analysis.totalVertices));
-
-  // Merge UVs (only if all have them)
-  const uvAttribute = mergeUVs(geometries, analysis.totalVertices, analysis.hasAllUVs);
-  if (uvAttribute) {
-    merged.setAttribute("uv", uvAttribute);
+  // For preserveCustomAttributes, use the Three.js-specific logic
+  // (The pure module doesn't support custom attributes in the same way)
+  if (preserveCustomAttributes) {
+    return mergeWithCustomAttributes(geometries, disposeInputs);
   }
 
-  // Merge indices
-  const indices = mergeIndices(geometries, analysis.totalIndices);
-  if (indices) {
-    merged.setIndex(indices);
+  // Convert to pure types
+  const geometryDataArray = geometries.map(threeGeometryToGeometryData);
+
+  // Use pure merge
+  const mergedData = mergeGeometriesPure(geometryDataArray);
+
+  // Dispose inputs if requested
+  if (disposeInputs) {
+    for (const geom of geometries) {
+      geom.dispose();
+    }
   }
+
+  // Convert back to Three.js
+  return geometryDataToThreeGeometry(mergedData);
+}
+
+/**
+ * Merge geometries while preserving custom attributes.
+ * This is Three.js-specific logic for handling custom attributes.
+ */
+function mergeWithCustomAttributes(
+  geometries: readonly THREE.BufferGeometry[],
+  disposeInputs: boolean,
+): THREE.BufferGeometry {
+  // Analyze for custom attributes
+  const customAttrNames = findCommonCustomAttributes(geometries);
+
+  // Convert to pure types for base attributes
+  const geometryDataArray = geometries.map(threeGeometryToGeometryData);
+  const mergedData = mergeGeometriesPure(geometryDataArray);
+
+  // Create result geometry
+  const result = geometryDataToThreeGeometry(mergedData);
 
   // Merge custom attributes
-  if (preserveCustomAttributes) {
-    for (const attrName of analysis.customAttributeNames) {
-      const customAttr = mergeCustomAttribute(geometries, attrName, analysis.totalVertices);
-      if (customAttr) {
-        merged.setAttribute(attrName, customAttr);
-      }
+  for (const attrName of customAttrNames) {
+    const merged = mergeCustomAttribute(geometries, attrName);
+    if (merged) {
+      result.setAttribute(attrName, merged);
     }
   }
 
@@ -400,7 +216,76 @@ export function mergeBufferGeometries(
     }
   }
 
-  return merged;
+  return result;
+}
+
+/**
+ * Find custom attribute names common to all geometries
+ */
+function findCommonCustomAttributes(
+  geometries: readonly THREE.BufferGeometry[],
+): string[] {
+  const attrCountMap = new Map<string, number>();
+
+  for (const geom of geometries) {
+    for (const name of Object.keys(geom.attributes)) {
+      if (name !== "position" && name !== "normal" && name !== "uv") {
+        attrCountMap.set(name, (attrCountMap.get(name) ?? 0) + 1);
+      }
+    }
+  }
+
+  const commonAttrs: string[] = [];
+  for (const [name, count] of attrCountMap.entries()) {
+    if (count === geometries.length) {
+      commonAttrs.push(name);
+    }
+  }
+
+  return commonAttrs;
+}
+
+/**
+ * Merge a custom attribute from all geometries
+ */
+function mergeCustomAttribute(
+  geometries: readonly THREE.BufferGeometry[],
+  attrName: string,
+): THREE.BufferAttribute | null {
+  // Get item size from first geometry
+  let itemSize = 0;
+  let totalVertices = 0;
+
+  for (const geom of geometries) {
+    const attr = geom.attributes[attrName];
+    const posAttr = geom.attributes.position;
+    if (attr && !itemSize) {
+      itemSize = attr.itemSize;
+    }
+    if (posAttr) {
+      totalVertices += posAttr.count;
+    }
+  }
+
+  if (itemSize === 0) {
+    return null;
+  }
+
+  const merged = new Float32Array(totalVertices * itemSize);
+  let offset = 0;
+
+  for (const geom of geometries) {
+    const attr = geom.attributes[attrName];
+    const posAttr = geom.attributes.position;
+    if (!posAttr) continue;
+
+    if (attr && attr.itemSize === itemSize) {
+      merged.set(attr.array as Float32Array, offset * itemSize);
+    }
+    offset += posAttr.count;
+  }
+
+  return new THREE.BufferAttribute(merged, itemSize);
 }
 
 // =============================================================================
@@ -411,7 +296,6 @@ export function mergeBufferGeometries(
  * Merge exactly two ExtrudeGeometry instances.
  *
  * @deprecated Use `mergeBufferGeometries` instead.
- * This function exists for backward compatibility only.
  *
  * @param geomA - First geometry
  * @param geomB - Second geometry (will be disposed)
@@ -421,14 +305,26 @@ export function mergeExtrudeGeometriesLegacy(
   geomA: THREE.ExtrudeGeometry,
   geomB: THREE.ExtrudeGeometry,
 ): THREE.ExtrudeGeometry {
-  // Use the unified function, disposing geomB for backward compatibility
   const merged = mergeBufferGeometries([geomA, geomB], {
-    disposeInputs: false, // Don't dispose geomA
+    disposeInputs: false,
   });
 
   // Dispose geomB manually (legacy behavior)
   geomB.dispose();
 
-  // Cast to ExtrudeGeometry (safe because it has all required attributes)
   return merged as THREE.ExtrudeGeometry;
 }
+
+// =============================================================================
+// Re-exports from pure module
+// =============================================================================
+
+export {
+  mergeGeometries as mergeGeometriesData,
+  mergeExtendedGeometries,
+} from "./pure/merge";
+
+export type {
+  GeometryData,
+  ExtendedGeometryData,
+} from "./pure/types";
