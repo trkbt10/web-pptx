@@ -11,6 +11,7 @@ import type { PicShape as PicShapeType, Transform } from "../../../domain";
 import type { ShapeId } from "../../../domain/types";
 import { useRenderResources } from "../context";
 import { buildTransformAttr } from "./transform";
+import { getBlipFillImageSrc } from "../../utils/image-conversion";
 
 // =============================================================================
 // Types
@@ -77,9 +78,10 @@ function PicShapeRendererBase({
   const resources = useRenderResources();
   const { blipFill, properties } = shape;
 
+  // Use resolvedResource (resolved at parse time) if available, otherwise fall back to runtime resolution
   const imagePath = useMemo(
-    () => resources.resolve(blipFill.resourceId),
-    [resources, blipFill.resourceId],
+    () => getBlipFillImageSrc(blipFill, (rId) => resources.resolve(rId)),
+    [blipFill, resources],
   );
   if (imagePath === undefined) {
     return null;
@@ -210,6 +212,11 @@ function arePicShapePropsEqual(prev: PicShapeRendererProps, next: PicShapeRender
   }
 
   if (prev.shape.blipFill.resourceId !== next.shape.blipFill.resourceId) {
+    return false;
+  }
+
+  // Check if resolvedResource changed (reference equality is sufficient since it's immutable)
+  if (prev.shape.blipFill.resolvedResource !== next.shape.blipFill.resolvedResource) {
     return false;
   }
 

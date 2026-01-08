@@ -92,11 +92,38 @@ export function shrinkShape(
     return null;
   }
 
+  // Validate shrunk shape - check for self-intersection by verifying area
+  // Original shape should have positive area (CCW), shrunk should too
+  const originalArea = computeSignedArea(points);
+  const shrunkArea = computeSignedArea(shrunkPoints);
+
+  // If shrunk area is negative or too small, shape has collapsed/inverted
+  // Use 10% of original area as minimum threshold
+  const minValidArea = Math.abs(originalArea) * 0.1;
+  if (shrunkArea * originalArea < 0 || Math.abs(shrunkArea) < minValidArea) {
+    return null;
+  }
+
   // Expand holes (outward) - holes get bigger when shape shrinks
   const expandedHoles: Vector2[][] = [];
   for (const hole of holes) {
     const expandedHole = expandContourPoints(hole, distance, false);
     if (expandedHole && expandedHole.length >= 3) {
+      // Validate expanded hole - ensure it doesn't exceed outer bounds
+      const holeArea = computeSignedArea(expandedHole);
+      const originalHoleArea = computeSignedArea(hole);
+
+      // If hole area inverted or expanded beyond reasonable bounds, skip it
+      if (holeArea * originalHoleArea < 0) {
+        continue;
+      }
+
+      // Check if expanded hole area exceeds the remaining shape area
+      // This indicates the hole has grown too large
+      if (Math.abs(holeArea) > Math.abs(shrunkArea) * 0.9) {
+        continue;
+      }
+
       expandedHoles.push(expandedHole);
     }
   }

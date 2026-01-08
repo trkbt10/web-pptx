@@ -80,6 +80,19 @@ export type BevelPathPoint = {
   readonly position: Vector2;
   /** Inward-facing normal (toward center of shape) */
   readonly normal: Vector2;
+  /**
+   * Miter length factor for corner handling.
+   *
+   * At corners, the inset distance must be scaled by this factor to ensure
+   * the bevel inner edge aligns with the shrunk shape used for inner cap.
+   *
+   * miterFactor = 1 / cos(halfAngle) where halfAngle is the angle between
+   * the normal and the corner bisector.
+   *
+   * For straight edges: miterFactor = 1
+   * For 90° corners: miterFactor ≈ 1.414
+   */
+  readonly miterFactor: number;
 };
 
 /**

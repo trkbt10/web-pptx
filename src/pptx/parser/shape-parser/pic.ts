@@ -5,7 +5,7 @@
  */
 
 import { getAttr, getChild, type XmlElement } from "../../../xml";
-import type { BlipFillProperties, PicShape, PictureLocks } from "../../domain";
+import type { BlipFillProperties, PicShape, PictureLocks, ResolvedBlipResource } from "../../domain";
 import { px, pct } from "../../domain/types";
 import { getBoolAttr, getIntAttr, parseBlipCompression, parseRectAlignment } from "../primitive";
 import { parseNonVisualMedia, parseNonVisualProperties } from "./non-visual";
@@ -13,12 +13,18 @@ import { parseShapeProperties } from "./properties";
 import { parseShapeStyle } from "./style";
 import { getBlipFillElement } from "./alternate-content";
 import { resolveEffectsFromStyleReference } from "../graphics/effects-parser";
-import type { FormatScheme } from "../context";
+import type { FormatScheme, ResourceContext } from "../context";
 
 /**
  * Parse blip fill properties for pictures
+ *
+ * @param blipFill - The blipFill XML element
+ * @param resourceContext - Optional resource context for resolving images at parse time
  */
-export function parseBlipFillProperties(blipFill: XmlElement | undefined): BlipFillProperties | undefined {
+export function parseBlipFillProperties(
+  blipFill: XmlElement | undefined,
+  resourceContext?: ResourceContext,
+): BlipFillProperties | undefined {
   if (!blipFill) {
     return undefined;
   }
@@ -33,6 +39,12 @@ export function parseBlipFillProperties(blipFill: XmlElement | undefined): BlipF
     return undefined;
   }
 
+  // Resolve image at parse time if context is available
+  let resolvedResource: ResolvedBlipResource | undefined;
+  if (resourceContext !== undefined && !resourceId.startsWith("data:")) {
+    resolvedResource = resourceContext.resolveBlipFill(resourceId);
+  }
+
   // Parse source rect
   const sourceRect = parseSourceRect(getChild(blipFill, "a:srcRect"));
 
@@ -44,6 +56,7 @@ export function parseBlipFillProperties(blipFill: XmlElement | undefined): BlipF
 
   return {
     resourceId,
+    resolvedResource,
     compressionState: parseBlipCompression(getAttr(blip, "cstate")),
     sourceRect,
     stretch: stretch !== undefined,
@@ -128,16 +141,24 @@ function detectMediaType(nvPicPr: XmlElement | undefined): PicShape["mediaType"]
 
 /**
  * Parse picture shape (p:pic)
+ *
+ * @param element - The p:pic XML element
+ * @param formatScheme - Optional format scheme for style reference resolution
+ * @param resourceContext - Optional resource context for resolving images at parse time
  * @see ECMA-376 Part 1, Section 19.3.1.37
  */
-export function parsePicShape(element: XmlElement, formatScheme?: FormatScheme): PicShape | undefined {
+export function parsePicShape(
+  element: XmlElement,
+  formatScheme?: FormatScheme,
+  resourceContext?: ResourceContext,
+): PicShape | undefined {
   const nvPicPr = getChild(element, "p:nvPicPr");
   const cNvPr = nvPicPr ? getChild(nvPicPr, "p:cNvPr") : undefined;
   const cNvPicPr = nvPicPr ? getChild(nvPicPr, "p:cNvPicPr") : undefined;
   const nvPr = nvPicPr ? getChild(nvPicPr, "p:nvPr") : undefined;
 
   const blipFill = getBlipFillElement(element);
-  const blipFillProps = parseBlipFillProperties(blipFill);
+  const blipFillProps = parseBlipFillProperties(blipFill, resourceContext);
   if (!blipFillProps) {
     return undefined;
   }

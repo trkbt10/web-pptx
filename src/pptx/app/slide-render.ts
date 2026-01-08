@@ -10,6 +10,7 @@
 import type { XmlDocument } from "../../xml/index";
 import { getChild } from "../../xml/index";
 import type { SlideContext } from "../parser/slide/context";
+import { createResourceContextImpl } from "../parser/slide/context";
 import type { Shape, SlideSize } from "../domain/index";
 import { getNonPlaceholderShapes } from "../domain/shape-utils";
 import { parseSlide } from "../parser/slide/slide-parser";
@@ -59,8 +60,14 @@ export type IntegratedSvgRenderResult = {
  * Parse and get non-placeholder shapes from slide layout.
  * These are decorative shapes that should be rendered behind slide content.
  *
+ * Uses a layout-specific ResourceContext to resolve images from the layout's
+ * relationships, not the slide's. This is critical because layout and slide
+ * may have different rId mappings for the same relationship IDs.
+ *
  * @param ctx - Slide render context containing layout content
  * @returns Array of non-placeholder shapes from layout
+ *
+ * @see ECMA-376 Part 1, Section 19.3.1.39 (sldLayout)
  */
 function getLayoutNonPlaceholderShapes(ctx: SlideContext): readonly Shape[] {
   const layoutContent = ctx.layout.content;
@@ -79,7 +86,28 @@ function getLayoutNonPlaceholderShapes(ctx: SlideContext): readonly Shape[] {
     return [];
   }
 
-  const layoutShapes = parseShapeTree(spTree);
+  // Create a layout-specific ResourceContext that resolves from layout resources first
+  // This prevents rId collision between slide and layout relationships
+  const layoutResourceContext = createResourceContextImpl(
+    (rId: string) => {
+      // Resolve from layout resources first
+      const layoutTarget = ctx.layout.resources.getTarget(rId);
+      if (layoutTarget !== undefined) {
+        return layoutTarget;
+      }
+      // Fall back to master resources (for shared resources)
+      return ctx.master.resources.getTarget(rId);
+    },
+    ctx.readFile.bind(ctx),
+  );
+
+  const layoutShapes = parseShapeTree(
+    spTree,
+    undefined, // PlaceholderContext
+    undefined, // MasterStylesInfo
+    undefined, // FormatScheme
+    layoutResourceContext,
+  );
   return getNonPlaceholderShapes(layoutShapes);
 }
 

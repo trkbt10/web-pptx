@@ -228,6 +228,10 @@ export function createEmptyParseContext(): ParseContext {
 
 import type { SlideContext } from "./slide/context";
 
+// Re-export ResourceContext for shape parser
+export type { ResourceContext } from "./slide/context";
+export { createResourceContextImpl } from "./slide/context";
+
 /**
  * Create ParseContext from SlideRenderContext.
  *

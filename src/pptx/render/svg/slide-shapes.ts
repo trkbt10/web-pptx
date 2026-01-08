@@ -30,6 +30,7 @@ import type { CoreRenderContext } from "../render-context";
 import type { SvgDefsCollector } from "./slide-utils";
 import { createDefsCollector, getShapeTransform, isShapeHidden, buildTransformAttr, buildGroupTransformAttr } from "./slide-utils";
 import { renderFillToSvgDef, renderFillToSvgStyle, getResolvedImageFill, renderImageFillToSvgDef } from "./fill";
+import { getBlipFillImageSrc } from "../utils/image-conversion";
 import { renderGeometryData } from "./geometry";
 import { generateLineMarkers } from "./marker";
 import { resolveFill, formatRgba } from "../../domain/drawing-ml/fill-resolution";
@@ -310,7 +311,8 @@ function calculateCroppedImageLayout(
  * @see ECMA-376 Part 1, Section 19.3.1.37 (p:pic)
  */
 function renderPictureSvg(shape: PicShape, ctx: CoreRenderContext, transformAttr: string, ooxmlIdAttr: string, w: number, h: number): string {
-  const imagePath = ctx.resources.resolve(shape.blipFill.resourceId);
+  // Use resolvedResource (resolved at parse time) if available, otherwise fall back to runtime resolution
+  const imagePath = getBlipFillImageSrc(shape.blipFill, (rId) => ctx.resources.resolve(rId));
   if (imagePath === undefined) {
     return "";
   }

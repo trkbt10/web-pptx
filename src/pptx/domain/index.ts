@@ -152,6 +152,7 @@ export type {
   ResourcePath,
   Hyperlink,
   HyperlinkSound,
+  ResolvedBlipResource,
 } from "./resource";
 
 // =============================================================================

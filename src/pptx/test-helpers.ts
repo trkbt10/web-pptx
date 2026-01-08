@@ -129,6 +129,7 @@ export function createMockResourceContext(): ResourceContext {
   return {
     resolveResource: () => undefined,
     readFile: () => null,
+    resolveBlipFill: () => undefined,
   };
 }
 
@@ -219,10 +220,12 @@ export function createMockSlideRenderContext(
     toResourceContext: () => ({
       resolveResource: () => undefined,
       readFile: () => null,
+      resolveBlipFill: () => undefined,
     }),
     toThemeResourceContext: () => ({
       resolveResource: () => undefined,
       readFile: () => null,
+      resolveBlipFill: () => undefined,
     }),
     toTextStyleContext: () => ({
       masterTextStyles: createMockMasterTextStyles(),

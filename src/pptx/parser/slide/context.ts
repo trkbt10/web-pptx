@@ -27,8 +27,10 @@ import type {
   Theme,
   RawMasterTextStyles,
   ColorMap,
+  ResolvedBlipResource,
 } from "../../domain/index";
 import type { ColorResolveContext } from "../../domain/resolution";
+import { getMimeType } from "../../../files/mime";
 
 // =============================================================================
 // Params (immutable data)
@@ -430,10 +432,10 @@ export function createSlideContext(
     },
 
     toResourceContext(): ResourceContext {
-      return {
-        resolveResource: self.resolveResource.bind(self),
-        readFile: self.readFile.bind(self),
-      };
+      return createResourceContextImpl(
+        self.resolveResource.bind(self),
+        self.readFile.bind(self),
+      );
     },
 
     toTextStyleContext(): TextStyleContext {
@@ -445,13 +447,10 @@ export function createSlideContext(
     },
 
     toThemeResourceContext(): ResourceContext {
-      return {
-        resolveResource(rId: string): string | undefined {
-          // Resolve from theme resources only
-          return presentation.themeResources?.getTarget(rId);
-        },
-        readFile: self.readFile.bind(self),
-      };
+      return createResourceContextImpl(
+        (rId: string) => presentation.themeResources?.getTarget(rId),
+        self.readFile.bind(self),
+      );
     },
   };
 
@@ -486,6 +485,15 @@ export type ResourceContext = {
   readonly resolveResource: (rId: string) => string | undefined;
   /** Read file from package */
   readonly readFile: (path: string) => ArrayBuffer | null;
+  /**
+   * Resolve a blipFill resource ID to raw image data.
+   * This is the unified method for resolving image resources at parse time.
+   * Conversion to Data URL or Blob URL is done by the render layer.
+   *
+   * @param rId - Relationship ID (e.g., "rId2")
+   * @returns ResolvedBlipResource containing raw image data, or undefined if not found
+   */
+  readonly resolveBlipFill: (rId: string) => ResolvedBlipResource | undefined;
 };
 
 /**
@@ -538,6 +546,53 @@ export type TextStyleContext = {
 };
 
 // =============================================================================
+// ResourceContext Factory
+// =============================================================================
+
+/**
+ * Create a ResourceContext implementation with resolveBlipFill.
+ *
+ * This is the canonical factory for creating ResourceContext instances.
+ * The resolveBlipFill method provides unified image resource resolution,
+ * separating resolution (here) from conversion (in render layer).
+ *
+ * @param resolveResource - Function to resolve rId to file path
+ * @param readFile - Function to read file contents from the package
+ */
+export function createResourceContextImpl(
+  resolveResource: (rId: string) => string | undefined,
+  readFile: (path: string) => ArrayBuffer | null,
+): ResourceContext {
+  return {
+    resolveResource,
+    readFile,
+    resolveBlipFill(rId: string): ResolvedBlipResource | undefined {
+      const path = resolveResource(rId);
+      if (path === undefined) {
+        return undefined;
+      }
+
+      // Skip non-image files (e.g., XML relationships)
+      const ext = path.split(".").pop()?.toLowerCase() ?? "";
+      if (ext === "xml" || ext === "rels") {
+        return undefined;
+      }
+
+      const data = readFile(path);
+      if (data === null) {
+        return undefined;
+      }
+
+      return {
+        data,
+        mimeType: getMimeType(ext),
+        path,
+      };
+    },
+  };
+}
+
+// =============================================================================
 // Context Derivation Functions
 // =============================================================================
 
@@ -566,10 +621,10 @@ export function toPlaceholderContext(ctx: SlideContext): PlaceholderContext {
  * Derive ResourceContext from SlideRenderContext.
  */
 export function toResourceContext(ctx: SlideContext): ResourceContext {
-  return {
-    resolveResource: ctx.resolveResource.bind(ctx),
-    readFile: ctx.readFile.bind(ctx),
-  };
+  return createResourceContextImpl(
+    ctx.resolveResource.bind(ctx),
+    ctx.readFile.bind(ctx),
+  );
 }
 
 /**

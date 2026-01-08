@@ -56,13 +56,16 @@ function generatePathBevel(
   const numPathPoints = pathPoints.length;
   const numProfilePoints = profilePoints.length;
 
-  // For holes, we need to invert the profile direction
-  const profileDir = isHole ? -1 : 1;
+  // Profile direction is always positive (toward solid):
+  // - Outer: inwardNormal points toward center, inset goes toward center
+  // - Hole: inwardNormal points toward solid, inset goes toward solid
+  // This matches shrinkShape behavior for inner cap generation.
+  const profileDir = 1;
 
   // Generate vertex grid: path points × profile points
   for (let pi = 0; pi < numPathPoints; pi++) {
     const pathPoint = pathPoints[pi];
-    const { position, normal: inwardNormal } = pathPoint;
+    const { position, normal: inwardNormal, miterFactor } = pathPoint;
 
     // Calculate path-local UV coordinate (along the path)
     const pathU = pi / (numPathPoints - (isClosed ? 0 : 1));
@@ -70,8 +73,10 @@ function generatePathBevel(
     for (let ri = 0; ri < numProfilePoints; ri++) {
       const profilePoint = profilePoints[ri];
 
-      // Inset along the inward normal
-      const insetAmount = profilePoint.inset * width * profileDir;
+      // Inset along the inward normal, scaled by miter factor for proper corner handling.
+      // The miter factor ensures the bevel's inner edge aligns with the shrunk shape
+      // used for inner cap generation.
+      const insetAmount = profilePoint.inset * width * miterFactor * profileDir;
       const x = position.x + inwardNormal.x * insetAmount;
       const y = position.y + inwardNormal.y * insetAmount;
 
@@ -82,16 +87,16 @@ function generatePathBevel(
 
       // Normal calculation for bevel surface
       //
-      // The bevel surface faces OUTWARD from the shape, so the normal
-      // must point away from the shape center. However, inwardNormal
-      // points TOWARD the center, so we negate it for the XY component.
+      // The bevel surface should face away from the solid:
+      // - Outer: faces outward (away from shape center)
+      // - Hole: faces into the hole (toward hole center)
       //
-      // Profile curve:
-      // - At inset=0 (edge of profile), surface is flat, normal = +Z
-      // - At inset=1 (end of profile), surface turns 90°, normal = outward XY
+      // inwardNormal points:
+      // - Outer: toward shape center
+      // - Hole: toward solid (away from hole center)
       //
-      // For holes, the bevel faces inward (into the hole), so we don't negate.
-      const outwardSign = isHole ? 1 : -1;
+      // For both cases, the surface normal XY component is -inwardNormal.
+      const outwardSign = -1;
       const profileNormalZ = zDirection * (1 - profilePoint.inset);
       const profileNormalXY = profilePoint.depth;
       const normalLength = Math.sqrt(
@@ -132,12 +137,9 @@ function generatePathBevel(
       //       |                    |
       //   i2 (pi+1, ri) ------ i3 (pi+1, ri+1)
       //
-      // For outer contour:
-      // - Path goes CCW around shape
-      // - Profile goes from face (ri=0) toward edge (ri=max)
-      // - Surface faces outward (toward viewer for front bevel)
-      //
-      // Triangle winding must produce normals matching vertex normals.
+      // With unified profile direction (both toward solid):
+      // - Outer (CCW): standard winding
+      // - Hole (CW): need opposite winding due to path direction
       if (isHole) {
         indices.push(i0, i1, i2);
         indices.push(i2, i1, i3);

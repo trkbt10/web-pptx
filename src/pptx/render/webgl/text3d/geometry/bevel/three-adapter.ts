@@ -8,6 +8,7 @@
  */
 
 import * as THREE from "three";
+import { ShapeUtils } from "three";
 import type {
   Vector2,
   ShapeInput,
@@ -163,6 +164,342 @@ export function vector2ToThreeVector2(v: Vector2): THREE.Vector2 {
 }
 
 // =============================================================================
+// Triangulation using THREE.ShapeUtils
+// =============================================================================
+
+/**
+ * Triangulate a shape with holes using THREE.ShapeGeometry.
+ *
+ * This approach creates a THREE.Shape, uses ShapeGeometry to triangulate,
+ * then extracts the positions and indices.
+ *
+ * @param outer - Outer contour points
+ * @param holes - Array of hole contours
+ * @returns Combined points array and triangle indices
+ */
+export function triangulateShapeWithThree(
+  outer: readonly Vector2[],
+  holes: readonly (readonly Vector2[])[],
+): { points: Vector2[]; indices: number[] } {
+  // Create THREE.Shape from outer contour
+  const shape = new THREE.Shape();
+  if (outer.length > 0) {
+    shape.moveTo(outer[0].x, outer[0].y);
+    for (let i = 1; i < outer.length; i++) {
+      shape.lineTo(outer[i].x, outer[i].y);
+    }
+    shape.closePath();
+  }
+
+  // Add holes
+  for (const hole of holes) {
+    if (hole.length > 0) {
+      const holePath = new THREE.Path();
+      holePath.moveTo(hole[0].x, hole[0].y);
+      for (let i = 1; i < hole.length; i++) {
+        holePath.lineTo(hole[i].x, hole[i].y);
+      }
+      holePath.closePath();
+      shape.holes.push(holePath);
+    }
+  }
+
+  // Use ShapeGeometry to triangulate - this handles holes correctly
+  const geom = new THREE.ShapeGeometry(shape);
+  const posAttr = geom.getAttribute("position");
+  const indexAttr = geom.getIndex();
+
+  // Extract points from geometry
+  const points: Vector2[] = [];
+  for (let i = 0; i < posAttr.count; i++) {
+    points.push(vec2(posAttr.getX(i), posAttr.getY(i)));
+  }
+
+  // Extract indices
+  const indices: number[] = [];
+  if (indexAttr) {
+    for (let i = 0; i < indexAttr.count; i++) {
+      indices.push(indexAttr.getX(i));
+    }
+  } else {
+    // Non-indexed geometry - create sequential indices
+    for (let i = 0; i < posAttr.count; i++) {
+      indices.push(i);
+    }
+  }
+
+  geom.dispose();
+  return { points, indices };
+}
+
+/**
+ * Generate extruded geometry using THREE.ShapeUtils for triangulation.
+ *
+ * This is a Three.js-dependent version that produces more reliable
+ * triangulation than the pure JavaScript implementation.
+ *
+ * @param shape - Input shape with optional holes
+ * @param config - Extrusion configuration
+ * @returns Geometry data (positions, normals, uvs, indices)
+ */
+export function generateExtrusionWithThree(
+  shape: ShapeInput,
+  config: {
+    depth: number;
+    includeFrontCap: boolean;
+    includeBackCap: boolean;
+  },
+): BevelGeometryData {
+  if (shape.points.length < 3) {
+    return {
+      positions: new Float32Array(0),
+      normals: new Float32Array(0),
+      uvs: new Float32Array(0),
+      indices: new Uint32Array(0),
+    };
+  }
+
+  const { depth, includeFrontCap, includeBackCap } = config;
+
+  // Ensure outer contour is CCW (positive signed area)
+  const signedArea = computeSignedAreaLocal(shape.points);
+  const outerPoints = signedArea < 0 ? [...shape.points].reverse() : [...shape.points];
+
+  // Ensure holes are CW (negative signed area from the hole's perspective)
+  const holes = shape.holes.map((hole) => {
+    const holeArea = computeSignedAreaLocal(hole);
+    return holeArea > 0 ? [...hole].reverse() : [...hole];
+  });
+
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+
+  let vertexOffset = 0;
+
+  // Generate front cap (at Z=depth)
+  if (includeFrontCap) {
+    const { points: capPoints, indices: capIndices } = triangulateShapeWithThree(
+      outerPoints,
+      holes,
+    );
+
+    for (const pt of capPoints) {
+      positions.push(pt.x, pt.y, depth);
+      normals.push(0, 0, 1);
+      uvs.push(pt.x, pt.y);
+    }
+
+    for (const idx of capIndices) {
+      indices.push(vertexOffset + idx);
+    }
+
+    vertexOffset += capPoints.length;
+  }
+
+  // Generate back cap (at Z=0)
+  if (includeBackCap) {
+    const { points: capPoints, indices: capIndices } = triangulateShapeWithThree(
+      outerPoints,
+      holes,
+    );
+
+    for (const pt of capPoints) {
+      positions.push(pt.x, pt.y, 0);
+      normals.push(0, 0, -1);
+      uvs.push(pt.x, pt.y);
+    }
+
+    // Reverse winding for back cap
+    for (let i = 0; i < capIndices.length; i += 3) {
+      indices.push(
+        vertexOffset + capIndices[i],
+        vertexOffset + capIndices[i + 2],
+        vertexOffset + capIndices[i + 1],
+      );
+    }
+
+    vertexOffset += capPoints.length;
+  }
+
+  // Generate side walls
+  const sideResult = generateSideWallsLocal(outerPoints, holes, depth, vertexOffset);
+  positions.push(...sideResult.positions);
+  normals.push(...sideResult.normals);
+  uvs.push(...sideResult.uvs);
+  indices.push(...sideResult.indices);
+
+  return {
+    positions: new Float32Array(positions),
+    normals: new Float32Array(normals),
+    uvs: new Float32Array(uvs),
+    indices: new Uint32Array(indices),
+  };
+}
+
+/**
+ * Generate a cap at a specific Z position using THREE.ShapeUtils triangulation.
+ */
+export function generateCapAtZWithThree(
+  shape: ShapeInput,
+  config: {
+    zPosition: number;
+    normalDirection: 1 | -1;
+  },
+): BevelGeometryData {
+  if (shape.points.length < 3) {
+    return {
+      positions: new Float32Array(0),
+      normals: new Float32Array(0),
+      uvs: new Float32Array(0),
+      indices: new Uint32Array(0),
+    };
+  }
+
+  const { zPosition, normalDirection } = config;
+
+  // Ensure outer contour is CCW
+  const signedArea = computeSignedAreaLocal(shape.points);
+  const outerPoints = signedArea < 0 ? [...shape.points].reverse() : [...shape.points];
+
+  // Ensure holes are CW
+  const holes = shape.holes.map((hole) => {
+    const holeArea = computeSignedAreaLocal(hole);
+    return holeArea > 0 ? [...hole].reverse() : [...hole];
+  });
+
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+
+  const { points: capPoints, indices: capIndices } = triangulateShapeWithThree(
+    outerPoints,
+    holes,
+  );
+
+  for (const pt of capPoints) {
+    positions.push(pt.x, pt.y, zPosition);
+    normals.push(0, 0, normalDirection);
+    uvs.push(pt.x, pt.y);
+  }
+
+  if (normalDirection === 1) {
+    for (const idx of capIndices) {
+      indices.push(idx);
+    }
+  } else {
+    for (let i = 0; i < capIndices.length; i += 3) {
+      indices.push(capIndices[i], capIndices[i + 2], capIndices[i + 1]);
+    }
+  }
+
+  return {
+    positions: new Float32Array(positions),
+    normals: new Float32Array(normals),
+    uvs: new Float32Array(uvs),
+    indices: new Uint32Array(indices),
+  };
+}
+
+// Local helper: compute signed area
+function computeSignedAreaLocal(points: readonly Vector2[]): number {
+  let area = 0;
+  for (let i = 0; i < points.length; i++) {
+    const curr = points[i];
+    const next = points[(i + 1) % points.length];
+    area += curr.x * next.y - next.x * curr.y;
+  }
+  return area / 2;
+}
+
+// Local helper: generate side walls
+function generateSideWallsLocal(
+  outer: readonly Vector2[],
+  holes: readonly (readonly Vector2[])[],
+  depth: number,
+  vertexOffset: number,
+): {
+  positions: number[];
+  normals: number[];
+  uvs: number[];
+  indices: number[];
+} {
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+
+  let currentOffset = vertexOffset;
+
+  const generateContourSideWall = (
+    points: readonly Vector2[],
+    isHole: boolean,
+  ): void => {
+    const n = points.length;
+
+    for (let i = 0; i < n; i++) {
+      const curr = points[i];
+      const next = points[(i + 1) % n];
+
+      const edgeX = next.x - curr.x;
+      const edgeY = next.y - curr.y;
+      const edgeLen = Math.sqrt(edgeX * edgeX + edgeY * edgeY);
+
+      let nx: number, ny: number;
+      if (edgeLen > 0.0001) {
+        if (isHole) {
+          nx = edgeY / edgeLen;
+          ny = -edgeX / edgeLen;
+        } else {
+          nx = -edgeY / edgeLen;
+          ny = edgeX / edgeLen;
+        }
+      } else {
+        nx = 0;
+        ny = 0;
+      }
+
+      positions.push(curr.x, curr.y, depth);
+      positions.push(curr.x, curr.y, 0);
+      positions.push(next.x, next.y, depth);
+      positions.push(next.x, next.y, 0);
+
+      for (let j = 0; j < 4; j++) {
+        normals.push(nx, ny, 0);
+      }
+
+      const u0 = i / n;
+      const u1 = (i + 1) / n;
+      uvs.push(u0, 1);
+      uvs.push(u0, 0);
+      uvs.push(u1, 1);
+      uvs.push(u1, 0);
+
+      const base = currentOffset + i * 4;
+      if (isHole) {
+        indices.push(base, base + 2, base + 1);
+        indices.push(base + 1, base + 2, base + 3);
+      } else {
+        indices.push(base, base + 1, base + 2);
+        indices.push(base + 2, base + 1, base + 3);
+      }
+    }
+
+    currentOffset += n * 4;
+  };
+
+  generateContourSideWall(outer, false);
+
+  for (const hole of holes) {
+    generateContourSideWall(hole, true);
+  }
+
+  return { positions, normals, uvs, indices };
+}
+
+// =============================================================================
 // Asymmetric Extrusion with Bevel (Three.js Independent Core)
 // =============================================================================
 
@@ -235,7 +572,8 @@ export function createExtrudedGeometryWithBevel(
     // Generate extrusion with selective cap omission
     // - Omit front cap if top bevel is present (front cap would overlap with bevel)
     // - Omit back cap if bottom bevel is present
-    const extrusionData = generateExtrusion(shapeInput, {
+    // Use THREE.ShapeUtils for reliable triangulation
+    const extrusionData = generateExtrusionWithThree(shapeInput, {
       depth: extrusionDepth,
       includeFrontCap: !bevel.top, // Omit if bevel present
       includeBackCap: !bevel.bottom,
@@ -261,10 +599,11 @@ export function createExtrudedGeometryWithBevel(
 
       // Generate inner cap at recessed position (after bevel inset)
       // This covers the flat face inside the bevel
+      // Use THREE.ShapeUtils for reliable triangulation
       const shrunkShape = shrinkShape(shapeInput, bevel.top.width);
       if (shrunkShape && shrunkShape.points.length >= 3) {
         const innerCapZ = extrusionDepth - topBevelHeight;
-        const innerCapData = generateCapAtZ(shrunkShape, {
+        const innerCapData = generateCapAtZWithThree(shrunkShape, {
           zPosition: innerCapZ,
           normalDirection: 1, // Front-facing (+Z)
         });
@@ -290,10 +629,11 @@ export function createExtrudedGeometryWithBevel(
 
       // Generate inner cap at recessed position (after bevel inset)
       // This covers the flat face inside the bevel
+      // Use THREE.ShapeUtils for reliable triangulation
       const shrunkShape = shrinkShape(shapeInput, bevel.bottom.width);
       if (shrunkShape && shrunkShape.points.length >= 3) {
         const innerCapZ = bottomBevelHeight;
-        const innerCapData = generateCapAtZ(shrunkShape, {
+        const innerCapData = generateCapAtZWithThree(shrunkShape, {
           zPosition: innerCapZ,
           normalDirection: -1, // Back-facing (-Z)
         });

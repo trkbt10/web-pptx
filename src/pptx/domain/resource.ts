@@ -36,3 +36,23 @@ export type Hyperlink = {
   readonly action?: string;
   readonly sound?: HyperlinkSound;
 };
+
+// =============================================================================
+// Resolved Resources
+// =============================================================================
+
+/**
+ * Resolved blipFill resource.
+ * Contains the raw image data resolved at parse time.
+ * Conversion to Data URL or Blob URL is done by the render layer.
+ *
+ * @see ECMA-376 Part 1, Section 20.1.8.14 (blipFill)
+ */
+export type ResolvedBlipResource = {
+  /** Raw image data */
+  readonly data: ArrayBuffer;
+  /** MIME type (e.g., "image/png", "image/jpeg") */
+  readonly mimeType: string;
+  /** Original file path for debugging */
+  readonly path: string;
+};

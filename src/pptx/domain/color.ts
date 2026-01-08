@@ -15,6 +15,7 @@ import type {
   ResourceId,
   SchemeColorValue,
 } from "./types";
+import type { ResolvedBlipResource } from "./resource";
 
 // =============================================================================
 // Color Types
@@ -242,7 +243,17 @@ export type TileFill = {
  */
 export type BlipFill = {
   readonly type: "blipFill";
+  /**
+   * Resource ID (relationship ID, e.g., "rId2") or pre-resolved data URL.
+   * When resolved at parse time, resolvedResource will also be populated.
+   */
   readonly resourceId: ResourceId;
+  /**
+   * Resolved image resource data (when resolved at parse time).
+   * This allows the render layer to convert to the appropriate format
+   * (Data URL, Blob URL, etc.) without needing to access the zip file.
+   */
+  readonly resolvedResource?: ResolvedBlipResource;
   readonly compressionState?: BlipCompression;
   readonly stretch?: StretchFill;
   readonly tile?: TileFill;

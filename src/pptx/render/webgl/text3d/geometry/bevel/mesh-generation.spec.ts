@@ -15,10 +15,10 @@ import { ANGLE_PROFILE, CIRCLE_PROFILE } from "./profiles";
 function createSquarePath(isHole: boolean): BevelPath {
   return {
     points: [
-      { position: vec2(0, 0), normal: vec2(0.707, 0.707) },
-      { position: vec2(10, 0), normal: vec2(-0.707, 0.707) },
-      { position: vec2(10, 10), normal: vec2(-0.707, -0.707) },
-      { position: vec2(0, 10), normal: vec2(0.707, -0.707) },
+      { position: vec2(0, 0), normal: vec2(0.707, 0.707), miterFactor: 1 },
+      { position: vec2(10, 0), normal: vec2(-0.707, 0.707), miterFactor: 1 },
+      { position: vec2(10, 10), normal: vec2(-0.707, -0.707), miterFactor: 1 },
+      { position: vec2(0, 10), normal: vec2(0.707, -0.707), miterFactor: 1 },
     ],
     isHole,
     isClosed: true,
@@ -28,9 +28,9 @@ function createSquarePath(isHole: boolean): BevelPath {
 function createTrianglePath(): BevelPath {
   return {
     points: [
-      { position: vec2(0, 0), normal: vec2(0, 1) },
-      { position: vec2(10, 0), normal: vec2(-0.866, -0.5) },
-      { position: vec2(5, 8.66), normal: vec2(0.866, -0.5) },
+      { position: vec2(0, 0), normal: vec2(0, 1), miterFactor: 1 },
+      { position: vec2(10, 0), normal: vec2(-0.866, -0.5), miterFactor: 1 },
+      { position: vec2(5, 8.66), normal: vec2(0.866, -0.5), miterFactor: 1 },
     ],
     isHole: false,
     isClosed: true,
@@ -111,9 +111,9 @@ describe("generateBevelMesh", () => {
     it("applies inset along normal for last profile point", () => {
       const path: BevelPath = {
         points: [
-          { position: vec2(0, 0), normal: vec2(1, 0) },
-          { position: vec2(10, 0), normal: vec2(1, 0) },
-          { position: vec2(10, 10), normal: vec2(1, 0) },
+          { position: vec2(0, 0), normal: vec2(1, 0), miterFactor: 1 },
+          { position: vec2(10, 0), normal: vec2(1, 0), miterFactor: 1 },
+          { position: vec2(10, 10), normal: vec2(1, 0), miterFactor: 1 },
         ],
         isHole: false,
         isClosed: false,
@@ -139,9 +139,9 @@ describe("generateBevelMesh", () => {
     it("applies zDirection correctly", () => {
       const path: BevelPath = {
         points: [
-          { position: vec2(0, 0), normal: vec2(1, 0) },
-          { position: vec2(10, 0), normal: vec2(1, 0) },
-          { position: vec2(10, 10), normal: vec2(1, 0) },
+          { position: vec2(0, 0), normal: vec2(1, 0), miterFactor: 1 },
+          { position: vec2(10, 0), normal: vec2(1, 0), miterFactor: 1 },
+          { position: vec2(10, 10), normal: vec2(1, 0), miterFactor: 1 },
         ],
         isHole: false,
         isClosed: false,
@@ -166,17 +166,20 @@ describe("generateBevelMesh", () => {
   });
 
   describe("hole handling", () => {
-    it("inverts profile direction for holes", () => {
+    it("uses same profile direction for holes (normals control inset direction)", () => {
+      // With the unified profile direction, the inset direction is controlled by
+      // the normal direction (computed in path extraction), not the isHole flag.
+      // Here we use the same normals for both, so positions should be identical.
+      // The actual difference in real usage comes from extractPathPointsWithNormals
+      // computing different normal directions for holes.
       const outerPath = createSquarePath(false);
       const holePath = createSquarePath(true);
 
       const outerResult = generateBevelMesh([outerPath], defaultConfig);
       const holeResult = generateBevelMesh([holePath], defaultConfig);
 
-      // The inset direction should be opposite for holes
-      // This manifests as different vertex positions
-      // We'll just verify that the geometries are different
-      expect(outerResult.positions).not.toEqual(holeResult.positions);
+      // With same normals, positions are identical
+      expect(outerResult.positions).toEqual(holeResult.positions);
     });
 
     it("uses different winding order for holes", () => {
@@ -198,9 +201,9 @@ describe("generateBevelMesh", () => {
       const outer = createSquarePath(false);
       const hole: BevelPath = {
         points: [
-          { position: vec2(3, 3), normal: vec2(-1, 0) },
-          { position: vec2(7, 3), normal: vec2(0, -1) },
-          { position: vec2(5, 7), normal: vec2(0.707, 0.707) },
+          { position: vec2(3, 3), normal: vec2(-1, 0), miterFactor: 1 },
+          { position: vec2(7, 3), normal: vec2(0, -1), miterFactor: 1 },
+          { position: vec2(5, 7), normal: vec2(0.707, 0.707), miterFactor: 1 },
         ],
         isHole: true,
         isClosed: true,

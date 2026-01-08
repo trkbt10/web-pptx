@@ -18,7 +18,7 @@ import type { TextBody } from "./text";
 import type { Degrees, Percent, Pixels } from "./types";
 import type { Point, Transform, GroupTransform } from "./geometry";
 import type { Effects } from "./effects";
-import type { Hyperlink, ResourceId } from "./resource";
+import type { Hyperlink, ResourceId, ResolvedBlipResource } from "./resource";
 import type { GroupLocks, PictureLocks, ShapeLocks } from "./shape-locks";
 import type { ContentPart } from "./anchor";
 import type { BlipCompression } from "./appearance";
@@ -447,7 +447,16 @@ export type PicShape = {
  * @see ECMA-376 Part 1, Section 20.1.8.14 (blipFill)
  */
 export type BlipFillProperties = {
+  /**
+   * Resource ID (relationship ID, e.g., "rId2") or pre-resolved data URL.
+   */
   readonly resourceId: ResourceId;
+  /**
+   * Resolved image resource data (when resolved at parse time).
+   * This allows the render layer to convert to the appropriate format
+   * (Data URL, Blob URL, etc.) without needing to access the zip file.
+   */
+  readonly resolvedResource?: ResolvedBlipResource;
   readonly compressionState?: BlipCompression;
   readonly sourceRect?: {
     readonly left: Percent;

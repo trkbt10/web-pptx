@@ -69,14 +69,29 @@ function removeDuplicateClosingPoint(points: readonly Vector2[]): readonly Vecto
 }
 
 /**
+ * Maximum miter factor to prevent extreme spikes at sharp corners.
+ * A value of 4 limits the miter extension to 4× the base width.
+ */
+const MAX_MITER_FACTOR = 4;
+
+/**
+ * Minimum dot product threshold for miter calculation.
+ * Below this, the angle is too sharp and we use MAX_MITER_FACTOR.
+ */
+const MIN_DOT_PRODUCT = 0.1;
+
+/**
  * Extract path points with inward-facing normals from a polygon.
  *
  * Uses signed area to determine winding direction and ensure
  * normals always point inward (toward the shape interior).
  *
+ * Also computes miter factor for each vertex to enable proper
+ * corner handling in bevel generation.
+ *
  * @param points - Polygon vertices
  * @param isHole - Whether this is a hole (affects normal direction)
- * @returns Array of points with computed normals
+ * @returns Array of points with computed normals and miter factors
  */
 export function extractPathPointsWithNormals(
   points: readonly Vector2[],
@@ -125,33 +140,50 @@ export function extractPathPointsWithNormals(
     const edgePrev = Vec2.sub(curr, prev);
     const edgeNext = Vec2.sub(next, curr);
 
-    // Average edge direction
-    const avgEdge = Vec2.add(edgePrev, edgeNext);
+    // Compute normals for each adjacent edge (perpCCW of normalized edge)
+    const normal1Raw = Vec2.perpCCW(Vec2.normalize(edgePrev));
+    const normal2Raw = Vec2.perpCCW(Vec2.normalize(edgeNext));
+
+    // Apply flip if needed (consistent with bisector calculation)
+    const normal1 = flipNormal ? Vec2.negate(normal1Raw) : normal1Raw;
+    const normal2 = flipNormal ? Vec2.negate(normal2Raw) : normal2Raw;
+
+    // Compute bisector of adjacent normals
+    // This is the direction we move vertices for miter join
+    const bisectorSum = Vec2.add(normal1, normal2);
+    const bisectorLength = Vec2.length(bisectorSum);
 
     let normal: Vector2;
+    let miterFactor: number;
 
-    if (Vec2.lengthSq(avgEdge) < 0.001) {
-      // Use single edge if directions cancel out
-      const edge =
-        Vec2.lengthSq(edgeNext) > 0.001 ? edgeNext : edgePrev;
-      const normalizedEdge = Vec2.normalize(edge);
-      // Perpendicular: rotate 90° CCW
-      normal = Vec2.perpCCW(normalizedEdge);
+    if (bisectorLength < 0.001) {
+      // Nearly parallel edges (180° corner) - use single edge normal
+      normal = normal2;
+      miterFactor = 1;
     } else {
-      const normalizedAvg = Vec2.normalize(avgEdge);
-      // Perpendicular to edge direction: rotate 90° CCW
-      // This gives the "left" side of the path
-      normal = Vec2.perpCCW(normalizedAvg);
-    }
+      // Compute bisector (normalized average of normals)
+      const bisector = Vec2.scale(bisectorSum, 1 / bisectorLength);
 
-    // Flip if winding doesn't match expectation
-    if (flipNormal) {
-      normal = Vec2.negate(normal);
+      // The normal for the bevel is the bisector direction
+      // This ensures the bevel surface is symmetric at corners
+      normal = bisector;
+
+      // Compute miter factor: 1 / cos(halfAngle)
+      // where halfAngle is angle between edge normal and bisector
+      const dotProduct = normal1.x * bisector.x + normal1.y * bisector.y;
+
+      if (Math.abs(dotProduct) > MIN_DOT_PRODUCT) {
+        miterFactor = Math.min(1 / dotProduct, MAX_MITER_FACTOR);
+      } else {
+        // Very sharp corner - cap at max to prevent spikes
+        miterFactor = MAX_MITER_FACTOR;
+      }
     }
 
     result.push({
       position: vec2(curr.x, curr.y),
       normal,
+      miterFactor,
     });
   }
 
