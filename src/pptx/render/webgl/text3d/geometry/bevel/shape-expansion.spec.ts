@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { expandShape, expandShapesForContour, shrinkShape } from "./shape-expansion";
+import { expandShape, expandShapesForContour, shrinkShape, calculateMinWallThickness, calculateSafeBevelWidth } from "./shape-expansion";
 import type { ShapeInput, Vector2 } from "./types";
 
 function createSquareShape(size: number): ShapeInput {
@@ -277,5 +277,96 @@ describe("shrinkShape", () => {
       expect(bounds.width).toBeLessThan(shape.points[1].x);
     }
     // Either null or a degenerate shape is acceptable
+  });
+});
+
+// =============================================================================
+// Wall Thickness and Safe Bevel Width Tests
+// =============================================================================
+
+describe("calculateMinWallThickness", () => {
+  it("returns shape width for shapes without holes", () => {
+    const shape = createSquareShape(100);
+    const thickness = calculateMinWallThickness(shape);
+
+    // For a square without holes, min width should be close to 100
+    expect(thickness).toBeGreaterThan(90);
+    expect(thickness).toBeLessThanOrEqual(100);
+  });
+
+  it("calculates correct wall thickness for centered hole", () => {
+    // Outer: 100x100, Hole: 60x60 centered → wall thickness = 20 on each side
+    const shape = createSquareWithHole(100, 60);
+    const thickness = calculateMinWallThickness(shape);
+
+    // Wall thickness should be approximately 20 (distance from outer to hole)
+    expect(thickness).toBeGreaterThan(15);
+    expect(thickness).toBeLessThan(25);
+  });
+
+  it("calculates correct wall thickness for small hole", () => {
+    // Outer: 100x100, Hole: 20x20 centered → wall thickness = 40 on each side
+    const shape = createSquareWithHole(100, 20);
+    const thickness = calculateMinWallThickness(shape);
+
+    // Wall thickness should be approximately 40
+    expect(thickness).toBeGreaterThan(35);
+    expect(thickness).toBeLessThan(45);
+  });
+
+  it("handles narrow wall correctly", () => {
+    // Outer: 100x100, Hole: 90x90 centered → wall thickness = 5 on each side
+    const shape = createSquareWithHole(100, 90);
+    const thickness = calculateMinWallThickness(shape);
+
+    // Wall thickness should be approximately 5
+    expect(thickness).toBeGreaterThan(3);
+    expect(thickness).toBeLessThan(8);
+  });
+});
+
+describe("calculateSafeBevelWidth", () => {
+  it("returns requested width when wall is thick enough", () => {
+    // Wall thickness = 20, requested bevel = 5
+    // Safe max = 20/2 * 0.9 = 9, so 5 should be fine
+    const shape = createSquareWithHole(100, 60);
+    const safeWidth = calculateSafeBevelWidth(shape, 5);
+
+    expect(safeWidth).toBe(5);
+  });
+
+  it("limits bevel width for narrow walls", () => {
+    // Wall thickness ≈ 5, requested bevel = 10
+    // Safe max = 5/2 * 0.9 = 2.25
+    const shape = createSquareWithHole(100, 90);
+    const safeWidth = calculateSafeBevelWidth(shape, 10);
+
+    // Should be limited to less than half the wall thickness
+    expect(safeWidth).toBeLessThan(5);
+    expect(safeWidth).toBeGreaterThan(0);
+  });
+
+  it("returns requested width for shapes without holes", () => {
+    const shape = createSquareShape(100);
+    const safeWidth = calculateSafeBevelWidth(shape, 10);
+
+    // No holes, so most widths should be safe
+    expect(safeWidth).toBe(10);
+  });
+
+  it("ensures shrinkShape succeeds with safe width", () => {
+    // This is the key integration test:
+    // Using calculateSafeBevelWidth should always produce a width
+    // that shrinkShape can handle
+    const shape = createSquareWithHole(100, 90); // Very narrow wall
+    const requestedWidth = 20; // Would definitely cause collision
+
+    const safeWidth = calculateSafeBevelWidth(shape, requestedWidth);
+    const shrunk = shrinkShape(shape, safeWidth);
+
+    // With safe width, shrinkShape should succeed
+    expect(shrunk).not.toBeNull();
+    expect(shrunk!.points.length).toBeGreaterThanOrEqual(3);
+    expect(shrunk!.holes.length).toBe(1); // Hole should be preserved
   });
 });

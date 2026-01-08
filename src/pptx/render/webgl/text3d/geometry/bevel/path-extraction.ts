@@ -70,9 +70,16 @@ function removeDuplicateClosingPoint(points: readonly Vector2[]): readonly Vecto
 
 /**
  * Maximum miter factor to prevent extreme spikes at sharp corners.
- * A value of 4 limits the miter extension to 4× the base width.
+ *
+ * Reduced from 4 to 2 because:
+ * - With bevel width 5 and miter 4, effective inset = 20px
+ * - This collapses thin strokes (<20px) completely
+ * - A value of 2 limits effective inset to 10px, preserving more shapes
+ *
+ * Trade-off: Sharp corners will have slightly beveled/cut appearance
+ * instead of perfectly extended miter joints.
  */
-const MAX_MITER_FACTOR = 4;
+const MAX_MITER_FACTOR = 2;
 
 /**
  * Minimum dot product threshold for miter calculation.

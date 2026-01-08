@@ -19,9 +19,8 @@ import type {
 import { vec2 } from "./types";
 import { generateExtrusion, mergeExtrusionGeometries, generateCapAtZ } from "./extrusion";
 import { extractBevelPathsFromShape } from "./path-extraction";
-import { generateBevelMesh, mergeBevelGeometries } from "./mesh-generation";
+import { generateBevelMesh, mergeBevelGeometries, extractInnerRingFromBevelPaths } from "./mesh-generation";
 import { getBevelProfile } from "./profiles";
-import { shrinkShape } from "./shape-expansion";
 
 // =============================================================================
 // THREE.Shape → ShapeInput Conversion
@@ -500,6 +499,109 @@ function generateSideWallsLocal(
 }
 
 // =============================================================================
+// Inner Cap Generation from Bevel Ring
+// =============================================================================
+
+/**
+ * Generate a cap from the bevel's innermost ring.
+ *
+ * This function triangulates the inner ring extracted from bevel paths,
+ * guaranteeing perfect alignment with the bevel mesh regardless of
+ * whether shrinkShape would succeed.
+ *
+ * @param outer - Outer ring points
+ * @param holes - Hole ring points
+ * @param config - Cap configuration
+ * @returns Cap geometry data
+ */
+function generateCapFromRing(
+  outer: readonly { x: number; y: number }[],
+  holes: readonly (readonly { x: number; y: number }[])[],
+  config: {
+    zPosition: number;
+    normalDirection: 1 | -1;
+  },
+): BevelGeometryData {
+  if (outer.length < 3) {
+    return {
+      positions: new Float32Array(0),
+      normals: new Float32Array(0),
+      uvs: new Float32Array(0),
+      indices: new Uint32Array(0),
+    };
+  }
+
+  const { zPosition, normalDirection } = config;
+
+  // Ensure outer is CCW for correct triangulation
+  const outerPoints = ensureCCW(outer);
+
+  // Ensure holes are CW (opposite winding)
+  const holePoints = holes.map((hole) => ensureCW(hole));
+
+  // Use THREE.ShapeUtils for triangulation
+  const { points, indices: rawIndices } = triangulateShapeWithThree(
+    outerPoints.map((p) => vec2(p.x, p.y)),
+    holePoints.map((hole) => hole.map((p) => vec2(p.x, p.y))),
+  );
+
+  const positions: number[] = [];
+  const normals: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+
+  for (const pt of points) {
+    positions.push(pt.x, pt.y, zPosition);
+    normals.push(0, 0, normalDirection);
+    uvs.push(pt.x, pt.y);
+  }
+
+  if (normalDirection === 1) {
+    for (const idx of rawIndices) {
+      indices.push(idx);
+    }
+  } else {
+    // Reverse winding for back-facing cap
+    for (let i = 0; i < rawIndices.length; i += 3) {
+      indices.push(rawIndices[i], rawIndices[i + 2], rawIndices[i + 1]);
+    }
+  }
+
+  return {
+    positions: new Float32Array(positions),
+    normals: new Float32Array(normals),
+    uvs: new Float32Array(uvs),
+    indices: new Uint32Array(indices),
+  };
+}
+
+/**
+ * Ensure polygon is counter-clockwise.
+ */
+function ensureCCW<T extends { x: number; y: number }>(
+  points: readonly T[],
+): T[] {
+  const area = computeSignedAreaLocal(points.map((p) => vec2(p.x, p.y)));
+  if (area < 0) {
+    return [...points].reverse();
+  }
+  return [...points];
+}
+
+/**
+ * Ensure polygon is clockwise.
+ */
+function ensureCW<T extends { x: number; y: number }>(
+  points: readonly T[],
+): T[] {
+  const area = computeSignedAreaLocal(points.map((p) => vec2(p.x, p.y)));
+  if (area > 0) {
+    return [...points].reverse();
+  }
+  return [...points];
+}
+
+// =============================================================================
 // Asymmetric Extrusion with Bevel (Three.js Independent Core)
 // =============================================================================
 
@@ -575,7 +677,7 @@ export function createExtrudedGeometryWithBevel(
     // Use THREE.ShapeUtils for reliable triangulation
     const extrusionData = generateExtrusionWithThree(shapeInput, {
       depth: extrusionDepth,
-      includeFrontCap: !bevel.top, // Omit if bevel present
+      includeFrontCap: !bevel.top,
       includeBackCap: !bevel.bottom,
     });
 
@@ -598,13 +700,11 @@ export function createExtrudedGeometryWithBevel(
       geometryDataList.push(topBevelData);
 
       // Generate inner cap at recessed position (after bevel inset)
-      // This covers the flat face inside the bevel
-      // Use THREE.ShapeUtils for reliable triangulation
-      const shrunkShape = shrinkShape(shapeInput, bevel.top.width);
-      if (shrunkShape && shrunkShape.points.length >= 3) {
-        const innerCapZ = extrusionDepth - topBevelHeight;
-        const innerCapData = generateCapAtZWithThree(shrunkShape, {
-          zPosition: innerCapZ,
+      // Extract the innermost ring from bevel paths to guarantee alignment
+      const innerRing = extractInnerRingFromBevelPaths(topPaths, topBevelConfig);
+      if (innerRing.outer.length >= 3) {
+        const innerCapData = generateCapFromRing(innerRing.outer, innerRing.holes, {
+          zPosition: innerRing.zPosition,
           normalDirection: 1, // Front-facing (+Z)
         });
         geometryDataList.push(innerCapData);
@@ -628,13 +728,11 @@ export function createExtrudedGeometryWithBevel(
       geometryDataList.push(bottomBevelData);
 
       // Generate inner cap at recessed position (after bevel inset)
-      // This covers the flat face inside the bevel
-      // Use THREE.ShapeUtils for reliable triangulation
-      const shrunkShape = shrinkShape(shapeInput, bevel.bottom.width);
-      if (shrunkShape && shrunkShape.points.length >= 3) {
-        const innerCapZ = bottomBevelHeight;
-        const innerCapData = generateCapAtZWithThree(shrunkShape, {
-          zPosition: innerCapZ,
+      // Extract the innermost ring from bevel paths to guarantee alignment
+      const innerRing = extractInnerRingFromBevelPaths(bottomPaths, bottomBevelConfig);
+      if (innerRing.outer.length >= 3) {
+        const innerCapData = generateCapFromRing(innerRing.outer, innerRing.holes, {
+          zPosition: innerRing.zPosition,
           normalDirection: -1, // Back-facing (-Z)
         });
         geometryDataList.push(innerCapData);
