@@ -19,7 +19,7 @@ import {
   ProgressBar,
   KeyboardHints,
   IconButton,
-} from "./ui";
+} from "../components/ui";
 import { useState } from "react";
 
 type Props = {

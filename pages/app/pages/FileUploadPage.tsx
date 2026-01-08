@@ -11,8 +11,8 @@ import {
   ShieldIcon,
   GitHubIcon,
   LogoIcon,
-} from "./ui";
-import "./FileUpload.css";
+} from "../components/ui";
+import "./FileUploadPage.css";
 
 type Props = {
   onFileSelect: (file: File) => void;
@@ -25,7 +25,7 @@ type Props = {
 /**
  * File upload landing screen for the web PPTX viewer.
  */
-export function FileUpload({ onFileSelect, onDemoLoad, isLoading, onEditorTest, onDrawingMLTest }: Props) {
+export function FileUploadPage({ onFileSelect, onDemoLoad, isLoading, onEditorTest, onDrawingMLTest }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [mounted, setMounted] = useState(false);

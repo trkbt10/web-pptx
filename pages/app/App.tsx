@@ -5,11 +5,11 @@
 import { useCallback, useMemo } from "react";
 import { Routes, Route, Navigate, useNavigate, useParams } from "react-router-dom";
 import { usePptx } from "./hooks/usePptx";
-import { FileUpload } from "./components/FileUpload";
-import { SlideViewer } from "./components/SlideViewer";
-import { SlideshowPage } from "./components/SlideshowPage";
-import { EditorTestPage } from "./components/EditorTestPage";
-import { DrawingMLTestPage } from "./components/DrawingMLTestPage";
+import { FileUploadPage } from "./pages/FileUploadPage";
+import { SlideViewer } from "./pages/SlideViewer";
+import { SlideshowPage } from "./pages/SlideshowPage";
+import { EditorTestPage } from "./pages/EditorTestPage";
+import { DrawingMLTestPage } from "./pages/DrawingMLTestPage";
 import { PresentationEditor, EditorConfigProvider } from "@lib/pptx-editor";
 import { convertToPresentationDocument } from "@lib/pptx/app";
 import "./App.css";
@@ -114,7 +114,7 @@ export function App() {
   }
 
   const renderUploadPage = () => (
-    <FileUpload
+    <FileUploadPage
       onFileSelect={handleFileSelect}
       onDemoLoad={handleDemoLoad}
       isLoading={status === "loading"}

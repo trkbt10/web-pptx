@@ -8,13 +8,13 @@ import { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } fr
 import type { LoadedPresentation } from "@lib/pptx/app";
 import { useSlideAnimation, useSlideTransition, SvgContentRenderer } from "../../../src/pptx/render/react";
 import { useSlideshowKeyboard } from "../hooks/useSlideshowKeyboard";
-import { NavButton } from "./slideshow";
+import { NavButton } from "../components/slideshow";
 import {
   CloseIcon,
   EnterFullscreenIcon,
   ExitFullscreenIcon,
   SlideIndicator,
-} from "./ui";
+} from "../components/ui";
 import "./SlideshowPage.css";
 
 type Props = {

@@ -10,8 +10,8 @@
 import { Routes, Route, Navigate, useParams, useNavigate } from "react-router-dom";
 import { RenderProvider } from "@lib/pptx/render/react/context";
 import { SvgDefsProvider } from "@lib/pptx/render/react/hooks/useSvgDefs";
-import { testSlideSize, testColorContext } from "./drawing-ml-tests";
-import { categories, findCategory, findFeature, getDefaultRoute } from "./drawing-ml-tests/routes";
+import { testSlideSize, testColorContext } from "../components/drawing-ml-tests";
+import { categories, findCategory, findFeature, getDefaultRoute } from "../components/drawing-ml-tests/routes";
 import "./DrawingMLTestPage.css";
 
 // =============================================================================
