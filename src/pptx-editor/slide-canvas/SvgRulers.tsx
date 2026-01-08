@@ -99,9 +99,9 @@ export function SvgRulers({
   const textColor = `var(--text-secondary, ${colorTokens.text.secondary})`;
   const fontSize = fontTokens.size.sm;
 
-  // Width/height of ruler areas
-  const hRulerWidth = viewportSize.width - rulerThickness;
-  const vRulerHeight = viewportSize.height - rulerThickness;
+  // Width/height of ruler areas (ensure non-negative)
+  const hRulerWidth = Math.max(0, viewportSize.width - rulerThickness);
+  const vRulerHeight = Math.max(0, viewportSize.height - rulerThickness);
 
   return (
     <g className="rulers" style={{ pointerEvents: "none" }}>
