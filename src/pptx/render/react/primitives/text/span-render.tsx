@@ -6,7 +6,7 @@
  * @see ECMA-376 Part 1, Section 21.1.2.3 (Text Run Properties)
  */
 
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import type { LayoutLine, PositionedSpan } from "../../../text-layout";
 import { PT_TO_PX } from "../../../../domain/unit-conversion";
 import {
@@ -275,7 +275,7 @@ export function renderSpan(
   // Wrap with link if needed
   elements.push(wrapWithLink(textElement, span, key));
 
-  return <>{elements}</>;
+  return <Fragment key={`span-${key}`}>{elements}</Fragment>;
 }
 
 /**
