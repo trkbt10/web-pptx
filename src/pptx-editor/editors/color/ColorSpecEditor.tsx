@@ -21,8 +21,8 @@ import type {
   SolidFill,
 } from "../../../pptx/domain/color/types";
 import type { EditorProps, SelectOption } from "../../types";
-import type { ColorContext } from "../../../pptx/domain/resolution";
-import { resolveColor } from "../../../pptx/domain/drawing-ml";
+import type { ColorContext } from "../../../pptx/domain/color/context";
+import { resolveColor } from "../../../pptx/domain/color/resolution";
 import { useEditorConfig } from "../../context/editor/EditorConfigContext";
 
 export type ColorSpecEditorProps = EditorProps<ColorSpec> & {

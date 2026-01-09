@@ -8,7 +8,7 @@
 
 import { render } from "@testing-library/react";
 import type { Color } from "../../../../domain/color/types";
-import type { ColorContext } from "../../../../domain/resolution";
+import type { ColorContext } from "../../../../domain/color/context";
 import type { SlideSize } from "../../../../domain";
 import type { Pixels } from "../../../../domain/types";
 import { px, pct } from "../../../../domain/types";

@@ -13,7 +13,7 @@ import { useSvgDefs } from "../../hooks/useSvgDefs";
 import { ShadowFilterDef, resolveShadowProps, type ResolvedShadowProps } from "./ShadowFilter";
 import { GlowFilterDef, resolveGlowProps, type ResolvedGlowProps } from "./GlowFilter";
 import { SoftEdgeFilterDef } from "./SoftEdgeFilter";
-import type { ColorContext } from "../../../../domain/resolution";
+import type { ColorContext } from "../../../../domain/color/context";
 
 // =============================================================================
 // Types

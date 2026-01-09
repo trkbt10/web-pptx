@@ -7,7 +7,7 @@
 
 import type { ReactNode } from "react";
 import type { Fill } from "../../../domain";
-import type { ColorContext } from "../../../domain/resolution";
+import type { ColorContext } from "../../../domain/color/context";
 import {
   resolveFill,
   type ResolvedFill,

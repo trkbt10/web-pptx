@@ -22,7 +22,7 @@ import type { Color, Fill, SolidFill, Line } from "../../color/types";
 import type { ShapeStyle } from "../../shape";
 import type { TextBody } from "../../text";
 import type { DiagramTreeNode } from "./tree-builder";
-import type { ColorContext } from "../../resolution";
+import type { ColorContext } from "../../color/context";
 import { px } from "../../types";
 
 // Use existing color resolution utilities

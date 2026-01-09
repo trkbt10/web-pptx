@@ -27,8 +27,8 @@ import {
   feMergeNode,
 } from "./primitives";
 import { unsafeHtml } from "../html/primitives";
-import { resolveColor } from "../../domain/drawing-ml";
-import type { ColorContext } from "../../domain/resolution";
+import { resolveColor } from "../../domain/color/resolution";
+import type { ColorContext } from "../../domain/color/context";
 
 // =============================================================================
 // Effect ID Generation

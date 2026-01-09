@@ -10,7 +10,7 @@
 
 import type { ChartLines, ChartShapeProperties } from "../../domain/chart";
 import type { Fill } from "../../domain/color/types";
-import { resolveColor } from "../../domain/drawing-ml/index";
+import { resolveColor } from "../../domain/color/resolution";
 
 // =============================================================================
 // Default Values

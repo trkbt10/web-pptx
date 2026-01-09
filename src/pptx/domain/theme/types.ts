@@ -11,8 +11,8 @@ import type { XmlDocument, XmlElement } from "../../../xml/index";
 import type {
   ColorScheme as ColorSchemeType,
   ColorMap as ColorMapType,
-  FontScheme as FontSchemeType,
-} from "../resolution";
+} from "../color/context";
+import type { FontScheme as FontSchemeType } from "../resolution";
 
 // =============================================================================
 // Custom Color Types (ECMA-376 Part 1, Section 20.1.4.1.8)

@@ -6,7 +6,8 @@
  */
 
 import type { Slide, SlideSize, Shape } from "../../domain";
-import type { ColorContext, FontScheme } from "../../domain/resolution";
+import type { ColorContext } from "../../domain/color/context";
+import type { FontScheme } from "../../domain/resolution";
 import type { ShapeId } from "../../domain/types";
 import type { RenderOptions } from "../render-options";
 import type { ResolvedBackgroundFill } from "../background-fill";

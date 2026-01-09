@@ -7,7 +7,7 @@
  */
 
 import type { ReactNode } from "react";
-import type { TextPatternFillConfig } from "../../../../domain/drawing-ml";
+import type { TextPatternFillConfig } from "../../../../domain/drawing-ml/text-fill";
 
 // =============================================================================
 // Types

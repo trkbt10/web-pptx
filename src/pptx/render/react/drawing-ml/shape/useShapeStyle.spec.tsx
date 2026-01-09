@@ -9,7 +9,7 @@
 import { render } from "@testing-library/react";
 import type { Fill, Line, SlideSize } from "../../../../domain";
 import type { Effects, ShadowEffect } from "../../../../domain/effects";
-import type { ColorContext } from "../../../../domain/resolution";
+import type { ColorContext } from "../../../../domain/color/context";
 import type { Pixels } from "../../../../domain/types";
 import { px, deg, pct } from "../../../../domain/types";
 import { RenderProvider } from "../../context";

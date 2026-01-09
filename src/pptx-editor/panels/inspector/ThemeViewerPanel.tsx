@@ -6,7 +6,8 @@
  */
 
 import type { CSSProperties } from "react";
-import type { ColorContext, FontScheme, ColorScheme } from "../../../pptx/domain/resolution";
+import type { ColorContext, ColorScheme } from "../../../pptx/domain/color/context";
+import type { FontScheme } from "../../../pptx/domain/resolution";
 import { InspectorSection, Accordion } from "../../ui/layout";
 import { colorTokens, fontTokens, spacingTokens } from "../../ui/design-tokens";
 

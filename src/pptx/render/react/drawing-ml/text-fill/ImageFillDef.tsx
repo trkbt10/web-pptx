@@ -7,7 +7,7 @@
  */
 
 import type { ReactNode } from "react";
-import type { TextImageFillConfig } from "../../../../domain/drawing-ml";
+import type { TextImageFillConfig } from "../../../../domain/drawing-ml/text-fill";
 
 // =============================================================================
 // Image Fill Definition

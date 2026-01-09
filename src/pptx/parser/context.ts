@@ -7,10 +7,8 @@
 import type { XmlDocument, XmlElement } from "../../xml";
 import type { ResourceMap } from "../opc";
 import type { Color } from "../domain/color/types";
-import type {
-  ColorContext,
-  FontScheme,
-} from "../domain/resolution";
+import type { ColorContext } from "../domain/color/context";
+import type { FontScheme } from "../domain/resolution";
 import type { ResourceRelationshipResolver } from "../domain";
 
 // =============================================================================

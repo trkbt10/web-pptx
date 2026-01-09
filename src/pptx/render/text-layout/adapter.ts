@@ -7,11 +7,12 @@ import type { TextBody, Paragraph, TextRun, RunProperties, BulletStyle, AutoNumb
 import type { Pixels, Points } from "../../domain/types";
 import type { LayoutInput, LayoutParagraphInput, LayoutSpan, TextBoxConfig, BulletConfig, AutoFitConfig, TextOutlineConfig, FontAlignment, LayoutTabStop } from "./types";
 import type { RenderOptions } from "../render-options";
-import type { ColorContext, FontScheme } from "../../domain/resolution";
+import type { ColorContext } from "../../domain/color/context";
+import type { FontScheme } from "../../domain/resolution";
 import { resolveThemeFont } from "../../domain/resolution";
 import type { Color, Line, Fill } from "../../domain/color/types";
 
-import { resolveColor as resolveColorRaw } from "../../domain/drawing-ml";
+import { resolveColor as resolveColorRaw } from "../../domain/color/resolution";
 import { resolveTextFill, resolveTextEffects } from "../../parser/drawing-ml";
 import type { ResourceResolver } from "../../parser/drawing-ml";
 import { px, pt, pct } from "../../domain/types";

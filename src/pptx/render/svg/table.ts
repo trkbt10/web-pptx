@@ -18,7 +18,7 @@ import {
   isFlagEnabled,
 } from "../../domain/table/resolver";
 import type { Pixels } from "../../domain/index";
-import type { ColorContext } from "../../domain/resolution";
+import type { ColorContext } from "../../domain/color/context";
 import { renderFillToStyle, renderLineToStyle } from "./fill";
 import type { RenderOptions } from "../render-options";
 import type { TableStyleList } from "../../parser/table/style-parser";

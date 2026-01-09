@@ -12,7 +12,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import type { Slide, Shape } from "../../pptx/domain";
-import type { ColorContext, FontScheme } from "../../pptx/domain/resolution";
+import type { ColorContext } from "../../pptx/domain/color/context";
+import type { FontScheme } from "../../pptx/domain/resolution";
 import type { Pixels, ShapeId } from "../../pptx/domain/types";
 import { px } from "../../pptx/domain/types";
 import type { DragState, SelectionState, ResizeHandlePosition, PathEditState } from "../context/slide/state";

@@ -5,7 +5,8 @@
  */
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
-import type { ColorScheme, ColorMap, FontScheme } from "../../../pptx/domain/resolution";
+import type { ColorScheme, ColorMap } from "../../../pptx/domain/color/context";
+import type { FontScheme } from "../../../pptx/domain/resolution";
 
 /**
  * Editor configuration

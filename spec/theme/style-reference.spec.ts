@@ -10,7 +10,7 @@
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
 import { openPresentation } from "../../src/pptx";
 import { parseSlide } from "../../src/pptx/parser/slide/slide-parser";
-import { resolveColor } from "../../src/pptx/domain/drawing-ml";
+import { resolveColor } from "../../src/pptx/domain/color/resolution";
 import { parseXml, getByPath } from "../../src/xml";
 import { createParseContext } from "../../src/pptx/parser/context";
 import { createSlideContext } from "../../src/pptx/parser/slide/context";

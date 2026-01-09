@@ -51,7 +51,7 @@ import {
   type StyleResolverContext,
   type ResolvedDiagramStyle,
 } from "./style-resolver";
-import type { ColorContext } from "../../resolution";
+import type { ColorContext } from "../../color/context";
 
 // =============================================================================
 // Types

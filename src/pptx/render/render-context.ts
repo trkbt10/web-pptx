@@ -5,7 +5,8 @@
  */
 
 import type { SlideSize, Shape } from "../domain";
-import type { ColorContext, FontScheme } from "../domain/resolution";
+import type { ColorContext } from "../domain/color/context";
+import type { FontScheme } from "../domain/resolution";
 import type { ResourceResolver } from "../domain/resource-resolver";
 import { createEmptyResourceResolver } from "../domain/resource-resolver";
 import { px } from "../domain/types";

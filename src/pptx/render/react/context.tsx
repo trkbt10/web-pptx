@@ -7,7 +7,8 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { SlideSize, Shape } from "../../domain";
-import type { ColorContext, FontScheme } from "../../domain/resolution";
+import type { ColorContext } from "../../domain/color/context";
+import type { FontScheme } from "../../domain/resolution";
 import type { ShapeId, Pixels } from "../../domain/types";
 import { px } from "../../domain/types";
 import type { CoreRenderContext } from "../render-context";

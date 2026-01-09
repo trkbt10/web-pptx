@@ -30,7 +30,7 @@ import type {
   ResolvedBlipResource,
 } from "../../domain/index";
 import type { TableStyleList } from "../table/style-parser";
-import type { ColorResolveContext } from "../../domain/resolution";
+import type { ColorResolveContext } from "../../domain/color/context";
 import { getMimeType } from "../../../files/mime";
 
 // =============================================================================

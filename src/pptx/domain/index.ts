@@ -301,9 +301,9 @@ export type {
   ColorMap,
   ColorContext,
   ColorResolveContext,
-  FontSpec,
-  FontScheme,
-} from "./resolution";
+} from "./color/context";
+
+export type { FontSpec, FontScheme } from "./resolution";
 
 export { resolveThemeFont } from "./resolution";
 

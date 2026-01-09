@@ -7,7 +7,7 @@
  */
 
 import type { ReactNode } from "react";
-import type { TextEffectsConfig } from "../../../../domain/drawing-ml";
+import type { TextEffectsConfig } from "../../../../domain/drawing-ml/text-effects";
 
 // =============================================================================
 // Types

@@ -17,7 +17,7 @@ import { createTextGeometryWithShapesAsync, type TextGeometryResult } from "../g
 import { applyTextWarp } from "../geometry/text-warp";
 import type { TextWarp } from "../../../../domain/text";
 // Color resolution (shared with React renderer)
-import { resolveColor } from "../../../../domain/drawing-ml";
+import { resolveColor } from "../../../../domain/color/resolution";
 // Effects imports
 import {
   applyAllEffects,

@@ -10,7 +10,7 @@ import { useMemo, type ReactNode } from "react";
 import type { PatternFill } from "../../../../domain/color/types";
 import { useSvgDefs } from "../../hooks/useSvgDefs";
 import { useRenderContext } from "../../context";
-import { resolveColor } from "../../../../domain/drawing-ml";
+import { resolveColor } from "../../../../domain/color/resolution";
 import { PatternDef, isPatternSupported } from "./PatternDef";
 
 // =============================================================================

@@ -1,26 +1,13 @@
 /**
- * @file Resolution context types for PPTX processing
+ * @file Font resolution context types for PPTX processing
  *
  * Types used by both parser and render layers for resolving
- * color, font, and style references.
+ * font references.
  *
- * These are separate from the "data structure" domain types (color.ts, shape.ts, etc.)
- * because they represent resolution contexts rather than content structures.
+ * Note: Color resolution types are in domain/color/context.ts
  *
- * @see ECMA-376 Part 1, Section 20.1.6 (Theme)
  * @see ECMA-376 Part 1, Section 20.1.4.1 (Font Scheme)
  */
-
-// =============================================================================
-// Color Resolution Types (re-exported from domain/color/context.ts)
-// =============================================================================
-
-export type {
-  ColorScheme,
-  ColorMap,
-  ColorContext,
-  ColorResolveContext,
-} from "./color/context";
 
 // =============================================================================
 // Font Resolution Types

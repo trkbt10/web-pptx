@@ -12,7 +12,7 @@ import { render } from "@testing-library/react";
 import type { GraphicFrame as GraphicFrameType, Transform } from "../../../../domain";
 import type { Table } from "../../../../domain/table/types";
 import type { SlideSize } from "../../../../domain";
-import type { ColorContext } from "../../../../domain/resolution";
+import type { ColorContext } from "../../../../domain/color/context";
 import type { Pixels, Degrees } from "../../../../domain/types";
 import { px, deg } from "../../../../domain/types";
 import { RenderProvider } from "../../context";

@@ -5,7 +5,7 @@
  */
 
 import type { PatternFill, PatternType } from "../../../../domain/color/types";
-import type { ColorContext } from "../../../../domain/resolution";
+import type { ColorContext } from "../../../../domain/color/context";
 import { resolvePatternFillForReact, isPatternSupported, getSupportedPatterns } from "./usePatternFill.js";
 
 // =============================================================================

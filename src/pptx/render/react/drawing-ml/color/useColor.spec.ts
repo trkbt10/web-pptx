@@ -5,7 +5,7 @@
  */
 
 import type { Color } from "../../../../domain/color/types";
-import type { ColorContext } from "../../../../domain/resolution";
+import type { ColorContext } from "../../../../domain/color/context";
 import type { SchemeColorValue } from "../../../../domain/types";
 import { deg, pct } from "../../../../domain/types";
 import { resolveColorForReact } from "./useColor";

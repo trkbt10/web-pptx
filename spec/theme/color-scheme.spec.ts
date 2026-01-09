@@ -8,9 +8,9 @@
  */
 
 import { openPresentation } from "../../src/pptx";
-import { resolveColor } from "../../src/pptx/domain/drawing-ml";
+import { resolveColor } from "../../src/pptx/domain/color/resolution";
 import type { Color } from "../../src/pptx/domain";
-import type { ColorContext } from "../../src/pptx/domain/resolution";
+import type { ColorContext } from "../../src/pptx/domain/color/context";
 import { createPresentationFile, THEMES_PPTX_PATH } from "./test-utils";
 
 describe("Color Scheme Application", () => {

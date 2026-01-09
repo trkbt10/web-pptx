@@ -11,7 +11,7 @@ import type {
   DiagramColorList,
 } from "../types";
 import type { Color, Fill, SolidFill } from "../../color/types";
-import type { ColorContext } from "../../resolution";
+import type { ColorContext } from "../../color/context";
 import type { DiagramTreeNode } from "./tree-builder";
 import {
   resolveNodeStyle,

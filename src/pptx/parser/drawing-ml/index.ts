@@ -15,7 +15,7 @@ export type { FillType, FillResult, GradientFill } from "./fill";
 export type {
   BackgroundElement,
   BackgroundParseResult,
-} from "../../domain/drawing-ml";
+} from "../../domain/drawing-ml/background";
 
 // Color parsing
 export { getSchemeColor, getSolidFill } from "./color";

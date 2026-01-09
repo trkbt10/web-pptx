@@ -8,15 +8,15 @@
 
 import type { Effects, ShadowEffect, GlowEffect, SoftEdgeEffect, ReflectionEffect } from "../../domain/effects";
 import type { Color } from "../../domain/color/types";
-import type { ColorContext } from "../../domain/resolution";
+import type { ColorContext } from "../../domain/color/context";
 import type {
   TextEffectsConfig,
   TextShadowConfig,
   TextGlowConfig,
   TextSoftEdgeConfig,
   TextReflectionConfig,
-} from "../../domain/drawing-ml";
-import { resolveColor } from "../../domain/drawing-ml";
+} from "../../domain/drawing-ml/text-effects";
+import { resolveColor } from "../../domain/color/resolution";
 
 // =============================================================================
 // Resolution Functions

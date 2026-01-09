@@ -6,7 +6,8 @@
 import type { Pixels, Points, TextAlign, TextAnchor, Percent } from "../../domain/types";
 import type { LineSpacing, TextWrapping, TextOverflow, TextVerticalOverflow } from "../../domain/text";
 import type { RenderOptions } from "../render-options";
-import type { TextFillConfig, TextEffectsConfig } from "../../domain/drawing-ml";
+import type { TextFillConfig } from "../../domain/drawing-ml/text-fill";
+import type { TextEffectsConfig } from "../../domain/drawing-ml/text-effects";
 
 // =============================================================================
 // Auto Fit Configuration

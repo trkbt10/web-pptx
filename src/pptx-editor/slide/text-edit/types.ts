@@ -5,7 +5,8 @@
  */
 
 import type { TextBody, RunProperties, ParagraphProperties } from "../../../pptx/domain";
-import type { ColorContext, FontScheme } from "../../../pptx/domain/resolution";
+import type { ColorContext } from "../../../pptx/domain/color/context";
+import type { FontScheme } from "../../../pptx/domain/resolution";
 import type { TextEditBounds } from "./state";
 import type { CursorCoordinates, SelectionRect, CursorPosition, TextSelection } from "./cursor";
 

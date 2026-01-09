@@ -8,8 +8,8 @@
 
 import { useMemo } from "react";
 import type { Color, ColorTransform } from "../../../../domain/color/types";
-import type { ColorContext } from "../../../../domain/resolution";
-import { resolveColor } from "../../../../domain/drawing-ml";
+import type { ColorContext } from "../../../../domain/color/context";
+import { resolveColor } from "../../../../domain/color/resolution";
 import { useRenderContext } from "../../context";
 
 // =============================================================================

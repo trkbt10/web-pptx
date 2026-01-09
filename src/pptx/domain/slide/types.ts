@@ -10,7 +10,7 @@
 import type { XmlElement } from "../../../xml";
 import type { Fill } from "../color/types";
 import type { ColorMapping, ColorMapOverride } from "../color/types";
-import type { ColorMap } from "../resolution";
+import type { ColorMap } from "../color/context";
 import type { Shape } from "../shape";
 import type { Pixels, ResourceId, ShapeId } from "../types";
 import type { SlideTransition } from "../transition";

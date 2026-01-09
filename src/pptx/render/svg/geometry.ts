@@ -23,7 +23,7 @@ import { renderFillToStyle, renderLineToStyle } from "./fill";
 import { generateLineMarkers, type MarkerCollection } from "./marker";
 import { resolveFill, formatRgba } from "../../domain/color/fill";
 import type { Fill, Line } from "../../domain";
-import type { ColorContext } from "../../domain/resolution";
+import type { ColorContext } from "../../domain/color/context";
 import { createGuideContext, evaluateGuides } from "../../domain/shape-geometry/guide-engine";
 
 // =============================================================================

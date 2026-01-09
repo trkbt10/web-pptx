@@ -5,7 +5,7 @@
  */
 
 import type { CSSProperties } from "react";
-import type { ColorContext } from "../../../pptx/domain/resolution";
+import type { ColorContext } from "../../../pptx/domain/color/context";
 import type { TextEditBounds } from "./state";
 import { colorTokens } from "../../ui/design-tokens";
 

@@ -7,7 +7,7 @@
  */
 
 import type { ReactNode } from "react";
-import type { TextGradientFillConfig } from "../../../../domain/drawing-ml";
+import type { TextGradientFillConfig } from "../../../../domain/drawing-ml/text-fill";
 
 // =============================================================================
 // Types

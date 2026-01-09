@@ -6,7 +6,7 @@
 
 import type { XmlElement } from "../../../xml/index";
 import { isXmlElement, getChild, getChildren, getAttr, escapeXml } from "../../../xml/index";
-import type { ColorResolveContext } from "../../domain/resolution";
+import type { ColorResolveContext } from "../../domain/color/context";
 import type { ResourceContext } from "../slide/context";
 import { angleToDegrees } from "../../domain/unit-conversion";
 import { base64ArrayBuffer } from "../../../buffer/index";

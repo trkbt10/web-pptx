@@ -5,7 +5,7 @@
  */
 
 import type { Fill, Line } from "../../domain";
-import type { ColorContext } from "../../domain/resolution";
+import type { ColorContext } from "../../domain/color/context";
 import {
   getDashArrayPattern,
   resolveFill,

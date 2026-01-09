@@ -7,10 +7,10 @@
  */
 
 import type { Fill, Color } from "../../domain/color/types";
-import type { ColorContext } from "../../domain/resolution";
-import type { TextFillConfig } from "../../domain/drawing-ml";
+import type { ColorContext } from "../../domain/color/context";
+import type { TextFillConfig } from "../../domain/drawing-ml/text-fill";
 import type { ResourceResolverFn } from "../../domain";
-import { resolveColor } from "../../domain/drawing-ml";
+import { resolveColor } from "../../domain/color/resolution";
 
 // =============================================================================
 // Resource Resolver Type (re-exported from domain)
