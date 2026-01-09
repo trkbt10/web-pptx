@@ -14,6 +14,7 @@ import {
   getXPositionInLine,
   getLineEndX,
   getLineTextLength,
+  getTextWidthForChars,
   DEFAULT_FONT_SIZE_PT,
   fontSizeToPixels,
 } from "../text-render/text-geometry";
@@ -311,12 +312,7 @@ function getCharOffsetForXInLine(line: LayoutLine, x: number): number {
     if (x <= spanEnd) {
       const spanWidth = span.width as number;
       const clamped = Math.min(Math.max(x - spanStart, 0), spanWidth);
-      const ratio = spanWidth === 0 ? 0 : clamped / spanWidth;
-      const offsetInSpan = Math.min(
-        spanLength,
-        Math.max(0, Math.round(ratio * spanLength)),
-      );
-      return charOffset + offsetInSpan;
+      return charOffset + getCharOffsetInSpan(span, clamped);
     }
 
     charOffset += spanLength;
@@ -324,6 +320,33 @@ function getCharOffsetForXInLine(line: LayoutLine, x: number): number {
   }
 
   return charOffset;
+}
+
+function getCharOffsetInSpan(span: LayoutLine["spans"][number], targetX: number): number {
+  const length = span.text.length;
+  if (length === 0) {
+    return 0;
+  }
+
+  let low = 0;
+  let high = length;
+
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    const width = getTextWidthForChars(span, mid + 1) as number;
+    if (width < targetX) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+  }
+
+  const prevIndex = Math.max(low - 1, 0);
+  const prevWidth = getTextWidthForChars(span, prevIndex) as number;
+  const nextWidth = getTextWidthForChars(span, low) as number;
+  return Math.abs(targetX - prevWidth) <= Math.abs(nextWidth - targetX)
+    ? prevIndex
+    : low;
 }
 
 /**

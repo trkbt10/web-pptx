@@ -8,6 +8,7 @@ import { PT_TO_PX } from "../../../domain/unit-conversion";
 import { px } from "../../../domain/types";
 import { DEFAULT_FONT_SIZE_PT } from "../../../domain/defaults";
 import { applyTextTransform } from "../primitives/text/text-utils";
+import { ensureSvgTextNode, normalizeSpaces, setTextAttributes } from "./svg-text-measure";
 import type {
   ParagraphMeasurer,
   TextMeasureParagraph,
@@ -15,36 +16,6 @@ import type {
   TextMeasureRunResult,
   TextMeasureParagraphResult,
 } from "./types";
-
-let sharedTextNode: SVGTextElement | null = null;
-const NON_BREAKING_SPACE = "\u00A0";
-
-function ensureSvgTextNode(): SVGTextElement | null {
-  if (sharedTextNode) {
-    return sharedTextNode;
-  }
-  if (typeof document === "undefined") {
-    return null;
-  }
-
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("width", "0");
-  svg.setAttribute("height", "0");
-  svg.setAttribute("aria-hidden", "true");
-  svg.setAttribute("focusable", "false");
-  svg.style.position = "absolute";
-  svg.style.left = "-10000px";
-  svg.style.top = "-10000px";
-  svg.style.visibility = "hidden";
-  svg.style.pointerEvents = "none";
-
-  const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-  svg.appendChild(text);
-
-  document.body.appendChild(svg);
-  sharedTextNode = text;
-  return sharedTextNode;
-}
 
 function buildTextAttributes(run: TextMeasureRun): Record<string, string> {
   const fontSize = run.properties.fontSize ?? DEFAULT_FONT_SIZE_PT;
@@ -94,10 +65,7 @@ function resolveTextTransform(run: TextMeasureRun["properties"]): "none" | "uppe
 }
 
 function measureTextSegment(textNode: SVGTextElement, text: string): number {
-  const normalizedText = text.includes(" ")
-    ? text.replace(/ /g, NON_BREAKING_SPACE)
-    : text;
-  textNode.textContent = normalizedText;
+  textNode.textContent = normalizeSpaces(text);
   return textNode.getComputedTextLength();
 }
 
@@ -168,9 +136,7 @@ function measureRunWithSvg(
   }
 
   const attributes = buildTextAttributes(run);
-  Object.entries(attributes).forEach(([key, value]) => {
-    textNode.setAttribute(key, value);
-  });
+  setTextAttributes(textNode, attributes);
 
   const transform = resolveTextTransform(run.properties);
   const measuredText = applyTextTransform(run.text, transform);

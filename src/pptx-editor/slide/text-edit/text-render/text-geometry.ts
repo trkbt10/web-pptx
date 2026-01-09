@@ -8,6 +8,7 @@
 import type { Pixels, Points } from "../../../../pptx/domain/types";
 import type { LayoutLine, PositionedSpan } from "../../../../pptx/render/text-layout";
 import { PT_TO_PX } from "../../../../pptx/domain/unit-conversion";
+import { measureLayoutSpanTextWidth } from "../../../../pptx/render/react/text-measure/span-measure";
 
 // =============================================================================
 // Constants
@@ -196,7 +197,12 @@ export function getTextWidthForChars(span: PositionedSpan, charCount: number): P
     return span.width;
   }
 
-  // Proportional width estimation
+  const measured = measureLayoutSpanTextWidth(span, span.text.slice(0, charCount));
+  if ((measured as number) > 0) {
+    return measured;
+  }
+
+  // Fallback to proportional estimation when measurement is unavailable.
   const avgCharWidth = (span.width as number) / span.text.length;
   return (avgCharWidth * charCount) as Pixels;
 }
