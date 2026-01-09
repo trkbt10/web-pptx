@@ -19,6 +19,7 @@ import {
   buildFontFamily,
   toSvgDominantBaseline,
 } from "../../../../pptx/render/react/primitives/text/text-utils";
+import { createTextEffectsFilterDef } from "../../../../pptx/render/react/drawing-ml";
 import type { CompositionState } from "../coordinator/types";
 
 // =============================================================================
@@ -107,6 +108,23 @@ function renderSpan(
   if (span.direction === "rtl") {
     textProps.direction = "rtl";
     textProps.unicodeBidi = "bidi-override";
+  }
+  if (span.textOutline !== undefined) {
+    textProps.stroke = span.textOutline.color;
+    textProps.strokeWidth = span.textOutline.width;
+    textProps.strokeLinecap = span.textOutline.cap;
+    textProps.strokeLinejoin = span.textOutline.join;
+    textProps.paintOrder = "stroke fill";
+  }
+
+  if (span.effects !== undefined) {
+    const effectsId = `text-effect-${key}`;
+    elements.push(
+      <defs key={`defs-${key}`}>
+        {createTextEffectsFilterDef(span.effects, effectsId)}
+      </defs>,
+    );
+    textProps.filter = `url(#${effectsId})`;
   }
 
   // Apply text transform

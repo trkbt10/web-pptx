@@ -200,6 +200,50 @@ export function cursorPositionToCoordinates(
 }
 
 /**
+ * Get line range (start/end cursor positions) for a cursor position.
+ */
+export function getLineRangeForPosition(
+  position: CursorPosition,
+  layoutResult: LayoutResult,
+): { start: CursorPosition; end: CursorPosition } | undefined {
+  const { paragraphIndex, charOffset } = position;
+  if (paragraphIndex >= layoutResult.paragraphs.length) {
+    return undefined;
+  }
+
+  const para = layoutResult.paragraphs[paragraphIndex];
+  if (para.lines.length === 0) {
+    return {
+      start: { paragraphIndex, charOffset: 0 },
+      end: { paragraphIndex, charOffset: 0 },
+    };
+  }
+
+  let offset = 0;
+  for (const line of para.lines) {
+    const lineLength = getLineTextLength(line);
+    const lineStart = offset;
+    const lineEnd = offset + lineLength;
+
+    if (charOffset <= lineEnd) {
+      return {
+        start: { paragraphIndex, charOffset: lineStart },
+        end: { paragraphIndex, charOffset: lineEnd },
+      };
+    }
+
+    offset = lineEnd;
+  }
+
+  const lastLine = para.lines[para.lines.length - 1];
+  const lastLength = getLineTextLength(lastLine);
+  return {
+    start: { paragraphIndex, charOffset: offset - lastLength },
+    end: { paragraphIndex, charOffset: offset },
+  };
+}
+
+/**
  * Map visual coordinates to a cursor position.
  */
 export function coordinatesToCursorPosition(

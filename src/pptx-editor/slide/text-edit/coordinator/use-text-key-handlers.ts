@@ -8,9 +8,7 @@ import { useCallback, type KeyboardEvent, type MutableRefObject } from "react";
 
 type UseTextKeyHandlersArgs = {
   readonly isComposing: boolean;
-  readonly currentText: string;
   readonly onCancel: () => void;
-  readonly onComplete: (text: string) => void;
   readonly finishedRef: MutableRefObject<boolean>;
 };
 
@@ -20,16 +18,11 @@ type UseTextKeyHandlersResult = {
 
 export function useTextKeyHandlers({
   isComposing,
-  currentText,
   onCancel,
-  onComplete,
   finishedRef,
 }: UseTextKeyHandlersArgs): UseTextKeyHandlersResult {
   if (onCancel === undefined) {
     throw new Error("useTextKeyHandlers requires onCancel.");
-  }
-  if (onComplete === undefined) {
-    throw new Error("useTextKeyHandlers requires onComplete.");
   }
   if (finishedRef === undefined) {
     throw new Error("useTextKeyHandlers requires finishedRef.");
@@ -45,13 +38,9 @@ export function useTextKeyHandlers({
         e.preventDefault();
         finishedRef.current = true;
         onCancel();
-      } else if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        finishedRef.current = true;
-        onComplete(currentText);
       }
     },
-    [currentText, finishedRef, isComposing, onCancel, onComplete],
+    [finishedRef, isComposing, onCancel],
   );
 
   return { handleKeyDown };

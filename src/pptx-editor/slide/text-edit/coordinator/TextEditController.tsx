@@ -20,6 +20,8 @@ import {
   getPlainText,
   cursorPositionToOffset,
   coordinatesToCursorPosition,
+  offsetToCursorPosition,
+  getLineRangeForPosition,
 } from "../input-support/cursor";
 import { mergeTextIntoBody, extractDefaultRunProperties } from "../input-support/text-body-merge";
 import { colorTokens } from "../../../ui/design-tokens";
@@ -31,6 +33,52 @@ import type { TextEditControllerProps, CursorState, CompositionState } from "./t
 import { useTextEditInput } from "./use-text-edit-input";
 import { useTextComposition } from "./use-text-composition";
 import { useTextKeyHandlers } from "./use-text-key-handlers";
+const WORD_CHAR_REGEX = /[\p{L}\p{N}_]/u;
+
+function isWordChar(value: string): boolean {
+  return WORD_CHAR_REGEX.test(value);
+}
+
+function getWordRange(text: string, offset: number): { start: number; end: number } {
+  if (text.length === 0) {
+    return { start: 0, end: 0 };
+  }
+
+  const clamped = Math.max(0, Math.min(offset, text.length - 1));
+  const char = text[clamped];
+
+  if (char === "\n") {
+    return { start: clamped, end: clamped + 1 };
+  }
+
+  const wordChar = isWordChar(char);
+  let start = clamped;
+  let end = clamped + 1;
+
+  while (start > 0) {
+    const prev = text[start - 1];
+    if (prev === "\n") {
+      break;
+    }
+    if (isWordChar(prev) !== wordChar) {
+      break;
+    }
+    start -= 1;
+  }
+
+  while (end < text.length) {
+    const next = text[end];
+    if (next === "\n") {
+      break;
+    }
+    if (isWordChar(next) !== wordChar) {
+      break;
+    }
+    end += 1;
+  }
+
+  return { start, end };
+}
 
 // =============================================================================
 // Initial State
@@ -70,6 +118,13 @@ function applySelectionRange(
   textarea.setSelectionRange(start, end, direction);
 }
 
+function isPrimaryPointerAction(event: React.PointerEvent<SVGSVGElement>): boolean {
+  if (event.pointerType === "mouse") {
+    return event.button === 0;
+  }
+  return event.button === 0 || (event.buttons & 1) === 1;
+}
+
 // =============================================================================
 // Component
 // =============================================================================
@@ -92,6 +147,12 @@ export function TextEditController({
   const svgRef = useRef<SVGSVGElement>(null);
   const dragAnchorRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
+  const selectionSnapshotRef = useRef({
+    start: 0,
+    end: 0,
+    direction: "forward" as HTMLTextAreaElement["selectionDirection"],
+  });
+  const selectionGuardRef = useRef(false);
   const [currentText, setCurrentText] = useState(() => getPlainText(textBody));
   const [composition, setComposition] = useState<CompositionState>(INITIAL_COMPOSITION_STATE);
   const initialTextRef = useRef(getPlainText(textBody));
@@ -140,6 +201,10 @@ export function TextEditController({
     setCurrentText,
     onComplete,
     onSelectionChange,
+    onSelectionSnapshot: (snapshot) => {
+      selectionSnapshotRef.current = snapshot;
+    },
+    selectionGuardRef,
     setCursorState,
     finishedRef,
     initialTextRef,
@@ -152,9 +217,7 @@ export function TextEditController({
   );
   const { handleKeyDown } = useTextKeyHandlers({
     isComposing: composition.isComposing,
-    currentText,
     onCancel,
-    onComplete,
     finishedRef,
   });
 
@@ -182,7 +245,9 @@ export function TextEditController({
 
   const handleSvgPointerDown = useCallback(
     (event: React.PointerEvent<SVGSVGElement>) => {
-      if (event.pointerType === "mouse" && event.button !== 0) {
+      if (!isPrimaryPointerAction(event)) {
+        selectionGuardRef.current = true;
+        event.preventDefault();
         return;
       }
 
@@ -192,6 +257,7 @@ export function TextEditController({
         return;
       }
 
+      selectionGuardRef.current = false;
       isDraggingRef.current = true;
       textarea.focus();
 
@@ -205,7 +271,13 @@ export function TextEditController({
       event.currentTarget.setPointerCapture(event.pointerId);
       event.preventDefault();
     },
-    [getOffsetFromPointerEvent, updateCursorPosition],
+    [
+      currentText,
+      currentTextBody,
+      getOffsetFromPointerEvent,
+      layoutResult,
+      updateCursorPosition,
+    ],
   );
 
   const handleSvgPointerMove = useCallback(
@@ -234,6 +306,7 @@ export function TextEditController({
     }
     isDraggingRef.current = false;
     dragAnchorRef.current = null;
+    selectionGuardRef.current = false;
     event.currentTarget.releasePointerCapture(event.pointerId);
     event.preventDefault();
   }, []);
@@ -241,8 +314,104 @@ export function TextEditController({
   const handleSvgPointerCancel = useCallback((event: React.PointerEvent<SVGSVGElement>) => {
     isDraggingRef.current = false;
     dragAnchorRef.current = null;
+    selectionGuardRef.current = false;
     event.currentTarget.releasePointerCapture(event.pointerId);
   }, []);
+
+  const handleSvgClick = useCallback(
+    (event: React.MouseEvent<SVGSVGElement>) => {
+      if (event.detail < 3) {
+        return;
+      }
+      if (!isPrimaryPointerAction(event as React.PointerEvent<SVGSVGElement>)) {
+        event.preventDefault();
+        return;
+      }
+      if (isDraggingRef.current) {
+        return;
+      }
+
+      const textarea = textareaRef.current;
+      const offset = getOffsetFromPointerEvent(event as React.PointerEvent<SVGSVGElement>);
+      if (!textarea || offset === null) {
+        return;
+      }
+
+      const position = offsetToCursorPosition(currentTextBody, offset);
+      const lineRange = getLineRangeForPosition(position, layoutResult);
+      if (!lineRange) {
+        return;
+      }
+
+      const startOffset = cursorPositionToOffset(currentTextBody, lineRange.start);
+      const endOffset = cursorPositionToOffset(currentTextBody, lineRange.end);
+      applySelectionRange(textarea, startOffset, endOffset);
+      updateCursorPosition();
+      event.preventDefault();
+    },
+    [currentTextBody, getOffsetFromPointerEvent, layoutResult, updateCursorPosition],
+  );
+
+  const handleSvgDoubleClick = useCallback(
+    (event: React.MouseEvent<SVGSVGElement>) => {
+      if (!isPrimaryPointerAction(event as React.PointerEvent<SVGSVGElement>)) {
+        event.preventDefault();
+        return;
+      }
+      if (isDraggingRef.current) {
+        return;
+      }
+
+      const textarea = textareaRef.current;
+      const offset = getOffsetFromPointerEvent(event as React.PointerEvent<SVGSVGElement>);
+      if (!textarea || offset === null) {
+        return;
+      }
+
+      const range = getWordRange(currentText, offset);
+      applySelectionRange(textarea, range.start, range.end);
+      updateCursorPosition();
+      event.preventDefault();
+    },
+    [currentText, getOffsetFromPointerEvent, updateCursorPosition],
+  );
+
+  const handleSvgContextMenu = useCallback(
+    (event: React.MouseEvent<SVGSVGElement>) => {
+      const textarea = textareaRef.current;
+      if (!textarea) {
+        return;
+      }
+      const snapshot = selectionSnapshotRef.current;
+      textarea.focus();
+      textarea.setSelectionRange(snapshot.start, snapshot.end, snapshot.direction ?? "forward");
+      updateCursorPosition();
+      selectionGuardRef.current = false;
+      event.stopPropagation();
+    },
+    [updateCursorPosition],
+  );
+
+  const handleTextareaContextMenu = useCallback(
+    (event: React.MouseEvent<HTMLTextAreaElement>) => {
+      const textarea = textareaRef.current;
+      if (!textarea) {
+        return;
+      }
+      const snapshot = selectionSnapshotRef.current;
+      textarea.focus();
+      textarea.setSelectionRange(snapshot.start, snapshot.end, snapshot.direction ?? "forward");
+      updateCursorPosition();
+      selectionGuardRef.current = false;
+      event.stopPropagation();
+    },
+    [updateCursorPosition],
+  );
+
+  const handleTextareaNonPrimaryMouseDown = useCallback(() => {
+    selectionGuardRef.current = true;
+  }, []);
+
 
   const boundsWidth = bounds.width as number;
   const boundsHeight = bounds.height as number;
@@ -260,6 +429,8 @@ export function TextEditController({
       onCompositionStart={handleCompositionStart}
       onCompositionUpdate={handleCompositionUpdate}
       onCompositionEnd={handleCompositionEnd}
+      onNonPrimaryMouseDown={handleTextareaNonPrimaryMouseDown}
+      onContextMenu={handleTextareaContextMenu}
     >
       <svg
         ref={svgRef}
@@ -271,6 +442,7 @@ export function TextEditController({
           height: "100%",
           pointerEvents: "auto",
           overflow: "visible",
+          zIndex: 2,
         }}
         viewBox={`0 0 ${boundsWidth} ${boundsHeight}`}
         preserveAspectRatio="xMinYMin meet"
@@ -278,12 +450,17 @@ export function TextEditController({
         onPointerMove={handleSvgPointerMove}
         onPointerUp={handleSvgPointerUp}
         onPointerCancel={handleSvgPointerCancel}
+        onClick={handleSvgClick}
+        onDoubleClick={handleSvgDoubleClick}
+        onContextMenu={handleSvgContextMenu}
       >
-        {/* Rendered text */}
-        <TextOverlay
-          layoutResult={layoutResult}
-          composition={composition}
-          cursorOffset={textareaRef.current?.selectionStart ?? 0}
+        <rect
+          x={0}
+          y={0}
+          width={boundsWidth}
+          height={boundsHeight}
+          fill="transparent"
+          pointerEvents="all"
         />
 
         {/* Selection highlights */}
@@ -298,6 +475,13 @@ export function TextEditController({
             fillOpacity={0.3}
           />
         ))}
+
+        {/* Rendered text */}
+        <TextOverlay
+          layoutResult={layoutResult}
+          composition={composition}
+          cursorOffset={textareaRef.current?.selectionStart ?? 0}
+        />
 
         {/* Cursor caret */}
         <CursorCaret

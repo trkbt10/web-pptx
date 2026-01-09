@@ -35,6 +35,12 @@ type UseTextEditInputArgs = {
   readonly setCurrentText: Dispatch<SetStateAction<string>>;
   readonly onComplete: (text: string) => void;
   readonly onSelectionChange?: (event: SelectionChangeEvent) => void;
+  readonly onSelectionSnapshot?: (snapshot: {
+    readonly start: number;
+    readonly end: number;
+    readonly direction: HTMLTextAreaElement["selectionDirection"];
+  }) => void;
+  readonly selectionGuardRef?: MutableRefObject<boolean>;
   readonly setCursorState: Dispatch<SetStateAction<CursorState>>;
   readonly finishedRef: MutableRefObject<boolean>;
   readonly initialTextRef: MutableRefObject<string>;
@@ -109,6 +115,8 @@ export function useTextEditInput({
   setCurrentText,
   onComplete,
   onSelectionChange,
+  onSelectionSnapshot,
+  selectionGuardRef,
   setCursorState,
   finishedRef,
   initialTextRef,
@@ -158,8 +166,16 @@ export function useTextEditInput({
     if (!textarea) {
       return;
     }
+    if (selectionGuardRef?.current) {
+      return;
+    }
 
     const { selectionStart, selectionEnd } = textarea;
+    onSelectionSnapshot?.({
+      start: selectionStart,
+      end: selectionEnd,
+      direction: textarea.selectionDirection,
+    });
     const hasSelection = selectionStart !== selectionEnd;
 
     if (hasSelection) {
@@ -257,6 +273,8 @@ export function useTextEditInput({
     layoutResult,
     composition.isComposing,
     onSelectionChange,
+    onSelectionSnapshot,
+    selectionGuardRef,
     setCursorState,
   ]);
 

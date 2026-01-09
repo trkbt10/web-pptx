@@ -9,6 +9,7 @@ import type {
   KeyboardEventHandler,
   CompositionEventHandler,
   ReactEventHandler,
+  MouseEventHandler,
   ReactNode,
   RefObject,
   CSSProperties,
@@ -28,6 +29,8 @@ export type TextEditInputFrameProps = {
   readonly onCompositionStart: CompositionEventHandler<HTMLTextAreaElement>;
   readonly onCompositionUpdate: CompositionEventHandler<HTMLTextAreaElement>;
   readonly onCompositionEnd: CompositionEventHandler<HTMLTextAreaElement>;
+  readonly onNonPrimaryMouseDown?: () => void;
+  readonly onContextMenu?: MouseEventHandler<HTMLTextAreaElement>;
   readonly children: ReactNode;
 };
 
@@ -49,6 +52,7 @@ const HIDDEN_TEXTAREA_STYLE: CSSProperties = {
   wordWrap: "break-word",
   pointerEvents: "auto",
   caretColor: "transparent",
+  zIndex: 1,
 };
 
 function buildContainerStyle(
@@ -90,9 +94,18 @@ export function TextEditInputFrame({
   onCompositionStart,
   onCompositionUpdate,
   onCompositionEnd,
+  onNonPrimaryMouseDown,
+  onContextMenu,
   children,
 }: TextEditInputFrameProps) {
   const containerStyle = buildContainerStyle(bounds, slideWidth, slideHeight);
+  const handleMouseDown: MouseEventHandler<HTMLTextAreaElement> = (event) => {
+    if (event.button !== 0) {
+      onNonPrimaryMouseDown?.();
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
 
   return (
     <div style={containerStyle}>
@@ -105,6 +118,8 @@ export function TextEditInputFrame({
         onCompositionStart={onCompositionStart}
         onCompositionUpdate={onCompositionUpdate}
         onCompositionEnd={onCompositionEnd}
+        onMouseDown={handleMouseDown}
+        onContextMenu={onContextMenu}
         style={HIDDEN_TEXTAREA_STYLE}
         spellCheck={false}
         autoComplete="off"
