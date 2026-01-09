@@ -58,6 +58,8 @@ import { CanvasControls } from "../slide-canvas/CanvasControls";
 import { SvgEditorCanvas } from "../slide-canvas/SvgEditorCanvas";
 import type { ViewportTransform } from "../../pptx/render/svg-viewport";
 import { TextEditContextProvider, useTextEditContextValue } from "../context/slide/TextEditContext";
+import { PresentationPreviewProvider, usePresentationPreview } from "../context/presentation/PresentationPreviewContext";
+import { Button } from "../ui/primitives/Button";
 import {
   type TextSelectionContext,
   getParagraphsInSelection,
@@ -79,8 +81,12 @@ import {
   noSlideStyle,
   RULER_THICKNESS,
 } from "./editor-styles";
+import { PresentationSlideshow, type SlideshowSlideContent } from "../preview/PresentationSlideshow";
 import { usePanelCallbacks, useContextMenuActions, useKeyboardShortcuts, useDragHandlers, useEditorLayers } from "./hooks";
 import type { TabContents } from "./hooks";
+import { PlayIcon } from "../ui/icons";
+import { renderSlideSvg } from "../../pptx/render/svg/renderer";
+import { createCoreRenderContext } from "../../pptx/render";
 
 // =============================================================================
 // Types
@@ -144,6 +150,7 @@ function EditorContent({
   const previousTextEditRef = useRef<typeof textEdit | null>(null);
   const lastCommittedTextBodyRef = useRef<TextBody | undefined>(undefined);
   const [viewport, setViewport] = useState<ViewportTransform | undefined>(undefined);
+  const { isOpen: isPreviewOpen, startSlideIndex, openPreview, closePreview } = usePresentationPreview();
 
   const slide = activeSlide?.slide;
   const width = document.slideWidth;
@@ -524,6 +531,46 @@ function EditorContent({
     return { file: () => null };
   }, [document.presentationFile]);
 
+  const previewSlideSize = useMemo(() => {
+    return document.presentation.slideSize ?? { width: document.slideWidth, height: document.slideHeight };
+  }, [document.presentation.slideSize, document.slideWidth, document.slideHeight]);
+
+  const getPreviewSlideContent = useCallback(
+    (slideIndex: number): SlideshowSlideContent => {
+      const slideWithId = document.slides[slideIndex - 1];
+      if (!slideWithId) {
+        return { svg: "", timing: undefined, transition: undefined };
+      }
+
+      const slideTransition = slideWithId.apiSlide?.transition ?? slideWithId.slide.transition;
+      const slideTiming = slideWithId.apiSlide?.timing;
+
+      if (slideWithId.apiSlide && document.presentationFile) {
+        const renderCtx = createRenderContext(slideWithId.apiSlide, zipFile, previewSlideSize);
+        const svg = renderSlideSvg(slideWithId.slide, renderCtx).svg;
+        return { svg, timing: slideTiming, transition: slideTransition };
+      }
+
+      const renderCtx = createCoreRenderContext({
+        slideSize: previewSlideSize,
+        colorContext: document.colorContext,
+        resources: document.resources,
+        fontScheme: document.fontScheme,
+      });
+      const svg = renderSlideSvg(slideWithId.slide, renderCtx).svg;
+      return { svg, timing: slideTiming, transition: slideTransition };
+    },
+    [
+      document.slides,
+      document.presentationFile,
+      document.colorContext,
+      document.resources,
+      document.fontScheme,
+      previewSlideSize,
+      zipFile,
+    ],
+  );
+
   const { getThumbnailSvg } = useSlideThumbnails({
     slideWidth: width,
     slideHeight: height,
@@ -580,6 +627,14 @@ function EditorContent({
     }
     return getLayoutNonPlaceholderShapes(apiSlide);
   }, [activeSlide?.apiSlide]);
+
+  const getEditorSlideIndex = useCallback(() => {
+    if (!activeSlide) {
+      return 1;
+    }
+    const index = document.slides.findIndex((slideItem) => slideItem.id === activeSlide.id);
+    return index === -1 ? 1 : index + 1;
+  }, [activeSlide, document.slides]);
 
   const editingShapeId = isTextEditActive(textEdit) ? textEdit.shapeId : undefined;
   const rulerThickness = showRulers ? RULER_THICKNESS : 0;
@@ -827,9 +882,18 @@ function EditorContent({
   return (
     <TextEditContextProvider value={textEditContextValue}>
       <div style={editorContainerStyle}>
+        {isPreviewOpen && (
+          <PresentationSlideshow
+            slideCount={document.slides.length}
+            slideSize={previewSlideSize}
+            startSlideIndex={startSlideIndex}
+            getSlideContent={getPreviewSlideContent}
+            onExit={closePreview}
+          />
+        )}
         {showToolbar && (
           <div style={toolbarStyle}>
-            <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "16px", alignItems: "center", width: "100%" }}>
               <ShapeToolbar
                 canUndo={canUndo}
                 canRedo={canRedo}
@@ -853,6 +917,16 @@ function EditorContent({
                 snapStep={snapStep}
                 onSnapStepChange={setSnapStep}
               />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => openPreview(getEditorSlideIndex())}
+                title="Preview slideshow"
+                style={{ marginLeft: "auto" }}
+              >
+                <PlayIcon size={16} />
+                <span style={{ marginLeft: "6px" }}>Preview</span>
+              </Button>
             </div>
           </div>
         )}
@@ -892,10 +966,12 @@ export function PresentationEditor({
   );
 
   return (
-    <PresentationEditorProvider initialDocument={initialDocument}>
-      <div className={className} style={containerStyles}>
-        <EditorContent showInspector={showInspector} showToolbar={showToolbar} />
-      </div>
-    </PresentationEditorProvider>
+    <PresentationPreviewProvider>
+      <PresentationEditorProvider initialDocument={initialDocument}>
+        <div className={className} style={containerStyles}>
+          <EditorContent showInspector={showInspector} showToolbar={showToolbar} />
+        </div>
+      </PresentationEditorProvider>
+    </PresentationPreviewProvider>
   );
 }

@@ -7,6 +7,21 @@
   justify-content: center;
   user-select: none;
   overflow: hidden;
+  z-index: 2147483647;
+}
+
+dialog.slideshow-container {
+  border: none;
+  padding: 0;
+  margin: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+}
+
+dialog.slideshow-container::backdrop {
+  background: #000;
 }
 
 /* Screen overlays */
@@ -325,7 +340,9 @@
 
 /* Fade transition - opacity crossfade */
 .slide-transition-fade {
-  animation: transition-fade var(--transition-duration) ease-out both;
+  animation-name: transition-fade;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-fade {
@@ -335,7 +352,9 @@
 
 /* Dissolve transition - fade with subtle blur */
 .slide-transition-dissolve {
-  animation: transition-dissolve var(--transition-duration) ease-out both;
+  animation-name: transition-dissolve;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-dissolve {
@@ -348,33 +367,51 @@
  * Default direction is "l" (from left to right)
  */
 .slide-transition-wipe {
-  animation: transition-wipe-l var(--transition-duration) ease-out both;
+  animation-name: transition-wipe-l;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 /* Wipe directions */
 .slide-transition-wipe-l {
-  animation: transition-wipe-l var(--transition-duration) ease-out both;
+  animation-name: transition-wipe-l;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-wipe-r {
-  animation: transition-wipe-r var(--transition-duration) ease-out both;
+  animation-name: transition-wipe-r;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-wipe-u {
-  animation: transition-wipe-u var(--transition-duration) ease-out both;
+  animation-name: transition-wipe-u;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-wipe-d {
-  animation: transition-wipe-d var(--transition-duration) ease-out both;
+  animation-name: transition-wipe-d;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-wipe-ld {
-  animation: transition-wipe-ld var(--transition-duration) ease-out both;
+  animation-name: transition-wipe-ld;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-wipe-lu {
-  animation: transition-wipe-lu var(--transition-duration) ease-out both;
+  animation-name: transition-wipe-lu;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-wipe-rd {
-  animation: transition-wipe-rd var(--transition-duration) ease-out both;
+  animation-name: transition-wipe-rd;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-wipe-ru {
-  animation: transition-wipe-ru var(--transition-duration) ease-out both;
+  animation-name: transition-wipe-ru;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-wipe-l {
@@ -415,20 +452,30 @@
  * Default direction is "l" (push from left)
  */
 .slide-transition-push {
-  animation: transition-push-l var(--transition-duration) ease-out both;
+  animation-name: transition-push-l;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 .slide-transition-push-l {
-  animation: transition-push-l var(--transition-duration) ease-out both;
+  animation-name: transition-push-l;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-push-r {
-  animation: transition-push-r var(--transition-duration) ease-out both;
+  animation-name: transition-push-r;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-push-u {
-  animation: transition-push-u var(--transition-duration) ease-out both;
+  animation-name: transition-push-u;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-push-d {
-  animation: transition-push-d var(--transition-duration) ease-out both;
+  animation-name: transition-push-d;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-push-l {
@@ -453,32 +500,50 @@
  * Default direction is "l" (cover from left)
  */
 .slide-transition-cover {
-  animation: transition-cover-l var(--transition-duration) ease-out both;
+  animation-name: transition-cover-l;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 .slide-transition-cover-l {
-  animation: transition-cover-l var(--transition-duration) ease-out both;
+  animation-name: transition-cover-l;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-cover-r {
-  animation: transition-cover-r var(--transition-duration) ease-out both;
+  animation-name: transition-cover-r;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-cover-u {
-  animation: transition-cover-u var(--transition-duration) ease-out both;
+  animation-name: transition-cover-u;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-cover-d {
-  animation: transition-cover-d var(--transition-duration) ease-out both;
+  animation-name: transition-cover-d;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-cover-ld {
-  animation: transition-cover-ld var(--transition-duration) ease-out both;
+  animation-name: transition-cover-ld;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-cover-lu {
-  animation: transition-cover-lu var(--transition-duration) ease-out both;
+  animation-name: transition-cover-lu;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-cover-rd {
-  animation: transition-cover-rd var(--transition-duration) ease-out both;
+  animation-name: transition-cover-rd;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-cover-ru {
-  animation: transition-cover-ru var(--transition-duration) ease-out both;
+  animation-name: transition-cover-ru;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-cover-l {
@@ -519,32 +584,50 @@
  * Default direction is "l" (pull from left)
  */
 .slide-transition-pull {
-  animation: transition-pull-l var(--transition-duration) ease-out both;
+  animation-name: transition-pull-l;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 .slide-transition-pull-l {
-  animation: transition-pull-l var(--transition-duration) ease-out both;
+  animation-name: transition-pull-l;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-pull-r {
-  animation: transition-pull-r var(--transition-duration) ease-out both;
+  animation-name: transition-pull-r;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-pull-u {
-  animation: transition-pull-u var(--transition-duration) ease-out both;
+  animation-name: transition-pull-u;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-pull-d {
-  animation: transition-pull-d var(--transition-duration) ease-out both;
+  animation-name: transition-pull-d;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-pull-ld {
-  animation: transition-pull-ld var(--transition-duration) ease-out both;
+  animation-name: transition-pull-ld;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-pull-lu {
-  animation: transition-pull-lu var(--transition-duration) ease-out both;
+  animation-name: transition-pull-lu;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-pull-rd {
-  animation: transition-pull-rd var(--transition-duration) ease-out both;
+  animation-name: transition-pull-rd;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-pull-ru {
-  animation: transition-pull-ru var(--transition-duration) ease-out both;
+  animation-name: transition-pull-ru;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-pull-l {
@@ -582,7 +665,9 @@
 
 /* Circle transition - expand from center */
 .slide-transition-circle {
-  animation: transition-circle var(--transition-duration) ease-out both;
+  animation-name: transition-circle;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-circle {
@@ -592,7 +677,9 @@
 
 /* Diamond transition - expand from center */
 .slide-transition-diamond {
-  animation: transition-diamond var(--transition-duration) ease-out both;
+  animation-name: transition-diamond;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-diamond {
@@ -602,7 +689,9 @@
 
 /* Plus transition - expand plus shape from center */
 .slide-transition-plus {
-  animation: transition-plus var(--transition-duration) ease-out both;
+  animation-name: transition-plus;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-plus {
@@ -616,14 +705,20 @@
  * Default is "out"
  */
 .slide-transition-split {
-  animation: transition-split-out var(--transition-duration) ease-out both;
+  animation-name: transition-split-out;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 .slide-transition-split-in {
-  animation: transition-split-in var(--transition-duration) ease-out both;
+  animation-name: transition-split-in;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-split-out {
-  animation: transition-split-out var(--transition-duration) ease-out both;
+  animation-name: transition-split-out;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-split-out {
@@ -640,14 +735,20 @@
  * Default direction is "horz" (horizontal stripes expanding down)
  */
 .slide-transition-blinds {
-  animation: transition-blinds-horz var(--transition-duration) linear both;
+  animation-name: transition-blinds-horz;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 
 .slide-transition-blinds-horz {
-  animation: transition-blinds-horz var(--transition-duration) linear both;
+  animation-name: transition-blinds-horz;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 .slide-transition-blinds-vert {
-  animation: transition-blinds-vert var(--transition-duration) linear both;
+  animation-name: transition-blinds-vert;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-blinds-horz {
@@ -697,13 +798,19 @@
  * Note: CSS cannot easily do a true checkerboard, using fade as fallback
  */
 .slide-transition-checker {
-  animation: transition-fade var(--transition-duration) ease-out both;
+  animation-name: transition-fade;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-checker-horz {
-  animation: transition-fade var(--transition-duration) ease-out both;
+  animation-name: transition-fade;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-checker-vert {
-  animation: transition-fade var(--transition-duration) ease-out both;
+  animation-name: transition-fade;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 /* Comb transition - stripes reveal with alternating directions
@@ -711,14 +818,20 @@
  * Default direction is "horz" (horizontal comb)
  */
 .slide-transition-comb {
-  animation: transition-comb-horz var(--transition-duration) linear both;
+  animation-name: transition-comb-horz;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 
 .slide-transition-comb-horz {
-  animation: transition-comb-horz var(--transition-duration) linear both;
+  animation-name: transition-comb-horz;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 .slide-transition-comb-vert {
-  animation: transition-comb-vert var(--transition-duration) linear both;
+  animation-name: transition-comb-vert;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-comb-horz {
@@ -769,23 +882,35 @@
  * Default is 1 spoke
  */
 .slide-transition-wheel {
-  animation: transition-wheel-1 var(--transition-duration) linear both;
+  animation-name: transition-wheel-1;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 
 .slide-transition-wheel-1 {
-  animation: transition-wheel-1 var(--transition-duration) linear both;
+  animation-name: transition-wheel-1;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 .slide-transition-wheel-2 {
-  animation: transition-wheel-2 var(--transition-duration) linear both;
+  animation-name: transition-wheel-2;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 .slide-transition-wheel-3 {
-  animation: transition-wheel-3 var(--transition-duration) linear both;
+  animation-name: transition-wheel-3;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 .slide-transition-wheel-4 {
-  animation: transition-wheel-4 var(--transition-duration) linear both;
+  animation-name: transition-wheel-4;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 .slide-transition-wheel-8 {
-  animation: transition-wheel-8 var(--transition-duration) linear both;
+  animation-name: transition-wheel-8;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 
 /* 1 spoke - single sweep */
@@ -832,7 +957,9 @@
 
 /* Wedge transition - two-way wipe from center */
 .slide-transition-wedge {
-  animation: transition-wedge var(--transition-duration) ease-out both;
+  animation-name: transition-wedge;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-wedge {
@@ -846,14 +973,20 @@
  * Default is "in"
  */
 .slide-transition-zoom {
-  animation: transition-zoom-in var(--transition-duration) ease-out both;
+  animation-name: transition-zoom-in;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 .slide-transition-zoom-in {
-  animation: transition-zoom-in var(--transition-duration) ease-out both;
+  animation-name: transition-zoom-in;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-zoom-out {
-  animation: transition-zoom-out var(--transition-duration) ease-out both;
+  animation-name: transition-zoom-out;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-zoom-in {
@@ -872,7 +1005,9 @@
 
 /* Newsflash transition - diagonal wipe with flash */
 .slide-transition-newsflash {
-  animation: transition-newsflash var(--transition-duration) ease-out both;
+  animation-name: transition-newsflash;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-newsflash {
@@ -883,7 +1018,9 @@
 
 /* Random transition - picks a random effect (fallback to dissolve) */
 .slide-transition-random {
-  animation: transition-dissolve var(--transition-duration) ease-out both;
+  animation-name: transition-dissolve;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 /* RandomBar transition - random bars reveal
@@ -892,14 +1029,20 @@
  * Default is "horz"
  */
 .slide-transition-randombar {
-  animation: transition-randombar-horz var(--transition-duration) linear both;
+  animation-name: transition-randombar-horz;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 
 .slide-transition-randombar-horz {
-  animation: transition-randombar-horz var(--transition-duration) linear both;
+  animation-name: transition-randombar-horz;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 .slide-transition-randombar-vert {
-  animation: transition-randombar-vert var(--transition-duration) linear both;
+  animation-name: transition-randombar-vert;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-randombar-horz {
@@ -971,20 +1114,30 @@
  * Default is "ld"
  */
 .slide-transition-strips {
-  animation: transition-strips-ld var(--transition-duration) ease-out both;
+  animation-name: transition-strips-ld;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 .slide-transition-strips-ld {
-  animation: transition-strips-ld var(--transition-duration) ease-out both;
+  animation-name: transition-strips-ld;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-strips-lu {
-  animation: transition-strips-lu var(--transition-duration) ease-out both;
+  animation-name: transition-strips-lu;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-strips-rd {
-  animation: transition-strips-rd var(--transition-duration) ease-out both;
+  animation-name: transition-strips-rd;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 .slide-transition-strips-ru {
-  animation: transition-strips-ru var(--transition-duration) ease-out both;
+  animation-name: transition-strips-ru;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
 }
 
 @keyframes transition-strips-ld {

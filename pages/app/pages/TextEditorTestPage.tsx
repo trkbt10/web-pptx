@@ -6,7 +6,6 @@
 
 import { useMemo, useState } from "react";
 import {
-  EditorConfigProvider,
   Panel,
   Accordion,
   FieldGroup,
@@ -26,7 +25,6 @@ import type { Slide, TextBody, TextRun } from "@lib/pptx/domain";
 import { px, deg, pt, type Pixels } from "@lib/pptx/domain";
 import { SlideRendererSvg } from "@lib/pptx/render/react";
 import { layoutTextBody, toLayoutInput } from "@lib/pptx/render/text-layout";
-import { createPagesFontCatalog } from "../fonts/pages-font-catalog";
 import { TextEditController } from "../../../src/pptx-editor/slide/text-edit";
 import type { TextSelection, CursorPosition, SelectionChangeEvent } from "../../../src/pptx-editor/slide/text-edit";
 import {
@@ -41,7 +39,7 @@ import {
 import { getExtractionValue, isMixed } from "../../../src/pptx-editor/editors/text/mixed-properties";
 import { testSlideSize, testColorContext } from "../components/drawing-ml-tests";
 import "./DrawingMLTestPage.css";
-import "./SlideshowPage.css";
+import "../../../src/pptx-editor/preview/SlideshowPlayer.css";
 
 type TextEditorTestPageProps = {
   readonly onBack: () => void;
@@ -109,7 +107,6 @@ function getSelectionForBody(textBody: TextBody): TextSelection | null {
  * Demo page for inline text editing + formatting UI.
  */
 export function TextEditorTestPage({ onBack }: TextEditorTestPageProps) {
-  const fontCatalog = useMemo(() => createPagesFontCatalog(), []);
   const slideWidth = Number(testSlideSize.width);
   const slideHeight = Number(testSlideSize.height);
 
@@ -287,130 +284,104 @@ export function TextEditorTestPage({ onBack }: TextEditorTestPageProps) {
   }, [currentTextBody, extractedProperties.runRanges, selectionContext]);
 
   return (
-    <EditorConfigProvider config={{ locale: "en-US", fontCatalog }}>
-      <div className="drawingml-test-page">
-        <header className="test-header">
-          <button className="back-button" onClick={onBack}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            Back
-          </button>
-          <div className="header-info">
-            <h1 className="test-title">Text Editor Test</h1>
-            <div className="section-indicator">pptx-editor</div>
-          </div>
-        </header>
+    <div className="drawingml-test-page">
+      <header className="test-header">
+        <button className="back-button" onClick={onBack}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Back
+        </button>
+        <div className="header-info">
+          <h1 className="test-title">Text Editor Test</h1>
+          <div className="section-indicator">pptx-editor</div>
+        </div>
+      </header>
 
-        <main className="test-content">
-          <section className="test-section">
-            <h3>Text Edit Controller</h3>
-            <p className="section-description">
-              Inline text editing overlay from src/pptx-editor/slide/text-edit.
-            </p>
-            <div className="test-examples">
-              <div className="text-editor-layout">
-                <Panel title="Text Edit Settings" width="100%">
-                  <FieldGroup label="X" inline>
-                    <PixelsEditor
-                      value={textBounds.x}
-                      onChange={(value) => updateBounds({ x: value })}
+      <main className="test-content">
+        <section className="test-section">
+          <h3>Text Edit Controller</h3>
+          <p className="section-description">Inline text editing overlay from src/pptx-editor/slide/text-edit.</p>
+          <div className="test-examples">
+            <div className="text-editor-layout">
+              <Panel title="Text Edit Settings" width="100%">
+                <FieldGroup label="X" inline>
+                  <PixelsEditor value={textBounds.x} onChange={(value) => updateBounds({ x: value })} />
+                </FieldGroup>
+                <FieldGroup label="Y" inline>
+                  <PixelsEditor value={textBounds.y} onChange={(value) => updateBounds({ y: value })} />
+                </FieldGroup>
+                <FieldGroup label="Width" inline>
+                  <PixelsEditor value={textBounds.width} onChange={(value) => updateBounds({ width: value })} />
+                </FieldGroup>
+                <FieldGroup label="Height" inline>
+                  <PixelsEditor value={textBounds.height} onChange={(value) => updateBounds({ height: value })} />
+                </FieldGroup>
+                <FieldGroup label="Rotate" inline>
+                  <DegreesEditor
+                    value={deg(textBounds.rotation)}
+                    onChange={(value) => updateBounds({ rotation: Number(value) })}
+                  />
+                </FieldGroup>
+              </Panel>
+              <Panel title="Text Edit Canvas" width="100%">
+                <div className="slideshow-slide-container">
+                  <SlideRendererSvg slide={slide} slideSize={testSlideSize} colorContext={testColorContext} />
+                  <TextEditController
+                    bounds={textBounds}
+                    textBody={currentTextBody}
+                    colorContext={testColorContext}
+                    slideWidth={slideWidth}
+                    slideHeight={slideHeight}
+                    onComplete={setLastComplete}
+                    onCancel={() => setLastComplete(null)}
+                    onSelectionChange={handleSelectionChange}
+                  />
+                </div>
+              </Panel>
+              <Panel title="Text Formatting" width="100%">
+                <Accordion title="Character" defaultExpanded>
+                  <MixedRunPropertiesEditor value={runProperties} onChange={handleApplyRunProperties} showSpacing={true} />
+                </Accordion>
+                <Accordion title="Paragraph" defaultExpanded={false}>
+                  <MixedParagraphPropertiesEditor
+                    value={extractedProperties.paragraphProperties}
+                    onChange={handleApplyParagraphProperties}
+                    showSpacing={true}
+                    showIndentation={true}
+                  />
+                </Accordion>
+                <Accordion title="Text Fill" defaultExpanded={false}>
+                  <FieldGroup label="Fill">
+                    <FillEditor
+                      value={fillValue ?? { type: "solidFill", color: createDefaultColor("000000") }}
+                      onChange={(value) => handleApplyRunProperties({ fill: value })}
                     />
                   </FieldGroup>
-                  <FieldGroup label="Y" inline>
-                    <PixelsEditor
-                      value={textBounds.y}
-                      onChange={(value) => updateBounds({ y: value })}
+                </Accordion>
+                <Accordion title="Text Outline" defaultExpanded={false}>
+                  <FieldGroup label="Outline">
+                    <LineEditor
+                      value={outlineValue ?? createDefaultLine()}
+                      onChange={(value) => handleApplyRunProperties({ textOutline: value })}
                     />
                   </FieldGroup>
-                  <FieldGroup label="Width" inline>
-                    <PixelsEditor
-                      value={textBounds.width}
-                      onChange={(value) => updateBounds({ width: value })}
-                    />
-                  </FieldGroup>
-                  <FieldGroup label="Height" inline>
-                    <PixelsEditor
-                      value={textBounds.height}
-                      onChange={(value) => updateBounds({ height: value })}
-                    />
-                  </FieldGroup>
-                  <FieldGroup label="Rotate" inline>
-                    <DegreesEditor
-                      value={deg(textBounds.rotation)}
-                      onChange={(value) => updateBounds({ rotation: Number(value) })}
-                    />
-                  </FieldGroup>
-                </Panel>
-                <Panel title="Text Edit Canvas" width="100%">
-                  <div className="slideshow-slide-container">
-                    <SlideRendererSvg
-                      slide={slide}
-                      slideSize={testSlideSize}
-                      colorContext={testColorContext}
-                    />
-                    <TextEditController
-                      bounds={textBounds}
-                      textBody={currentTextBody}
-                      colorContext={testColorContext}
-                      slideWidth={slideWidth}
-                      slideHeight={slideHeight}
-                      onComplete={setLastComplete}
-                      onCancel={() => setLastComplete(null)}
-                      onSelectionChange={handleSelectionChange}
-                    />
-                  </div>
-                </Panel>
-                <Panel title="Text Formatting" width="100%">
-                  <Accordion title="Character" defaultExpanded>
-                    <MixedRunPropertiesEditor
-                      value={runProperties}
-                      onChange={handleApplyRunProperties}
-                      showSpacing={true}
-                    />
-                  </Accordion>
-                  <Accordion title="Paragraph" defaultExpanded={false}>
-                    <MixedParagraphPropertiesEditor
-                      value={extractedProperties.paragraphProperties}
-                      onChange={handleApplyParagraphProperties}
-                      showSpacing={true}
-                      showIndentation={true}
-                    />
-                  </Accordion>
-                  <Accordion title="Text Fill" defaultExpanded={false}>
-                    <FieldGroup label="Fill">
-                      <FillEditor
-                        value={fillValue ?? { type: "solidFill", color: createDefaultColor("000000") }}
-                        onChange={(value) => handleApplyRunProperties({ fill: value })}
-                      />
-                    </FieldGroup>
-                  </Accordion>
-                  <Accordion title="Text Outline" defaultExpanded={false}>
-                    <FieldGroup label="Outline">
-                      <LineEditor
-                        value={outlineValue ?? createDefaultLine()}
-                        onChange={(value) => handleApplyRunProperties({ textOutline: value })}
-                      />
-                    </FieldGroup>
-                  </Accordion>
-                  <Accordion title="Text Effects" defaultExpanded={false}>
-                    <EffectsEditor
-                      value={effectiveRunProperties?.effects ?? createDefaultEffects()}
-                      onChange={(value) => handleApplyRunProperties({ effects: value })}
-                    />
-                  </Accordion>
-                </Panel>
-              </div>
-              <div className="pattern-info">Last commit</div>
-              <pre className="pattern-names">
-                {lastComplete ?? "Press Enter to commit, Esc to cancel."}
-              </pre>
-              <div className="pattern-info">Layout result</div>
-              <pre className="pattern-names">{JSON.stringify(layoutResult, null, 2)}</pre>
+                </Accordion>
+                <Accordion title="Text Effects" defaultExpanded={false}>
+                  <EffectsEditor
+                    value={effectiveRunProperties?.effects ?? createDefaultEffects()}
+                    onChange={(value) => handleApplyRunProperties({ effects: value })}
+                  />
+                </Accordion>
+              </Panel>
             </div>
-          </section>
-        </main>
-      </div>
-    </EditorConfigProvider>
+            <div className="pattern-info">Last commit</div>
+            <pre className="pattern-names">{lastComplete ?? "Press Enter to commit, Esc to cancel."}</pre>
+            <div className="pattern-info">Layout result</div>
+            <pre className="pattern-names">{JSON.stringify(layoutResult, null, 2)}</pre>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }

@@ -13,6 +13,10 @@ import { useEditorConfig } from "../../context/editor/EditorConfigContext";
 import type { FontCatalog } from "../../fonts/types";
 
 const CLEAR_VALUE = "__pptx_editor_font_family_clear__";
+const CATALOG_HINT_VALUE = "__pptx_editor_font_family_catalog_hint__";
+const CATALOG_LOADING_VALUE = "__pptx_editor_font_family_catalog_loading__";
+const CATALOG_ERROR_VALUE = "__pptx_editor_font_family_catalog_error__";
+const CATALOG_STATUS_VALUE = "__pptx_editor_font_family_catalog_status__";
 
 type FontFamilySelectValue = string | typeof CLEAR_VALUE;
 
@@ -55,8 +59,24 @@ function buildFontFamilyOptions(
   loadedFamilies: readonly string[],
   catalogFamilies: readonly string[],
   currentValue: string,
-  catalogLabel: string
+  catalogLabel: string,
+  showCatalogHint: boolean,
+  catalogStatus: "idle" | "loading" | "loaded" | "error",
+  catalogErrorMessage: string | null
 ): SearchableSelectOption<FontFamilySelectValue>[] {
+  function getCatalogStatusLabel(): string {
+    if (catalogStatus === "loading") {
+      return `${catalogLabel}: Loading…`;
+    }
+    if (catalogStatus === "loaded") {
+      return `${catalogLabel}: Ready (${catalogFamilies.length})`;
+    }
+    if (catalogStatus === "error") {
+      return `${catalogLabel}: Failed`;
+    }
+    return `${catalogLabel}: Idle`;
+  }
+
   const options: SearchableSelectOption<FontFamilySelectValue>[] = [
     {
       value: CLEAR_VALUE,
@@ -65,6 +85,16 @@ function buildFontFamilyOptions(
       keywords: ["clear", "unset", "inherit", "default"],
     },
   ];
+
+  if (showCatalogHint) {
+    options.push({
+      value: CATALOG_STATUS_VALUE,
+      label: getCatalogStatusLabel(),
+      disabled: true,
+      group: "Actions",
+      keywords: ["catalog", "status", catalogLabel, catalogStatus],
+    });
+  }
 
   const normalizedCurrent = currentValue.trim();
   const familySet = new Set(
@@ -98,6 +128,37 @@ function buildFontFamilyOptions(
     });
   }
 
+  if (showCatalogHint) {
+    options.push({
+      value: CATALOG_HINT_VALUE,
+      label: "Scroll or type to search…",
+      disabled: true,
+      group: catalogLabel,
+      keywords: ["search", "type"],
+    });
+  }
+
+  if (showCatalogHint && catalogStatus === "loading") {
+    options.push({
+      value: CATALOG_LOADING_VALUE,
+      label: "Loading…",
+      disabled: true,
+      group: catalogLabel,
+      keywords: ["loading"],
+    });
+  }
+
+  if (showCatalogHint && catalogStatus === "error") {
+    const msg = catalogErrorMessage?.trim() ? `: ${catalogErrorMessage.trim()}` : "";
+    options.push({
+      value: CATALOG_ERROR_VALUE,
+      label: `Failed to load font catalog${msg}`,
+      disabled: true,
+      group: catalogLabel,
+      keywords: ["error", "failed"],
+    });
+  }
+
   const loadedSet = new Set(loadedFamilies.map((f) => f.trim()));
   for (const family of uniqueFamilies(catalogFamilies)) {
     if (loadedSet.has(family)) {
@@ -108,7 +169,6 @@ function buildFontFamilyOptions(
       label: family,
       group: catalogLabel,
       keywords: [family],
-      hiddenWhenEmptySearch: true,
     });
   }
 
@@ -177,23 +237,34 @@ export function FontFamilySelect({
   const fontCatalog = fontCatalogOverride ?? fontCatalogFromContext;
   const documentFamilies = useDocumentFontFamilies();
   const [catalogFamilies, setCatalogFamilies] = useState<readonly string[]>([]);
+  const [catalogStatus, setCatalogStatus] = useState<"idle" | "loading" | "loaded" | "error">(() =>
+    fontCatalog ? "loading" : "idle"
+  );
+  const [catalogErrorMessage, setCatalogErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!fontCatalog) {
       setCatalogFamilies([]);
+      setCatalogStatus("idle");
+      setCatalogErrorMessage(null);
       return;
     }
 
+    setCatalogStatus("loading");
+    setCatalogErrorMessage(null);
     const canceled = { value: false };
     Promise.resolve(fontCatalog.listFamilies())
       .then((families) => {
         if (!canceled.value) {
           setCatalogFamilies(families);
+          setCatalogStatus("loaded");
         }
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (!canceled.value) {
           setCatalogFamilies([]);
+          setCatalogStatus("error");
+          setCatalogErrorMessage(error instanceof Error ? error.message : String(error));
         }
       });
 
@@ -203,8 +274,17 @@ export function FontFamilySelect({
   }, [fontCatalog]);
 
   const options = useMemo(
-    () => buildFontFamilyOptions(documentFamilies, catalogFamilies, value, fontCatalog?.label ?? "Catalog"),
-    [documentFamilies, catalogFamilies, value, fontCatalog?.label]
+    () =>
+      buildFontFamilyOptions(
+        documentFamilies,
+        catalogFamilies,
+        value,
+        fontCatalog?.label ?? "Catalog",
+        !!fontCatalog,
+        catalogStatus,
+        catalogErrorMessage
+      ),
+    [documentFamilies, catalogFamilies, value, fontCatalog?.label, catalogStatus, catalogErrorMessage, fontCatalog]
   );
 
   const catalogSet = useMemo(() => new Set(catalogFamilies.map((f) => f.trim())), [catalogFamilies]);
@@ -244,6 +324,7 @@ export function FontFamilySelect({
       className={className}
       style={style}
       dropdownWidth={360}
+      virtualization={{ itemHeight: 44, headerHeight: 22, overscan: 10 }}
       renderItem={renderFontItem(sampleText)}
       renderValue={renderFontValue}
     />

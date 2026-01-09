@@ -120,11 +120,18 @@ export function useDocumentFontFamilies(): readonly string[] {
     if (typeof document === "undefined") {
       return [];
     }
+    if (!document.fonts) {
+      return [];
+    }
     return document.fonts.status === "loaded" ? getFontFamilies(document.fonts) : [];
   });
 
   useEffect(() => {
     if (typeof document === "undefined") {
+      return;
+    }
+
+    if (!document.fonts) {
       return;
     }
 

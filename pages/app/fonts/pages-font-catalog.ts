@@ -9,8 +9,19 @@ import { createGoogleFontsCatalog } from "./google-fonts-catalog";
  * Creates the Google Fonts-backed catalog used by the demo pages.
  */
 export function createPagesFontCatalog(): FontCatalog {
-  return createGoogleFontsCatalog({
-    familiesUrl: `${import.meta.env.BASE_URL}fonts/google-fonts-families.json`,
+  function resolveFamiliesUrl(): string {
+    if (typeof window === "undefined") {
+      throw new Error("createPagesFontCatalog: window is required to resolve the families URL");
+    }
+
+    // Resolve relative to the current location so this works for both:
+    // - GitHub Pages (https://.../web-pptx/#/...)
+    // - local dev (http://localhost:5174/web-pptx/#/...)
+    return new URL("fonts/google-fonts-families.json", window.location.href).toString();
+  }
+
+  const catalog = createGoogleFontsCatalog({
+    familiesUrl: resolveFamiliesUrl(),
     cssBaseUrl: "https://fonts.googleapis.com/css2",
     display: "swap",
     weights: [400, 500, 600, 700],
@@ -18,4 +29,19 @@ export function createPagesFontCatalog(): FontCatalog {
     cacheTtlMs: 1000 * 60 * 60 * 24 * 7, // 7 days
     timeoutMs: 10_000,
   });
+
+  return {
+    label: catalog.label,
+    async listFamilies() {
+      try {
+        return await Promise.resolve(catalog.listFamilies());
+      } catch (error) {
+        console.warn("createPagesFontCatalog: failed to load Google Fonts families", error);
+        throw error;
+      }
+    },
+    async ensureFamilyLoaded(family: string) {
+      return await catalog.ensureFamilyLoaded(family);
+    },
+  };
 }

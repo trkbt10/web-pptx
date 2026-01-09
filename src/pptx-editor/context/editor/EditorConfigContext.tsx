@@ -4,7 +4,7 @@
  * Provides theme and configuration to editor components without coupling.
  */
 
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
 import type { ColorScheme, ColorMap } from "../../../pptx/domain/color/context";
 import type { FontScheme } from "../../../pptx/domain/resolution";
 import type { FontCatalog } from "../../fonts/types";
@@ -37,6 +37,8 @@ const defaultConfig: EditorConfig = {
 
 const EditorConfigContext = createContext<EditorConfig>(defaultConfig);
 
+const prefetchedFontCatalogs = new WeakSet<FontCatalog>();
+
 /**
  * Provider for editor configuration
  */
@@ -51,6 +53,18 @@ export function EditorConfigProvider({
     () => ({ ...defaultConfig, ...config }),
     [config]
   );
+
+  useEffect(() => {
+    const catalog = mergedConfig.fontCatalog;
+    if (!catalog) {
+      return;
+    }
+    if (prefetchedFontCatalogs.has(catalog)) {
+      return;
+    }
+    prefetchedFontCatalogs.add(catalog);
+    void Promise.resolve(catalog.listFamilies()).catch(() => undefined);
+  }, [mergedConfig.fontCatalog]);
 
   return (
     <EditorConfigContext.Provider value={mergedConfig}>

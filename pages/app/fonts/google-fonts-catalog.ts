@@ -10,6 +10,8 @@ import type { FontCatalog } from "@lib/pptx-editor";
 export type GoogleFontsCatalogConfig = {
   /** e.g. "/fonts/google-fonts-families.json" */
   readonly familiesUrl: string;
+  /** Optional fetch injection for tests / custom runtimes */
+  readonly fetcher?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
   /** e.g. "https://fonts.googleapis.com/css2" */
   readonly cssBaseUrl: string;
   /** e.g. "swap" */
@@ -223,6 +225,10 @@ async function loadFontFace(family: string, weights: readonly number[], timeoutM
  */
 export function createGoogleFontsCatalog(config: GoogleFontsCatalogConfig): FontCatalog {
   const familiesUrl = requireNonEmptyString(config.familiesUrl, "familiesUrl");
+  const fetcher = config.fetcher ?? globalThis.fetch;
+  if (typeof fetcher !== "function") {
+    throw new Error('createGoogleFontsCatalog: "fetcher" is required in this environment');
+  }
   const cssBaseUrl = requireNonEmptyString(config.cssBaseUrl, "cssBaseUrl");
   const cacheKey = requireNonEmptyString(config.cacheKey, "cacheKey");
   const cacheTtlMs = requirePositiveInt(config.cacheTtlMs, "cacheTtlMs");
@@ -236,31 +242,49 @@ export function createGoogleFontsCatalog(config: GoogleFontsCatalogConfig): Font
   }
   const weights = config.weights;
 
-  const inMemoryFamilies: { value: readonly string[] | null } = { value: null };
+  const inMemoryFamilies: { value: readonly string[] | null; inFlight: Promise<readonly string[]> | null } = {
+    value: null,
+    inFlight: null,
+  };
+
+  const fetchFamilies = async (): Promise<readonly string[]> => {
+    const cached = getCache(cacheKey);
+    if (cached) {
+      const age = Date.now() - cached.cachedAtMs;
+      if (age >= 0 && age < cacheTtlMs) {
+        const families = uniqueSortedFamilies(cached.families);
+        inMemoryFamilies.value = families;
+        return families;
+      }
+    }
+
+    const response = await fetcher(familiesUrl, { method: "GET" });
+    if (!response.ok) {
+      throw new Error(`Google Fonts families fetch failed: ${response.status} (${familiesUrl})`);
+    }
+    const families = parseFamiliesFile((await response.json()) as FamiliesFile);
+    inMemoryFamilies.value = families;
+    setCache(cacheKey, { cachedAtMs: Date.now(), families });
+    return families;
+  };
 
   const listFamilies = async (): Promise<readonly string[]> => {
     if (inMemoryFamilies.value) {
       return inMemoryFamilies.value;
     }
+    if (inMemoryFamilies.inFlight) {
+      return inMemoryFamilies.inFlight;
+    }
 
-    const cached = getCache(cacheKey);
-    if (cached) {
-      const age = Date.now() - cached.cachedAtMs;
-      if (age >= 0 && age < cacheTtlMs) {
-        inMemoryFamilies.value = uniqueSortedFamilies(cached.families);
-        return inMemoryFamilies.value;
+    const inFlight = fetchFamilies();
+    inMemoryFamilies.inFlight = inFlight;
+    try {
+      return await inFlight;
+    } finally {
+      if (inMemoryFamilies.inFlight === inFlight) {
+        inMemoryFamilies.inFlight = null;
       }
     }
-
-    const response = await fetch(familiesUrl, { method: "GET" });
-    if (!response.ok) {
-      throw new Error(`Google Fonts families fetch failed: ${response.status}`);
-    }
-    const families = parseFamiliesFile((await response.json()) as FamiliesFile);
-
-    inMemoryFamilies.value = families;
-    setCache(cacheKey, { cachedAtMs: Date.now(), families });
-    return families;
   };
 
   const ensureFamilyLoaded = async (family: string): Promise<boolean> => {

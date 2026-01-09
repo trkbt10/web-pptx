@@ -69,6 +69,9 @@ export {
 
   // UI elements
   Plus as AddIcon,
+  Maximize2 as EnterFullscreenIcon,
+  Minimize2 as ExitFullscreenIcon,
+  Play as PlayIcon,
   X as CloseIcon,
   ChevronRight as ChevronRightIcon,
   ChevronDown as ChevronDownIcon,

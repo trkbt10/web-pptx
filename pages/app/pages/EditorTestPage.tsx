@@ -5,8 +5,8 @@
  * Organized by editor category with tab navigation.
  */
 
-import { useMemo, useState, type CSSProperties } from "react";
-import { EditorConfigProvider, Button } from "@lib/pptx-editor";
+import { useState, type CSSProperties } from "react";
+import { Button } from "@lib/pptx-editor";
 import {
   ColorEditorsTest,
   PrimitiveEditorsTest,
@@ -18,7 +18,6 @@ import {
   SlideEditorTest,
   PresentationEditorTest,
 } from "../components/editor-tests";
-import { createPagesFontCatalog } from "../fonts/pages-font-catalog";
 
 type EditorTestPageProps = {
   readonly onBack: () => void;
@@ -146,34 +145,31 @@ function TabContent({ activeTab }: { activeTab: TabId }) {
  */
 export function EditorTestPage({ onBack }: EditorTestPageProps) {
   const [activeTab, setActiveTab] = useState<TabId>("presentation");
-  const fontCatalog = useMemo(() => createPagesFontCatalog(), []);
 
   return (
-    <EditorConfigProvider config={{ locale: "en-US", fontCatalog }}>
-      <div style={pageStyle}>
-        {/* Header */}
-        <header style={headerStyle}>
-          <h1 style={titleStyle}>Editor Components Test</h1>
-          <Button variant="secondary" onClick={onBack}>
-            ← Back
-          </Button>
-        </header>
+    <div style={pageStyle}>
+      {/* Header */}
+      <header style={headerStyle}>
+        <h1 style={titleStyle}>Editor Components Test</h1>
+        <Button variant="secondary" onClick={onBack}>
+          ← Back
+        </Button>
+      </header>
 
-        {/* Tab Navigation */}
-        <nav style={tabsContainerStyle}>
-          {tabs.map((tab) => (
-            <TabButton
-              key={tab.id}
-              tab={tab}
-              isActive={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
-            />
-          ))}
-        </nav>
+      {/* Tab Navigation */}
+      <nav style={tabsContainerStyle}>
+        {tabs.map((tab) => (
+          <TabButton
+            key={tab.id}
+            tab={tab}
+            isActive={activeTab === tab.id}
+            onClick={() => setActiveTab(tab.id)}
+          />
+        ))}
+      </nav>
 
-        {/* Tab Content */}
-        <TabContent activeTab={activeTab} />
-      </div>
-    </EditorConfigProvider>
+      {/* Tab Content */}
+      <TabContent activeTab={activeTab} />
+    </div>
   );
 }

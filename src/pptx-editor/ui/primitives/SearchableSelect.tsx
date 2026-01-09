@@ -14,6 +14,7 @@ import {
   type ReactNode,
   type CSSProperties,
   type KeyboardEvent,
+  type UIEvent as ReactUIEvent,
 } from "react";
 import { createPortal } from "react-dom";
 import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../design-tokens";
@@ -21,6 +22,20 @@ import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../design-
 // =============================================================================
 // Types
 // =============================================================================
+
+function lowerBound(values: readonly number[], target: number): number {
+  const recur = (lo: number, hi: number): number => {
+    if (lo >= hi) {
+      return lo;
+    }
+    const mid = Math.floor((lo + hi) / 2);
+    if (values[mid] < target) {
+      return recur(mid + 1, hi);
+    }
+    return recur(lo, mid);
+  };
+  return recur(0, values.length);
+}
 
 /**
  * Option item for SearchableSelect
@@ -75,6 +90,21 @@ export type SearchableSelectProps<T extends string = string> = {
   readonly dropdownWidth?: number | string;
   /** Maximum height of the dropdown list */
   readonly maxHeight?: number;
+  /**
+   * Enables virtual-window rendering to avoid constructing a huge DOM.
+   *
+   * This assumes fixed row heights.
+   */
+  readonly virtualization?: {
+    /** Height of each option row in px */
+    readonly itemHeight: number;
+    /** Height of each group header row in px (default: 22) */
+    readonly headerHeight?: number;
+    /** Overscan rows above/below viewport (default: 8) */
+    readonly overscan?: number;
+  };
+  /** Optional test id for the list container */
+  readonly listTestId?: string;
 };
 
 // =============================================================================
@@ -204,6 +234,10 @@ const noResultsStyle: CSSProperties = {
   fontSize: fontTokens.size.sm,
 };
 
+const virtualContainerStyle: CSSProperties = {
+  position: "relative",
+};
+
 // =============================================================================
 // Chevron Icon
 // =============================================================================
@@ -248,15 +282,24 @@ export function SearchableSelect<T extends string = string>({
   renderValue,
   dropdownWidth = 280,
   maxHeight = 320,
+  virtualization,
+  listTestId,
 }: SearchableSelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(0);
 
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+
+  const isVirtualized = !!virtualization;
+  const virtualItemHeight = virtualization?.itemHeight ?? 0;
+  const virtualHeaderHeight = virtualization?.headerHeight ?? 22;
+  const virtualOverscan = virtualization?.overscan ?? 8;
 
   // Find selected option
   const selectedOption = useMemo(
@@ -268,9 +311,6 @@ export function SearchableSelect<T extends string = string>({
   const filteredOptions = useMemo(() => {
     if (!searchQuery.trim()) {
       return options.filter((opt) => {
-        if (opt.disabled) {
-          return false;
-        }
         if (opt.hiddenWhenEmptySearch && opt.value !== value) {
           return false;
         }
@@ -279,9 +319,6 @@ export function SearchableSelect<T extends string = string>({
     }
     const query = searchQuery.toLowerCase();
     return options.filter((opt) => {
-      if (opt.disabled) {
-        return false;
-      }
       if (opt.label.toLowerCase().includes(query)) {
         return true;
       }
@@ -316,6 +353,88 @@ export function SearchableSelect<T extends string = string>({
     return result;
   }, [groupedOptions]);
 
+  type Row =
+    | { readonly kind: "header"; readonly group: string; readonly key: string }
+    | { readonly kind: "option"; readonly option: SearchableSelectOption<T>; readonly optionIndex: number };
+
+  const rows = useMemo((): readonly Row[] => {
+    const optionCounter = { value: 0 };
+    const result: Row[] = [];
+    for (const [group, opts] of groupedOptions.entries()) {
+      if (group) {
+        result.push({ kind: "header", group, key: `__group__${group}` });
+      }
+      for (const opt of opts) {
+        const optionIndex = optionCounter.value;
+        optionCounter.value += 1;
+        result.push({ kind: "option", option: opt, optionIndex });
+      }
+    }
+    return result;
+  }, [groupedOptions]);
+
+  const virtualLayout = useMemo(() => {
+    if (!isVirtualized) {
+      return null;
+    }
+    if (!Number.isFinite(virtualItemHeight) || virtualItemHeight <= 0) {
+      throw new Error('SearchableSelect: "virtualization.itemHeight" must be > 0');
+    }
+    if (!Number.isFinite(virtualHeaderHeight) || virtualHeaderHeight <= 0) {
+      throw new Error('SearchableSelect: "virtualization.headerHeight" must be > 0');
+    }
+    if (!Number.isFinite(virtualOverscan) || virtualOverscan < 0) {
+      throw new Error('SearchableSelect: "virtualization.overscan" must be >= 0');
+    }
+
+    const offsets: number[] = [];
+    const heights: number[] = [];
+    const optionRowIndexByOptionIndex = new Array<number>(flatOptions.length);
+
+    const acc = { offset: 0 };
+    rows.forEach((row, rowIndex) => {
+      offsets.push(acc.offset);
+      const height = row.kind === "header" ? virtualHeaderHeight : virtualItemHeight;
+      heights.push(height);
+      acc.offset += height;
+      if (row.kind === "option") {
+        optionRowIndexByOptionIndex[row.optionIndex] = rowIndex;
+      }
+    });
+
+    const totalHeight = acc.offset;
+
+    const fallbackViewportHeight = Math.max(1, Math.min(maxHeight, 400) - 84);
+    const effectiveViewportHeight = viewportHeight > 0 ? viewportHeight : fallbackViewportHeight;
+
+    const overscanPx = virtualOverscan * virtualItemHeight;
+    const startOffset = Math.max(0, scrollTop - overscanPx);
+    const endOffset = scrollTop + effectiveViewportHeight + overscanPx;
+
+    const startIndex = Math.max(0, lowerBound(offsets, startOffset) - 1);
+    const endIndex = Math.min(rows.length, lowerBound(offsets, endOffset) + 1);
+
+    return {
+      offsets,
+      heights,
+      totalHeight,
+      optionRowIndexByOptionIndex,
+      startIndex,
+      endIndex,
+      effectiveViewportHeight,
+    } as const;
+  }, [
+    isVirtualized,
+    virtualItemHeight,
+    virtualHeaderHeight,
+    virtualOverscan,
+    rows,
+    flatOptions.length,
+    maxHeight,
+    viewportHeight,
+    scrollTop,
+  ]);
+
   // Position state
   const [position, setPosition] = useState({ top: 0, left: 0 });
 
@@ -345,12 +464,17 @@ export function SearchableSelect<T extends string = string>({
     setIsOpen(true);
     setSearchQuery("");
     setHighlightedIndex(0);
+    setScrollTop(0);
+    if (listRef.current) {
+      listRef.current.scrollTop = 0;
+    }
   }, [disabled]);
 
   // Handle close
   const handleClose = useCallback(() => {
     setIsOpen(false);
     setSearchQuery("");
+    setScrollTop(0);
   }, []);
 
   const handleDropdownPointerDown = useCallback(
@@ -392,7 +516,7 @@ export function SearchableSelect<T extends string = string>({
           break;
         case "Enter":
           e.preventDefault();
-          if (flatOptions[highlightedIndex]) {
+          if (flatOptions[highlightedIndex] && !flatOptions[highlightedIndex].disabled) {
             handleSelect(flatOptions[highlightedIndex].value);
           }
           break;
@@ -415,6 +539,26 @@ export function SearchableSelect<T extends string = string>({
     }
   }, [isOpen, updatePosition]);
 
+  const handleListScroll = useCallback((event: ReactUIEvent<HTMLDivElement>) => {
+    setScrollTop(event.currentTarget.scrollTop);
+  }, []);
+
+  const measureViewport = useCallback(() => {
+    const next = listRef.current?.clientHeight ?? 0;
+    setViewportHeight(next);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    measureViewport();
+    window.addEventListener("resize", measureViewport);
+    return () => {
+      window.removeEventListener("resize", measureViewport);
+    };
+  }, [isOpen, measureViewport]);
+
   // Update position on scroll/resize
   useEffect(() => {
     if (!isOpen) {
@@ -428,17 +572,37 @@ export function SearchableSelect<T extends string = string>({
     };
   }, [isOpen, updatePosition]);
 
-  // Scroll highlighted item into view
+  // Keep highlighted option in view
   useEffect(() => {
     if (!isOpen || !listRef.current) {
       return;
     }
-    const items = listRef.current.querySelectorAll("[data-option-index]");
-    const highlighted = items[highlightedIndex];
-    if (highlighted instanceof HTMLElement) {
-      highlighted.scrollIntoView?.({ block: "nearest" });
+
+    if (!virtualLayout) {
+      const items = listRef.current.querySelectorAll("[data-option-index]");
+      const highlighted = items[highlightedIndex];
+      if (highlighted instanceof HTMLElement) {
+        highlighted.scrollIntoView?.({ block: "nearest" });
+      }
+      return;
     }
-  }, [isOpen, highlightedIndex]);
+
+    const rowIndex = virtualLayout.optionRowIndexByOptionIndex[highlightedIndex];
+    if (rowIndex === undefined) {
+      return;
+    }
+    const top = virtualLayout.offsets[rowIndex] ?? 0;
+    const height = virtualLayout.heights[rowIndex] ?? virtualItemHeight;
+    const viewTop = listRef.current.scrollTop;
+    const viewBottom = viewTop + virtualLayout.effectiveViewportHeight;
+    const bottom = top + height;
+
+    if (top < viewTop) {
+      listRef.current.scrollTop = top;
+    } else if (bottom > viewBottom) {
+      listRef.current.scrollTop = Math.max(0, bottom - virtualLayout.effectiveViewportHeight);
+    }
+  }, [isOpen, highlightedIndex, virtualLayout, virtualItemHeight]);
 
   // Reset highlight when search changes
   useEffect(() => {
@@ -500,39 +664,101 @@ export function SearchableSelect<T extends string = string>({
               </div>
 
               {/* Options list */}
-              <div ref={listRef} style={listStyle}>
-                {flatOptions.length === 0 && (
-                  <div style={noResultsStyle}>No results found</div>
-                )}
-                {flatOptions.length > 0 &&
-                  Array.from(groupedOptions.entries()).map(([group, opts]) => (
-                    <div key={group ?? "__ungrouped__"}>
-                      {group && <div style={groupHeaderStyle}>{group}</div>}
-                      {opts.map((opt) => {
-                        const globalIndex = flatOptions.indexOf(opt);
-                        const isSelected = opt.value === value;
-                        const isHighlighted = globalIndex === highlightedIndex;
+              <div ref={listRef} style={listStyle} onScroll={handleListScroll} data-testid={listTestId}>
+                {rows.length === 0 && <div style={noResultsStyle}>No results found</div>}
 
+                {rows.length > 0 && !virtualLayout && (
+                  <>
+                    {rows.map((row) => {
+                      if (row.kind === "header") {
                         return (
-                          <div
-                            key={opt.value}
-                            data-option-index={globalIndex}
-                            style={itemStyle(isSelected, isHighlighted, !!opt.disabled)}
-                            onClick={() => {
-                              if (!opt.disabled) {
-                                handleSelect(opt.value);
-                              }
-                            }}
-                            onMouseEnter={() => setHighlightedIndex(globalIndex)}
-                          >
-                            {renderItem?.(
-                              { option: opt, isSelected, isHighlighted }
-                            ) ?? opt.label}
+                          <div key={row.key} style={groupHeaderStyle}>
+                            {row.group}
                           </div>
                         );
-                      })}
-                    </div>
-                  ))}
+                      }
+
+                      const opt = row.option;
+                      const globalIndex = row.optionIndex;
+                      const isSelected = opt.value === value;
+                      const isHighlighted = globalIndex === highlightedIndex;
+
+                      return (
+                        <div
+                          key={opt.value}
+                          data-option-index={globalIndex}
+                          style={itemStyle(isSelected, isHighlighted, !!opt.disabled)}
+                          onClick={() => {
+                            if (!opt.disabled) {
+                              handleSelect(opt.value);
+                            }
+                          }}
+                          onMouseEnter={() => setHighlightedIndex(globalIndex)}
+                        >
+                          {renderItem?.({ option: opt, isSelected, isHighlighted }) ?? opt.label}
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+
+                {rows.length > 0 && virtualLayout && (
+                  <div style={{ ...virtualContainerStyle, height: `${virtualLayout.totalHeight}px` }}>
+                    {rows.slice(virtualLayout.startIndex, virtualLayout.endIndex).map((row, localIndex) => {
+                      const rowIndex = virtualLayout.startIndex + localIndex;
+                      const top = virtualLayout.offsets[rowIndex] ?? 0;
+                      const height = virtualLayout.heights[rowIndex] ?? virtualItemHeight;
+
+                      if (row.kind === "header") {
+                        return (
+                          <div
+                            key={`${row.key}:${rowIndex}`}
+                            style={{
+                              ...groupHeaderStyle,
+                              position: "absolute",
+                              top: `${top}px`,
+                              height: `${height}px`,
+                              boxSizing: "border-box",
+                              left: 0,
+                              right: 0,
+                            }}
+                          >
+                            {row.group}
+                          </div>
+                        );
+                      }
+
+                      const opt = row.option;
+                      const globalIndex = row.optionIndex;
+                      const isSelected = opt.value === value;
+                      const isHighlighted = globalIndex === highlightedIndex;
+
+                      return (
+                        <div
+                          key={`${opt.value}:${rowIndex}`}
+                          data-option-index={globalIndex}
+                          style={{
+                            ...itemStyle(isSelected, isHighlighted, !!opt.disabled),
+                            position: "absolute",
+                            top: `${top}px`,
+                            height: `${height}px`,
+                            boxSizing: "border-box",
+                            left: 0,
+                            right: 0,
+                          }}
+                          onClick={() => {
+                            if (!opt.disabled) {
+                              handleSelect(opt.value);
+                            }
+                          }}
+                          onMouseEnter={() => setHighlightedIndex(globalIndex)}
+                        >
+                          {renderItem?.({ option: opt, isSelected, isHighlighted }) ?? opt.label}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </>,
