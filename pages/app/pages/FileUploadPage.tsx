@@ -19,6 +19,7 @@ type Props = {
   onDemoLoad: () => void;
   isLoading?: boolean;
   onEditorTest?: () => void;
+  onTextEditorTest?: () => void;
   onDrawingMLTest?: () => void;
   onGlyphTest?: () => void;
 };
@@ -26,7 +27,15 @@ type Props = {
 /**
  * File upload landing screen for the web PPTX viewer.
  */
-export function FileUploadPage({ onFileSelect, onDemoLoad, isLoading, onEditorTest, onDrawingMLTest, onGlyphTest }: Props) {
+export function FileUploadPage({
+  onFileSelect,
+  onDemoLoad,
+  isLoading,
+  onEditorTest,
+  onTextEditorTest,
+  onDrawingMLTest,
+  onGlyphTest,
+}: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -231,6 +240,24 @@ export function FileUploadPage({ onFileSelect, onDemoLoad, isLoading, onEditorTe
             }}
           >
             Editor Test
+          </button>
+        )}
+        {onTextEditorTest && (
+          <button
+            className="text-editor-test-link"
+            onClick={onTextEditorTest}
+            style={{
+              marginLeft: "8px",
+              padding: "4px 8px",
+              fontSize: "12px",
+              color: "var(--text-tertiary)",
+              background: "transparent",
+              border: "1px solid var(--border-subtle)",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            Text Editor Test
           </button>
         )}
         {onDrawingMLTest && (

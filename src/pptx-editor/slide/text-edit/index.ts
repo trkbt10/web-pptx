@@ -15,9 +15,11 @@ export {
   type TextCursorState,
   createInactiveTextEditState,
   createActiveTextEditState,
+  createInitialStickyFormatting,
+  createActiveStickyFormatting,
   isTextEditInactive,
   isTextEditActive,
-} from "./state";
+} from "./input-support/state";
 
 // Cursor position mapping
 export {
@@ -28,21 +30,22 @@ export {
   getPlainText,
   offsetToCursorPosition,
   cursorPositionToOffset,
+  coordinatesToCursorPosition,
   cursorPositionToCoordinates,
   selectionToRects,
   isSamePosition,
   isBefore,
   normalizeSelection,
-} from "./cursor";
+} from "./input-support/cursor";
 
 // Text body merge utilities
 export {
   mergeTextIntoBody,
   extractDefaultRunProperties,
-} from "./text-body-merge";
+} from "./input-support/text-body-merge";
 
 // Text edit controller component
-export { TextEditController } from "./TextEditController";
+export { TextEditController } from "./coordinator/TextEditController";
 
 // Text edit types
 export type {
@@ -50,7 +53,7 @@ export type {
   CursorState,
   CompositionState,
   SelectionChangeEvent,
-} from "./types";
+} from "./coordinator/types";
 
 // Text geometry utilities (shared between cursor and rendering)
 export {
@@ -60,11 +63,13 @@ export {
   fontSizeToPixels,
   getLineFontSize,
   getFontSizeAtOffset,
+  getFontSizeForRange,
   getTextVisualBounds,
   getLineVisualBounds,
   getVisualBoundsAtOffset,
+  getVisualBoundsForRange,
   getTextWidthForChars,
   getXPositionInLine,
   getLineEndX,
   getLineTextLength,
-} from "./text-geometry";
+} from "./text-render/text-geometry";

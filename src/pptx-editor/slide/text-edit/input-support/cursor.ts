@@ -5,18 +5,18 @@
  * Uses LayoutResult from the text-layout engine to compute visual positions.
  */
 
-import type { TextBody } from "../../../pptx/domain";
-import type { Pixels } from "../../../pptx/domain/types";
-import type { LayoutResult, LayoutLine } from "../../../pptx/render/text-layout";
+import type { TextBody } from "../../../../pptx/domain";
+import type { Pixels } from "../../../../pptx/domain/types";
+import type { LayoutResult, LayoutLine } from "../../../../pptx/render/text-layout";
 import {
-  getVisualBoundsAtOffset,
+  getVisualBoundsForRange,
   getLineVisualBounds,
   getXPositionInLine,
   getLineEndX,
   getLineTextLength,
   DEFAULT_FONT_SIZE_PT,
   fontSizeToPixels,
-} from "./text-geometry";
+} from "../text-render/text-geometry";
 
 // =============================================================================
 // Types
@@ -199,6 +199,55 @@ export function cursorPositionToCoordinates(
 }
 
 /**
+ * Map visual coordinates to a cursor position.
+ */
+export function coordinatesToCursorPosition(
+  layoutResult: LayoutResult,
+  x: number,
+  y: number,
+): CursorPosition {
+  if (layoutResult.paragraphs.length === 0) {
+    return { paragraphIndex: 0, charOffset: 0 };
+  }
+
+  let bestParagraphIndex = 0;
+  let bestLineIndex = 0;
+  let bestDistance = Number.POSITIVE_INFINITY;
+
+  layoutResult.paragraphs.forEach((para, paragraphIndex) => {
+    para.lines.forEach((line, lineIndex) => {
+      const bounds = getLineVisualBounds(line);
+      const top = bounds.topY as number;
+      const bottom = (bounds.topY as number) + (bounds.height as number);
+      const distance =
+        y < top ? top - y : y > bottom ? y - bottom : 0;
+
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestParagraphIndex = paragraphIndex;
+        bestLineIndex = lineIndex;
+      }
+    });
+  });
+
+  const targetParagraph = layoutResult.paragraphs[bestParagraphIndex];
+  if (!targetParagraph || targetParagraph.lines.length === 0) {
+    return { paragraphIndex: bestParagraphIndex, charOffset: 0 };
+  }
+
+  const targetLine = targetParagraph.lines[bestLineIndex];
+  const lineOffset = getCharOffsetForXInLine(targetLine, x);
+  const offsetBeforeLine = targetParagraph.lines
+    .slice(0, bestLineIndex)
+    .reduce((sum, line) => sum + getLineTextLength(line), 0);
+
+  return {
+    paragraphIndex: bestParagraphIndex,
+    charOffset: offsetBeforeLine + lineOffset,
+  };
+}
+
+/**
  * Get coordinates for cursor within a line.
  */
 function getCursorInLineCoordinates(
@@ -206,13 +255,75 @@ function getCursorInLineCoordinates(
   charOffset: number,
 ): CursorCoordinates {
   const x = getXPositionInLine(line, charOffset);
-  const bounds = getVisualBoundsAtOffset(line, charOffset);
+  const lineLength = getLineTextLength(line);
+  if (lineLength === 0) {
+    const emptyBounds = getLineVisualBounds(line);
+    return {
+      x,
+      y: emptyBounds.topY,
+      height: emptyBounds.height,
+    };
+  }
+
+  const rangeStart = Math.min(charOffset, Math.max(lineLength - 1, 0));
+  const rangeEnd = Math.min(rangeStart + 1, lineLength);
+  const bounds = getVisualBoundsForRange(line, rangeStart, rangeEnd);
 
   return {
     x,
     y: bounds.topY,
     height: bounds.height,
   };
+}
+
+/**
+ * Get character offset within a line from an x-coordinate.
+ */
+function getCharOffsetForXInLine(line: LayoutLine, x: number): number {
+  if (line.spans.length === 0) {
+    return 0;
+  }
+
+  const lineStartX = line.x as number;
+  if (x <= lineStartX) {
+    return 0;
+  }
+
+  const lineLength = getLineTextLength(line);
+  if (lineLength === 0) {
+    return 0;
+  }
+
+  // eslint-disable-next-line no-restricted-syntax -- accumulate through spans
+  let currentX = lineStartX;
+  // eslint-disable-next-line no-restricted-syntax -- accumulate through spans
+  let charOffset = 0;
+
+  for (const span of line.spans) {
+    const spanLength = span.text.length;
+    if (spanLength === 0) {
+      currentX += (span.width as number) + (span.dx as number);
+      continue;
+    }
+
+    const spanStart = currentX;
+    const spanEnd = currentX + (span.width as number);
+    if (x <= spanEnd) {
+      const spanWidth = span.width as number;
+      const clamped = Math.min(Math.max(x - spanStart, 0), spanWidth);
+      const ratio = spanWidth === 0 ? 0 : clamped / spanWidth;
+      const offsetInSpan = Math.min(
+        spanLength,
+        Math.max(0, Math.round(ratio * spanLength)),
+      );
+      return charOffset + offsetInSpan;
+    }
+
+    charOffset += spanLength;
+    currentX = spanEnd + (span.dx as number);
+  }
+
+  return charOffset;
 }
 
 /**
@@ -377,7 +488,7 @@ function getSelectionRectsInParagraph(
 
       const startX = getXPositionInLine(line, selStart);
       const endX = getXPositionInLine(line, selEnd);
-      const bounds = getLineVisualBounds(line);
+      const bounds = getVisualBoundsForRange(line, selStart, selEnd);
 
       rects.push({
         x: startX,
@@ -401,4 +512,3 @@ function getParagraphTextLength(
 ): number {
   return para.lines.reduce((sum, line) => sum + getLineTextLength(line), 0);
 }
-

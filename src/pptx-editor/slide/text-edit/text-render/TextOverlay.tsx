@@ -6,10 +6,14 @@
  */
 
 import type { ReactNode } from "react";
-import type { Pixels } from "../../../pptx/domain/types";
-import type { LayoutResult, LayoutLine, PositionedSpan } from "../../../pptx/render/text-layout";
+import type { Pixels } from "../../../../pptx/domain/types";
+import type {
+  LayoutResult,
+  LayoutLine,
+  PositionedSpan,
+} from "../../../../pptx/render/text-layout";
 import { fontSizeToPixels, getTextVisualBounds } from "./text-geometry";
-import type { CompositionState } from "./types";
+import type { CompositionState } from "../coordinator/types";
 
 // =============================================================================
 // Types
@@ -114,7 +118,7 @@ function renderSpan(
     </text>,
   );
 
-  return <>{elements}</>;
+  return <g key={`span-${key}`}>{elements}</g>;
 }
 
 // =============================================================================

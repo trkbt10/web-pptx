@@ -19,7 +19,7 @@ import {
 import type { ResizeHandlePosition } from "@lib/pptx-editor";
 import type { Slide, Shape } from "@lib/pptx/domain";
 import type { SpShape, GrpShape, GraphicFrame, CxnShape } from "@lib/pptx/domain/shape";
-import type { Line } from "@lib/pptx/domain/color";
+import type { Line } from "@lib/pptx/domain/color/types";
 import type { Table, TableRow, TableCell } from "@lib/pptx/domain/table";
 import type { ShapeId } from "@lib/pptx/domain/types";
 import { px, deg, pt } from "@lib/pptx/domain/types";

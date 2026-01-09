@@ -33,9 +33,14 @@ import {
 } from "../shape/factory";
 import type { ShapeBounds } from "../shape/creation-bounds";
 import { drawingPathToCustomGeometry } from "../path-tools/utils/path-commands";
-import { isTextEditActive, mergeTextIntoBody, extractDefaultRunProperties } from "../slide/text-edit";
-import type { StickyFormattingState } from "../slide/text-edit/state";
-import { createActiveStickyFormatting, createInitialStickyFormatting } from "../slide/text-edit/state";
+import {
+  isTextEditActive,
+  mergeTextIntoBody,
+  extractDefaultRunProperties,
+  createActiveStickyFormatting,
+  createInitialStickyFormatting,
+  type StickyFormattingState,
+} from "../slide/text-edit";
 import { ShapeToolbar } from "../panels/ShapeToolbar";
 import {
   buildSlideLayoutOptions,
@@ -50,7 +55,10 @@ import { SvgEditorCanvas } from "../slide-canvas/SvgEditorCanvas";
 import type { ViewportTransform } from "../../pptx/render/svg-viewport";
 import { TextEditContextProvider, useTextEditContextValue } from "../context/slide/TextEditContext";
 import type { TextSelectionContext } from "../editors/text/text-property-extractor";
-import { applyRunPropertiesToSelection, applyParagraphPropertiesToSelection } from "../slide/text-edit/run-formatting";
+import {
+  applyRunPropertiesToSelection,
+  applyParagraphPropertiesToSelection,
+} from "../slide/text-edit/input-support/run-formatting";
 import { EDITOR_GRID_CONFIG, usePivotTabs, CanvasArea } from "../layout";
 import { SelectedElementTab, SlideInfoTab, LayersTab } from "../panels/right-panel";
 import { AssetPanel, LayoutInfoPanel, ThemeViewerPanel } from "../panels/inspector";

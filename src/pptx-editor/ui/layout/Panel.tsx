@@ -43,14 +43,7 @@ export type PanelProps = {
  * </Panel>
  * ```
  */
-export function Panel({
-  children,
-  title,
-  badge,
-  width = 280,
-  className,
-  style,
-}: PanelProps) {
+export function Panel({ children, title, badge, width = 280, className, style }: PanelProps) {
   const containerStyle: CSSProperties = {
     width: typeof width === "number" ? `${width}px` : width,
     flexShrink: 0,
@@ -64,7 +57,7 @@ export function Panel({
   };
 
   const headerStyle: CSSProperties = {
-    padding: `${spacingTokens.md} ${spacingTokens.lg}`,
+    padding: `${spacingTokens.sm} ${spacingTokens.md}`,
     borderBottom: `1px solid var(--border-subtle, ${colorTokens.border.subtle})`,
     fontSize: fontTokens.size.md,
     fontWeight: fontTokens.weight.semibold,
@@ -78,7 +71,7 @@ export function Panel({
     fontSize: fontTokens.size.xs,
     color: `var(--text-tertiary, ${colorTokens.text.tertiary})`,
     backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
-    padding: "2px 6px",
+    padding: `${spacingTokens.xs} ${spacingTokens.sm}`,
     borderRadius: radiusTokens.sm,
   };
 

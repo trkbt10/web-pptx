@@ -13,7 +13,7 @@ import {
   getEffectiveRunPropertiesAtCursor,
 } from "./text-property-extractor";
 import type { TextBody, TextRun, Paragraph } from "../../../pptx/domain/text";
-import type { CursorPosition, TextSelection } from "../../slide/text-edit/cursor";
+import type { CursorPosition, TextSelection } from "../../slide/text-edit";
 import type { Points, Pixels } from "../../../pptx/domain/types";
 
 // =============================================================================

@@ -11,9 +11,14 @@ import {
   toggleRunProperty,
   clearRunProperties,
 } from "./run-formatting";
-import type { TextBody, TextRun, Paragraph, RegularRun } from "../../../pptx/domain/text";
+import type {
+  TextBody,
+  TextRun,
+  Paragraph,
+  RegularRun,
+} from "../../../../pptx/domain/text";
 import type { TextSelection } from "./cursor";
-import type { Points } from "../../../pptx/domain/types";
+import type { Points } from "../../../../pptx/domain/types";
 
 // =============================================================================
 // Test Fixtures

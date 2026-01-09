@@ -229,6 +229,22 @@
 }
 
 /* ============================================
+   Text Editor Layout
+   ============================================ */
+.text-editor-layout {
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .text-editor-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================
    Previews
    ============================================ */
 .color-grid {

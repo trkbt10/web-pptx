@@ -4,11 +4,16 @@
  * Shared type definitions for text editing components.
  */
 
-import type { TextBody, RunProperties, ParagraphProperties } from "../../../pptx/domain";
-import type { ColorContext } from "../../../pptx/domain/color/context";
-import type { FontScheme } from "../../../pptx/domain/resolution";
-import type { TextEditBounds } from "./state";
-import type { CursorCoordinates, SelectionRect, CursorPosition, TextSelection } from "./cursor";
+import type { TextBody, RunProperties, ParagraphProperties } from "../../../../pptx/domain";
+import type { ColorContext } from "../../../../pptx/domain/color/context";
+import type { FontScheme } from "../../../../pptx/domain/resolution";
+import type { TextEditBounds } from "../input-support/state";
+import type {
+  CursorCoordinates,
+  SelectionRect,
+  CursorPosition,
+  TextSelection,
+} from "../input-support/cursor";
 
 // =============================================================================
 // Component Props

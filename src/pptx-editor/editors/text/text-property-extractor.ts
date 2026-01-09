@@ -6,8 +6,8 @@
  */
 
 import type { TextBody, Paragraph, TextRun, RunProperties, ParagraphProperties } from "../../../pptx/domain/text";
-import type { CursorPosition, TextSelection } from "../../slide/text-edit/cursor";
-import { normalizeSelection, isSamePosition } from "../../slide/text-edit/cursor";
+import type { CursorPosition, TextSelection } from "../../slide/text-edit";
+import { normalizeSelection, isSamePosition } from "../../slide/text-edit";
 import {
   extractMixedRunProperties,
   extractMixedParagraphProperties,

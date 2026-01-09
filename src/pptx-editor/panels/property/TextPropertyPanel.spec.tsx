@@ -12,7 +12,7 @@ import { TextPropertyPanel } from "./TextPropertyPanel";
 import { TextEditContextProvider } from "../../context/slide/TextEditContext";
 import type { TextEditContextValue } from "../../context/slide/TextEditContext";
 import type { TextBody } from "../../../pptx/domain/text";
-import type { TextEditState } from "../../slide/text-edit/state";
+import type { TextEditState } from "../../slide/text-edit";
 
 // =============================================================================
 // Test Helpers

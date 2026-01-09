@@ -5,9 +5,9 @@
  * Used by both cursor positioning and text overlay rendering.
  */
 
-import type { Pixels, Points } from "../../../pptx/domain/types";
-import type { LayoutLine, PositionedSpan } from "../../../pptx/render/text-layout";
-import { PT_TO_PX } from "../../../pptx/domain/unit-conversion";
+import type { Pixels, Points } from "../../../../pptx/domain/types";
+import type { LayoutLine, PositionedSpan } from "../../../../pptx/render/text-layout";
+import { PT_TO_PX } from "../../../../pptx/domain/unit-conversion";
 
 // =============================================================================
 // Constants
@@ -37,13 +37,22 @@ export function fontSizeToPixels(fontSizePt: Points): Pixels {
 }
 
 /**
- * Get the effective font size for a line (from first span or default).
+ * Get the effective font size for a line (max span size or default).
  */
 export function getLineFontSize(line: LayoutLine): Points {
-  if (line.spans.length > 0) {
-    return line.spans[0].fontSize;
+  if (line.spans.length === 0) {
+    return DEFAULT_FONT_SIZE_PT;
   }
-  return DEFAULT_FONT_SIZE_PT;
+
+  let maxSize = line.spans[0].fontSize as number;
+  for (const span of line.spans) {
+    const size = span.fontSize as number;
+    if (size > maxSize) {
+      maxSize = size;
+    }
+  }
+
+  return maxSize as Points;
 }
 
 /**
@@ -65,6 +74,46 @@ export function getFontSizeAtOffset(line: LayoutLine, charOffset: number): Point
     return line.spans[line.spans.length - 1].fontSize;
   }
   return DEFAULT_FONT_SIZE_PT;
+}
+
+/**
+ * Get the max font size within a selection range in a line.
+ */
+export function getFontSizeForRange(
+  line: LayoutLine,
+  startOffset: number,
+  endOffset: number,
+): Points {
+  if (line.spans.length === 0) {
+    return DEFAULT_FONT_SIZE_PT;
+  }
+
+  const rangeStart = Math.min(startOffset, endOffset);
+  const rangeEnd = Math.max(startOffset, endOffset);
+  let maxSize = 0;
+  let hasSelection = false;
+  // eslint-disable-next-line no-restricted-syntax -- offset tracking
+  let offset = 0;
+
+  for (const span of line.spans) {
+    const spanStart = offset;
+    const spanEnd = offset + span.text.length;
+    const intersects = spanEnd > rangeStart && spanStart < rangeEnd;
+    if (intersects) {
+      hasSelection = true;
+      const size = span.fontSize as number;
+      if (size > maxSize) {
+        maxSize = size;
+      }
+    }
+    offset = spanEnd;
+  }
+
+  if (!hasSelection) {
+    return getLineFontSize(line);
+  }
+
+  return maxSize as Points;
 }
 
 // =============================================================================
@@ -117,6 +166,18 @@ export function getVisualBoundsAtOffset(
   charOffset: number,
 ): TextVisualBounds {
   const fontSizePt = getFontSizeAtOffset(line, charOffset);
+  return getTextVisualBounds(line.y, fontSizePt);
+}
+
+/**
+ * Calculate visual bounds using the max font size within a line range.
+ */
+export function getVisualBoundsForRange(
+  line: LayoutLine,
+  startOffset: number,
+  endOffset: number,
+): TextVisualBounds {
+  const fontSizePt = getFontSizeForRange(line, startOffset, endOffset);
   return getTextVisualBounds(line.y, fontSizePt);
 }
 

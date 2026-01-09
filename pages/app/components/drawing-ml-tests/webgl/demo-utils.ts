@@ -10,8 +10,8 @@
 
 import { pt, px } from "@lib/pptx/domain/types";
 import type { TextBody, Paragraph, RegularRun, RunProperties } from "@lib/pptx/domain/text";
-import type { SolidFill } from "@lib/pptx/domain/color";
-import type { ColorContext } from "@lib/pptx/domain/resolution";
+import type { SolidFill } from "@lib/pptx/domain/color/types";
+import type { ColorContext } from "@lib/pptx/domain/color/context";
 import type {
   Shape3d,
   Scene3d,

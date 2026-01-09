@@ -13,7 +13,7 @@ import {
   createDefaultSolidFill,
   createDefaultLine,
 } from "@lib/pptx-editor";
-import type { Color, Fill, Line } from "@lib/pptx/domain/color";
+import type { Color, Fill, Line } from "@lib/pptx/domain/color/types";
 
 const cardStyle: CSSProperties = {
   backgroundColor: "var(--bg-secondary)",

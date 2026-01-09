@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useState } from "react";
-import type { CursorCoordinates } from "./cursor";
+import type { CursorCoordinates } from "../input-support/cursor";
 
 // =============================================================================
 // Constants

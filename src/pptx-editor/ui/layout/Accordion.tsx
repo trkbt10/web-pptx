@@ -41,7 +41,7 @@ const headerStyle = (disabled: boolean): CSSProperties => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  padding: `${spacingTokens.sm} ${spacingTokens.xs}`,
+  padding: `${spacingTokens.sm} ${spacingTokens.md}`,
   cursor: disabled ? "not-allowed" : "pointer",
   userSelect: "none",
   opacity: disabled ? 0.5 : 1,
@@ -110,12 +110,7 @@ export function Accordion({
 
   return (
     <div style={{ ...containerStyle, ...style }} className={className}>
-      <div
-        style={headerStyle(disabled ?? false)}
-        onClick={handleToggle}
-        role="button"
-        aria-expanded={expanded}
-      >
+      <div style={headerStyle(disabled ?? false)} onClick={handleToggle} role="button" aria-expanded={expanded}>
         <span style={titleStyle}>{title}</span>
         <div style={chevronContainerStyle(expanded)}>
           <ChevronRightIcon size={iconTokens.size.sm} strokeWidth={iconTokens.strokeWidth} />

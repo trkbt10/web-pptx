@@ -10,9 +10,9 @@ import { PresentationEditor } from "@lib/pptx-editor";
 import type { PresentationDocument, SlideWithId } from "@lib/pptx/app";
 import type { Slide, Presentation } from "@lib/pptx/domain";
 import type { SpShape, GrpShape, GraphicFrame } from "@lib/pptx/domain/shape";
-import type { Line } from "@lib/pptx/domain/color";
+import type { Line } from "@lib/pptx/domain/color/types";
 import type { Table, TableRow, TableCell } from "@lib/pptx/domain/table";
-import type { ColorContext } from "@lib/pptx/domain/resolution";
+import type { ColorContext } from "@lib/pptx/domain/color/context";
 import type { ResourceResolver } from "@lib/pptx/render/core";
 import { px, deg, pt } from "@lib/pptx/domain/types";
 
