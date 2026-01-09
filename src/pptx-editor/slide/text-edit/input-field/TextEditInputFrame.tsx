@@ -29,8 +29,8 @@ export type TextEditInputFrameProps = {
   readonly onCompositionStart: CompositionEventHandler<HTMLTextAreaElement>;
   readonly onCompositionUpdate: CompositionEventHandler<HTMLTextAreaElement>;
   readonly onCompositionEnd: CompositionEventHandler<HTMLTextAreaElement>;
-  readonly onNonPrimaryMouseDown?: () => void;
-  readonly onContextMenu?: MouseEventHandler<HTMLTextAreaElement>;
+  readonly onNonPrimaryMouseDown?: MouseEventHandler<HTMLTextAreaElement>;
+  readonly onContextMenuCapture?: MouseEventHandler<HTMLTextAreaElement>;
   readonly children: ReactNode;
 };
 
@@ -95,13 +95,13 @@ export function TextEditInputFrame({
   onCompositionUpdate,
   onCompositionEnd,
   onNonPrimaryMouseDown,
-  onContextMenu,
+  onContextMenuCapture,
   children,
 }: TextEditInputFrameProps) {
   const containerStyle = buildContainerStyle(bounds, slideWidth, slideHeight);
   const handleMouseDown: MouseEventHandler<HTMLTextAreaElement> = (event) => {
     if (event.button !== 0) {
-      onNonPrimaryMouseDown?.();
+      onNonPrimaryMouseDown?.(event);
       event.preventDefault();
       event.stopPropagation();
     }
@@ -119,7 +119,7 @@ export function TextEditInputFrame({
         onCompositionUpdate={onCompositionUpdate}
         onCompositionEnd={onCompositionEnd}
         onMouseDown={handleMouseDown}
-        onContextMenu={onContextMenu}
+        onContextMenuCapture={onContextMenuCapture}
         style={HIDDEN_TEXTAREA_STYLE}
         spellCheck={false}
         autoComplete="off"

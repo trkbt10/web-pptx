@@ -33,6 +33,8 @@ import type { TextEditControllerProps, CursorState, CompositionState } from "./t
 import { useTextEditInput } from "./use-text-edit-input";
 import { useTextComposition } from "./use-text-composition";
 import { useTextKeyHandlers } from "./use-text-key-handlers";
+import { ContextMenu } from "../../../ui/context-menu/ContextMenu";
+import type { MenuEntry } from "../../../ui/context-menu/types";
 const WORD_CHAR_REGEX = /[\p{L}\p{N}_]/u;
 
 function isWordChar(value: string): boolean {
@@ -153,6 +155,7 @@ export function TextEditController({
     direction: "forward" as HTMLTextAreaElement["selectionDirection"],
   });
   const selectionGuardRef = useRef(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [currentText, setCurrentText] = useState(() => getPlainText(textBody));
   const [composition, setComposition] = useState<CompositionState>(INITIAL_COMPOSITION_STATE);
   const initialTextRef = useRef(getPlainText(textBody));
@@ -209,6 +212,46 @@ export function TextEditController({
     finishedRef,
     initialTextRef,
   });
+
+  const restoreSelectionSnapshot = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+    const snapshot = selectionSnapshotRef.current;
+    textarea.focus();
+    textarea.setSelectionRange(snapshot.start, snapshot.end, snapshot.direction ?? "forward");
+    updateCursorPosition();
+  }, [updateCursorPosition]);
+
+  const copySelection = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+    restoreSelectionSnapshot();
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? start;
+    const selectedText = textarea.value.slice(start, end);
+    if (selectedText.length === 0) {
+      return;
+    }
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(selectedText).catch(() => {
+        document.execCommand("copy");
+      });
+    } else {
+      document.execCommand("copy");
+    }
+  }, [restoreSelectionSnapshot]);
+
+  const contextMenuItems: readonly MenuEntry[] = useMemo(
+    () => [
+      { id: "copy", label: "Copy" },
+    ],
+    [],
+  );
   const { handleCompositionStart, handleCompositionUpdate, handleCompositionEnd } = useTextComposition(
     {
       setComposition,
@@ -376,40 +419,47 @@ export function TextEditController({
     [currentText, getOffsetFromPointerEvent, updateCursorPosition],
   );
 
-  const handleSvgContextMenu = useCallback(
+  const handleSvgContextMenuCapture = useCallback(
     (event: React.MouseEvent<SVGSVGElement>) => {
-      const textarea = textareaRef.current;
-      if (!textarea) {
-        return;
-      }
-      const snapshot = selectionSnapshotRef.current;
-      textarea.focus();
-      textarea.setSelectionRange(snapshot.start, snapshot.end, snapshot.direction ?? "forward");
-      updateCursorPosition();
-      selectionGuardRef.current = false;
+      event.preventDefault();
+      selectionGuardRef.current = true;
+      restoreSelectionSnapshot();
+      setContextMenu({ x: event.clientX, y: event.clientY });
       event.stopPropagation();
     },
-    [updateCursorPosition],
+    [restoreSelectionSnapshot],
   );
 
-  const handleTextareaContextMenu = useCallback(
+  const handleTextareaContextMenuCapture = useCallback(
     (event: React.MouseEvent<HTMLTextAreaElement>) => {
-      const textarea = textareaRef.current;
-      if (!textarea) {
-        return;
-      }
-      const snapshot = selectionSnapshotRef.current;
-      textarea.focus();
-      textarea.setSelectionRange(snapshot.start, snapshot.end, snapshot.direction ?? "forward");
-      updateCursorPosition();
-      selectionGuardRef.current = false;
+      event.preventDefault();
+      selectionGuardRef.current = true;
+      restoreSelectionSnapshot();
+      setContextMenu({ x: event.clientX, y: event.clientY });
       event.stopPropagation();
     },
-    [updateCursorPosition],
+    [restoreSelectionSnapshot],
   );
 
-  const handleTextareaNonPrimaryMouseDown = useCallback(() => {
+  const handleTextareaNonPrimaryMouseDown = useCallback((event: React.MouseEvent<HTMLTextAreaElement>) => {
+    const current = event.currentTarget;
+    selectionSnapshotRef.current = {
+      start: current.selectionStart ?? 0,
+      end: current.selectionEnd ?? 0,
+      direction: current.selectionDirection ?? "forward",
+    };
     selectionGuardRef.current = true;
+  }, []);
+
+  const handleContextMenuAction = useCallback((actionId: string) => {
+    if (actionId === "copy") {
+      copySelection();
+    }
+  }, [copySelection]);
+
+  const handleContextMenuClose = useCallback(() => {
+    setContextMenu(null);
+    selectionGuardRef.current = false;
   }, []);
 
 
@@ -417,7 +467,8 @@ export function TextEditController({
   const boundsHeight = bounds.height as number;
 
   return (
-    <TextEditInputFrame
+    <>
+      <TextEditInputFrame
       bounds={bounds}
       slideWidth={slideWidth}
       slideHeight={slideHeight}
@@ -430,7 +481,7 @@ export function TextEditController({
       onCompositionUpdate={handleCompositionUpdate}
       onCompositionEnd={handleCompositionEnd}
       onNonPrimaryMouseDown={handleTextareaNonPrimaryMouseDown}
-      onContextMenu={handleTextareaContextMenu}
+      onContextMenuCapture={handleTextareaContextMenuCapture}
     >
       <svg
         ref={svgRef}
@@ -452,7 +503,7 @@ export function TextEditController({
         onPointerCancel={handleSvgPointerCancel}
         onClick={handleSvgClick}
         onDoubleClick={handleSvgDoubleClick}
-        onContextMenu={handleSvgContextMenu}
+        onContextMenuCapture={handleSvgContextMenuCapture}
       >
         <rect
           x={0}
@@ -490,5 +541,15 @@ export function TextEditController({
         />
       </svg>
     </TextEditInputFrame>
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={contextMenuItems}
+          onAction={handleContextMenuAction}
+          onClose={handleContextMenuClose}
+        />
+      )}
+    </>
   );
 }
