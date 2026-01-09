@@ -5,7 +5,7 @@
  * - Loads requested fonts on demand using Google Fonts CSS2 endpoint.
  */
 
-import type { FontCatalog } from "@lib/pptx-editor";
+import type { FontCatalog, FontCatalogFamilyRecord } from "@lib/pptx-editor";
 
 export type GoogleFontsCatalogConfig = {
   /** e.g. "/fonts/google-fonts-families.json" */
@@ -29,6 +29,7 @@ export type GoogleFontsCatalogConfig = {
 type CachedFamilies = {
   readonly cachedAtMs: number;
   readonly families: readonly string[];
+  readonly categories?: Readonly<Record<string, string>>;
 };
 
 function requireNonEmptyString(value: string, name: string): string {
@@ -78,16 +79,34 @@ type FamiliesFile =
   | readonly string[]
   | {
       readonly families: readonly string[];
+      readonly categories?: Readonly<Record<string, string>>;
     };
 
-function parseFamiliesFile(value: unknown): readonly string[] {
+type ParsedFamiliesFile = {
+  readonly families: readonly string[];
+  readonly categories: Readonly<Record<string, string>>;
+};
+
+function parseFamiliesFile(value: unknown): ParsedFamiliesFile {
   if (Array.isArray(value)) {
-    return uniqueSortedFamilies(value.filter((v): v is string => typeof v === "string"));
+    return { families: uniqueSortedFamilies(value.filter((v): v is string => typeof v === "string")), categories: {} };
   }
   if (value && typeof value === "object" && "families" in value) {
     const families = (value as { readonly families?: unknown }).families;
     if (Array.isArray(families)) {
-      return uniqueSortedFamilies(families.filter((v): v is string => typeof v === "string"));
+      const categories = (value as { readonly categories?: unknown }).categories;
+      const resolvedCategories: Record<string, string> = {};
+      if (categories && typeof categories === "object") {
+        for (const [key, raw] of Object.entries(categories as Record<string, unknown>)) {
+          if (typeof raw === "string" && raw.trim() !== "") {
+            resolvedCategories[normalizeFamilyName(key)] = raw.trim();
+          }
+        }
+      }
+      return {
+        families: uniqueSortedFamilies(families.filter((v): v is string => typeof v === "string")),
+        categories: resolvedCategories,
+      };
     }
   }
   throw new Error("Invalid families JSON: expected string[] or { families: string[] }");
@@ -123,7 +142,15 @@ function getCache(key: string): CachedFamilies | null {
       return null;
     }
     const families = parsed.families.filter((v): v is string => typeof v === "string");
-    return { cachedAtMs: parsed.cachedAtMs, families };
+    const categories: Record<string, string> = {};
+    if (parsed.categories && typeof parsed.categories === "object") {
+      for (const [family, rawCategory] of Object.entries(parsed.categories as Record<string, unknown>)) {
+        if (typeof rawCategory === "string" && rawCategory.trim() !== "") {
+          categories[normalizeFamilyName(family)] = rawCategory.trim();
+        }
+      }
+    }
+    return { cachedAtMs: parsed.cachedAtMs, families, categories };
   } catch {
     return null;
   }
@@ -242,40 +269,19 @@ export function createGoogleFontsCatalog(config: GoogleFontsCatalogConfig): Font
   }
   const weights = config.weights;
 
-  const inMemoryFamilies: { value: readonly string[] | null; inFlight: Promise<readonly string[]> | null } = {
+  const inMemoryFamilies: { value: ParsedFamiliesFile | null; inFlight: Promise<ParsedFamiliesFile> | null } = {
     value: null,
     inFlight: null,
   };
+  const inMemoryRecords: { value: readonly FontCatalogFamilyRecord[] | null } = { value: null };
 
-  const fetchFamilies = async (): Promise<readonly string[]> => {
-    const cached = getCache(cacheKey);
-    if (cached) {
-      const age = Date.now() - cached.cachedAtMs;
-      if (age >= 0 && age < cacheTtlMs) {
-        const families = uniqueSortedFamilies(cached.families);
-        inMemoryFamilies.value = families;
-        return families;
-      }
-    }
-
-    const response = await fetcher(familiesUrl, { method: "GET" });
-    if (!response.ok) {
-      throw new Error(`Google Fonts families fetch failed: ${response.status} (${familiesUrl})`);
-    }
-    const families = parseFamiliesFile((await response.json()) as FamiliesFile);
-    inMemoryFamilies.value = families;
-    setCache(cacheKey, { cachedAtMs: Date.now(), families });
-    return families;
-  };
-
-  const listFamilies = async (): Promise<readonly string[]> => {
+  const getParsedFamilies = async (): Promise<ParsedFamiliesFile> => {
     if (inMemoryFamilies.value) {
       return inMemoryFamilies.value;
     }
     if (inMemoryFamilies.inFlight) {
       return inMemoryFamilies.inFlight;
     }
-
     const inFlight = fetchFamilies();
     inMemoryFamilies.inFlight = inFlight;
     try {
@@ -285,6 +291,50 @@ export function createGoogleFontsCatalog(config: GoogleFontsCatalogConfig): Font
         inMemoryFamilies.inFlight = null;
       }
     }
+  };
+
+  const fetchFamilies = async (): Promise<ParsedFamiliesFile> => {
+    const cached = getCache(cacheKey);
+    if (cached) {
+      const age = Date.now() - cached.cachedAtMs;
+      if (age >= 0 && age < cacheTtlMs) {
+        const families = uniqueSortedFamilies(cached.families);
+        const categories = cached.categories ?? {};
+        const parsed: ParsedFamiliesFile = { families, categories };
+        inMemoryFamilies.value = parsed;
+        inMemoryRecords.value = null;
+        return parsed;
+      }
+    }
+
+    const response = await fetcher(familiesUrl, { method: "GET" });
+    if (!response.ok) {
+      throw new Error(`Google Fonts families fetch failed: ${response.status} (${familiesUrl})`);
+    }
+    const parsed = parseFamiliesFile((await response.json()) as FamiliesFile);
+    inMemoryFamilies.value = parsed;
+    inMemoryRecords.value = null;
+    setCache(cacheKey, { cachedAtMs: Date.now(), families: parsed.families, categories: parsed.categories });
+    return parsed;
+  };
+
+  const listFamilies = async (): Promise<readonly string[]> => {
+    const parsed = await getParsedFamilies();
+    return parsed.families;
+  };
+
+  const listFamilyRecords = async (): Promise<readonly FontCatalogFamilyRecord[]> => {
+    if (inMemoryRecords.value) {
+      return inMemoryRecords.value;
+    }
+    const parsed = await getParsedFamilies();
+    const records: FontCatalogFamilyRecord[] = parsed.families.map((family) => {
+      const category = parsed.categories[family];
+      const tag = typeof category === "string" && category.trim() !== "" ? category.trim() : undefined;
+      return tag ? { family, tags: [tag] } : { family };
+    });
+    inMemoryRecords.value = records;
+    return records;
   };
 
   const ensureFamilyLoaded = async (family: string): Promise<boolean> => {
@@ -312,6 +362,7 @@ export function createGoogleFontsCatalog(config: GoogleFontsCatalogConfig): Font
   return {
     label: "Google Fonts",
     listFamilies,
+    listFamilyRecords,
     ensureFamilyLoaded,
   };
 }

@@ -220,6 +220,8 @@ function buildParagraphsFromEntries(
     readonly currentParagraphEndProperties: RunProperties | undefined;
   };
 
+  const emptyTextRun: TextRun = { type: "text", text: "", properties: undefined };
+
   const buildRunFromCurrent = (run: NonNullable<BuildState["currentRun"]>): TextRun => {
     if (run.kind === "field" && run.fieldType && run.fieldId) {
       return {
@@ -251,9 +253,9 @@ function buildParagraphsFromEntries(
 
   const pushParagraph = (state: BuildState): BuildState => {
     const flushed = flushRun(state);
-    const paragraph = {
+    const paragraph: TextBody["paragraphs"][number] = {
       properties: flushed.currentParagraphProperties ?? {},
-      runs: flushed.runs.length > 0 ? flushed.runs : [{ type: "text", text: "", properties: undefined }],
+      runs: flushed.runs.length > 0 ? flushed.runs : [emptyTextRun],
       endProperties: flushed.currentParagraphEndProperties,
     };
     return {

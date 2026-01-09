@@ -44,4 +44,27 @@ describe("createGoogleFontsCatalog", () => {
     expect(calls.fetch).toBe(1);
     expect(await p3).toEqual(["Inter", "Roboto"]);
   });
+
+  it("exposes category tags via listFamilyRecords when available", async () => {
+    const catalog = createGoogleFontsCatalog({
+      familiesUrl: "/fonts/google-fonts-families.json",
+      fetcher: async () =>
+        new Response(
+          JSON.stringify({ families: ["Inter"], categories: { Inter: "sans-serif" } }),
+          { status: 200 }
+        ),
+      cssBaseUrl: "https://fonts.googleapis.com/css2",
+      display: "swap",
+      weights: [400],
+      cacheKey: "test:cache:categories",
+      cacheTtlMs: 1,
+      timeoutMs: 1000,
+    });
+
+    if (!catalog.listFamilyRecords) {
+      throw new Error("Expected listFamilyRecords to be defined");
+    }
+
+    expect(await catalog.listFamilyRecords()).toEqual([{ family: "Inter", tags: ["sans-serif"] }]);
+  });
 });

@@ -4,7 +4,7 @@
  * Uses the shared SlideList component for the sidebar thumbnails.
  */
 
-import { useMemo, useCallback, useRef, type CSSProperties } from "react";
+import { useMemo, useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import type { LoadedPresentation } from "@lib/pptx/app";
 import { SlideList } from "../../../src/pptx-editor/slide-list";
 import type { SlideWithId } from "@lib/pptx/app";
@@ -19,8 +19,8 @@ import {
   ProgressBar,
   KeyboardHints,
   IconButton,
-} from "../components/ui";
-import { useState } from "react";
+  } from "../components/ui";
+import { useSvgFontLoader } from "../fonts/useSvgFontLoader";
 
 type Props = {
   presentation: LoadedPresentation;
@@ -322,6 +322,14 @@ export function SlideViewer({
     () => pres.getSlide(nav.currentSlide).renderSVG(),
     [pres, nav.currentSlide],
   );
+
+  const loadSvgFonts = useSvgFontLoader();
+  useEffect(() => {
+    if (!loadSvgFonts) {
+      return;
+    }
+    void loadSvgFonts(renderedContent);
+  }, [loadSvgFonts, renderedContent]);
 
   const handleSlideClick = useCallback((slideId: string) => {
     const slideNumber = parseInt(slideId.replace("slide-", ""), 10);

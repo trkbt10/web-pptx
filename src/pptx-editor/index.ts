@@ -40,7 +40,7 @@ export {
 } from "./context/editor/EditorConfigContext";
 
 // Fonts (injectable catalog types)
-export type { FontCatalog } from "./fonts/types";
+export type { FontCatalog, FontCatalogFamilyRecord } from "./fonts/types";
 
 // UI Primitives
 export {

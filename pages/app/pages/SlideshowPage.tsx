@@ -7,6 +7,7 @@
 import { useCallback } from "react";
 import type { LoadedPresentation } from "@lib/pptx/app";
 import { PresentationSlideshow } from "@lib/pptx-editor";
+import { useSvgFontLoader } from "../fonts/useSvgFontLoader";
 
 type Props = {
   presentation: LoadedPresentation;
@@ -19,17 +20,22 @@ type Props = {
  */
 export function SlideshowPage({ presentation, startSlide, onExit }: Props) {
   const { presentation: pres } = presentation;
+  const loadSvgFonts = useSvgFontLoader();
 
   const getSlideContent = useCallback(
     (slideIndex: number) => {
       const slide = pres.getSlide(slideIndex);
+      const svg = slide.renderSVG();
+      if (loadSvgFonts) {
+        void loadSvgFonts(svg);
+      }
       return {
-        svg: slide.renderSVG(),
+        svg,
         timing: slide.timing,
         transition: slide.transition,
       };
     },
-    [pres],
+    [pres, loadSvgFonts],
   );
 
   return (

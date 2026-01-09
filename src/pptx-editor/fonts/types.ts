@@ -2,6 +2,16 @@
  * @file Font catalog types (injectable)
  */
 
+export type FontCatalogFamilyRecord = {
+  /** Font family name */
+  readonly family: string;
+  /**
+   * Optional tags used for grouping/filtering in the UI.
+   * Example: ["sans-serif"] for Google Fonts categories.
+   */
+  readonly tags?: readonly string[];
+};
+
 /**
  * Injectable font catalog for dynamic font listing/loading.
  *
@@ -22,6 +32,12 @@ export type FontCatalog = {
   readonly listFamilies: () => Promise<readonly string[]> | readonly string[];
 
   /**
+   * Optional richer listing for UI grouping and tag filtering.
+   * If provided, `listFamilies()` should still return the full family list.
+   */
+  readonly listFamilyRecords?: () => Promise<readonly FontCatalogFamilyRecord[]> | readonly FontCatalogFamilyRecord[];
+
+  /**
    * Ensures the given family is loaded into `document.fonts` (e.g. via Google Fonts CSS).
    * Return `true` if the family is expected to be available after the promise resolves.
    */
@@ -33,4 +49,3 @@ export type FontCatalog = {
    */
   readonly label?: string;
 };
-

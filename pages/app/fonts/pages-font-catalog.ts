@@ -4,6 +4,7 @@
 
 import type { FontCatalog } from "@lib/pptx-editor";
 import { createGoogleFontsCatalog } from "./google-fonts-catalog";
+import { GOOGLE_FONTS_FAMILIES_UPDATED_AT } from "./google-fonts-families.version";
 
 /**
  * Creates the Google Fonts-backed catalog used by the demo pages.
@@ -25,7 +26,8 @@ export function createPagesFontCatalog(): FontCatalog {
     cssBaseUrl: "https://fonts.googleapis.com/css2",
     display: "swap",
     weights: [400, 500, 600, 700],
-    cacheKey: "web-pptx:google-fonts-families:v1",
+    // Ties localStorage cache invalidation to the checked-in families list version.
+    cacheKey: `web-pptx:google-fonts-families:${GOOGLE_FONTS_FAMILIES_UPDATED_AT}`,
     cacheTtlMs: 1000 * 60 * 60 * 24 * 7, // 7 days
     timeoutMs: 10_000,
   });
@@ -40,6 +42,18 @@ export function createPagesFontCatalog(): FontCatalog {
         throw error;
       }
     },
+    ...(catalog.listFamilyRecords
+      ? {
+          async listFamilyRecords() {
+            try {
+              return await Promise.resolve(catalog.listFamilyRecords());
+            } catch (error) {
+              console.warn("createPagesFontCatalog: failed to load Google Fonts family records", error);
+              throw error;
+            }
+          },
+        }
+      : {}),
     async ensureFamilyLoaded(family: string) {
       return await catalog.ensureFamilyLoaded(family);
     },

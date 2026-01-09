@@ -108,4 +108,36 @@ describe("SearchableSelect", () => {
     fireEvent.scroll(list);
     expect(getByText("Item 150")).toBeTruthy();
   });
+
+  it("filters tagged options via tagFilter chips", () => {
+    ensureScrollIntoView();
+
+    const { getByRole, getByText, queryByText } = render(
+      <SearchableSelect
+        value="a"
+        onChange={() => undefined}
+        options={[
+          { value: "a", label: "Alpha", tags: ["sans-serif"] },
+          { value: "b", label: "Beta", tags: ["serif"] },
+          { value: "c", label: "UnTagged Utility" },
+        ]}
+        searchPlaceholder="Search..."
+        tagFilter={{
+          tags: [
+            { id: "sans-serif", label: "Sans" },
+            { id: "serif", label: "Serif" },
+          ],
+        }}
+      />
+    );
+
+    fireEvent.click(getByRole("button"));
+    expect(getByText("Alpha", { selector: "[data-option-index]" })).toBeTruthy();
+    expect(getByText("Beta", { selector: "[data-option-index]" })).toBeTruthy();
+
+    fireEvent.click(getByText("Serif"));
+    expect(queryByText("Alpha", { selector: "[data-option-index]" })).toBeNull();
+    expect(getByText("Beta", { selector: "[data-option-index]" })).toBeTruthy();
+    expect(getByText("UnTagged Utility", { selector: "[data-option-index]" })).toBeTruthy();
+  });
 });

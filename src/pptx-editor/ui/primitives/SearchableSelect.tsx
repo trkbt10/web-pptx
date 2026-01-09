@@ -53,6 +53,8 @@ export type SearchableSelectOption<T extends string = string> = {
   readonly group?: string;
   /** Optional search keywords (for matching beyond label) */
   readonly keywords?: readonly string[];
+  /** Optional tags used for UI filtering */
+  readonly tags?: readonly string[];
 };
 
 /**
@@ -105,6 +107,14 @@ export type SearchableSelectProps<T extends string = string> = {
   };
   /** Optional test id for the list container */
   readonly listTestId?: string;
+  /**
+   * Optional tag filter shown inside the dropdown (under the search box).
+   * Intended for large lists to narrow by category.
+   */
+  readonly tagFilter?: {
+    readonly tags: readonly { readonly id: string; readonly label: string }[];
+    readonly allLabel?: string;
+  };
 };
 
 // =============================================================================
@@ -165,6 +175,26 @@ const searchContainerStyle: CSSProperties = {
   borderBottom: `1px solid var(--border-subtle, ${colorTokens.border.subtle})`,
 };
 
+const filterRowStyle: CSSProperties = {
+  display: "flex",
+  gap: spacingTokens.xs,
+  flexWrap: "wrap",
+  marginTop: spacingTokens.xs,
+};
+
+const filterChipStyle = (isActive: boolean): CSSProperties => ({
+  display: "inline-flex",
+  alignItems: "center",
+  padding: "4px 8px",
+  fontSize: fontTokens.size.xs,
+  borderRadius: radiusTokens.sm,
+  border: `1px solid var(--border-primary, ${colorTokens.border.primary})`,
+  backgroundColor: isActive ? "rgba(68, 114, 196, 0.18)" : `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
+  color: `var(--text-primary, ${colorTokens.text.primary})`,
+  cursor: "pointer",
+  userSelect: "none",
+});
+
 const searchInputStyle: CSSProperties = {
   width: "100%",
   padding: "6px 8px",
@@ -212,6 +242,15 @@ function getItemBackground(isSelected: boolean, isHighlighted: boolean): string 
 
 function getItemCursor(isDisabled: boolean): string {
   return isDisabled ? "not-allowed" : "pointer";
+}
+
+function includesActiveTag<T extends string>(opt: SearchableSelectOption<T>, activeTagId: string): boolean {
+  // If an option has no tags, treat it as untagged and keep it visible.
+  // This keeps utility rows (e.g. Actions) available even when filtering.
+  if (!opt.tags || opt.tags.length === 0) {
+    return true;
+  }
+  return opt.tags.includes(activeTagId);
 }
 
 const itemStyle = (isSelected: boolean, isHighlighted: boolean, isDisabled: boolean): CSSProperties => ({
@@ -284,12 +323,14 @@ export function SearchableSelect<T extends string = string>({
   maxHeight = 320,
   virtualization,
   listTestId,
+  tagFilter,
 }: SearchableSelectProps<T>) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(0);
+  const [activeTagId, setActiveTagId] = useState<string | null>(null);
 
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -309,9 +350,13 @@ export function SearchableSelect<T extends string = string>({
 
   // Filter options based on search query
   const filteredOptions = useMemo(() => {
+    const activeTag = activeTagId;
     if (!searchQuery.trim()) {
       return options.filter((opt) => {
         if (opt.hiddenWhenEmptySearch && opt.value !== value) {
+          return false;
+        }
+        if (activeTag && !includesActiveTag(opt, activeTag)) {
           return false;
         }
         return true;
@@ -319,6 +364,9 @@ export function SearchableSelect<T extends string = string>({
     }
     const query = searchQuery.toLowerCase();
     return options.filter((opt) => {
+      if (activeTag && !includesActiveTag(opt, activeTag)) {
+        return false;
+      }
       if (opt.label.toLowerCase().includes(query)) {
         return true;
       }
@@ -327,7 +375,7 @@ export function SearchableSelect<T extends string = string>({
       }
       return false;
     });
-  }, [options, searchQuery]);
+  }, [options, searchQuery, activeTagId, value]);
 
   // Group filtered options
   const groupedOptions = useMemo(() => {
@@ -607,7 +655,7 @@ export function SearchableSelect<T extends string = string>({
   // Reset highlight when search changes
   useEffect(() => {
     setHighlightedIndex(0);
-  }, [searchQuery]);
+  }, [searchQuery, activeTagId]);
 
   // Render trigger content
   function getTriggerContent() {
@@ -661,6 +709,41 @@ export function SearchableSelect<T extends string = string>({
                   placeholder={searchPlaceholder}
                   style={searchInputStyle}
                 />
+                {tagFilter && tagFilter.tags.length > 0 && (
+                  <div style={filterRowStyle}>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      style={filterChipStyle(activeTagId === null)}
+                      onClick={() => setActiveTagId(null)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          setActiveTagId(null);
+                        }
+                      }}
+                    >
+                      {tagFilter.allLabel ?? "All"}
+                    </div>
+                    {tagFilter.tags.map((tag) => (
+                      <div
+                        key={tag.id}
+                        role="button"
+                        tabIndex={0}
+                        style={filterChipStyle(activeTagId === tag.id)}
+                        onClick={() => setActiveTagId(tag.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setActiveTagId(tag.id);
+                          }
+                        }}
+                      >
+                        {tag.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Options list */}

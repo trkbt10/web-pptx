@@ -279,7 +279,7 @@ export function PresentationSlideshow({
   }, [advanceAfter, currentSlideIndex, slideCount, isTransitioning, isBlackScreen, isWhiteScreen]);
 
   const handleClick = useCallback(
-    (event: MouseEvent<HTMLDivElement>) => {
+    (event: MouseEvent<HTMLDialogElement>) => {
       const target = event.target as HTMLElement;
       if (target.closest("[data-controls]")) {
         return;
@@ -300,7 +300,7 @@ export function PresentationSlideshow({
   );
 
   const handleContextMenu = useCallback(
-    (event: MouseEvent<HTMLDivElement>) => {
+    (event: MouseEvent<HTMLDialogElement>) => {
       event.preventDefault();
       goToPrev();
     },
