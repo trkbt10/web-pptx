@@ -18,7 +18,7 @@ import type {
   DiagramColorList,
   DiagramClrAppMethod,
 } from "../types";
-import type { Color, Fill, SolidFill, Line } from "../../color/types";
+import type { Fill, SolidFill, Line } from "../../color/types";
 import type { ShapeStyle } from "../../shape";
 import type { TextBody } from "../../text";
 import type { DiagramTreeNode } from "./tree-builder";
@@ -317,22 +317,6 @@ export function calculateColorIndex(
 // =============================================================================
 
 /**
- * Resolve a Color to hex string (without #)
- *
- * Delegates to domain/drawing-ml/color.ts for actual resolution.
- *
- * @param color - Color domain object
- * @param colorContext - Color context with theme colors
- * @returns Hex color string (without #) or undefined
- */
-export function resolveColor(
-  color: Color,
-  colorContext: ColorContext
-): string | undefined {
-  return resolveDrawingMlColor(color, colorContext);
-}
-
-/**
  * @deprecated Use resolveFillFromList instead
  * Resolve color from a color list (returns CSS string for backward compatibility)
  */
@@ -355,7 +339,7 @@ export function resolveColorFromList(
     return defaultColor;
   }
 
-  const resolved = resolveColor(color, colorContext);
+  const resolved = resolveDrawingMlColor(color, colorContext);
   return resolved ? `#${resolved}` : defaultColor;
 }
 
@@ -392,88 +376,5 @@ export function createEmptyColorContext(): ColorContext {
   return {
     colorScheme: {},
     colorMap: {},
-  };
-}
-
-/**
- * @deprecated Use createStyleContext instead
- * Create default style resolver context (for backward compatibility)
- */
-export function createDefaultStyleContext(
-  styleDefinition?: DiagramStyleDefinition,
-  colorDefinition?: DiagramColorsDefinition,
-  themeColors?: Map<string, string>
-): StyleResolverContext & { themeColors: ReadonlyMap<string, string>; defaultFills: DefaultFills } {
-  // Convert themeColors map to ColorContext
-  const colorScheme: Record<string, string> = {};
-  if (themeColors) {
-    for (const [key, value] of themeColors) {
-      colorScheme[key] = value.replace(/^#/, "");
-    }
-  }
-
-  const colorContext: ColorContext = {
-    colorScheme,
-    colorMap: {},
-  };
-
-  // Create placeholder defaults for backward compatibility
-  // These should NOT be used in new code - handle undefined properly instead
-  const defaultFills: DefaultFills = {
-    fill: createSolidFillFromHex("4472C4"), // Office default accent1 (for legacy compatibility only)
-    line: createLineFromHex("2F528F"),
-    text: createSolidFillFromHex("000000"),
-    background: createSolidFillFromHex("FFFFFF"),
-  };
-
-  return {
-    styleDefinition,
-    colorDefinition,
-    colorContext,
-    themeColors: themeColors ?? new Map(),
-    defaultFills,
-  };
-}
-
-/**
- * @deprecated For backward compatibility only
- */
-export type DefaultFills = {
-  readonly fill: Fill;
-  readonly line: Line;
-  readonly text: Fill;
-  readonly background: Fill;
-};
-
-/**
- * @deprecated Use DefaultFills instead
- */
-export type DefaultColors = DefaultFills;
-
-// =============================================================================
-// Internal Helpers (for backward compatibility)
-// =============================================================================
-
-function createSolidFillFromHex(hexValue: string): SolidFill {
-  return {
-    type: "solidFill",
-    color: {
-      spec: {
-        type: "srgb",
-        value: hexValue,
-      },
-    },
-  };
-}
-
-function createLineFromHex(hexValue: string): Line {
-  return {
-    width: px(1),
-    cap: "flat",
-    compound: "sng",
-    alignment: "ctr",
-    fill: createSolidFillFromHex(hexValue),
-    dash: "solid",
-    join: "round",
   };
 }

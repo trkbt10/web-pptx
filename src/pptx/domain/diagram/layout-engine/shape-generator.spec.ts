@@ -4,23 +4,21 @@
  * @see ECMA-376 Part 1, Section 21.4 - DrawingML Diagrams
  */
 
-import { describe, it, expect } from "vitest";
 import type {
   DiagramDataModel,
   DiagramLayoutDefinition,
-  DiagramStyleDefinition,
   DiagramColorsDefinition,
   DiagramPoint,
   DiagramConnection,
 } from "../types";
 import type { SpShape } from "../../shape";
-import type { Fill, SolidFill } from "../../color/types";
+import type { Fill, SolidFill, Line } from "../../color/types";
+import type { TextBody } from "../../text";
+import { px, deg } from "../../types";
 import {
   generateDiagramShapes,
-  flattenShapes,
   shapeToSvgAttributes,
   generateShapeSvg,
-  spShapeToGeneratedShape,
   type ShapeGenerationConfig,
 } from "./shape-generator";
 
@@ -306,77 +304,67 @@ describe("generateDiagramShapes", () => {
   });
 });
 
+
 // =============================================================================
-// flattenShapes Tests
+// SpShape Test Helper
 // =============================================================================
 
-describe("flattenShapes", () => {
-  it("returns empty array for empty input", () => {
-    const result = flattenShapes([]);
-    expect(result).toHaveLength(0);
-  });
+function createTestSpShape(overrides: {
+  id?: string;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  rotation?: number;
+  fill?: Fill;
+  line?: Line;
+  text?: string;
+}): SpShape {
+  const textBody: TextBody | undefined = overrides.text ? {
+    bodyProperties: {},
+    paragraphs: [{
+      properties: {},
+      runs: [{ type: "text" as const, text: overrides.text }],
+    }],
+  } as TextBody : undefined;
 
-  it("flattens nested shapes", () => {
-    const dataModel = createSimpleDataModel();
-    const config = createDefaultConfig();
+  return {
+    type: "sp",
+    nonVisual: {
+      id: overrides.id ?? "test-shape",
+      name: "Test Shape",
+    },
+    properties: {
+      transform: {
+        x: px(overrides.x ?? 0),
+        y: px(overrides.y ?? 0),
+        width: px(overrides.width ?? 100),
+        height: px(overrides.height ?? 60),
+        rotation: deg(overrides.rotation ?? 0),
+        flipH: false,
+        flipV: false,
+      },
+      fill: overrides.fill,
+      line: overrides.line,
+    },
+    textBody,
+  };
+}
 
-    const genResult = generateDiagramShapes(
-      dataModel,
-      undefined,
-      undefined,
-      undefined,
-      config
-    );
-
-    const flattened = flattenShapes(genResult.shapes);
-
-    // Should have all shapes flattened
-    expect(flattened.length).toBeGreaterThanOrEqual(genResult.shapes.length);
-  });
-
-  it("preserves all shape properties", () => {
-    const dataModel = createSimpleDataModel();
-    const config = createDefaultConfig();
-
-    const genResult = generateDiagramShapes(
-      dataModel,
-      undefined,
-      undefined,
-      undefined,
-      config
-    );
-
-    // Ensure we have shapes
-    expect(genResult.shapes.length).toBeGreaterThan(0);
-
-    const result = flattenShapes(genResult.shapes);
-
-    // Verify properties are preserved
-    expect(result[0].type).toBe("sp");
-    expect(result[0].nonVisual.id).toBeTruthy();
-    expect(result[0].properties.transform).toBeDefined();
-  });
-
-  it("converts to legacy GeneratedShape format correctly", () => {
-    const dataModel = createSimpleDataModel();
-    const config = createDefaultConfig();
-
-    const genResult = generateDiagramShapes(
-      dataModel,
-      undefined,
-      undefined,
-      undefined,
-      config
-    );
-
-    const legacyShapes = genResult.shapes.map(spShapeToGeneratedShape);
-
-    expect(legacyShapes[0].id).toBeTruthy();
-    expect(legacyShapes[0].x).toBeGreaterThanOrEqual(0);
-    expect(legacyShapes[0].width).toBeGreaterThan(0);
-    expect(legacyShapes[0].children).toEqual([]);
-  });
-});
+function createTestLine(width: number, hexColor: string): Line {
+  return {
+    width: px(width),
+    fill: {
+      type: "solidFill",
+      color: { spec: { type: "srgb", value: hexColor } },
+    },
+    cap: "flat",
+    compound: "sng",
+    alignment: "ctr",
+    dash: "solid",
+    join: "round",
+  };
+}
 
 // =============================================================================
 // shapeToSvgAttributes Tests
@@ -384,16 +372,12 @@ describe("flattenShapes", () => {
 
 describe("shapeToSvgAttributes", () => {
   it("generates basic attributes", () => {
-    const shape = {
-      id: "s1",
-      shapeType: "rect" as const,
+    const shape = createTestSpShape({
       x: 10,
       y: 20,
       width: 100,
       height: 60,
-      children: [],
-      sourceNodeId: "n1",
-    };
+    });
 
     const attrs = shapeToSvgAttributes(shape);
 
@@ -404,34 +388,20 @@ describe("shapeToSvgAttributes", () => {
   });
 
   it("includes fill color", () => {
-    const shape = {
-      id: "s1",
-      shapeType: "rect" as const,
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 60,
-      fillColor: "#FF0000",
-      children: [],
-      sourceNodeId: "n1",
-    };
+    const shape = createTestSpShape({
+      fill: {
+        type: "solidFill",
+        color: { spec: { type: "srgb", value: "FF0000" } },
+      },
+    });
 
     const attrs = shapeToSvgAttributes(shape);
 
     expect(attrs.fill).toBe("#FF0000");
   });
 
-  it("sets fill to none when no fill color", () => {
-    const shape = {
-      id: "s1",
-      shapeType: "rect" as const,
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 60,
-      children: [],
-      sourceNodeId: "n1",
-    };
+  it("sets fill to none when no fill", () => {
+    const shape = createTestSpShape({});
 
     const attrs = shapeToSvgAttributes(shape);
 
@@ -439,18 +409,9 @@ describe("shapeToSvgAttributes", () => {
   });
 
   it("includes stroke attributes", () => {
-    const shape = {
-      id: "s1",
-      shapeType: "rect" as const,
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 60,
-      lineColor: "#000000",
-      lineWidth: 2,
-      children: [],
-      sourceNodeId: "n1",
-    };
+    const shape = createTestSpShape({
+      line: createTestLine(2, "000000"),
+    });
 
     const attrs = shapeToSvgAttributes(shape);
 
@@ -459,17 +420,9 @@ describe("shapeToSvgAttributes", () => {
   });
 
   it("includes rotation transform", () => {
-    const shape = {
-      id: "s1",
-      shapeType: "rect" as const,
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 60,
+    const shape = createTestSpShape({
       rotation: 45,
-      children: [],
-      sourceNodeId: "n1",
-    };
+    });
 
     const attrs = shapeToSvgAttributes(shape);
 
@@ -483,16 +436,12 @@ describe("shapeToSvgAttributes", () => {
 
 describe("generateShapeSvg", () => {
   it("generates rect element", () => {
-    const shape = {
-      id: "s1",
-      shapeType: "rect" as const,
+    const shape = createTestSpShape({
       x: 10,
       y: 20,
       width: 100,
       height: 60,
-      children: [],
-      sourceNodeId: "n1",
-    };
+    });
 
     const svg = generateShapeSvg(shape);
 
@@ -502,17 +451,9 @@ describe("generateShapeSvg", () => {
   });
 
   it("includes text element", () => {
-    const shape = {
-      id: "s1",
-      shapeType: "rect" as const,
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 60,
+    const shape = createTestSpShape({
       text: "Hello",
-      children: [],
-      sourceNodeId: "n1",
-    };
+    });
 
     const svg = generateShapeSvg(shape);
 
@@ -521,17 +462,9 @@ describe("generateShapeSvg", () => {
   });
 
   it("escapes XML special characters in text", () => {
-    const shape = {
-      id: "s1",
-      shapeType: "rect" as const,
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 60,
+    const shape = createTestSpShape({
       text: "<Test & More>",
-      children: [],
-      sourceNodeId: "n1",
-    };
+    });
 
     const svg = generateShapeSvg(shape);
 
@@ -539,39 +472,15 @@ describe("generateShapeSvg", () => {
   });
 
   it("includes fill color in rect", () => {
-    const shape = {
-      id: "s1",
-      shapeType: "rect" as const,
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 60,
-      fillColor: "#FF0000",
-      children: [],
-      sourceNodeId: "n1",
-    };
+    const shape = createTestSpShape({
+      fill: {
+        type: "solidFill",
+        color: { spec: { type: "srgb", value: "FF0000" } },
+      },
+    });
 
     const svg = generateShapeSvg(shape);
 
     expect(svg).toContain('fill="#FF0000"');
-  });
-
-  it("uses text color for text element", () => {
-    const shape = {
-      id: "s1",
-      shapeType: "rect" as const,
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 60,
-      text: "Test",
-      textColor: "#0000FF",
-      children: [],
-      sourceNodeId: "n1",
-    };
-
-    const svg = generateShapeSvg(shape);
-
-    expect(svg).toContain('fill="#0000FF"');
   });
 });

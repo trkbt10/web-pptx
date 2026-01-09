@@ -108,6 +108,7 @@ export {
 } from "./iteration";
 
 // Style and Color Resolution
+// Note: resolveColor should be imported directly from domain/color/resolution
 export {
   resolveNodeStyle,
   findStyleLabel,
@@ -116,24 +117,17 @@ export {
   resolveFillFromList,
   resolveLineFromList,
   calculateColorIndex,
-  resolveColor,
   createStyleContext,
   createEmptyColorContext,
-  createDefaultStyleContext,
   type ResolvedDiagramStyle,
   type StyleResolverContext,
-  type DefaultFills,
-  type DefaultColors,
 } from "./style-resolver";
 
 // Shape Generation
 export {
   generateDiagramShapes,
-  flattenShapes,
   shapeToSvgAttributes,
   generateShapeSvg,
-  spShapeToGeneratedShape,
-  type GeneratedShape,
   type ShapeGenerationResult,
   type ShapeGenerationConfig,
 } from "./shape-generator";

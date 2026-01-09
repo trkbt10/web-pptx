@@ -549,62 +549,6 @@ function calculateTotalBounds(
   };
 }
 
-// =============================================================================
-// Legacy Support Types (for backward compatibility during migration)
-// =============================================================================
-
-/**
- * @deprecated Use SpShape directly instead
- * Legacy shape type for backward compatibility
- */
-export type GeneratedShape = {
-  readonly id: string;
-  readonly shapeType: PresetShapeType | "rect";
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-  readonly rotation?: number;
-  readonly fillColor?: string;
-  readonly lineColor?: string;
-  readonly lineWidth?: number;
-  readonly text?: string;
-  readonly textColor?: string;
-  readonly fontSize?: number;
-  readonly children: readonly GeneratedShape[];
-  readonly sourceNodeId: string;
-  readonly styleLabel?: string;
-};
-
-/**
- * @deprecated Use SpShape directly
- * Convert SpShape to legacy GeneratedShape for backward compatibility
- */
-export function spShapeToGeneratedShape(shape: SpShape): GeneratedShape {
-  const transform = shape.properties.transform;
-  const geometry = shape.properties.geometry;
-  const fill = shape.properties.fill;
-  const line = shape.properties.line;
-
-  return {
-    id: shape.nonVisual.id,
-    shapeType: (geometry?.type === "preset" ? geometry.preset : "rect") as PresetShapeType | "rect",
-    x: transform?.x ?? 0,
-    y: transform?.y ?? 0,
-    width: transform?.width ?? 0,
-    height: transform?.height ?? 0,
-    rotation: transform?.rotation,
-    fillColor: extractColorFromFill(fill),
-    lineColor: extractColorFromFill(line?.fill),
-    lineWidth: line?.width,
-    text: extractTextFromTextBody(shape.textBody),
-    textColor: undefined, // Would need to extract from textBody
-    fontSize: undefined, // Would need to extract from textBody
-    children: [], // SpShape doesn't have children
-    sourceNodeId: shape.modelId ?? shape.nonVisual.id,
-    styleLabel: undefined,
-  };
-}
 
 /**
  * Extract CSS color from Fill
@@ -644,53 +588,14 @@ function extractTextFromTextBody(textBody: TextBody | undefined): string | undef
   return text || undefined;
 }
 
-/**
- * @deprecated Use shapes from ShapeGenerationResult directly
- * Flatten shapes (no-op since SpShape output is already flat)
- */
-export function flattenShapes(shapes: readonly SpShape[]): SpShape[] {
-  return [...shapes];
-}
 
 /**
  * Convert SpShape to SVG attributes
  */
-export function shapeToSvgAttributes(shape: SpShape | GeneratedShape): Record<string, string> {
-  // Handle legacy GeneratedShape
-  if ("shapeType" in shape && "x" in shape) {
-    const legacyShape = shape as GeneratedShape;
-    const attrs: Record<string, string> = {
-      x: String(legacyShape.x),
-      y: String(legacyShape.y),
-      width: String(legacyShape.width),
-      height: String(legacyShape.height),
-    };
-
-    if (legacyShape.fillColor) {
-      attrs.fill = legacyShape.fillColor;
-    } else {
-      attrs.fill = "none";
-    }
-
-    if (legacyShape.lineColor) {
-      attrs.stroke = legacyShape.lineColor;
-      attrs["stroke-width"] = String(legacyShape.lineWidth ?? 1);
-    }
-
-    if (legacyShape.rotation) {
-      const cx = legacyShape.x + legacyShape.width / 2;
-      const cy = legacyShape.y + legacyShape.height / 2;
-      attrs.transform = `rotate(${legacyShape.rotation}, ${cx}, ${cy})`;
-    }
-
-    return attrs;
-  }
-
-  // Handle SpShape
-  const spShape = shape as SpShape;
-  const transform = spShape.properties.transform;
-  const fill = spShape.properties.fill;
-  const line = spShape.properties.line;
+export function shapeToSvgAttributes(shape: SpShape): Record<string, string> {
+  const transform = shape.properties.transform;
+  const fill = shape.properties.fill;
+  const line = shape.properties.line;
 
   const x = transform?.x ?? 0;
   const y = transform?.y ?? 0;
@@ -730,7 +635,7 @@ export function shapeToSvgAttributes(shape: SpShape | GeneratedShape): Record<st
 /**
  * Generate simple SVG for a shape
  */
-export function generateShapeSvg(shape: SpShape | GeneratedShape): string {
+export function generateShapeSvg(shape: SpShape): string {
   const attrs = shapeToSvgAttributes(shape);
   const attrStr = Object.entries(attrs)
     .map(([k, v]) => `${k}="${v}"`)
@@ -742,19 +647,7 @@ export function generateShapeSvg(shape: SpShape | GeneratedShape): string {
   elements.push(`<rect ${attrStr}/>`);
 
   // Text content
-  let text: string | undefined;
-  let textColor = "#000000";
-  let fontSize = 12;
-
-  if ("text" in shape && shape.text) {
-    // Legacy GeneratedShape
-    text = shape.text;
-    textColor = (shape as GeneratedShape).textColor ?? "#000000";
-    fontSize = (shape as GeneratedShape).fontSize ?? 12;
-  } else if ("textBody" in shape) {
-    // SpShape
-    text = extractTextFromTextBody((shape as SpShape).textBody);
-  }
+  const text = extractTextFromTextBody(shape.textBody);
 
   if (text) {
     const x = Number(attrs.x);
@@ -763,6 +656,10 @@ export function generateShapeSvg(shape: SpShape | GeneratedShape): string {
     const height = Number(attrs.height);
     const textX = x + width / 2;
     const textY = y + height / 2;
+
+    // Default text styling
+    const textColor = "#000000";
+    const fontSize = 12;
 
     elements.push(
       `<text x="${textX}" y="${textY}" fill="${textColor}" font-size="${fontSize}" text-anchor="middle" dominant-baseline="middle">${escapeXml(text)}</text>`

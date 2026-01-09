@@ -4,13 +4,12 @@
  * @see ECMA-376 Part 1, Section 21.4.4.6 (styleLbl)
  */
 
-import { describe, it, expect } from "vitest";
 import type {
   DiagramStyleDefinition,
   DiagramColorsDefinition,
   DiagramColorList,
 } from "../types";
-import type { Color, Fill, SolidFill } from "../../color/types";
+import type { Color, Fill } from "../../color/types";
 import type { ColorContext } from "../../color/context";
 import type { DiagramTreeNode } from "./tree-builder";
 import {
@@ -21,12 +20,11 @@ import {
   resolveFillFromList,
   resolveLineFromList,
   calculateColorIndex,
-  resolveColor,
   createStyleContext,
   createEmptyColorContext,
-  createDefaultStyleContext,
   type StyleResolverContext,
 } from "./style-resolver";
+import { resolveColor } from "../../color/resolution";
 
 // =============================================================================
 // Helper Functions for Testing Fill Types
@@ -489,29 +487,3 @@ describe("createEmptyColorContext", () => {
   });
 });
 
-// =============================================================================
-// createDefaultStyleContext Tests (deprecated)
-// =============================================================================
-
-describe("createDefaultStyleContext", () => {
-  it("creates context with deprecated API", () => {
-    const styleDef = createStyleDefinition();
-    const colorDef = createColorDefinition();
-    const themeColors = new Map([["accent1", "#FF0000"]]);
-    const context = createDefaultStyleContext(styleDef, colorDef, themeColors);
-
-    expect(context.styleDefinition).toBe(styleDef);
-    expect(context.colorDefinition).toBe(colorDef);
-    expect(context.themeColors.get("accent1")).toBe("#FF0000");
-  });
-
-  it("has defaultFills for backward compatibility", () => {
-    const context = createDefaultStyleContext();
-
-    expect(context.defaultFills).toBeDefined();
-    expect(context.defaultFills.fill).toBeDefined();
-    expect(context.defaultFills.line).toBeDefined();
-    expect(context.defaultFills.text).toBeDefined();
-    expect(context.defaultFills.background).toBeDefined();
-  });
-});
