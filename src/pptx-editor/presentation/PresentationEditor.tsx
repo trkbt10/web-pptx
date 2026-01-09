@@ -51,7 +51,7 @@ import {
   createRenderContext,
   getLayoutNonPlaceholderShapes,
 } from "../../pptx/app";
-import { getSlideLayoutAttributes } from "../../pptx/domain/slide";
+import { getSlideLayoutAttributes } from "../../pptx/parser/slide/layout-parser";
 import { RELATIONSHIP_TYPES } from "../../pptx/opc";
 import { createZipAdapter } from "../../pptx/domain";
 import { CanvasControls } from "../slide-canvas/CanvasControls";

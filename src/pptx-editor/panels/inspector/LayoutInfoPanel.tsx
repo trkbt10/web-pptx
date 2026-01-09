@@ -8,7 +8,7 @@
 import { useMemo, type CSSProperties } from "react";
 import type { SlideSize, PresentationFile } from "../../../pptx/domain";
 import { px } from "../../../pptx/domain/types";
-import type { SlideLayoutAttributes } from "../../../pptx/domain/slide";
+import type { SlideLayoutAttributes } from "../../../pptx/parser/slide/layout-parser";
 import type { SlideLayoutOption } from "../../../pptx/app";
 import { InspectorSection, Accordion } from "../../ui/layout";
 import { colorTokens, fontTokens, spacingTokens } from "../../ui/design-tokens";

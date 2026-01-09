@@ -1,12 +1,12 @@
 /**
- * @file Slide layout domain helpers tests
+ * @file Slide layout parser tests
  */
 
 import type { XmlDocument, XmlElement } from "../../../xml";
 import {
   applySlideLayoutAttributes,
   getSlideLayoutAttributes,
-} from "./layout";
+} from "../../parser/slide/layout-parser";
 
 function el(
   name: string,

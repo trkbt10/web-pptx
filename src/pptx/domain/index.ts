@@ -908,8 +908,7 @@ export type {
   SlideMaster,
   HandoutMaster,
   NotesMaster,
-  // Slide indexing
-  IndexTables,
+  // Slide indexing (pure domain type only; IndexTables is in parser/slide/shape-tree-indexer)
   SlideNodeType,
 } from "./slide";
 

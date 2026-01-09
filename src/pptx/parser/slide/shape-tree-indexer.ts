@@ -4,9 +4,30 @@
  * Builds lookup tables for placeholder resolution in slide/layout/master XML.
  */
 
-import type { IndexTables } from "../../domain/slide";
 import type { XmlDocument, XmlElement } from "../../../xml";
 import { getChild, getChildren, isXmlElement } from "../../../xml";
+
+/**
+ * Index tables for slide content.
+ *
+ * These tables contain XML element references and are used during parsing
+ * for placeholder resolution. They belong to the parser layer, not domain.
+ *
+ * @see ECMA-376 Part 1, Section 19.3.1.36 (p:ph)
+ * - idx: xsd:unsignedInt - Placeholder index for matching
+ * - type: ST_PlaceholderType - Placeholder type (title, body, etc.)
+ */
+export type IndexTables = {
+  /** Shapes indexed by p:cNvPr/@id (string in XML) */
+  idTable: Record<string, XmlElement>;
+  /**
+   * Shapes indexed by p:ph/@idx (numeric per ECMA-376 xsd:unsignedInt).
+   * @see ECMA-376 Part 1, Section 19.3.1.36
+   */
+  idxTable: Map<number, XmlElement>;
+  /** Shapes indexed by p:ph/@type (string enum ST_PlaceholderType) */
+  typeTable: Record<string, XmlElement>;
+};
 
 /**
  * Get the shape tree (p:cSld/p:spTree) from slide-related XML.

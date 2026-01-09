@@ -9,20 +9,19 @@
 
 import type { PresentationFile } from "../domain";
 import type { XmlDocument, XmlElement } from "../../xml";
-import type { IndexTables } from "../domain/slide";
 import type { ResourceMap } from "../domain/opc";
 import { parseContentTypes } from "../opc";
 import { getByPath } from "../../xml";
 import { parseAppVersion } from "./presentation-info";
 import { readXml, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS } from "../parser/slide/xml-reader";
-import { indexShapeTreeNodes } from "../parser/slide/shape-tree-indexer";
+import { indexShapeTreeNodes, type IndexTables } from "../parser/slide/shape-tree-indexer";
 import {
   loadRelationships,
   findMasterPath,
   findThemePath,
 } from "../parser/relationships";
 import { createEmptyResourceMap } from "../domain/relationships";
-import { getSlideLayoutAttributes } from "../domain/slide/layout";
+import { getSlideLayoutAttributes } from "../parser/slide/layout-parser";
 
 export type SlideLayoutOption = {
   readonly value: string;

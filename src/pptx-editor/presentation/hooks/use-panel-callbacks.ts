@@ -6,8 +6,8 @@
 
 import { useCallback } from "react";
 import type { Shape } from "../../../pptx/domain";
-import type { Background, SlideLayoutAttributes } from "../../../pptx/domain/slide";
-import { applySlideLayoutAttributes } from "../../../pptx/domain/slide";
+import type { Background } from "../../../pptx/domain/slide";
+import { applySlideLayoutAttributes, type SlideLayoutAttributes } from "../../../pptx/parser/slide/layout-parser";
 import type { ShapeId } from "../../../pptx/domain/types";
 import { px } from "../../../pptx/domain/types";
 import type { ResizeHandlePosition } from "../../context/slide/state";

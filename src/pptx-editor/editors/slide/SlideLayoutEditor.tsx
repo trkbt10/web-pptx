@@ -4,7 +4,8 @@
 
 import { useCallback } from "react";
 import type { SlideSize, PresentationFile } from "../../../pptx/domain";
-import type { SlideLayoutAttributes, SlideLayoutType } from "../../../pptx/domain/slide";
+import type { SlideLayoutType } from "../../../pptx/domain/slide";
+import type { SlideLayoutAttributes } from "../../../pptx/parser/slide/layout-parser";
 import type { SlideLayoutOption } from "../../../pptx/app";
 import type { EditorProps, SelectOption } from "../../types";
 import { FieldGroup, FieldRow } from "../../ui/layout";

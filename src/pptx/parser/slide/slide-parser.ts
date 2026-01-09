@@ -209,7 +209,11 @@ function parseTransitionAttributes(
   return { direction: undefined, orientation: undefined, spokes: undefined, inOutDirection: undefined };
 }
 
-function getTransitionElement(parent: XmlElement | undefined): XmlElement | undefined {
+/**
+ * Get the transition element from a slide, handling mc:AlternateContent.
+ * @see ECMA-376 Part 1, Section 19.5 (Transitions)
+ */
+export function getTransitionElement(parent: XmlElement | undefined): XmlElement | undefined {
   if (!parent) {
     return undefined;
   }

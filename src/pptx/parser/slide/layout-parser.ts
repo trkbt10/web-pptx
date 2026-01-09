@@ -1,12 +1,15 @@
 /**
- * @file Slide layout domain helpers
+ * @file Slide layout XML parser
+ *
+ * Parses and modifies slide layout XML documents.
+ * This belongs to the parser layer as it operates on XmlDocument.
  *
  * @see ECMA-376 Part 1, Section 19.3.1.39 (p:sldLayout)
  */
 
 import type { XmlDocument, XmlElement } from "../../../xml";
 import { getByPath } from "../../../xml";
-import type { SlideLayoutType } from "./types";
+import type { SlideLayoutType } from "../../domain/slide/types";
 
 /**
  * Slide layout attributes extracted from p:sldLayout element.

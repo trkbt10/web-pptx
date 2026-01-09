@@ -3,6 +3,11 @@
  *
  * Pure domain types for slide resources.
  * No render layer dependencies.
+ *
+ * NOTE: Parser-specific types have been moved to their proper locations:
+ * - IndexTables: parser/slide/shape-tree-indexer.ts
+ * - SlideLayoutAttributes: parser/slide/layout-parser.ts
+ * - SlideData, LayoutData, etc.: parser/slide/data-types.ts
  */
 
 // Types
@@ -21,17 +26,10 @@ export type {
   SlideMaster,
   HandoutMaster,
   NotesMaster,
-  // Params types (pure data, no render dependencies)
-  SlideMasterParams,
-  SlideLayoutParams,
-  SlideParams,
 } from "./types";
 
-export type { SlideLayoutAttributes } from "./layout";
-export { getSlideLayoutAttributes, applySlideLayoutAttributes } from "./layout";
-
-// Slide content indexing types
-export type { IndexTables, SlideNodeType } from "./indexing";
+// Slide content indexing types (pure domain type only)
+export type { SlideNodeType } from "./indexing";
 
 // Placeholder text style mappings
 export type { MasterTextStyleName } from "./placeholder-styles";
@@ -41,12 +39,3 @@ export {
   isTitleType,
   getTextStyleName,
 } from "./placeholder-styles";
-
-// Data types
-export type {
-  SlideData,
-  LayoutData,
-  MasterData,
-  ThemeData,
-  DiagramData,
-} from "./data";

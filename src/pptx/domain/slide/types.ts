@@ -7,17 +7,13 @@
  * @see ECMA-376 Part 1, Section 19.3 - Presentation ML
  */
 
-import type { XmlElement } from "../../../xml";
 import type { Fill } from "../color/types";
 import type { ColorMapping, ColorMapOverride } from "../color/types";
-import type { ColorMap } from "../color/context";
 import type { Shape } from "../shape";
 import type { Pixels, ResourceId, ShapeId } from "../types";
 import type { SlideTransition } from "../transition";
 import type { MasterTextStyles, TextStyleLevels } from "../text-style";
 import type { CustomerData } from "../metadata";
-import type { ResourceMap, PlaceholderTable } from "../opc";
-import type { RawMasterTextStyles } from "../theme";
 
 // =============================================================================
 // Slide Size Types
@@ -241,40 +237,3 @@ export type NotesMaster = {
   readonly preserve?: boolean;
 };
 
-// =============================================================================
-// Slide Params Types (Pure data, no render dependencies)
-// =============================================================================
-
-/**
- * Slide master parameters for rendering.
- * Contains resolved data from slide master XML.
- */
-export type SlideMasterParams = {
-  readonly textStyles: RawMasterTextStyles;
-  readonly placeholders: PlaceholderTable;
-  readonly colorMap: ColorMap;
-  readonly resources: ResourceMap;
-  /** Master content element (p:sldMaster) for background lookup */
-  readonly content?: XmlElement;
-};
-
-/**
- * Slide layout parameters for rendering.
- * Contains resolved data from slide layout XML.
- */
-export type SlideLayoutParams = {
-  readonly placeholders: PlaceholderTable;
-  readonly resources: ResourceMap;
-  /** Layout content element (p:sldLayout) for background lookup */
-  readonly content?: XmlElement;
-};
-
-/**
- * Slide parameters for rendering.
- * Contains resolved data from slide XML.
- */
-export type SlideParams = {
-  readonly content: XmlElement;
-  readonly resources: ResourceMap;
-  readonly colorMapOverride?: ColorMap;
-};

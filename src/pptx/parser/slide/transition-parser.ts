@@ -6,34 +6,10 @@
  * @see ECMA-376 Part 1, Section 19.5 (Transitions)
  */
 
-import type { XmlDocument } from "../../../xml";
+import type { XmlDocument, XmlElement } from "../../../xml";
 import type { SlideTransition } from "../../domain";
 import { getByPath } from "../../../xml";
-import { parseTransition } from "./slide-parser";
-import type { XmlElement } from "../../../xml";
-import { getChild } from "../../../xml";
-import { processAlternateContent } from "../shape-parser/alternate-content";
-
-/**
- * Get the transition element from a slide, handling mc:AlternateContent.
- */
-function getTransitionElement(parent: XmlElement | undefined): XmlElement | undefined {
-  if (!parent) {
-    return undefined;
-  }
-
-  const transition = getChild(parent, "p:transition");
-  if (transition) {
-    return transition;
-  }
-
-  const alternateContent = getChild(parent, "mc:AlternateContent");
-  if (!alternateContent) {
-    return undefined;
-  }
-
-  return processAlternateContent(alternateContent, "p:transition");
-}
+import { parseTransition, getTransitionElement } from "./slide-parser";
 
 /**
  * Parse slide transition data from slide content XML.

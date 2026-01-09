@@ -9,7 +9,7 @@ import type { Slide } from "./types";
 import type { ZipFile, SlideSize } from "../domain";
 import type { XmlElement, XmlDocument } from "../../xml";
 import { getByPath } from "../../xml";
-import type { SlideData } from "../domain/slide/data";
+import type { SlideData } from "../parser/slide/data-types";
 import type { RenderOptions } from "../render/render-options";
 import type { SlideContext } from "../parser/slide/context";
 import { createSlideContext } from "../parser/slide/context";

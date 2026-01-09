@@ -5,7 +5,7 @@
 
 import type { PresentationFile } from "../../domain";
 import type { ResourceMap } from "../../domain/opc";
-import type { LayoutData, MasterData, ThemeData, DiagramData } from "../../domain/slide/data";
+import type { LayoutData, MasterData, ThemeData, DiagramData } from "./data-types";
 import {
   loadRelationships,
   findLayoutPath,

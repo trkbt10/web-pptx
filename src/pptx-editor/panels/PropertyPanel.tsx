@@ -9,7 +9,8 @@
 
 import { useCallback, type CSSProperties } from "react";
 import type { Slide, Shape } from "../../pptx/domain/index";
-import type { Background, SlideLayoutAttributes } from "../../pptx/domain/slide";
+import type { Background } from "../../pptx/domain/slide";
+import type { SlideLayoutAttributes } from "../../pptx/parser/slide/layout-parser";
 import type { ShapeId } from "../../pptx/domain/types";
 import type { SlideLayoutOption } from "../../pptx/app";
 import { SlidePropertiesPanel } from "./property/SlidePropertiesPanel";

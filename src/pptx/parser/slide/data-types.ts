@@ -1,11 +1,14 @@
 /**
  * @file Internal types for slide data processing
- * Types used for slide loading and processing
+ *
+ * Types used for slide loading and processing in the parser layer.
+ * These types contain XML document references and are not part of the
+ * pure domain model.
  */
 
 import type { XmlDocument, XmlElement } from "../../../xml";
-import type { IndexTables } from "./indexing";
-import type { ResourceMap } from "../opc";
+import type { IndexTables } from "./shape-tree-indexer";
+import type { ResourceMap } from "../../domain/opc";
 
 /**
  * Complete slide data for creating Slide objects

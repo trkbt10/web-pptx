@@ -9,7 +9,7 @@
  */
 
 import type { PlaceholderTable, ColorMap } from "../../domain";
-import type { IndexTables } from "../../domain/slide";
+import type { IndexTables } from "./shape-tree-indexer";
 import type { XmlElement } from "../../../xml";
 import { parseColorMap } from "../drawing-ml";
 

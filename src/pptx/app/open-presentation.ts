@@ -7,7 +7,7 @@ import type { Presentation, Slide, SlideInfo, ListOptions, PresentationOptions }
 import type { SlideFileInfo, ZipFile } from "../opc";
 import type { SlideSize } from "../domain";
 import { getByPath, type XmlElement } from "../../xml";
-import type { SlideData } from "../domain/slide/data";
+import type { SlideData } from "../parser/slide/data-types";
 import type { RenderOptions } from "../render/render-options";
 import type { TableStyleList } from "../parser/table/style-parser";
 import { parseContentTypes, buildSlideFileInfoList } from "../opc";

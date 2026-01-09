@@ -6,7 +6,8 @@
 
 import { useCallback, type CSSProperties } from "react";
 import type { SlideSize, PresentationFile } from "../../../pptx/domain";
-import type { Background, SlideLayoutAttributes } from "../../../pptx/domain/slide";
+import type { Background } from "../../../pptx/domain/slide";
+import type { SlideLayoutAttributes } from "../../../pptx/parser/slide/layout-parser";
 import { Accordion } from "../../ui/layout/Accordion";
 import type { SlideLayoutOption } from "../../../pptx/app";
 import { BackgroundEditor, SlideLayoutEditor, createDefaultBackground } from "../../editors/index";

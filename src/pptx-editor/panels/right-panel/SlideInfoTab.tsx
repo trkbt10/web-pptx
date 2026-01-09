@@ -7,7 +7,8 @@
 
 import type { CSSProperties } from "react";
 import type { SlideSize, PresentationFile } from "../../../pptx/domain";
-import type { Background, SlideLayoutAttributes } from "../../../pptx/domain/slide";
+import type { Background } from "../../../pptx/domain/slide";
+import type { SlideLayoutAttributes } from "../../../pptx/parser/slide/layout-parser";
 import type { SlideLayoutOption } from "../../../pptx/app";
 import { SlidePropertiesPanel } from "../property/SlidePropertiesPanel";
 import { InspectorSection } from "../../ui/layout";
