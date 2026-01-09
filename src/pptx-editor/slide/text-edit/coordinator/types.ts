@@ -50,6 +50,10 @@ export type TextEditControllerProps = {
   readonly onComplete: (newText: string) => void;
   /** Called when editing is cancelled */
   readonly onCancel: () => void;
+  /** Show selection highlight overlay */
+  readonly showSelectionOverlay?: boolean;
+  /** Show the edit frame outline */
+  readonly showFrameOutline?: boolean;
 
   // === Extended props for property panel integration ===
 

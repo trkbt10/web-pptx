@@ -143,6 +143,8 @@ export function TextEditController({
   slideHeight,
   onComplete,
   onCancel,
+  showSelectionOverlay = true,
+  showFrameOutline = true,
   onSelectionChange,
 }: TextEditControllerProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -482,6 +484,7 @@ export function TextEditController({
       onCompositionEnd={handleCompositionEnd}
       onNonPrimaryMouseDown={handleTextareaNonPrimaryMouseDown}
       onContextMenuCapture={handleTextareaContextMenuCapture}
+      showFrameOutline={showFrameOutline}
     >
       <svg
         ref={svgRef}
@@ -515,7 +518,7 @@ export function TextEditController({
         />
 
         {/* Selection highlights */}
-        {cursorState.selectionRects.map((rect, index) => (
+        {showSelectionOverlay && cursorState.selectionRects.map((rect, index) => (
           <rect
             key={`sel-${index}`}
             x={rect.x as number}
