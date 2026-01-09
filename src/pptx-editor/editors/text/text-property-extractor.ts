@@ -334,8 +334,6 @@ export function extractPropertiesFromTextBody(
   for (const [pIdx, paragraph] of textBody.paragraphs.entries()) {
     allParagraphProperties.push(paragraph.properties);
 
-    // eslint-disable-next-line no-restricted-syntax -- iteration with offset tracking
-    let offset = 0;
     for (const [rIdx, run] of paragraph.runs.entries()) {
       const runLength = getRunLength(run);
       allRanges.push({
@@ -345,7 +343,6 @@ export function extractPropertiesFromTextBody(
         endOffset: runLength,
         run,
       });
-      offset += runLength;
     }
   }
 

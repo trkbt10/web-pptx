@@ -400,9 +400,10 @@ function EditorContent({
         case "selection":
           return getParagraphsInSelection(textBody, context.selection);
         case "cursor":
-          return context.position.paragraphIndex < textBody.paragraphs.length
-            ? [context.position.paragraphIndex]
-            : [];
+          if (context.position.paragraphIndex < textBody.paragraphs.length) {
+            return [context.position.paragraphIndex];
+          }
+          return [];
         case "shape":
           return textBody.paragraphs.map((_, index) => index);
         case "none":

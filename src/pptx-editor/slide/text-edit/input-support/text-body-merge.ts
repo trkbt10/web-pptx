@@ -178,9 +178,10 @@ function applySingleReplaceEdit(
   const prefixEntries = originalEntries.slice(0, prefixLength);
   const suffixEntries = originalEntries.slice(oldLength - suffixLength);
 
-  const paragraphTemplateEntry = prefixLength > 0
-    ? originalEntries[prefixLength - 1]
-    : originalEntries[0];
+  let paragraphTemplateEntry = originalEntries[0];
+  if (prefixLength > 0) {
+    paragraphTemplateEntry = originalEntries[prefixLength - 1];
+  }
   const insertedParagraphProperties = paragraphTemplateEntry?.paragraphProperties ?? fallbackParagraphProperties;
   const insertedParagraphEndProperties = paragraphTemplateEntry?.paragraphEndProperties ?? fallbackParagraphEndProperties;
 
@@ -262,13 +263,6 @@ function buildParagraphsFromEntries(
       currentParagraphProperties = entry.paragraphProperties ?? currentParagraphProperties ?? {};
       currentParagraphEndProperties = entry.paragraphEndProperties ?? currentParagraphEndProperties;
       continue;
-    }
-
-    if (entry.paragraphProperties && currentParagraphProperties === undefined) {
-      currentParagraphProperties = entry.paragraphProperties;
-    }
-    if (entry.paragraphEndProperties && currentParagraphEndProperties === undefined) {
-      currentParagraphEndProperties = entry.paragraphEndProperties;
     }
 
     if (entry.kind === "break") {

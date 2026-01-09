@@ -307,9 +307,10 @@ export function TextEditController({
       isDraggingRef.current = true;
       textarea.focus();
 
-      const anchorOffset = event.shiftKey
-        ? getSelectionAnchor(textarea)
-        : offset;
+      let anchorOffset = offset;
+      if (event.shiftKey) {
+        anchorOffset = getSelectionAnchor(textarea);
+      }
       dragAnchorRef.current = anchorOffset;
       applySelectionRange(textarea, anchorOffset, offset);
       updateCursorPosition();
