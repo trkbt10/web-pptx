@@ -4,7 +4,6 @@
  * @see ECMA-376 Part 1, Section 21.4.4 (dgm:dataModel)
  */
 
-import { describe, it, expect } from "vitest";
 import type { DiagramDataModel, DiagramPoint, DiagramConnection } from "../types";
 import {
   buildDiagramTree,
@@ -13,12 +12,23 @@ import {
   filterNodesByType,
   getContentNodes,
   getNodeText,
-  type DiagramTreeNode,
 } from "./tree-builder";
 
 // =============================================================================
 // Test Fixtures
 // =============================================================================
+
+function createTextBody(text: string): { bodyProperties: Record<string, never>; paragraphs: { properties: Record<string, never>; runs: { type: "text"; text: string }[] }[] } {
+  return {
+    bodyProperties: {},
+    paragraphs: [
+      {
+        properties: {},
+        runs: [{ type: "text" as const, text }],
+      },
+    ],
+  };
+}
 
 function createPoint(
   modelId: string,
@@ -28,17 +38,7 @@ function createPoint(
   return {
     modelId,
     type,
-    textBody: text
-      ? {
-          bodyProperties: {},
-          paragraphs: [
-            {
-              properties: {},
-              runs: [{ type: "text" as const, text }],
-            },
-          ],
-        }
-      : undefined,
+    textBody: text ? createTextBody(text) : undefined,
   };
 }
 

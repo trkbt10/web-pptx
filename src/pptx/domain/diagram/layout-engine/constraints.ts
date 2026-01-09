@@ -123,7 +123,7 @@ function resolveConstraintType(
   explicitValue: number | undefined,
   context: ConstraintContext
 ): number {
-  const { bounds, parentBounds } = context;
+  const { bounds } = context;
 
   // If explicit value provided, use it
   if (explicitValue !== undefined) {
@@ -635,7 +635,7 @@ export function getNodesForRelationship(
       // Child nodes (not directly available from LayoutNode, need tree structure)
       return currentNode.children as LayoutNode[];
 
-    case "des":
+    case "des": {
       // Descendant nodes
       const descendants: LayoutNode[] = [];
       function collectDescendants(node: LayoutNode): void {
@@ -646,6 +646,7 @@ export function getNodesForRelationship(
       }
       collectDescendants(currentNode);
       return descendants;
+    }
 
     default:
       return [currentNode];

@@ -15,15 +15,10 @@ import type {
   DiagramChoose,
   DiagramIf,
   DiagramAlgorithm,
-  DiagramConstraint,
-  DiagramPresentationOf,
   DiagramAxisType,
   DiagramElementType,
 } from "../types";
-import type {
-  DiagramTreeNode,
-  DiagramPointType,
-} from "./tree-builder";
+import type { DiagramTreeNode } from "./tree-builder";
 import {
   getAncestors,
   getAncestorsOrSelf,
@@ -46,14 +41,11 @@ import {
   createChildContext,
   createEmptyResult,
   mergeBounds,
-  getParam,
-  getConstraint,
 } from "./types";
 import {
   createAlgorithmRegistry,
   getLayoutAlgorithm,
 } from "./algorithms";
-import type { DiagramConstraintType } from "../types";
 
 // =============================================================================
 // Types
@@ -86,6 +78,43 @@ export type LayoutProcessOptions = {
 };
 
 // =============================================================================
+// Helper Functions
+// =============================================================================
+
+/**
+ * Calculate result bounds from array of bounds, or empty bounds if array is empty
+ */
+function calculateResultBounds(allBounds: LayoutBounds[]): LayoutBounds {
+  if (allBounds.length > 0) {
+    return mergeBounds(...allBounds);
+  }
+  return { x: 0, y: 0, width: 0, height: 0 };
+}
+
+/**
+ * Convert a value to a number for comparison
+ */
+function toComparisonNumber(value: number | boolean | string): number {
+  if (typeof value === "number") {
+    return value;
+  }
+  if (typeof value === "boolean") {
+    return value ? 1 : 0;
+  }
+  return parseFloat(value) || 0;
+}
+
+/**
+ * Compare two string values for equality
+ */
+function compareStrings(left: unknown, right: unknown, negate: boolean): boolean | null {
+  if (typeof left === "string" && typeof right === "string") {
+    return negate ? left !== right : left === right;
+  }
+  return null;
+}
+
+// =============================================================================
 // Main Processor
 // =============================================================================
 
@@ -98,7 +127,7 @@ export function processLayoutDefinition(
   layoutDef: DiagramLayoutDefinition,
   options: LayoutProcessOptions
 ): LayoutProcessResult {
-  const { bounds, dataNodes, allNodes, maxDepth } = options;
+  const { bounds, dataNodes, allNodes } = options;
 
   // Get root layout node from definition
   const rootLayoutNode = layoutDef.layoutNode;
@@ -235,9 +264,7 @@ function processLayoutNode(
   }
 
   // 8. Calculate merged bounds
-  const resultBounds = allBounds.length > 0
-    ? mergeBounds(...allBounds)
-    : { x: 0, y: 0, width: 0, height: 0 };
+  const resultBounds = calculateResultBounds(allBounds);
 
   return {
     nodes: processedNodes,
@@ -271,7 +298,8 @@ function processForEachElement(
   }
 
   // Select nodes based on axis
-  let selectedNodes = selectNodesByAxis(currentNode, forEach.axis, context.allNodes ?? []);
+  // eslint-disable-next-line no-restricted-syntax
+  let selectedNodes = selectNodesByAxis(currentNode, forEach.axis);
 
   // Filter by point type
   if (forEach.pointType && forEach.pointType.length > 0) {
@@ -455,24 +483,19 @@ function evaluateComparison(
   right: number | boolean | string
 ): boolean {
   // Convert to numbers for numeric comparison
-  const leftNum = typeof left === "number" ? left :
-    typeof left === "boolean" ? (left ? 1 : 0) :
-    parseFloat(left) || 0;
-
-  const rightNum = typeof right === "number" ? right :
-    typeof right === "boolean" ? (right ? 1 : 0) :
-    parseFloat(String(right)) || 0;
+  const leftNum = toComparisonNumber(left);
+  const rightNum = toComparisonNumber(right);
 
   switch (operator) {
-    case "equ":
-      return typeof left === "string" && typeof right === "string"
-        ? left === right
-        : leftNum === rightNum;
+    case "equ": {
+      const strResult = compareStrings(left, right, false);
+      return strResult !== null ? strResult : leftNum === rightNum;
+    }
 
-    case "neq":
-      return typeof left === "string" && typeof right === "string"
-        ? left !== right
-        : leftNum !== rightNum;
+    case "neq": {
+      const strResult = compareStrings(left, right, true);
+      return strResult !== null ? strResult : leftNum !== rightNum;
+    }
 
     case "gt":
       return leftNum > rightNum;
@@ -623,8 +646,7 @@ function applyAlgorithm(
  */
 function selectNodesByAxis(
   currentNode: DiagramTreeNode,
-  axes: readonly DiagramAxisType[] | undefined,
-  allNodes: readonly DiagramTreeNode[]
+  axes: readonly DiagramAxisType[] | undefined
 ): DiagramTreeNode[] {
   if (!axes || axes.length === 0) {
     // Default to children
@@ -635,7 +657,7 @@ function selectNodesByAxis(
   const seenIds = new Set<string>();
 
   for (const axis of axes) {
-    const nodes = selectByAxis(currentNode, axis, allNodes);
+    const nodes = selectByAxis(currentNode, axis);
     for (const node of nodes) {
       if (!seenIds.has(node.id)) {
         seenIds.add(node.id);
@@ -652,8 +674,7 @@ function selectNodesByAxis(
  */
 function selectByAxis(
   currentNode: DiagramTreeNode,
-  axis: DiagramAxisType,
-  allNodes: readonly DiagramTreeNode[]
+  axis: DiagramAxisType
 ): DiagramTreeNode[] {
   switch (axis) {
     case "self":

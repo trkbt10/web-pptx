@@ -16,10 +16,7 @@ import type {
   DiagramConstraintType,
   DiagramDirection,
   DiagramHierBranchStyle,
-  DiagramLayoutNode,
   DiagramResizeHandlesStr,
-  DiagramRule,
-  DiagramVariableType,
 } from "../types";
 
 // =============================================================================
@@ -88,12 +85,12 @@ export type LayoutContext = {
   readonly params: ReadonlyMap<string, DiagramAlgorithmParamValue>;
   /** Constraints to apply */
   readonly constraints: readonly DiagramConstraint[];
-  /** Default spacing between nodes */
-  readonly defaultSpacing: number;
-  /** Default node width */
-  readonly defaultNodeWidth: number;
-  /** Default node height */
-  readonly defaultNodeHeight: number;
+  /** Default spacing between nodes (from constraints or config) */
+  readonly defaultSpacing?: number;
+  /** Default node width (from constraints or config) */
+  readonly defaultNodeWidth?: number;
+  /** Default node height (from constraints or config) */
+  readonly defaultNodeHeight?: number;
 
   // ECMA-376 21.4.2.6 forEach / 21.4.2.7 if context
   /** Current tree node being processed (for forEach/if evaluation) */
@@ -184,36 +181,7 @@ export type CreateContextOptions = {
  *
  * @see ECMA-376 Part 1, Section 21.4.2 - Layout Definition
  */
-export function createDefaultContext(
-  options: CreateContextOptions
-): LayoutContext;
-/**
- * @deprecated Use options object instead
- */
-export function createDefaultContext(
-  bounds: LayoutBounds,
-  params?: readonly DiagramAlgorithmParam[],
-  constraints?: readonly DiagramConstraint[]
-): LayoutContext;
-export function createDefaultContext(
-  boundsOrOptions: LayoutBounds | CreateContextOptions,
-  params?: readonly DiagramAlgorithmParam[],
-  constraints?: readonly DiagramConstraint[]
-): LayoutContext {
-  // Handle both signatures - check if it's a LayoutBounds (has x property directly)
-  // vs CreateContextOptions (has bounds property)
-  const isLayoutBounds =
-    typeof boundsOrOptions === "object" &&
-    "x" in boundsOrOptions &&
-    "y" in boundsOrOptions &&
-    "width" in boundsOrOptions &&
-    "height" in boundsOrOptions &&
-    !("bounds" in boundsOrOptions);
-
-  const options: CreateContextOptions = isLayoutBounds
-    ? { bounds: boundsOrOptions as LayoutBounds, params, constraints }
-    : (boundsOrOptions as CreateContextOptions);
-
+export function createDefaultContext(options: CreateContextOptions): LayoutContext {
   const paramMap = new Map<string, DiagramAlgorithmParamValue>();
   if (options.params) {
     for (const param of options.params) {
@@ -227,9 +195,6 @@ export function createDefaultContext(
     bounds: options.bounds,
     params: paramMap,
     constraints: options.constraints ?? [],
-    defaultSpacing: 10,
-    defaultNodeWidth: 100,
-    defaultNodeHeight: 60,
     // ECMA-376 21.4.2.6 forEach context
     currentNode: options.currentNode,
     position: options.position,

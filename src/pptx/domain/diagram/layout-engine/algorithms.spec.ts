@@ -4,9 +4,8 @@
  * @see ECMA-376 Part 1, Section 21.4.2 (Algorithms)
  */
 
-import { describe, it, expect } from "vitest";
 import type { DiagramTreeNode } from "./tree-builder";
-import type { LayoutContext, LayoutBounds } from "./types";
+import type { LayoutBounds, LayoutContext } from "./types";
 import { createDefaultContext } from "./types";
 import {
   linearLayout,
@@ -38,7 +37,7 @@ function createTreeNode(
 }
 
 function createContext(bounds: LayoutBounds): LayoutContext {
-  return createDefaultContext(bounds);
+  return createDefaultContext({ bounds });
 }
 
 const defaultBounds: LayoutBounds = {
@@ -73,9 +72,9 @@ describe("linearLayout", () => {
 
   it("arranges nodes vertically when linDir=fromT", () => {
     const nodes = [createTreeNode("a"), createTreeNode("b")];
-    const context = createDefaultContext(defaultBounds, [
+    const context = createDefaultContext({ bounds: defaultBounds, params: [
       { type: "linDir", value: "fromT" },
-    ]);
+    ]});
 
     const result = linearLayout(nodes, context);
 
@@ -87,9 +86,9 @@ describe("linearLayout", () => {
 
   it("reverses order when linDir=fromR", () => {
     const nodes = [createTreeNode("a"), createTreeNode("b"), createTreeNode("c")];
-    const context = createDefaultContext(defaultBounds, [
+    const context = createDefaultContext({ bounds: defaultBounds, params: [
       { type: "linDir", value: "fromR" },
-    ]);
+    ]});
 
     const result = linearLayout(nodes, context);
 
@@ -113,9 +112,9 @@ describe("linearLayout", () => {
 
   it("aligns nodes to left when nodeHorzAlign=l", () => {
     const nodes = [createTreeNode("a"), createTreeNode("b")];
-    const context = createDefaultContext(defaultBounds, [
+    const context = createDefaultContext({ bounds: defaultBounds, params: [
       { type: "nodeHorzAlign", value: "l" },
-    ]);
+    ]});
     const result = linearLayout(nodes, context);
 
     // First node should start at bounds.x
@@ -151,10 +150,10 @@ describe("spaceLayout", () => {
   it("positions node at origin when aligned left/top", () => {
     const nodes = [createTreeNode("a")];
     const bounds: LayoutBounds = { x: 50, y: 100, width: 200, height: 150 };
-    const context = createDefaultContext(bounds, [
+    const context = createDefaultContext({ bounds, params: [
       { type: "nodeHorzAlign", value: "l" },
       { type: "nodeVertAlign", value: "t" },
-    ]);
+    ]});
     const result = spaceLayout(nodes, context);
 
     expect(result.nodes).toHaveLength(1);
@@ -234,9 +233,9 @@ describe("cycleLayout", () => {
       createTreeNode("c"),
       createTreeNode("d"),
     ];
-    const context = createDefaultContext(defaultBounds, [
+    const context = createDefaultContext({ bounds: defaultBounds, params: [
       { type: "rotPath", value: "alongPath" },
-    ]);
+    ]});
     const result = cycleLayout(nodes, context);
 
     expect(result.nodes).toHaveLength(4);
@@ -274,9 +273,9 @@ describe("cycleLayout", () => {
       createTreeNode("c"),
     ];
     const bounds: LayoutBounds = { x: 0, y: 0, width: 300, height: 300 };
-    const context = createDefaultContext(bounds, [
+    const context = createDefaultContext({ bounds, params: [
       { type: "ctrShpMap", value: "fNode" },
-    ]);
+    ]});
     const result = cycleLayout(nodes, context);
 
     expect(result.nodes).toHaveLength(4);

@@ -78,6 +78,18 @@ function getShapeText(shape: SpShape): string | undefined {
 // Test Fixtures
 // =============================================================================
 
+function createTextBodyForPoint(text: string): TextBody {
+  return {
+    bodyProperties: {},
+    paragraphs: [
+      {
+        properties: {},
+        runs: [{ type: "text" as const, text }],
+      },
+    ],
+  };
+}
+
 function createPoint(
   modelId: string,
   type?: string,
@@ -86,17 +98,7 @@ function createPoint(
   return {
     modelId,
     type,
-    textBody: text
-      ? {
-          bodyProperties: {},
-          paragraphs: [
-            {
-              properties: {},
-              runs: [{ type: "text" as const, text }],
-            },
-          ],
-        }
-      : undefined,
+    textBody: text ? createTextBodyForPoint(text) : undefined,
   };
 }
 
@@ -309,6 +311,16 @@ describe("generateDiagramShapes", () => {
 // SpShape Test Helper
 // =============================================================================
 
+function createTestTextBody(text: string): TextBody {
+  return {
+    bodyProperties: {},
+    paragraphs: [{
+      properties: {},
+      runs: [{ type: "text" as const, text }],
+    }],
+  } as TextBody;
+}
+
 function createTestSpShape(overrides: {
   id?: string;
   x?: number;
@@ -320,13 +332,7 @@ function createTestSpShape(overrides: {
   line?: Line;
   text?: string;
 }): SpShape {
-  const textBody: TextBody | undefined = overrides.text ? {
-    bodyProperties: {},
-    paragraphs: [{
-      properties: {},
-      runs: [{ type: "text" as const, text: overrides.text }],
-    }],
-  } as TextBody : undefined;
+  const textBody: TextBody | undefined = overrides.text ? createTestTextBody(overrides.text) : undefined;
 
   return {
     type: "sp",

@@ -12,7 +12,6 @@ import type {
   DiagramForEach,
   DiagramChoose,
   DiagramIf,
-  DiagramElse,
   DiagramLayoutContent,
   DiagramFunctionType,
   DiagramFunctionArgument,
@@ -547,6 +546,19 @@ function calculateMaxDepth(nodes: readonly DiagramTreeNode[]): number {
 }
 
 /**
+ * Convert a function value to a numeric value for comparison
+ */
+function toNumericValue(value: DiagramFunctionValue): number {
+  if (typeof value === "number") {
+    return value;
+  }
+  if (typeof value === "boolean") {
+    return value ? 1 : 0;
+  }
+  return parseFloat(String(value)) || 0;
+}
+
+/**
  * Evaluate comparison operator
  */
 export function evaluateOperator(
@@ -559,19 +571,8 @@ export function evaluateOperator(
   }
 
   // Convert to numbers for comparison if possible
-  const left =
-    typeof leftValue === "number"
-      ? leftValue
-      : typeof leftValue === "boolean"
-      ? (leftValue ? 1 : 0)
-      : parseFloat(String(leftValue)) || 0;
-
-  const right =
-    typeof rightValue === "number"
-      ? rightValue
-      : typeof rightValue === "boolean"
-      ? (rightValue ? 1 : 0)
-      : parseFloat(String(rightValue)) || 0;
+  const left = toNumericValue(leftValue);
+  const right = toNumericValue(rightValue);
 
   switch (operator) {
     case "equ":

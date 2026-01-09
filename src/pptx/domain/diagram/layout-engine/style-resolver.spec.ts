@@ -16,7 +16,6 @@ import {
   resolveNodeStyle,
   findStyleLabel,
   findColorStyleLabel,
-  resolveColorFromList,
   resolveFillFromList,
   resolveLineFromList,
   calculateColorIndex,
@@ -48,6 +47,13 @@ function extractColorFromFill(fill: Fill | undefined): string | undefined {
 // Test Fixtures
 // =============================================================================
 
+function createPropertySet(styleLabel: string | undefined): { presentationStyleLabel: string } | undefined {
+  if (!styleLabel) {
+    return undefined;
+  }
+  return { presentationStyleLabel: styleLabel };
+}
+
 function createTreeNode(
   id: string,
   styleLabel?: string
@@ -59,9 +65,7 @@ function createTreeNode(
     depth: 0,
     siblingIndex: 0,
     siblingCount: 1,
-    propertySet: styleLabel
-      ? { presentationStyleLabel: styleLabel }
-      : undefined,
+    propertySet: createPropertySet(styleLabel),
   };
 }
 
@@ -368,50 +372,6 @@ describe("resolveLineFromList", () => {
   });
 });
 
-// =============================================================================
-// resolveColorFromList Tests (deprecated but still tested for backward compat)
-// =============================================================================
-
-describe("resolveColorFromList", () => {
-  const colorContext = createColorContext(new Map([["accent1", "#4472C4"]]));
-
-  it("resolves RGB color from list", () => {
-    const colorList: DiagramColorList = {
-      colors: [
-        { spec: { type: "srgb", value: "FF0000" } },
-        { spec: { type: "srgb", value: "00FF00" } },
-      ],
-    };
-
-    const result = resolveColorFromList(colorList, 0, 2, colorContext, undefined);
-
-    expect(result?.toUpperCase()).toBe("#FF0000");
-  });
-
-  it("returns default when no color list", () => {
-    const result = resolveColorFromList(undefined, 0, 2, colorContext, "#FFFFFF");
-
-    expect(result).toBe("#FFFFFF");
-  });
-
-  it("returns default when empty colors", () => {
-    const colorList: DiagramColorList = { colors: [] };
-
-    const result = resolveColorFromList(colorList, 0, 2, colorContext, "#FFFFFF");
-
-    expect(result).toBe("#FFFFFF");
-  });
-
-  it("resolves scheme color from theme", () => {
-    const colorList: DiagramColorList = {
-      colors: [{ spec: { type: "scheme", value: "accent1" } }],
-    };
-
-    const result = resolveColorFromList(colorList, 0, 1, colorContext, undefined);
-
-    expect(result?.toLowerCase()).toBe("#4472c4");
-  });
-});
 
 // =============================================================================
 // resolveColor Tests

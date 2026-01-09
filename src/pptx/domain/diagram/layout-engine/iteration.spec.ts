@@ -5,7 +5,6 @@
  * @see ECMA-376 Part 1, Section 21.4.6 (Choose/If/Else)
  */
 
-import { describe, it, expect } from "vitest";
 import type { DiagramForEach, DiagramChoose, DiagramIf } from "../types";
 import type { DiagramTreeNode } from "./tree-builder";
 import {

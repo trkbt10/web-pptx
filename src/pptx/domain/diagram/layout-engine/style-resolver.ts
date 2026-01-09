@@ -25,8 +25,6 @@ import type { DiagramTreeNode } from "./tree-builder";
 import type { ColorContext } from "../../color/context";
 import { px } from "../../types";
 
-// Use existing color resolution utilities
-import { resolveColor as resolveDrawingMlColor } from "../../color/resolution";
 
 // =============================================================================
 // Types
@@ -87,6 +85,36 @@ export type StyleResolverContext = {
 };
 
 // =============================================================================
+// Helper Functions
+// =============================================================================
+
+/**
+ * Get style label from style definition if styleLbl is defined
+ */
+function getStyleLabelIfPresent(
+  styleLbl: string | undefined,
+  styleDefinition: DiagramStyleDefinition | undefined
+): DiagramStyleLabel | undefined {
+  if (!styleLbl) {
+    return undefined;
+  }
+  return findStyleLabel(styleLbl, styleDefinition);
+}
+
+/**
+ * Get color style label from color definition if styleLbl is defined
+ */
+function getColorStyleLabelIfPresent(
+  styleLbl: string | undefined,
+  colorDefinition: DiagramColorsDefinition | undefined
+): DiagramColorStyleLabel | undefined {
+  if (!styleLbl) {
+    return undefined;
+  }
+  return findColorStyleLabel(styleLbl, colorDefinition);
+}
+
+// =============================================================================
 // Style Resolution
 // =============================================================================
 
@@ -111,14 +139,10 @@ export function resolveNodeStyle(
   const styleLbl = node.propertySet?.presentationStyleLabel;
 
   // Find matching style label in style definition
-  const styleLabel = styleLbl
-    ? findStyleLabel(styleLbl, styleDefinition)
-    : undefined;
+  const styleLabel = getStyleLabelIfPresent(styleLbl, styleDefinition);
 
   // Find matching color style label in color definition
-  const colorStyleLabel = styleLbl
-    ? findColorStyleLabel(styleLbl, colorDefinition)
-    : undefined;
+  const colorStyleLabel = getColorStyleLabelIfPresent(styleLbl, colorDefinition);
 
   // Resolve fills from color lists (undefined if not available)
   const fill = resolveFillFromList(
@@ -293,54 +317,25 @@ export function calculateColorIndex(
       // Cycle through colors repeatedly
       return nodeIndex % colorCount;
 
-    case "repeat":
+    case "repeat": {
       // Repeat each color for a segment of nodes
       const segmentSize = Math.ceil(totalNodes / colorCount);
       return Math.min(Math.floor(nodeIndex / segmentSize), colorCount - 1);
+    }
 
-    case "span":
+    case "span": {
       // Span colors across all nodes (gradient-like)
       if (totalNodes <= 1) {
         return 0;
       }
       const ratio = nodeIndex / (totalNodes - 1);
       return Math.min(Math.floor(ratio * colorCount), colorCount - 1);
+    }
 
     default:
       // Default to cycle per ECMA-376
       return nodeIndex % colorCount;
   }
-}
-
-// =============================================================================
-// Color Resolution (delegated to domain/drawing-ml)
-// =============================================================================
-
-/**
- * @deprecated Use resolveFillFromList instead
- * Resolve color from a color list (returns CSS string for backward compatibility)
- */
-export function resolveColorFromList(
-  colorList: DiagramColorList | undefined,
-  nodeIndex: number,
-  totalNodes: number,
-  colorContext: ColorContext,
-  defaultColor: string | undefined
-): string | undefined {
-  if (!colorList || colorList.colors.length === 0) {
-    return defaultColor;
-  }
-
-  const { colors, method } = colorList;
-  const colorIndex = calculateColorIndex(nodeIndex, totalNodes, colors.length, method);
-  const color = colors[colorIndex];
-
-  if (!color) {
-    return defaultColor;
-  }
-
-  const resolved = resolveDrawingMlColor(color, colorContext);
-  return resolved ? `#${resolved}` : defaultColor;
 }
 
 // =============================================================================

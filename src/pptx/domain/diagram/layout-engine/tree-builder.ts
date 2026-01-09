@@ -12,7 +12,6 @@
 import type {
   DiagramDataModel,
   DiagramPoint,
-  DiagramConnection,
   DiagramPropertySet,
 } from "../types";
 import type { TextBody } from "../../text";

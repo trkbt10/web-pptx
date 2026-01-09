@@ -21,6 +21,7 @@ import type {
   DiagramColorsDefinition,
   DiagramLayoutNode,
   DiagramLayoutContent,
+  DiagramConstraint,
 } from "../types";
 import type { PresetShapeType } from "../../types";
 import { px, deg } from "../../types";
@@ -91,6 +92,19 @@ export type ShapeGenerationConfig = {
 // Shape Generation
 // =============================================================================
 
+function generateShapesFromLayout(
+  layoutNode: DiagramLayoutNode | undefined,
+  roots: readonly DiagramTreeNode[],
+  config: ShapeGenerationConfig,
+  styleContext: StyleResolverContext,
+  algorithmRegistry: ReturnType<typeof createAlgorithmRegistry>
+): SpShape[] {
+  if (layoutNode) {
+    return processLayoutNode(layoutNode, roots, config, styleContext, algorithmRegistry);
+  }
+  return generateDefaultLayout(roots, config, styleContext);
+}
+
 /**
  * Generate SpShape objects from diagram data model
  */
@@ -123,9 +137,13 @@ export function generateDiagramShapes(
 
   // Process layout definition or use default layout
   const layoutNode = layoutDefinition?.layoutNode;
-  const shapes = layoutNode
-    ? processLayoutNode(layoutNode, treeResult.roots, config, styleContext, algorithmRegistry)
-    : generateDefaultLayout(treeResult.roots, config, styleContext);
+  const shapes = generateShapesFromLayout(
+    layoutNode,
+    treeResult.roots,
+    config,
+    styleContext,
+    algorithmRegistry
+  );
 
   // Calculate total bounds
   const bounds = calculateTotalBounds(shapes, config.bounds);
@@ -135,6 +153,20 @@ export function generateDiagramShapes(
     bounds,
     treeResult,
   };
+}
+
+/**
+ * Apply constraints to layout nodes if constraints are defined
+ */
+function applyConstraintsIfPresent(
+  nodes: readonly LayoutNode[],
+  constraints: readonly DiagramConstraint[] | undefined,
+  bounds: LayoutBounds
+): readonly LayoutNode[] {
+  if (constraints) {
+    return applyConstraintsToLayout(nodes, constraints, bounds);
+  }
+  return nodes;
 }
 
 /**
@@ -171,13 +203,11 @@ function processLayoutNode(
   const layoutResult = algorithm(processedNodes, layoutContext);
 
   // Apply constraints if any
-  const constrainedNodes = layoutNode.constraints
-    ? applyConstraintsToLayout(
-        layoutResult.nodes,
-        layoutNode.constraints,
-        config.bounds
-      )
-    : layoutResult.nodes;
+  const constrainedNodes = applyConstraintsIfPresent(
+    layoutResult.nodes,
+    layoutNode.constraints,
+    config.bounds
+  );
 
   // Generate shapes from layout nodes (flattened)
   collectShapesFromLayoutNodes(constrainedNodes, layoutNode, styleContext, config, shapes);
@@ -318,11 +348,11 @@ function createLayoutContext(
   layoutNode: DiagramLayoutNode,
   config: ShapeGenerationConfig
 ): LayoutContext {
-  return createDefaultContext(
-    config.bounds,
-    layoutNode.algorithm?.params,
-    layoutNode.constraints
-  );
+  return createDefaultContext({
+    bounds: config.bounds,
+    params: layoutNode.algorithm?.params,
+    constraints: layoutNode.constraints,
+  });
 }
 
 /**
