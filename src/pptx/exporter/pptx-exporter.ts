@@ -11,7 +11,8 @@
  * @see src/pptx/app/pptx-loader.ts - Corresponding load functionality
  */
 
-import type { PresentationDocument } from "../app/presentation-document";
+import type { PresentationDocument, SlideWithId } from "../app/presentation-document";
+import type { Slide as ApiSlide } from "../app/types";
 import type { PresentationFile, Slide } from "../domain";
 import type { XmlDocument } from "../../xml";
 import { serializeDocument } from "../../xml";
@@ -69,12 +70,42 @@ export type WorkbookUpdate = {
 };
 
 /**
+ * Layout update for export (Phase 9)
+ */
+export type LayoutUpdate = {
+  /** Path to layout XML (e.g., "ppt/slideLayouts/slideLayout1.xml") */
+  readonly layoutPath: string;
+  /** Updated layout XML document */
+  readonly layoutXml: XmlDocument;
+};
+
+/**
+ * Master update for export (Phase 9)
+ */
+export type MasterUpdate = {
+  /** Path to master XML (e.g., "ppt/slideMasters/slideMaster1.xml") */
+  readonly masterPath: string;
+  /** Updated master XML document */
+  readonly masterXml: XmlDocument;
+};
+
+/**
+ * Theme update for export (Phase 9)
+ */
+export type ThemeUpdate = {
+  /** Path to theme XML (e.g., "ppt/theme/theme1.xml") */
+  readonly themePath: string;
+  /** Updated theme XML document */
+  readonly themeXml: XmlDocument;
+};
+
+/**
  * Extended export options with chart and workbook updates
  */
 export type ExtendedExportOptions = ExportOptions & {
-  /** Chart updates to apply */
+  /** Chart updates to apply (Phase 10) */
   readonly chartUpdates?: readonly ChartUpdate[];
-  /** Workbook (embedding) updates to apply */
+  /** Workbook (embedding) updates to apply (Phase 10) */
   readonly workbookUpdates?: readonly WorkbookUpdate[];
 };
 
@@ -162,6 +193,33 @@ export async function exportPptx(
     }
   }
 
+  // Phase 9: Collect and apply master/layout/theme updates from document
+  const { layoutUpdates, masterUpdates, themeUpdates } = collectMasterLayoutThemeUpdates(doc);
+
+  for (const update of layoutUpdates) {
+    const xml = serializeDocument(update.layoutXml, {
+      declaration: true,
+      standalone: true,
+    });
+    pkg.writeText(update.layoutPath, xml);
+  }
+
+  for (const update of masterUpdates) {
+    const xml = serializeDocument(update.masterXml, {
+      declaration: true,
+      standalone: true,
+    });
+    pkg.writeText(update.masterPath, xml);
+  }
+
+  for (const update of themeUpdates) {
+    const xml = serializeDocument(update.themeXml, {
+      declaration: true,
+      standalone: true,
+    });
+    pkg.writeText(update.themePath, xml);
+  }
+
   // Generate the PPTX
   const blob = await pkg.toBlob({
     compressionLevel: options.compressionLevel,
@@ -226,6 +284,33 @@ export async function exportPptxAsBuffer(
     for (const update of options.workbookUpdates) {
       pkg.writeBinary(update.workbookPath, update.workbookBuffer);
     }
+  }
+
+  // Phase 9: Collect and apply master/layout/theme updates from document
+  const { layoutUpdates, masterUpdates, themeUpdates } = collectMasterLayoutThemeUpdates(doc);
+
+  for (const update of layoutUpdates) {
+    const xml = serializeDocument(update.layoutXml, {
+      declaration: true,
+      standalone: true,
+    });
+    pkg.writeText(update.layoutPath, xml);
+  }
+
+  for (const update of masterUpdates) {
+    const xml = serializeDocument(update.masterXml, {
+      declaration: true,
+      standalone: true,
+    });
+    pkg.writeText(update.masterPath, xml);
+  }
+
+  for (const update of themeUpdates) {
+    const xml = serializeDocument(update.themeXml, {
+      declaration: true,
+      standalone: true,
+    });
+    pkg.writeText(update.themePath, xml);
   }
 
   return pkg.toArrayBuffer({
@@ -447,4 +532,121 @@ function mimeTypeToMediaType(mimeType: string): MediaType {
     throw new Error(`Unsupported media type: ${mimeType}`);
   }
   return mediaType;
+}
+
+// =============================================================================
+// Phase 9: Master/Layout/Theme Collection (ECMA-376 Part 2)
+// =============================================================================
+
+const REL_SLIDE_LAYOUT =
+  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideLayout";
+const REL_SLIDE_MASTER =
+  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/slideMaster";
+const REL_THEME =
+  "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme";
+
+type CollectedUpdates = {
+  readonly layoutUpdates: readonly LayoutUpdate[];
+  readonly masterUpdates: readonly MasterUpdate[];
+  readonly themeUpdates: readonly ThemeUpdate[];
+};
+
+/**
+ * Collect layout/master/theme updates from document.
+ *
+ * Deduplicates by path since multiple slides may share the same layout/master/theme.
+ * First occurrence wins to preserve edits on earlier slides.
+ */
+function collectMasterLayoutThemeUpdates(doc: PresentationDocument): CollectedUpdates {
+  const layoutMap = new Map<string, XmlDocument>();
+  const masterMap = new Map<string, XmlDocument>();
+  const themeMap = new Map<string, XmlDocument>();
+
+  for (const slideWithId of doc.slides) {
+    if (!slideWithId.apiSlide) {
+      continue;
+    }
+
+    const layoutPath = resolveLayoutPath(slideWithId);
+    if (layoutPath && slideWithId.apiSlide.layout && !layoutMap.has(layoutPath)) {
+      layoutMap.set(layoutPath, slideWithId.apiSlide.layout);
+    }
+
+    const masterPath = resolveMasterPath(slideWithId.apiSlide);
+    if (masterPath && slideWithId.apiSlide.master && !masterMap.has(masterPath)) {
+      masterMap.set(masterPath, slideWithId.apiSlide.master);
+    }
+
+    const themePath = resolveThemePath(slideWithId.apiSlide);
+    if (themePath && slideWithId.apiSlide.theme && !themeMap.has(themePath)) {
+      themeMap.set(themePath, slideWithId.apiSlide.theme);
+    }
+  }
+
+  return {
+    layoutUpdates: Array.from(layoutMap.entries()).map(
+      ([layoutPath, layoutXml]) => ({ layoutPath, layoutXml }),
+    ),
+    masterUpdates: Array.from(masterMap.entries()).map(
+      ([masterPath, masterXml]) => ({ masterPath, masterXml }),
+    ),
+    themeUpdates: Array.from(themeMap.entries()).map(
+      ([themePath, themeXml]) => ({ themePath, themeXml }),
+    ),
+  };
+}
+
+function resolveLayoutPath(slideWithId: SlideWithId): string | undefined {
+  if (slideWithId.layoutPathOverride) {
+    return slideWithId.layoutPathOverride;
+  }
+  const apiSlide = slideWithId.apiSlide;
+  if (!apiSlide) {
+    return undefined;
+  }
+  const relTarget = apiSlide.relationships.getTargetByType(REL_SLIDE_LAYOUT);
+  if (!relTarget) {
+    return undefined;
+  }
+  return resolveRelativePath(`ppt/slides/${apiSlide.filename}.xml`, relTarget);
+}
+
+function resolveMasterPath(apiSlide: ApiSlide): string | undefined {
+  const relTarget = apiSlide.layoutRelationships.getTargetByType(REL_SLIDE_MASTER);
+  if (!relTarget) {
+    return undefined;
+  }
+  return resolveRelativePath("ppt/slideLayouts/dummy.xml", relTarget);
+}
+
+function resolveThemePath(apiSlide: ApiSlide): string | undefined {
+  const relTarget = apiSlide.masterRelationships.getTargetByType(REL_THEME);
+  if (!relTarget) {
+    return undefined;
+  }
+  return resolveRelativePath("ppt/slideMasters/dummy.xml", relTarget);
+}
+
+function resolveRelativePath(basePath: string, relTarget: string): string {
+  if (!relTarget.startsWith("..")) {
+    if (!relTarget.startsWith("ppt/")) {
+      const baseDir = basePath.substring(0, basePath.lastIndexOf("/"));
+      return `${baseDir}/${relTarget}`;
+    }
+    return relTarget;
+  }
+
+  const baseSegments = basePath.split("/");
+  baseSegments.pop();
+
+  const relSegments = relTarget.split("/");
+  for (const segment of relSegments) {
+    if (segment === "..") {
+      baseSegments.pop();
+    } else if (segment !== ".") {
+      baseSegments.push(segment);
+    }
+  }
+
+  return baseSegments.join("/");
 }
