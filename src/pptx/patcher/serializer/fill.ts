@@ -4,6 +4,7 @@
 
 import type { XmlElement } from "../../../xml";
 import type {
+  BlipEffects,
   BlipFill,
   Fill,
   GradientFill,
@@ -109,6 +110,9 @@ export function serializeBlipFill(blip: BlipFill): XmlElement {
   const attrs: Record<string, string> = {
     rotWithShape: ooxmlBool(blip.rotWithShape),
   };
+  if (blip.dpi !== undefined) {
+    attrs.dpi = String(blip.dpi);
+  }
 
   const blipAttrs: Record<string, string> = {
   };
@@ -121,7 +125,10 @@ export function serializeBlipFill(blip: BlipFill): XmlElement {
     blipAttrs.cstate = blip.compressionState;
   }
 
-  const children: XmlElement[] = [createElement("a:blip", blipAttrs)];
+  // Serialize blip effects as child elements of a:blip
+  const blipChildren = blip.blipEffects ? serializeBlipEffects(blip.blipEffects) : [];
+
+  const children: XmlElement[] = [createElement("a:blip", blipAttrs, blipChildren)];
 
   if (blip.sourceRect) {
     children.push(
@@ -169,4 +176,82 @@ function serializeTileFill(tile: TileFill): XmlElement {
     flip: tile.flip,
     algn: tile.alignment,
   });
+}
+
+/**
+ * Serialize blip effects (color transform effects) to a:blip child elements
+ * @see ECMA-376 Part 1, Section 20.1.8.13 (CT_Blip)
+ */
+function serializeBlipEffects(effects: BlipEffects): XmlElement[] {
+  const children: XmlElement[] = [];
+
+  if (effects.alphaBiLevel) {
+    children.push(createElement("a:alphaBiLevel", { thresh: ooxmlPercent100k(effects.alphaBiLevel.threshold) }));
+  }
+  if (effects.alphaCeiling) {
+    children.push(createElement("a:alphaCeiling"));
+  }
+  if (effects.alphaFloor) {
+    children.push(createElement("a:alphaFloor"));
+  }
+  if (effects.alphaInv) {
+    children.push(createElement("a:alphaInv"));
+  }
+  if (effects.alphaMod) {
+    children.push(createElement("a:alphaMod"));
+  }
+  if (effects.alphaModFix) {
+    children.push(createElement("a:alphaModFix", { amt: ooxmlPercent100k(effects.alphaModFix.amount) }));
+  }
+  if (effects.alphaRepl) {
+    children.push(createElement("a:alphaRepl", { a: ooxmlPercent100k(effects.alphaRepl.alpha) }));
+  }
+  if (effects.biLevel) {
+    children.push(createElement("a:biLevel", { thresh: ooxmlPercent100k(effects.biLevel.threshold) }));
+  }
+  if (effects.blur) {
+    children.push(createElement("a:blur", {
+      rad: ooxmlEmu(effects.blur.radius),
+      grow: ooxmlBool(effects.blur.grow),
+    }));
+  }
+  if (effects.colorChange) {
+    children.push(createElement("a:clrChange", { useA: ooxmlBool(effects.colorChange.useAlpha) }, [
+      createElement("a:clrFrom", {}, [serializeColor(effects.colorChange.from)]),
+      createElement("a:clrTo", {}, [serializeColor(effects.colorChange.to)]),
+    ]));
+  }
+  if (effects.colorReplace) {
+    children.push(createElement("a:clrRepl", {}, [serializeColor(effects.colorReplace.color)]));
+  }
+  if (effects.duotone) {
+    children.push(createElement("a:duotone", {}, [
+      serializeColor(effects.duotone.colors[0]),
+      serializeColor(effects.duotone.colors[1]),
+    ]));
+  }
+  if (effects.grayscale) {
+    children.push(createElement("a:grayscl"));
+  }
+  if (effects.hsl) {
+    children.push(createElement("a:hsl", {
+      hue: ooxmlAngleUnits(effects.hsl.hue),
+      sat: ooxmlPercent100k(effects.hsl.saturation),
+      lum: ooxmlPercent100k(effects.hsl.luminance),
+    }));
+  }
+  if (effects.luminance) {
+    children.push(createElement("a:lum", {
+      bright: ooxmlPercent100k(effects.luminance.brightness),
+      contrast: ooxmlPercent100k(effects.luminance.contrast),
+    }));
+  }
+  if (effects.tint) {
+    children.push(createElement("a:tint", {
+      hue: ooxmlAngleUnits(effects.tint.hue),
+      amt: ooxmlPercent100k(effects.tint.amount),
+    }));
+  }
+
+  return children;
 }

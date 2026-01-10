@@ -85,6 +85,7 @@ import { PresentationSlideshow, type SlideshowSlideContent } from "../preview/Pr
 import { usePanelCallbacks, useContextMenuActions, useKeyboardShortcuts, useDragHandlers, useEditorLayers } from "./hooks";
 import type { TabContents } from "./hooks";
 import { PlayIcon } from "../ui/icons";
+import { ExportButton } from "./components";
 import { renderSlideSvg } from "../../pptx/render/svg/renderer";
 import { createCoreRenderContext } from "../../pptx/render";
 
@@ -927,6 +928,7 @@ function EditorContent({
                 <PlayIcon size={16} />
                 <span style={{ marginLeft: "6px" }}>Preview</span>
               </Button>
+              <ExportButton fileName="presentation.pptx" />
             </div>
           </div>
         )}

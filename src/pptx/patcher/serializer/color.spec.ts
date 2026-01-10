@@ -34,6 +34,33 @@ describe("serializeColor", () => {
     expect(el.attrs.lum).toBe("25000");
   });
 
+  it("serializes scrgb color", () => {
+    const color: Color = {
+      spec: { type: "scrgb", red: pct(100), green: pct(50), blue: pct(0) },
+    };
+    const el = serializeColor(color);
+    expect(el.name).toBe("a:scrgbClr");
+    expect(el.attrs.r).toBe("100000");
+    expect(el.attrs.g).toBe("50000");
+    expect(el.attrs.b).toBe("0");
+  });
+
+  it("round-trips scrgb color through parser", () => {
+    const color: Color = {
+      spec: { type: "scrgb", red: pct(75), green: pct(25), blue: pct(100) },
+    };
+    const serialized = serializeColor(color);
+    const parsed = parseColor(serialized);
+
+    expect(parsed).toBeDefined();
+    expect(parsed?.spec.type).toBe("scrgb");
+    if (parsed?.spec.type === "scrgb") {
+      expect(parsed.spec.red).toBe(75);
+      expect(parsed.spec.green).toBe(25);
+      expect(parsed.spec.blue).toBe(100);
+    }
+  });
+
   it("serializes color transforms as child elements", () => {
     const color: Color = {
       spec: { type: "srgb", value: "112233" },

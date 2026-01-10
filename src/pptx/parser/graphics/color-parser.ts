@@ -13,6 +13,7 @@ import type {
   HslColor,
   PresetColor,
   SchemeColor,
+  ScrgbColor,
   SrgbColor,
   SystemColor,
 } from "../../domain/index";
@@ -129,6 +130,22 @@ function parseHslColor(element: XmlElement): HslColor | undefined {
 }
 
 /**
+ * Parse scRGB color
+ * @see ECMA-376 Part 1, Section 20.1.2.3.30
+ *
+ * ```xml
+ * <a:scrgbClr r="100000" g="50000" b="0"/>
+ * ```
+ */
+function parseScrgbColor(element: XmlElement): ScrgbColor | undefined {
+  const r = getPercent100kAttr(element, "r");
+  const g = getPercent100kAttr(element, "g");
+  const b = getPercent100kAttr(element, "b");
+  if (r === undefined || g === undefined || b === undefined) {return undefined;}
+  return { type: "scrgb", red: r, green: g, blue: b };
+}
+
+/**
  * Parse color specification from element
  */
 function parseColorSpec(element: XmlElement): ColorSpec | undefined {
@@ -144,9 +161,7 @@ function parseColorSpec(element: XmlElement): ColorSpec | undefined {
     case "a:hslClr":
       return parseHslColor(element);
     case "a:scrgbClr":
-      // scRGB - convert to sRGB (simplified)
-      // TODO: proper scRGB conversion
-      return { type: "srgb", value: "000000" };
+      return parseScrgbColor(element);
     default:
       return undefined;
   }

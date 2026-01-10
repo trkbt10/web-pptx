@@ -309,9 +309,25 @@ export type RelativeOffsetEffect = {
 // =============================================================================
 
 /**
+ * Effects container type indicator for round-trip fidelity.
+ * - "effectLst": Simple list of effects (a:effectLst)
+ * - "effectDag": DAG-structured effects (a:effectDag)
+ *
+ * @see ECMA-376 Part 1, Section 20.1.8.25 (effectDag)
+ * @see ECMA-376 Part 1, Section 20.1.8.26 (effectLst)
+ */
+export type EffectContainerKind = "effectLst" | "effectDag";
+
+/**
  * Combined effects container
  */
 export type Effects = {
+  /**
+   * Original container type from XML.
+   * When present, serializer should use this to maintain XML structure fidelity.
+   * If absent, defaults to "effectLst".
+   */
+  readonly containerKind?: EffectContainerKind;
   readonly shadow?: ShadowEffect;
   readonly glow?: GlowEffect;
   readonly reflection?: ReflectionEffect;

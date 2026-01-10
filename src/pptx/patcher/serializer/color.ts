@@ -46,6 +46,16 @@ export function serializeColor(color: Color): XmlElement {
         },
         children,
       );
+    case "scrgb":
+      return createElement(
+        "a:scrgbClr",
+        {
+          r: ooxmlPercent100k(color.spec.red),
+          g: ooxmlPercent100k(color.spec.green),
+          b: ooxmlPercent100k(color.spec.blue),
+        },
+        children,
+      );
   }
 }
 

@@ -528,6 +528,86 @@ describe("parseColor - a:hslClr (ECMA-376 Section 20.1.2.3.13)", () => {
 });
 
 // =============================================================================
+// a:scrgbClr - Section 20.1.2.3.30
+// =============================================================================
+
+describe("parseColor - a:scrgbClr (ECMA-376 Section 20.1.2.3.30)", () => {
+  it("parses scRGB color with all attributes", () => {
+    // r, g, b are in 1/100000 (100000 = 100%)
+    const scrgbClr = el("a:scrgbClr", {
+      r: "100000", // 100%
+      g: "50000", // 50%
+      b: "0", // 0%
+    });
+    const result = parseColor(scrgbClr);
+
+    expect(result).toBeDefined();
+    expect(result?.spec.type).toBe("scrgb");
+    if (result?.spec.type === "scrgb") {
+      expect(result.spec.red).toBe(100);
+      expect(result.spec.green).toBe(50);
+      expect(result.spec.blue).toBe(0);
+    }
+  });
+
+  it("parses white (all 100%)", () => {
+    const scrgbClr = el("a:scrgbClr", {
+      r: "100000",
+      g: "100000",
+      b: "100000",
+    });
+    const result = parseColor(scrgbClr);
+
+    expect(result?.spec.type).toBe("scrgb");
+    if (result?.spec.type === "scrgb") {
+      expect(result.spec.red).toBe(100);
+      expect(result.spec.green).toBe(100);
+      expect(result.spec.blue).toBe(100);
+    }
+  });
+
+  it("parses black (all 0%)", () => {
+    const scrgbClr = el("a:scrgbClr", {
+      r: "0",
+      g: "0",
+      b: "0",
+    });
+    const result = parseColor(scrgbClr);
+
+    expect(result?.spec.type).toBe("scrgb");
+    if (result?.spec.type === "scrgb") {
+      expect(result.spec.red).toBe(0);
+      expect(result.spec.green).toBe(0);
+      expect(result.spec.blue).toBe(0);
+    }
+  });
+
+  it("parses with transforms", () => {
+    const scrgbClr = el(
+      "a:scrgbClr",
+      {
+        r: "100000",
+        g: "0",
+        b: "0",
+      },
+      [
+        el("a:alpha", { val: "75000" }), // 75%
+      ],
+    );
+    const result = parseColor(scrgbClr);
+
+    expect(result?.spec.type).toBe("scrgb");
+    expect(result?.transform?.alpha).toBe(75);
+  });
+
+  it("returns undefined for missing attributes", () => {
+    const scrgbClr = el("a:scrgbClr", { r: "100000" }); // missing g and b
+    const result = parseColor(scrgbClr);
+    expect(result).toBeUndefined();
+  });
+});
+
+// =============================================================================
 // Color Transforms - Section 20.1.2.3.*
 // =============================================================================
 

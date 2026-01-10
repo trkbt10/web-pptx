@@ -868,6 +868,45 @@ describe("parseEffects - a:effectDag (ECMA-376 Section 20.1.8.24)", () => {
   });
 });
 
+describe("parseEffects - containerKind for round-trip fidelity", () => {
+  it("records containerKind as 'effectLst' when parsing effectLst", () => {
+    const spPr = el("p:spPr", {}, [
+      el("a:effectLst", {}, [
+        el("a:outerShdw", { blurRad: "38100" }, [el("a:srgbClr", { val: "000000" })]),
+      ]),
+    ]);
+    const result = parseEffects(spPr);
+
+    expect(result?.containerKind).toBe("effectLst");
+  });
+
+  it("records containerKind as 'effectDag' when parsing effectDag", () => {
+    const spPr = el("p:spPr", {}, [
+      el("a:effectDag", {}, [
+        el("a:outerShdw", { blurRad: "38100" }, [el("a:srgbClr", { val: "000000" })]),
+      ]),
+    ]);
+    const result = parseEffects(spPr);
+
+    expect(result?.containerKind).toBe("effectDag");
+  });
+
+  it("records containerKind as 'effectLst' when both effectLst and effectDag present", () => {
+    const spPr = el("p:spPr", {}, [
+      el("a:effectLst", {}, [
+        el("a:outerShdw", { blurRad: "38100" }, [el("a:srgbClr", { val: "FF0000" })]),
+      ]),
+      el("a:effectDag", {}, [
+        el("a:outerShdw", { blurRad: "38100" }, [el("a:srgbClr", { val: "0000FF" })]),
+      ]),
+    ]);
+    const result = parseEffects(spPr);
+
+    // effectLst is preferred, so containerKind should be effectLst
+    expect(result?.containerKind).toBe("effectLst");
+  });
+});
+
 // =============================================================================
 // parseEffects - Edge cases
 // =============================================================================

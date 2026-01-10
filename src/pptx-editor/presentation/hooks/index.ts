@@ -7,3 +7,9 @@ export { useContextMenuActions, type UseContextMenuActionsParams, type UseContex
 export { useKeyboardShortcuts, type UseKeyboardShortcutsParams } from "./use-keyboard-shortcuts";
 export { useDragHandlers, type UseDragHandlersParams } from "./use-drag-handlers";
 export { useEditorLayers, type UseEditorLayersParams, type UseEditorLayersResult, type TabContents } from "./use-editor-layers";
+export {
+  useExportPresentation,
+  type ExportState,
+  type UseExportPresentationOptions,
+  type UseExportPresentationResult,
+} from "./use-export-presentation";

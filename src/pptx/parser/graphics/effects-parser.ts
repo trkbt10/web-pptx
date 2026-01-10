@@ -9,6 +9,7 @@
 import type {
   Color,
   Effects,
+  EffectContainerKind,
   AlphaBiLevelEffect,
   AlphaCeilingEffect,
   AlphaFloorEffect,
@@ -539,14 +540,15 @@ export function parseEffects(spPr: XmlElement | undefined): Effects | undefined 
   // Check for effect list
   const effectLst = getChild(spPr, "a:effectLst");
   if (effectLst) {
-    return parseEffectList(effectLst);
+    return parseEffectList(effectLst, undefined, "effectLst");
   }
 
   // Effect DAG is more complex - simplified handling
+  // Record the original container type for round-trip fidelity
   const effectDag = getChild(spPr, "a:effectDag");
   if (effectDag) {
-    // For DAG, we just look for common effects
-    return parseEffectList(effectDag);
+    // For DAG, we just look for common effects but record the container type
+    return parseEffectList(effectDag, undefined, "effectDag");
   }
 
   return undefined;
@@ -563,12 +565,12 @@ function parseEffectsWithOverride(
 
   const effectLst = getChild(spPr, "a:effectLst");
   if (effectLst) {
-    return parseEffectList(effectLst, overrideColor);
+    return parseEffectList(effectLst, overrideColor, "effectLst");
   }
 
   const effectDag = getChild(spPr, "a:effectDag");
   if (effectDag) {
-    return parseEffectList(effectDag, overrideColor);
+    return parseEffectList(effectDag, overrideColor, "effectDag");
   }
 
   return undefined;
@@ -576,9 +578,19 @@ function parseEffectsWithOverride(
 
 /**
  * Parse effect list
+ * @param containerKind - Original container type for round-trip fidelity
  */
-function parseEffectList(effectLst: XmlElement, overrideColor?: Color): Effects | undefined {
+function parseEffectList(
+  effectLst: XmlElement,
+  overrideColor?: Color,
+  containerKind?: EffectContainerKind,
+): Effects | undefined {
   const effects: EffectsBuilder = {};
+
+  // Record the original container type
+  if (containerKind) {
+    effects.containerKind = containerKind;
+  }
 
   // Outer shadow
   const outerShdw = getChild(effectLst, "a:outerShdw");
@@ -712,7 +724,10 @@ function parseEffectList(effectLst: XmlElement, overrideColor?: Color): Effects 
     effects.relativeOffset = parseRelativeOffset(relOff);
   }
 
-  const hasEffect = Object.values(effects).some((effect) => effect !== undefined);
+  // Check if any actual effect is present (excluding containerKind metadata)
+  const hasEffect = Object.entries(effects).some(
+    ([key, value]) => key !== "containerKind" && value !== undefined
+  );
   return hasEffect ? (effects as Effects) : undefined;
 }
 

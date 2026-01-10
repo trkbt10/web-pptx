@@ -103,6 +103,8 @@ function createDefaultColorSpec(type: ColorSpecType): ColorSpec {
       return { type: "preset", value: "black" };
     case "hsl":
       return { type: "hsl", hue: deg(0), saturation: pct(100), luminance: pct(50) };
+    case "scrgb":
+      return { type: "scrgb", red: pct(0), green: pct(0), blue: pct(0) };
   }
 }
 

@@ -33,6 +33,17 @@ import { serializeColor } from "./color";
 import { serializeFill } from "./fill";
 import { ooxmlAngleUnits, ooxmlBool, ooxmlEmu, ooxmlPercent1000, ooxmlPercent100k } from "./units";
 
+/**
+ * Serialize effects to XML element.
+ *
+ * Note: Currently always outputs as a:effectLst even if the original was a:effectDag.
+ * The containerKind is recorded in the domain for future reference, but full DAG
+ * serialization would require preserving the original DAG structure (node connections).
+ * The patcher avoids this issue by not replacing effects elements that haven't changed.
+ *
+ * @see ECMA-376 Part 1, Section 20.1.8.25 (effectDag)
+ * @see ECMA-376 Part 1, Section 20.1.8.26 (effectLst)
+ */
 export function serializeEffects(effects: Effects): XmlElement | null {
   const children: XmlElement[] = [];
 
@@ -104,7 +115,11 @@ export function serializeEffects(effects: Effects): XmlElement | null {
     return null;
   }
 
-  return createElement("a:effectLst", {}, children);
+  // Use containerKind to determine output element name
+  // Note: Even for effectDag, we output as effectLst since we don't preserve DAG structure
+  // The containerKind is available for future enhancements or for callers to make decisions
+  const containerName = effects.containerKind === "effectDag" ? "a:effectDag" : "a:effectLst";
+  return createElement(containerName, {}, children);
 }
 
 export function serializeShadow(shadow: ShadowEffect): XmlElement {

@@ -30,6 +30,21 @@ export function serializeTextBody(textBody: TextBody): XmlElement {
   ]);
 }
 
+export function serializeDrawingTextBody(textBody: TextBody): XmlElement {
+  const paragraphs: XmlElement[] = [];
+  if (textBody.paragraphs.length > 0) {
+    paragraphs.push(...textBody.paragraphs.map(serializeParagraph));
+  } else {
+    paragraphs.push(createEmptyParagraph());
+  }
+
+  return createElement("a:txBody", {}, [
+    serializeBodyProperties(textBody.bodyProperties),
+    createElement("a:lstStyle"),
+    ...paragraphs,
+  ]);
+}
+
 /**
  * Patch a p:txBody element, preserving existing bodyPr/lstStyle while replacing paragraphs.
  */

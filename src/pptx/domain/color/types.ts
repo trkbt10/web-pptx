@@ -84,6 +84,18 @@ export type HslColor = {
 };
 
 /**
+ * scRGB color specification
+ * Uses percentage values for each channel (-1000% to +1000% per ECMA-376)
+ * @see ECMA-376 Part 1, Section 20.1.2.3.30 (scrgbClr)
+ */
+export type ScrgbColor = {
+  readonly type: "scrgb";
+  readonly red: Percent;
+  readonly green: Percent;
+  readonly blue: Percent;
+};
+
+/**
  * Color transform modifications
  * @see ECMA-376 Part 1, Section 20.1.2.3 (color transforms)
  */
@@ -124,7 +136,8 @@ export type ColorSpec =
   | SchemeColor
   | SystemColor
   | PresetColor
-  | HslColor;
+  | HslColor
+  | ScrgbColor;
 
 /**
  * Color with optional transforms
@@ -238,6 +251,30 @@ export type TileFill = {
 };
 
 /**
+ * Blip effects (color transform effects applied to the blip image)
+ * These are child elements of a:blip that modify the image appearance.
+ * @see ECMA-376 Part 1, Section 20.1.8.13 (CT_Blip)
+ */
+export type BlipEffects = {
+  readonly alphaBiLevel?: { readonly threshold: Percent };
+  readonly alphaCeiling?: boolean;
+  readonly alphaFloor?: boolean;
+  readonly alphaInv?: boolean;
+  readonly alphaMod?: boolean;
+  readonly alphaModFix?: { readonly amount: Percent };
+  readonly alphaRepl?: { readonly alpha: Percent };
+  readonly biLevel?: { readonly threshold: Percent };
+  readonly blur?: { readonly radius: Pixels; readonly grow: boolean };
+  readonly colorChange?: { readonly from: Color; readonly to: Color; readonly useAlpha: boolean };
+  readonly colorReplace?: { readonly color: Color };
+  readonly duotone?: { readonly colors: readonly [Color, Color] };
+  readonly grayscale?: boolean;
+  readonly hsl?: { readonly hue: Degrees; readonly saturation: Percent; readonly luminance: Percent };
+  readonly luminance?: { readonly brightness: Percent; readonly contrast: Percent };
+  readonly tint?: { readonly hue: Degrees; readonly amount: Percent };
+};
+
+/**
  * Picture/Blip fill
  * @see ECMA-376 Part 1, Section 20.1.8.14 (blipFill)
  */
@@ -262,6 +299,16 @@ export type BlipFill = {
    */
   readonly resolvedResource?: ResolvedBlipResource;
   readonly compressionState?: BlipCompression;
+  /**
+   * DPI for rendering the blip.
+   * @see ECMA-376 Part 1, Section 20.1.8.14 (dpi attribute)
+   */
+  readonly dpi?: number;
+  /**
+   * Effects applied to the blip image (color transforms).
+   * @see ECMA-376 Part 1, Section 20.1.8.13 (CT_Blip)
+   */
+  readonly blipEffects?: BlipEffects;
   readonly stretch?: StretchFill;
   readonly tile?: TileFill;
   readonly sourceRect?: {

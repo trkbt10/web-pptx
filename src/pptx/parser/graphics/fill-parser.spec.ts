@@ -498,6 +498,92 @@ describe("parseFill - a:blipFill (ECMA-376 Section 20.1.8.14)", () => {
     const result = parseFill(blipFill);
     expect(result).toBeUndefined();
   });
+
+  describe("dpi attribute (ECMA-376 Section 20.1.8.14)", () => {
+    it("parses dpi attribute", () => {
+      const blipFill = el("a:blipFill", { dpi: "150" }, [el("a:blip", { "r:embed": "rId1" })]);
+      const result = parseFill(blipFill);
+
+      if (result?.type === "blipFill") {
+        expect(result.dpi).toBe(150);
+      }
+    });
+
+    it("handles missing dpi attribute", () => {
+      const blipFill = el("a:blipFill", {}, [el("a:blip", { "r:embed": "rId1" })]);
+      const result = parseFill(blipFill);
+
+      if (result?.type === "blipFill") {
+        expect(result.dpi).toBeUndefined();
+      }
+    });
+  });
+
+  describe("blip effects (ECMA-376 Section 20.1.8.13 CT_Blip)", () => {
+    it("parses grayscale effect in blip", () => {
+      const blipFill = el("a:blipFill", {}, [
+        el("a:blip", { "r:embed": "rId1" }, [el("a:grayscl")]),
+      ]);
+      const result = parseFill(blipFill);
+
+      if (result?.type === "blipFill") {
+        expect(result.blipEffects).toBeDefined();
+        expect(result.blipEffects?.grayscale).toBe(true);
+      }
+    });
+
+    it("parses alphaModFix effect in blip", () => {
+      const blipFill = el("a:blipFill", {}, [
+        el("a:blip", { "r:embed": "rId1" }, [el("a:alphaModFix", { amt: "50000" })]),
+      ]);
+      const result = parseFill(blipFill);
+
+      if (result?.type === "blipFill") {
+        expect(result.blipEffects).toBeDefined();
+        expect(result.blipEffects?.alphaModFix?.amount).toBe(50);
+      }
+    });
+
+    it("parses blur effect in blip", () => {
+      const blipFill = el("a:blipFill", {}, [
+        el("a:blip", { "r:embed": "rId1" }, [el("a:blur", { rad: "914400", grow: "1" })]),
+      ]);
+      const result = parseFill(blipFill);
+
+      if (result?.type === "blipFill") {
+        expect(result.blipEffects).toBeDefined();
+        expect(result.blipEffects?.blur).toBeDefined();
+        expect(result.blipEffects?.blur?.grow).toBe(true);
+      }
+    });
+
+    it("parses duotone effect in blip", () => {
+      const blipFill = el("a:blipFill", {}, [
+        el("a:blip", { "r:embed": "rId1" }, [
+          el("a:duotone", {}, [
+            el("a:srgbClr", { val: "000000" }),
+            el("a:srgbClr", { val: "FFFFFF" }),
+          ]),
+        ]),
+      ]);
+      const result = parseFill(blipFill);
+
+      if (result?.type === "blipFill") {
+        expect(result.blipEffects).toBeDefined();
+        expect(result.blipEffects?.duotone).toBeDefined();
+        expect(result.blipEffects?.duotone?.colors).toHaveLength(2);
+      }
+    });
+
+    it("returns undefined blipEffects when no effects present", () => {
+      const blipFill = el("a:blipFill", {}, [el("a:blip", { "r:embed": "rId1" })]);
+      const result = parseFill(blipFill);
+
+      if (result?.type === "blipFill") {
+        expect(result.blipEffects).toBeUndefined();
+      }
+    });
+  });
 });
 
 // =============================================================================

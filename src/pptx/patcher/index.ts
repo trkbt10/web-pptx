@@ -38,3 +38,9 @@ export * from "./presentation";
 
 // Parts - shared XML part updaters
 export * from "./parts";
+
+// Phase 10: Advanced elements (chart/table/diagram/OLE)
+export * from "./chart";
+export * from "./table";
+export * from "./diagram";
+export * from "./ole";

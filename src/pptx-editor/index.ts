@@ -303,5 +303,16 @@ export {
 export { PresentationEditor, type PresentationEditorProps } from "./presentation/PresentationEditor";
 export { SlideThumbnailPanel } from "./panels";
 
+// Export Components
+export { ExportButton, type ExportButtonProps } from "./presentation/components";
+
+// Export Hooks
+export {
+  useExportPresentation,
+  type ExportState,
+  type UseExportPresentationOptions,
+  type UseExportPresentationResult,
+} from "./presentation/hooks";
+
 // Context Menu Types
 export type { ContextMenuActions } from "./slide/context-menu/SlideContextMenu";

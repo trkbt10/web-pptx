@@ -7,7 +7,9 @@
  */
 
 import type {
+  BlipEffects,
   BlipFill,
+  Color,
   Fill,
   GradientFill,
   GradientStop,
@@ -29,15 +31,18 @@ import {
   getAttr,
   getChild,
   getChildren,
+  isXmlElement,
   type XmlElement,
 } from "../../../xml/index";
-import { parseColorFromParent } from "./color-parser";
+import { parseColor, parseColorFromParent } from "./color-parser";
 import {
   getAngleAttr,
   getBoolAttrOr,
   getEmuAttr,
   getPercent100kAttr,
   parseBlipCompression,
+  parseFixedPercentage,
+  parsePositivePercentage,
   parseRectAlignment,
 } from "../primitive";
 
@@ -273,12 +278,153 @@ function parseSourceRect(element: XmlElement): BlipFill["sourceRect"] | undefine
   };
 }
 
+/** Mutable builder type for BlipEffects */
+type BlipEffectsBuilder = {
+  -readonly [K in keyof BlipEffects]?: BlipEffects[K];
+};
+
+/**
+ * Parse blip effects (color transform effects applied to a:blip)
+ * @see ECMA-376 Part 1, Section 20.1.8.13 (CT_Blip)
+ */
+function parseBlipEffects(blip: XmlElement): BlipEffects | undefined {
+  const effects: BlipEffectsBuilder = {};
+  let hasEffect = false;
+
+  for (const child of blip.children) {
+    if (!isXmlElement(child)) {continue;}
+
+    switch (child.name) {
+      case "a:alphaBiLevel": {
+        const threshold = parseFixedPercentage(getAttr(child, "thresh"));
+        if (threshold !== undefined) {
+          effects.alphaBiLevel = { threshold };
+          hasEffect = true;
+        }
+        break;
+      }
+      case "a:alphaCeiling":
+        effects.alphaCeiling = true;
+        hasEffect = true;
+        break;
+      case "a:alphaFloor":
+        effects.alphaFloor = true;
+        hasEffect = true;
+        break;
+      case "a:alphaInv":
+        effects.alphaInv = true;
+        hasEffect = true;
+        break;
+      case "a:alphaMod":
+        effects.alphaMod = true;
+        hasEffect = true;
+        break;
+      case "a:alphaModFix": {
+        const amount = parsePositivePercentage(getAttr(child, "amt")) ?? pct(100);
+        effects.alphaModFix = { amount };
+        hasEffect = true;
+        break;
+      }
+      case "a:alphaRepl": {
+        const alpha = parseFixedPercentage(getAttr(child, "a"));
+        if (alpha !== undefined) {
+          effects.alphaRepl = { alpha };
+          hasEffect = true;
+        }
+        break;
+      }
+      case "a:biLevel": {
+        const threshold = parseFixedPercentage(getAttr(child, "thresh"));
+        if (threshold !== undefined) {
+          effects.biLevel = { threshold };
+          hasEffect = true;
+        }
+        break;
+      }
+      case "a:blur": {
+        const radius = getEmuAttr(child, "rad") ?? px(0);
+        const grow = getBoolAttrOr(child, "grow", true);
+        effects.blur = { radius, grow };
+        hasEffect = true;
+        break;
+      }
+      case "a:clrChange": {
+        const clrFrom = getChild(child, "a:clrFrom");
+        const clrTo = getChild(child, "a:clrTo");
+        if (clrFrom && clrTo) {
+          const from = parseColorFromParent(clrFrom);
+          const to = parseColorFromParent(clrTo);
+          if (from && to) {
+            effects.colorChange = {
+              from,
+              to,
+              useAlpha: getBoolAttrOr(child, "useA", true),
+            };
+            hasEffect = true;
+          }
+        }
+        break;
+      }
+      case "a:clrRepl": {
+        const color = parseColorFromParent(child);
+        if (color) {
+          effects.colorReplace = { color };
+          hasEffect = true;
+        }
+        break;
+      }
+      case "a:duotone": {
+        const colors: Color[] = [];
+        for (const colorChild of child.children) {
+          if (isXmlElement(colorChild)) {
+            const parsed = parseColor(colorChild);
+            if (parsed) {colors.push(parsed);}
+          }
+        }
+        if (colors.length === 2) {
+          effects.duotone = { colors: [colors[0], colors[1]] };
+          hasEffect = true;
+        }
+        break;
+      }
+      case "a:grayscl":
+        effects.grayscale = true;
+        hasEffect = true;
+        break;
+      case "a:hsl": {
+        const hue = getAngleAttr(child, "hue") ?? deg(0);
+        const sat = getPercent100kAttr(child, "sat") ?? pct(0);
+        const lum = getPercent100kAttr(child, "lum") ?? pct(0);
+        effects.hsl = { hue, saturation: sat, luminance: lum };
+        hasEffect = true;
+        break;
+      }
+      case "a:lum": {
+        const bright = getPercent100kAttr(child, "bright") ?? pct(0);
+        const contrast = getPercent100kAttr(child, "contrast") ?? pct(0);
+        effects.luminance = { brightness: bright, contrast };
+        hasEffect = true;
+        break;
+      }
+      case "a:tint": {
+        const hue = getAngleAttr(child, "hue") ?? deg(0);
+        const amt = parseFixedPercentage(getAttr(child, "amt")) ?? pct(0);
+        effects.tint = { hue, amount: amt };
+        hasEffect = true;
+        break;
+      }
+    }
+  }
+
+  return hasEffect ? (effects as BlipEffects) : undefined;
+}
+
 /**
  * Parse blip (picture) fill
  * @see ECMA-376 Part 1, Section 20.1.8.14
  *
  * ```xml
- * <a:blipFill rotWithShape="1">
+ * <a:blipFill rotWithShape="1" dpi="96">
  *   <a:blip r:embed="rId1"/>
  *   <a:stretch>
  *     <a:fillRect/>
@@ -296,11 +442,20 @@ function parseBlipFill(element: XmlElement): BlipFill | undefined {
   const resourceId = embedId ?? linkId;
   if (!resourceId) {return undefined;}
 
+  // Parse dpi attribute (optional)
+  const dpiAttr = getAttr(element, "dpi");
+  const dpi = dpiAttr ? parseInt(dpiAttr, 10) : undefined;
+
+  // Parse blip effects (child elements of a:blip)
+  const blipEffects = parseBlipEffects(blip);
+
   return {
     type: "blipFill",
     resourceId,
     relationshipType: embedId ? "embed" : "link",
     compressionState: parseBlipCompression(getAttr(blip, "cstate")),
+    dpi: dpi !== undefined && !isNaN(dpi) ? dpi : undefined,
+    blipEffects,
     stretch: parseStretchFill(element),
     tile: parseTileFillMode(element),
     sourceRect: parseSourceRect(element),
