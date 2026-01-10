@@ -71,8 +71,8 @@ describe("table-parser", () => {
   });
   it("parses table from table_test.pptx slide1", async () => {
     const pptxPath = "fixtures/poi-test-data/test-data/slideshow/table_test.pptx";
-    const { cache } = await loadPptxFile(pptxPath);
-    const slideXml = cache.get("ppt/slides/slide1.xml")?.text;
+    const { zipPackage } = await loadPptxFile(pptxPath);
+    const slideXml = zipPackage.readText("ppt/slides/slide1.xml");
     expect(slideXml).toBeDefined();
 
     const doc = parseXml(slideXml!);
@@ -111,8 +111,8 @@ describe("table-parser", () => {
 
   it("shape-parser returns GraphicFrame with table data", async () => {
     const pptxPath = "fixtures/poi-test-data/test-data/slideshow/table_test.pptx";
-    const { cache } = await loadPptxFile(pptxPath);
-    const slideXml = cache.get("ppt/slides/slide1.xml")?.text;
+    const { zipPackage } = await loadPptxFile(pptxPath);
+    const slideXml = zipPackage.readText("ppt/slides/slide1.xml");
     const doc = parseXml(slideXml!);
     const root = getRootElement(doc);
     const cSld = findChildElement(root, "p:cSld");
@@ -142,8 +142,8 @@ describe("table-parser", () => {
 
   it("parseSlide includes table in shapes", async () => {
     const pptxPath = "fixtures/poi-test-data/test-data/slideshow/table_test.pptx";
-    const { cache } = await loadPptxFile(pptxPath);
-    const slideXml = cache.get("ppt/slides/slide1.xml")?.text;
+    const { zipPackage } = await loadPptxFile(pptxPath);
+    const slideXml = zipPackage.readText("ppt/slides/slide1.xml");
     const doc = parseXml(slideXml!);
 
     // Minimal parse context
@@ -176,8 +176,8 @@ describe("table-parser", () => {
 
   it("renderSlideSvg renders table as foreignObject", async () => {
     const pptxPath = "fixtures/poi-test-data/test-data/slideshow/table_test.pptx";
-    const { cache } = await loadPptxFile(pptxPath);
-    const slideXml = cache.get("ppt/slides/slide1.xml")?.text;
+    const { zipPackage } = await loadPptxFile(pptxPath);
+    const slideXml = zipPackage.readText("ppt/slides/slide1.xml");
     const doc = parseXml(slideXml!);
 
     // Minimal parse context

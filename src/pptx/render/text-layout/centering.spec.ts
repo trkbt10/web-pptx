@@ -13,16 +13,16 @@ import type { SpShape } from "../../domain";
 import type { FieldRun, RegularRun } from "../../domain/text";
 
 async function loadPptx(pptxPath: string) {
-  const { cache, presentationFile } = await loadPptxFile(pptxPath);
-  return { cache, presentationFile };
+  const { zipPackage, presentationFile } = await loadPptxFile(pptxPath);
+  return { zipPackage, presentationFile };
 }
 
 describe("text-centering-and-color", () => {
   it("parses paragraph alignment from 2411-Performance_Up slide1", async () => {
     const pptxPath = "fixtures/poi-test-data/test-data/slideshow/2411-Performance_Up.pptx";
-    const { cache } = await loadPptx(pptxPath);
+    const { zipPackage } = await loadPptx(pptxPath);
 
-    const slideXml = cache.get("ppt/slides/slide1.xml")?.text;
+    const slideXml = zipPackage.readText("ppt/slides/slide1.xml");
     expect(slideXml).toBeDefined();
 
     const doc = parseXml(slideXml!);
@@ -78,11 +78,11 @@ describe("text-centering-and-color", () => {
 
   it("checks parsed alignment with proper context", async () => {
     const pptxPath = "fixtures/poi-test-data/test-data/slideshow/2411-Performance_Up.pptx";
-    const { cache } = await loadPptx(pptxPath);
+    const { zipPackage } = await loadPptx(pptxPath);
 
     // Load XML documents
-    const slideXml = cache.get("ppt/slides/slide1.xml")?.text;
-    const masterXml = cache.get("ppt/slideMasters/slideMaster1.xml")?.text;
+    const slideXml = zipPackage.readText("ppt/slides/slide1.xml");
+    const masterXml = zipPackage.readText("ppt/slideMasters/slideMaster1.xml");
 
     const slideDoc = parseXml(slideXml!);
     const masterDoc = parseXml(masterXml!);
@@ -190,9 +190,9 @@ describe("text-centering-and-color", () => {
 
   it("checks raw XML for alignment attributes", async () => {
     const pptxPath = "fixtures/poi-test-data/test-data/slideshow/2411-Performance_Up.pptx";
-    const { cache } = await loadPptx(pptxPath);
+    const { zipPackage } = await loadPptx(pptxPath);
 
-    const slideXml = cache.get("ppt/slides/slide1.xml")?.text;
+    const slideXml = zipPackage.readText("ppt/slides/slide1.xml");
 
     console.log("\n=== Raw XML Alignment Check ===");
 
@@ -207,17 +207,17 @@ describe("text-centering-and-color", () => {
 
   it("checks layout and master for text style inheritance", async () => {
     const pptxPath = "fixtures/poi-test-data/test-data/slideshow/2411-Performance_Up.pptx";
-    const { cache } = await loadPptx(pptxPath);
+    const { zipPackage } = await loadPptx(pptxPath);
 
     // Find slide1's layout via relationships
-    const slideRels = cache.get("ppt/slides/_rels/slide1.xml.rels")?.text;
+    const slideRels = zipPackage.readText("ppt/slides/_rels/slide1.xml.rels");
     console.log("\n=== Slide1 Relationships ===");
     const layoutMatch = slideRels?.match(/Target="([^"]+slideLayout[^"]+)"/);
     console.log(`Layout: ${layoutMatch?.[1]}`);
 
     // Read layout
     const layoutPath = layoutMatch?.[1]?.replace("../", "ppt/");
-    const layoutXml = layoutPath ? cache.get(layoutPath)?.text : undefined;
+    const layoutXml = layoutPath ? zipPackage.readText(layoutPath) : undefined;
 
     // Check layout for alignment
     const layoutAlgnMatches = layoutXml?.match(/algn="[^"]+"/g);
@@ -227,13 +227,13 @@ describe("text-centering-and-color", () => {
     const layoutRelsPath = layoutPath
       ? layoutPath.replace(".xml", ".xml.rels").replace("slideLayouts/", "slideLayouts/_rels/")
       : undefined;
-    const layoutRels = layoutRelsPath ? cache.get(layoutRelsPath)?.text : undefined;
+    const layoutRels = layoutRelsPath ? zipPackage.readText(layoutRelsPath) : undefined;
     const masterMatch = layoutRels?.match(/Target="([^"]+slideMaster[^"]+)"/);
     console.log(`Master: ${masterMatch?.[1]}`);
 
     // Read master
     const masterPath = masterMatch?.[1]?.replace("../", "ppt/");
-    const masterXml = masterPath ? cache.get(masterPath)?.text : undefined;
+    const masterXml = masterPath ? zipPackage.readText(masterPath) : undefined;
 
     // Check master for titleStyle alignment
     console.log("\n=== Master titleStyle ===");
@@ -248,7 +248,7 @@ describe("text-centering-and-color", () => {
     }
 
     // Check theme for color scheme
-    const themeXml = cache.get("ppt/theme/theme1.xml")?.text;
+    const themeXml = zipPackage.readText("ppt/theme/theme1.xml");
     console.log("\n=== Theme Color Scheme ===");
     const dk1Match = themeXml?.match(/<a:dk1>[\s\S]*?<\/a:dk1>/);
     const dk2Match = themeXml?.match(/<a:dk2>[\s\S]*?<\/a:dk2>/);

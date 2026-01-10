@@ -2,13 +2,23 @@
  * @file PPTX Exporter
  *
  * Main API for exporting PresentationDocument to PPTX format.
+ * Uses ZipPackage for unified ZIP handling (shared with pptx-loader).
+ *
  * Phase 1 (MVP): Simple pass-through - exports the original PPTX with updated XML.
+ *
+ * @see src/pptx/opc/zip-package.ts - Shared ZIP abstraction
+ * @see src/pptx/app/pptx-loader.ts - Corresponding load functionality
  */
 
 import type { PresentationDocument } from "../app/presentation-document";
 import type { PresentationFile } from "../domain";
 import { serializeDocument } from "../../xml";
-import { createZipBuilder, createZipBuilderFromBuffer, type ZipBuilder } from "./zip-builder";
+import {
+  createEmptyZipPackage,
+  isBinaryFile,
+  type ZipPackage,
+  type ZipGenerateOptions,
+} from "../opc/zip-package";
 
 // =============================================================================
 // Types
@@ -61,8 +71,8 @@ export async function exportPptx(
     throw new Error("PresentationDocument must have a presentationFile for export");
   }
 
-  // Create a ZIP builder from the source
-  const builder = await createBuilderFromPresentationFile(doc.presentationFile);
+  // Create a ZipPackage and copy all files from source
+  const pkg = copyPresentationFileToPackage(doc.presentationFile);
 
   // Update slide XMLs from apiSlide.content
   for (const slideWithId of doc.slides) {
@@ -72,12 +82,12 @@ export async function exportPptx(
         declaration: true,
         standalone: true,
       });
-      builder.addText(slidePath, xml);
+      pkg.writeText(slidePath, xml);
     }
   }
 
   // Generate the PPTX
-  const blob = await builder.toBlob({
+  const blob = await pkg.toBlob({
     compressionLevel: options.compressionLevel,
   });
 
@@ -100,7 +110,7 @@ export async function exportPptxAsBuffer(
     throw new Error("PresentationDocument must have a presentationFile for export");
   }
 
-  const builder = await createBuilderFromPresentationFile(doc.presentationFile);
+  const pkg = copyPresentationFileToPackage(doc.presentationFile);
 
   for (const slideWithId of doc.slides) {
     if (slideWithId.apiSlide) {
@@ -109,11 +119,11 @@ export async function exportPptxAsBuffer(
         declaration: true,
         standalone: true,
       });
-      builder.addText(slidePath, xml);
+      pkg.writeText(slidePath, xml);
     }
   }
 
-  return builder.toArrayBuffer({
+  return pkg.toArrayBuffer({
     compressionLevel: options.compressionLevel,
   });
 }
@@ -123,12 +133,12 @@ export async function exportPptxAsBuffer(
 // =============================================================================
 
 /**
- * Create a ZipBuilder by reading all files from PresentationFile.
+ * Copy all files from PresentationFile to a new ZipPackage.
  *
- * Uses listFiles() if available, otherwise throws an error.
- * This ensures we copy ALL files from the original PPTX without guessing.
+ * This creates a new package with all the original content,
+ * which can then be modified before export.
  */
-async function createBuilderFromPresentationFile(file: PresentationFile): Promise<ZipBuilder> {
+function copyPresentationFileToPackage(file: PresentationFile): ZipPackage {
   // Require listFiles() for proper export
   if (!file.listFiles) {
     throw new Error(
@@ -137,44 +147,22 @@ async function createBuilderFromPresentationFile(file: PresentationFile): Promis
     );
   }
 
+  const pkg = createEmptyZipPackage();
   const paths = file.listFiles();
-  const builder = createZipBuilder();
 
   for (const path of paths) {
-    // Determine if this is a binary file based on extension
     if (isBinaryFile(path)) {
       const content = file.readBinary(path);
       if (content) {
-        builder.addBinary(path, content);
+        pkg.writeBinary(path, content);
       }
     } else {
       const content = file.readText(path);
       if (content) {
-        builder.addText(path, content);
+        pkg.writeText(path, content);
       }
     }
   }
 
-  return builder;
-}
-
-/**
- * Check if a file path is a binary file (vs XML/text)
- */
-function isBinaryFile(path: string): boolean {
-  const binaryExtensions = [
-    ".png",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".bmp",
-    ".wmf",
-    ".emf",
-    ".svg",
-    ".bin",
-    ".ole",
-    ".vml",
-  ];
-  const lowerPath = path.toLowerCase();
-  return binaryExtensions.some((ext) => lowerPath.endsWith(ext));
+  return pkg;
 }

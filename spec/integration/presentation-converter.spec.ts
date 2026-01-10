@@ -130,18 +130,18 @@ describe("convertToPresentationDocument", () => {
     it("extracts image relationships correctly", async () => {
       // Find a PPTX with images
       const fixturePath = path.join(FIXTURE_DIR, "decompressed-pptx/Sample_demo1.pptx");
-      const { cache } = await loadPptxFile(fixturePath);
-      const filePaths = Array.from(cache.keys());
+      const { zipPackage } = await loadPptxFile(fixturePath);
+      const filePaths = zipPackage.listFiles();
 
       // Check for media files
-      const mediaFiles = filePaths.filter((f) =>
+      const mediaFiles = filePaths.filter((f: string) =>
         f.startsWith("ppt/media/")
       );
       console.log("Media files found:", mediaFiles);
 
       // Verify media files can be accessed
       for (const mediaFile of mediaFiles.slice(0, 3)) {
-        const buffer = cache.get(mediaFile)?.buffer;
+        const buffer = zipPackage.readBinary(mediaFile);
         expect(buffer?.byteLength ?? 0).toBeGreaterThan(0);
 
         const mimeType = getMimeTypeFromPath(mediaFile);

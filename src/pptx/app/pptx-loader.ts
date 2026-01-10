@@ -1,91 +1,97 @@
 /**
- * @file Client-side PPTX loader using JSZip.
+ * @file Client-side PPTX loader
  *
  * Loads and parses PPTX files directly in the browser without any backend.
+ * Uses ZipPackage for unified ZIP handling (shared with pptx-exporter).
+ *
+ * @see src/pptx/opc/zip-package.ts - Shared ZIP abstraction
+ * @see src/pptx/exporter/pptx-exporter.ts - Corresponding export functionality
  */
 
-import JSZip from "jszip";
+import { loadZipPackage, type ZipPackage } from "../opc/zip-package";
 import { openPresentation } from "./open-presentation";
 import type { PresentationFile } from "../domain";
 
-export type PptxFileCacheEntry = { text: string; buffer: ArrayBuffer };
-export type PptxFileCache = Map<string, PptxFileCacheEntry>;
+// =============================================================================
+// Types
+// =============================================================================
 
+/**
+ * Result of loading a PPTX file.
+ */
 export type LoadedPresentation = {
-  presentation: ReturnType<typeof openPresentation>;
-  presentationFile: PresentationFile;
+  /** Parsed presentation data */
+  readonly presentation: ReturnType<typeof openPresentation>;
+  /** File access interface for the loaded package */
+  readonly presentationFile: PresentationFile;
 };
 
+/**
+ * Bundle containing the loaded package and file access.
+ * Provides direct access to the ZipPackage for read/write operations.
+ */
 export type PptxFileBundle = {
-  cache: PptxFileCache;
-  presentationFile: PresentationFile;
+  /** The underlying ZIP package (supports both read and write) */
+  readonly zipPackage: ZipPackage;
+  /** File access interface (read-only view) */
+  readonly presentationFile: PresentationFile;
 };
 
+/**
+ * Accepted input types for loading PPTX from buffer.
+ */
 export type PptxBufferInput = ArrayBuffer | Uint8Array;
 
-/**
- * Preload all files from the ZIP into memory
- */
-async function preloadZipFiles(jszip: JSZip): Promise<PptxFileCache> {
-  const cache: PptxFileCache = new Map();
-  const files = Object.keys(jszip.files);
-
-  for (const filePath of files) {
-    const file = jszip.file(filePath);
-    if (file !== null && !file.dir) {
-      const buffer = await file.async("arraybuffer");
-      const text = new TextDecoder().decode(buffer);
-      cache.set(filePath, { text, buffer });
-    }
-  }
-
-  return cache;
-}
+// =============================================================================
+// Main Loading Functions
+// =============================================================================
 
 /**
- * Create a PresentationFile interface from the cached files
+ * Load a PPTX file from an ArrayBuffer and return the bundle.
+ *
+ * Use this when you need access to the underlying ZipPackage
+ * for later modification or export.
+ *
+ * @example
+ * ```typescript
+ * const bundle = await loadPptxBundleFromBuffer(buffer);
+ *
+ * // Read files directly
+ * const xml = bundle.zipPackage.readText("ppt/presentation.xml");
+ *
+ * // Modify and export
+ * bundle.zipPackage.writeText("ppt/slides/slide1.xml", newXml);
+ * const blob = await bundle.zipPackage.toBlob();
+ * ```
  */
-export function createPresentationFile(cache: PptxFileCache): PresentationFile {
-  // Pre-compute file list for efficient access
-  const fileList = Array.from(cache.keys());
-
-  return {
-    readText(filePath: string): string | null {
-      const entry = cache.get(filePath);
-      return entry?.text ?? null;
-    },
-    readBinary(filePath: string): ArrayBuffer | null {
-      const entry = cache.get(filePath);
-      return entry?.buffer ?? null;
-    },
-    exists(filePath: string): boolean {
-      return cache.has(filePath);
-    },
-    listFiles(): readonly string[] {
-      return fileList;
-    },
-  };
-}
-
-/**
- * Load a PPTX file from an ArrayBuffer and return the cached bundle.
- */
-export async function loadPptxBundleFromBuffer(buffer: PptxBufferInput): Promise<PptxFileBundle> {
+export async function loadPptxBundleFromBuffer(
+  buffer: PptxBufferInput,
+): Promise<PptxFileBundle> {
   if (!buffer) {
     throw new Error("buffer is required");
   }
-  const jszip = await JSZip.loadAsync(buffer);
-  const cache = await preloadZipFiles(jszip);
+  const zipPackage = await loadZipPackage(buffer);
+
   return {
-    cache,
-    presentationFile: createPresentationFile(cache),
+    zipPackage,
+    presentationFile: zipPackage.asPresentationFile(),
   };
 }
 
 /**
- * Load a PPTX file from an ArrayBuffer
+ * Load a PPTX file from an ArrayBuffer.
+ *
+ * This is the main loading function for most use cases.
+ *
+ * @example
+ * ```typescript
+ * const { presentation, presentationFile } = await loadPptxFromBuffer(buffer);
+ * const slides = presentation.slides;
+ * ```
  */
-export async function loadPptxFromBuffer(buffer: ArrayBuffer): Promise<LoadedPresentation> {
+export async function loadPptxFromBuffer(
+  buffer: PptxBufferInput,
+): Promise<LoadedPresentation> {
   const { presentationFile } = await loadPptxBundleFromBuffer(buffer);
   const presentation = openPresentation(presentationFile);
 
@@ -93,7 +99,16 @@ export async function loadPptxFromBuffer(buffer: ArrayBuffer): Promise<LoadedPre
 }
 
 /**
- * Load a PPTX file from a File object (from file input)
+ * Load a PPTX file from a File object (from file input).
+ *
+ * @example
+ * ```typescript
+ * const input = document.querySelector('input[type="file"]');
+ * input.onchange = async (e) => {
+ *   const file = e.target.files[0];
+ *   const { presentation } = await loadPptxFromFile(file);
+ * };
+ * ```
  */
 export async function loadPptxFromFile(file: File): Promise<LoadedPresentation> {
   const buffer = await file.arrayBuffer();
@@ -101,7 +116,12 @@ export async function loadPptxFromFile(file: File): Promise<LoadedPresentation> 
 }
 
 /**
- * Load a PPTX file from a URL
+ * Load a PPTX file from a URL.
+ *
+ * @example
+ * ```typescript
+ * const { presentation } = await loadPptxFromUrl("/templates/blank.pptx");
+ * ```
  */
 export async function loadPptxFromUrl(url: string): Promise<LoadedPresentation> {
   const response = await fetch(url);

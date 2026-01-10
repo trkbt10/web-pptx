@@ -79,6 +79,18 @@ export {
 } from "./utils";
 
 // =============================================================================
+// ZIP Package (Unified read/write abstraction)
+// =============================================================================
+
+export {
+  loadZipPackage,
+  createEmptyZipPackage,
+  isBinaryFile,
+} from "./zip-package";
+
+export type { ZipPackage, ZipGenerateOptions } from "./zip-package";
+
+// =============================================================================
 // Re-export Domain Types (Canonical Source)
 // =============================================================================
 

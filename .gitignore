@@ -177,3 +177,4 @@ fixtures/
 spec/visual-regression/__output__/
 spec/visual-regression/__diff__/
 reference
+spec/webgl-visual/__output__

@@ -1,0 +1,22 @@
+/**
+ * @file PPTX Patcher Module
+ *
+ * Change detection and XML patching for PPTX export.
+ *
+ * @example
+ * ```typescript
+ * import { detectSlideChanges, patchSlideXml } from "./pptx/patcher";
+ *
+ * // Detect changes between original and modified slide
+ * const changes = detectSlideChanges(originalSlide, modifiedSlide);
+ *
+ * // Apply changes to the XML document
+ * const updatedXml = patchSlideXml(slideXml, changes);
+ * ```
+ */
+
+// Core - Change detection and XML mutation
+export * from "./core";
+
+// Slide - Slide-level patching
+export * from "./slide";
