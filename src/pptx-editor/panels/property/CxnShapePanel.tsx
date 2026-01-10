@@ -7,10 +7,10 @@
 import type { CxnShape } from "../../../pptx/domain/index";
 import { Accordion } from "../../ui/layout/Accordion";
 import { FieldGroup } from "../../ui/layout/index";
+import { LineEditor } from "../../ui/line";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,
-  LineEditor,
   EffectsEditor,
   GeometryEditor,
 } from "../../editors/index";

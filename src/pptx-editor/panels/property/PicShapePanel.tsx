@@ -5,7 +5,7 @@
  */
 
 import type { PicShape } from "../../../pptx/domain/index";
-import type { Percent } from "../../../pptx/domain/types";
+import type { Percent } from "../../../ooxml/domain/units";
 import { Accordion } from "../../ui/layout/Accordion";
 import { FieldGroup, FieldRow } from "../../ui/layout/index";
 import { Toggle } from "../../ui/primitives/index";

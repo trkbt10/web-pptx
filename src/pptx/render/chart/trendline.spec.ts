@@ -10,7 +10,7 @@ import { renderTrendline, renderTrendlines } from "./trendline";
 import type { Trendline } from "../../domain/chart";
 import type { SeriesData } from "./types";
 import type { BodyProperties, ParagraphProperties } from "../../domain/text";
-import { pt, px } from "../../domain/types";
+import { pt, px } from "../../../ooxml/domain/units";
 
 // Mock series data for testing
 const mockSeriesData: SeriesData = {

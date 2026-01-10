@@ -434,8 +434,4 @@ export function resolveEmbeddedXlsxPath(chartRelsXml: string): string | undefine
   }
 }
 
-// =============================================================================
-// Re-exports for backward compatibility
-// =============================================================================
-
-export type { XlsxWorkbook, XlsxWorksheet } from "../../../xlsx/domain/workbook";
+// XlsxWorkbook, XlsxWorksheet: import directly from "@/xlsx/domain/workbook"

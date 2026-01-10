@@ -1,5 +1,5 @@
 import { getByPath, getChild, getChildren, getTextByPath, parseXml } from "../../../xml";
-import { deg, px } from "../../domain/types";
+import { deg, px } from "../../../ooxml/domain/units";
 import { patchChart, patchChartTransform } from "./chart-patcher";
 
 describe("chart-patcher", () => {

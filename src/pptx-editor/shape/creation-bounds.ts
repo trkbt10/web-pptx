@@ -4,7 +4,7 @@
  * Shared bounds type for creation flows (click/drag placement).
  */
 
-import type { Pixels } from "../../pptx/domain/types";
+import type { Pixels } from "../../ooxml/domain/units";
 
 export type ShapeBounds = {
   readonly x: Pixels;

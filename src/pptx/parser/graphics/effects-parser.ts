@@ -6,38 +6,9 @@
  * @see ECMA-376 Part 1, Section 20.1.8 - Effect Properties
  */
 
-import type {
-  Color,
-  Effects,
-  EffectContainerKind,
-  AlphaBiLevelEffect,
-  AlphaCeilingEffect,
-  AlphaFloorEffect,
-  AlphaInverseEffect,
-  AlphaModulateEffect,
-  AlphaModulateFixedEffect,
-  AlphaOutsetEffect,
-  AlphaReplaceEffect,
-  BiLevelEffect,
-  BlendEffect,
-  BlendMode,
-  ColorChangeEffect,
-  ColorReplaceEffect,
-  DuotoneEffect,
-  EffectContainer,
-  FillEffectType,
-  FillOverlayEffect,
-  GrayscaleEffect,
-  PresetShadowEffect,
-  PresetShadowValue,
-  RelativeOffsetEffect,
-  GlowEffect,
-  ReflectionEffect,
-  ShadowEffect,
-  SoftEdgeEffect,
-  StyleReference,
-} from "../../domain/index";
-import { px, deg, pct } from "../../domain/types";
+import type { Color } from "../../../ooxml/domain/color";
+import type { Effects, EffectContainerKind, AlphaBiLevelEffect, AlphaCeilingEffect, AlphaFloorEffect, AlphaInverseEffect, AlphaModulateEffect, AlphaModulateFixedEffect, AlphaOutsetEffect, AlphaReplaceEffect, BiLevelEffect, BlendEffect, BlendMode, ColorChangeEffect, ColorReplaceEffect, DuotoneEffect, EffectContainer, FillEffectType, FillOverlayEffect, GrayscaleEffect, PresetShadowEffect, PresetShadowValue, RelativeOffsetEffect, GlowEffect, ReflectionEffect, ShadowEffect, SoftEdgeEffect, StyleReference } from "../../domain/index";
+import { px, deg, pct } from "../../../ooxml/domain/units";
 import { getAttr, getChild, type XmlElement } from "../../../xml/index";
 import { parseColor, parseColorFromParent } from "./color-parser";
 import { parseFill } from "./fill-parser";

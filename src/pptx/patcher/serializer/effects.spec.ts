@@ -3,7 +3,7 @@
  */
 
 import { createElement, getChild } from "../../../xml";
-import { deg, pct, px } from "../../domain/types";
+import { deg, pct, px } from "../../../ooxml/domain/units";
 import type { Effects } from "../../domain";
 import { parseEffects } from "../../parser/graphics/effects-parser";
 import { serializeEffects } from "./effects";

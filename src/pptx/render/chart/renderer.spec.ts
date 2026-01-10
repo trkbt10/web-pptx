@@ -24,7 +24,7 @@ import type {
   BubbleSeries,
 } from "../../domain/chart";
 import { createCoreRenderContext } from "../render-context";
-import { pct, deg, px } from "../../domain/types";
+import { pct, deg, px } from "../../../ooxml/domain/units";
 import { loadPptxFile } from "../../../../scripts/lib/pptx-loader";
 
 const AASCU_FIXTURE = "fixtures/poi-test-data/test-data/slideshow/aascu.org_workarea_downloadasset.aspx_id=5864.pptx";

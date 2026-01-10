@@ -12,8 +12,8 @@
  */
 
 import type { Geometry, TextRect } from "../shape";
-import type { Pixels } from "../types";
-import { px } from "../types";
+import type { Pixels } from "../../../ooxml/domain/units";
+import { px } from "../../../ooxml/domain/units";
 import {
   createGuideContext,
   evaluateGuides,

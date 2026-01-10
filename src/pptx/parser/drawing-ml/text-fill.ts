@@ -6,7 +6,8 @@
  * @see ECMA-376 Part 1, Section 20.1.8 (Fill Properties)
  */
 
-import type { Fill, Color } from "../../domain/color/types";
+import type { Color } from "../../../ooxml/domain/color";
+import type { Fill } from "../../domain/color/types";
 import type { ColorContext } from "../../domain/color/context";
 import type { TextFillConfig } from "../../domain/drawing-ml/text-fill";
 import type { ResourceResolverFn } from "../../domain";

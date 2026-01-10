@@ -11,7 +11,7 @@
 
 import { slideEditorReducer } from "./reducer";
 import type { Slide, SpShape, Shape } from "../../../../pptx/domain";
-import { px, deg } from "../../../../pptx/domain/types";
+import { px, deg } from "../../../../ooxml/domain/units";
 import {
   createSlideEditorState,
   type SlideEditorState,

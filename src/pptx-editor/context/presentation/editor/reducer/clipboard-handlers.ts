@@ -6,7 +6,7 @@
 
 import type { Shape } from "../../../../../pptx/domain";
 import type { ShapeId } from "../../../../../pptx/domain/types";
-import { px } from "../../../../../pptx/domain/types";
+import { px } from "../../../../../ooxml/domain/units";
 import type { PresentationEditorState } from "../types";
 import type { HandlerMap } from "./handler-types";
 import { getActiveSlide, updateActiveSlideInDocument } from "./helpers";
@@ -14,7 +14,8 @@ import { findSlideById } from "../slide";
 import { pushHistory } from "../../../slide/state";
 import { findShapeById } from "../../../../shape/query";
 import { generateShapeId } from "../../../../shape/mutation";
-import { getShapeTransform, withUpdatedTransform } from "../../../../shape/transform";
+import { withUpdatedTransform } from "../../../../shape/transform";
+import { getShapeTransform } from "../../../../../pptx/render/svg/slide-utils";
 
 // Note: CopyAction and PasteAction types not needed since handlers don't use action payload
 

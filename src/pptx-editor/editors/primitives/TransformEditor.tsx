@@ -9,7 +9,8 @@ import { FieldGroup, FieldRow } from "../../ui/layout";
 import { Toggle } from "../../ui/primitives";
 import { PixelsEditor } from "./PixelsEditor";
 import { DegreesEditor } from "./DegreesEditor";
-import { px, deg, type Transform } from "../../../pptx/domain/types";
+import { px, deg } from "../../../ooxml/domain/units";
+import type { Transform } from "../../../pptx/domain/types";
 import type { EditorProps } from "../../types";
 
 export type TransformEditorProps = EditorProps<Transform> & {

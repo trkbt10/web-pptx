@@ -5,12 +5,7 @@
  */
 
 import { getAttr, getChild, type XmlElement } from "../../../xml";
-import type {
-  GraphicContent,
-  GraphicFrame,
-  GraphicFrameLocks,
-  OleObjectFollowColorScheme,
-} from "../../domain";
+import type { GraphicContent, GraphicFrame, GraphicFrameLocks, OleObjectFollowColorScheme } from "../../domain";
 import { parseTable } from "../table/table-parser";
 import { parseTransform } from "../graphics/transform-parser";
 import { getBoolAttr, getIntAttr, parseShapeId } from "../primitive";

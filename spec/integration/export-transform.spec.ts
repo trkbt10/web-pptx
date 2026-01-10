@@ -14,7 +14,7 @@ import { openPresentation } from "../../src/pptx";
 import { convertToPresentationDocument, loadPptxFromBuffer } from "../../src/pptx/app";
 import { exportPptxAsBuffer } from "../../src/pptx/exporter";
 import { detectSlideChanges, patchSlideXml } from "../../src/pptx/patcher";
-import { deg, px } from "../../src/pptx/domain/types";
+import { deg, px } from "../../src/ooxml/domain/units";
 import type { Slide as DomainSlide } from "../../src/pptx/domain/slide/types";
 import type { Shape } from "../../src/pptx/domain/shape";
 import type { Transform } from "../../src/pptx/domain/geometry";

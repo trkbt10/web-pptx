@@ -4,16 +4,13 @@
  * Utilities for converting between client and slide coordinate systems.
  */
 
-// Re-export viewport-aware coordinate functions from the shared module
-export {
-  screenToSlideCoords,
-  slideToScreenCoords,
-  screenToCanvasCoords,
-  isPointInCanvasArea,
-  isPointInRulerArea,
-} from "../../pptx/render/svg-viewport";
-
-export type { ViewportTransform } from "../../pptx/render/svg-viewport";
+// =============================================================================
+// Viewport-aware coordinate functions - DO NOT RE-EXPORT
+// =============================================================================
+// Import directly from "@/pptx/render/svg-viewport" for:
+// screenToSlideCoords, slideToScreenCoords, screenToCanvasCoords,
+// isPointInCanvasArea, isPointInRulerArea, ViewportTransform
+// =============================================================================
 
 /**
  * Convert client (mouse) coordinates to slide coordinates.

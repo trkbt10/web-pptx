@@ -4,18 +4,19 @@
  */
 
 import type { TextBody, Paragraph, TextRun, RunProperties, BulletStyle, AutoNumberBullet } from "../../domain/text";
-import type { Pixels, Points } from "../../domain/types";
+import type { Pixels, Points } from "../../../ooxml/domain/units";
 import type { LayoutInput, LayoutParagraphInput, LayoutSpan, TextBoxConfig, BulletConfig, AutoFitConfig, TextOutlineConfig, FontAlignment, LayoutTabStop } from "./types";
 import type { RenderOptions } from "../render-options";
 import type { ColorContext } from "../../domain/color/context";
 import type { FontScheme } from "../../domain/resolution";
 import { resolveThemeFont } from "../../domain/resolution";
-import type { Color, Line, Fill } from "../../domain/color/types";
+import type { Color } from "../../../ooxml/domain/color";
+import type { Line, Fill } from "../../domain/color/types";
 
 import { resolveColor as resolveColorRaw } from "../../domain/color/resolution";
 import { resolveTextFill, resolveTextEffects } from "../../parser/drawing-ml";
 import type { ResourceResolver } from "../../parser/drawing-ml";
-import { px, pt, pct } from "../../domain/types";
+import { px, pt, pct } from "../../../ooxml/domain/units";
 import { DEFAULT_FONT_SIZE_PT } from "../../domain/defaults";
 import type { AutoFit } from "../../domain/text";
 import { formatAutoNumber } from "./auto-number";

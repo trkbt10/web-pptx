@@ -6,7 +6,7 @@
 
 import type { DiagramDataModel, DiagramPoint, DiagramConnection } from "../../../pptx/domain/diagram";
 import type { BodyProperties } from "../../../pptx/domain/text";
-import { px } from "../../../pptx/domain/types";
+import { px } from "../../../ooxml/domain/units";
 import { createDefaultDiagramDataModel, createDefaultDiagramPoint, createDefaultDiagramConnection } from "./index";
 
 const createDefaultBodyProperties = (): BodyProperties => ({

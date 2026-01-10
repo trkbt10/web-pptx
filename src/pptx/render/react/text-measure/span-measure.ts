@@ -6,7 +6,7 @@
  */
 
 import type { LayoutSpan } from "../../text-layout";
-import { px } from "../../../domain/types";
+import { px } from "../../../../ooxml/domain/units";
 import { PT_TO_PX } from "../../../domain/unit-conversion";
 import { applyTextTransform } from "../primitives/text/text-utils";
 import { ensureSvgTextNode, normalizeSpaces, setTextAttributes } from "./svg-text-measure";

@@ -17,7 +17,7 @@ import {
   resolveSpanHeight,
   isFlagEnabled,
 } from "../../domain/table/resolver";
-import type { Pixels } from "../../domain/index";
+import type { Pixels } from "../../../ooxml/domain/units";
 import type { ColorContext } from "../../domain/color/context";
 import { renderFillToStyle, renderLineToStyle } from "./fill";
 import type { RenderOptions } from "../render-options";

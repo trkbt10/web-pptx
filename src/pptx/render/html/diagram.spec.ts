@@ -12,7 +12,7 @@ import { renderDiagram, renderDiagramPlaceholder } from "./diagram";
 import type { DiagramContent } from "../../domain/index";
 import { createEmptyCoreRenderContext } from "../render-context";
 import type { SpShape } from "../../domain/shape";
-import { px, deg } from "../../domain/types";
+import { px, deg } from "../../../ooxml/domain/units";
 import type { BodyProperties, ParagraphProperties } from "../../domain/text";
 
 /**

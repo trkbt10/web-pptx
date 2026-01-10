@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { px, deg } from "../../../../pptx/domain/types";
+import { px, deg } from "../../../../ooxml/domain/units";
 import {
   createIdleDragState,
   isDragIdle,

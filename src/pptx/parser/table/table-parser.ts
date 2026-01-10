@@ -20,7 +20,7 @@ import type {
   TableProperties,
   TableRow,
 } from "../../domain/table/types";
-import { px } from "../../domain/types";
+import { px } from "../../../ooxml/domain/units";
 import {
   getAttr,
   getChild,

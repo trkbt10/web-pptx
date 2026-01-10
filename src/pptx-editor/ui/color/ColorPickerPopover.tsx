@@ -7,8 +7,8 @@
  */
 
 import { useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
-import type { SolidFill } from "../../../pptx/domain/color/types";
-import { pct } from "../../../pptx/domain/types";
+import type { SolidFill } from "../../../ooxml/domain/fill";
+import { pct } from "../../../ooxml/domain/units";
 import { Popover } from "../primitives/Popover";
 import { LabeledSlider } from "../common";
 import { FillPreview } from "./FillPreview";

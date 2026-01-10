@@ -3,31 +3,7 @@
  */
 
 import { createElement, type XmlElement } from "../../../xml";
-import type {
-  AlphaBiLevelEffect,
-  AlphaCeilingEffect,
-  AlphaFloorEffect,
-  AlphaInverseEffect,
-  AlphaModulateEffect,
-  AlphaModulateFixedEffect,
-  AlphaOutsetEffect,
-  AlphaReplaceEffect,
-  BiLevelEffect,
-  BlendEffect,
-  ColorChangeEffect,
-  ColorReplaceEffect,
-  DuotoneEffect,
-  EffectContainer,
-  Effects,
-  FillOverlayEffect,
-  GlowEffect,
-  GrayscaleEffect,
-  PresetShadowEffect,
-  ReflectionEffect,
-  RelativeOffsetEffect,
-  ShadowEffect,
-  SoftEdgeEffect,
-} from "../../domain";
+import type { AlphaBiLevelEffect, AlphaCeilingEffect, AlphaFloorEffect, AlphaInverseEffect, AlphaModulateEffect, AlphaModulateFixedEffect, AlphaOutsetEffect, AlphaReplaceEffect, BiLevelEffect, BlendEffect, ColorChangeEffect, ColorReplaceEffect, DuotoneEffect, EffectContainer, Effects, FillOverlayEffect, GlowEffect, GrayscaleEffect, PresetShadowEffect, ReflectionEffect, RelativeOffsetEffect, ShadowEffect, SoftEdgeEffect } from "../../domain";
 import { serializeColor } from "./color";
 import { serializeFill } from "./fill";
 import { ooxmlAngleUnits, ooxmlBool, ooxmlEmu, ooxmlPercent1000, ooxmlPercent100k } from "./units";

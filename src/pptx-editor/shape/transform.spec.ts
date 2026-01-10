@@ -1,9 +1,10 @@
 /**
  * @file Shape transform utilities tests
  */
-import { px, deg } from "../../pptx/domain/types";
+import { px, deg } from "../../ooxml/domain/units";
 import type { SpShape, GraphicFrame, GrpShape, CxnShape, ContentPartShape } from "../../pptx/domain/shape";
-import { getShapeTransform, withUpdatedTransform, hasEditableTransform } from "./transform";
+import { getShapeTransform } from "../../pptx/render/svg/slide-utils";
+import { withUpdatedTransform, hasEditableTransform } from "./transform";
 
 // =============================================================================
 // Test Fixtures

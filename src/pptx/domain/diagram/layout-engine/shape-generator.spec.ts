@@ -12,9 +12,10 @@ import type {
   DiagramConnection,
 } from "../types";
 import type { SpShape } from "../../shape";
-import type { Fill, SolidFill, Line } from "../../color/types";
+import type { SolidFill } from "../../../../ooxml/domain/fill";
+import type { Fill, Line } from "../../color/types";
 import type { TextBody } from "../../text";
-import { px, deg } from "../../types";
+import { px, deg } from "../../../../ooxml/domain/units";
 import {
   generateDiagramShapes,
   shapeToSvgAttributes,

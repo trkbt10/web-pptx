@@ -3,8 +3,8 @@
  */
 
 import { getChild } from "../../../xml";
-import { deg, pct } from "../../domain/types";
-import type { Color } from "../../domain";
+import { deg, pct } from "../../../ooxml/domain/units";
+import type { Color } from "../../../ooxml/domain/color";
 import { parseColor } from "../../parser/graphics/color-parser";
 import { serializeColor } from "./color";
 

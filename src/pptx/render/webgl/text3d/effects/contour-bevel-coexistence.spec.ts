@@ -14,7 +14,7 @@ import * as THREE from "three";
 import { createContourMesh, createContourMeshExpanded, createContourFromShapes } from "./contour";
 import { getBevelConfig, type BevelConfig } from "../geometry/bevel";
 import { createExtrudedGeometryWithBevel, type AsymmetricBevelSpec } from "../geometry/bevel/three-adapter";
-import { px } from "../../../../domain/types";
+import { px } from "../../../../../ooxml/domain/units";
 
 /**
  * Create a simple square shape for testing

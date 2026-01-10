@@ -1,4 +1,4 @@
-import type { Degrees, Percent, Pixels } from "../../domain";
+import type { Degrees, Percent, Pixels } from "../../../ooxml/domain/units";
 import { EMU_PER_PIXEL } from "../../domain/defaults";
 
 export function ooxmlBool(value: boolean): "1" | "0" {

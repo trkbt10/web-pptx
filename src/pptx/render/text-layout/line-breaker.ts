@@ -4,8 +4,8 @@
  */
 
 import type { MeasuredSpan, TextBoxConfig } from "./types";
-import type { Pixels, Points } from "../../domain/types";
-import { px, pt } from "../../domain/types";
+import type { Pixels, Points } from "../../../ooxml/domain/units";
+import { px, pt } from "../../../ooxml/domain/units";
 import { estimateTextWidth } from "./measurer";
 import { isCjkCodePoint } from "../../../text/cjk";
 import { DEFAULT_FONT_SIZE_PT } from "../../domain/defaults";

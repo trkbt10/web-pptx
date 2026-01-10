@@ -6,9 +6,9 @@
 
 import { type CSSProperties, useCallback, useState, useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
+import { px } from "../../../ooxml/domain/units";
 import type { SlideSize, PresentationFile, Shape } from "../../../pptx/domain";
 import type { SlideLayoutOption } from "../../../pptx/app";
-import { px } from "../../../pptx/domain/types";
 import { LayoutThumbnail, useLayoutThumbnails } from "../../thumbnail";
 import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../design-tokens";
 

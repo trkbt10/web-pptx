@@ -10,8 +10,7 @@ import { render } from "@testing-library/react";
 import type { Fill, Line, SlideSize } from "../../../../domain";
 import type { Effects, ShadowEffect } from "../../../../domain/effects";
 import type { ColorContext } from "../../../../domain/color/context";
-import type { Pixels } from "../../../../domain/types";
-import { px, deg, pct } from "../../../../domain/types";
+import { px, deg, pct } from "../../../../../ooxml/domain/units";
 import { RenderProvider } from "../../context";
 import { SvgDefsProvider } from "../../hooks/useSvgDefs";
 import { useShapeStyle, type ShapeStyleResult } from "./useShapeStyle.js";
@@ -21,8 +20,8 @@ import { useShapeStyle, type ShapeStyleResult } from "./useShapeStyle.js";
 // =============================================================================
 
 const testSlideSize: SlideSize = {
-  width: px(960) as Pixels,
-  height: px(540) as Pixels,
+  width: px(960),
+  height: px(540),
 };
 
 const testColorContext: ColorContext = {

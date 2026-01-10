@@ -6,7 +6,7 @@
  */
 
 import type { ReactNode } from "react";
-import type { Pixels } from "../../../../pptx/domain/types";
+import type { Pixels } from "../../../../ooxml/domain/units";
 import type {
   LayoutResult,
   LayoutLine,

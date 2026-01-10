@@ -35,8 +35,7 @@ export {
   getDocumentRoot,
 } from "./xml-mutator";
 
-// Re-export element creation from xml module
-export { createElement, createText } from "../../../xml";
+// XML element creation: import directly from "@/xml"
 
 // Shape Differ
 export type {

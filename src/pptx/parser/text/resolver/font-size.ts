@@ -8,8 +8,8 @@
 import type { XmlElement } from "../../../../xml/index";
 import { getChild, getByPath } from "../../../../xml/index";
 import type { TextStyleContext, MasterTextStyles } from "../../context";
-import type { Points } from "../../../domain/types";
-import { pt } from "../../../domain/types";
+import type { Points } from "../../../../ooxml/domain/units";
+import { pt } from "../../../../ooxml/domain/units";
 import { DEFAULT_FONT_SIZE_PT, FONT_SIZE_CENTIPOINTS_TO_PT } from "../../../domain/defaults";
 import { TYPE_TO_MASTER_STYLE } from "./constants";
 import { lookupPlaceholder } from "./placeholder";

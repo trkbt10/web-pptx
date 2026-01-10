@@ -36,7 +36,6 @@ export {
 // Transform
 // =============================================================================
 export {
-  getShapeTransform,
   getAbsoluteBounds,
   withUpdatedTransform,
   hasEditableTransform,

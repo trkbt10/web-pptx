@@ -11,8 +11,7 @@
 
 import type { Shape, Transform, GrpShape, GroupTransform } from "../../pptx/domain";
 
-// Re-export getShapeTransform for convenience
-export { getShapeTransform } from "../../pptx/render/svg/slide-utils";
+// getShapeTransform: import directly from "@/pptx/render/svg/slide-utils"
 
 // =============================================================================
 // Types

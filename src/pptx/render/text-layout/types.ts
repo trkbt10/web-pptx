@@ -3,7 +3,8 @@
  * Types for text measurement and layout results
  */
 
-import type { Pixels, Points, TextAlign, TextAnchor, Percent } from "../../domain/types";
+import type { Pixels, Points, Percent } from "../../../ooxml/domain/units";
+import type { TextAlign, TextAnchor } from "../../domain/types";
 import type { LineSpacing, TextWrapping, TextOverflow, TextVerticalOverflow } from "../../domain/text";
 import type { RenderOptions } from "../render-options";
 import type { TextFillConfig } from "../../domain/drawing-ml/text-fill";

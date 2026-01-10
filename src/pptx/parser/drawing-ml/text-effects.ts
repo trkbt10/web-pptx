@@ -7,7 +7,7 @@
  */
 
 import type { Effects, ShadowEffect, GlowEffect, SoftEdgeEffect, ReflectionEffect } from "../../domain/effects";
-import type { Color } from "../../domain/color/types";
+import type { Color } from "../../../ooxml/domain/color";
 import type { ColorContext } from "../../domain/color/context";
 import type {
   TextEffectsConfig,

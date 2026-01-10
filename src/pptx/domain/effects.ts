@@ -4,8 +4,8 @@
  * @see ECMA-376 Part 1, Section 20.1.8 - Effects
  */
 
-import type { Degrees, Percent, Pixels } from "./types";
-import type { Color } from "./color/types";
+import type { Degrees, Percent, Pixels } from "../../ooxml/domain/units";
+import type { Color } from "../../ooxml/domain/color";
 import type { Fill } from "./color/types";
 import type { FillEffectType } from "./appearance";
 

@@ -4,7 +4,7 @@
 
 import { layoutTextBody } from "./engine";
 import type { LayoutInput, LayoutParagraphInput, LayoutSpan, TextBoxConfig, AutoFitConfig } from "./types";
-import { px, pt, pct } from "../../domain/types";
+import { px, pt, pct } from "../../../ooxml/domain/units";
 
 describe("layoutTextBody", () => {
   /** Default autoFit configuration for tests */

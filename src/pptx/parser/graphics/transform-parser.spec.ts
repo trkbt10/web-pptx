@@ -28,7 +28,7 @@ import {
   applyGroupTransform,
 } from "./transform-parser";
 import type { Transform, GroupTransform } from "../../domain/index";
-import { px, deg } from "../../domain/types";
+import { px, deg } from "../../../ooxml/domain/units";
 
 // Helper to create mock XmlElement
 function el(name: string, attrs: Record<string, string> = {}, children: XmlElement[] = []): XmlElement {

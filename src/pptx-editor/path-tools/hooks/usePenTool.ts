@@ -5,8 +5,8 @@
  */
 
 import { useCallback, useState, useRef, useEffect } from "react";
-import type { Pixels } from "../../../pptx/domain/types";
-import { px } from "../../../pptx/domain/types";
+import type { Pixels } from "../../../ooxml/domain/units";
+import { px } from "../../../ooxml/domain/units";
 import type {
   DrawingPath,
   PathAnchorPoint,

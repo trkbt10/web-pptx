@@ -6,8 +6,8 @@
  */
 
 import type { LayoutSpan, MeasuredSpan } from "./types";
-import type { Pixels, Points } from "../../domain/types";
-import { px } from "../../domain/types";
+import type { Pixels, Points } from "../../../ooxml/domain/units";
+import { px } from "../../../ooxml/domain/units";
 import { PT_TO_PX } from "../../domain/unit-conversion";
 import { isCjkCodePoint } from "../../../text/cjk";
 import { getCharWidth, getKerningAdjustment } from "../../../text/font-metrics";

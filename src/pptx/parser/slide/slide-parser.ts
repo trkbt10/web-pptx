@@ -6,21 +6,7 @@
  * @see ECMA-376 Part 1, Section 19.3 - Presentation ML
  */
 
-import type {
-  Background,
-  ColorMapOverride,
-  ColorMapping,
-  CustomerData,
-  HandoutMaster,
-  NotesMaster,
-  Slide,
-  SlideLayout,
-  SlideLayoutId,
-  SlideLayoutType,
-  SlideMaster,
-  SlideTransition,
-  TransitionType,
-} from "../../domain/index";
+import type { Background, ColorMapOverride, ColorMapping, CustomerData, HandoutMaster, NotesMaster, Slide, SlideLayout, SlideLayoutId, SlideLayoutType, SlideMaster, SlideTransition, TransitionType } from "../../domain/index";
 import {
   getAttr,
   getByPath,

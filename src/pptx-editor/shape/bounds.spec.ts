@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { SpShape, Shape } from "../../pptx/domain";
-import { px, deg } from "../../pptx/domain/types";
+import { px, deg } from "../../ooxml/domain/units";
 import {
   getShapeBounds,
   getCombinedBounds,

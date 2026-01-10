@@ -17,18 +17,11 @@ import { createDefaultColor } from "./ColorEditor";
 import { GradientStopsEditor, createDefaultGradientStops } from "./GradientStopsEditor";
 import { DegreesEditor } from "../primitives/DegreesEditor";
 import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../../ui/design-tokens";
-import {
-  PATTERN_PRESETS,
-  type Fill,
-  type NoFill,
-  type SolidFill,
-  type GradientFill,
-  type PatternFill,
-  type BlipFill,
-  type PatternType,
-  type LinearGradient,
-} from "../../../pptx/domain/color/types";
-import { deg, type ResourceId } from "../../../pptx/domain/types";
+import type { NoFill, SolidFill, GradientFill, PatternFill, PatternType, LinearGradient } from "../../../ooxml/domain/fill";
+import { PATTERN_PRESETS } from "../../../ooxml/domain/fill";
+import type { Fill, BlipFill } from "../../../pptx/domain/color/types";
+import { deg } from "../../../ooxml/domain/units";
+import type { ResourceId } from "../../../pptx/domain/types";
 import type { EditorProps, SelectOption } from "../../types";
 
 // =============================================================================

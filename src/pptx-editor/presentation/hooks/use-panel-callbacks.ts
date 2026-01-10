@@ -9,7 +9,7 @@ import type { Shape } from "../../../pptx/domain";
 import type { Background } from "../../../pptx/domain/slide";
 import { applySlideLayoutAttributes, type SlideLayoutAttributes } from "../../../pptx/parser/slide/layout-parser";
 import type { ShapeId } from "../../../pptx/domain/types";
-import { px } from "../../../pptx/domain/types";
+import { px } from "../../../ooxml/domain/units";
 import type { ResizeHandlePosition } from "../../context/slide/state";
 import type { PresentationEditorAction } from "../../context/presentation/editor/types";
 import type { PresentationDocument } from "../../../pptx/app";

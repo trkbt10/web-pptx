@@ -7,29 +7,9 @@
  */
 /* eslint-disable curly -- parser uses single-line guards consistently */
 
-import type {
-  AdjustValue,
-  AdjustHandle,
-  XYAdjustHandle,
-  PolarAdjustHandle,
-  ArcToCommand,
-  CloseCommand,
-  ConnectionSite,
-  CubicBezierCommand,
-  CustomGeometry,
-  Geometry,
-  GeometryGuide,
-  GeometryPath,
-  LineToCommand,
-  MoveToCommand,
-  PathCommand,
-  Point,
-  PresetGeometry,
-  QuadBezierCommand,
-  TextRect,
-} from "../../domain/index";
-import type { Degrees } from "../../domain/types";
-import { px, deg } from "../../domain/types";
+import type { AdjustValue, AdjustHandle, XYAdjustHandle, PolarAdjustHandle, ArcToCommand, CloseCommand, ConnectionSite, CubicBezierCommand, CustomGeometry, Geometry, GeometryGuide, GeometryPath, LineToCommand, MoveToCommand, PathCommand, Point, PresetGeometry, QuadBezierCommand, TextRect } from "../../domain/index";
+import type { Degrees } from "../../../ooxml/domain/units";
+import { px, deg } from "../../../ooxml/domain/units";
 import {
   getAttr,
   getChild,

@@ -10,13 +10,8 @@
  * @see ECMA-376 Part 1, Section 20.1.8.53 (softEdge)
  */
 
-import type {
-  Color,
-  Effects,
-  GlowEffect,
-  ShadowEffect,
-  SoftEdgeEffect,
-} from "../../domain";
+import type { Color } from "../../../ooxml/domain/color";
+import type { Effects, GlowEffect, ShadowEffect, SoftEdgeEffect } from "../../domain";
 import type { HtmlString } from "../html/primitives";
 import {
   filter,

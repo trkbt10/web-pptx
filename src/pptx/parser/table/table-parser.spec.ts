@@ -11,7 +11,7 @@ import { parseSlide } from "../slide/slide-parser";
 import { renderSlideSvg } from "../../render/svg/renderer";
 import { createCoreRenderContext } from "../../render/render-context";
 import { openPresentation } from "../../index";
-import { px } from "../../domain/types";
+import { px } from "../../../ooxml/domain/units";
 import type { ParseContext } from "../context";
 
 function getRootElement(doc: XmlDocument): XmlElement {

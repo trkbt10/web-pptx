@@ -205,13 +205,4 @@ export type {
   ContourConfig,
 } from "./effects";
 
-// Re-export glyph module types for convenience
-export type {
-  ContourPath,
-  GlyphContour,
-  GlyphMetrics,
-  GlyphStyleKey,
-  PositionedGlyph,
-  TextLayoutConfig,
-  TextLayoutResult,
-} from "../../glyph/types";
+// Glyph types: import directly from "@/pptx/render/glyph/types"

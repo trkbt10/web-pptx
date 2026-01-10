@@ -14,7 +14,7 @@ import { useRef, useMemo, useCallback, useState, useEffect, type CSSProperties }
 import { GridLayout } from "react-panel-layout";
 import type { Shape, RunProperties, ParagraphProperties, ZipFile, TextBody } from "../../pptx/domain";
 import type { ShapeId } from "../../pptx/domain/types";
-import { px } from "../../pptx/domain/types";
+import { px } from "../../ooxml/domain/units";
 import type { PresentationDocument, SlideWithId } from "../../pptx/app";
 import { PresentationEditorProvider, usePresentationEditor } from "../context/presentation/PresentationEditorContext";
 import { SlideThumbnailPanel } from "../panels";

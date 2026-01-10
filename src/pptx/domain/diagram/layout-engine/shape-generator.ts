@@ -24,7 +24,7 @@ import type {
   DiagramConstraint,
 } from "../types";
 import type { PresetShapeType } from "../../types";
-import { px, deg } from "../../types";
+import { px, deg } from "../../../../ooxml/domain/units";
 import type { SpShape, ShapeProperties, PresetGeometry, AdjustValue } from "../../shape";
 import type { Fill, Line } from "../../color/types";
 import type { Transform } from "../../geometry";

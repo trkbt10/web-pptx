@@ -6,11 +6,11 @@
 
 import type { SpShape } from "../../../pptx/domain/index";
 import { Accordion } from "../../ui/layout/Accordion";
+import { LineEditor } from "../../ui/line";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,
   MixedTextBodyEditor,
-  LineEditor,
   FillEditor,
   EffectsEditor,
   GeometryEditor,

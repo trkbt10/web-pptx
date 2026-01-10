@@ -7,11 +7,10 @@
 // @vitest-environment jsdom
 
 import { render } from "@testing-library/react";
-import type { Color } from "../../../../domain/color/types";
+import type { Color } from "../../../../../ooxml/domain/color";
 import type { ColorContext } from "../../../../domain/color/context";
 import type { SlideSize } from "../../../../domain";
-import type { Pixels } from "../../../../domain/types";
-import { px, pct } from "../../../../domain/types";
+import { px, pct } from "../../../../../ooxml/domain/units";
 import { RenderProvider } from "../../context";
 import { ColorSwatch, ColorSwatchRow } from "./ColorSwatch";
 
@@ -20,8 +19,8 @@ import { ColorSwatch, ColorSwatchRow } from "./ColorSwatch";
 // =============================================================================
 
 const testSlideSize: SlideSize = {
-  width: px(960) as Pixels,
-  height: px(540) as Pixels,
+  width: px(960),
+  height: px(540),
 };
 
 const testColorContext: ColorContext = {

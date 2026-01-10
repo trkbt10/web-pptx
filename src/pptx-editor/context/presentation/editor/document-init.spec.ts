@@ -2,7 +2,7 @@
  * @file Document initialization tests
  */
 
-import { px } from "../../../../pptx/domain/types";
+import { px } from "../../../../ooxml/domain/units";
 import type { Slide } from "../../../../pptx/domain";
 import {
   createDocumentFromPresentation,

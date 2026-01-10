@@ -10,7 +10,7 @@
 
 import { useMemo } from "react";
 import type { Table } from "../../../../../domain/table/types";
-import { px } from "../../../../../domain/types";
+import { px } from "../../../../../../ooxml/domain/units";
 import { useRenderContext } from "../../../context";
 import { renderTableSvg } from "../../../../svg/table";
 import type { SvgResult } from "../types";

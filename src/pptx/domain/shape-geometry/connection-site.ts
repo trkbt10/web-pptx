@@ -13,8 +13,8 @@
  */
 
 import type { CustomGeometry, Geometry } from "../shape";
-import type { Degrees, Pixels } from "../types";
-import { deg, px } from "../types";
+import type { Degrees, Pixels } from "../../../ooxml/domain/units";
+import { deg, px } from "../../../ooxml/domain/units";
 import {
   createGuideContext,
   evaluateGuides,

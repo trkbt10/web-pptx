@@ -18,7 +18,7 @@ import {
   DEFAULT_CHART_FONT_FAMILY,
 } from "./text-props";
 import type { TextBody, Paragraph, ParagraphProperties, BodyProperties } from "../../domain/text";
-import { pt, px } from "../../domain/types";
+import { pt, px } from "../../../ooxml/domain/units";
 
 // =============================================================================
 // Test Helpers

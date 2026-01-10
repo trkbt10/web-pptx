@@ -7,8 +7,9 @@
  * @see ECMA-376 Part 1, Section 20.1.8.53 (softEdge)
  */
 
-import { px, deg } from "../../domain/types";
-import type { Color, Effects, ShadowEffect, GlowEffect, SoftEdgeEffect } from "../../domain";
+import { px, deg } from "../../../ooxml/domain/units";
+import type { Color } from "../../../ooxml/domain/color";
+import type { Effects, ShadowEffect, GlowEffect, SoftEdgeEffect } from "../../domain";
 import {
   generateEffectsFilterId,
   generateEffectsFilter,

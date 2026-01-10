@@ -7,29 +7,10 @@
  * @see ECMA-376 Part 1, Section 20.1.10 - Simple Types
  */
 
-import type {
-  Degrees,
-  Percent,
-  Pixels,
-  Points,
-  BlackWhiteMode,
-  BlipCompression,
-  ColorSchemeIndex,
-  FontCollectionIndex,
-  OnOffStyleType,
-  RectAlignment,
-  SchemeColorValue,
-  ShapeId,
-  StyleMatrixColumnIndex,
-  TextShapeType,
-  AlignH,
-  AlignV,
-  RelFromH,
-  RelFromV,
-  WrapText,
-  EditAs,
-} from "../domain";
-import { px, deg, pct, pt } from "../domain/types";
+import type { Degrees, Percent, Pixels, Points } from "../../ooxml/domain/units";
+import type { SchemeColorValue } from "../../ooxml/domain/color";
+import type { BlackWhiteMode, BlipCompression, ColorSchemeIndex, FontCollectionIndex, OnOffStyleType, RectAlignment, ShapeId, StyleMatrixColumnIndex, TextShapeType, AlignH, AlignV, RelFromH, RelFromV, WrapText, EditAs } from "../domain";
+import { px, deg, pct, pt } from "../../ooxml/domain/units";
 import { getAttr, getChild, type XmlElement } from "../../xml";
 
 // =============================================================================

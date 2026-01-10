@@ -16,8 +16,9 @@ import type {
   LayoutSpan,
   BulletConfig,
 } from "./types";
-import type { Pixels, Points, TextAlign } from "../../domain/types";
-import { px, pt, pct } from "../../domain/types";
+import type { Pixels, Points } from "../../../ooxml/domain/units";
+import type { TextAlign } from "../../domain/types";
+import { px, pt, pct } from "../../../ooxml/domain/units";
 import { measureSpans, estimateBulletWidth } from "./measurer";
 import { breakIntoLines, getLineWidth } from "./line-breaker";
 import { PT_TO_PX } from "../../domain/unit-conversion";

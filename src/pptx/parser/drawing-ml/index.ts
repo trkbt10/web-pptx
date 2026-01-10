@@ -11,11 +11,7 @@
 // Parser-specific fill types (not domain types)
 export type { FillType, FillResult, GradientFill } from "./fill";
 
-// Background types from domain
-export type {
-  BackgroundElement,
-  BackgroundParseResult,
-} from "../../domain/drawing-ml/background";
+// Background types: import directly from "@/pptx/domain/drawing-ml/background"
 
 // Color parsing
 export { getSchemeColor, getSolidFill } from "./color";

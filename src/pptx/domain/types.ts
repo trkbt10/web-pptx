@@ -10,17 +10,17 @@
  */
 
 // =============================================================================
-// Re-export common OOXML unit types
+// OOXML Unit Types - DO NOT RE-EXPORT
 // =============================================================================
-
-export type { Brand, Pixels, Degrees, Percent, Points, EMU } from "../../ooxml/domain/units";
-export { px, deg, pct, pt, emu } from "../../ooxml/domain/units";
+// Import directly from "@/ooxml/domain/units" for:
+// Brand, Pixels, Degrees, Percent, Points, EMU, px, deg, pct, pt, emu
+// =============================================================================
 
 // =============================================================================
 // PPTX-specific Branded Types
 // =============================================================================
 
-// Import Brand for defining PPTX-specific types
+// Import Brand for defining PPTX-specific types (import is OK, re-export is not)
 import type { Brand } from "../../ooxml/domain/units";
 
 /**

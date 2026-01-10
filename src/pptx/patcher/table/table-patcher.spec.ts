@@ -1,5 +1,5 @@
 import { createElement, createText, getChild, getChildren, getTextByPath, isXmlElement, type XmlElement } from "../../../xml";
-import { px } from "../../domain/types";
+import { px } from "../../../ooxml/domain/units";
 import type { TextBody } from "../../domain/text";
 import type { TableRow } from "../../domain/table/types";
 import { patchTable } from "./table-patcher";

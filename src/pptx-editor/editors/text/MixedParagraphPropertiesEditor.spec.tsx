@@ -10,7 +10,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MixedParagraphPropertiesEditor } from "./MixedParagraphPropertiesEditor";
 import type { MixedParagraphProperties } from "./mixed-properties";
-import type { Pixels } from "../../../pptx/domain/types";
+import type { Pixels } from "../../../ooxml/domain/units";
 
 // =============================================================================
 // Test Helpers

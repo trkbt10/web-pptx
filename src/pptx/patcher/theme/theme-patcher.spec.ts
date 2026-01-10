@@ -3,7 +3,7 @@
  */
 
 import { createElement, getChild, type XmlDocument, type XmlElement } from "../../../xml";
-import type { Color } from "../../domain/color/types";
+import type { Color } from "../../../ooxml/domain/color";
 import type { FormatScheme } from "../../domain/theme/types";
 import { patchTheme } from "./theme-patcher";
 

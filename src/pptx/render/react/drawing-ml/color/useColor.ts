@@ -7,7 +7,7 @@
  */
 
 import { useMemo } from "react";
-import type { Color, ColorTransform } from "../../../../domain/color/types";
+import type { Color, ColorTransform } from "../../../../../ooxml/domain/color";
 import type { ColorContext } from "../../../../domain/color/context";
 import { resolveColor } from "../../../../domain/color/resolution";
 import { useRenderContext } from "../../context";

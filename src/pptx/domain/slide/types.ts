@@ -10,7 +10,8 @@
 import type { Fill } from "../color/types";
 import type { ColorMapping, ColorMapOverride } from "../color/types";
 import type { Shape } from "../shape";
-import type { Pixels, ResourceId, ShapeId } from "../types";
+import type { Pixels } from "../../../ooxml/domain/units";
+import type { ResourceId, ShapeId } from "../types";
 import type { SlideTransition } from "../transition";
 import type { MasterTextStyles, TextStyleLevels } from "../text-style";
 import type { CustomerData } from "../metadata";

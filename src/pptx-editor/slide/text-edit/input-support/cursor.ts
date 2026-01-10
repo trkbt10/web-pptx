@@ -6,7 +6,7 @@
  */
 
 import type { TextBody } from "../../../../pptx/domain";
-import type { Pixels } from "../../../../pptx/domain/types";
+import type { Pixels } from "../../../../ooxml/domain/units";
 import type { LayoutResult, LayoutLine } from "../../../../pptx/render/text-layout";
 import {
   getVisualBoundsForRange,

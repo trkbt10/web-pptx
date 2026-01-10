@@ -24,19 +24,16 @@ export {
   ColorEditor,
   FillEditor,
   GradientStopsEditor,
-  LineEditor,
   createDefaultSrgbColor,
   createDefaultColor,
   createDefaultSolidFill,
   createNoFill,
   createDefaultGradientStops,
-  createDefaultLine,
   type ColorSpecEditorProps,
   type ColorTransformEditorProps,
   type ColorEditorProps,
   type FillEditorProps,
   type GradientStopsEditorProps,
-  type LineEditorProps,
 } from "./color";
 
 // Text editors

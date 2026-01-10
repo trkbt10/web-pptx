@@ -10,9 +10,9 @@ import { Button, Popover } from "../../ui/primitives";
 import { FillPreview } from "../../ui/color";
 import { GradientStopEditor } from "./GradientStopEditor";
 import { createDefaultColor } from "./ColorEditor";
-import type { GradientStop, Color, SolidFill } from "../../../pptx/domain/color/types";
-import type { Percent } from "../../../pptx/domain/types";
-import { pct } from "../../../pptx/domain/types";
+import type { Color } from "../../../ooxml/domain/color";
+import type { GradientStop, SolidFill } from "../../../ooxml/domain/fill";
+import { pct, type Percent } from "../../../ooxml/domain/units";
 import type { EditorProps } from "../../types";
 
 export type GradientStopsEditorProps = EditorProps<readonly GradientStop[]> & {

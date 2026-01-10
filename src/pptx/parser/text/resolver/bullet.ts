@@ -7,10 +7,10 @@
 import type { XmlElement } from "../../../../xml/index";
 import { getChild } from "../../../../xml/index";
 import type { TextStyleContext, MasterTextStyles } from "../../context";
-import type { Points, Percent } from "../../../domain/types";
-import { pt } from "../../../domain/types";
+import type { Points, Percent } from "../../../../ooxml/domain/units";
+import { pt } from "../../../../ooxml/domain/units";
 import type { Bullet, BulletStyle } from "../../../domain/text";
-import type { Color } from "../../../domain/color/types";
+import type { Color } from "../../../../ooxml/domain/color";
 import { parseColorFromParent } from "../../graphics/color-parser";
 import { parseTextBulletSize, parseTextBulletStartAt } from "../../primitive";
 import { TYPE_TO_MASTER_STYLE } from "./constants";

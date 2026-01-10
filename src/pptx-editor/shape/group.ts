@@ -6,9 +6,9 @@
 
 import type { Shape, GrpShape, GroupTransform, Transform } from "../../pptx/domain";
 import type { Bounds, ShapeId } from "../../pptx/domain/types";
-import { px, deg } from "../../pptx/domain/types";
+import { px, deg } from "../../ooxml/domain/units";
+import { getShapeTransform } from "../../pptx/render/svg/slide-utils";
 import { getCombinedBounds } from "./bounds";
-import { getShapeTransform } from "./transform";
 import { generateShapeId } from "./mutation";
 import { hasShapeId } from "./identity";
 

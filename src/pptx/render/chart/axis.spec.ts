@@ -18,7 +18,7 @@ import {
 import type { ValueAxis, CategoryAxis } from "../../domain/chart";
 import type { TextBody, BodyProperties, ParagraphProperties } from "../../domain/text";
 import type { MultiLevelCategories } from "./data";
-import { pt, px } from "../../domain/types";
+import { pt, px } from "../../../ooxml/domain/units";
 
 describe("axis utilities", () => {
   describe("calculateMajorUnit", () => {

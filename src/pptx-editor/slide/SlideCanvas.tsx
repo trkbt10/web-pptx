@@ -14,8 +14,9 @@ import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, 
 import type { Slide, Shape } from "../../pptx/domain";
 import type { ColorContext } from "../../pptx/domain/color/context";
 import type { FontScheme } from "../../pptx/domain/resolution";
-import type { Pixels, ShapeId } from "../../pptx/domain/types";
-import { px } from "../../pptx/domain/types";
+import type { Pixels } from "../../ooxml/domain/units";
+import type { ShapeId } from "../../pptx/domain/types";
+import { px } from "../../ooxml/domain/units";
 import type { DragState, SelectionState, ResizeHandlePosition, PathEditState } from "../context/slide/state";
 import { isPathEditEditing } from "../context/slide/state";
 import type { CreationMode } from "../context/presentation/editor/types";

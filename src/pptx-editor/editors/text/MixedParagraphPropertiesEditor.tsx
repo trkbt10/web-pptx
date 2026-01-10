@@ -11,9 +11,9 @@ import { FieldGroup, FieldRow } from "../../ui/layout";
 import { PixelsEditor } from "../primitives";
 import { LineSpacingEditor } from "./LineSpacingEditor";
 import type { ParagraphProperties, LineSpacing } from "../../../pptx/domain/text";
-import type { TextAlign, Pixels } from "../../../pptx/domain/types";
+import type { TextAlign } from "../../../pptx/domain/types";
 import type { SelectOption } from "../../types";
-import { px } from "../../../pptx/domain/types";
+import { px, type Pixels } from "../../../ooxml/domain/units";
 import type { MixedParagraphProperties, PropertyExtraction } from "./mixed-properties";
 import { getExtractionValue, isMixed } from "./mixed-properties";
 

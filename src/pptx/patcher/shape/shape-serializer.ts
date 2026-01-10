@@ -1,18 +1,5 @@
 import { createElement, type XmlElement } from "../../../xml";
-import type {
-  Shape,
-  SpShape,
-  GrpShape,
-  PicShape,
-  CxnShape,
-  NonVisualProperties,
-  Geometry,
-  PresetGeometry,
-  CustomGeometry,
-  GeometryPath,
-  PathCommand,
-  ConnectionTarget,
-} from "../../domain";
+import type { Shape, SpShape, GrpShape, PicShape, CxnShape, NonVisualProperties, Geometry, PresetGeometry, CustomGeometry, GeometryPath, PathCommand, ConnectionTarget } from "../../domain";
 import type { Transform, GroupTransform } from "../../domain/geometry";
 import { serializeTransform } from "../serializer/transform";
 import { serializeColor, serializeEffects, serializeFill, serializeLine, serializeTextBody } from "../serializer";

@@ -7,7 +7,7 @@
  */
 
 import { createElement, isXmlElement, type XmlElement, type XmlNode } from "../../../xml";
-import type { Color } from "../../domain/color/types";
+import type { Color } from "../../../ooxml/domain/color";
 import { serializeColor } from "../serializer/color";
 
 export type SchemeColorName =

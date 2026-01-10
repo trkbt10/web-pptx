@@ -14,7 +14,7 @@ import {
 } from "./text-property-extractor";
 import type { TextBody, TextRun, Paragraph } from "../../../pptx/domain/text";
 import type { CursorPosition, TextSelection } from "../../slide/text-edit";
-import type { Points, Pixels } from "../../../pptx/domain/types";
+import type { Points, Pixels } from "../../../ooxml/domain/units";
 
 // =============================================================================
 // Test Fixtures

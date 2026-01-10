@@ -8,20 +8,8 @@
 
 import type { XmlElement } from "../../../xml/index";
 import { getChild, getTextContent } from "../../../xml/index";
-import type {
-  AbsoluteAnchor,
-  AnchorClientData,
-  AnchorMarker,
-  ContentPart,
-  ConnectorLocks,
-  GraphicFrameLocks,
-  GroupLocks,
-  OneCellAnchor,
-  Pixels,
-  Point,
-  Size,
-  TwoCellAnchor,
-} from "../../domain/index";
+import type { Pixels } from "../../../ooxml/domain/units";
+import type { AbsoluteAnchor, AnchorClientData, AnchorMarker, ContentPart, ConnectorLocks, GraphicFrameLocks, GroupLocks, OneCellAnchor, Point, Size, TwoCellAnchor } from "../../domain/index";
 import {
   getBoolAttr,
   parseBlackWhiteMode,

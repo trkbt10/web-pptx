@@ -18,12 +18,13 @@ import type {
   DiagramColorList,
   DiagramClrAppMethod,
 } from "../types";
-import type { Fill, SolidFill, Line } from "../../color/types";
+import type { SolidFill } from "../../../../ooxml/domain/fill";
+import type { Fill, Line } from "../../color/types";
 import type { ShapeStyle } from "../../shape";
 import type { TextBody } from "../../text";
 import type { DiagramTreeNode } from "./tree-builder";
 import type { ColorContext } from "../../color/context";
-import { px } from "../../types";
+import { px } from "../../../../ooxml/domain/units";
 
 
 // =============================================================================

@@ -15,7 +15,7 @@ import { Accordion, FieldGroup, FieldRow } from "../../ui/layout";
 import { PercentEditor, DegreesEditor } from "../primitives";
 import { DataLabelsEditor, createDefaultDataLabels } from "./DataLabelsEditor";
 import { ChartShapePropertiesEditor } from "./ChartShapePropertiesEditor";
-import { pct, deg } from "../../../pptx/domain/types";
+import { pct, deg } from "../../../ooxml/domain/units";
 import type {
   ChartSeries,
   BarChartSeries,

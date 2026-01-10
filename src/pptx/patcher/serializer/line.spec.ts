@@ -3,7 +3,7 @@
  */
 
 import { getChild } from "../../../xml";
-import { pct, px } from "../../domain/types";
+import { pct, px } from "../../../ooxml/domain/units";
 import type { Line } from "../../domain";
 import { parseLine } from "../../parser/graphics/line-parser";
 import { serializeLine } from "./line";

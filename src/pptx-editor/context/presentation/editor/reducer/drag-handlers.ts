@@ -5,8 +5,8 @@
  */
 
 import type { Slide, Shape } from "../../../../../pptx/domain";
-import type { Degrees } from "../../../../../pptx/domain/types";
-import { px, deg } from "../../../../../pptx/domain/types";
+import type { Degrees } from "../../../../../ooxml/domain/units";
+import { px, deg } from "../../../../../ooxml/domain/units";
 import type {
   PresentationEditorState,
   PresentationEditorAction,
@@ -21,7 +21,8 @@ import {
   collectBoundsForIds,
   getCombinedCenter,
 } from "../../../../shape/bounds";
-import { getShapeTransform, withUpdatedTransform } from "../../../../shape/transform";
+import { withUpdatedTransform } from "../../../../shape/transform";
+import { getShapeTransform } from "../../../../../pptx/render/svg/slide-utils";
 
 type StartMoveAction = Extract<
   PresentationEditorAction,

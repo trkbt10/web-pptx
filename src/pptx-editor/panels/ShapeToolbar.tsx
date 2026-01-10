@@ -10,7 +10,8 @@ import type { CSSProperties } from "react";
 import { Button } from "../ui/primitives/Button";
 import { LinePickerPopover } from "../ui/line/index";
 import type { Line, Shape } from "../../pptx/domain/index";
-import type { Pixels, ShapeId } from "../../pptx/domain/types";
+import type { Pixels } from "../../ooxml/domain/units";
+import type { ShapeId } from "../../pptx/domain/types";
 import {
   TrashIcon,
   CopyIcon,

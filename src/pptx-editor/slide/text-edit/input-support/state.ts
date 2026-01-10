@@ -5,7 +5,8 @@
  */
 
 import type { TextBody, RunProperties } from "../../../../pptx/domain";
-import type { ShapeId, Pixels } from "../../../../pptx/domain/types";
+import type { Pixels } from "../../../../ooxml/domain/units";
+import type { ShapeId } from "../../../../pptx/domain/types";
 import type { CursorPosition, TextSelection } from "./cursor";
 
 // =============================================================================

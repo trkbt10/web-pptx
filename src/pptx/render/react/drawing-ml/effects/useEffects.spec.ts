@@ -6,7 +6,7 @@
 
 import type { Effects, ShadowEffect, GlowEffect, SoftEdgeEffect } from "../../../../domain/effects";
 import type { ColorContext } from "../../../../domain/color/context";
-import { deg, px, pct } from "../../../../domain/types";
+import { deg, px, pct } from "../../../../../ooxml/domain/units";
 import { resolveEffectsForReact } from "./useEffects.js";
 import { directionToOffset, resolveShadowProps } from "./ShadowFilter.js";
 import { resolveGlowProps } from "./GlowFilter.js";

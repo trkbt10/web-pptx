@@ -3,7 +3,7 @@
  */
 
 import { createElement, getChild } from "../../../xml";
-import type { Color } from "../../domain/color/types";
+import type { Color } from "../../../ooxml/domain/color";
 import { patchSchemeColor } from "./color-scheme-patcher";
 
 function srgb(value: string): Color {

@@ -6,7 +6,7 @@
 
 import type { Slide, Shape } from "../../../../pptx/domain";
 import type { Bounds, ShapeId } from "../../../../pptx/domain/types";
-import { px, deg } from "../../../../pptx/domain/types";
+import { px, deg } from "../../../../ooxml/domain/units";
 import type { SlideEditorState, SlideEditorAction } from "./types";
 import {
   createHistory,
@@ -29,7 +29,8 @@ import {
   collectBoundsForIds,
   getCombinedCenter,
 } from "../../../shape/bounds";
-import { getShapeTransform, withUpdatedTransform } from "../../../shape/transform";
+import { withUpdatedTransform } from "../../../shape/transform";
+import { getShapeTransform } from "../../../../pptx/render/svg/slide-utils";
 import { ungroupShape, groupShapes } from "../../../shape/group";
 
 // =============================================================================

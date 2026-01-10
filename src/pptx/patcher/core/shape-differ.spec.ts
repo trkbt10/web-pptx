@@ -5,9 +5,11 @@
 import type { Shape, SpShape, PicShape, GrpShape, GroupShapeProperties } from "../../domain/shape";
 import type { Slide } from "../../domain/slide/types";
 import type { Transform, GroupTransform } from "../../domain/geometry";
-import type { Fill, SolidFill, Color } from "../../domain/color/types";
+import type { Color } from "../../../ooxml/domain/color";
+import type { SolidFill } from "../../../ooxml/domain/fill";
+import type { Fill } from "../../domain/color/types";
 import type { TextBody, Paragraph, TextRun } from "../../domain/text";
-import { px, deg } from "../../domain/types";
+import { px, deg } from "../../../ooxml/domain/units";
 import {
   detectSlideChanges,
   detectShapePropertyChanges,

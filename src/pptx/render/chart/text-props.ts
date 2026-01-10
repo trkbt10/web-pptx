@@ -14,8 +14,8 @@
  */
 
 import type { TextBody, RunProperties, Paragraph } from "../../domain/text";
-import type { Points } from "../../domain/types";
-import { pt } from "../../domain/types";
+import type { Points } from "../../../ooxml/domain/units";
+import { pt } from "../../../ooxml/domain/units";
 
 // =============================================================================
 // ECMA-376 Default Values

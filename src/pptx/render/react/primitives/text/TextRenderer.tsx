@@ -10,7 +10,7 @@ import { useMemo } from "react";
 import type { TextBody } from "../../../../domain/text";
 import { layoutTextBody, toLayoutInput } from "../../../text-layout";
 import { createLayoutParagraphMeasurer } from "../../text-measure/layout-bridge";
-import { px, deg } from "../../../../domain/types";
+import { px, deg } from "../../../../../ooxml/domain/units";
 import { useRenderContext } from "../../context";
 import { useSvgDefs } from "../../hooks/useSvgDefs";
 import { has3dEffects } from "../../../svg/effects3d";

@@ -4,14 +4,7 @@
  * Converts TextBody domain objects to HTML output.
  */
 
-import type {
-  BodyProperties,
-  Paragraph,
-  RunProperties,
-  TextBody,
-  TextRun,
-  Transform,
-} from "../../domain/index";
+import type { BodyProperties, Paragraph, RunProperties, TextBody, TextRun, Transform } from "../../domain/index";
 import type { CoreRenderContext } from "../render-context";
 import { resolveColor } from "../../domain/color/resolution";
 import {

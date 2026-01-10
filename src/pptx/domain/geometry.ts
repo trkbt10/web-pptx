@@ -4,7 +4,7 @@
  * @see ECMA-376 Part 1, Section 20.1.7 - Transform
  */
 
-import type { Degrees, Pixels } from "./types";
+import type { Degrees, Pixels } from "../../ooxml/domain/units";
 
 // =============================================================================
 // Geometry Types

@@ -4,7 +4,7 @@
 
 import { estimateTextWidth, measureSpan, measureSpans, estimateBulletWidth } from "./measurer";
 import type { LayoutSpan } from "./types";
-import { px, pt } from "../../domain/types";
+import { px, pt } from "../../../ooxml/domain/units";
 
 describe("estimateTextWidth", () => {
   test("measures empty string as zero width", () => {

@@ -4,23 +4,9 @@
  * Creates table/chart/diagram frames with default content.
  */
 
-import type {
-  GraphicFrame,
-  Table,
-  TableRow,
-  TableCell,
-  TableColumn,
-  Chart,
-  ChartSeries,
-  CategoryAxis,
-  ValueAxis,
-  DataReference,
-  BarSeries,
-  LineSeries,
-  PieSeries,
-} from "../../pptx/domain";
+import type { GraphicFrame, Table, TableRow, TableCell, TableColumn, Chart, ChartSeries, CategoryAxis, ValueAxis, DataReference, BarSeries, LineSeries, PieSeries } from "../../pptx/domain";
 import type { ShapeId, ResourceId } from "../../pptx/domain/types";
-import { deg, pct, px } from "../../pptx/domain/types";
+import { deg, pct, px } from "../../ooxml/domain/units";
 import type { CreationChartType, CreationDiagramType } from "../context/presentation/editor/types";
 import type { ShapeBounds } from "../shape/creation-bounds";
 

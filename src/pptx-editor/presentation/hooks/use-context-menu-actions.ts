@@ -7,7 +7,7 @@
 import { useMemo, useCallback } from "react";
 import type { Slide, Shape } from "../../../pptx/domain";
 import type { ShapeId } from "../../../pptx/domain/types";
-import { px } from "../../../pptx/domain/types";
+import { px } from "../../../ooxml/domain/units";
 import type { ContextMenuActions } from "../../slide/context-menu/SlideContextMenu";
 import type { SelectionState } from "../../context/slide/state";
 import type { PresentationEditorState } from "../../context/presentation/editor/types";

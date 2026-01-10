@@ -3,7 +3,7 @@
  */
 
 import { createElement, type XmlElement } from "../../../xml";
-import type { Color, ColorTransform } from "../../domain";
+import type { Color, ColorTransform } from "../../../ooxml/domain/color";
 import { ooxmlAngleUnits, ooxmlPercent100k } from "./units";
 
 export function serializeColor(color: Color): XmlElement {

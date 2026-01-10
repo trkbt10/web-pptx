@@ -10,7 +10,7 @@
 
 import { renderGeometryData, renderPresetGeometryData } from "./geometry";
 import type { CustomGeometry, GeometryPath, PresetGeometry } from "../../domain";
-import { px } from "../../domain/types";
+import { px } from "../../../ooxml/domain/units";
 
 /**
  * Helper to create a PresetGeometry object for testing.

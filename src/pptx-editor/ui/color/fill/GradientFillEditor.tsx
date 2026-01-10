@@ -15,8 +15,8 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from "react";
-import type { GradientFill, LinearGradient } from "../../../../pptx/domain/color/types";
-import { deg, pct } from "../../../../pptx/domain/types";
+import type { GradientFill, LinearGradient } from "../../../../ooxml/domain/fill";
+import { deg, pct } from "../../../../ooxml/domain/units";
 import { LabeledSlider } from "../../common";
 import { GradientStopRow } from "./GradientStopRow";
 import { createDefaultColor, getStopHex } from "./fill-utils";
@@ -109,9 +109,13 @@ export function GradientFillEditor({ value, onChange }: GradientFillEditorProps)
 
   const handleAngleChange = useCallback(
     (newAngle: number) => {
+      const nextLinear: LinearGradient = {
+        angle: deg(newAngle),
+        scaled: value.linear?.scaled ?? true,
+      };
       onChange({
         ...value,
-        linear: { ...(value.linear ?? { scaled: true }), angle: deg(newAngle) } as LinearGradient,
+        linear: nextLinear,
       });
     },
     [value, onChange]

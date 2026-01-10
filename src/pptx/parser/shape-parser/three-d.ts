@@ -8,20 +8,10 @@
 /* eslint-disable jsdoc/require-jsdoc -- helper guards follow spec enums */
 
 import { getAttr, getChild, type XmlElement } from "../../../xml";
-import type {
-  Color,
-  Scene3d,
-  Shape3d,
-  Rotation3d,
-  Bevel3d,
-  BevelPresetType,
-  LightRigDirection,
-  LightRigType,
-  PresetCameraType,
-  PresetMaterialType,
-  SolidFill,
-} from "../../domain";
-import { px } from "../../domain/types";
+import type { Color } from "../../../ooxml/domain/color";
+import type { SolidFill } from "../../../ooxml/domain/fill";
+import type { Scene3d, Shape3d, Rotation3d, Bevel3d, BevelPresetType, LightRigDirection, LightRigType, PresetCameraType, PresetMaterialType } from "../../domain";
+import { px } from "../../../ooxml/domain/units";
 import { getAngleAttr, getEmuAttr, getPercent100kAttr } from "../primitive";
 import { parseColorFromParent } from "../graphics/color-parser";
 

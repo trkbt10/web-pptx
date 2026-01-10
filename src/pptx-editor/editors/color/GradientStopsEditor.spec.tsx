@@ -6,8 +6,8 @@
 
 import { render, fireEvent } from "@testing-library/react";
 import { useState } from "react";
-import type { GradientStop } from "../../../pptx/domain/color/types";
-import { pct } from "../../../pptx/domain/types";
+import type { GradientStop } from "../../../ooxml/domain/fill";
+import { pct } from "../../../ooxml/domain/units";
 import { GradientStopsEditor } from "./GradientStopsEditor";
 
 function setRect(element: HTMLElement, rect: DOMRect): void {

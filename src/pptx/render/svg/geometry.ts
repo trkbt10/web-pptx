@@ -4,19 +4,8 @@
  * Converts Geometry domain objects to SVG paths.
  */
 
-import type {
-  ArcToCommand,
-  CubicBezierCommand,
-  CustomGeometry,
-  Geometry,
-  GeometryGuide,
-  GeometryPath,
-  PathCommand,
-  PresetGeometry,
-  QuadBezierCommand,
-  Transform,
-} from "../../domain";
-import { px } from "../../domain/types";
+import type { ArcToCommand, CubicBezierCommand, CustomGeometry, Geometry, GeometryGuide, GeometryPath, PathCommand, PresetGeometry, QuadBezierCommand, Transform } from "../../domain";
+import { px } from "../../../ooxml/domain/units";
 import type { HtmlString } from "../html/primitives";
 import { path } from "./primitives";
 import { renderFillToStyle, renderLineToStyle } from "./fill";

@@ -6,8 +6,8 @@
 
 import { useCallback, useEffect, type RefObject } from "react";
 import type { Slide } from "../../../pptx/domain";
-import type { Pixels } from "../../../pptx/domain/types";
-import { px, deg } from "../../../pptx/domain/types";
+import type { Pixels } from "../../../ooxml/domain/units";
+import { px, deg } from "../../../ooxml/domain/units";
 import type { DragState, SelectionState } from "../../context/slide/state";
 import type { PresentationEditorAction } from "../../context/presentation/editor/types";
 import type { ViewportTransform } from "../../../pptx/render/svg-viewport";

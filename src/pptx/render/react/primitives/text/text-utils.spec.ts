@@ -9,7 +9,7 @@ import {
   toSvgDominantBaseline,
 } from "./text-utils";
 import type { PositionedSpan } from "../../../text-layout";
-import { pt, px } from "../../../../domain/types";
+import { pt, px } from "../../../../../ooxml/domain/units";
 
 // =============================================================================
 // Test Helpers

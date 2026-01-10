@@ -10,7 +10,7 @@
 import { generateScatterChart, type ScatterChartConfig } from "./scatter";
 import type { SeriesData } from "../types";
 import type { Marker } from "../../../domain/chart";
-import { pt } from "../../../domain/types";
+import { pt } from "../../../../ooxml/domain/units";
 
 /**
  * Helper to create mock series data

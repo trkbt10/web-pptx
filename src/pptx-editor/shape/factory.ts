@@ -4,15 +4,10 @@
  * Creates new shapes with default properties for the editor.
  */
 
-import type {
-  SpShape,
-  CxnShape,
-  PicShape,
-  Shape,
-  CustomGeometry,
-} from "../../pptx/domain";
-import type { ShapeId, Pixels, ResourceId } from "../../pptx/domain/types";
-import { px, deg, pct } from "../../pptx/domain/types";
+import type { SpShape, CxnShape, PicShape, Shape, CustomGeometry } from "../../pptx/domain";
+import type { Pixels } from "../../ooxml/domain/units";
+import type { ShapeId, ResourceId } from "../../pptx/domain/types";
+import { px, deg, pct } from "../../ooxml/domain/units";
 import type { CreationPresetShape, CreationMode } from "../context/presentation/editor/types";
 import type { ShapeBounds } from "./creation-bounds";
 import { createTableGraphicFrame, createChartGraphicFrame, createDiagramGraphicFrame } from "../graphic-frame/factory";

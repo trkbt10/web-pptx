@@ -7,7 +7,7 @@
 import type { XmlElement } from "../../../../xml/index";
 import { getChild } from "../../../../xml/index";
 import type { TextStyleContext, MasterTextStyles } from "../../context";
-import type { Pixels } from "../../../domain/types";
+import type { Pixels } from "../../../../ooxml/domain/units";
 import { parseTextIndent, parseTextMargin } from "../../primitive";
 import { TYPE_TO_MASTER_STYLE } from "./constants";
 import { lookupPlaceholder } from "./placeholder";

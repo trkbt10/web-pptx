@@ -3,7 +3,7 @@ import type { SpShape, GrpShape, PicShape, CxnShape } from "../../domain/shape";
 import type { TextBody } from "../../domain/text";
 import type { Effects, Line } from "../../domain";
 import { EMU_PER_PIXEL } from "../../domain";
-import { px, deg, pct } from "../../domain/types";
+import { px, deg, pct } from "../../../ooxml/domain/units";
 import { serializeShape, serializeGroupShape, serializePicture, serializeConnectionShape } from "./shape-serializer";
 
 function createRectShape(id: string, overrides: Partial<SpShape> = {}): SpShape {

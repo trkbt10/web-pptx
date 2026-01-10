@@ -4,8 +4,8 @@
  * @see ECMA-376 Part 1, Section 19.2 - Presentation
  */
 
-import type { Color } from "../color/types";
-import type { Pixels } from "../types";
+import type { Color } from "../../../ooxml/domain/color";
+import type { Pixels } from "../../../ooxml/domain/units";
 import type { TextStyleLevels } from "../text-style";
 import type { EmbeddedFont } from "../embedded-font";
 import type { PrintProperties } from "../print";

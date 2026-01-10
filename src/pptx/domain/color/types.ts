@@ -5,28 +5,19 @@
  * @see ECMA-376 Part 1, Section 20.1.8 - Fill Properties
  */
 
-import type {
-  BlipCompression,
-  Brand,
-  Degrees,
-  Percent,
-  Pixels,
-  RectAlignment,
-  ResourceId,
-} from "../types";
+import type { Brand, Degrees, Percent, Pixels } from "../../../ooxml/domain/units";
+import type { BlipCompression, RectAlignment, ResourceId } from "../types";
 import type { ResolvedBlipResource } from "../resource";
-import type {
-  Color,
-  ColorSpec,
-  ColorTransform,
-  HslColor,
-  PresetColor,
-  SchemeColor,
-  ScrgbColor,
-  SrgbColor,
-  SystemColor,
-} from "../../../ooxml/domain/color";
-// Import only types needed for Fill union (others are directly re-exported)
+
+// =============================================================================
+// OOXML types - DO NOT RE-EXPORT
+// =============================================================================
+// Color types: import directly from "@/ooxml/domain/color"
+// Fill types: import directly from "@/ooxml/domain/fill"
+// =============================================================================
+
+// Import OOXML types for internal use in this file only
+import type { Color } from "../../../ooxml/domain/color";
 import type {
   NoFill,
   SolidFill,
@@ -34,40 +25,6 @@ import type {
   PatternFill,
   GroupFill,
 } from "../../../ooxml/domain/fill";
-
-// =============================================================================
-// Re-export shared Color types from OOXML
-// =============================================================================
-
-export type {
-  Color,
-  ColorSpec,
-  ColorTransform,
-  HslColor,
-  PresetColor,
-  SchemeColor,
-  ScrgbColor,
-  SrgbColor,
-  SystemColor,
-};
-
-// =============================================================================
-// Re-export shared Fill types from OOXML
-// =============================================================================
-
-export type {
-  NoFill,
-  SolidFill,
-  GradientStop,
-  LinearGradient,
-  PathGradient,
-  GradientFill,
-  PatternType,
-  PatternFill,
-  GroupFill,
-} from "../../../ooxml/domain/fill";
-
-export { PATTERN_PRESETS } from "../../../ooxml/domain/fill";
 
 // =============================================================================
 // PPTX-specific Color Types

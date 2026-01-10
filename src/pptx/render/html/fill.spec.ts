@@ -11,7 +11,7 @@
 import { resolvedFillToBackground, fillToBackground, resolvedLineToBorder, lineToBorder } from "./fill";
 import type { Fill, Line } from "../../domain";
 import type { ResolvedFill, ResolvedLine } from "../../domain/color/fill";
-import { pct, px } from "../../domain/types";
+import { pct, px } from "../../../ooxml/domain/units";
 
 // =============================================================================
 // resolvedFillToBackground Tests

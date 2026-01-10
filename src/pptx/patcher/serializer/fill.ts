@@ -3,16 +3,8 @@
  */
 
 import { createElement, type XmlElement } from "../../../xml";
-import type {
-  BlipEffects,
-  BlipFill,
-  Fill,
-  GradientFill,
-  GradientStop,
-  PatternFill,
-  StretchFill,
-  TileFill,
-} from "../../domain";
+import type { GradientFill, GradientStop, PatternFill } from "../../../ooxml/domain/fill";
+import type { BlipEffects, BlipFill, Fill, StretchFill, TileFill } from "../../domain";
 import { serializeColor } from "./color";
 import { ooxmlBool, ooxmlAngleUnits, ooxmlEmu, ooxmlPercent100k } from "./units";
 

@@ -5,16 +5,7 @@
  */
 
 import { getAttr, getChild, type XmlElement } from "../../../xml";
-import type {
-  AudioCd,
-  AudioCdTime,
-  HyperlinkSound,
-  MediaReference,
-  NonVisualProperties,
-  Placeholder,
-  PlaceholderSize,
-  PlaceholderType,
-} from "../../domain";
+import type { AudioCd, AudioCdTime, HyperlinkSound, MediaReference, NonVisualProperties, Placeholder, PlaceholderSize, PlaceholderType } from "../../domain";
 import { getBoolAttr, getIndexAttr, getIntAttr } from "../primitive";
 
 /**

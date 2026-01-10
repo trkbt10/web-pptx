@@ -6,7 +6,7 @@
 
 import type { Fill, Line } from "./color/types";
 import type { TextBody } from "./text";
-import type { Degrees, Percent, Pixels, Points } from "./types";
+import type { Degrees, Percent, Pixels, Points } from "../../ooxml/domain/units";
 
 // =============================================================================
 // Chart Type Enumeration

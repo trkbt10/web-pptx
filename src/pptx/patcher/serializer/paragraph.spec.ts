@@ -1,5 +1,5 @@
 import { getChild, getChildren, getTextContent, isXmlElement } from "../../../xml";
-import { pt } from "../../domain/types";
+import { pt } from "../../../ooxml/domain/units";
 import type { Paragraph } from "../../domain/text";
 import { serializeParagraph } from "./paragraph";
 

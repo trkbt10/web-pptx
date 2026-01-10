@@ -16,7 +16,7 @@ import { PercentEditor } from "../primitives";
 import { TextBodyEditor, createDefaultTextBody } from "../text";
 import { ChartShapePropertiesEditor } from "./ChartShapePropertiesEditor";
 import { ChartTitleEditor } from "./ChartTitleEditor";
-import { pct } from "../../../pptx/domain/types";
+import { pct } from "../../../ooxml/domain/units";
 import type {
   Axis,
   AxisPosition,

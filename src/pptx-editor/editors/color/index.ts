@@ -16,4 +16,5 @@ export {
   type GradientStopsEditorProps,
   createDefaultGradientStops,
 } from "./GradientStopsEditor";
-export { LineEditor, type LineEditorProps, createDefaultLine } from "../../ui/line/LineEditor";
+
+// LineEditor: import directly from "@/pptx-editor/ui/line/LineEditor"

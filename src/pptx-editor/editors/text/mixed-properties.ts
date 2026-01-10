@@ -16,8 +16,9 @@ import type {
   BulletStyle,
   TextTypeface,
 } from "../../../pptx/domain/text";
-import type { Color, Fill, Line } from "../../../pptx/domain/color/types";
-import type { Pixels, Points, Percent } from "../../../pptx/domain/types";
+import type { Color } from "../../../ooxml/domain/color";
+import type { Fill, Line } from "../../../pptx/domain/color/types";
+import type { Pixels, Points, Percent } from "../../../ooxml/domain/units";
 
 // =============================================================================
 // Property Extraction Types

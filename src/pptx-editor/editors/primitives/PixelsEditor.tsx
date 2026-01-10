@@ -4,7 +4,7 @@
 
 import { useCallback, type CSSProperties } from "react";
 import { Input } from "../../ui/primitives";
-import { px, type Pixels } from "../../../pptx/domain/types";
+import { px, type Pixels } from "../../../ooxml/domain/units";
 import type { EditorProps } from "../../types";
 
 export type PixelsEditorProps = EditorProps<Pixels> & {

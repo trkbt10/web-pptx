@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from "vitest";
 import * as THREE from "three";
-import type { Percent, Pixels } from "../../../../domain/types";
+import type { Percent, Pixels } from "../../../../../ooxml/domain/units";
 import {
   applyTileFlipMode,
   applyTileRect,

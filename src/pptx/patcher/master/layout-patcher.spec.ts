@@ -3,7 +3,7 @@
  */
 
 import { createElement, getChild, type XmlDocument, type XmlElement } from "../../../xml";
-import { deg, px } from "../../domain/types";
+import { deg, px } from "../../../ooxml/domain/units";
 import type { Transform } from "../../domain/geometry";
 import type { ShapeChange } from "../core/shape-differ";
 import { patchLayoutPlaceholders, patchLayoutShapes } from "./layout-patcher";

@@ -9,7 +9,7 @@
 import { describe, it, expect } from "vitest";
 import { buildGroupTransformAttr, buildTransformAttr, createDefsCollector } from "./slide-utils";
 import type { GroupTransform, Transform } from "../../domain/types";
-import { px, deg } from "../../domain/types";
+import { px, deg } from "../../../ooxml/domain/units";
 
 describe("buildGroupTransformAttr", () => {
   it("returns empty string for undefined transform", () => {

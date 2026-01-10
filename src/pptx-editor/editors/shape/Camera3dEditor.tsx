@@ -10,7 +10,8 @@ import { FieldGroup, FieldRow } from "../../ui/layout";
 import { DegreesEditor } from "../primitives/DegreesEditor";
 import { PercentEditor } from "../primitives/PercentEditor";
 import { Rotation3dEditor, createDefaultRotation3d } from "./Rotation3dEditor";
-import { deg, pct, type PresetCameraType } from "../../../pptx/domain/types";
+import { deg, pct } from "../../../ooxml/domain/units";
+import type { PresetCameraType } from "../../../pptx/domain/types";
 import type { Camera3d } from "../../../pptx/domain";
 import type { EditorProps, SelectOption } from "../../types";
 

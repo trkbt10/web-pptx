@@ -3,7 +3,7 @@
  */
 
 import type { Paragraph, RunProperties, TextBody } from "../../domain/text";
-import { px, pt } from "../../domain/types";
+import { px, pt } from "../../../ooxml/domain/units";
 import { createEmptyCoreRenderContext } from "../render-context";
 import { createDefsCollector } from "./slide-utils";
 import { renderTextSvg } from "./slide-text";

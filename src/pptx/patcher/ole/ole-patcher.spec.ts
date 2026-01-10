@@ -1,5 +1,5 @@
 import { getChild, parseXml } from "../../../xml";
-import { deg, px } from "../../domain/types";
+import { deg, px } from "../../../ooxml/domain/units";
 import { patchOleObject } from "./ole-patcher";
 
 describe("ole-patcher", () => {

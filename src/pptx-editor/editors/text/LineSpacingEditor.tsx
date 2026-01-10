@@ -9,9 +9,8 @@ import { Select } from "../../ui/primitives";
 import { FieldRow } from "../../ui/layout";
 import { PercentEditor, PointsEditor } from "../primitives";
 import type { LineSpacing } from "../../../pptx/domain/text";
-import type { Percent, Points } from "../../../pptx/domain/types";
 import type { EditorProps, SelectOption } from "../../types";
-import { pct, pt } from "../../../pptx/domain/types";
+import { pct, pt, type Percent, type Points } from "../../../ooxml/domain/units";
 
 // =============================================================================
 // Types

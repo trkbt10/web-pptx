@@ -9,7 +9,7 @@
  */
 
 import type { Scene3d, Shape3d, LightRig, Bevel3d } from "../../domain/index";
-import type { Degrees } from "../../domain/types";
+import type { Degrees } from "../../../ooxml/domain/units";
 
 // =============================================================================
 // Types

@@ -7,7 +7,8 @@
  */
 
 import * as THREE from "three";
-import type { PresetCameraType, Degrees, Percent } from "../../../../domain/index";
+import type { Degrees, Percent } from "../../../../../ooxml/domain/units";
+import type { PresetCameraType } from "../../../../domain/index";
 
 // =============================================================================
 // Camera Configuration Types

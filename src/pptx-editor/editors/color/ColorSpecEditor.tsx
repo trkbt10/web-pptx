@@ -10,16 +10,9 @@ import { Input, Select } from "../../ui/primitives";
 import { FieldGroup } from "../../ui/layout";
 import { FillPreview } from "../../ui/color";
 import { PercentEditor, DegreesEditor } from "../primitives";
-import { deg, pct } from "../../../pptx/domain/types";
-import type {
-  ColorSpec,
-  SrgbColor,
-  SchemeColor,
-  SystemColor,
-  PresetColor,
-  HslColor,
-  SolidFill,
-} from "../../../pptx/domain/color/types";
+import { deg, pct } from "../../../ooxml/domain/units";
+import type { ColorSpec, SrgbColor, SchemeColor, SystemColor, PresetColor, HslColor } from "../../../ooxml/domain/color";
+import type { SolidFill } from "../../../ooxml/domain/fill";
 import type { EditorProps, SelectOption } from "../../types";
 import type { ColorContext } from "../../../pptx/domain/color/context";
 import { resolveColor } from "../../../pptx/domain/color/resolution";

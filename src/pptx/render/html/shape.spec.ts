@@ -10,7 +10,7 @@
 import { renderSpShape, renderPicShape, renderShape } from "./shape";
 import type { SpShape, PicShape, Transform } from "../../domain";
 import { createEmptyHtmlRenderContext } from "./context";
-import { px, deg } from "../../domain/types";
+import { px, deg } from "../../../ooxml/domain/units";
 
 // =============================================================================
 // Test Helpers

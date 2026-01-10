@@ -16,10 +16,10 @@ import type {
   AutoNumberBullet,
   CharBullet,
 } from "../../../pptx/domain/text";
-import type { Percent, Points, TextTypeface } from "../../../pptx/domain/types";
-import type { Color } from "../../../pptx/domain/color/types";
+import type { TextTypeface } from "../../../pptx/domain/types";
+import type { Color } from "../../../ooxml/domain/color";
 import type { EditorProps, SelectOption } from "../../types";
-import { pct, pt } from "../../../pptx/domain/types";
+import { pct, pt, type Percent, type Points } from "../../../ooxml/domain/units";
 
 // =============================================================================
 // Types

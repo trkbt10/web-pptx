@@ -15,7 +15,7 @@ import type {
 } from "../../../domain/chart";
 import { getChild, getChildren, getAttr, type XmlElement } from "../../../../xml";
 import { getIntAttr, getFloatAttr, getBoolAttr } from "../../primitive";
-import { deg } from "../../../domain/types";
+import { deg } from "../../../../ooxml/domain/units";
 import { parseSeriesText, parseDataReference } from "../data-reference";
 import { parseChartShapeProperties, parseChartLines } from "../shape-properties";
 import { parseDataPoints, parseDataLabels } from "../components";

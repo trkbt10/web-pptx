@@ -4,8 +4,9 @@
  * Pure functions for calculating shape alignment and distribution positions.
  */
 
-import type { Bounds, ShapeId, Pixels } from "../../pptx/domain/types";
-import { px } from "../../pptx/domain/types";
+import type { Pixels } from "../../ooxml/domain/units";
+import type { Bounds, ShapeId } from "../../pptx/domain/types";
+import { px } from "../../ooxml/domain/units";
 
 // =============================================================================
 // Types

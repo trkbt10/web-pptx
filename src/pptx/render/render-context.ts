@@ -9,7 +9,7 @@ import type { ColorContext } from "../domain/color/context";
 import type { FontScheme } from "../domain/resolution";
 import type { ResourceResolver } from "../domain/resource-resolver";
 import { createEmptyResourceResolver } from "../domain/resource-resolver";
-import { px } from "../domain/types";
+import { px } from "../../ooxml/domain/units";
 import type { RenderOptions } from "./render-options";
 import { DEFAULT_RENDER_OPTIONS } from "./render-options";
 import type { ResolvedBackgroundFill } from "./background-fill";

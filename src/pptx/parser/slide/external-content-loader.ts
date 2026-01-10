@@ -7,21 +7,7 @@
  * The enrichment happens in the integration layer, bridging parser and render.
  */
 
-import type {
-  BlipFill,
-  BlipFillProperties,
-  DiagramColorsDefinition,
-  DiagramDataModel,
-  DiagramLayoutDefinition,
-  DiagramStyleDefinition,
-  Fill,
-  GraphicFrame,
-  OleReference,
-  PicShape,
-  Shape,
-  Slide,
-  SpShape,
-} from "../../domain/index";
+import type { BlipFill, BlipFillProperties, DiagramColorsDefinition, DiagramDataModel, DiagramLayoutDefinition, DiagramStyleDefinition, Fill, GraphicFrame, OleReference, PicShape, Shape, Slide, SpShape } from "../../domain/index";
 import {
   generateDiagramShapes,
   type ShapeGenerationConfig,

@@ -14,7 +14,7 @@ import { fillToBackground, lineToBorder } from "./fill";
 import type { HtmlRenderContext } from "./context";
 import { renderTextBody } from "./text";
 import type { Transform } from "../../domain/index";
-import { px, deg } from "../../domain/types";
+import { px, deg } from "../../../ooxml/domain/units";
 
 // =============================================================================
 // Table Rendering

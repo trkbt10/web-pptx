@@ -6,7 +6,8 @@
  */
 
 import type { Slide, Shape } from "../../../../pptx/domain";
-import type { Pixels, ShapeId } from "../../../../pptx/domain/types";
+import type { Pixels } from "../../../../ooxml/domain/units";
+import type { ShapeId } from "../../../../pptx/domain/types";
 import type {
   UndoRedoHistory,
   SelectionState,

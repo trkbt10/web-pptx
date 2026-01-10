@@ -15,7 +15,7 @@ import {
   areRunPropertiesEqual,
 } from "./mixed-properties";
 import type { RunProperties, ParagraphProperties } from "../../../pptx/domain/text";
-import type { Points, Pixels } from "../../../pptx/domain/types";
+import type { Points, Pixels } from "../../../ooxml/domain/units";
 
 describe("extractCommonProperty", () => {
   it("returns notApplicable for empty array", () => {

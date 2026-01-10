@@ -98,17 +98,14 @@ export {
   ColorTransformEditor,
   ColorEditor,
   FillEditor,
-  LineEditor,
   createDefaultSrgbColor,
   createDefaultColor,
   createDefaultSolidFill,
   createNoFill,
-  createDefaultLine,
   type ColorSpecEditorProps,
   type ColorTransformEditorProps,
   type ColorEditorProps,
   type FillEditorProps,
-  type LineEditorProps,
   // Text
   RunPropertiesEditor,
   LineSpacingEditor,
@@ -260,7 +257,6 @@ export { getShapeBounds, getCombinedBounds } from "./shape/bounds";
 
 // Shape transform utilities
 export {
-  getShapeTransform,
   withUpdatedTransform,
   hasEditableTransform,
   getAbsoluteBounds,

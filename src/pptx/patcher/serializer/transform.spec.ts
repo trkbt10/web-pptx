@@ -4,7 +4,7 @@
 
 import { createElement, getChild, type XmlElement } from "../../../xml";
 import type { Transform } from "../../domain/geometry";
-import { deg, px } from "../../domain/types";
+import { deg, px } from "../../../ooxml/domain/units";
 import { patchTransformElement, serializeTransform } from "./transform";
 
 function createTransform(overrides: Partial<{

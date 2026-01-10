@@ -7,7 +7,7 @@
  */
 
 import type { GroupTransform, Transform } from "../../domain/index";
-import { px, deg } from "../../domain/types";
+import { px, deg } from "../../../ooxml/domain/units";
 import { getChild, type XmlElement } from "../../../xml/index";
 import { getAngleAttr, getBoolAttrOr, getEmuAttrOr } from "../primitive";
 

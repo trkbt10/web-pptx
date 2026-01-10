@@ -8,9 +8,10 @@
 
 import type { ShapeProperties, ShapeStyle } from "../shape";
 import type { Scene3d, Shape3d } from "../three-d";
-import type { Percent, PresetShapeType } from "../types";
+import type { Percent } from "../../../ooxml/domain/units";
+import type { PresetShapeType } from "../types";
 import type { TextBody } from "../text";
-import type { Color } from "../color/types";
+import type { Color } from "../../../ooxml/domain/color";
 
 // =============================================================================
 // Common Types

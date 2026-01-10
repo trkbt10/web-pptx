@@ -4,7 +4,7 @@
 
 import { useCallback, type CSSProperties } from "react";
 import { Input } from "../../ui/primitives";
-import { deg, type Degrees } from "../../../pptx/domain/types";
+import { deg, type Degrees } from "../../../ooxml/domain/units";
 import type { EditorProps } from "../../types";
 
 export type DegreesEditorProps = EditorProps<Degrees> & {

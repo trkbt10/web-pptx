@@ -24,19 +24,13 @@
 // =============================================================================
 // Base Types (Measurement Units)
 // =============================================================================
+// OOXML unit types: import directly from "@/ooxml/domain/units"
+// (Brand, Pixels, Degrees, Percent, Points, EMU, px, deg, pct, pt, emu)
 
-export type {
-  Brand,
-  Pixels,
-  Degrees,
-  Percent,
-  Points,
-  EMU,
-  RelationshipId,
-  HexColor,
-} from "./types";
+// PPTX-specific branded types only
+export type { RelationshipId, HexColor } from "./types";
 
-export { px, deg, pct, pt, emu, rId, hexColor } from "./types";
+export { rId, hexColor } from "./types";
 
 // =============================================================================
 // Defaults and Constants
@@ -309,36 +303,26 @@ export type { FontSpec, FontScheme } from "./resolution";
 export { resolveThemeFont } from "./resolution";
 
 // =============================================================================
-// Color Types
+// OOXML Shared Types - DO NOT RE-EXPORT
+// =============================================================================
+// Color types: import directly from "@/ooxml/domain/color"
+// Fill types: import directly from "@/ooxml/domain/fill"
+// Unit types: import directly from "@/ooxml/domain/units"
+// =============================================================================
+
+// =============================================================================
+// PPTX-specific Color/Fill Types
 // =============================================================================
 
 export type {
-  // Color specifications
+  // PPTX-specific color
   ResolvedColor,
-  SrgbColor,
-  SchemeColor,
-  SystemColor,
-  PresetColor,
-  HslColor,
-  ScrgbColor,
-  ColorTransform,
-  ColorSpec,
-  Color,
-  // Fill types
-  NoFill,
-  SolidFill,
-  GradientStop,
-  LinearGradient,
-  PathGradient,
-  GradientFill,
+  // PPTX-specific fill types
   TileFlipMode,
   StretchFill,
   TileFill,
   BlipEffects,
   BlipFill,
-  PatternType,
-  PatternFill,
-  GroupFill,
   Fill,
   // Line types
   LineEnd,
@@ -349,7 +333,7 @@ export type {
   ColorMapOverride,
 } from "./color/types";
 
-export { color, PATTERN_PRESETS } from "./color/types";
+export { color } from "./color/types";
 
 // =============================================================================
 // Text Types

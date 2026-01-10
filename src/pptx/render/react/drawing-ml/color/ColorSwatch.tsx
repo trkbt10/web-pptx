@@ -6,7 +6,7 @@
  */
 
 import { memo } from "react";
-import type { Color } from "../../../../domain/color/types";
+import type { Color } from "../../../../../ooxml/domain/color";
 import { useColor, type ResolvedColorResult } from "./useColor";
 
 /**

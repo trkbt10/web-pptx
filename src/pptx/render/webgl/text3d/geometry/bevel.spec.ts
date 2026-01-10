@@ -9,7 +9,8 @@
 
 import { describe, it, expect } from "vitest";
 import { getBevelConfig, getAsymmetricBevelConfig } from "./bevel";
-import type { Bevel3d, BevelPresetType, Pixels, Shape3d } from "../../../../domain/index";
+import type { Pixels } from "../../../../../ooxml/domain/units";
+import type { Bevel3d, BevelPresetType, Shape3d } from "../../../../domain/index";
 
 // =============================================================================
 // Test Helpers

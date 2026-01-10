@@ -20,7 +20,7 @@ import type {
   PrintWhat,
   PrintProperties,
 } from "../../domain/print";
-import type { Color } from "../../domain/color/types";
+import type { Color } from "../../../ooxml/domain/color";
 import { parseColor, parseColorFromParent } from "../graphics/color-parser";
 
 // =============================================================================

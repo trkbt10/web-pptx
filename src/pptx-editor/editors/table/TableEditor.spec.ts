@@ -6,7 +6,7 @@
  */
 
 import type { Table, TableRow, TableCell } from "../../../pptx/domain/table/types";
-import { px } from "../../../pptx/domain/types";
+import { px } from "../../../ooxml/domain/units";
 
 // =============================================================================
 // Helper functions

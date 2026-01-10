@@ -4,13 +4,7 @@
  * @see ECMA-376 Part 1, Section 19.4 (Comments)
  */
 
-import type {
-  Comment,
-  CommentAuthor,
-  CommentAuthorList,
-  CommentList,
-  CommentPosition,
-} from "../../domain/index";
+import type { Comment, CommentAuthor, CommentAuthorList, CommentList, CommentPosition } from "../../domain/index";
 import { getAttr, getChild, getChildren, getTextContent, type XmlElement } from "../../../xml/index";
 import { getEmuAttr, getIntAttr, getIntAttrOr } from "../primitive";
 

@@ -20,15 +20,7 @@ import { getChild, getByPath } from "../../../xml/index";
 import type { RenderOptions } from "../../render/render-options";
 
 // Import domain types from canonical sources
-import type {
-  ZipFile,
-  ResourceMap,
-  PlaceholderTable,
-  Theme,
-  RawMasterTextStyles,
-  ColorMap,
-  ResolvedBlipResource,
-} from "../../domain/index";
+import type { ZipFile, ResourceMap, PlaceholderTable, Theme, RawMasterTextStyles, ColorMap, ResolvedBlipResource } from "../../domain/index";
 import type { TableStyleList } from "../table/style-parser";
 import type { ColorResolveContext } from "../../domain/color/context";
 import { getMimeType } from "../../../files/mime";

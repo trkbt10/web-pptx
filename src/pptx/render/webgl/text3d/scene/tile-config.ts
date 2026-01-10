@@ -9,8 +9,9 @@
  */
 
 import * as THREE from "three";
-import type { TileFlipMode, TileFill, GradientFill } from "../../../../domain/color/types";
-import type { Percent, Pixels } from "../../../../domain/types";
+import type { GradientFill } from "../../../../../ooxml/domain/fill";
+import type { TileFlipMode, TileFill } from "../../../../domain/color/types";
+import type { Percent, Pixels } from "../../../../../ooxml/domain/units";
 
 // =============================================================================
 // Re-export Domain Types for Convenience

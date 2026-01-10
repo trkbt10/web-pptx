@@ -7,15 +7,8 @@
 import type { Fill, Line } from "../color/types";
 import type { TextBody } from "../text";
 import type { BevelPresetType } from "../three-d";
-import type {
-  Effects,
-  FontCollectionIndex,
-  LightRigDirection,
-  LightRigType,
-  Pixels,
-  PresetMaterialType,
-  StyleMatrixColumnIndex,
-} from "../types";
+import type { Pixels } from "../../../ooxml/domain/units";
+import type { Effects, FontCollectionIndex, LightRigDirection, LightRigType, PresetMaterialType, StyleMatrixColumnIndex } from "../types";
 
 // =============================================================================
 // Table Structure Types

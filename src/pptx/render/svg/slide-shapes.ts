@@ -12,20 +12,7 @@
  * @see ECMA-376 Part 1, Section 20.1 (DrawingML)
  */
 
-import type {
-  Shape,
-  SpShape,
-  PicShape,
-  GrpShape,
-  CxnShape,
-  GraphicFrame,
-  Fill,
-  Line,
-  Geometry,
-  OleReference,
-  ChartReference,
-  DiagramReference,
-} from "../../domain";
+import type { Shape, SpShape, PicShape, GrpShape, CxnShape, GraphicFrame, Fill, Line, Geometry, OleReference, ChartReference, DiagramReference } from "../../domain";
 import type { CoreRenderContext } from "../render-context";
 import type { SvgDefsCollector } from "./slide-utils";
 import { createDefsCollector, getShapeTransform, isShapeHidden, buildTransformAttr, buildGroupTransformAttr } from "./slide-utils";
@@ -37,7 +24,7 @@ import { resolveFill, formatRgba } from "../../domain/color/fill";
 import { renderTextSvg, getDashArray } from "./slide-text";
 import { renderChart } from "../chart";
 import { renderTableSvg } from "./table";
-import { px } from "../../domain/types";
+import { px } from "../../../ooxml/domain/units";
 import { extractSvgContent } from "./svg-utils";
 
 // =============================================================================
@@ -711,4 +698,3 @@ function renderChartFromRef(chartRef: ChartReference, w: number, h: number, ctx:
   });
   return undefined;
 }
-

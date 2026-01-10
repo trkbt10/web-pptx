@@ -6,37 +6,9 @@
  * @see ECMA-376 Part 1, Section 21.1.2 - Text
  */
 
-import type {
-  AutoFit,
-  AutoNumberBullet,
-  BlipBullet,
-  BodyProperties,
-  Bullet,
-  BulletStyle,
-  CharBullet,
-  FieldRun,
-  Hyperlink,
-  HyperlinkMouseOver,
-  LineBreakRun,
-  LineSpacing,
-  NoBullet,
-  Paragraph,
-  ParagraphProperties,
-  RegularRun,
-  RunProperties,
-  Scene3d,
-  Shape3d,
-  StrikeStyle,
-  TabStop,
-  TextBody,
-  TextRun,
-  TextVerticalOverflow,
-  TextWarp,
-  TextWarpAdjustValue,
-  UnderlineStyle,
-} from "../../domain/index";
+import type { AutoFit, AutoNumberBullet, BlipBullet, BodyProperties, Bullet, BulletStyle, CharBullet, FieldRun, Hyperlink, HyperlinkMouseOver, LineBreakRun, LineSpacing, NoBullet, Paragraph, ParagraphProperties, RegularRun, RunProperties, Scene3d, Shape3d, StrikeStyle, TabStop, TextBody, TextRun, TextVerticalOverflow, TextWarp, TextWarpAdjustValue, UnderlineStyle } from "../../domain/index";
 import { parseScene3d, parseShape3d } from "../shape-parser/three-d";
-import { px, pt } from "../../domain/types";
+import { px, pt } from "../../../ooxml/domain/units";
 import {
   getAttr,
   getChild,

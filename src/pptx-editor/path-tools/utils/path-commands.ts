@@ -5,8 +5,9 @@
  */
 
 import type { Point, PathCommand, GeometryPath, CustomGeometry, Geometry } from "../../../pptx/domain";
-import type { Pixels, Bounds } from "../../../pptx/domain/types";
-import { px } from "../../../pptx/domain/types";
+import type { Pixels } from "../../../ooxml/domain/units";
+import type { Bounds } from "../../../pptx/domain/types";
+import { px } from "../../../ooxml/domain/units";
 import type { DrawingPath, PathAnchorPoint } from "../types";
 
 // =============================================================================

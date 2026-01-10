@@ -9,7 +9,7 @@ import { Accordion, FieldGroup } from "../../ui/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
 import { TablePropertiesEditor, createDefaultTableProperties } from "./TablePropertiesEditor";
 import { TableCellEditor, createDefaultTableCell } from "./TableCellEditor";
-import { px } from "../../../pptx/domain/types";
+import { px } from "../../../ooxml/domain/units";
 import type {
   Table,
   TableProperties,

@@ -8,7 +8,7 @@
 import { presentationEditorReducer, createPresentationEditorState } from "./reducer";
 import type { PresentationEditorState, CreationMode } from "../types";
 import type { SpShape } from "../../../../../pptx/domain/shape";
-import { px } from "../../../../../pptx/domain/types";
+import { px } from "../../../../../ooxml/domain/units";
 import { createShapeFromMode, getDefaultBoundsForMode } from "../../../../shape/factory";
 import { createTestDocument } from "./test-fixtures";
 

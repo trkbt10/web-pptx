@@ -4,10 +4,10 @@
  * Tests color resolution for all 5 color types and transforms.
  */
 
-import type { Color } from "../../../../domain/color/types";
+import type { Color, SchemeColorValue } from "../../../../../ooxml/domain/color";
 import type { ColorContext } from "../../../../domain/color/context";
-import type { SchemeColorValue } from "../../../../domain/types";
-import { deg, pct } from "../../../../domain/types";
+
+import { deg, pct } from "../../../../../ooxml/domain/units";
 import { resolveColorForReact } from "./useColor";
 
 // =============================================================================

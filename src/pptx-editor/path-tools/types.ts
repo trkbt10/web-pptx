@@ -4,7 +4,8 @@
  * Core types for pen tool, pencil tool, and path editing functionality.
  */
 
-import type { Pixels, ShapeId } from "../../pptx/domain/types";
+import type { Pixels } from "../../ooxml/domain/units";
+import type { ShapeId } from "../../pptx/domain/types";
 import type { Point } from "../../pptx/domain";
 
 // =============================================================================

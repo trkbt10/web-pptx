@@ -5,7 +5,7 @@
  */
 
 import { useRef, useMemo, useCallback } from "react";
-import type { Pixels } from "../../pptx/domain/types";
+import type { Pixels } from "../../ooxml/domain/units";
 import type { ZipFile } from "../../pptx/domain";
 import { renderSlideSvg } from "../../pptx/render/svg/renderer";
 import { createCoreRenderContext } from "../../pptx/render/render-context";

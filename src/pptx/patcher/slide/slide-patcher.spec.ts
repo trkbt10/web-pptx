@@ -6,7 +6,7 @@ import { createElement, isXmlElement, getChild, type XmlDocument, type XmlElemen
 import type { ShapeChange } from "../core/shape-differ";
 import type { Transform } from "../../domain/geometry";
 import { EMU_PER_PIXEL } from "../../domain";
-import { px, deg } from "../../domain/types";
+import { px, deg } from "../../../ooxml/domain/units";
 import type { SpShape } from "../../domain/shape";
 import type { TextBody } from "../../domain/text";
 import { parseShapeTree } from "../../parser/shape-parser";

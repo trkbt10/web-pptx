@@ -24,7 +24,7 @@ import {
 import { ChartTitleEditor } from "./ChartTitleEditor";
 import { ChartShapePropertiesEditor } from "./ChartShapePropertiesEditor";
 import { LayoutEditor } from "./LayoutEditor";
-import { pct, deg } from "../../../pptx/domain/types";
+import { pct, deg } from "../../../ooxml/domain/units";
 import type {
   Chart,
   ChartTitle,

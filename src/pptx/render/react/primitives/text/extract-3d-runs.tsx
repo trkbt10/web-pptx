@@ -12,7 +12,7 @@ import type { RenderOptions } from "../../../render-options";
 import type { ColorContext } from "../../../../domain/color/context";
 import type { Text3DRunConfig } from "../../../webgl/text3d";
 import { layoutTextBody, toLayoutInput } from "../../../text-layout";
-import { px } from "../../../../domain/types";
+import { px } from "../../../../../ooxml/domain/units";
 import { PT_TO_PX } from "../../../../domain/unit-conversion";
 
 // =============================================================================

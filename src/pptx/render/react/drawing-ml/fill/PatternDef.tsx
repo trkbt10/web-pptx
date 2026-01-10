@@ -7,7 +7,7 @@
  */
 
 import { memo, type ReactNode } from "react";
-import type { PatternType } from "../../../../domain/color/types";
+import type { PatternType } from "../../../../../ooxml/domain/fill";
 
 // =============================================================================
 // Types

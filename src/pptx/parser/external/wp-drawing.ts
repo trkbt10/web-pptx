@@ -8,29 +8,8 @@
 
 import type { XmlElement } from "../../../xml/index";
 import { getAttr, getChild, getChildren, getTextContent } from "../../../xml/index";
-import type {
-  AlignH,
-  AlignV,
-  EffectExtent,
-  GraphicFrameLocks,
-  ConnectionTarget,
-  NonVisualProperties,
-  PositionH,
-  PositionV,
-  Point,
-  WrapPolygon,
-  WrapSquare,
-  WrapThrough,
-  WrapTight,
-  WrapTopAndBottom,
-  GroupLocks,
-  ContentPartLocks,
-  ContentPart,
-  LinkedTextbox,
-  TextboxInfo,
-  ConnectorLocks,
-} from "../../domain/index";
-import type { Pixels } from "../../domain/types";
+import type { AlignH, AlignV, EffectExtent, GraphicFrameLocks, ConnectionTarget, NonVisualProperties, PositionH, PositionV, Point, WrapPolygon, WrapSquare, WrapThrough, WrapTight, WrapTopAndBottom, GroupLocks, ContentPartLocks, ContentPart, LinkedTextbox, TextboxInfo, ConnectorLocks } from "../../domain/index";
+import type { Pixels } from "../../../ooxml/domain/units";
 import {
   parseAlignH,
   parseAlignV,

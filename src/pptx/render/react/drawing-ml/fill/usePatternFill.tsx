@@ -7,7 +7,7 @@
  */
 
 import { useMemo, type ReactNode } from "react";
-import type { PatternFill } from "../../../../domain/color/types";
+import type { PatternFill } from "../../../../../ooxml/domain/fill";
 import { useSvgDefs } from "../../hooks/useSvgDefs";
 import { useRenderContext } from "../../context";
 import { resolveColor } from "../../../../domain/color/resolution";

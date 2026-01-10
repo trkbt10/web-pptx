@@ -8,7 +8,7 @@
 
 import * as THREE from "three";
 import type { Scene3d, Shape3d, PresetCameraType } from "../../../../domain/index";
-import type { Pixels } from "../../../../domain/types";
+import type { Pixels } from "../../../../../ooxml/domain/units";
 import type { PositionedSpan } from "../../../text-layout/types";
 import { createCameraConfig, createCamera, type CameraConfig } from "../scene/camera";
 import { createLightingConfig, addLightsToScene } from "../scene/lighting";

@@ -22,7 +22,9 @@ import {
 import { createEmptyResourceMap } from "../../src/pptx/opc";
 import { parseTheme, parseColorScheme, parseMasterTextStyles } from "../../src/pptx/parser/drawing-ml";
 import { renderSlideSvgIntegrated } from "../../src/pptx/app/slide-render";
-import type { SpShape, Color, Pixels } from "../../src/pptx/domain";
+import type { Pixels } from "../../src/ooxml/domain/units";
+import type { Color } from "../../src/ooxml/domain/color";
+import type { SpShape } from "../../src/pptx/domain";
 import { createPresentationFile, THEMES_PPTX_PATH } from "./test-utils";
 
 describe("a:fontRef schemeClr application", () => {

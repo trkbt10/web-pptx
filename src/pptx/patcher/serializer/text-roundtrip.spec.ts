@@ -5,7 +5,7 @@
  */
 
 import { getChild, isXmlElement } from "../../../xml";
-import { pct, pt, px } from "../../domain/types";
+import { pct, pt, px } from "../../../ooxml/domain/units";
 import type { TextBody } from "../../domain/text";
 import { parseTextBody } from "../../parser/text/text-parser";
 import { serializeTextBody } from "./text";

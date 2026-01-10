@@ -18,7 +18,7 @@ import type {
   RegularRun,
 } from "../../../../pptx/domain/text";
 import type { TextSelection } from "./cursor";
-import type { Points } from "../../../../pptx/domain/types";
+import type { Points } from "../../../../ooxml/domain/units";
 
 // =============================================================================
 // Test Fixtures

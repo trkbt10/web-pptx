@@ -7,7 +7,7 @@
  */
 
 import { createElement, getChild, isXmlElement, type XmlDocument, type XmlElement } from "../../../xml";
-import type { Color } from "../../domain/color/types";
+import type { Color } from "../../../ooxml/domain/color";
 import type { FontScheme } from "../../domain/resolution";
 import type { FormatScheme } from "../../domain/theme/types";
 import { replaceChildByName, updateDocumentRoot } from "../core/xml-mutator";

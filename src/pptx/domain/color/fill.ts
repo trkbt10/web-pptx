@@ -7,7 +7,9 @@
  * @see ECMA-376 Part 1, Section 20.1.8 (Fill Properties)
  */
 
-import type { Color, Fill, Line, PatternType, BlipFill } from "./types";
+import type { Color } from "../../../ooxml/domain/color";
+import type { PatternType } from "../../../ooxml/domain/fill";
+import type { Fill, Line, BlipFill } from "./types";
 import { resolveColor } from "./resolution";
 import type { ColorContext } from "./context";
 import type { ResourceResolverFn } from "../resource-resolver";

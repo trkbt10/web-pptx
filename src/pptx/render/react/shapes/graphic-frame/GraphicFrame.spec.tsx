@@ -13,8 +13,7 @@ import type { GraphicFrame as GraphicFrameType, Transform } from "../../../../do
 import type { Table } from "../../../../domain/table/types";
 import type { SlideSize } from "../../../../domain";
 import type { ColorContext } from "../../../../domain/color/context";
-import type { Pixels, Degrees } from "../../../../domain/types";
-import { px, deg } from "../../../../domain/types";
+import { px, deg } from "../../../../../ooxml/domain/units";
 import { RenderProvider } from "../../context";
 import { SvgDefsProvider } from "../../hooks/useSvgDefs";
 import { GraphicFrameRenderer } from "./GraphicFrameRenderer";
@@ -24,8 +23,8 @@ import { GraphicFrameRenderer } from "./GraphicFrameRenderer";
 // =============================================================================
 
 const testSlideSize: SlideSize = {
-  width: px(960) as Pixels,
-  height: px(540) as Pixels,
+  width: px(960),
+  height: px(540),
 };
 
 /**
@@ -59,11 +58,11 @@ const testColorContext: ColorContext = {
  * Default transform for test shapes
  */
 const defaultTransform: Transform = {
-  x: px(0) as Pixels,
-  y: px(0) as Pixels,
-  width: px(200) as Pixels,
-  height: px(100) as Pixels,
-  rotation: deg(0) as Degrees,
+  x: px(0),
+  y: px(0),
+  width: px(200),
+  height: px(100),
+  rotation: deg(0),
   flipH: false,
   flipV: false,
 };
@@ -82,11 +81,11 @@ const defaultNonVisual = {
 const testTable: Table = {
   properties: {},
   grid: {
-    columns: [{ width: px(100) as Pixels }, { width: px(100) as Pixels }],
+    columns: [{ width: px(100) }, { width: px(100) }],
   },
   rows: [
     {
-      height: px(30) as Pixels,
+      height: px(30),
       cells: [
         { properties: {} },
         { properties: {} },
@@ -472,11 +471,11 @@ describe("GraphicFrameRenderer", () => {
         type: "graphicFrame",
         nonVisual: defaultNonVisual,
         transform: {
-          x: px(100) as Pixels,
-          y: px(50) as Pixels,
-          width: px(200) as Pixels,
-          height: px(100) as Pixels,
-          rotation: deg(45) as Degrees,
+          x: px(100),
+          y: px(50),
+          width: px(200),
+          height: px(100),
+          rotation: deg(45),
           flipH: false,
           flipV: false,
         },

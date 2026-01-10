@@ -19,7 +19,7 @@ import type { XmlDocument, XmlElement } from "../../../xml/index";
 import { getAttr, getByPath, getChild, getChildren, isXmlElement } from "../../../xml/index";
 import { getIntAttr } from "../primitive";
 import { parseColor } from "../graphics/color-parser";
-import type { Color } from "../../domain/index";
+import type { Color } from "../../../ooxml/domain/color";
 
 /**
  * Parse diagram colors definition from XML document.

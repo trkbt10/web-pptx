@@ -20,7 +20,7 @@ import type { Slide } from "../../../../pptx/domain";
 // =============================================================================
 
 import type { Shape, SpShape } from "../../../../pptx/domain";
-import { px, deg } from "../../../../pptx/domain/types";
+import { px, deg } from "../../../../ooxml/domain/units";
 
 // Create minimal test slide using type assertion for incomplete shapes
 const createTestSlide = (shapeCount: number = 0): Slide => ({

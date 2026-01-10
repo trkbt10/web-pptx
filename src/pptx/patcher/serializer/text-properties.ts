@@ -5,18 +5,8 @@
  */
 
 import { createElement, createText, type XmlElement } from "../../../xml";
-import type {
-  BodyProperties,
-  Bullet,
-  BulletStyle,
-  Hyperlink,
-  HyperlinkMouseOver,
-  LineSpacing,
-  ParagraphProperties,
-  RunProperties,
-  TabStop,
-} from "../../domain";
-import type { Pixels, Points } from "../../domain/types";
+import type { BodyProperties, Bullet, BulletStyle, Hyperlink, HyperlinkMouseOver, LineSpacing, ParagraphProperties, RunProperties, TabStop } from "../../domain";
+import type { Pixels, Points } from "../../../ooxml/domain/units";
 import { serializeColor } from "./color";
 import { serializeEffects } from "./effects";
 import { serializeFill } from "./fill";

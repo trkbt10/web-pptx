@@ -5,7 +5,7 @@
  */
 
 import { useCallback } from "react";
-import type { SolidFill } from "../../../../pptx/domain/color/types";
+import type { SolidFill } from "../../../../ooxml/domain/fill";
 import { HexColorEditor } from "../components";
 import { createDefaultColor, getHexFromColor } from "./fill-utils";
 

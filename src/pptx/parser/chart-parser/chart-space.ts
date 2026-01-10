@@ -21,7 +21,7 @@ import type {
   PrintSettings,
 } from "../../domain/chart";
 import { getChild, getChildren, getAttr as xmlGetAttr, getXmlText, type XmlElement } from "../../../xml";
-import { deg } from "../../domain/types";
+import { deg } from "../../../ooxml/domain/units";
 import { parseBoolean, parseFloat64, parseInt32, getBoolAttr, getIntAttr } from "../primitive";
 import { parseChartShapeProperties } from "./shape-properties";
 import { parseTextBody } from "../text/text-parser";

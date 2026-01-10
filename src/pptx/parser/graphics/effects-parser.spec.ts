@@ -42,7 +42,7 @@
  */
 
 import type { XmlElement } from "../../../xml/index";
-import type { Color } from "../../domain";
+import type { Color } from "../../../ooxml/domain/color";
 import { parseEffects } from "./effects-parser";
 
 // Helper to create mock XmlElement

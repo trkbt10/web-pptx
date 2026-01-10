@@ -12,18 +12,8 @@ import type {
   DiagramStyleDefinitionHeaderList,
   DiagramStyleLabel,
 } from "../../domain/diagram";
-import type {
-  Fill,
-  Rotation3d,
-  Scene3d,
-  Shape3d,
-  BevelPresetType,
-  LightRigDirection,
-  LightRigType,
-  PresetCameraType,
-  PresetMaterialType,
-} from "../../domain/index";
-import type { Color } from "../../domain/color/types";
+import type { Fill, Rotation3d, Scene3d, Shape3d, BevelPresetType, LightRigDirection, LightRigType, PresetCameraType, PresetMaterialType } from "../../domain/index";
+import type { Color } from "../../../ooxml/domain/color";
 import type { XmlDocument, XmlElement } from "../../../xml/index";
 import { getAttr, getByPath, getChild, getChildren, isXmlElement } from "../../../xml/index";
 import { getAngleAttr, getEmuAttr, getIntAttr, getPercent100kAttr } from "../primitive";

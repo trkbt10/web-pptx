@@ -6,7 +6,7 @@
  */
 
 import type { Slide, Presentation, PresentationFile } from "../domain";
-import type { Pixels } from "../domain/types";
+import type { Pixels } from "../../ooxml/domain/units";
 import type { ColorContext } from "../domain/color/context";
 import type { FontScheme } from "../domain/resolution";
 import type { ResourceResolver } from "../domain/resource-resolver";

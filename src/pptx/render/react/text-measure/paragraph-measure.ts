@@ -5,7 +5,7 @@
  */
 
 import { PT_TO_PX } from "../../../domain/unit-conversion";
-import { px } from "../../../domain/types";
+import { px } from "../../../../ooxml/domain/units";
 import { DEFAULT_FONT_SIZE_PT } from "../../../domain/defaults";
 import { applyTextTransform } from "../primitives/text/text-utils";
 import { ensureSvgTextNode, normalizeSpaces, setTextAttributes } from "./svg-text-measure";

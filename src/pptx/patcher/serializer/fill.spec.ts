@@ -3,7 +3,7 @@
  */
 
 import { getChild, getChildren } from "../../../xml";
-import { deg, pct, px } from "../../domain/types";
+import { deg, pct, px } from "../../../ooxml/domain/units";
 import type { Fill } from "../../domain";
 import { parseFill } from "../../parser/graphics/fill-parser";
 import { serializeFill } from "./fill";

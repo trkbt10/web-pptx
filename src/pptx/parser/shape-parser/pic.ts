@@ -6,7 +6,7 @@
 
 import { getAttr, getChild, type XmlElement } from "../../../xml";
 import type { BlipFillProperties, PicShape, PictureLocks, ResolvedBlipResource } from "../../domain";
-import { px, pct } from "../../domain/types";
+import { px, pct } from "../../../ooxml/domain/units";
 import { getBoolAttr, getIntAttr, parseBlipCompression, parseRectAlignment } from "../primitive";
 import { parseNonVisualMedia, parseNonVisualProperties } from "./non-visual";
 import { parseShapeProperties } from "./properties";

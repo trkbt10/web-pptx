@@ -7,7 +7,7 @@
 
 import { FieldGroup, FieldRow } from "../../ui/layout";
 import { DegreesEditor } from "../primitives/DegreesEditor";
-import { deg } from "../../../pptx/domain/types";
+import { deg } from "../../../ooxml/domain/units";
 import type { Rotation3d } from "../../../pptx/domain";
 import type { EditorProps } from "../../types";
 

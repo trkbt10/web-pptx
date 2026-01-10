@@ -6,12 +6,8 @@
  * @see ECMA-376 Part 1, Section 20.1.2.2.24 (ln)
  */
 
-import type {
-  CustomDash,
-  Line,
-  LineEnd,
-} from "../../domain/index";
-import { px } from "../../domain/types";
+import type { CustomDash, Line, LineEnd } from "../../domain/index";
+import { px } from "../../../ooxml/domain/units";
 import {
   getAttr,
   getChild,

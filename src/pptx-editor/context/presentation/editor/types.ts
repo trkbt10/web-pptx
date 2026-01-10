@@ -6,7 +6,8 @@
  */
 
 import type { Slide, Shape, TextBody } from "../../../../pptx/domain";
-import type { ShapeId, Pixels, Degrees } from "../../../../pptx/domain/types";
+import type { ShapeId } from "../../../../pptx/domain/types";
+import type { Pixels, Degrees } from "../../../../ooxml/domain/units";
 import type { PresentationDocument, SlideWithId, SlideId } from "../../../../pptx/app";
 import type { ShapeHierarchyTarget } from "../../../shape";
 import type {

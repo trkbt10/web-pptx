@@ -6,7 +6,7 @@ import { createElement, getChild, type XmlDocument, type XmlElement } from "../.
 import type { ShapeChange } from "../core/shape-differ";
 import type { ParagraphProperties } from "../../domain/text";
 import type { Transform } from "../../domain/geometry";
-import { deg, px } from "../../domain/types";
+import { deg, px } from "../../../ooxml/domain/units";
 import { patchBodyStyle, patchDefaultTextStyle, patchMasterShapes, patchTitleStyle } from "./master-patcher";
 
 function doc(root: XmlElement): XmlDocument {

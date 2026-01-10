@@ -6,8 +6,8 @@
 
 import type { Shape } from "../../pptx/domain";
 import type { Bounds, ShapeId } from "../../pptx/domain/types";
-import { px } from "../../pptx/domain/types";
-import { getShapeTransform } from "./transform";
+import { px } from "../../ooxml/domain/units";
+import { getShapeTransform } from "../../pptx/render/svg/slide-utils";
 import { findShapeById } from "./query";
 import { getRotatedCorners } from "./rotate";
 

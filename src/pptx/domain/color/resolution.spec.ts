@@ -2,8 +2,8 @@
  * @file Tests for color resolution transforms
  */
 
-import type { Color } from "./types";
-import { pct } from "../types";
+import type { Color } from "../../../ooxml/domain/color";
+import { pct } from "../../../ooxml/domain/units";
 import { resolveColor } from "./resolution";
 
 describe("resolveColor", () => {

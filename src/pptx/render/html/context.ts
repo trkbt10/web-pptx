@@ -5,7 +5,7 @@
  * Use RenderContext from ../context instead.
  */
 
-import { px } from "../../domain/types";
+import { px } from "../../../ooxml/domain/units";
 import type { CoreRenderContext, CoreRenderContextConfig } from "../render-context";
 import { createCoreRenderContext, createEmptyCoreRenderContext } from "../render-context";
 

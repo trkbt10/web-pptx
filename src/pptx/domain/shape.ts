@@ -15,7 +15,7 @@ import type {
 } from "./diagram";
 import type { Table } from "./table/types";
 import type { TextBody } from "./text";
-import type { Degrees, Percent, Pixels } from "./types";
+import type { Degrees, Percent, Pixels } from "../../ooxml/domain/units";
 import type { Point, Transform, GroupTransform } from "./geometry";
 import type { Effects } from "./effects";
 import type { Hyperlink, ResourceId, ResolvedBlipResource } from "./resource";

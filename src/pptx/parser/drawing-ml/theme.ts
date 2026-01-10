@@ -8,18 +8,7 @@
 
 import type { XmlElement, XmlDocument } from "../../../xml/index";
 import { getAttr, getChild, getChildren, getByPath } from "../../../xml/index";
-import type {
-  FontSpec,
-  FontScheme,
-  ColorScheme,
-  ColorMap,
-  FormatScheme,
-  Theme,
-  ObjectDefaults,
-  CustomColor,
-  ExtraColorScheme,
-  RawMasterTextStyles,
-} from "../../domain";
+import type { FontSpec, FontScheme, ColorScheme, ColorMap, FormatScheme, Theme, ObjectDefaults, CustomColor, ExtraColorScheme, RawMasterTextStyles } from "../../domain";
 
 // =============================================================================
 // Font Scheme Parsing

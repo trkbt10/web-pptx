@@ -16,7 +16,7 @@ import type {
 } from "../../domain/chart";
 import { getChild, getChildren, getXmlText, getAttr as xmlGetAttr, type XmlElement } from "../../../xml";
 import { getIntAttr, getFloatAttr, getBoolAttr } from "../primitive";
-import { pt } from "../../domain/types";
+import { pt } from "../../../ooxml/domain/units";
 import { parseTextBody } from "../text/text-parser";
 import { parseChartShapeProperties } from "./shape-properties";
 import { parseDataReference } from "./data-reference";

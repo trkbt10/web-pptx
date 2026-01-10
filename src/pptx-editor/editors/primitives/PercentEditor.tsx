@@ -4,7 +4,7 @@
 
 import { useCallback, type CSSProperties } from "react";
 import { Input, Slider } from "../../ui/primitives";
-import { pct, type Percent } from "../../../pptx/domain/types";
+import { pct, type Percent } from "../../../ooxml/domain/units";
 import type { EditorProps } from "../../types";
 
 export type PercentEditorProps = EditorProps<Percent> & {

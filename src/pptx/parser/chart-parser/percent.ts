@@ -2,8 +2,8 @@
  * @file Chart percentage parsing helpers
  */
 
-import type { Percent } from "../../domain";
-import { pct } from "../../domain/types";
+import type { Percent } from "../../../ooxml/domain/units";
+import { pct } from "../../../ooxml/domain/units";
 import { getAttr, type XmlElement } from "../../../xml";
 
 

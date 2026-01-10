@@ -18,7 +18,7 @@ import type {
   LineSeries,
 } from "../../domain/chart";
 import type { TextBody } from "../../domain/text";
-import { pt } from "../../domain/types";
+import { pt } from "../../../ooxml/domain/units";
 import type { CoreRenderContext } from "../render-context";
 import { type HtmlString, unsafeHtml, escapeHtml } from "../html/index";
 import { resolveFill } from "../../domain/color/fill";

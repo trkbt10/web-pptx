@@ -11,7 +11,7 @@ import { Accordion, FieldGroup, FieldRow } from "../../ui/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
 import { FillEditor, createNoFill } from "../color/FillEditor";
 import { LineEditor, createDefaultLine } from "../../ui/line";
-import { px } from "../../../pptx/domain/types";
+import { px, type Pixels } from "../../../ooxml/domain/units";
 import type {
   TableCellProperties,
   CellMargin,
@@ -23,12 +23,7 @@ import type {
 } from "../../../pptx/domain/table/types";
 import type { BevelPresetType } from "../../../pptx/domain";
 import type { Line } from "../../../pptx/domain/color/types";
-import type {
-  PresetMaterialType,
-  LightRigType,
-  LightRigDirection,
-  Pixels,
-} from "../../../pptx/domain/types";
+import type { PresetMaterialType, LightRigType, LightRigDirection } from "../../../pptx/domain/types";
 import type { EditorProps, SelectOption } from "../../types";
 
 export type TableCellPropertiesEditorProps = EditorProps<TableCellProperties> & {

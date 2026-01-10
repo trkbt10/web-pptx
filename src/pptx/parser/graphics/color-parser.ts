@@ -6,17 +6,7 @@
  * @see ECMA-376 Part 1, Section 20.1.2.3 - Color Types
  */
 
-import type {
-  Color,
-  ColorSpec,
-  ColorTransform,
-  HslColor,
-  PresetColor,
-  SchemeColor,
-  ScrgbColor,
-  SrgbColor,
-  SystemColor,
-} from "../../domain/index";
+import type { Color, ColorSpec, ColorTransform, HslColor, PresetColor, SchemeColor, ScrgbColor, SrgbColor, SystemColor } from "../../../ooxml/domain/color";
 import {
   findChild,
   getAttr,

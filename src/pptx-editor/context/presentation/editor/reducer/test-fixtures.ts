@@ -6,7 +6,7 @@
 
 import type { Slide } from "../../../../../pptx/domain";
 import type { PresentationDocument } from "../../../../../pptx/app";
-import { px } from "../../../../../pptx/domain/types";
+import { px } from "../../../../../ooxml/domain/units";
 
 /**
  * Create an empty slide for testing

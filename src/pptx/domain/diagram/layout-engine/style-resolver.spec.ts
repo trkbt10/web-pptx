@@ -9,7 +9,8 @@ import type {
   DiagramColorsDefinition,
   DiagramColorList,
 } from "../types";
-import type { Color, Fill } from "../../color/types";
+import type { Fill } from "../../color/types";
+import type { Color } from "../../../../ooxml/domain/color";
 import type { ColorContext } from "../../color/context";
 import type { DiagramTreeNode } from "./tree-builder";
 import {
@@ -446,4 +447,3 @@ describe("createEmptyColorContext", () => {
     expect(context.colorMap).toEqual({});
   });
 });
-

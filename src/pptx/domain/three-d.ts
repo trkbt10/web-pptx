@@ -6,7 +6,7 @@
 
 import type { Fill } from "./color/types";
 import type { Point } from "./geometry";
-import type { Degrees, Percent, Pixels } from "./types";
+import type { Degrees, Percent, Pixels } from "../../ooxml/domain/units";
 
 // =============================================================================
 // 3D Enumeration Types

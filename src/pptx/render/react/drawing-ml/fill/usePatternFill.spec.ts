@@ -4,7 +4,7 @@
  * Tests pattern fill resolution.
  */
 
-import type { PatternFill, PatternType } from "../../../../domain/color/types";
+import type { PatternFill, PatternType } from "../../../../../ooxml/domain/fill";
 import type { ColorContext } from "../../../../domain/color/context";
 import { resolvePatternFillForReact, isPatternSupported, getSupportedPatterns } from "./usePatternFill.js";
 

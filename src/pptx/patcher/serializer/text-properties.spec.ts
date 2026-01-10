@@ -1,5 +1,5 @@
 import { getChild, getTextContent, isXmlElement } from "../../../xml";
-import { pct, pt, px } from "../../domain/types";
+import { pct, pt, px } from "../../../ooxml/domain/units";
 import type { BulletStyle, ParagraphProperties, RunProperties } from "../../domain/text";
 import { serializeParagraphProperties, serializeRunProperties } from "./text-properties";
 

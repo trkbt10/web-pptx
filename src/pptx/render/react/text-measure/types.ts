@@ -9,7 +9,7 @@ import type {
   BulletStyle,
   TabStop,
 } from "../../../domain/text";
-import type { Pixels } from "../../../domain/types";
+import type { Pixels } from "../../../../ooxml/domain/units";
 
 export type TextMeasureRun = {
   readonly run: TextRun;

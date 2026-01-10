@@ -4,7 +4,7 @@
  * @see ECMA-376 Part 1, Section 20.4 - WordprocessingML Drawing
  */
 
-import type { Pixels } from "./types";
+import type { Pixels } from "../../ooxml/domain/units";
 import type { EffectExtent, Point } from "./geometry";
 
 // =============================================================================
