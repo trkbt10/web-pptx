@@ -11,6 +11,7 @@ import type { Color, Fill, Line, PatternType, BlipFill } from "./types";
 import { resolveColor } from "./resolution";
 import type { ColorContext } from "./context";
 import type { ResourceResolverFn } from "../resource-resolver";
+import { hexToRgb } from "../../../color";
 
 // =============================================================================
 // Color Utilities
@@ -43,15 +44,6 @@ export function resolveColorWithAlpha(
   return { hex, alpha };
 }
 
-/**
- * Convert hex to RGB values
- */
-export function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  const r = parseInt(hex.slice(0, 2), 16);
-  const g = parseInt(hex.slice(2, 4), 16);
-  const b = parseInt(hex.slice(4, 6), 16);
-  return { r, g, b };
-}
 
 /**
  * Format color as CSS rgba string

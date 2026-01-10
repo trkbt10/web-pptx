@@ -17,7 +17,8 @@ import type { RenderOptions } from "../render/render-options";
 import { DEFAULT_RENDER_OPTIONS } from "../render/render-options";
 import type { ResolvedBackgroundFill } from "../render/background-fill";
 import { createWarningCollector } from "../render/warnings";
-import { getMimeTypeFromPath, createDataUrl } from "../opc";
+import { getMimeTypeFromPath } from "../opc";
+import { toDataUrl } from "../../buffer";
 
 // =============================================================================
 // Types
@@ -133,7 +134,8 @@ function buildResourceResolver(ctx: SlideContext): ResourceResolver {
 
       const data = ctx.readFile(target);
       if (data !== null) {
-        return createDataUrl(data, target);
+        const mimeType = getMimeTypeFromPath(target) ?? "application/octet-stream";
+        return toDataUrl(data, mimeType);
       }
 
       return target;

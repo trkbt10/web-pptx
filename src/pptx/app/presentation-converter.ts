@@ -20,6 +20,7 @@ import { getByPath } from "../../xml";
 import { createRenderContext } from "./render-context";
 import { getMimeTypeFromPath } from "../opc";
 import { createZipAdapter } from "../domain";
+import { toDataUrl } from "../../buffer";
 
 // =============================================================================
 // Color Context Building
@@ -120,8 +121,7 @@ function createResourceResolverFromFile(file: PresentationFile, apiSlide: ApiSli
         return undefined;
       }
 
-      const base64 = arrayBufferToBase64(buffer);
-      return `data:${mimeType};base64,${base64}`;
+      return toDataUrl(buffer, mimeType);
     },
 
     getMimeType: (id: string) => {
@@ -168,15 +168,6 @@ function normalizePptxPath(path: string): string {
   }
 
   return normalized;
-}
-
-/**
- * Convert ArrayBuffer to base64 string
- */
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
-  return btoa(binary);
 }
 
 // =============================================================================

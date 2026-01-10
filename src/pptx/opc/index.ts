@@ -74,8 +74,6 @@ export {
 
 export {
   getMimeTypeFromPath,
-  arrayBufferToBase64,
-  createDataUrl,
 } from "./utils";
 
 // =============================================================================

@@ -62,42 +62,6 @@ export function getMimeTypeFromPath(path: string): string | undefined {
 }
 
 // =============================================================================
-// Base64 Encoding
-// =============================================================================
-
-/**
- * Convert ArrayBuffer to base64 string.
- *
- * @param buffer - ArrayBuffer to convert
- * @returns Base64 encoded string
- */
-export function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-// =============================================================================
-// Data URL Creation
-// =============================================================================
-
-/**
- * Create a data URL from ArrayBuffer content.
- *
- * @param data - File content as ArrayBuffer
- * @param path - File path (used to determine MIME type)
- * @returns Data URL string
- */
-export function createDataUrl(data: ArrayBuffer, path: string): string {
-  const mimeType = getMimeTypeFromPath(path) ?? "application/octet-stream";
-  const base64 = arrayBufferToBase64(data);
-  return `data:${mimeType};base64,${base64}`;
-}
-
-// =============================================================================
 // RFC 3986 Path Resolution
 // =============================================================================
 

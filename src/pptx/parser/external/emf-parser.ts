@@ -7,6 +7,8 @@
  * @see https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-emf
  */
 
+import { base64ArrayBuffer } from "../../../buffer";
+
 // =============================================================================
 // EMF Record Types (MS-EMF Section 2.1.1)
 // =============================================================================
@@ -803,7 +805,7 @@ function extractDIBToPng(
   bmpData.set(new Uint8Array(view.buffer, view.byteOffset + bmiOffset, bmiSize), 14);
   bmpData.set(new Uint8Array(view.buffer, view.byteOffset + bitsOffset, bitsSize), 14 + bmiSize);
 
-  const base64 = uint8ArrayToBase64(bmpData);
+  const base64 = base64ArrayBuffer(bmpData.buffer);
   return `data:image/bmp;base64,${base64}`;
 }
 
@@ -871,11 +873,6 @@ function escapeXml(text: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
-}
-
-function uint8ArrayToBase64(bytes: Uint8Array): string {
-  const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
-  return btoa(binary);
 }
 
 function resolveTextAnchor(textAlign: number): "start" | "middle" | "end" {

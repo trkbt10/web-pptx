@@ -38,9 +38,8 @@ import {
   getRelationshipPath,
   RELATIONSHIP_TYPES,
   getMimeTypeFromPath,
-  arrayBufferToBase64,
-  createDataUrl,
 } from "../../opc";
+import { toDataUrl } from "../../../buffer";
 import {
   parseRelationships,
   resolvePartPath,
@@ -580,7 +579,8 @@ function resolveResourceToDataUrl(
   }
 
   // Convert to data URL
-  return createDataUrl(data, targetPath);
+  const mimeType = getMimeTypeFromPath(targetPath) ?? "application/octet-stream";
+  return toDataUrl(data, mimeType);
 }
 
 // =============================================================================
@@ -697,7 +697,6 @@ function resolveVmlPreviewImage(oleRef: OleReference, fileReader: FileReader): s
   }
 
   // Convert to data URL
-  const mimeType = getMimeTypeFromPath(normalizedPath);
-  const base64 = arrayBufferToBase64(imageData);
-  return `data:${mimeType};base64,${base64}`;
+  const mimeType = getMimeTypeFromPath(normalizedPath) ?? "application/octet-stream";
+  return toDataUrl(imageData, mimeType);
 }
