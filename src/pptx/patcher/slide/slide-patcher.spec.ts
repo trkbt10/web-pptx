@@ -3,12 +3,16 @@
  */
 
 import type { XmlDocument, XmlElement } from "../../../xml";
-import { isXmlElement, getChild, getByPath } from "../../../xml";
-import type { ShapeChange, PropertyChange, TransformChange } from "../core/shape-differ";
+import { isXmlElement, getChild } from "../../../xml";
+import type { ShapeChange } from "../core/shape-differ";
 import type { Transform } from "../../domain/geometry";
+import { EMU_PER_PIXEL } from "../../domain";
 import { px, deg } from "../../domain/types";
+import type { SpShape } from "../../domain/shape";
+import type { TextBody } from "../../domain/text";
+import { parseShapeTree } from "../../parser/shape-parser";
 import { patchSlideXml, getSpTree, hasShapes } from "./slide-patcher";
-import { createElement } from "../core/xml-mutator";
+import { createElement, findShapeById } from "../core/xml-mutator";
 
 // =============================================================================
 // Test Helpers
@@ -48,6 +52,58 @@ function createShapeElement(id: string, x = 0, y = 0, width = 100, height = 100)
   ]);
 }
 
+function createShapeElementWithSpPrChildren(id: string, spPrChildren: XmlElement[]): XmlElement {
+  return createElement("p:sp", {}, [
+    createElement("p:nvSpPr", {}, [
+      createElement("p:cNvPr", { id, name: `Shape ${id}` }),
+      createElement("p:cNvSpPr"),
+      createElement("p:nvPr"),
+    ]),
+    createElement("p:spPr", {}, [
+      createElement("a:xfrm", {}, [
+        createElement("a:off", { x: "0", y: "0" }),
+        createElement("a:ext", { cx: "100", cy: "100" }),
+      ]),
+      ...spPrChildren,
+    ]),
+    createElement("p:txBody", {}, [
+      createElement("a:bodyPr"),
+      createElement("a:lstStyle"),
+      createElement("a:p"),
+    ]),
+  ]);
+}
+
+function createGroupElement(id: string, children: XmlElement[] = []): XmlElement {
+  return createElement("p:grpSp", {}, [
+    createElement("p:nvGrpSpPr", {}, [
+      createElement("p:cNvPr", { id, name: `Group ${id}` }),
+      createElement("p:cNvGrpSpPr"),
+      createElement("p:nvPr"),
+    ]),
+    createElement("p:grpSpPr", {}, [
+      createElement("a:xfrm", {}, [
+        createElement("a:off", { x: "0", y: "0" }),
+        createElement("a:ext", { cx: "0", cy: "0" }),
+        createElement("a:chOff", { x: "0", y: "0" }),
+        createElement("a:chExt", { cx: "0", cy: "0" }),
+      ]),
+    ]),
+    ...children,
+  ]);
+}
+
+function createDomainSpShape(id: string, x = 0): SpShape {
+  return {
+    type: "sp",
+    nonVisual: { id, name: `Shape ${id}` },
+    properties: {
+      transform: createTransform({ x }),
+      geometry: { type: "preset", preset: "rect", adjustValues: [] },
+    },
+  };
+}
+
 function createTransform(overrides: Partial<{
   x: number;
   y: number;
@@ -76,6 +132,10 @@ function createTransform(overrides: Partial<{
     flipH: defaults.flipH,
     flipV: defaults.flipV,
   };
+}
+
+function pxToEmuString(valuePx: number): string {
+  return String(Math.round(valuePx * EMU_PER_PIXEL));
 }
 
 function getShapeById(doc: XmlDocument, id: string): XmlElement | null {
@@ -109,6 +169,74 @@ function getXfrmFromShape(shape: XmlElement): XmlElement | null {
 // =============================================================================
 
 describe("patchSlideXml", () => {
+  describe("shape addition", () => {
+    it("adds a shape to the slide", () => {
+      const doc = createSlideDocument([createShapeElement("2")]);
+      const changes: ShapeChange[] = [{ type: "added", shape: createDomainSpShape("3", 50) }];
+
+      const result = patchSlideXml(doc, changes);
+      expect(getShapeById(result, "3")).not.toBeNull();
+
+      const parsed = parseShapeTree(getSpTree(result) ?? undefined);
+      const added = parsed.find((s): s is Extract<typeof s, { type: "sp" }> => s.type === "sp" && s.nonVisual.id === "3");
+      expect(added?.properties.transform?.x).toBe(px(50));
+    });
+
+    it("round-trips added shape textBody through parser", () => {
+      const doc = createSlideDocument([]);
+      const textBody: TextBody = {
+        bodyProperties: {},
+        paragraphs: [
+          {
+            properties: {},
+            runs: [{ type: "text", text: "Hello" }],
+          },
+        ],
+      };
+      const shape = { ...createDomainSpShape("3", 0), textBody };
+      const changes: ShapeChange[] = [{ type: "added", shape }];
+
+      const result = patchSlideXml(doc, changes);
+      const parsed = parseShapeTree(getSpTree(result) ?? undefined);
+      const added = parsed.find((s): s is Extract<typeof s, { type: "sp" }> => s.type === "sp" && s.nonVisual.id === "3");
+      const run = added?.textBody?.paragraphs[0]?.runs[0];
+      expect(run && run.type === "text" ? run.text : undefined).toBe("Hello");
+    });
+
+    it("inserts a shape after a specific id", () => {
+      const doc = createSlideDocument([createShapeElement("2"), createShapeElement("3")]);
+      const changes: ShapeChange[] = [{ type: "added", shape: createDomainSpShape("4"), afterId: "2" }];
+
+      const result = patchSlideXml(doc, changes);
+      const spTree = getSpTree(result)!;
+      const ids = spTree.children
+        .filter((c): c is XmlElement => isXmlElement(c) && c.name === "p:sp")
+        .map((sp) => getChild(getChild(sp, "p:nvSpPr")!, "p:cNvPr")!.attrs.id);
+      expect(ids).toEqual(["2", "4", "3"]);
+    });
+
+    it("adds a shape inside a group when parentId is provided", () => {
+      const group = createGroupElement("10", [createShapeElement("2")]);
+      const doc = createSlideDocument([group]);
+      const changes: ShapeChange[] = [
+        { type: "added", shape: createDomainSpShape("3"), parentId: "10", afterId: "2" },
+      ];
+
+      const result = patchSlideXml(doc, changes);
+      const spTree = getSpTree(result)!;
+      const updatedGroup = findShapeById(spTree, "10");
+      expect(updatedGroup).not.toBeNull();
+
+      const hasChild3 = updatedGroup && updatedGroup.name === "p:grpSp"
+        ? updatedGroup.children.some((c) =>
+            isXmlElement(c) &&
+            c.name === "p:sp" &&
+            getChild(getChild(c, "p:nvSpPr")!, "p:cNvPr")!.attrs.id === "3")
+        : false;
+      expect(hasChild3).toBe(true);
+    });
+  });
+
   describe("shape removal", () => {
     it("removes a shape from the slide", () => {
       const shape1 = createShapeElement("2");
@@ -173,8 +301,8 @@ describe("patchSlideXml", () => {
       expect(xfrm).not.toBeNull();
 
       const off = getChild(xfrm!, "a:off");
-      expect(off?.attrs.x).toBe("500");
-      expect(off?.attrs.y).toBe("300");
+      expect(off?.attrs.x).toBe(pxToEmuString(500));
+      expect(off?.attrs.y).toBe(pxToEmuString(300));
     });
 
     it("updates size in a:xfrm", () => {
@@ -201,8 +329,8 @@ describe("patchSlideXml", () => {
       const xfrm = getXfrmFromShape(modifiedShape!);
 
       const ext = getChild(xfrm!, "a:ext");
-      expect(ext?.attrs.cx).toBe("200");
-      expect(ext?.attrs.cy).toBe("150");
+      expect(ext?.attrs.cx).toBe(pxToEmuString(200));
+      expect(ext?.attrs.cy).toBe(pxToEmuString(150));
     });
 
     it("adds rotation attribute when non-zero", () => {
@@ -286,6 +414,274 @@ describe("patchSlideXml", () => {
     });
   });
 
+  describe("fill modification", () => {
+    it("replaces existing fill element in p:spPr", () => {
+      const shape = createShapeElementWithSpPrChildren("2", [
+        createElement("a:solidFill", {}, [createElement("a:srgbClr", { val: "000000" })]),
+      ]);
+      const doc = createSlideDocument([shape]);
+
+      const changes: ShapeChange[] = [
+        {
+          type: "modified",
+          shapeId: "2",
+          shapeType: "sp",
+          changes: [
+            {
+              property: "fill",
+              oldValue: { type: "solidFill", color: { spec: { type: "srgb", value: "000000" } } },
+              newValue: { type: "noFill" },
+            },
+          ],
+        },
+      ];
+
+      const result = patchSlideXml(doc, changes);
+      const modifiedShape = getShapeById(result, "2");
+      const spPr = getChild(modifiedShape!, "p:spPr");
+      expect(spPr).toBeDefined();
+
+      expect(getChild(spPr!, "a:noFill")).toBeDefined();
+      expect(getChild(spPr!, "a:solidFill")).toBeUndefined();
+    });
+
+    it("removes fill elements when newValue is undefined", () => {
+      const shape = createShapeElementWithSpPrChildren("2", [
+        createElement("a:solidFill", {}, [createElement("a:srgbClr", { val: "000000" })]),
+      ]);
+      const doc = createSlideDocument([shape]);
+
+      const changes: ShapeChange[] = [
+        {
+          type: "modified",
+          shapeId: "2",
+          shapeType: "sp",
+          changes: [
+            {
+              property: "fill",
+              oldValue: { type: "solidFill", color: { spec: { type: "srgb", value: "000000" } } },
+              newValue: undefined,
+            },
+          ],
+        },
+      ];
+
+      const result = patchSlideXml(doc, changes);
+      const modifiedShape = getShapeById(result, "2");
+      const spPr = getChild(modifiedShape!, "p:spPr");
+      expect(getChild(spPr!, "a:solidFill")).toBeUndefined();
+      expect(getChild(spPr!, "a:noFill")).toBeUndefined();
+    });
+  });
+
+  describe("line modification", () => {
+    it("replaces existing a:ln element in p:spPr", () => {
+      const shape = createShapeElementWithSpPrChildren("2", [
+        createElement("a:ln", { w: "12700" }, [
+          createElement("a:solidFill", {}, [createElement("a:srgbClr", { val: "000000" })]),
+        ]),
+      ]);
+      const doc = createSlideDocument([shape]);
+
+      const changes: ShapeChange[] = [
+        {
+          type: "modified",
+          shapeId: "2",
+          shapeType: "sp",
+          changes: [
+            {
+              property: "line",
+              oldValue: undefined,
+              newValue: {
+                width: px(2),
+                cap: "round",
+                compound: "dbl",
+                alignment: "ctr",
+                fill: { type: "solidFill", color: { spec: { type: "srgb", value: "FF0000" } } },
+                dash: "dash",
+                join: "round",
+              },
+            },
+          ],
+        },
+      ];
+
+      const result = patchSlideXml(doc, changes);
+      const modifiedShape = getShapeById(result, "2");
+      const spPr = getChild(modifiedShape!, "p:spPr");
+      const ln = getChild(spPr!, "a:ln");
+      expect(ln).toBeDefined();
+      expect(ln?.attrs.w).toBe(pxToEmuString(2));
+      expect(ln?.attrs.cap).toBe("rnd");
+      expect(getChild(getChild(ln!, "a:solidFill")!, "a:srgbClr")?.attrs.val).toBe("FF0000");
+      expect(getChild(ln!, "a:prstDash")?.attrs.val).toBe("dash");
+    });
+
+    it("removes a:ln when newValue is undefined", () => {
+      const shape = createShapeElementWithSpPrChildren("2", [
+        createElement("a:ln", { w: "12700" }, [
+          createElement("a:solidFill", {}, [createElement("a:srgbClr", { val: "000000" })]),
+        ]),
+      ]);
+      const doc = createSlideDocument([shape]);
+
+      const changes: ShapeChange[] = [
+        {
+          type: "modified",
+          shapeId: "2",
+          shapeType: "sp",
+          changes: [
+            {
+              property: "line",
+              oldValue: undefined,
+              newValue: undefined,
+            },
+          ],
+        },
+      ];
+
+      const result = patchSlideXml(doc, changes);
+      const modifiedShape = getShapeById(result, "2");
+      const spPr = getChild(modifiedShape!, "p:spPr");
+      expect(getChild(spPr!, "a:ln")).toBeUndefined();
+    });
+  });
+
+  describe("textBody modification", () => {
+    it("patches p:txBody paragraphs while preserving existing a:bodyPr", () => {
+      const shape = createElement("p:sp", {}, [
+        createElement("p:nvSpPr", {}, [
+          createElement("p:cNvPr", { id: "2", name: "Shape 2" }),
+          createElement("p:cNvSpPr"),
+          createElement("p:nvPr"),
+        ]),
+        createElement("p:spPr", {}, [
+          createElement("a:xfrm", {}, [
+            createElement("a:off", { x: "0", y: "0" }),
+            createElement("a:ext", { cx: "100", cy: "100" }),
+          ]),
+        ]),
+        createElement("p:txBody", {}, [
+          createElement("a:bodyPr", { wrap: "none", anchor: "ctr" }),
+          createElement("a:lstStyle"),
+          createElement("a:p"),
+          createElement("a:extLst"),
+        ]),
+      ]);
+
+      const doc = createSlideDocument([shape]);
+      const nextTextBody: TextBody = {
+        bodyProperties: { wrapping: "square", anchor: "top" },
+        paragraphs: [
+          {
+            properties: {},
+            runs: [{ type: "text", text: "Changed", properties: { bold: true } }],
+          },
+        ],
+      };
+
+      const changes: ShapeChange[] = [
+        {
+          type: "modified",
+          shapeId: "2",
+          shapeType: "sp",
+          changes: [
+            { property: "textBody", oldValue: undefined, newValue: nextTextBody },
+          ],
+        },
+      ];
+
+      const result = patchSlideXml(doc, changes);
+      const modifiedShape = getShapeById(result, "2")!;
+      const txBody = getChild(modifiedShape, "p:txBody")!;
+
+      expect(getChild(txBody, "a:extLst")).toBeDefined();
+      const bodyPr = getChild(txBody, "a:bodyPr")!;
+      expect(bodyPr.attrs.wrap).toBe("none");
+      expect(bodyPr.attrs.anchor).toBe("ctr");
+
+      const p = getChild(txBody, "a:p")!;
+      const r = getChild(p, "a:r")!;
+      const rPr = getChild(r, "a:rPr")!;
+      expect(rPr.attrs.b).toBe("1");
+      const t = getChild(r, "a:t")!;
+      expect(t.children[0] && !isXmlElement(t.children[0]) ? t.children[0].value : "").toBe("Changed");
+    });
+  });
+
+  describe("effects modification", () => {
+    it("replaces existing a:effectLst", () => {
+      const shape = createShapeElementWithSpPrChildren("2", [
+        createElement("a:effectLst", {}, [
+          createElement("a:outerShdw", { blurRad: "0", dist: "0", dir: "0" }, [
+            createElement("a:srgbClr", { val: "000000" }),
+          ]),
+        ]),
+      ]);
+      const doc = createSlideDocument([shape]);
+
+      const changes: ShapeChange[] = [
+        {
+          type: "modified",
+          shapeId: "2",
+          shapeType: "sp",
+          changes: [
+            {
+              property: "effects",
+              oldValue: undefined,
+              newValue: {
+                glow: {
+                  color: { spec: { type: "srgb", value: "00FF00" } },
+                  radius: px(3),
+                },
+              },
+            },
+          ],
+        },
+      ];
+
+      const result = patchSlideXml(doc, changes);
+      const modifiedShape = getShapeById(result, "2");
+      const spPr = getChild(modifiedShape!, "p:spPr");
+      const effectLst = getChild(spPr!, "a:effectLst");
+      expect(effectLst).toBeDefined();
+      expect(getChild(effectLst!, "a:glow")).toBeDefined();
+      expect(getChild(effectLst!, "a:outerShdw")).toBeUndefined();
+    });
+
+    it("removes effects when newValue is undefined", () => {
+      const shape = createShapeElementWithSpPrChildren("2", [
+        createElement("a:effectLst", {}, [
+          createElement("a:glow", { rad: "0" }, [
+            createElement("a:srgbClr", { val: "00FF00" }),
+          ]),
+        ]),
+      ]);
+      const doc = createSlideDocument([shape]);
+
+      const changes: ShapeChange[] = [
+        {
+          type: "modified",
+          shapeId: "2",
+          shapeType: "sp",
+          changes: [
+            {
+              property: "effects",
+              oldValue: undefined,
+              newValue: undefined,
+            },
+          ],
+        },
+      ];
+
+      const result = patchSlideXml(doc, changes);
+      const modifiedShape = getShapeById(result, "2");
+      const spPr = getChild(modifiedShape!, "p:spPr");
+      expect(getChild(spPr!, "a:effectLst")).toBeUndefined();
+      expect(getChild(spPr!, "a:effectDag")).toBeUndefined();
+    });
+  });
+
   describe("multiple changes", () => {
     it("applies multiple changes in order", () => {
       const shape1 = createShapeElement("2", 0, 0);
@@ -318,7 +714,7 @@ describe("patchSlideXml", () => {
       const modifiedShape = getShapeById(result, "3");
       const xfrm = getXfrmFromShape(modifiedShape!);
       const off = getChild(xfrm!, "a:off");
-      expect(off?.attrs.x).toBe("999");
+      expect(off?.attrs.x).toBe(pxToEmuString(999));
 
       // Shape 4 should be unchanged
       const unchangedShape = getShapeById(result, "4");

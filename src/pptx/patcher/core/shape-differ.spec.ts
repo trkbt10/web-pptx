@@ -209,7 +209,10 @@ describe("detectSlideChanges", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].type).toBe("added");
-    expect((result[0] as { shape: Shape }).shape).toBe(newShape);
+    const added = result[0] as Extract<ShapeChange, { type: "added" }>;
+    expect(added.shape).toBe(newShape);
+    expect(added.parentId).toBeUndefined();
+    expect(added.afterId).toBeUndefined();
   });
 
   it("detects removed shape", () => {
@@ -221,7 +224,9 @@ describe("detectSlideChanges", () => {
 
     expect(result).toHaveLength(1);
     expect(result[0].type).toBe("removed");
-    expect((result[0] as { shapeId: string }).shapeId).toBe("1");
+    const removed = result[0] as Extract<ShapeChange, { type: "removed" }>;
+    expect(removed.shapeId).toBe("1");
+    expect(removed.parentId).toBeUndefined();
   });
 
   it("detects modified shape", () => {
@@ -267,6 +272,8 @@ describe("detectSlideChanges", () => {
     expect(removed[0].shapeId).toBe("1");
 
     expect(added).toHaveLength(2);
+    expect(added[0].afterId).toBe("2");
+    expect(added[1].afterId).toBe("3");
 
     expect(modifiedChanges).toHaveLength(1);
     expect(modifiedChanges[0].shapeId).toBe("2");
@@ -288,6 +295,24 @@ describe("detectSlideChanges", () => {
     // Should detect change to the inner shape
     const modifiedChanges = getChangesByType(result, "modified");
     expect(modifiedChanges.some((c) => c.shapeId === "inner")).toBe(true);
+  });
+
+  it("detects added shapes inside groups with parentId", () => {
+    const originalInner = createSpShape("2");
+    const originalGroup = createGrpShape("group", [originalInner]);
+    const original = createSlide([originalGroup]);
+
+    const addedInner = createSpShape("3");
+    const modifiedGroup = createGrpShape("group", [originalInner, addedInner]);
+    const modified = createSlide([modifiedGroup]);
+
+    const result = detectSlideChanges(original, modified);
+    const added = getChangesByType(result, "added");
+
+    expect(added).toHaveLength(1);
+    expect(added[0].shape).toBe(addedInner);
+    expect(added[0].parentId).toBe("group");
+    expect(added[0].afterId).toBe("2");
   });
 });
 

@@ -42,6 +42,16 @@ export type ShapeModified = {
 export type ShapeAdded = {
   readonly type: "added";
   readonly shape: Shape;
+  /**
+   * Parent group shape ID when the shape is added inside a p:grpSp.
+   * Undefined means the slide root (p:spTree).
+   */
+  readonly parentId?: string;
+  /**
+   * Insert after this ID within the same container (z-order preservation).
+   * Undefined means append to the end of the container.
+   */
+  readonly afterId?: string;
 };
 
 /**
@@ -50,6 +60,11 @@ export type ShapeAdded = {
 export type ShapeRemoved = {
   readonly type: "removed";
   readonly shapeId: string;
+  /**
+   * Parent group shape ID when the shape was removed from inside a p:grpSp.
+   * Undefined means the slide root (p:spTree).
+   */
+  readonly parentId?: string;
 };
 
 /**
@@ -123,23 +138,12 @@ export function detectSlideChanges(
 ): readonly ShapeChange[] {
   const changes: ShapeChange[] = [];
 
-  // Build a map of original shapes by ID
+  // Added/removed must preserve hierarchy + z-order (per-container diff)
+  changes.push(...detectTreeAddRemoveChanges(original.shapes, modified.shapes, undefined));
+
+  // Modified changes can be detected by ID across the entire tree
   const originalById = buildShapeMap(original.shapes);
   const modifiedById = buildShapeMap(modified.shapes);
-
-  // Detect removed shapes
-  for (const [id, _] of originalById) {
-    if (!modifiedById.has(id)) {
-      changes.push({ type: "removed", shapeId: id });
-    }
-  }
-
-  // Detect added shapes
-  for (const [id, shape] of modifiedById) {
-    if (!originalById.has(id)) {
-      changes.push({ type: "added", shape });
-    }
-  }
 
   // Detect modified shapes
   for (const [id, modifiedShape] of modifiedById) {
@@ -154,6 +158,66 @@ export function detectSlideChanges(
           changes: propertyChanges,
         });
       }
+    }
+  }
+
+  return changes;
+}
+
+function detectTreeAddRemoveChanges(
+  originalShapes: readonly Shape[],
+  modifiedShapes: readonly Shape[],
+  parentId: string | undefined,
+): ShapeChange[] {
+  const changes: ShapeChange[] = [];
+
+  const originalById = new Map<string, Shape>();
+  for (const shape of originalShapes) {
+    const id = getShapeId(shape);
+    if (id) {
+      originalById.set(id, shape);
+    }
+  }
+
+  const modifiedById = new Map<string, Shape>();
+  for (const shape of modifiedShapes) {
+    const id = getShapeId(shape);
+    if (id) {
+      modifiedById.set(id, shape);
+    }
+  }
+
+  // Removed (only direct children of this container)
+  for (const [id, originalShape] of originalById) {
+    if (!modifiedById.has(id)) {
+      changes.push({ type: "removed", shapeId: id, parentId });
+    } else {
+      // Recurse into groups that exist in both trees
+      const modifiedShape = modifiedById.get(id);
+      if (originalShape.type === "grpSp" && modifiedShape?.type === "grpSp") {
+        changes.push(...detectTreeAddRemoveChanges(originalShape.children, modifiedShape.children, id));
+      }
+    }
+  }
+
+  // Added (in modified z-order within this container)
+  let lastAnchorId: string | undefined;
+  for (const shape of modifiedShapes) {
+    const id = getShapeId(shape);
+    if (!id) {
+      continue;
+    }
+
+    if (!originalById.has(id)) {
+      changes.push({
+        type: "added",
+        shape,
+        parentId,
+        afterId: lastAnchorId,
+      });
+      lastAnchorId = id;
+    } else {
+      lastAnchorId = id;
     }
   }
 

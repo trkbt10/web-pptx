@@ -687,6 +687,10 @@ describe("parseEffects - a:fillOverlay (ECMA-376 Section 20.1.8.29)", () => {
     const result = parseEffects(spPr);
     expect(result?.fillOverlay?.blend).toBe("darken");
     expect(result?.fillOverlay?.fillType).toBe("solidFill");
+    expect(result?.fillOverlay?.fill).toEqual({
+      type: "solidFill",
+      color: { spec: { type: "srgb", value: "000000" } },
+    });
   });
 
   it("returns undefined when blend is missing", () => {

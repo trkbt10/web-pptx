@@ -6,6 +6,7 @@
 
 import type { Degrees, Percent, Pixels } from "./types";
 import type { Color } from "./color/types";
+import type { Fill } from "./color/types";
 import type { FillEffectType } from "./appearance";
 
 // =============================================================================
@@ -279,6 +280,11 @@ export type DuotoneEffect = {
 export type FillOverlayEffect = {
   readonly blend: BlendMode;
   readonly fillType: FillEffectType;
+  /**
+   * When present, contains the actual fill definition inside a:fillOverlay.
+   * This allows round-trip fidelity when exporting.
+   */
+  readonly fill?: Fill;
 };
 
 /**

@@ -9,19 +9,22 @@
 
 import type { XmlDocument, XmlElement } from "../../../xml";
 import { isXmlElement, getChild } from "../../../xml";
-import type { ShapeChange, PropertyChange } from "../core/shape-differ";
+import type { ShapeChange, ShapeAdded, PropertyChange } from "../core/shape-differ";
 import {
   updateDocumentRoot,
   getDocumentRoot,
   findShapeById,
   replaceShapeById,
   removeShapeById,
-  appendChild,
   updateChildByName,
   replaceChildByName,
-  createElement,
-  setAttributes,
 } from "../core/xml-mutator";
+import { serializeEffects, serializeFill, serializeLine } from "../serializer";
+import { patchTransformElement, serializeTransform } from "../serializer/transform";
+import { addShapeToTree } from "./shape-tree-patcher";
+import { extractShapeIds, generateShapeId } from "../shape/id-generator";
+import { serializeShape } from "../shape/shape-serializer";
+import { applyTextBodyChangeToShape } from "./text-patcher";
 
 // =============================================================================
 // Main Patching Function
@@ -46,8 +49,7 @@ export function patchSlideXml(
         result = applyRemoval(result, change.shapeId);
         break;
       case "added":
-        // Shape addition requires full serialization (Phase 6)
-        // For now, we skip added shapes
+        result = applyAddition(result, change);
         break;
       case "modified":
         result = applyModification(result, change.shapeId, change.changes);
@@ -56,6 +58,62 @@ export function patchSlideXml(
   }
 
   return result;
+}
+
+// =============================================================================
+// Addition
+// =============================================================================
+
+function applyAddition(doc: XmlDocument, change: ShapeAdded): XmlDocument {
+  const existingIds = extractShapeIds(doc);
+  const shapeWithUniqueIds = ensureUniqueIdsForInsertion(change.shape, existingIds);
+  const shapeXml = serializeShape(shapeWithUniqueIds);
+
+	  return updateDocumentRoot(doc, (root) => {
+	    const cSld = getChild(root, "p:cSld");
+	    if (!cSld) return root;
+
+	    const spTree = getChild(cSld, "p:spTree");
+	    if (!spTree) return root;
+
+	    const afterId = change.afterId;
+	    const parentId = change.parentId;
+	    const updatedSpTree = getUpdatedSpTreeForAddition(spTree, parentId, shapeXml, afterId);
+
+	    return updateChildByName(root, "p:cSld", (cSldEl) =>
+	      replaceChildByName(cSldEl, "p:spTree", updatedSpTree),
+	    );
+	  });
+	}
+
+function getUpdatedSpTreeForAddition(
+  spTree: XmlElement,
+  parentId: string | undefined,
+  shapeXml: XmlElement,
+  afterId: string | undefined,
+): XmlElement {
+  if (!parentId) {
+    return addShapeToTree(spTree, shapeXml, afterId);
+  }
+  return addShapeToGroupTree(spTree, parentId, shapeXml, afterId);
+}
+
+function addShapeToGroupTree(
+  spTree: XmlElement,
+  parentId: string,
+  shapeXml: XmlElement,
+  afterId: string | undefined,
+): XmlElement {
+  const parent = findShapeById(spTree, parentId);
+  if (!parent) {
+    throw new Error(`applyAddition: parentId not found: ${parentId}`);
+  }
+  if (parent.name !== "p:grpSp") {
+    throw new Error(`applyAddition: parentId is not a p:grpSp: ${parentId}`);
+  }
+
+  const updatedGroup = addShapeToTree(parent, shapeXml, afterId);
+  return replaceShapeById(spTree, parentId, updatedGroup);
 }
 
 // =============================================================================
@@ -180,16 +238,25 @@ function applyTransformChange(
     return shape;
   }
 
-  // Find or create a:xfrm
+  // GraphicFrame uses p:xfrm directly (no nested a:xfrm)
+  if (spPrName === "p:xfrm") {
+    const patched = patchTransformElement(spPr, newTransform);
+    return replaceChildByName(shape, "p:xfrm", patched);
+  }
+
+  // Find or create a:xfrm within spPr/grpSpPr
   const xfrm = getChild(spPr, "a:xfrm");
 
   // Build new xfrm
-  const newXfrm = buildTransformElement(newTransform, xfrm);
+  const newXfrm = xfrm ? patchTransformElement(xfrm, newTransform) : serializeTransform(newTransform);
 
   // Replace xfrm in spPr
-  const newSpPr = xfrm
-    ? replaceChildByName(spPr, "a:xfrm", newXfrm)
-    : prependXfrm(spPr, newXfrm);
+  const newSpPr = (() => {
+    if (xfrm) {
+      return replaceChildByName(spPr, "a:xfrm", newXfrm);
+    }
+    return prependXfrm(spPr, newXfrm);
+  })();
 
   // Replace spPr in shape
   return replaceChildByName(shape, spPrName, newSpPr);
@@ -214,73 +281,6 @@ function getShapePropertiesName(shapeName: string): string {
 }
 
 /**
- * Build an a:xfrm element from Transform.
- * Preserves existing attributes like flipH/flipV if present.
- */
-function buildTransformElement(
-  transform: NonNullable<PropertyChange["newValue"]>,
-  existing?: XmlElement,
-): XmlElement {
-  const t = transform as {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    rotation: number;
-    flipH: boolean;
-    flipV: boolean;
-  };
-
-  // Build attributes
-  const attrs: Record<string, string> = {};
-
-  // Rotation (in 60000ths of a degree)
-  if (t.rotation !== 0) {
-    attrs.rot = String(Math.round(t.rotation * 60000));
-  }
-
-  // Flip attributes
-  if (t.flipH) {
-    attrs.flipH = "1";
-  }
-  if (t.flipV) {
-    attrs.flipV = "1";
-  }
-
-  // Preserve other existing attributes
-  if (existing) {
-    for (const [key, value] of Object.entries(existing.attrs)) {
-      if (!(key in attrs) && key !== "rot" && key !== "flipH" && key !== "flipV") {
-        attrs[key] = value;
-      }
-    }
-  }
-
-  // Build children (a:off and a:ext)
-  const offElement = createElement("a:off", {
-    x: String(Math.round(t.x)),
-    y: String(Math.round(t.y)),
-  });
-
-  const extElement = createElement("a:ext", {
-    cx: String(Math.round(t.width)),
-    cy: String(Math.round(t.height)),
-  });
-
-  // Preserve child offset/extent for groups (chOff, chExt)
-  const existingChildren: XmlElement[] = [];
-  if (existing) {
-    for (const child of existing.children) {
-      if (isXmlElement(child) && (child.name === "a:chOff" || child.name === "a:chExt")) {
-        existingChildren.push(child);
-      }
-    }
-  }
-
-  return createElement("a:xfrm", attrs, [offElement, extElement, ...existingChildren]);
-}
-
-/**
  * Prepend a:xfrm to spPr (it should come first).
  */
 function prependXfrm(spPr: XmlElement, xfrm: XmlElement): XmlElement {
@@ -296,11 +296,65 @@ function prependXfrm(spPr: XmlElement, xfrm: XmlElement): XmlElement {
 
 function applyFillChange(
   shape: XmlElement,
-  _change: PropertyChange & { property: "fill" },
+  change: PropertyChange & { property: "fill" },
 ): XmlElement {
-  // TODO: Implement in Phase 4
-  // For now, return shape unchanged
-  return shape;
+  const newFill = change.newValue;
+
+  const spPrName = getShapePropertiesName(shape.name);
+  if (spPrName === "p:xfrm") {
+    return shape;
+  }
+
+  const spPr = shape.children.find(
+    (c): c is XmlElement => isXmlElement(c) && c.name === spPrName,
+  );
+  if (!spPr) {
+    return shape;
+  }
+
+  const fillNames = new Set([
+    "a:noFill",
+    "a:solidFill",
+    "a:gradFill",
+    "a:blipFill",
+    "a:pattFill",
+    "a:grpFill",
+  ]);
+
+  const originalChildren = [...spPr.children];
+  const firstFillIndex = originalChildren.findIndex(
+    (c) => isXmlElement(c) && fillNames.has(c.name),
+  );
+
+  const keptChildren = originalChildren.filter(
+    (c) => !(isXmlElement(c) && fillNames.has(c.name)),
+  );
+
+  if (!newFill) {
+    const newSpPr = { ...spPr, children: keptChildren };
+    return replaceChildByName(shape, spPrName, newSpPr);
+  }
+
+  const fillElement = serializeFill(newFill);
+  let insertIndex = 0;
+  if (firstFillIndex === -1) {
+    insertIndex = findInsertIndexByName(keptChildren, ["a:ln", "a:effectLst", "a:effectDag"]);
+  } else {
+    insertIndex = originalChildren
+      .slice(0, firstFillIndex)
+      .filter((c) => !(isXmlElement(c) && fillNames.has(c.name))).length;
+  }
+
+  const newSpPr = {
+    ...spPr,
+    children: [
+      ...keptChildren.slice(0, insertIndex),
+      fillElement,
+      ...keptChildren.slice(insertIndex),
+    ],
+  };
+
+  return replaceChildByName(shape, spPrName, newSpPr);
 }
 
 // =============================================================================
@@ -309,10 +363,56 @@ function applyFillChange(
 
 function applyLineChange(
   shape: XmlElement,
-  _change: PropertyChange & { property: "line" },
+  change: PropertyChange & { property: "line" },
 ): XmlElement {
-  // TODO: Implement in Phase 4
-  return shape;
+  const newLine = change.newValue;
+
+  const spPrName = getShapePropertiesName(shape.name);
+  if (spPrName === "p:xfrm") {
+    return shape;
+  }
+
+  const spPr = shape.children.find(
+    (c): c is XmlElement => isXmlElement(c) && c.name === spPrName,
+  );
+  if (!spPr) {
+    return shape;
+  }
+
+  const originalChildren = [...spPr.children];
+  const existingLnIndex = originalChildren.findIndex(
+    (c) => isXmlElement(c) && c.name === "a:ln",
+  );
+
+  const keptChildren = originalChildren.filter(
+    (c) => !(isXmlElement(c) && c.name === "a:ln"),
+  );
+
+  if (!newLine) {
+    const newSpPr = { ...spPr, children: keptChildren };
+    return replaceChildByName(shape, spPrName, newSpPr);
+  }
+
+  const lnElement = serializeLine(newLine);
+  let insertIndex = 0;
+  if (existingLnIndex === -1) {
+    insertIndex = findInsertIndexByName(keptChildren, ["a:effectLst", "a:effectDag"]);
+  } else {
+    insertIndex = originalChildren
+      .slice(0, existingLnIndex)
+      .filter((c) => !(isXmlElement(c) && c.name === "a:ln")).length;
+  }
+
+  const newSpPr = {
+    ...spPr,
+    children: [
+      ...keptChildren.slice(0, insertIndex),
+      lnElement,
+      ...keptChildren.slice(insertIndex),
+    ],
+  };
+
+  return replaceChildByName(shape, spPrName, newSpPr);
 }
 
 // =============================================================================
@@ -321,10 +421,9 @@ function applyLineChange(
 
 function applyTextBodyChange(
   shape: XmlElement,
-  _change: PropertyChange & { property: "textBody" },
+  change: PropertyChange & { property: "textBody" },
 ): XmlElement {
-  // TODO: Implement in Phase 5
-  return shape;
+  return applyTextBodyChangeToShape(shape, change);
 }
 
 // =============================================================================
@@ -333,10 +432,75 @@ function applyTextBodyChange(
 
 function applyEffectsChange(
   shape: XmlElement,
-  _change: PropertyChange & { property: "effects" },
+  change: PropertyChange & { property: "effects" },
 ): XmlElement {
-  // TODO: Implement in Phase 4
-  return shape;
+  const newEffects = change.newValue;
+
+  const spPrName = getShapePropertiesName(shape.name);
+  if (spPrName === "p:xfrm") {
+    return shape;
+  }
+
+  const spPr = shape.children.find(
+    (c): c is XmlElement => isXmlElement(c) && c.name === spPrName,
+  );
+  if (!spPr) {
+    return shape;
+  }
+
+  const effectNames = new Set(["a:effectLst", "a:effectDag"]);
+  const originalChildren = [...spPr.children];
+  const firstEffectIndex = originalChildren.findIndex(
+    (c) => isXmlElement(c) && effectNames.has(c.name),
+  );
+
+  const keptChildren = originalChildren.filter(
+    (c) => !(isXmlElement(c) && effectNames.has(c.name)),
+  );
+
+  const effectElement = newEffects ? serializeEffects(newEffects) : null;
+  if (!effectElement) {
+    const newSpPr = { ...spPr, children: keptChildren };
+    return replaceChildByName(shape, spPrName, newSpPr);
+  }
+
+  let insertIndex = 0;
+  if (firstEffectIndex === -1) {
+    insertIndex = keptChildren.length;
+  } else {
+    insertIndex = originalChildren
+      .slice(0, firstEffectIndex)
+      .filter((c) => !(isXmlElement(c) && effectNames.has(c.name))).length;
+  }
+
+  const newSpPr = {
+    ...spPr,
+    children: [
+      ...keptChildren.slice(0, insertIndex),
+      effectElement,
+      ...keptChildren.slice(insertIndex),
+    ],
+  };
+
+  return replaceChildByName(shape, spPrName, newSpPr);
+}
+
+function findInsertIndexByName(children: readonly unknown[], names: readonly string[]): number {
+  if (names.length === 0) {
+    return children.length;
+  }
+
+  for (let i = 0; i < children.length; i += 1) {
+    const child = children[i];
+    if (!isXmlElement(child)) {
+      continue;
+    }
+    if (names.includes(child.name)) {
+      return i;
+    }
+  }
+
+  return children.length;
 }
 
 // =============================================================================
@@ -347,6 +511,7 @@ function applyGeometryChange(
   shape: XmlElement,
   _change: PropertyChange & { property: "geometry" },
 ): XmlElement {
+  void _change;
   // TODO: Implement in future phase
   return shape;
 }
@@ -359,6 +524,7 @@ function applyBlipFillChange(
   shape: XmlElement,
   _change: PropertyChange & { property: "blipFill" },
 ): XmlElement {
+  void _change;
   // TODO: Implement in Phase 7
   return shape;
 }
@@ -392,4 +558,145 @@ export function hasShapes(doc: XmlDocument): boolean {
       isXmlElement(child) &&
       ["p:sp", "p:pic", "p:grpSp", "p:cxnSp", "p:graphicFrame"].includes(child.name),
   );
+}
+
+function ensureUniqueIdsForInsertion(
+  shape: ShapeAdded["shape"],
+  existingIds: readonly string[],
+): ShapeAdded["shape"] {
+  const idsInShape = collectShapeIds(shape);
+  const duplicates = findDuplicates(idsInShape);
+  if (duplicates.length > 0) {
+    throw new Error(`ensureUniqueIdsForInsertion: duplicate ids in inserted shape: ${duplicates.join(", ")}`);
+  }
+
+  const usedIds = new Set(existingIds);
+  const idMap = new Map<string, string>();
+
+  const withNewIds = mapShapeTree(shape, (node) => {
+    const id = getDomainShapeId(node);
+    if (!id) {
+      throw new Error("ensureUniqueIdsForInsertion: shape id is required");
+    }
+
+    if (!usedIds.has(id)) {
+      usedIds.add(id);
+      return node;
+    }
+
+    const newId = generateShapeId([...usedIds]);
+    usedIds.add(newId);
+    idMap.set(id, newId);
+
+    return setDomainShapeId(node, newId);
+  });
+
+  if (idMap.size === 0) {
+    return withNewIds;
+  }
+
+  return mapShapeTree(withNewIds, (node) => {
+    if (node.type === "cxnSp") {
+      return updateConnectorRefs(node, idMap);
+    }
+    return node;
+  });
+}
+
+function collectShapeIds(shape: ShapeAdded["shape"]): string[] {
+  const ids: string[] = [];
+  mapShapeTree(shape, (node) => {
+    const id = getDomainShapeId(node);
+    if (id) ids.push(id);
+    return node;
+  });
+  return ids;
+}
+
+function findDuplicates(ids: readonly string[]): string[] {
+  const seen = new Set<string>();
+  const dup = new Set<string>();
+  for (const id of ids) {
+    if (seen.has(id)) {
+      dup.add(id);
+    } else {
+      seen.add(id);
+    }
+  }
+  return [...dup];
+}
+
+function mapShapeTree(
+  node: ShapeAdded["shape"],
+  mapper: (shape: ShapeAdded["shape"]) => ShapeAdded["shape"],
+): ShapeAdded["shape"] {
+  const mapped = mapper(node);
+
+  if (mapped.type !== "grpSp") {
+    return mapped;
+  }
+
+  const children = mapped.children.map((child) => mapShapeTree(child, mapper));
+  return { ...mapped, children };
+}
+
+function getDomainShapeId(shape: ShapeAdded["shape"]): string | undefined {
+  switch (shape.type) {
+    case "sp":
+    case "pic":
+    case "grpSp":
+    case "cxnSp":
+    case "graphicFrame":
+      return shape.nonVisual.id;
+    case "contentPart":
+      return undefined;
+  }
+}
+
+function setDomainShapeId(shape: ShapeAdded["shape"], newId: string): ShapeAdded["shape"] {
+  if (!newId) {
+    throw new Error("setDomainShapeId: newId is required");
+  }
+
+  switch (shape.type) {
+    case "sp":
+    case "pic":
+    case "grpSp":
+    case "cxnSp":
+    case "graphicFrame":
+      return { ...shape, nonVisual: { ...shape.nonVisual, id: newId } };
+    case "contentPart":
+      return shape;
+  }
+}
+
+function updateConnectorRefs(
+  conn: Extract<ShapeAdded["shape"], { type: "cxnSp" }>,
+  idMap: ReadonlyMap<string, string>,
+): Extract<ShapeAdded["shape"], { type: "cxnSp" }> {
+  const startConnection = conn.nonVisual.startConnection;
+  const endConnection = conn.nonVisual.endConnection;
+
+  let updatedStart = startConnection;
+  if (startConnection && idMap.has(startConnection.shapeId)) {
+    updatedStart = { ...startConnection, shapeId: idMap.get(startConnection.shapeId)! };
+  }
+
+  let updatedEnd = endConnection;
+  if (endConnection && idMap.has(endConnection.shapeId)) {
+    updatedEnd = { ...endConnection, shapeId: idMap.get(endConnection.shapeId)! };
+  }
+
+  if (updatedStart === startConnection && updatedEnd === endConnection) {
+    return conn;
+  }
+
+  return {
+    ...conn,
+    nonVisual: {
+      ...conn.nonVisual,
+      startConnection: updatedStart,
+      endConnection: updatedEnd,
+    },
+  };
 }

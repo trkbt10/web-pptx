@@ -20,3 +20,6 @@ export * from "./core";
 
 // Slide - Slide-level patching
 export * from "./slide";
+
+// Shape - Shape addition/serialization helpers
+export * from "./shape";

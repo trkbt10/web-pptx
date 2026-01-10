@@ -115,6 +115,7 @@ function createDefaultFill(type: FillType): Fill {
       return {
         type: "blipFill",
         resourceId: "" as ResourceId,
+        relationshipType: "embed",
         rotWithShape: true,
       };
     default:

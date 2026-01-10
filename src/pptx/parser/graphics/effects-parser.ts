@@ -39,6 +39,7 @@ import type {
 import { px, deg, pct } from "../../domain/types";
 import { getAttr, getChild, type XmlElement } from "../../../xml/index";
 import { parseColor, parseColorFromParent } from "./color-parser";
+import { parseFill } from "./fill-parser";
 import {
   getAngleAttr,
   getBoolAttrOr,
@@ -399,34 +400,47 @@ function parseFillOverlay(element: XmlElement): FillOverlayEffect | undefined {
     return undefined;
   }
 
-  const fillType = getFillOverlayType(element);
+  const fillElement = findFillOverlayElement(element);
+  if (!fillElement) {return undefined;}
+
+  const fillType = mapFillOverlayType(fillElement.name);
   if (!fillType) {return undefined;}
+
+  const fill = parseFill(fillElement);
 
   return {
     blend: blendAttr as BlendMode,
     fillType,
+    fill,
   };
 }
 
-function getFillOverlayType(element: XmlElement): FillEffectType | undefined {
+function findFillOverlayElement(element: XmlElement): XmlElement | undefined {
   for (const child of element.children) {
     if (typeof child !== "object" || !("name" in child)) {continue;}
-    switch (child.name) {
-      case "a:solidFill":
-        return "solidFill";
-      case "a:gradFill":
-        return "gradFill";
-      case "a:blipFill":
-        return "blipFill";
-      case "a:pattFill":
-        return "pattFill";
-      case "a:grpFill":
-        return "grpFill";
-      default:
-        break;
+    const name = (child as XmlElement).name;
+    if (mapFillOverlayType(name) !== undefined) {
+      return child as XmlElement;
     }
   }
   return undefined;
+}
+
+function mapFillOverlayType(name: string): FillEffectType | undefined {
+  switch (name) {
+    case "a:solidFill":
+      return "solidFill";
+    case "a:gradFill":
+      return "gradFill";
+    case "a:blipFill":
+      return "blipFill";
+    case "a:pattFill":
+      return "pattFill";
+    case "a:grpFill":
+      return "grpFill";
+    default:
+      return undefined;
+  }
 }
 
 /**

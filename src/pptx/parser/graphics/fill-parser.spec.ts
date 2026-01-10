@@ -386,6 +386,7 @@ describe("parseFill - a:blipFill (ECMA-376 Section 20.1.8.14)", () => {
     expect(result?.type).toBe("blipFill");
     if (result?.type === "blipFill") {
       expect(result.resourceId).toBe("rId1");
+      expect(result.relationshipType).toBe("embed");
     }
   });
 
@@ -395,6 +396,7 @@ describe("parseFill - a:blipFill (ECMA-376 Section 20.1.8.14)", () => {
 
     if (result?.type === "blipFill") {
       expect(result.resourceId).toBe("rId2");
+      expect(result.relationshipType).toBe("link");
     }
   });
 

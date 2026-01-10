@@ -291,12 +291,15 @@ function parseBlipFill(element: XmlElement): BlipFill | undefined {
   if (!blip) {return undefined;}
 
   // Get resource ID (r:embed or r:link)
-  const resourceId = getAttr(blip, "r:embed") ?? getAttr(blip, "r:link");
+  const embedId = getAttr(blip, "r:embed");
+  const linkId = getAttr(blip, "r:link");
+  const resourceId = embedId ?? linkId;
   if (!resourceId) {return undefined;}
 
   return {
     type: "blipFill",
     resourceId,
+    relationshipType: embedId ? "embed" : "link",
     compressionState: parseBlipCompression(getAttr(blip, "cstate")),
     stretch: parseStretchFill(element),
     tile: parseTileFillMode(element),

@@ -5,3 +5,9 @@
  */
 
 export { patchSlideXml, getSpTree, hasShapes } from "./slide-patcher";
+export {
+  addShapeToTree,
+  removeShapeFromTree,
+  batchUpdateShapeTree,
+  type ShapeOperation,
+} from "./shape-tree-patcher";

@@ -249,6 +249,13 @@ export type BlipFill = {
    */
   readonly resourceId: ResourceId;
   /**
+   * Whether the underlying relationship was referenced via r:embed or r:link.
+   *
+   * Note: When resourceId is a data URL, this value is not semantically meaningful
+   * for OOXML export and is typically set to "embed".
+   */
+  readonly relationshipType: "embed" | "link";
+  /**
    * Resolved image resource data (when resolved at parse time).
    * This allows the render layer to convert to the appropriate format
    * (Data URL, Blob URL, etc.) without needing to access the zip file.
