@@ -15,8 +15,19 @@ import {
   PDFArray,
   decodePDFRawStream,
 } from "pdf-lib";
-import type { FontMapping, FontMetrics, FontInfo, FontMappings, CMapParseResult } from "../domain/font";
+import type { FontMapping, FontMetrics, FontInfo, FontMappings, CMapParseResult, CMapParserOptions } from "../domain/font";
 import { DEFAULT_FONT_METRICS, parseToUnicodeCMap } from "../domain/font";
+
+/**
+ * Options for font extraction operations.
+ */
+export type FontExtractionOptions = {
+  /**
+   * Options for CMap parsing.
+   * Controls how ToUnicode CMaps are processed.
+   */
+  readonly cmapOptions?: CMapParserOptions;
+};
 
 // Re-export for backwards compatibility
 export type { FontMapping, FontMetrics, FontInfo, FontMappings } from "../domain/font";
@@ -26,9 +37,13 @@ export { DEFAULT_FONT_METRICS, decodeText } from "../domain/font";
 // Font Extraction
 // =============================================================================
 
+import type { CIDOrdering } from "../domain/font";
+import { detectCIDOrdering } from "../domain/font";
+
 export type FontExtractionResult = {
   readonly toUnicode: CMapParseResult | null;
   readonly metrics: FontMetrics | null;
+  readonly ordering: CIDOrdering | null;
   readonly errors: readonly string[];
 };
 
@@ -56,7 +71,7 @@ export function extractFontInfoWithDeps<PdfPageT, ResourcesT>(
     resources = deps.getPageResources(pdfPage);
   } catch (error) {
     errors.push(`Failed to get page resources: ${formatError(error)}`);
-    return { toUnicode, metrics, errors };
+    return { toUnicode, metrics, ordering: null, errors };
   }
 
   try {
@@ -71,7 +86,9 @@ export function extractFontInfoWithDeps<PdfPageT, ResourcesT>(
     errors.push(`Failed to extract metrics for ${fontName}: ${formatError(error)}`);
   }
 
-  return { toUnicode, metrics, errors };
+  // Note: CID ordering is not extracted via deps as it requires PDFPage access
+  // This function is primarily for testing; real extraction uses extractFontMappings
+  return { toUnicode, metrics, ordering: null, errors };
 }
 
 export function logExtractionErrors(result: FontExtractionResult, fontName: string): void {
@@ -105,7 +122,10 @@ export function logExtractionErrors(result: FontExtractionResult, fontName: stri
 /**
  * Extract ToUnicode mappings for all fonts on a page
  */
-export function extractFontMappings(pdfPage: PDFPage): FontMappings {
+export function extractFontMappings(
+  pdfPage: PDFPage,
+  options: FontExtractionOptions = {}
+): FontMappings {
   const mappings: FontMappings = new Map();
 
   let resources: PDFDict | null = null;
@@ -151,7 +171,7 @@ export function extractFontMappings(pdfPage: PDFPage): FontMappings {
       continue;
     }
 
-    const extractionResult = extractFontInfoFromFontDict(fontDict, context, cleanName);
+    const extractionResult = extractFontInfoFromFontDict(fontDict, context, cleanName, options);
     logExtractionErrors(extractionResult, cleanName);
 
     // Store font info even if mapping is empty (metrics may still be useful)
@@ -190,14 +210,16 @@ function getFontDict(resources: PDFDict): PDFDict | null {
 function extractFontInfoFromFontDict(
   fontDict: PDFDict,
   context: PDFDict["context"],
-  fontName: string
+  fontName: string,
+  options: FontExtractionOptions = {}
 ): FontExtractionResult {
   const errors: string[] = [];
   let toUnicode: CMapParseResult | null = null;
   let metrics: FontMetrics | null = null;
+  let ordering: CIDOrdering | null = null;
 
   try {
-    toUnicode = extractToUnicodeMapping(fontDict, context);
+    toUnicode = extractToUnicodeMapping(fontDict, context, options.cmapOptions);
   } catch (error) {
     errors.push(`Failed to extract ToUnicode for ${fontName}: ${formatError(error)}`);
   }
@@ -208,7 +230,14 @@ function extractFontInfoFromFontDict(
     errors.push(`Failed to extract metrics for ${fontName}: ${formatError(error)}`);
   }
 
-  return { toUnicode, metrics, errors };
+  try {
+    ordering = extractCIDOrdering(fontDict, context);
+  } catch (error) {
+    // CID ordering extraction failure is not critical, just log it
+    errors.push(`Failed to extract CID ordering for ${fontName}: ${formatError(error)}`);
+  }
+
+  return { toUnicode, metrics, ordering, errors };
 }
 
 function fontExtractionResultToFontInfo(result: FontExtractionResult): FontInfo {
@@ -218,6 +247,7 @@ function fontExtractionResultToFontInfo(result: FontExtractionResult): FontInfo 
     mapping: toUnicode.mapping,
     codeByteWidth: toUnicode.codeByteWidth,
     metrics: result.metrics ?? DEFAULT_FONT_METRICS,
+    ordering: result.ordering ?? undefined,
   };
 }
 
@@ -226,7 +256,8 @@ function fontExtractionResultToFontInfo(result: FontExtractionResult): FontInfo 
  */
 function extractToUnicodeMapping(
   fontDict: PDFDict,
-  context: PDFDict["context"]
+  context: PDFDict["context"],
+  cmapOptions?: CMapParserOptions
 ): CMapParseResult {
   const emptyResult: CMapParseResult = {
     mapping: new Map<number, string>(),
@@ -252,7 +283,7 @@ function extractToUnicodeMapping(
         if (firstDescendant instanceof PDFDict) {
           const descToUnicode = firstDescendant.get(PDFName.of("ToUnicode"));
           if (descToUnicode) {
-            return extractToUnicodeMappingFromRef(descToUnicode, context);
+            return extractToUnicodeMappingFromRef(descToUnicode, context, cmapOptions);
           }
         }
       }
@@ -260,7 +291,7 @@ function extractToUnicodeMapping(
     return emptyResult;
   }
 
-  return extractToUnicodeMappingFromRef(toUnicodeRef, context);
+  return extractToUnicodeMappingFromRef(toUnicodeRef, context, cmapOptions);
 }
 
 /**
@@ -464,6 +495,80 @@ function extractFontDescriptorMetrics(
 }
 
 /**
+ * Extract CID ordering from font dictionary
+ *
+ * For Type0 fonts, the CIDSystemInfo dictionary contains the Ordering string
+ * which identifies the character collection (Japan1, GB1, etc.).
+ *
+ * PDF Reference 5.6.1 - CIDSystemInfo Dictionary
+ */
+function extractCIDOrdering(
+  fontDict: PDFDict,
+  context: PDFDict["context"]
+): CIDOrdering | null {
+  // Check font type - only Type0 fonts have CID ordering
+  const subtype = fontDict.get(PDFName.of("Subtype"));
+  const subtypeStr = subtype instanceof PDFName ? subtype.asString() : "";
+
+  if (subtypeStr !== "/Type0") {
+    return null;
+  }
+
+  // Get DescendantFonts
+  const descendantsRef = fontDict.get(PDFName.of("DescendantFonts"));
+  if (!descendantsRef) {
+    return null;
+  }
+
+  const descendants = descendantsRef instanceof PDFRef
+    ? context.lookup(descendantsRef)
+    : descendantsRef;
+
+  if (!(descendants instanceof PDFArray) || descendants.size() === 0) {
+    return null;
+  }
+
+  const firstRef = descendants.get(0);
+  const cidFont = firstRef instanceof PDFRef ? context.lookup(firstRef) : firstRef;
+
+  if (!(cidFont instanceof PDFDict)) {
+    return null;
+  }
+
+  // Get CIDSystemInfo from the CID font
+  const cidSystemInfoRef = cidFont.get(PDFName.of("CIDSystemInfo"));
+  if (!cidSystemInfoRef) {
+    return null;
+  }
+
+  const cidSystemInfo = cidSystemInfoRef instanceof PDFRef
+    ? context.lookup(cidSystemInfoRef)
+    : cidSystemInfoRef;
+
+  if (!(cidSystemInfo instanceof PDFDict)) {
+    return null;
+  }
+
+  // Extract Ordering string
+  const orderingRef = cidSystemInfo.get(PDFName.of("Ordering"));
+  if (!orderingRef) {
+    return null;
+  }
+
+  // Handle PDFString or PDFName
+  let orderingStr: string;
+  if (typeof orderingRef === "object" && "asString" in orderingRef) {
+    orderingStr = (orderingRef as { asString(): string }).asString();
+  } else if (typeof orderingRef === "string") {
+    orderingStr = orderingRef;
+  } else {
+    return null;
+  }
+
+  return detectCIDOrdering(orderingStr);
+}
+
+/**
  * Helper to extract number from PDFObject
  */
 function getNumber(obj: unknown): number | null {
@@ -481,7 +586,8 @@ function getNumber(obj: unknown): number | null {
  */
 function extractToUnicodeMappingFromRef(
   toUnicodeRef: unknown,
-  context: PDFDict["context"]
+  context: PDFDict["context"],
+  cmapOptions?: CMapParserOptions
 ): CMapParseResult {
   const emptyResult: CMapParseResult = { mapping: new Map(), codeByteWidth: 1 };
 
@@ -498,8 +604,8 @@ function extractToUnicodeMappingFromRef(
   const decoded = decodePDFRawStream(toUnicodeStream);
   const cmapData = new TextDecoder("latin1").decode(decoded.decode());
 
-  // Parse the CMap
-  const result = parseToUnicodeCMap(cmapData);
+  // Parse the CMap with options
+  const result = parseToUnicodeCMap(cmapData, cmapOptions);
 
   return result;
 }

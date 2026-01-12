@@ -36,6 +36,11 @@ export type FontInfo = {
   readonly codeByteWidth: 1 | 2;
   /** Font metrics for glyph widths and vertical metrics */
   readonly metrics: FontMetrics;
+  /**
+   * CID ordering for fallback decoding when ToUnicode is not available.
+   * Only present for CID fonts (Type0 with CIDFont descendants).
+   */
+  readonly ordering?: CIDOrdering;
 };
 
 /**

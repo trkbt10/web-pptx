@@ -80,7 +80,7 @@ export type {
 } from "./path";
 
 // Text domain
-export type { PdfText } from "./text";
+export type { PdfText, PdfTextFontMetrics } from "./text";
 
 // Image domain
 export type { PdfImage } from "./image";

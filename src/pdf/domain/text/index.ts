@@ -4,4 +4,4 @@
  * Exports types for PDF text handling.
  */
 
-export type { PdfText } from "./types";
+export type { PdfText, PdfTextFontMetrics } from "./types";

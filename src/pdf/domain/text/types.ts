@@ -35,4 +35,58 @@ export type PdfText = {
    */
   readonly fontSize: number;
   readonly graphicsState: PdfGraphicsState;
+
+  // =============================================================================
+  // Spacing Properties (from PDF text state operators)
+  // =============================================================================
+
+  /**
+   * Character spacing in PDF points (Tc operator).
+   * Added to each character's displacement after glyph width.
+   * @see PDF Reference 9.3.2
+   */
+  readonly charSpacing?: number;
+
+  /**
+   * Word spacing in PDF points (Tw operator).
+   * Added to space character (0x20) displacement only.
+   * @see PDF Reference 9.3.3
+   */
+  readonly wordSpacing?: number;
+
+  /**
+   * Horizontal scaling as percentage (Tz operator).
+   * Default: 100 (no scaling).
+   * @see PDF Reference 9.3.4
+   */
+  readonly horizontalScaling?: number;
+
+  // =============================================================================
+  // Font Metrics (for precise positioning)
+  // =============================================================================
+
+  /**
+   * Font metrics for precise baseline/positioning calculations.
+   * If undefined, default values (ascender: 800, descender: -200) are used.
+   */
+  readonly fontMetrics?: PdfTextFontMetrics;
+};
+
+/**
+ * Font metrics for precise text positioning.
+ */
+export type PdfTextFontMetrics = {
+  /**
+   * Font ascender in 1/1000 em units.
+   * Height above the baseline (positive value).
+   * Typical range: 700-900
+   */
+  readonly ascender: number;
+
+  /**
+   * Font descender in 1/1000 em units.
+   * Depth below the baseline (negative value).
+   * Typical range: -200 to -300
+   */
+  readonly descender: number;
 };

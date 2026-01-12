@@ -23,7 +23,7 @@ export { normalizeFontName, isBoldFont, isItalicFont } from "./font-style";
 export { mapFontName } from "./font-name-map";
 
 // CMap parsing
-export type { CMapParseResult } from "./cmap-parser";
+export type { CMapParseResult, CMapParserOptions } from "./cmap-parser";
 export {
   parseToUnicodeCMap,
   parseBfChar,
@@ -33,3 +33,11 @@ export {
 
 // Text decoding
 export { decodeText } from "./text-decoder";
+
+// CID ordering fallback
+export type { CIDFallbackMapping } from "./cid-ordering";
+export {
+  getCIDFallbackMapping,
+  detectCIDOrdering,
+  decodeCIDFallback,
+} from "./cid-ordering";

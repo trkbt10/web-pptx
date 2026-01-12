@@ -247,10 +247,22 @@ function convertPath(
  * at different positions. Each run is converted to a separate PdfText element
  * to preserve exact positioning (important for tables, multi-column layouts, etc.).
  *
- * Note: Y-flip is handled in transform-converter.ts during PDF→PPTX conversion
+ * ## Coordinate Pipeline
  *
- * The effectiveFontSize from TextRun includes text matrix and CTM scaling,
- * which gives the actual rendered size of the text.
+ * 1. **OperatorParser** extracts text runs with:
+ *    - run.x, run.y: Baseline position (from text matrix + CTM)
+ *    - run.effectiveFontSize: Scaled font size in page coordinates
+ *
+ * 2. **This Function** calculates:
+ *    - textHeight: (ascender - descender) * effectiveSize / 1000
+ *      With defaults (800, -200): textHeight = effectiveSize (1:1 ratio)
+ *    - minY: run.y + (descender * effectiveSize / 1000)
+ *      This is the bottom edge of the text bounding box
+ *
+ * 3. **PdfText.y** represents the bottom edge (minY) for text-to-shapes.ts
+ *    which converts to PPTX coordinates (top-left origin)
+ *
+ * Note: Y-flip is handled in transform-converter.ts during PDF→PPTX conversion
  */
 function convertText(parsed: ParsedText, _pageHeight: number, fontMappings: FontMappings): PdfText[] {
   const results: PdfText[] = [];
@@ -264,7 +276,9 @@ function convertText(parsed: ParsedText, _pageHeight: number, fontMappings: Font
     const effectiveSize = run.effectiveFontSize;
 
     // PDF Reference 5.7.1: Text height from ascender/descender
+    // All values are in 1/1000 em units (glyph space)
     // Height = (ascender - descender) * effectiveFontSize / 1000
+    // With default ascender=800, descender=-200: height = 1000/1000 * size = size
     const ascender = metrics?.ascender ?? 800;
     const descender = metrics?.descender ?? -200;
     const textHeight = ((ascender - descender) * effectiveSize) / 1000;
@@ -274,8 +288,10 @@ function convertText(parsed: ParsedText, _pageHeight: number, fontMappings: Font
       continue;
     }
 
-    // Calculate bounding box from baseline using effective font size
-    // Baseline is at y, text extends from (y + descender*effectiveSize/1000) to (y + ascender*effectiveSize/1000)
+    // Calculate bounding box bottom edge from baseline
+    // run.y = baseline position in PDF coordinates (Y increases upward)
+    // descender is negative (e.g., -200), so minY = baseline - |descender|*size/1000
+    // This gives the bottom edge of the text bounding box
     const minY = run.y + (descender * effectiveSize) / 1000;
     const width = Math.max(run.endX - run.x, 1); // Ensure non-zero width
 
@@ -289,6 +305,15 @@ function convertText(parsed: ParsedText, _pageHeight: number, fontMappings: Font
       fontName: run.fontName,
       fontSize: effectiveSize, // Use effective font size for PPTX rendering
       graphicsState: parsed.graphicsState,
+      // Spacing properties from text state operators
+      charSpacing: run.charSpacing,
+      wordSpacing: run.wordSpacing,
+      horizontalScaling: run.horizontalScaling,
+      // Font metrics for precise positioning
+      fontMetrics: {
+        ascender,
+        descender,
+      },
     });
   }
 

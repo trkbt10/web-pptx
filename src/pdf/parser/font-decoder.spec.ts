@@ -297,7 +297,7 @@ describe("font-decoder", () => {
   describe("logExtractionErrors", () => {
     it("does not log when no errors", () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-      const result: FontExtractionResult = { toUnicode: null, metrics: null, errors: [] };
+      const result: FontExtractionResult = { toUnicode: null, metrics: null, ordering: null, errors: [] };
 
       logExtractionErrors(result, "F1");
 
@@ -310,6 +310,7 @@ describe("font-decoder", () => {
       const result: FontExtractionResult = {
         toUnicode: { mapping: new Map(), codeByteWidth: 1 },
         metrics: null,
+        ordering: null,
         errors: ["Failed to extract metrics for F1: metrics broken"],
       };
 
@@ -326,6 +327,7 @@ describe("font-decoder", () => {
       const result: FontExtractionResult = {
         toUnicode: null,
         metrics: null,
+        ordering: null,
         errors: [
           "Failed to extract ToUnicode for F1: cmap broken",
           "Failed to extract metrics for F1: metrics broken",

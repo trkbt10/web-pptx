@@ -2,6 +2,7 @@ import type { PdfImage, PdfPage, PdfPath, PdfText } from "../domain";
 import { createDefaultGraphicsState } from "../domain";
 import { px } from "../../ooxml/domain/units";
 import { convertDocumentToSlides, convertPageToShapes } from "./pdf-to-shapes";
+import { SpatialGroupingStrategy } from "./text-grouping/spatial-grouping";
 
 const graphicsState = {
   ...createDefaultGraphicsState(),
@@ -241,6 +242,182 @@ describe("convertPageToShapes", () => {
 
     expect(convertPageToShapes(page, { ...options, minPathComplexity: 0 })).toHaveLength(1);
     expect(convertPageToShapes(page, { ...options, minPathComplexity: 2 })).toHaveLength(0);
+  });
+});
+
+describe("convertPageToShapes with SpatialGroupingStrategy", () => {
+  it("groups adjacent texts on the same line into one TextBox", () => {
+    const t1: PdfText = {
+      type: "text",
+      text: "Hello",
+      x: 0,
+      y: 100,
+      width: 40,
+      height: 12,
+      fontName: "ArialMT",
+      fontSize: 12,
+      graphicsState,
+    };
+
+    const t2: PdfText = {
+      type: "text",
+      text: "World",
+      x: 50,
+      y: 100,
+      width: 40,
+      height: 12,
+      fontName: "ArialMT",
+      fontSize: 12,
+      graphicsState,
+    };
+
+    const page: PdfPage = {
+      pageNumber: 1,
+      width: 100,
+      height: 200,
+      elements: [t1, t2] as const,
+    };
+
+    const shapes = convertPageToShapes(page, {
+      ...options,
+      textGroupingStrategy: new SpatialGroupingStrategy(),
+    });
+
+    // Should create one TextBox containing both texts
+    expect(shapes).toHaveLength(1);
+    expect(shapes[0]?.type).toBe("sp");
+
+    const sp = shapes[0];
+    if (sp?.type !== "sp") throw new Error("Expected sp shape");
+    expect(sp.textBody?.paragraphs).toHaveLength(1);
+    expect(sp.textBody?.paragraphs[0]?.runs).toHaveLength(2);
+  });
+
+  it("groups multi-line text with same font into one TextBox", () => {
+    const line1: PdfText = {
+      type: "text",
+      text: "Line 1",
+      x: 0,
+      y: 100,
+      width: 40,
+      height: 12,
+      fontName: "ArialMT",
+      fontSize: 12,
+      graphicsState,
+    };
+
+    const line2: PdfText = {
+      type: "text",
+      text: "Line 2",
+      x: 0,
+      y: 86, // 14pt below (12pt height + 2pt gap)
+      width: 40,
+      height: 12,
+      fontName: "ArialMT",
+      fontSize: 12,
+      graphicsState,
+    };
+
+    const page: PdfPage = {
+      pageNumber: 1,
+      width: 100,
+      height: 200,
+      elements: [line1, line2] as const,
+    };
+
+    const shapes = convertPageToShapes(page, {
+      ...options,
+      textGroupingStrategy: new SpatialGroupingStrategy(),
+    });
+
+    // Should create one TextBox with two paragraphs
+    expect(shapes).toHaveLength(1);
+
+    const sp = shapes[0];
+    if (sp?.type !== "sp") throw new Error("Expected sp shape");
+    expect(sp.textBody?.paragraphs).toHaveLength(2);
+  });
+
+  it("creates separate TextBoxes for texts with different fonts", () => {
+    const t1: PdfText = {
+      type: "text",
+      text: "Normal",
+      x: 0,
+      y: 100,
+      width: 40,
+      height: 12,
+      fontName: "ArialMT",
+      fontSize: 12,
+      graphicsState,
+    };
+
+    const t2: PdfText = {
+      type: "text",
+      text: "Bold",
+      x: 0,
+      y: 86,
+      width: 40,
+      height: 12,
+      fontName: "Arial-BoldMT",
+      fontSize: 12,
+      graphicsState,
+    };
+
+    const page: PdfPage = {
+      pageNumber: 1,
+      width: 100,
+      height: 200,
+      elements: [t1, t2] as const,
+    };
+
+    const shapes = convertPageToShapes(page, {
+      ...options,
+      textGroupingStrategy: new SpatialGroupingStrategy(),
+    });
+
+    // Should create two separate TextBoxes
+    expect(shapes).toHaveLength(2);
+  });
+
+  it("creates separate TextBoxes for texts far apart", () => {
+    const t1: PdfText = {
+      type: "text",
+      text: "Top",
+      x: 0,
+      y: 180,
+      width: 40,
+      height: 12,
+      fontName: "ArialMT",
+      fontSize: 12,
+      graphicsState,
+    };
+
+    const t2: PdfText = {
+      type: "text",
+      text: "Bottom",
+      x: 0,
+      y: 20,
+      width: 40,
+      height: 12,
+      fontName: "ArialMT",
+      fontSize: 12,
+      graphicsState,
+    };
+
+    const page: PdfPage = {
+      pageNumber: 1,
+      width: 100,
+      height: 200,
+      elements: [t1, t2] as const,
+    };
+
+    const shapes = convertPageToShapes(page, {
+      ...options,
+      textGroupingStrategy: new SpatialGroupingStrategy(),
+    });
+
+    // Should create two separate TextBoxes due to large vertical gap
+    expect(shapes).toHaveLength(2);
   });
 });
 

@@ -35,6 +35,28 @@ export type TextRun = {
    * both the text matrix (Tm) and the current transformation matrix (CTM).
    */
   readonly effectiveFontSize: number;
+
+  // ==========================================================================
+  // Text spacing properties (from PDF text state operators)
+  // ==========================================================================
+
+  /**
+   * Character spacing in PDF points (Tc operator).
+   * Added to each character's displacement after glyph width.
+   */
+  readonly charSpacing: number;
+
+  /**
+   * Word spacing in PDF points (Tw operator).
+   * Added to space character (0x20) displacement only.
+   */
+  readonly wordSpacing: number;
+
+  /**
+   * Horizontal scaling as percentage (Tz operator).
+   * Default: 100 (no scaling).
+   */
+  readonly horizontalScaling: number;
 };
 
 export type ParsedText = {
@@ -635,6 +657,10 @@ export class OperatorParser {
       fontName: this.currentFont,
       endX: endPos.x,
       effectiveFontSize,
+      // Add spacing properties from text state
+      charSpacing: state.charSpacing,
+      wordSpacing: state.wordSpacing,
+      horizontalScaling: state.horizontalScaling,
     });
   }
 

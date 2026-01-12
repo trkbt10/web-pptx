@@ -14,9 +14,11 @@ import {
   isSimpleRectangle,
 } from "./path-to-geometry";
 import { convertGraphicsStateToStyle } from "./color-converter";
-import { convertTextToShape } from "./text-to-shapes";
+import { convertTextToShape, convertGroupedTextToShape } from "./text-to-shapes";
 import { convertImageToShape } from "./image-to-shapes";
 import { computePathBBox } from "../parser/path-builder";
+import type { TextGroupingStrategy } from "./text-grouping/types";
+import { NoGroupingStrategy } from "./text-grouping/no-grouping";
 
 export type ConversionOptions = {
   /** ターゲットスライド幅 */
@@ -27,6 +29,11 @@ export type ConversionOptions = {
   readonly fit?: "contain" | "cover" | "stretch";
   /** 最小パス複雑度（これより単純なパスは無視） */
   readonly minPathComplexity?: number;
+  /**
+   * Strategy for grouping PDF text elements into PPTX TextBoxes.
+   * Default: NoGroupingStrategy (each text becomes its own TextBox)
+   */
+  readonly textGroupingStrategy?: TextGroupingStrategy;
 };
 
 /**
@@ -80,8 +87,13 @@ export function convertPageToShapes(page: PdfPage, options: ConversionOptions): 
     }
   }
 
-  for (const text of texts) {
-    const shape = convertTextToShape(text, context, generateId());
+  // Apply text grouping strategy (default: no grouping for backward compatibility)
+  const strategy = options.textGroupingStrategy ?? new NoGroupingStrategy();
+  const groups = strategy.group(texts);
+
+  // Convert each group to a single TextBox shape
+  for (const group of groups) {
+    const shape = convertGroupedTextToShape(group, context, generateId());
     shapes.push(shape);
   }
 

@@ -6,6 +6,7 @@
  */
 
 import type { FontInfo, FontMappings } from "./types";
+import { decodeCIDFallback } from "./cid-ordering";
 
 /**
  * Find font info by name with fallback strategies
@@ -50,15 +51,23 @@ export function decodeText(
 ): string {
   const fontInfo = findFontInfo(fontName, mappings);
 
-  if (!fontInfo || fontInfo.mapping.size === 0) {
+  if (!fontInfo) {
     return rawText;
   }
 
-  const { mapping, codeByteWidth } = fontInfo;
+  const { mapping, codeByteWidth, ordering } = fontInfo;
 
-  return codeByteWidth === 2
-    ? decodeTwoByteText(rawText, mapping)
-    : decodeSingleByteText(rawText, mapping);
+  // For 2-byte CID fonts, try CID fallback if mapping is empty or incomplete
+  if (codeByteWidth === 2) {
+    return decodeTwoByteText(rawText, mapping, ordering);
+  }
+
+  // For single-byte fonts, fall back to raw text if no mapping
+  if (mapping.size === 0) {
+    return rawText;
+  }
+
+  return decodeSingleByteText(rawText, mapping);
 }
 
 /**
@@ -68,9 +77,16 @@ export function decodeText(
  * Unlike single-byte fonts, the character code does NOT correspond to Unicode
  * code points directly.
  *
+ * When ToUnicode mapping is not available or incomplete, attempts CID fallback
+ * based on the font's CID ordering (Japan1, GB1, etc.).
+ *
  * @see PDF Reference 1.7, Section 5.9 (ToUnicode CMaps)
  */
-function decodeTwoByteText(rawText: string, mapping: Map<number, string>): string {
+function decodeTwoByteText(
+  rawText: string,
+  mapping: Map<number, string>,
+  ordering?: "Japan1" | "GB1" | "CNS1" | "Korea1"
+): string {
   const chars: string[] = [];
   // eslint-disable-next-line no-restricted-syntax -- index iteration for byte processing
   for (let i = 0; i < rawText.length; i += 2) {
@@ -78,15 +94,24 @@ function decodeTwoByteText(rawText: string, mapping: Map<number, string>): strin
     const lowByte = i + 1 < rawText.length ? rawText.charCodeAt(i + 1) : 0;
     const code = (highByte << 8) | lowByte;
 
+    // Try ToUnicode mapping first
     const mapped = mapping.get(code);
     if (mapped) {
       chars.push(mapped);
-    } else {
-      // No mapping found - use replacement character (U+FFFD)
-      // Do NOT fall back to ASCII interpretation, as 2-byte codes
-      // are not ASCII-compatible in CID fonts
-      chars.push("\uFFFD");
+      continue;
     }
+
+    // Try CID fallback based on ordering
+    const cidFallback = decodeCIDFallback(code, ordering ?? null);
+    if (cidFallback) {
+      chars.push(cidFallback);
+      continue;
+    }
+
+    // No mapping found - use replacement character (U+FFFD)
+    // Do NOT fall back to ASCII interpretation, as 2-byte codes
+    // are not ASCII-compatible in CID fonts
+    chars.push("\uFFFD");
   }
   return chars.join("");
 }
