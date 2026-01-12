@@ -16,7 +16,7 @@ import {
   createDefaultShapeProperties,
 } from "@lib/pptx-editor";
 import type { NonVisualProperties, ShapeProperties, Geometry } from "@lib/pptx/domain/shape";
-import type { Effects } from "@lib/pptx/domain/types";
+import type { Effects } from "@lib/pptx/domain";
 
 const cardStyle: CSSProperties = {
   backgroundColor: "var(--bg-secondary)",

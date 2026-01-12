@@ -79,6 +79,13 @@ export {
   type FillPreviewProps,
 } from "./ui/color";
 
+// UI Line
+export {
+  LineEditor,
+  createDefaultLine,
+  type LineEditorProps,
+} from "./ui/line";
+
 // Editors
 export {
   // Primitives

@@ -6,9 +6,9 @@
 
 import { useMemo, useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import type { LoadedPresentation } from "@lib/pptx/app";
-import { SlideList } from "../../../src/pptx-editor/slide-list";
+import { SlideList } from "@lib/pptx-editor/slide-list";
 import type { SlideWithId } from "@lib/pptx/app";
-import { useLazySvgCache, SvgContentRenderer } from "../../../src/pptx/render/react";
+import { useLazySvgCache, SvgContentRenderer } from "@lib/pptx/render/react";
 import { useSlideNavigation, useViewerKeyboard } from "../hooks";
 import {
   ChevronLeftIcon,

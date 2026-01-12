@@ -5,7 +5,7 @@
  */
 
 import type { PatternType } from "@lib/pptx/domain";
-import { px, deg, pct } from "@lib/pptx/domain/types";
+import { px, deg, pct } from "@lib/ooxml/domain/units";
 import { CombinedPreview, makeGradient } from "../common";
 
 /**

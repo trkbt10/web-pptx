@@ -14,7 +14,7 @@ import type { Line } from "@lib/pptx/domain/color/types";
 import type { Table, TableRow, TableCell } from "@lib/pptx/domain/table";
 import type { ColorContext } from "@lib/pptx/domain/color/context";
 import type { ResourceResolver } from "@lib/pptx/render/core";
-import { px, deg, pt } from "@lib/pptx/domain/types";
+import { px, deg, pt } from "@lib/ooxml/domain/units";
 
 // =============================================================================
 // Fixture Helpers

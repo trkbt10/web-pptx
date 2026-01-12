@@ -22,30 +22,33 @@ import {
   createDefaultTextBody,
 } from "@lib/pptx-editor";
 import type { Slide, TextBody, TextRun } from "@lib/pptx/domain";
-import { px, deg, pt, type Pixels } from "@lib/pptx/domain";
+import { px, deg, pt, type Pixels } from "@lib/ooxml/domain/units";
 import { SlideRendererSvg } from "@lib/pptx/render/react";
 import { layoutTextBody, toLayoutInput } from "@lib/pptx/render/text-layout";
-import { TextEditController } from "../../../src/pptx-editor/slide/text-edit";
-import type { TextSelection, CursorPosition, SelectionChangeEvent } from "../../../src/pptx-editor/slide/text-edit";
+import { TextEditController } from "@lib/pptx-editor/slide/text-edit";
+import type { TextSelection, CursorPosition, SelectionChangeEvent } from "@lib/pptx-editor/slide/text-edit";
 import {
   applyRunPropertiesToSelection,
   applyParagraphPropertiesToSelection,
-} from "../../../src/pptx-editor/slide/text-edit/input-support/run-formatting";
+} from "@lib/pptx-editor/slide/text-edit/input-support/run-formatting";
 import {
   extractTextProperties,
   getEffectiveRunPropertiesAtCursor,
   type TextSelectionContext,
-} from "../../../src/pptx-editor/editors/text/text-property-extractor";
-import { getExtractionValue, isMixed } from "../../../src/pptx-editor/editors/text/mixed-properties";
+} from "@lib/pptx-editor/editors/text/text-property-extractor";
+import { getExtractionValue, isMixed } from "@lib/pptx-editor/editors/text/mixed-properties";
 import { testSlideSize, testColorContext } from "../components/drawing-ml-tests";
 import "./DrawingMLTestPage.css";
-import "../../../src/pptx-editor/preview/SlideshowPlayer.css";
+import "@lib/pptx-editor/preview/SlideshowPlayer.css";
 
 type TextEditorTestPageProps = {
   readonly onBack: () => void;
 };
 
-function createTextRun(text: string, properties?: TextBody["paragraphs"][number]["runs"][number]["properties"]): TextRun {
+function createTextRun(
+  text: string,
+  properties?: TextBody["paragraphs"][number]["runs"][number]["properties"],
+): TextRun {
   return { type: "text", text, properties };
 }
 
@@ -195,7 +198,7 @@ export function TextEditorTestPage({ onBack }: TextEditorTestPageProps) {
       },
       shapes: [],
     }),
-    []
+    [],
   );
 
   const [lastComplete, setLastComplete] = useState<string | null>(null);
@@ -204,7 +207,7 @@ export function TextEditorTestPage({ onBack }: TextEditorTestPageProps) {
 
   const extractedProperties = useMemo(
     () => extractTextProperties(currentTextBody, selectionContext),
-    [currentTextBody, selectionContext]
+    [currentTextBody, selectionContext],
   );
 
   const layoutResult = useMemo(() => {
@@ -217,16 +220,11 @@ export function TextEditorTestPage({ onBack }: TextEditorTestPageProps) {
     return layoutTextBody(input);
   }, [currentTextBody, textBounds.height, textBounds.width]);
 
-  const updateBounds = (
-    patch: Partial<{ x: Pixels; y: Pixels; width: Pixels; height: Pixels; rotation: number }>
-  ) => {
+  const updateBounds = (patch: Partial<{ x: Pixels; y: Pixels; width: Pixels; height: Pixels; rotation: number }>) => {
     setTextBounds((prev) => ({ ...prev, ...patch }));
   };
 
-  const resolveSelection = (
-    context: TextSelectionContext,
-    textBody: typeof currentTextBody
-  ): TextSelection | null => {
+  const resolveSelection = (context: TextSelectionContext, textBody: typeof currentTextBody): TextSelection | null => {
     if (context.type === "selection") {
       return context.selection;
     }
@@ -252,11 +250,7 @@ export function TextEditorTestPage({ onBack }: TextEditorTestPageProps) {
     if (extractedProperties.paragraphIndices.length === 0) {
       return;
     }
-    const next = applyParagraphPropertiesToSelection(
-      currentTextBody,
-      extractedProperties.paragraphIndices,
-      update
-    );
+    const next = applyParagraphPropertiesToSelection(currentTextBody, extractedProperties.paragraphIndices, update);
     setCurrentTextBody(next);
   };
 
@@ -272,10 +266,8 @@ export function TextEditorTestPage({ onBack }: TextEditorTestPageProps) {
   };
 
   const runProperties = extractedProperties.runProperties;
-  const fillValue =
-    !isMixed(runProperties.fill) ? getExtractionValue(runProperties.fill) : undefined;
-  const outlineValue =
-    !isMixed(runProperties.textOutline) ? getExtractionValue(runProperties.textOutline) : undefined;
+  const fillValue = !isMixed(runProperties.fill) ? getExtractionValue(runProperties.fill) : undefined;
+  const outlineValue = !isMixed(runProperties.textOutline) ? getExtractionValue(runProperties.textOutline) : undefined;
   const effectiveRunProperties = useMemo(() => {
     if (selectionContext.type === "cursor") {
       return getEffectiveRunPropertiesAtCursor(currentTextBody, selectionContext.position);
@@ -341,7 +333,11 @@ export function TextEditorTestPage({ onBack }: TextEditorTestPageProps) {
               </Panel>
               <Panel title="Text Formatting" width="100%">
                 <Accordion title="Character" defaultExpanded>
-                  <MixedRunPropertiesEditor value={runProperties} onChange={handleApplyRunProperties} showSpacing={true} />
+                  <MixedRunPropertiesEditor
+                    value={runProperties}
+                    onChange={handleApplyRunProperties}
+                    showSpacing={true}
+                  />
                 </Accordion>
                 <Accordion title="Paragraph" defaultExpanded={false}>
                   <MixedParagraphPropertiesEditor

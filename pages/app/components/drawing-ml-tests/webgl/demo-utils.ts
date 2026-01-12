@@ -8,7 +8,7 @@
  * This file provides convenience wrappers for demo/preview purposes.
  */
 
-import { pt, px } from "@lib/pptx/domain/types";
+import { pt, px } from "@lib/ooxml/domain/units";
 import type { TextBody, Paragraph, RegularRun, RunProperties } from "@lib/pptx/domain/text";
 import type { SolidFill } from "@lib/pptx/domain/color/types";
 import type { ColorContext } from "@lib/pptx/domain/color/context";

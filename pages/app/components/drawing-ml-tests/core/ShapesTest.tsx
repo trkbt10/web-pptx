@@ -5,7 +5,7 @@
  */
 
 import type { Fill } from "@lib/pptx/domain";
-import { px } from "@lib/pptx/domain/types";
+import { px } from "@lib/ooxml/domain/units";
 import { type CheckItem, TestSubsection, GeometryPreview, PresetShapePreview, TransformPreview } from "../common";
 
 // =============================================================================
