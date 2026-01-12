@@ -101,19 +101,7 @@ describe("convertTextToShape", () => {
     });
   });
 
-  it("applies Y-axis flip from ConversionContext (PDF bottom-left → PPTX top-left)", () => {
-    const pdfText: PdfText = {
-      type: "text",
-      text: "Y",
-      x: 0,
-      y: 0,
-      width: 10,
-      height: 10,
-      fontName: "Helvetica",
-      fontSize: 10,
-      graphicsState: createGraphicsState({ colorSpace: "DeviceGray", components: [0] as const }),
-    };
-
+  describe("Y coordinate conversion (baseline → top edge)", () => {
     const context = {
       pdfWidth: 100,
       pdfHeight: 100,
@@ -121,16 +109,70 @@ describe("convertTextToShape", () => {
       slideHeight: px(100),
     } as const;
 
-    const shape = convertTextToShape(pdfText, context, "t");
+    it.each([
+      { name: "page top", y: 90, height: 10, fontSize: 10, expectedY: 0 },
+      { name: "page middle", y: 50, height: 10, fontSize: 10, expectedY: 40 },
+      { name: "page bottom", y: 0, height: 10, fontSize: 10, expectedY: 90 },
+      { name: "large font size", y: 70, height: 30, fontSize: 30, expectedY: 0 },
+      { name: "small font size", y: 50, height: 5, fontSize: 5, expectedY: 45 },
+    ] satisfies ReadonlyArray<{
+      readonly name: string;
+      readonly y: number;
+      readonly height: number;
+      readonly fontSize: number;
+      readonly expectedY: number;
+    }>)("$name", ({ y, height, fontSize, expectedY }) => {
+      const pdfText: PdfText = {
+        type: "text",
+        text: "Y",
+        x: 10,
+        y,
+        width: 20,
+        height,
+        fontName: "Helvetica",
+        fontSize,
+        graphicsState: createGraphicsState({ colorSpace: "DeviceGray", components: [0] as const }),
+      };
 
-    expect(shape.properties.transform).toEqual({
-      x: px(0),
-      y: px(90),
-      width: px(10),
-      height: px(10),
-      rotation: deg(0),
-      flipH: false,
-      flipV: false,
+      const shape = convertTextToShape(pdfText, context, "t");
+
+      expect(shape.properties.transform).toEqual({
+        x: px(10),
+        y: px(expectedY),
+        width: px(20),
+        height: px(height),
+        rotation: deg(0),
+        flipH: false,
+        flipV: false,
+      });
+
+      const run = shape.textBody?.paragraphs[0]?.runs[0];
+      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run.properties) throw new Error("Expected run properties");
+      expect(run.properties.fontSize).toEqual(pt(fontSize));
+    });
+
+    it("keeps multiline text as-is and uses the whole block height for baseline-to-top conversion", () => {
+      const pdfText: PdfText = {
+        type: "text",
+        text: "Line 1\nLine 2",
+        x: 10,
+        y: 60,
+        width: 20,
+        height: 20,
+        fontName: "Helvetica",
+        fontSize: 10,
+        graphicsState: createGraphicsState({ colorSpace: "DeviceGray", components: [0] as const }),
+      };
+
+      const shape = convertTextToShape(pdfText, context, "ml");
+      const transform = shape.properties.transform;
+      if (!transform) throw new Error("Expected shape transform");
+      expect(transform.y).toEqual(px(20));
+
+      const run = shape.textBody?.paragraphs[0]?.runs[0];
+      if (!run || run.type !== "text") throw new Error("Expected text run");
+      expect(run.text).toBe("Line 1\nLine 2");
     });
   });
 
@@ -195,4 +237,3 @@ describe("convertTextToShape", () => {
     expect(run.properties.italic).toBe(true);
   });
 });
-

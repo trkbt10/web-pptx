@@ -41,14 +41,47 @@ export function rgbToRgbBytes(r: number, g: number, b: number): RgbColor {
 }
 
 /**
- * Convert CMYK to RGB
+ * Convert CMYK to RGB using naive linear conversion.
  *
- * PDF Reference 8.6.4.4: DeviceCMYK uses 4 components (C, M, Y, K in 0-1 range)
+ * ## Formula
  *
- * Naive CMYK→RGB conversion (without ICC profile):
+ * ```
  * R = 255 × (1 - C) × (1 - K)
  * G = 255 × (1 - M) × (1 - K)
  * B = 255 × (1 - Y) × (1 - K)
+ * ```
+ *
+ * ## Limitations
+ *
+ * This is a **naive conversion** that does NOT account for:
+ *
+ * 1. **ICC Profiles**: Professional print PDFs use calibrated CMYK
+ *    (e.g., FOGRA39, US Web Coated SWOP) which have non-linear
+ *    relationships with sRGB.
+ *
+ * 2. **Color Gamut**: CMYK and sRGB have different color gamuts.
+ *    Some CMYK colors cannot be accurately represented in sRGB.
+ *
+ * 3. **Black Generation**: The relationship between CMY and K
+ *    varies by printing process (GCR, UCR).
+ *
+ * ## When Accuracy Matters
+ *
+ * For accurate CMYK→RGB conversion, use:
+ * - A color management library (e.g., lcms2, ColorSync)
+ * - The PDF's embedded ICC profile
+ * - A standard print profile (FOGRA39, SWOP, etc.)
+ *
+ * ## Typical Inaccuracies
+ *
+ * | CMYK Input      | This Function | Accurate sRGB |
+ * |-----------------|---------------|---------------|
+ * | C=100 M=0 Y=0   | (0, 255, 255) | ~(0, 174, 239)|
+ * | C=0 M=100 Y=0   | (255, 0, 255) | ~(236, 0, 140)|
+ * | C=0 M=0 Y=100   | (255, 255, 0) | ~(255, 242, 0)|
+ *
+ * @see PDF Reference 1.7, Section 8.6.4.4 (DeviceCMYK Color Space)
+ * @see ISO 12647-2 (Offset printing)
  *
  * @param c - Cyan (0-1)
  * @param m - Magenta (0-1)

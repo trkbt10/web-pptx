@@ -43,6 +43,9 @@ export type PdfGraphicsState = {
   readonly ctm: PdfMatrix;
   readonly fillColor: PdfColor;
   readonly strokeColor: PdfColor;
+  /**
+   * Stroke width in PDF points (1 point = 1/72 inch).
+   */
   readonly lineWidth: number;
   readonly lineJoin: PdfLineJoin;
   readonly lineCap: PdfLineCap;

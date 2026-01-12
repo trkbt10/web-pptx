@@ -146,5 +146,80 @@ describe("pixel-converter", () => {
       expect(result[8]).toBe(192);
       expect(result[12]).toBe(255);
     });
+
+    test("expands 1-bit packed grayscale", () => {
+      // 2 pixels: [0, 1] packed into the high bits: 0b0100_0000
+      const data = new Uint8Array([0b0100_0000]);
+      const result = convertToRgba(data, 2, 1, "DeviceGray", 1);
+
+      expect(Array.from(result)).toEqual([
+        0,
+        0,
+        0,
+        255,
+        255,
+        255,
+        255,
+        255,
+      ]);
+    });
+
+    test("expands 2-bit packed grayscale", () => {
+      // 4 pixels: [0, 1, 2, 3] packed as: 00 01 10 11 => 0x1B
+      const data = new Uint8Array([0x1b]);
+      const result = convertToRgba(data, 4, 1, "DeviceGray", 2);
+
+      expect(result[0]).toBe(0);
+      expect(result[4]).toBe(85);
+      expect(result[8]).toBe(170);
+      expect(result[12]).toBe(255);
+    });
+
+    test("expands 4-bit packed grayscale", () => {
+      // 3 pixels: [0, 15, 8] packed as: 0x0F, 0x80
+      const data = new Uint8Array([0x0f, 0x80]);
+      const result = convertToRgba(data, 3, 1, "DeviceGray", 4);
+
+      expect(result[0]).toBe(0);
+      expect(result[4]).toBe(255);
+      expect(result[8]).toBe(136);
+    });
+
+    test("downsamples 16-bit RGB to 8-bit", () => {
+      // 1 pixel, RGB, big-endian per component:
+      // R=0x1234 => 0x12, G=0xABCD => 0xAB, B=0x00FF => 0x00
+      const data = new Uint8Array([0x12, 0x34, 0xab, 0xcd, 0x00, 0xff]);
+      const infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+      const result = convertToRgba(data, 1, 1, "DeviceRGB", 16);
+
+      expect(Array.from(result)).toEqual([0x12, 0xab, 0x00, 255]);
+      expect(infoSpy).toHaveBeenCalled();
+      infoSpy.mockRestore();
+    });
+
+    test("throws for unsupported bitsPerComponent", () => {
+      const data = new Uint8Array([0]);
+      expect(() => convertToRgba(data, 1, 1, "DeviceGray", 3)).toThrow(
+        /Unsupported bitsPerComponent/
+      );
+    });
+
+    test("warns and proceeds on small data length mismatch", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const data = new Uint8Array(19).fill(255);
+      const result = convertToRgba(data, 20, 1, "DeviceGray", 8);
+
+      expect(result.length).toBe(20 * 4);
+      expect(result[19 * 4]).toBe(0);
+      expect(warnSpy.mock.calls.some((call) => String(call[0]).includes("Attempting to proceed."))).toBe(
+        true
+      );
+      warnSpy.mockRestore();
+    });
+
+    test("throws on large data length mismatch", () => {
+      const data = new Uint8Array(10).fill(255);
+      expect(() => convertToRgba(data, 20, 1, "DeviceGray", 8)).toThrow(/Cannot process image/);
+    });
   });
 });

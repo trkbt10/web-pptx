@@ -8,6 +8,43 @@
 import type { PdfColorSpace } from "../domain";
 import { getColorSpaceComponents } from "../domain";
 
+/**
+ * Convert 16-bit component data to 8-bit by taking the high byte.
+ *
+ * PDF 16-bit images store 2 bytes per component in big-endian order.
+ */
+function downsample16to8(data: Uint8Array, sampleCount: number): Uint8Array {
+  const result = new Uint8Array(sampleCount);
+  for (let i = 0; i < sampleCount; i++) {
+    result[i] = data[i * 2] ?? 0;
+  }
+  return result;
+}
+
+/**
+ * Expand 1, 2, or 4-bit packed component data to 8-bit (0-255).
+ */
+function expandBitsTo8(
+  data: Uint8Array,
+  bitsPerComponent: 1 | 2 | 4,
+  sampleCount: number
+): Uint8Array {
+  const result = new Uint8Array(sampleCount);
+  const samplesPerByte = 8 / bitsPerComponent;
+  const mask = (1 << bitsPerComponent) - 1;
+  const scale = 255 / mask;
+
+  for (let i = 0; i < sampleCount; i++) {
+    const byteIdx = Math.floor(i / samplesPerByte);
+    const bitOffset = (samplesPerByte - 1 - (i % samplesPerByte)) * bitsPerComponent;
+    const byte = data[byteIdx] ?? 0;
+    const value = (byte >> bitOffset) & mask;
+    result[i] = Math.round(value * scale);
+  }
+
+  return result;
+}
+
 // =============================================================================
 // Public API
 // =============================================================================
@@ -17,7 +54,8 @@ import { getColorSpaceComponents } from "../domain";
  *
  * bitsPerComponent: PDF Reference 8.9.2
  * - 1, 2, 4, 8, 16 bits per component
- * Currently only 8-bit is fully supported (most common)
+ * - 1/2/4-bit: unpacked and scaled to 8-bit (0-255)
+ * - 16-bit: downsampled to 8-bit by taking the high byte
  */
 export function convertToRgba(
   data: Uint8Array,
@@ -29,45 +67,90 @@ export function convertToRgba(
   const pixelCount = width * height;
   const rgba = new Uint8ClampedArray(pixelCount * 4);
 
-  // Currently only support 8 bits per component
-  if (bitsPerComponent !== 8) {
-    console.warn(
-      `[PDF Image] bitsPerComponent=${bitsPerComponent} not fully supported, treating as 8-bit`
-    );
+  const componentsPerPixel = getColorSpaceComponents(colorSpace);
+  const sampleCount = pixelCount * componentsPerPixel;
+  if (componentsPerPixel === 0) {
+    console.warn(`[PDF Image] Unsupported color space: ${colorSpace}`);
+    return rgba;
   }
 
-  // Validate data length for expected color space
-  const componentsPerPixel = getColorSpaceComponents(colorSpace);
-  const expectedLength = pixelCount * componentsPerPixel;
-  if (data.length !== expectedLength) {
-    console.warn(
-      `[PDF Image] Data length mismatch for ${colorSpace}: expected ${expectedLength} bytes (${width}x${height}x${componentsPerPixel}), got ${data.length}`
-    );
-    // Try to auto-detect color space based on data length
-    const actualComponents = data.length / pixelCount;
+  let expectedRawLength: number;
+  switch (bitsPerComponent) {
+    case 1:
+    case 2:
+    case 4:
+      expectedRawLength = Math.ceil((sampleCount * bitsPerComponent) / 8);
+      break;
+    case 8:
+      expectedRawLength = sampleCount;
+      break;
+    case 16:
+      expectedRawLength = sampleCount * 2;
+      break;
+    default:
+      throw new Error(
+        `[PDF Image] Unsupported bitsPerComponent: ${bitsPerComponent}. Supported values: 1, 2, 4, 8, 16.`
+      );
+  }
+
+  if (data.length !== expectedRawLength) {
+    const message =
+      `[PDF Image] Data length mismatch for ${colorSpace} (bitsPerComponent=${bitsPerComponent}): ` +
+      `expected ${expectedRawLength} bytes (${width}x${height}x${componentsPerPixel}), got ${data.length}`;
+
+    if (expectedRawLength > 0 && Math.abs(data.length - expectedRawLength) < expectedRawLength * 0.1) {
+      console.warn(message + ". Attempting to proceed.");
+    } else {
+      throw new Error(message + ". Cannot process image.");
+    }
+  }
+
+  let normalizedData: Uint8Array = data;
+  switch (bitsPerComponent) {
+    case 1:
+    case 2:
+    case 4:
+      normalizedData = expandBitsTo8(data, bitsPerComponent, sampleCount);
+      break;
+    case 8:
+      normalizedData = data;
+      break;
+    case 16:
+      normalizedData = downsample16to8(data, sampleCount);
+      console.info("[PDF Image] Downsampled 16-bit image to 8-bit");
+      break;
+    default:
+      throw new Error(
+        `[PDF Image] Unsupported bitsPerComponent: ${bitsPerComponent}. Supported values: 1, 2, 4, 8, 16.`
+      );
+  }
+
+  if (bitsPerComponent === 8 && normalizedData.length !== sampleCount) {
+    // Try to auto-detect color space based on data length (8-bit only)
+    const actualComponents = normalizedData.length / pixelCount;
     if (Math.abs(actualComponents - 1) < 0.01) {
       console.warn("[PDF Image] Auto-detected as grayscale");
-      return convertGrayToRgba(data, pixelCount, rgba);
+      return convertGrayToRgba(normalizedData, pixelCount, rgba);
     }
     if (Math.abs(actualComponents - 3) < 0.01) {
       console.warn("[PDF Image] Auto-detected as RGB");
-      return convertRgbToRgba(data, pixelCount, rgba);
+      return convertRgbToRgba(normalizedData, pixelCount, rgba);
     }
     if (Math.abs(actualComponents - 4) < 0.01) {
       console.warn("[PDF Image] Auto-detected as CMYK");
-      return convertCmykToRgba(data, pixelCount, rgba);
+      return convertCmykToRgba(normalizedData, pixelCount, rgba);
     }
   }
 
   switch (colorSpace) {
     case "DeviceGray":
-      return convertGrayToRgba(data, pixelCount, rgba);
+      return convertGrayToRgba(normalizedData, pixelCount, rgba);
     case "DeviceRGB":
-      return convertRgbToRgba(data, pixelCount, rgba);
+      return convertRgbToRgba(normalizedData, pixelCount, rgba);
     case "DeviceCMYK":
-      return convertCmykToRgba(data, pixelCount, rgba);
+      return convertCmykToRgba(normalizedData, pixelCount, rgba);
     case "ICCBased":
-      return convertIccBasedToRgba(data, pixelCount, rgba);
+      return convertIccBasedToRgba(normalizedData, pixelCount, rgba);
     case "Pattern":
     default:
       console.warn(`[PDF Image] Unsupported color space: ${colorSpace}`);

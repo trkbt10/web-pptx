@@ -45,6 +45,56 @@ const context = {
   slideHeight: px(100),
 } as const;
 
+const KAPPA = 0.5522847498307936;
+
+const createEllipsePath = (params: {
+  readonly cx: number;
+  readonly cy: number;
+  readonly rx: number;
+  readonly ry: number;
+  readonly paintOp: PdfPath["paintOp"];
+  readonly closePath: boolean;
+}): PdfPath => {
+  const { cx, cy, rx, ry, paintOp, closePath } = params;
+
+  const opsWithoutClose = [
+    { type: "moveTo", point: { x: cx + rx, y: cy } },
+    {
+      type: "curveTo",
+      cp1: { x: cx + rx, y: cy + ry * KAPPA },
+      cp2: { x: cx + rx * KAPPA, y: cy + ry },
+      end: { x: cx, y: cy + ry },
+    },
+    {
+      type: "curveTo",
+      cp1: { x: cx - rx * KAPPA, y: cy + ry },
+      cp2: { x: cx - rx, y: cy + ry * KAPPA },
+      end: { x: cx - rx, y: cy },
+    },
+    {
+      type: "curveTo",
+      cp1: { x: cx - rx, y: cy - ry * KAPPA },
+      cp2: { x: cx - rx * KAPPA, y: cy - ry },
+      end: { x: cx, y: cy - ry },
+    },
+    {
+      type: "curveTo",
+      cp1: { x: cx + rx * KAPPA, y: cy - ry },
+      cp2: { x: cx + rx, y: cy - ry * KAPPA },
+      end: { x: cx + rx, y: cy },
+    },
+  ] as const;
+
+  const operations = closePath ? ([...opsWithoutClose, { type: "closePath" }] as const) : opsWithoutClose;
+
+  return {
+    type: "path",
+    operations,
+    paintOp,
+    graphicsState,
+  };
+};
+
 describe("convertPathToGeometry", () => {
   it("converts moveTo/lineTo into geometry PathCommands (with Y-flip + local coords)", () => {
     const pdfPath: PdfPath = {
@@ -259,19 +309,60 @@ describe("isApproximateEllipse", () => {
 
     expect(isApproximateEllipse(pdfPath)).toBe(true);
   });
+
+  it("detects a circle-like path (rx == ry)", () => {
+    const pdfPath = createEllipsePath({ cx: 50, cy: 50, rx: 10, ry: 10, paintOp: "stroke", closePath: true });
+    expect(isApproximateEllipse(pdfPath)).toBe(true);
+  });
+
+  it("detects an ellipse-like path (rx != ry) even without closePath", () => {
+    const pdfPath = createEllipsePath({ cx: 50, cy: 50, rx: 10, ry: 20, paintOp: "stroke", closePath: false });
+    expect(isApproximateEllipse(pdfPath)).toBe(true);
+  });
+
+  it("does not detect rectangles as ellipses", () => {
+    const pdfPath: PdfPath = {
+      type: "path",
+      operations: [{ type: "rect", x: 0, y: 0, width: 10, height: 10 }] as const,
+      paintOp: "stroke",
+      graphicsState,
+    };
+
+    expect(isApproximateEllipse(pdfPath)).toBe(false);
+  });
+
+  it("does not detect incomplete ellipses (3 curves)", () => {
+    const pdfPath: PdfPath = {
+      type: "path",
+      operations: [
+        { type: "moveTo", point: { x: 0, y: 5 } },
+        { type: "curveTo", cp1: { x: 0, y: 8 }, cp2: { x: 2, y: 10 }, end: { x: 5, y: 10 } },
+        { type: "curveTo", cp1: { x: 8, y: 10 }, cp2: { x: 10, y: 8 }, end: { x: 10, y: 5 } },
+        { type: "curveTo", cp1: { x: 10, y: 2 }, cp2: { x: 8, y: 0 }, end: { x: 5, y: 0 } },
+        { type: "closePath" },
+      ] as const,
+      paintOp: "stroke",
+      graphicsState,
+    };
+
+    expect(isApproximateEllipse(pdfPath)).toBe(false);
+  });
 });
 
 describe("convertToPresetRect / convertToPresetEllipse", () => {
   it("returns preset geometries", () => {
-    const pdfPath: PdfPath = {
+    const rectPath: PdfPath = {
       type: "path",
       operations: [{ type: "rect", x: 0, y: 0, width: 10, height: 10 }] as const,
       paintOp: "fill",
       graphicsState,
     };
 
-    expect(convertToPresetRect(pdfPath, context)).toEqual({ type: "preset", preset: "rect", adjustValues: [] });
-    expect(convertToPresetEllipse(pdfPath, context)).toEqual({ type: "preset", preset: "ellipse", adjustValues: [] });
+    expect(convertToPresetRect(rectPath, context)).toEqual({ type: "preset", preset: "rect", adjustValues: [] });
+    expect(() => convertToPresetEllipse(rectPath, context)).toThrow("Path is not an approximate ellipse");
+
+    const ellipsePath = createEllipsePath({ cx: 50, cy: 50, rx: 10, ry: 20, paintOp: "stroke", closePath: true });
+    expect(convertToPresetEllipse(ellipsePath, context)).toEqual({ type: "preset", preset: "ellipse", adjustValues: [] });
   });
 });
 

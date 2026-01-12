@@ -75,11 +75,20 @@ const MINIMAL_SLIDE_MASTER = `<?xml version="1.0" encoding="UTF-8" standalone="y
   </p:txStyles>
 </p:sldMaster>`;
 
+/**
+ * Minimal slide layout XML.
+ *
+ * ECMA-376 Part 1, Section 19.3.1.39 requires the `type` attribute
+ * on sldLayout to specify the layout type. We use "blank" for PDF imports.
+ *
+ * @see ISO/IEC 29500-1:2016 §19.3.1.39 (sldLayout)
+ */
 const MINIMAL_SLIDE_LAYOUT = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:sldLayout
   xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"
   xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
-  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  type="blank">
   <p:cSld>
     <p:spTree>
       <p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>

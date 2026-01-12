@@ -6,6 +6,7 @@
  */
 
 import type { PdfBBox, PdfMatrix, PdfPoint } from "../domain";
+import { decomposeMatrix } from "../domain/coordinate/matrix";
 import type { Pixels } from "../../ooxml/domain/units";
 import { deg, px } from "../../ooxml/domain/units";
 import type { Transform } from "../../pptx/domain/geometry";
@@ -20,6 +21,104 @@ export type ConversionContext = {
   /** ターゲットスライド高さ（ピクセル） */
   readonly slideHeight: Pixels;
 };
+
+type TransformComponents = {
+  readonly translation: { readonly x: number; readonly y: number };
+  readonly scale: { readonly x: number; readonly y: number };
+  readonly rotation: number; // radians
+  readonly shear: { readonly x: number; readonly y: number };
+  readonly isSimple: boolean;
+};
+
+function extractTransformComponents(ctm: PdfMatrix): TransformComponents {
+  const [a, b, c, d, e, f] = ctm;
+  const decomposed = decomposeMatrix(ctm);
+
+  return {
+    translation: { x: e, y: f },
+    scale: { x: decomposed.scaleX, y: decomposed.scaleY },
+    rotation: decomposed.rotation,
+    shear: { x: decomposed.shearX, y: decomposed.shearY },
+    isSimple: decomposed.isSimple,
+  };
+}
+
+type PptxPoint = { readonly x: number; readonly y: number };
+
+function toNumberPixels(value: Pixels): number {
+  return value as number;
+}
+
+function convertPointToNumbers(
+  point: PdfPoint,
+  context: ConversionContext
+): PptxPoint {
+  const converted = convertPoint(point, context);
+  return { x: toNumberPixels(converted.x), y: toNumberPixels(converted.y) };
+}
+
+function getImageCornersInPptx(
+  ctm: PdfMatrix,
+  context: ConversionContext
+): {
+  readonly tl: PptxPoint;
+  readonly tr: PptxPoint;
+  readonly bl: PptxPoint;
+  readonly br: PptxPoint;
+} {
+  const [a, b, c, d, e, f] = ctm;
+
+  // PDF image placement uses a unit square [0,0]-[1,1] in image space.
+  // We treat PPTX-local (top-left origin, y down) as:
+  // - TL: (0,0) -> PDF (0,1)
+  // - TR: (1,0) -> PDF (1,1)
+  // - BL: (0,1) -> PDF (0,0)
+  // - BR: (1,1) -> PDF (1,0)
+  const pdfTl: PdfPoint = { x: c + e, y: d + f };
+  const pdfTr: PdfPoint = { x: a + c + e, y: b + d + f };
+  const pdfBl: PdfPoint = { x: e, y: f };
+  const pdfBr: PdfPoint = { x: a + e, y: b + f };
+
+  return {
+    tl: convertPointToNumbers(pdfTl, context),
+    tr: convertPointToNumbers(pdfTr, context),
+    bl: convertPointToNumbers(pdfBl, context),
+    br: convertPointToNumbers(pdfBr, context),
+  };
+}
+
+function normalizeDegrees(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  const normalized = ((value % 360) + 360) % 360;
+  return normalized > 180 ? normalized - 360 : normalized;
+}
+
+function computeBounds(points: readonly PptxPoint[]): {
+  readonly minX: number;
+  readonly minY: number;
+  readonly maxX: number;
+  readonly maxY: number;
+} {
+  if (points.length === 0) {
+    throw new Error("points is required");
+  }
+
+  let minX = points[0].x;
+  let minY = points[0].y;
+  let maxX = points[0].x;
+  let maxY = points[0].y;
+
+  for (const point of points) {
+    minX = Math.min(minX, point.x);
+    minY = Math.min(minY, point.y);
+    maxX = Math.max(maxX, point.x);
+    maxY = Math.max(maxY, point.y);
+  }
+
+  return { minX, minY, maxX, maxY };
+}
 
 function getScale(context: ConversionContext): { readonly scaleX: number; readonly scaleY: number } {
   if (!Number.isFinite(context.pdfWidth) || context.pdfWidth <= 0) {
@@ -110,36 +209,150 @@ export function convertBBox(
  * PPTX uses top-left origin, so we need to:
  * 1. Y-flip the position
  * 2. Adjust for height (since PDF's (e,f) is bottom-left, not top-left)
+ *
+ * ## Limitations
+ *
+ * This implementation handles:
+ * - Scale transformations (uniform and non-uniform)
+ * - Vertical flip (d < 0)
+ * - Rotation (extracted from atan2(b, a))
+ *
+ * NOT fully supported:
+ * - Shear (skew) transformations - the matrix may have shear components
+ *   that are not correctly decomposed
+ * - Complex combined transformations (rotation + shear + non-uniform scale)
+ *
+ * For complex matrices, consider using decomposeMatrix() from domain/coordinate/matrix.ts
+ * for more accurate decomposition.
+ *
+ * @see PDF Reference 1.7, Section 4.2.2 (Common Transformations)
  */
 export function convertMatrix(pdfMatrix: PdfMatrix, context: ConversionContext): Transform {
-  const [a, b, c, d, e, f] = pdfMatrix;
-  const { scaleX, scaleY } = getScale(context);
+  const components = extractTransformComponents(pdfMatrix);
 
-  // Extract scale factors (absolute values - sign indicates flip)
-  const matrixScaleX = Math.sqrt(a * a + b * b);
-  const matrixScaleY = Math.sqrt(c * c + d * d);
-  const rotation = Math.atan2(b, a) * (180 / Math.PI);
+  const corners = getImageCornersInPptx(pdfMatrix, context);
+  const u = {
+    x: corners.tr.x - corners.tl.x,
+    y: corners.tr.y - corners.tl.y,
+  };
+  const v = {
+    x: corners.bl.x - corners.tl.x,
+    y: corners.bl.y - corners.tl.y,
+  };
 
-  // Determine if image is vertically flipped in PDF
-  // d < 0 means image is flipped (Y-axis inverted in PDF space)
-  const isFlippedV = d < 0;
+  const width = Math.hypot(u.x, u.y);
+  const height = Math.hypot(v.x, v.y);
 
-  // Calculate top-left position in PPTX coordinates
-  // In PDF: (e, f) is bottom-left of the image
-  // If d > 0: top-left in PDF is at (e, f + height), where height = |d|
-  // If d < 0: image hangs down from f, so top is at (e, f)
-  // After Y-flip to PPTX: need to account for this
-  const pdfTopY = isFlippedV ? f : f + Math.abs(d);
-  const position = convertPoint({ x: e, y: pdfTopY }, context);
+  const orthogonality = width > 0 && height > 0 ? Math.abs((u.x * v.x + u.y * v.y) / (width * height)) : 0;
+  const hasShear =
+    !components.isSimple ||
+    Math.abs(components.shear.x) > 1e-6 ||
+    Math.abs(components.shear.y) > 1e-6 ||
+    orthogonality > 1e-6;
+
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    const bounds = computeBounds([corners.tl, corners.tr, corners.bl, corners.br]);
+    return {
+      x: px(bounds.minX),
+      y: px(bounds.minY),
+      width: px(Math.max(0, bounds.maxX - bounds.minX)),
+      height: px(Math.max(0, bounds.maxY - bounds.minY)),
+      rotation: deg(0),
+      flipH: false,
+      flipV: false,
+    };
+  }
+
+  if (hasShear) {
+    console.warn("[PDF Image] Shear/complex transform not supported; falling back to bounds");
+    const bounds = computeBounds([corners.tl, corners.tr, corners.bl, corners.br]);
+    return {
+      x: px(bounds.minX),
+      y: px(bounds.minY),
+      width: px(bounds.maxX - bounds.minX),
+      height: px(bounds.maxY - bounds.minY),
+      rotation: deg(0),
+      flipH: false,
+      flipV: false,
+    };
+  }
+
+  // Center point is invariant to rotation/flip
+  const center = {
+    x: (corners.tl.x + corners.tr.x + corners.bl.x + corners.br.x) / 4,
+    y: (corners.tl.y + corners.tr.y + corners.bl.y + corners.br.y) / 4,
+  };
+
+  // Determine flip parity from the mapped axes.
+  // Rotation has det=+1, so reflections are represented by flipH/flipV parity.
+  const det = u.x * v.y - u.y * v.x;
+  const detNegative = det < 0;
+
+  const rotationFromU = Math.atan2(u.y, u.x);
+
+  const candidates: Array<{
+    readonly flipH: boolean;
+    readonly flipV: boolean;
+    readonly rotationRad: number;
+    readonly dot: number; // higher is better
+    readonly flipCount: number;
+    readonly absRotationDeg: number;
+  }> = [];
+
+  const possibleFlips: ReadonlyArray<{ readonly flipH: boolean; readonly flipV: boolean }> = detNegative
+    ? [
+        { flipH: true, flipV: false },
+        { flipH: false, flipV: true },
+      ]
+    : [
+        { flipH: false, flipV: false },
+        { flipH: true, flipV: true },
+      ];
+
+  const vHat = { x: v.x / height, y: v.y / height };
+  for (const { flipH, flipV } of possibleFlips) {
+    const fx = flipH ? -1 : 1;
+    const fy = flipV ? -1 : 1;
+
+    const rotationRad = rotationFromU + (fx === -1 ? Math.PI : 0);
+    const sin = Math.sin(rotationRad);
+    const cos = Math.cos(rotationRad);
+
+    // Predicted v direction for the candidate.
+    const vPredHat = { x: fy * -sin, y: fy * cos };
+    const dot = vHat.x * vPredHat.x + vHat.y * vPredHat.y;
+
+    const rotationDeg = normalizeDegrees((rotationRad * 180) / Math.PI);
+    candidates.push({
+      flipH,
+      flipV,
+      rotationRad,
+      dot,
+      flipCount: (flipH ? 1 : 0) + (flipV ? 1 : 0),
+      absRotationDeg: Math.abs(rotationDeg),
+    });
+  }
+
+  candidates.sort((a, b) => {
+    if (b.dot !== a.dot) {
+      return b.dot - a.dot;
+    }
+    if (a.flipCount !== b.flipCount) {
+      return a.flipCount - b.flipCount;
+    }
+    return a.absRotationDeg - b.absRotationDeg;
+  });
+  const best = candidates[0];
+  const rotationDeg = normalizeDegrees((best.rotationRad * 180) / Math.PI);
 
   return {
-    x: position.x,
-    y: position.y,
-    width: px(matrixScaleX * scaleX),
-    height: px(matrixScaleY * scaleY),
-    rotation: deg(-rotation),
-    flipH: false,
-    flipV: isFlippedV,
+    x: px(center.x - width / 2),
+    y: px(center.y - height / 2),
+    width: px(width),
+    height: px(height),
+    rotation: deg(rotationDeg),
+    flipH: best.flipH,
+    flipV: best.flipV,
   };
 }
 
@@ -191,4 +404,3 @@ export function createFitContext(
     slideHeight: px(effectiveHeight),
   };
 }
-

@@ -15,12 +15,55 @@ export type CMapParseResult = {
   readonly codeByteWidth: 1 | 2;
 };
 
+export type CMapParserOptions = {
+  /**
+   * Maximum entries to generate from a single `bfrange`.
+   *
+   * Default: 256.
+   */
+  readonly maxRangeEntries?: number;
+};
+
 /* eslint-disable no-restricted-syntax -- parsers require mutable state for regex iteration */
+
+/**
+ * Maximum number of entries to generate from a single `bfrange`.
+ *
+ * ## Background
+ *
+ * CID fonts can have up to 65536 character codes (2-byte codes).
+ * A single `bfrange` can theoretically cover this entire range:
+ *
+ *   beginbfrange
+ *   <0000> <FFFF> <0020>
+ *   endbfrange
+ *
+ * However, generating 65536 entries would:
+ * - Use significant memory (Map entry overhead varies by runtime)
+ * - Take noticeable time to process
+ * - Rarely be necessary (most ranges are small)
+ *
+ * ## Chosen Limit: 256
+ *
+ * Memory estimate (rough): 256 entries ≈ a few KB.
+ *
+ * This handles:
+ * - Standard 8-bit encoding ranges
+ * - Common CID subsets (e.g., ASCII, Latin-1)
+ *
+ * For larger ranges, entries beyond this limit are skipped.
+ *
+ * @see PDF Reference 1.7, Section 5.9.2 (ToUnicode CMaps)
+ */
+const BFRANGE_MAX_ENTRIES = 256;
 
 /**
  * Parse ToUnicode CMap data and detect byte width
  */
-export function parseToUnicodeCMap(data: string): CMapParseResult {
+export function parseToUnicodeCMap(
+  data: string,
+  options: CMapParserOptions = {}
+): CMapParseResult {
   const mapping: FontMapping = new Map();
   let maxSourceHexLength = 0;
 
@@ -29,7 +72,7 @@ export function parseToUnicodeCMap(data: string): CMapParseResult {
   maxSourceHexLength = Math.max(maxSourceHexLength, bfcharLength);
 
   // Parse beginbfrange sections (range mappings)
-  const bfrangeLength = parseBfRange(data, mapping);
+  const bfrangeLength = parseBfRange(data, mapping, options);
   maxSourceHexLength = Math.max(maxSourceHexLength, bfrangeLength);
 
   // Determine byte width from source hex length
@@ -85,10 +128,15 @@ export function parseBfChar(data: string, mapping: FontMapping): number {
  * Format: <start> <end> <destStart> or <start> <end> [<dest1> <dest2> ...]
  * Returns the maximum source hex length found
  */
-export function parseBfRange(data: string, mapping: FontMapping): number {
+export function parseBfRange(
+  data: string,
+  mapping: FontMapping,
+  options: CMapParserOptions = {}
+): number {
   const sectionRegex = /beginbfrange\s*\n?([\s\S]*?)endbfrange/gi;
   let sectionMatch;
   let maxSourceLength = 0;
+  const maxRangeEntries = options.maxRangeEntries ?? BFRANGE_MAX_ENTRIES;
 
   while ((sectionMatch = sectionRegex.exec(data)) !== null) {
     const content = sectionMatch[1];
@@ -115,11 +163,18 @@ export function parseBfRange(data: string, mapping: FontMapping): number {
       const end = parseInt(endHex, 16);
       const destStart = parseInt(destHex, 16);
 
-      // Limit range to prevent memory issues
-      const maxRange = 256;
-      const rangeSize = Math.min(end - start + 1, maxRange);
+      const rangeSize = end - start + 1;
+      if (rangeSize > maxRangeEntries) {
+        console.warn(
+          `[PDF CMap] bfrange from 0x${start.toString(16)} to 0x${end.toString(16)} ` +
+            `has ${rangeSize} entries, limiting to ${maxRangeEntries}. ` +
+            "Some character mappings may be missing."
+        );
+      }
 
-      for (let i = 0; i < rangeSize; i++) {
+      const actualSize = Math.min(rangeSize, maxRangeEntries);
+
+      for (let i = 0; i < actualSize; i++) {
         const source = start + i;
         const unicode = String.fromCodePoint(destStart + i);
         mapping.set(source, unicode);
@@ -144,12 +199,25 @@ export function parseBfRange(data: string, mapping: FontMapping): number {
       const start = parseInt(startHex, 16);
       const end = parseInt(endHex, 16);
 
+      const rangeSize = end - start + 1;
+      if (rangeSize > maxRangeEntries) {
+        console.warn(
+          `[PDF CMap] bfrange from 0x${start.toString(16)} to 0x${end.toString(16)} ` +
+            `has ${rangeSize} entries, limiting to ${maxRangeEntries}. ` +
+            "Some character mappings may be missing."
+        );
+      }
+
       // Parse array elements
       const destRegex = /<([0-9a-fA-F]+)>/g;
       const dests: string[] = [];
       let destMatch;
+      const maxDestEntriesToRead = Math.min(rangeSize, maxRangeEntries);
 
       while ((destMatch = destRegex.exec(arrayContent)) !== null) {
+        if (dests.length >= maxDestEntriesToRead) {
+          break;
+        }
         const hex = destMatch[1];
         if (hex) {
           const unicode = hexToString(hex);
@@ -158,8 +226,8 @@ export function parseBfRange(data: string, mapping: FontMapping): number {
       }
 
       // Apply mappings
-      const rangeSize = Math.min(end - start + 1, dests.length);
-      for (let i = 0; i < rangeSize; i++) {
+      const actualSize = Math.min(rangeSize, dests.length, maxRangeEntries);
+      for (let i = 0; i < actualSize; i++) {
         const unicode = dests[i];
         if (unicode) {
           mapping.set(start + i, unicode);

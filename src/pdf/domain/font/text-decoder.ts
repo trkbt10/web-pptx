@@ -62,7 +62,13 @@ export function decodeText(
 }
 
 /**
- * Decode text with 2-byte (CID) encoding
+ * Decode text with 2-byte (CID) encoding.
+ *
+ * CID fonts use 2-byte character codes that map to Unicode via ToUnicode CMap.
+ * Unlike single-byte fonts, the character code does NOT correspond to Unicode
+ * code points directly.
+ *
+ * @see PDF Reference 1.7, Section 5.9 (ToUnicode CMaps)
  */
 function decodeTwoByteText(rawText: string, mapping: Map<number, string>): string {
   const chars: string[] = [];
@@ -75,9 +81,11 @@ function decodeTwoByteText(rawText: string, mapping: Map<number, string>): strin
     const mapped = mapping.get(code);
     if (mapped) {
       chars.push(mapped);
-    } else if (code >= 32 && code < 127) {
-      // Preserve printable ASCII
-      chars.push(String.fromCharCode(code));
+    } else {
+      // No mapping found - use replacement character (U+FFFD)
+      // Do NOT fall back to ASCII interpretation, as 2-byte codes
+      // are not ASCII-compatible in CID fonts
+      chars.push("\uFFFD");
     }
   }
   return chars.join("");

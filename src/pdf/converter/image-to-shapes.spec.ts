@@ -15,12 +15,36 @@ const context = {
 } as const;
 
 describe("convertImageToShape", () => {
-  it("creates a pic shape with data URL resourceId", () => {
+  it("creates a pic shape with data URL resourceId (PNG format)", () => {
+    // Full PNG signature (8 bytes) - will be detected as PNG and used as-is
     const image: PdfImage = {
       type: "image",
-      data: new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x00]),
+      data: new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00]),
       width: 10,
       height: 10,
+      colorSpace: "DeviceRGB",
+      bitsPerComponent: 8,
+      graphicsState,
+    };
+
+    const shape = convertImageToShape(image, context, "1");
+    expect(shape.type).toBe("pic");
+    expect(shape.nonVisual.id).toBe("1");
+    expect(shape.blipFill.resourceId.startsWith("data:image/png;base64,")).toBe(true);
+  });
+
+  it("creates a pic shape with raw pixel data", () => {
+    // 2x2 RGB image = 12 bytes of raw pixel data
+    const image: PdfImage = {
+      type: "image",
+      data: new Uint8Array([
+        255, 0, 0,    // red
+        0, 255, 0,    // green
+        0, 0, 255,    // blue
+        255, 255, 0,  // yellow
+      ]),
+      width: 2,
+      height: 2,
       colorSpace: "DeviceRGB",
       bitsPerComponent: 8,
       graphicsState,

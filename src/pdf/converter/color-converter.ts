@@ -37,20 +37,31 @@ export function convertColor(pdfColor: PdfColor): Color {
 }
 
 /**
- * Convert ICCBased color to sRGB
+ * Convert ICCBased color to sRGB.
  *
- * PDF Reference 8.6.5.5 - ICCBased Color Spaces:
- * An ICCBased color space is defined by an ICC profile stream.
- * The N entry in the profile stream dictionary specifies the number of components.
+ * ## Limitations
  *
- * Without full ICC profile parsing, we fall back to the alternate color space
- * based on the number of components:
- * - N=1: DeviceGray
- * - N=3: DeviceRGB
- * - N=4: DeviceCMYK
+ * This implementation does NOT parse ICC profiles. Instead, it:
+ * 1. Uses the AlternateColorSpace if specified in the PDF
+ * 2. Falls back to guessing based on component count:
+ *    - 1 component: DeviceGray
+ *    - 3 components: DeviceRGB
+ *    - 4 components: DeviceCMYK
  *
- * Note: This is a naive conversion that does not apply ICC profile color transforms.
- * For accurate color reproduction, a full ICC profile parser would be required.
+ * This approach may result in color inaccuracy for:
+ * - Professional print PDFs with calibrated colors
+ * - Wide-gamut color spaces (Adobe RGB, ProPhoto RGB)
+ * - Lab or other perceptual color spaces
+ *
+ * ## Future Improvements
+ *
+ * To properly support ICC profiles, we would need to:
+ * 1. Parse the ICC profile embedded in the PDF
+ * 2. Use a color management library (e.g., lcms2)
+ * 3. Convert through PCS (Profile Connection Space)
+ *
+ * @see PDF Reference 1.7, Section 8.6.5.5 (ICCBased Color Spaces)
+ * @see ICC.1:2022 (ICC Profile Format Specification)
  */
 function convertIccBasedToSrgb(
   components: readonly number[],
@@ -69,6 +80,7 @@ function convertIccBasedToSrgb(
   }
 
   // Infer alternate color space from component count
+  // This is a fallback when the PDF doesn't specify an alternate color space
   const n = components.length;
   if (n === 1) {
     return convertGrayToSrgb(components[0] ?? 0);
@@ -80,7 +92,13 @@ function convertIccBasedToSrgb(
     return convertCmykToSrgb(components);
   }
 
-  // Fallback: return black
+  // Unknown component count - cannot determine color space
+  // Supported: 1 (Gray), 3 (RGB), 4 (CMYK)
+  // Unsupported: 2 (e.g., two-color printing), 5+ (e.g., Hexachrome)
+  console.warn(
+    `[PDF Color] Cannot convert ICCBased color with ${n} components. ` +
+      `Supported: 1 (Gray), 3 (RGB), 4 (CMYK). Falling back to black.`
+  );
   return { spec: { type: "srgb", value: "000000" } };
 }
 

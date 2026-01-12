@@ -14,7 +14,19 @@ import type { PdfGraphicsState } from "../graphics-state";
 export type PdfImage = {
   readonly type: "image";
   readonly data: Uint8Array;
+  /**
+   * Image pixel width (sample columns).
+   *
+   * Note: The rendered size/placement on the page is determined by the current
+   * transformation matrix (`graphicsState.ctm`) in PDF points.
+   */
   readonly width: number;
+  /**
+   * Image pixel height (sample rows).
+   *
+   * Note: The rendered size/placement on the page is determined by the current
+   * transformation matrix (`graphicsState.ctm`) in PDF points.
+   */
   readonly height: number;
   readonly colorSpace: PdfColorSpace;
   readonly bitsPerComponent: number;

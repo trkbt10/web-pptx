@@ -9,7 +9,11 @@
 import {
   decodeText,
   DEFAULT_FONT_METRICS,
+  extractFontInfoWithDeps,
+  logExtractionErrors,
+  type ExtractFontInfoDeps,
   type FontMapping,
+  type FontExtractionResult,
   type FontInfo,
   type FontMappings,
   type FontMetrics,
@@ -181,6 +185,161 @@ describe("font-decoder", () => {
         expect(metrics.widths.get(0x3042)).toBe(1000);
         expect(metrics.defaultWidth).toBe(1000);
       });
+    });
+  });
+
+  describe("extractFontInfoWithDeps", () => {
+    type FakePage = { readonly pageId: string };
+    type FakeResources = { readonly resourcesId: string };
+
+    const TO_UNICODE = {
+      mapping: new Map<number, string>([[0x41, "A"]]),
+      codeByteWidth: 1 as const,
+    };
+
+    const METRICS: FontMetrics = {
+      widths: new Map(),
+      defaultWidth: 500,
+      ascender: 800,
+      descender: -200,
+    };
+
+    it("handles ToUnicode success + metrics failure", () => {
+      const deps = {
+        getPageResources: (_pdfPage: FakePage): FakeResources => ({ resourcesId: "r1" }),
+        extractToUnicode: (_resources: FakeResources, _fontName: string) => TO_UNICODE,
+        extractFontMetrics: () => {
+          throw new Error("metrics broken");
+        },
+      } satisfies ExtractFontInfoDeps<FakePage, FakeResources>;
+
+      const result = extractFontInfoWithDeps({ pageId: "p1" }, "F1", deps);
+
+      expect(result.toUnicode).toEqual(TO_UNICODE);
+      expect(result.metrics).toBeNull();
+      expect(result.errors).toEqual([
+        "Failed to extract metrics for F1: metrics broken",
+      ]);
+    });
+
+    it("handles ToUnicode failure + metrics success", () => {
+      const deps = {
+        getPageResources: (_pdfPage: FakePage): FakeResources => ({ resourcesId: "r1" }),
+        extractToUnicode: () => {
+          throw new Error("cmap broken");
+        },
+        extractFontMetrics: (_resources: FakeResources, _fontName: string) => METRICS,
+      } satisfies ExtractFontInfoDeps<FakePage, FakeResources>;
+
+      const result = extractFontInfoWithDeps({ pageId: "p1" }, "F1", deps);
+
+      expect(result.toUnicode).toBeNull();
+      expect(result.metrics).toEqual(METRICS);
+      expect(result.errors).toEqual([
+        "Failed to extract ToUnicode for F1: cmap broken",
+      ]);
+    });
+
+    it("handles both success", () => {
+      const deps = {
+        getPageResources: (_pdfPage: FakePage): FakeResources => ({ resourcesId: "r1" }),
+        extractToUnicode: (_resources: FakeResources, _fontName: string) => TO_UNICODE,
+        extractFontMetrics: (_resources: FakeResources, _fontName: string) => METRICS,
+      } satisfies ExtractFontInfoDeps<FakePage, FakeResources>;
+
+      const result = extractFontInfoWithDeps({ pageId: "p1" }, "F1", deps);
+
+      expect(result.toUnicode).toEqual(TO_UNICODE);
+      expect(result.metrics).toEqual(METRICS);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("handles both failure", () => {
+      const deps = {
+        getPageResources: (_pdfPage: FakePage): FakeResources => ({ resourcesId: "r1" }),
+        extractToUnicode: () => {
+          throw new Error("cmap broken");
+        },
+        extractFontMetrics: () => {
+          throw new Error("metrics broken");
+        },
+      } satisfies ExtractFontInfoDeps<FakePage, FakeResources>;
+
+      const result = extractFontInfoWithDeps({ pageId: "p1" }, "F1", deps);
+
+      expect(result.toUnicode).toBeNull();
+      expect(result.metrics).toBeNull();
+      expect(result.errors).toEqual([
+        "Failed to extract ToUnicode for F1: cmap broken",
+        "Failed to extract metrics for F1: metrics broken",
+      ]);
+    });
+
+    it("handles resources failure", () => {
+      const deps = {
+        getPageResources: () => {
+          throw new Error("resources broken");
+        },
+        extractToUnicode: () => TO_UNICODE,
+        extractFontMetrics: () => METRICS,
+      } satisfies ExtractFontInfoDeps<FakePage, FakeResources>;
+
+      const result = extractFontInfoWithDeps({ pageId: "p1" }, "F1", deps);
+
+      expect(result.toUnicode).toBeNull();
+      expect(result.metrics).toBeNull();
+      expect(result.errors).toEqual([
+        "Failed to get page resources: resources broken",
+      ]);
+    });
+  });
+
+  describe("logExtractionErrors", () => {
+    it("does not log when no errors", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const result: FontExtractionResult = { toUnicode: null, metrics: null, errors: [] };
+
+      logExtractionErrors(result, "F1");
+
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    it("logs partial extraction summary", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const result: FontExtractionResult = {
+        toUnicode: { mapping: new Map(), codeByteWidth: 1 },
+        metrics: null,
+        errors: ["Failed to extract metrics for F1: metrics broken"],
+      };
+
+      logExtractionErrors(result, "F1");
+
+      expect(warn).toHaveBeenCalledWith(
+        "[PDF Font] Partial extraction for \"F1\": succeeded: [ToUnicode], failed: 1 operation(s)"
+      );
+      warn.mockRestore();
+    });
+
+    it("logs complete extraction failure summary with messages", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const result: FontExtractionResult = {
+        toUnicode: null,
+        metrics: null,
+        errors: [
+          "Failed to extract ToUnicode for F1: cmap broken",
+          "Failed to extract metrics for F1: metrics broken",
+        ],
+      };
+
+      logExtractionErrors(result, "F1");
+
+      expect(warn).toHaveBeenCalledWith(
+        "[PDF Font] Complete extraction failure for \"F1\": " +
+        "Failed to extract ToUnicode for F1: cmap broken; " +
+        "Failed to extract metrics for F1: metrics broken"
+      );
+      warn.mockRestore();
     });
   });
 });

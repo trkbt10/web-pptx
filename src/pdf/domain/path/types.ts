@@ -42,9 +42,21 @@ export type PdfCurveToY = {
 
 export type PdfRect = {
   readonly type: "rect";
+  /**
+   * Left edge X coordinate in PDF points.
+   */
   readonly x: number;
+  /**
+   * Bottom edge Y coordinate in PDF points.
+   */
   readonly y: number;
+  /**
+   * Rectangle width in PDF points.
+   */
   readonly width: number;
+  /**
+   * Rectangle height in PDF points.
+   */
   readonly height: number;
 };
 

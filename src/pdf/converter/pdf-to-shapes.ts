@@ -6,7 +6,13 @@ import type { Pixels } from "../../ooxml/domain/units";
 import { deg } from "../../ooxml/domain/units";
 import type { ConversionContext } from "./transform-converter";
 import { convertBBox, createFitContext } from "./transform-converter";
-import { convertPathToGeometry, convertToPresetRect, isSimpleRectangle } from "./path-to-geometry";
+import {
+  convertPathToGeometry,
+  convertToPresetEllipse,
+  convertToPresetRect,
+  isApproximateEllipse,
+  isSimpleRectangle,
+} from "./path-to-geometry";
 import { convertGraphicsStateToStyle } from "./color-converter";
 import { convertTextToShape } from "./text-to-shapes";
 import { convertImageToShape } from "./image-to-shapes";
@@ -135,10 +141,14 @@ function convertPath(path: PdfPath, context: ConversionContext, shapeId: string)
   // (like rect, ellipse) won't represent the actual shape correctly
   const usePresetOptimization = ctmDecomposition.isSimple;
 
-  const geometry =
-    usePresetOptimization && isSimpleRectangle(path)
-      ? convertToPresetRect(path, context)
-      : convertPathToGeometry(path, context);
+  let geometry: SpShape["properties"]["geometry"];
+  if (usePresetOptimization && isSimpleRectangle(path)) {
+    geometry = convertToPresetRect(path, context);
+  } else if (usePresetOptimization && isApproximateEllipse(path)) {
+    geometry = convertToPresetEllipse(path, context);
+  } else {
+    geometry = convertPathToGeometry(path, context);
+  }
 
   const { fill, line } = convertGraphicsStateToStyle(path.graphicsState, path.paintOp);
 

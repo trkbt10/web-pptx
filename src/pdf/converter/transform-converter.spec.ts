@@ -3,7 +3,8 @@
  */
 
 import { px } from "../../ooxml/domain/units";
-import { convertBBox, convertPoint, convertSize, createFitContext } from "./transform-converter";
+import type { ConversionContext } from "./transform-converter";
+import { convertBBox, convertMatrix, convertPoint, convertSize, createFitContext } from "./transform-converter";
 
 describe("convertPoint", () => {
   it("flips Y-axis (PDF bottom-left → PPTX top-left)", () => {
@@ -120,9 +121,6 @@ describe("conversion guards", () => {
 });
 
 describe("convertMatrix", () => {
-  // Import convertMatrix for testing
-  const { convertMatrix } = require("./transform-converter");
-
   const context = {
     pdfWidth: 800,
     pdfHeight: 600,
@@ -130,71 +128,233 @@ describe("convertMatrix", () => {
     slideHeight: px(600),
   } as const;
 
-  it("positions image correctly with positive height (d > 0)", () => {
-    // CTM = [width, 0, 0, height, x, y]
-    // Image at (100, 200) with size 200x150
-    // In PDF: bottom-left at (100, 200), top-left at (100, 350)
-    // After Y-flip: top-left should be at (100, 600 - 350) = (100, 250)
-    const result = convertMatrix([200, 0, 0, 150, 100, 200], context);
+  type Point = { readonly x: number; readonly y: number };
 
+  function getExpectedCorners(
+    ctm: readonly [number, number, number, number, number, number],
+    conversionContext: ConversionContext,
+  ): { readonly tl: Point; readonly tr: Point; readonly bl: Point; readonly br: Point } {
+    const [a, b, c, d, e, f] = ctm;
+    const pdfTl = { x: c + e, y: d + f };
+    const pdfTr = { x: a + c + e, y: b + d + f };
+    const pdfBl = { x: e, y: f };
+    const pdfBr = { x: a + e, y: b + f };
+
+    const tl = convertPoint(pdfTl, conversionContext);
+    const tr = convertPoint(pdfTr, conversionContext);
+    const bl = convertPoint(pdfBl, conversionContext);
+    const br = convertPoint(pdfBr, conversionContext);
+
+    return {
+      tl: { x: tl.x as number, y: tl.y as number },
+      tr: { x: tr.x as number, y: tr.y as number },
+      bl: { x: bl.x as number, y: bl.y as number },
+      br: { x: br.x as number, y: br.y as number },
+    };
+  }
+
+  function applyTransformToCorner(
+    transform: ReturnType<typeof convertMatrix>,
+    corner: "tl" | "tr" | "bl" | "br",
+  ): Point {
+    const x = transform.x as number;
+    const y = transform.y as number;
+    const width = transform.width as number;
+    const height = transform.height as number;
+    const rotationRad = ((transform.rotation as number) * Math.PI) / 180;
+
+    const cx = x + width / 2;
+    const cy = y + height / 2;
+
+    const local =
+      corner === "tl"
+        ? { x: -width / 2, y: -height / 2 }
+        : corner === "tr"
+          ? { x: width / 2, y: -height / 2 }
+          : corner === "bl"
+            ? { x: -width / 2, y: height / 2 }
+            : { x: width / 2, y: height / 2 };
+
+    const flipped = {
+      x: transform.flipH ? -local.x : local.x,
+      y: transform.flipV ? -local.y : local.y,
+    };
+
+    // Clockwise rotation in a y-down coordinate system.
+    const sin = Math.sin(rotationRad);
+    const cos = Math.cos(rotationRad);
+    const rotated = {
+      x: flipped.x * cos - flipped.y * sin,
+      y: flipped.x * sin + flipped.y * cos,
+    };
+
+    return { x: cx + rotated.x, y: cy + rotated.y };
+  }
+
+  function expectPointClose(actual: Point, expected: Point): void {
+    expect(actual.x).toBeCloseTo(expected.x, 6);
+    expect(actual.y).toBeCloseTo(expected.y, 6);
+  }
+
+  function expectTransformMatchesCorners(
+    transform: ReturnType<typeof convertMatrix>,
+    corners: { readonly tl: Point; readonly tr: Point; readonly bl: Point; readonly br: Point },
+  ): void {
+    expectPointClose(applyTransformToCorner(transform, "tl"), corners.tl);
+    expectPointClose(applyTransformToCorner(transform, "tr"), corners.tr);
+    expectPointClose(applyTransformToCorner(transform, "bl"), corners.bl);
+    expectPointClose(applyTransformToCorner(transform, "br"), corners.br);
+  }
+
+  it("supports simple scale transform (a>0, d>0, b=c=0)", () => {
+    const ctm = [200, 0, 0, 150, 100, 200] as const;
+    const expected = getExpectedCorners(ctm, context);
+    const result = convertMatrix(ctm, context);
+
+    expect(result.flipH).toBe(false);
+    expect(result.flipV).toBe(false);
+    expect(result.rotation as number).toBe(0);
     expect(result.x).toBe(px(100));
-    expect(result.y).toBe(px(250)); // 600 - (200 + 150)
+    expect(result.y).toBe(px(250));
     expect(result.width).toBe(px(200));
     expect(result.height).toBe(px(150));
-    expect(result.flipV).toBe(false);
+    expectTransformMatchesCorners(result, expected);
   });
 
-  it("positions image correctly with negative height (d < 0, Y-flipped in PDF)", () => {
-    // CTM = [width, 0, 0, -height, x, y]
-    // Image at (100, 350) with size 200x150, flipped
-    // In PDF: top at (100, 350), extends downward to (100, 200)
-    // After Y-flip: top-left should be at (100, 600 - 350) = (100, 250)
-    const result = convertMatrix([200, 0, 0, -150, 100, 350], context);
+  it("supports horizontal flip (a<0)", () => {
+    const ctm = [-200, 0, 0, 150, 300, 200] as const;
+    const expected = getExpectedCorners(ctm, context);
+    const result = convertMatrix(ctm, context);
 
-    expect(result.x).toBe(px(100));
-    expect(result.y).toBe(px(250)); // 600 - 350
-    expect(result.width).toBe(px(200));
-    expect(result.height).toBe(px(150)); // Absolute value
+    expect(result.flipH).toBe(true);
+    expect(result.flipV).toBe(false);
+    expect(Math.abs(result.rotation as number)).toBeCloseTo(0, 6);
+    expectTransformMatchesCorners(result, expected);
+  });
+
+  it("supports vertical flip (d<0)", () => {
+    const ctm = [200, 0, 0, -150, 100, 350] as const;
+    const expected = getExpectedCorners(ctm, context);
+    const result = convertMatrix(ctm, context);
+
+    expect(result.flipH).toBe(false);
     expect(result.flipV).toBe(true);
+    expect(Math.abs(result.rotation as number)).toBeCloseTo(0, 6);
+    expectTransformMatchesCorners(result, expected);
   });
 
-  it("handles image at origin (0, 0)", () => {
-    // Image at bottom-left corner of PDF page
-    const result = convertMatrix([100, 0, 0, 100, 0, 0], context);
+  it("supports 90° rotation (a=0, b=1, c=-1, d=0) with scaling", () => {
+    const ctm = [0, 200, -150, 0, 300, 100] as const;
+    const expected = getExpectedCorners(ctm, context);
+    const result = convertMatrix(ctm, context);
 
-    expect(result.x).toBe(px(0));
-    expect(result.y).toBe(px(500)); // 600 - 100
-    expect(result.width).toBe(px(100));
-    expect(result.height).toBe(px(100));
+    expect(result.flipH).toBe(false);
     expect(result.flipV).toBe(false);
+    expect(Math.abs(Math.abs(result.rotation as number) - 90)).toBeLessThan(1e-6);
+    expectTransformMatchesCorners(result, expected);
   });
 
-  it("handles image at top of page", () => {
-    // Image at top-left corner of PDF page (y = pageHeight - imageHeight)
-    const result = convertMatrix([100, 0, 0, 100, 0, 500], context);
+  it("supports 180° rotation", () => {
+    const ctm = [-200, 0, 0, -150, 300, 350] as const;
+    const expected = getExpectedCorners(ctm, context);
+    const result = convertMatrix(ctm, context);
 
-    expect(result.x).toBe(px(0));
-    expect(result.y).toBe(px(0)); // 600 - (500 + 100)
-    expect(result.width).toBe(px(100));
-    expect(result.height).toBe(px(100));
+    expect(result.flipH).toBe(false);
+    expect(result.flipV).toBe(false);
+    expect(Math.abs(Math.abs(result.rotation as number) - 180)).toBeLessThan(1e-6);
+    expectTransformMatchesCorners(result, expected);
   });
 
-  it("scales coordinates when slide and PDF sizes differ", () => {
+  it("supports 45° rotation", () => {
+    const angle = Math.PI / 4;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const width = 200;
+    const height = 100;
+    const ctm = [width * cos, width * sin, -height * sin, height * cos, 250, 150] as const;
+
+    const expected = getExpectedCorners(ctm, context);
+    const result = convertMatrix(ctm, context);
+
+    expect(result.flipH).toBe(false);
+    expect(result.flipV).toBe(false);
+    expect(Math.abs(Math.abs(result.rotation as number) - 45)).toBeLessThan(1e-6);
+    expectTransformMatchesCorners(result, expected);
+  });
+
+  it("warns and falls back for shear transforms", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const ctm = [200, 0, 50, 150, 100, 200] as const;
+    const expected = getExpectedCorners(ctm, context);
+    const result = convertMatrix(ctm, context);
+
+    expect(warnSpy).toHaveBeenCalled();
+
+    const xs = [expected.tl.x, expected.tr.x, expected.bl.x, expected.br.x];
+    const ys = [expected.tl.y, expected.tr.y, expected.bl.y, expected.br.y];
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    expect(result.rotation as number).toBe(0);
+    expect(result.flipH).toBe(false);
+    expect(result.flipV).toBe(false);
+    expect(result.x as number).toBeCloseTo(minX, 6);
+    expect(result.y as number).toBeCloseTo(minY, 6);
+    expect(result.width as number).toBeCloseTo(maxX - minX, 6);
+    expect(result.height as number).toBeCloseTo(maxY - minY, 6);
+
+    warnSpy.mockRestore();
+  });
+
+  it("supports composite transform (rotation + non-uniform scale) when representable", () => {
+    const angle = (30 * Math.PI) / 180;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    const width = 240;
+    const height = 120;
+    const ctm = [width * cos, width * sin, -height * sin, height * cos, 200, 100] as const;
+
+    const expected = getExpectedCorners(ctm, context);
+    const result = convertMatrix(ctm, context);
+
+    expect(result.flipH).toBe(false);
+    expect(result.flipV).toBe(false);
+    expect(Math.abs(Math.abs(result.rotation as number) - 30)).toBeLessThan(1e-6);
+    expectTransformMatchesCorners(result, expected);
+  });
+
+  it("falls back when slide scaling introduces shear (scaleX ≠ scaleY with rotation)", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
     const scaledContext = {
       pdfWidth: 400,
       pdfHeight: 300,
       slideWidth: px(800),
-      slideHeight: px(600),
+      slideHeight: px(450),
     } as const;
 
-    // Image at (50, 100) with size 100x80 in PDF (400x300)
-    // In PDF: top-left at (50, 180)
-    // After scale (2x): x=100, y_flipped = (300 - 180) * 2 = 240
-    const result = convertMatrix([100, 0, 0, 80, 50, 100], scaledContext);
+    const ctm = [100, 100, -50, 50, 100, 100] as const;
+    const expected = getExpectedCorners(ctm, scaledContext);
+    const result = convertMatrix(ctm, scaledContext);
 
-    expect(result.x).toBe(px(100)); // 50 * 2
-    expect(result.y).toBe(px(240)); // (300 - 180) * 2
-    expect(result.width).toBe(px(200)); // 100 * 2
-    expect(result.height).toBe(px(160)); // 80 * 2
+    expect(warnSpy).toHaveBeenCalled();
+
+    const xs = [expected.tl.x, expected.tr.x, expected.bl.x, expected.br.x];
+    const ys = [expected.tl.y, expected.tr.y, expected.bl.y, expected.br.y];
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+
+    expect(result.rotation as number).toBe(0);
+    expect(result.x as number).toBeCloseTo(minX, 6);
+    expect(result.y as number).toBeCloseTo(minY, 6);
+    expect(result.width as number).toBeCloseTo(maxX - minX, 6);
+    expect(result.height as number).toBeCloseTo(maxY - minY, 6);
+
+    warnSpy.mockRestore();
   });
 });

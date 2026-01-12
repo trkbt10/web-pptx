@@ -189,9 +189,16 @@ async function extractImageData(
     // Get bits per component
     const bitsPerComponent = getNumberValue(dict, "BitsPerComponent") ?? 8;
 
+    // Get DecodeParms for Predictor handling
+    const decodeParms = getDecodeParms(dict, context);
+
     // Decode image data
     const decoded = decodePDFRawStream(imageObj);
-    const data = decoded.decode();
+    const rawData = decoded.decode();
+
+    // Apply PNG Predictor reversal if needed
+    const components = getColorSpaceComponents(colorSpace);
+    const data = reversePngPredictor(rawData, width, height, components, decodeParms);
 
     // Check for SMask (alpha channel)
     const hasAlpha = dict.has(PDFName.of("SMask"));
@@ -326,4 +333,154 @@ export function getImageBounds(
     width: Math.abs(a),
     height: Math.abs(d),
   };
+}
+
+// =============================================================================
+// PNG Predictor Handling
+// =============================================================================
+
+type DecodeParms = {
+  readonly predictor: number;
+  readonly columns: number;
+  readonly colors: number;
+};
+
+/**
+ * Get DecodeParms from image dictionary
+ */
+function getDecodeParms(dict: PDFDict, context: PDFDocument["context"]): DecodeParms | null {
+  const parmsRef = dict.get(PDFName.of("DecodeParms"));
+  if (!parmsRef) {
+    return null;
+  }
+
+  const parms = parmsRef instanceof PDFRef ? context.lookup(parmsRef) : parmsRef;
+  if (!(parms instanceof PDFDict)) {
+    return null;
+  }
+
+  const predictor = getNumberValue(parms, "Predictor") ?? 1;
+  if (predictor < 10 || predictor > 15) {
+    // Not a PNG predictor
+    return null;
+  }
+
+  return {
+    predictor,
+    columns: getNumberValue(parms, "Columns") ?? 1,
+    colors: getNumberValue(parms, "Colors") ?? 1,
+  };
+}
+
+/**
+ * Reverse PNG Predictor filter
+ *
+ * PDF Reference 7.4.4.4: PNG predictors add a filter type byte at the start of each row.
+ * - Filter 0: None
+ * - Filter 1: Sub (add left pixel)
+ * - Filter 2: Up (add pixel above)
+ * - Filter 3: Average (add average of left and above)
+ * - Filter 4: Paeth
+ */
+function reversePngPredictor(
+  data: Uint8Array,
+  width: number,
+  height: number,
+  components: number,
+  decodeParms: DecodeParms | null
+): Uint8Array {
+  if (!decodeParms) {
+    return data;
+  }
+
+  const bytesPerPixel = components;
+  const rowBytesWithFilter = width * bytesPerPixel + 1; // +1 for filter type byte
+  const rowBytesOutput = width * bytesPerPixel;
+
+  // Check if data has expected length with filter bytes
+  const expectedLength = height * rowBytesWithFilter;
+  if (data.length !== expectedLength) {
+    // Data doesn't match expected PNG predictor format, return as-is
+    return data;
+  }
+
+  const output = new Uint8Array(height * rowBytesOutput);
+
+  for (let y = 0; y < height; y++) {
+    const filterType = data[y * rowBytesWithFilter];
+    const srcRowStart = y * rowBytesWithFilter + 1; // Skip filter byte
+    const dstRowStart = y * rowBytesOutput;
+
+    switch (filterType) {
+      case 0: // None
+        for (let x = 0; x < rowBytesOutput; x++) {
+          output[dstRowStart + x] = data[srcRowStart + x] ?? 0;
+        }
+        break;
+
+      case 1: // Sub
+        for (let x = 0; x < rowBytesOutput; x++) {
+          const raw = data[srcRowStart + x] ?? 0;
+          const left = x >= bytesPerPixel ? (output[dstRowStart + x - bytesPerPixel] ?? 0) : 0;
+          output[dstRowStart + x] = (raw + left) & 0xff;
+        }
+        break;
+
+      case 2: // Up
+        for (let x = 0; x < rowBytesOutput; x++) {
+          const raw = data[srcRowStart + x] ?? 0;
+          const above = y > 0 ? (output[dstRowStart - rowBytesOutput + x] ?? 0) : 0;
+          output[dstRowStart + x] = (raw + above) & 0xff;
+        }
+        break;
+
+      case 3: // Average
+        for (let x = 0; x < rowBytesOutput; x++) {
+          const raw = data[srcRowStart + x] ?? 0;
+          const left = x >= bytesPerPixel ? (output[dstRowStart + x - bytesPerPixel] ?? 0) : 0;
+          const above = y > 0 ? (output[dstRowStart - rowBytesOutput + x] ?? 0) : 0;
+          output[dstRowStart + x] = (raw + Math.floor((left + above) / 2)) & 0xff;
+        }
+        break;
+
+      case 4: // Paeth
+        for (let x = 0; x < rowBytesOutput; x++) {
+          const raw = data[srcRowStart + x] ?? 0;
+          const left = x >= bytesPerPixel ? (output[dstRowStart + x - bytesPerPixel] ?? 0) : 0;
+          const above = y > 0 ? (output[dstRowStart - rowBytesOutput + x] ?? 0) : 0;
+          const upperLeft =
+            y > 0 && x >= bytesPerPixel
+              ? (output[dstRowStart - rowBytesOutput + x - bytesPerPixel] ?? 0)
+              : 0;
+          output[dstRowStart + x] = (raw + paethPredictor(left, above, upperLeft)) & 0xff;
+        }
+        break;
+
+      default:
+        // Unknown filter, copy as-is
+        for (let x = 0; x < rowBytesOutput; x++) {
+          output[dstRowStart + x] = data[srcRowStart + x] ?? 0;
+        }
+    }
+  }
+
+  return output;
+}
+
+/**
+ * Paeth predictor function
+ */
+function paethPredictor(a: number, b: number, c: number): number {
+  const p = a + b - c;
+  const pa = Math.abs(p - a);
+  const pb = Math.abs(p - b);
+  const pc = Math.abs(p - c);
+
+  if (pa <= pb && pa <= pc) {
+    return a;
+  }
+  if (pb <= pc) {
+    return b;
+  }
+  return c;
 }

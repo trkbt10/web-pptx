@@ -195,8 +195,11 @@ export function decomposeMatrix(matrix: PdfMatrix): MatrixDecomposition {
   // Shear causes deviation from this
   const expectedC = -scaleY * sin;
   const expectedD = scaleY * cos;
+  // shearX: deviation in c divided by cos (when cos is non-zero)
   const shearX = Math.abs(cos) > eps ? (c - expectedC) / cos : 0;
-  const shearY = Math.abs(cos) > eps ? (a - scaleX * cos) / sin : 0;
+  // shearY: deviation in a divided by sin (when sin is non-zero)
+  // Bug fix: was checking cos but dividing by sin
+  const shearY = Math.abs(sin) > eps ? (a - scaleX * cos) / sin : 0;
 
   // Check if matrix is "simple" (no shear)
   const isSimple = Math.abs(c - expectedC) < eps && Math.abs(d - expectedD) < eps;

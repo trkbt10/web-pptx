@@ -6,8 +6,13 @@
  */
 
 /**
- * PDF point (in PDF user space units)
- * PDF uses bottom-left origin; conversion handles Y-flip
+ * A point in PDF coordinate space.
+ *
+ * - Origin: bottom-left
+ * - Units: PDF points (1 point = 1/72 inch)
+ *
+ * @property x - X coordinate in PDF points (from left edge)
+ * @property y - Y coordinate in PDF points (from bottom edge)
  */
 export type PdfPoint = {
   readonly x: number;
@@ -15,7 +20,10 @@ export type PdfPoint = {
 };
 
 /**
- * PDF bounding box [x1, y1, x2, y2]
+ * PDF bounding box in PDF points: [x1, y1, x2, y2].
+ *
+ * - (x1, y1): bottom-left corner
+ * - (x2, y2): top-right corner
  */
 export type PdfBBox = readonly [number, number, number, number];
 

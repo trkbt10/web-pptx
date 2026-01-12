@@ -755,27 +755,64 @@ export class OperatorParser {
 
   // === Stack Utilities ===
 
+  /**
+   * Pop a number from the operand stack.
+   *
+   * If the stack is empty or the value is not a number, logs a warning
+   * and returns 0 as a fallback. This matches PDF viewer behavior where
+   * malformed content streams are handled gracefully rather than throwing.
+   *
+   * @see PDF Reference 1.7, Section 3.7.1 (Content Streams)
+   */
   private popNumber(): number {
     const val = this.operandStack.pop();
     if (typeof val !== "number") {
+      console.warn(
+        `[PDF Parser] Expected number operand but got ${val === undefined ? "empty stack" : typeof val}` +
+          (val !== undefined ? ` (value: ${JSON.stringify(val)})` : "")
+      );
       return 0;
     }
     return val;
   }
 
+  /**
+   * Pop a string from the operand stack.
+   *
+   * If the stack is empty or the value is not a string, logs a warning
+   * and returns an empty string as a fallback.
+   *
+   * @see PDF Reference 1.7, Section 3.7.1 (Content Streams)
+   */
   private popString(): string {
     const val = this.operandStack.pop();
     if (typeof val !== "string") {
+      console.warn(
+        `[PDF Parser] Expected string operand but got ${val === undefined ? "empty stack" : typeof val}` +
+          (val !== undefined ? ` (value: ${JSON.stringify(val)})` : "")
+      );
       return "";
     }
     return val;
   }
 
+  /**
+   * Pop an array from the operand stack.
+   *
+   * If the stack is empty or the value is not an array, logs a warning
+   * and returns an empty array as a fallback.
+   *
+   * @see PDF Reference 1.7, Section 3.7.1 (Content Streams)
+   */
   private popArray(): (number | string)[] {
     const val = this.operandStack.pop();
     if (Array.isArray(val)) {
       return val as (number | string)[];
     }
+    console.warn(
+      `[PDF Parser] Expected array operand but got ${val === undefined ? "empty stack" : typeof val}` +
+        (val !== undefined ? ` (value: ${JSON.stringify(val)})` : "")
+    );
     return [];
   }
 }

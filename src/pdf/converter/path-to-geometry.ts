@@ -243,25 +243,43 @@ function isAxisAlignedRectangle(p1: PdfPoint, p2: PdfPoint, p3: PdfPoint, p4: Pd
 export function isApproximateEllipse(pdfPath: PdfPath): boolean {
   const ops = pdfPath.operations;
 
-  if (ops.length !== 6) return false;
+  if (ops.length !== 5 && ops.length !== 6) return false;
   if (ops[0]?.type !== "moveTo") return false;
-  if (ops[5]?.type !== "closePath") return false;
 
   for (let i = 1; i <= 4; i++) {
     if (ops[i]?.type !== "curveTo") return false;
   }
 
-  return true;
+  if (ops.length === 6 && ops[5]?.type !== "closePath") return false;
+
+  const start = ops[0].point;
+  const lastCurve = ops[4];
+  if (lastCurve.type !== "curveTo") {
+    return false;
+  }
+
+  const end = lastCurve.end;
+  const [minX, minY, maxX, maxY] = computePathBBox(pdfPath);
+  const size = Math.max(maxX - minX, maxY - minY);
+  const epsilon = Math.max(1e-6, size * 1e-3);
+
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const dist2 = dx * dx + dy * dy;
+  return dist2 <= epsilon * epsilon;
 }
 
 /**
  * 楕円パスをPresetGeometry（ellipse）に変換
  */
-export function convertToPresetEllipse(_pdfPath: PdfPath, _context: ConversionContext): PresetGeometry {
+export function convertToPresetEllipse(pdfPath: PdfPath, _context: ConversionContext): PresetGeometry {
+  if (!isApproximateEllipse(pdfPath)) {
+    throw new Error("Path is not an approximate ellipse");
+  }
+
   return {
     type: "preset",
     preset: "ellipse",
     adjustValues: [],
   };
 }
-

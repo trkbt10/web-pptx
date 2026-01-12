@@ -6,4 +6,4 @@
 
 export type { PdfElement, PdfPage, PdfDocument, PdfImportOptions } from "./types";
 
-export { isPdfPath, isPdfText, isPdfImage } from "./types";
+export { PDF_UNITS, isPdfPath, isPdfText, isPdfImage } from "./types";

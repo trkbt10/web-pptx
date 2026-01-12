@@ -124,4 +124,23 @@ describe("pdf-importer", () => {
       code: "INVALID_PDF",
     } satisfies Partial<PdfImportError>);
   });
+
+  it("uses a data URL-based ResourceResolver", async () => {
+    const bytes = await createPdfBytes([{ width: 200, height: 200 }] as const);
+    const result = await importPdf(bytes);
+    const resolver = result.document.resources;
+
+    const dataUrl = "data:image/png;base64,AAAA";
+    expect(resolver.resolve(dataUrl)).toBe(dataUrl);
+    expect(resolver.getMimeType(dataUrl)).toBe("image/png");
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    expect(resolver.resolve("file:///tmp/image.png")).toBeUndefined();
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    warnSpy.mockRestore();
+
+    expect(resolver.getMimeType("file:///tmp/image.png")).toBeUndefined();
+    expect(resolver.getFilePath("file:///tmp/image.png")).toBeUndefined();
+    expect(resolver.readFile("/tmp/image.png")).toBeNull();
+  });
 });

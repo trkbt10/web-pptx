@@ -271,42 +271,156 @@ function createPresentationDocument(
     slides,
     slideWidth: slideSize.width,
     slideHeight: slideSize.height,
-    colorContext: createEmptyColorContext(),
+    colorContext: createDefaultColorContextForPdf(),
     resources: createDataUrlResourceResolver(),
   };
 }
 
 /**
- * Create a resource resolver that handles data: URLs directly.
- *
- * PDF-imported images use data: URLs as resourceIds.
- * This resolver returns them as-is for rendering.
+ * A ResourceResolver that only handles data URLs.
+ * Used for PDF imports where all resources are embedded.
  */
-function createDataUrlResourceResolver(): ResourceResolver {
+type DataUrlResourceResolver = ResourceResolver & {
+  readonly resolve: (resourceId: string) => string | undefined;
+};
+
+/**
+ * Create a ResourceResolver for PDF imports.
+ *
+ * ## Design Decision: Data URL-based Resources
+ *
+ * PDFs are not OPC (Open Packaging Conventions) archives. Unlike PPTX files,
+ * which have a zip structure with relationship parts, PDFs embed resources
+ * directly in the document stream.
+ *
+ * When importing PDF to PPTX, we convert embedded resources (images, etc.)
+ * to data URLs:
+ *
+ * ```
+ * PDF embedded image → data:image/png;base64,... → PPTX blip reference
+ * ```
+ *
+ * This approach:
+ * - Avoids creating temporary files
+ * - Simplifies the import pipeline
+ * - Allows immediate use without file extraction
+ *
+ * ## Limitations
+ *
+ * This resolver does NOT support:
+ * - External file references (getFilePath returns undefined)
+ * - OPC relationship lookups (getTarget, getType return undefined)
+ * - File reading from disk (readFile returns null)
+ *
+ * These limitations are acceptable because PDF imports:
+ * - Embed all resources as data URLs
+ * - Don't use OPC relationships
+ * - Don't reference external files
+ *
+ * @see ResourceResolver interface in resource-resolver.ts
+ */
+function createDataUrlResourceResolver(): DataUrlResourceResolver {
   return {
+    // OPC relationship methods - not applicable to PDF imports
     getTarget: () => undefined,
     getType: () => undefined,
     resolve: (resourceId: string) => {
-      // Data URLs are self-contained - return them directly
       if (resourceId.startsWith("data:")) {
         return resourceId;
       }
+      console.warn(
+        `[PDF Import] Resource "${resourceId.slice(0, 50)}..." is not a data URL. ` +
+          `PDF imports only support embedded resources.`,
+      );
       return undefined;
     },
     getMimeType: (id: string) => {
-      // Extract MIME type from data URL if present
       if (id.startsWith("data:")) {
         const match = id.match(/^data:([^;,]+)/);
         return match?.[1];
       }
       return undefined;
     },
+    // File-based methods - not applicable to PDF imports
     getFilePath: () => undefined,
     readFile: () => null,
   };
 }
 
-function createEmptyColorContext(): ColorContext {
+/**
+ * Create a default ColorContext for PDF imports.
+ *
+ * ## Design Decision
+ *
+ * PDFs do not have a theme color concept like PPTX. However, the PPTX
+ * representation requires a ColorContext for:
+ * - Resolving schemeClr references (e.g., "dk1", "accent1")
+ * - Providing fallback colors when no explicit color is set
+ *
+ * We provide sensible defaults based on the standard Office theme:
+ * - dk1: Black (000000) - Main dark color
+ * - lt1: White (FFFFFF) - Main light color
+ * - accent1-6: Standard accent colors
+ *
+ * These colors are only used when the PDF content doesn't specify
+ * explicit colors, which should be rare.
+ */
+export function createDefaultColorContextForPdf(): ColorContext {
+  return {
+    colorScheme: {
+      // Main colors
+      dk1: "000000", // Black
+      lt1: "FFFFFF", // White
+      dk2: "1F497D", // Dark Blue
+      lt2: "EEECE1", // Light Tan
+
+      // Accent colors (Office default theme)
+      accent1: "4F81BD", // Blue
+      accent2: "C0504D", // Red
+      accent3: "9BBB59", // Green
+      accent4: "8064A2", // Purple
+      accent5: "4BACC6", // Cyan
+      accent6: "F79646", // Orange
+
+      // Hyperlink colors
+      hlink: "0000FF", // Blue
+      folHlink: "800080", // Purple
+    },
+    colorMap: {
+      // Identity mapping (scheme color names map to themselves)
+      bg1: "lt1",
+      tx1: "dk1",
+      bg2: "lt2",
+      tx2: "dk2",
+      accent1: "accent1",
+      accent2: "accent2",
+      accent3: "accent3",
+      accent4: "accent4",
+      accent5: "accent5",
+      accent6: "accent6",
+      hlink: "hlink",
+      folHlink: "folHlink",
+    },
+  };
+}
+
+/**
+ * Create an empty ColorContext for PDF imports.
+ *
+ * ## Rationale
+ *
+ * PDF documents always specify colors explicitly (RGB, CMYK, etc.).
+ * They never use theme-based color references like PPTX.
+ *
+ * Therefore, an empty ColorContext is acceptable because:
+ * 1. All colors from PDF are converted to explicit sRGB values
+ * 2. No schemeClr references will be generated
+ * 3. The PPTX template provides fallback theme colors if needed
+ *
+ * If issues arise with theme color resolution, consider using
+ * createDefaultColorContextForPdf() instead.
+ */
+export function createEmptyColorContext(): ColorContext {
   return { colorScheme: {}, colorMap: {} };
 }
 

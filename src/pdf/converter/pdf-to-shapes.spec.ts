@@ -14,6 +14,8 @@ const options = {
   slideHeight: px(100),
 } as const;
 
+const KAPPA = 0.5522847498307936;
+
 describe("convertPageToShapes", () => {
   it("converts path/text/image into Shape[] with generated IDs", () => {
     const path: PdfPath = {
@@ -37,7 +39,8 @@ describe("convertPageToShapes", () => {
 
     const image: PdfImage = {
       type: "image",
-      data: new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x00]),
+      // Full PNG signature (8 bytes) - detected as PNG and used as-is
+      data: new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00]),
       width: 10,
       height: 10,
       colorSpace: "DeviceRGB",
@@ -72,6 +75,74 @@ describe("convertPageToShapes", () => {
     const sp0 = shapes[0];
     if (sp0?.type !== "sp") throw new Error("Expected sp shape");
     expect(sp0.properties.geometry).toEqual({ type: "preset", preset: "rect", adjustValues: [] });
+  });
+
+  it("converts ellipse paths into preset ellipse geometry (preserving size + fill/stroke)", () => {
+    const cx = 50;
+    const cy = 50;
+    const rx = 10;
+    const ry = 20;
+
+    const ellipse: PdfPath = {
+      type: "path",
+      operations: [
+        { type: "moveTo", point: { x: cx + rx, y: cy } },
+        {
+          type: "curveTo",
+          cp1: { x: cx + rx, y: cy + ry * KAPPA },
+          cp2: { x: cx + rx * KAPPA, y: cy + ry },
+          end: { x: cx, y: cy + ry },
+        },
+        {
+          type: "curveTo",
+          cp1: { x: cx - rx * KAPPA, y: cy + ry },
+          cp2: { x: cx - rx, y: cy + ry * KAPPA },
+          end: { x: cx - rx, y: cy },
+        },
+        {
+          type: "curveTo",
+          cp1: { x: cx - rx, y: cy - ry * KAPPA },
+          cp2: { x: cx - rx * KAPPA, y: cy - ry },
+          end: { x: cx, y: cy - ry },
+        },
+        {
+          type: "curveTo",
+          cp1: { x: cx + rx * KAPPA, y: cy - ry },
+          cp2: { x: cx + rx, y: cy - ry * KAPPA },
+          end: { x: cx + rx, y: cy },
+        },
+        { type: "closePath" },
+      ] as const,
+      paintOp: "fillStroke",
+      graphicsState,
+    };
+
+    const page: PdfPage = {
+      pageNumber: 1,
+      width: 100,
+      height: 100,
+      elements: [ellipse] as const,
+    };
+
+    const shapes = convertPageToShapes(page, options);
+    expect(shapes).toHaveLength(1);
+
+    const sp = shapes[0];
+    if (!sp || sp.type !== "sp") throw new Error("Expected sp shape");
+
+    expect(sp.properties.geometry).toEqual({ type: "preset", preset: "ellipse", adjustValues: [] });
+    const transform = sp.properties.transform;
+    if (!transform) throw new Error("Expected transform");
+    expect(transform.width).toEqual(px(rx * 2));
+    expect(transform.height).toEqual(px(ry * 2));
+
+    expect(sp.properties.fill).toMatchObject({
+      type: "solidFill",
+      color: { spec: { type: "srgb", value: "FF0000" } },
+    });
+    expect(sp.properties.line).toMatchObject({
+      fill: { type: "solidFill", color: { spec: { type: "srgb", value: "0000FF" } } },
+    });
   });
 
   it("excludes empty paths and non-painted paths", () => {
