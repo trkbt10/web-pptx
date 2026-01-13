@@ -10,15 +10,17 @@ import {
   convertPathToGeometry,
   convertToPresetEllipse,
   convertToPresetRect,
+  convertToPresetRoundRect,
   isApproximateEllipse,
+  isRoundedRectangle,
   isSimpleRectangle,
 } from "./path-to-geometry";
 import { convertGraphicsStateToStyle } from "./color-converter";
-import { convertTextToShape, convertGroupedTextToShape } from "./text-to-shapes";
+import { convertGroupedTextToShape } from "./text-to-shapes";
 import { convertImageToShape } from "./image-to-shapes";
 import { computePathBBox } from "../parser/path-builder";
-import type { TextGroupingStrategy } from "./text-grouping/types";
-import { NoGroupingStrategy } from "./text-grouping/no-grouping";
+import type { BlockingZone, GroupingContext, TextGroupingFn } from "./text-grouping/types";
+import { spatialGrouping } from "./text-grouping/spatial-grouping";
 
 export type ConversionOptions = {
   /** ターゲットスライド幅 */
@@ -30,10 +32,10 @@ export type ConversionOptions = {
   /** 最小パス複雑度（これより単純なパスは無視） */
   readonly minPathComplexity?: number;
   /**
-   * Strategy for grouping PDF text elements into PPTX TextBoxes.
-   * Default: NoGroupingStrategy (each text becomes its own TextBox)
+   * Function for grouping PDF text elements into PPTX TextBoxes.
+   * Default: spatialGrouping (groups adjacent texts into single TextBoxes)
    */
-  readonly textGroupingStrategy?: TextGroupingStrategy;
+  readonly textGroupingFn?: TextGroupingFn;
 };
 
 /**
@@ -87,9 +89,60 @@ export function convertPageToShapes(page: PdfPage, options: ConversionOptions): 
     }
   }
 
-  // Apply text grouping strategy (default: no grouping for backward compatibility)
-  const strategy = options.textGroupingStrategy ?? new NoGroupingStrategy();
-  const groups = strategy.group(texts);
+  // Create blocking zones from paths and images to prevent text grouping across shapes
+  const blockingZones: BlockingZone[] = [];
+
+  // Add paths as blocking zones (using bounding boxes)
+  // PdfBBox is [x1, y1, x2, y2] where (x1,y1) is bottom-left and (x2,y2) is top-right
+  for (const path of paths) {
+    if (path.paintOp === "none" || path.paintOp === "clip") {
+      continue; // Skip invisible paths
+    }
+    const bbox = computePathBBox(path);
+    const [x1, y1, x2, y2] = bbox;
+    blockingZones.push({
+      x: Math.min(x1, x2),
+      y: Math.min(y1, y2),
+      width: Math.abs(x2 - x1),
+      height: Math.abs(y2 - y1),
+    });
+  }
+
+  // Add images as blocking zones (compute bounding box from CTM)
+  // PDF images use unit square [0,0]-[1,1] transformed by CTM
+  for (const image of images) {
+    const ctm = image.graphicsState.ctm;
+    const [a, b, c, d, e, f] = ctm;
+    // Transform unit square corners:
+    // (0,0) -> (e, f)
+    // (1,0) -> (a+e, b+f)
+    // (0,1) -> (c+e, d+f)
+    // (1,1) -> (a+c+e, b+d+f)
+    const corners = [
+      { x: e, y: f },
+      { x: a + e, y: b + f },
+      { x: c + e, y: d + f },
+      { x: a + c + e, y: b + d + f },
+    ];
+    const minX = Math.min(...corners.map((c) => c.x));
+    const maxX = Math.max(...corners.map((c) => c.x));
+    const minY = Math.min(...corners.map((c) => c.y));
+    const maxY = Math.max(...corners.map((c) => c.y));
+    blockingZones.push({
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
+    });
+  }
+
+  const groupingContext: GroupingContext = {
+    blockingZones: blockingZones.length > 0 ? blockingZones : undefined,
+  };
+
+  // Apply text grouping function (default: spatial grouping for better PPTX editability)
+  const groupTexts = options.textGroupingFn ?? spatialGrouping;
+  const groups = groupTexts(texts, groupingContext);
 
   // Convert each group to a single TextBox shape
   for (const group of groups) {
@@ -158,6 +211,8 @@ function convertPath(path: PdfPath, context: ConversionContext, shapeId: string)
     geometry = convertToPresetRect(path, context);
   } else if (usePresetOptimization && isApproximateEllipse(path)) {
     geometry = convertToPresetEllipse(path, context);
+  } else if (usePresetOptimization && isRoundedRectangle(path)) {
+    geometry = convertToPresetRoundRect(path, context);
   } else {
     geometry = convertPathToGeometry(path, context);
   }

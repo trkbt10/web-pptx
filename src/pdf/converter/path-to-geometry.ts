@@ -283,3 +283,167 @@ export function convertToPresetEllipse(pdfPath: PdfPath, _context: ConversionCon
     adjustValues: [],
   };
 }
+
+/**
+ * Check if a path is a rounded rectangle.
+ *
+ * A rounded rectangle in PDF typically consists of:
+ * - moveTo (start on an edge)
+ * - Alternating lineTo (4 edges) and curveTo (4 corners)
+ * - closePath
+ *
+ * Returns the corner radius ratio (0-1) if detected, or null if not a rounded rect.
+ */
+export function detectRoundedRectangle(pdfPath: PdfPath): number | null {
+  const ops = pdfPath.operations;
+
+  // Minimum: moveTo + 4 corners (curveTo) + 4 edges (lineTo or implicit) + closePath
+  // Common patterns:
+  // 1. moveTo, lineTo, curveTo, lineTo, curveTo, lineTo, curveTo, lineTo, curveTo, closePath (10 ops)
+  // 2. moveTo, curveTo, lineTo, curveTo, lineTo, curveTo, lineTo, curveTo, closePath (9 ops)
+  if (ops.length < 5 || ops.length > 14) return null;
+  if (ops[0]?.type !== "moveTo") return null;
+
+  // Count curve operations (corners) and line operations (edges)
+  let curveCount = 0;
+  let lineCount = 0;
+
+  for (let i = 1; i < ops.length; i++) {
+    const op = ops[i];
+    if (op.type === "curveTo" || op.type === "curveToV" || op.type === "curveToY") {
+      curveCount++;
+    } else if (op.type === "lineTo") {
+      lineCount++;
+    } else if (op.type === "closePath") {
+      // Expected at the end
+    } else {
+      // Unexpected operation
+      return null;
+    }
+  }
+
+  // A rounded rectangle should have 4 corners (curves) and some line segments
+  if (curveCount !== 4) return null;
+  if (lineCount < 2) return null; // At least 2 lines (could be 4, but short edges may be omitted)
+
+  // Get bounding box
+  const [minX, minY, maxX, maxY] = computePathBBox(pdfPath);
+  const width = maxX - minX;
+  const height = maxY - minY;
+  const minDimension = Math.min(width, height);
+
+  if (minDimension <= 0) return null;
+
+  // Extract corner curves and estimate radius
+  const curves = ops.filter(
+    (op): op is Extract<PdfPathOp, { type: "curveTo" | "curveToV" | "curveToY" }> =>
+      op.type === "curveTo" || op.type === "curveToV" || op.type === "curveToY"
+  );
+
+  // Estimate radius from the first curve
+  const firstCurve = curves[0];
+  if (firstCurve.type !== "curveTo") return null;
+
+  const cp1 = firstCurve.cp1;
+  const cp2 = firstCurve.cp2;
+  const end = firstCurve.end;
+
+  // Get the start point of the curve (from the previous operation)
+  let startPoint: PdfPoint | null = null;
+  for (let i = 0; i < ops.length; i++) {
+    const op = ops[i];
+    if (op.type === "moveTo" || op.type === "lineTo") {
+      startPoint = op.point;
+    }
+    if (ops[i + 1] === firstCurve) break;
+  }
+
+  if (!startPoint) return null;
+
+  // For a Bézier curve approximating a 90-degree arc:
+  // - Start point to cp1 distance = radius * KAPPA
+  // - End point to cp2 distance = radius * KAPPA
+  // Where KAPPA ≈ 0.5523 is the Bézier circle constant
+  const BEZIER_CIRCLE_CONSTANT = 0.5523;
+
+  const dist1 = Math.hypot(cp1.x - startPoint.x, cp1.y - startPoint.y);
+  const dist2 = Math.hypot(cp2.x - end.x, cp2.y - end.y);
+  const avgControlDist = (dist1 + dist2) / 2;
+
+  const estimatedRadius = avgControlDist / BEZIER_CIRCLE_CONSTANT;
+
+  // Calculate ratio relative to smaller dimension
+  const radiusRatio = estimatedRadius / minDimension;
+
+  // Sanity check: ratio should be between 0 and 0.5 (can't be more than half)
+  if (radiusRatio < 0.01 || radiusRatio > 0.55) return null;
+
+  // Verify all corners have similar control point distances (within 50% tolerance)
+  // This catches cases where curves have very different radii
+  const radii: number[] = [];
+  for (let i = 0; i < curves.length; i++) {
+    const curve = curves[i];
+    if (curve.type !== "curveTo") continue;
+
+    // Find the start point for this curve
+    let curveStart: PdfPoint | null = null;
+    for (let j = 0; j < ops.length; j++) {
+      const op = ops[j];
+      if (op.type === "moveTo" || op.type === "lineTo") {
+        curveStart = op.point;
+      } else if (op.type === "curveTo" || op.type === "curveToV" || op.type === "curveToY") {
+        curveStart = op.end;
+      }
+      if (ops[j + 1] === curve) break;
+    }
+
+    if (!curveStart) continue;
+
+    const d1 = Math.hypot(curve.cp1.x - curveStart.x, curve.cp1.y - curveStart.y);
+    const d2 = Math.hypot(curve.cp2.x - curve.end.x, curve.cp2.y - curve.end.y);
+    const curveRadius = ((d1 + d2) / 2) / BEZIER_CIRCLE_CONSTANT;
+    radii.push(curveRadius);
+  }
+
+  // Check that all radii are similar
+  if (radii.length >= 2) {
+    const avgRadius = radii.reduce((a, b) => a + b, 0) / radii.length;
+    const maxDeviation = Math.max(...radii.map((r) => Math.abs(r - avgRadius)));
+    if (maxDeviation > avgRadius * 0.5) {
+      // Radii are too different - not a uniform rounded rect
+      return null;
+    }
+  }
+
+  return Math.min(0.5, Math.max(0.01, radiusRatio));
+}
+
+/**
+ * Check if a path is a rounded rectangle.
+ */
+export function isRoundedRectangle(pdfPath: PdfPath): boolean {
+  return detectRoundedRectangle(pdfPath) !== null;
+}
+
+/**
+ * Convert rounded rectangle path to PresetGeometry (roundRect).
+ *
+ * PPTX roundRect uses an adjust value (adj) that represents the radius
+ * as a percentage of the smaller dimension, scaled to 50000 = 50%.
+ */
+export function convertToPresetRoundRect(pdfPath: PdfPath, _context: ConversionContext): PresetGeometry {
+  const radiusRatio = detectRoundedRectangle(pdfPath);
+  if (radiusRatio === null) {
+    throw new Error("Path is not a rounded rectangle");
+  }
+
+  // PPTX uses a scale of 0-50000 for the adj value (50000 = 50% = half the short side)
+  // For roundRect, the default is 16667 (about 16.7%)
+  const adjValue = Math.round(radiusRatio * 100000);
+
+  return {
+    type: "preset",
+    preset: "roundRect",
+    adjustValues: [{ name: "adj", value: adjValue }],
+  };
+}

@@ -116,6 +116,8 @@ export function convertTextToShape(
 
 /**
  * TextBodyを構築
+ *
+ * Sets insets to 0 for precise text positioning.
  */
 function createTextBody(pdfText: PdfText): TextBody {
   const paragraph = createParagraph(pdfText);
@@ -125,6 +127,13 @@ function createTextBody(pdfText: PdfText): TextBody {
       wrapping: "none",
       anchor: "top",
       anchorCenter: false,
+      // Set all insets to 0 for precise positioning
+      insets: {
+        left: px(0),
+        top: px(0),
+        right: px(0),
+        bottom: px(0),
+      },
     },
     paragraphs: [paragraph],
   };
@@ -152,10 +161,13 @@ function createTextRun(pdfText: PdfText): TextRun {
   const normalizedName = normalizeFontName(pdfText.fontName);
   const spacing = convertSpacing(
     pdfText.charSpacing,
-    pdfText.wordSpacing,
-    pdfText.horizontalScaling,
-    pdfText.text
+    pdfText.horizontalScaling
   );
+
+  // Use isBold/isItalic from PdfText if available (from FontDescriptor),
+  // otherwise fall back to font name detection
+  const bold = pdfText.isBold ?? isBoldFont(normalizedName);
+  const italic = pdfText.isItalic ?? isItalicFont(normalizedName);
 
   return {
     type: "text",
@@ -164,8 +176,8 @@ function createTextRun(pdfText: PdfText): TextRun {
       fontSize: convertFontSize(pdfText.fontSize),
       fontFamily: mapFontName(pdfText.fontName),
       fill: convertFill(pdfText.graphicsState.fillColor, pdfText.graphicsState.fillAlpha),
-      bold: isBoldFont(normalizedName),
-      italic: isItalicFont(normalizedName),
+      bold,
+      italic,
       underline: "none",
       // Add spacing if present
       ...(spacing !== undefined && { spacing }),
@@ -186,8 +198,10 @@ function convertFontSize(pdfFontSize: number): Points {
 }
 
 /**
- * PPTX spacing limits in pixels (approx ±1000pt after conversion)
- * OOXML ST_TextPoint has practical limits around ±400000 centipoints
+ * PPTX spacing limits in pixels.
+ * OOXML ST_TextPointUnqualified has practical limits around ±4000 points (±400000 centipoints).
+ * Converted to pixels: ±4000pt × 1.333px/pt ≈ ±5333px
+ * We use more conservative limits for practical text rendering.
  */
 const SPACING_MIN_PX = -1000 * PT_TO_PX;
 const SPACING_MAX_PX = 1000 * PT_TO_PX;
@@ -195,62 +209,46 @@ const SPACING_MAX_PX = 1000 * PT_TO_PX;
 /**
  * Convert PDF spacing properties to PPTX spacing.
  *
- * ## PDF Spacing Properties
+ * ## PDF Spacing Properties (ISO 32000-1)
  *
- * - **charSpacing (Tc)**: Added to every character (in points)
- * - **wordSpacing (Tw)**: Added only to space characters (in points)
+ * - **charSpacing (Tc)**: Added to every character displacement (in points)
+ * - **wordSpacing (Tw)**: Added only to space characters (0x20) - not mapped to PPTX
  * - **horizontalScaling (Tz)**: Scales all spacing (percentage, default 100)
  *
- * ## PPTX Spacing
+ * ## PPTX Spacing (ECMA-376)
  *
  * PPTX has a single spacing value per TextRun (RunProperties.spacing).
- * We compute an effective spacing by combining charSpacing and wordSpacing
- * weighted by the frequency of spaces in the text.
+ * This maps directly to PDF's charSpacing (Tc) operator.
+ *
+ * Note: wordSpacing (Tw) is intentionally not included because PPTX's spacing
+ * applies uniformly to all characters, while PDF's Tw only affects spaces.
+ * Attempting to average Tw across all gaps produces inaccurate results.
  *
  * @param charSpacing - PDF Tc value in points
- * @param wordSpacing - PDF Tw value in points
  * @param horizontalScaling - PDF Tz value as percentage (default 100)
- * @param text - The text content (needed to calculate wordSpacing contribution)
  * @returns PPTX spacing value in pixels, or undefined if no significant spacing
  */
 function convertSpacing(
   charSpacing: number | undefined,
-  wordSpacing: number | undefined,
-  horizontalScaling: number | undefined,
-  text: string
+  horizontalScaling: number | undefined
 ): Pixels | undefined {
-  // Early return if no spacing values
-  if (
-    (charSpacing === undefined || charSpacing === 0) &&
-    (wordSpacing === undefined || wordSpacing === 0)
-  ) {
+  // Early return if no charSpacing
+  if (charSpacing === undefined || charSpacing === 0) {
     return undefined;
   }
 
+  // Apply horizontal scaling to charSpacing
   const scale = (horizontalScaling ?? 100) / 100;
-  const baseSpacing = (charSpacing ?? 0) * scale;
+  const spacingPts = charSpacing * scale;
 
-  // Calculate effective spacing with wordSpacing contribution
-  let effectiveSpacing = baseSpacing;
-
-  if (wordSpacing && wordSpacing !== 0) {
-    // Count spaces in text to calculate wordSpacing contribution
-    // wordSpacing is applied only to space characters
-    const spaceCount = (text.match(/ /g) ?? []).length;
-    const totalGaps = Math.max(text.length - 1, 1); // Number of inter-character gaps
-
-    // Weighted average: add wordSpacing contribution proportional to space frequency
-    const wordSpacingContribution = (wordSpacing * scale * spaceCount) / totalGaps;
-    effectiveSpacing += wordSpacingContribution;
-  }
-
-  // Skip if effective spacing is zero
-  if (effectiveSpacing === 0) {
+  // Skip negligible spacing (less than 0.01pt)
+  if (Math.abs(spacingPts) < 0.01) {
     return undefined;
   }
 
-  // Convert to pixels and clamp to valid range
-  const spacingPx = effectiveSpacing * PT_TO_PX;
+  // Convert from PDF points to CSS pixels
+  const spacingPx = spacingPts * PT_TO_PX;
+
   return validateAndClampSpacing(spacingPx);
 }
 
@@ -258,10 +256,10 @@ function convertSpacing(
  * Validate and clamp spacing value to PPTX limits.
  *
  * @param spacingPx - Spacing value in pixels
- * @returns Clamped spacing value, or undefined if too small to matter
+ * @returns Clamped spacing value in pixels, or undefined if too small to matter
  */
 function validateAndClampSpacing(spacingPx: number): Pixels | undefined {
-  // Skip negligible spacing (less than 0.1px)
+  // Skip negligible spacing (less than 0.1px ≈ 0.075pt)
   if (Math.abs(spacingPx) < 0.1) {
     return undefined;
   }
@@ -269,7 +267,7 @@ function validateAndClampSpacing(spacingPx: number): Pixels | undefined {
   // Clamp to PPTX limits
   if (spacingPx < SPACING_MIN_PX || spacingPx > SPACING_MAX_PX) {
     console.warn(
-      `[PDF] Spacing ${spacingPx.toFixed(2)}px exceeds limits, clamping to [${SPACING_MIN_PX}, ${SPACING_MAX_PX}]`
+      `[PDF] Spacing ${spacingPx.toFixed(2)}px exceeds limits, clamping to [${SPACING_MIN_PX.toFixed(0)}, ${SPACING_MAX_PX.toFixed(0)}]`
     );
     return px(Math.max(SPACING_MIN_PX, Math.min(SPACING_MAX_PX, spacingPx)));
   }
@@ -300,26 +298,123 @@ function convertGroupedTextPosition(
 }
 
 /**
+ * Threshold for paragraph break detection.
+ * If extra space between lines exceeds this ratio of font size,
+ * treat it as a new paragraph. Otherwise, flatten into same paragraph.
+ */
+const PARAGRAPH_BREAK_THRESHOLD_RATIO = 0.5;
+
+/**
  * Create TextBody from grouped paragraphs.
+ *
+ * Sets insets to 0 to ensure text is positioned exactly at the TextBox origin.
+ * PPTX default insets are 0.1 inch (~9.6px), which would cause visible offset.
+ *
+ * ## Text Wrapping Strategy
+ *
+ * For text wrapping to work in PPTX, text must be in the SAME paragraph.
+ * This function flattens consecutive lines that have normal line spacing
+ * into a single PPTX paragraph, enabling proper text wrapping.
+ *
+ * Lines are considered part of the same paragraph if:
+ * - extraSpace <= fontSize * PARAGRAPH_BREAK_THRESHOLD_RATIO
+ *
+ * A new paragraph is created only when:
+ * - There's significant extra space (actual paragraph break in the PDF)
+ *
+ * ## Coordinate System
+ *
+ * PDF baselineY is in page coordinates (Y increases upward), so:
+ * - First paragraph has highest baselineY
+ * - Subsequent paragraphs have lower baselineY values
+ * - baselineDistance = prevBaselineY - currentBaselineY
  */
 function createTextBodyFromGroup(group: GroupedText): TextBody {
+  // Flatten consecutive lines into logical paragraphs based on spacing
+  const logicalParagraphs = flattenToParagraphs(group.paragraphs);
+
   return {
     bodyProperties: {
-      wrapping: "none",
+      // Use "square" wrapping to enable text wrapping within TextBox bounds
+      // This improves editability in PPTX while maintaining layout from PDF
+      wrapping: "square",
       anchor: "top",
       anchorCenter: false,
+      // Set all insets to 0 for precise positioning
+      // Default PPTX insets are 91440 EMU = 0.1 inch = ~9.6px
+      insets: {
+        left: px(0),
+        top: px(0),
+        right: px(0),
+        bottom: px(0),
+      },
     },
-    paragraphs: group.paragraphs.map(createParagraphFromGrouped),
+    paragraphs: logicalParagraphs,
   };
 }
 
 /**
- * Create a Paragraph from a GroupedParagraph.
+ * Flatten GroupedParagraphs (PDF lines) into logical PPTX paragraphs.
+ *
+ * Consecutive lines with normal line spacing are combined into one paragraph
+ * to enable text wrapping. A new paragraph is created only when there's
+ * significant extra space (indicating a real paragraph break).
  */
-function createParagraphFromGrouped(para: GroupedParagraph): Paragraph {
+function flattenToParagraphs(groupedParas: readonly GroupedParagraph[]): Paragraph[] {
+  if (groupedParas.length === 0) return [];
+  if (groupedParas.length === 1) {
+    return [createFlatParagraph(groupedParas[0].runs, undefined)];
+  }
+
+  const result: Paragraph[] = [];
+  let currentRuns: PdfText[] = [...groupedParas[0].runs];
+  let spaceBefore: number | undefined = undefined;
+
+  for (let i = 1; i < groupedParas.length; i++) {
+    const prevPara = groupedParas[i - 1];
+    const currPara = groupedParas[i];
+
+    // Calculate spacing between lines
+    const baselineDistance = prevPara.baselineY - currPara.baselineY;
+    const prevFontSize = prevPara.runs[0]?.fontSize ?? 12;
+    const extraSpace = baselineDistance - prevFontSize;
+
+    // Check if this is a paragraph break (significant extra space)
+    const threshold = prevFontSize * PARAGRAPH_BREAK_THRESHOLD_RATIO;
+    const isParagraphBreak = extraSpace > threshold;
+
+    if (isParagraphBreak) {
+      // Finish current paragraph and start new one
+      result.push(createFlatParagraph(currentRuns, spaceBefore));
+      currentRuns = [...currPara.runs];
+      // Set spaceBefore for the new paragraph
+      spaceBefore = extraSpace > 0 ? extraSpace : undefined;
+    } else {
+      // Continue same paragraph - add runs from this line
+      currentRuns.push(...currPara.runs);
+    }
+  }
+
+  // Don't forget the last paragraph
+  if (currentRuns.length > 0) {
+    result.push(createFlatParagraph(currentRuns, spaceBefore));
+  }
+
+  return result;
+}
+
+/**
+ * Create a flattened PPTX Paragraph from multiple runs.
+ */
+function createFlatParagraph(runs: readonly PdfText[], spaceBeforePts: number | undefined): Paragraph {
   return {
-    properties: { alignment: "left" },
-    runs: para.runs.map(createTextRun),
+    properties: {
+      alignment: "left",
+      ...(spaceBeforePts !== undefined && spaceBeforePts > 0 && {
+        spaceBefore: { type: "points" as const, value: pt(spaceBeforePts) },
+      }),
+    },
+    runs: runs.map(createTextRun),
     endProperties: {},
   };
 }

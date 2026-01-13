@@ -41,3 +41,14 @@ export {
   detectCIDOrdering,
   decodeCIDFallback,
 } from "./cid-ordering";
+
+// Encoding maps
+export type { PdfEncodingName } from "./encoding-maps";
+export {
+  WINANSI_ENCODING,
+  MACROMAN_ENCODING,
+  STANDARD_ENCODING,
+  getEncodingByName,
+  applyEncodingDifferences,
+  glyphNameToUnicode,
+} from "./encoding-maps";

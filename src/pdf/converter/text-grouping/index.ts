@@ -1,19 +1,21 @@
 /**
- * @file Text grouping strategy exports
+ * @file Text grouping exports
  *
- * Provides pluggable strategies for grouping PDF text elements
+ * Provides pluggable functions for grouping PDF text elements
  * into logical blocks during PDF to PPTX conversion.
  */
 
 // Types
 export type {
-  TextGroupingStrategy,
+  TextGroupingFn,
   GroupedText,
   GroupedParagraph,
   TextBounds,
+  GroupingContext,
+  BlockingZone,
 } from "./types";
 
-// Strategies
-export { NoGroupingStrategy } from "./no-grouping";
-export { SpatialGroupingStrategy } from "./spatial-grouping";
-export type { SpatialGroupingOptions } from "./spatial-grouping";
+// Grouping functions
+export { noGrouping } from "./no-grouping";
+export { createSpatialGrouping, spatialGrouping } from "./spatial-grouping";
+export type { SpatialGroupingOptions, ColorMatchingMode } from "./spatial-grouping";

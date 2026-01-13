@@ -1,10 +1,12 @@
+/**
+ * @file Tests for no-grouping strategy
+ */
+
 import type { PdfText } from "../../domain";
 import { createDefaultGraphicsState } from "../../domain";
-import { NoGroupingStrategy } from "./no-grouping";
+import { noGrouping } from "./no-grouping";
 
-describe("NoGroupingStrategy", () => {
-  const strategy = new NoGroupingStrategy();
-
+describe("noGrouping", () => {
   const createPdfText = (overrides: Partial<PdfText> = {}): PdfText => ({
     type: "text",
     text: "Test",
@@ -19,7 +21,7 @@ describe("NoGroupingStrategy", () => {
   });
 
   it("returns empty array for empty input", () => {
-    expect(strategy.group([])).toEqual([]);
+    expect(noGrouping([])).toEqual([]);
   });
 
   it("creates one GroupedText per PdfText", () => {
@@ -28,7 +30,7 @@ describe("NoGroupingStrategy", () => {
       createPdfText({ text: "B", x: 50 }),
     ];
 
-    const groups = strategy.group(texts);
+    const groups = noGrouping(texts);
 
     expect(groups).toHaveLength(2);
   });
@@ -41,7 +43,7 @@ describe("NoGroupingStrategy", () => {
       height: 12,
     });
 
-    const [group] = strategy.group([text]);
+    const [group] = noGrouping([text]);
 
     expect(group.bounds).toEqual({
       x: 10,
@@ -54,7 +56,7 @@ describe("NoGroupingStrategy", () => {
   it("creates single paragraph with single run per group", () => {
     const text = createPdfText({ text: "Hello" });
 
-    const [group] = strategy.group([text]);
+    const [group] = noGrouping([text]);
 
     expect(group.paragraphs).toHaveLength(1);
     expect(group.paragraphs[0].runs).toHaveLength(1);
@@ -64,7 +66,7 @@ describe("NoGroupingStrategy", () => {
   it("sets baselineY as y + height (approximate)", () => {
     const text = createPdfText({ y: 100, height: 12 });
 
-    const [group] = strategy.group([text]);
+    const [group] = noGrouping([text]);
 
     expect(group.paragraphs[0].baselineY).toBe(112);
   });

@@ -8,20 +8,44 @@
 import type { PdfText } from "../../domain";
 
 /**
- * Strategy interface for grouping PDF text elements.
+ * Bounding box for blocking zones (shapes/images that interrupt text flow).
+ */
+export type BlockingZone = {
+  /** Left edge X coordinate in PDF points */
+  readonly x: number;
+  /** Bottom edge Y coordinate in PDF points */
+  readonly y: number;
+  /** Width in PDF points */
+  readonly width: number;
+  /** Height in PDF points */
+  readonly height: number;
+};
+
+/**
+ * Options for text grouping.
+ */
+export type GroupingContext = {
+  /**
+   * Zones that should block text grouping (shapes, images between texts).
+   * Texts should not be grouped if a blocking zone is between them.
+   */
+  readonly blockingZones?: readonly BlockingZone[];
+};
+
+/**
+ * Function type for grouping PDF text elements.
  *
  * Implementations control how individual PdfText elements are
  * combined into logical groups (TextBoxes in PPTX).
+ *
+ * @param texts - Array of PdfText elements to group
+ * @param context - Optional context with blocking zones
+ * @returns Array of grouped text blocks
  */
-export interface TextGroupingStrategy {
-  /**
-   * Group PdfText elements into logical blocks.
-   *
-   * @param texts - Array of PdfText elements to group
-   * @returns Array of grouped text blocks
-   */
-  group(texts: readonly PdfText[]): readonly GroupedText[];
-}
+export type TextGroupingFn = (
+  texts: readonly PdfText[],
+  context?: GroupingContext
+) => readonly GroupedText[];
 
 /**
  * Bounding box for a text group.

@@ -2,6 +2,32 @@
  * @file PDF text types
  *
  * Types for PDF text elements.
+ *
+ * ## Coordinate System (ISO 32000-1:2008, Section 8.3)
+ *
+ * PDF uses a bottom-left origin coordinate system:
+ * - X-axis: increases to the right
+ * - Y-axis: increases upward
+ *
+ * Text positioning in PDF involves:
+ * 1. Text matrix (Tm operator) - positions text in user space
+ * 2. CTM - transforms user space to page space
+ * 3. Rendering matrix Trm = Tm × CTM determines final position
+ *
+ * ## Text Bounding Box Calculation
+ *
+ * The text bounding box is calculated from:
+ * - Baseline position (from text matrix + CTM)
+ * - Font metrics (ascender/descender in 1/1000 em units)
+ * - Effective font size (fontSize × CTM scaling)
+ *
+ * ```
+ * height = (ascender - descender) × fontSize / 1000
+ * bottomEdge (y) = baseline + descender × fontSize / 1000
+ * topEdge = baseline + ascender × fontSize / 1000 = y + height
+ * ```
+ *
+ * @see ISO 32000-1:2008 Section 9.4 - Text Space Details
  */
 
 import type { PdfGraphicsState } from "../graphics-state";
@@ -13,20 +39,74 @@ import type { PdfGraphicsState } from "../graphics-state";
 export type PdfText = {
   readonly type: "text";
   readonly text: string;
+
   /**
-   * Text X position in PDF points (from left edge).
+   * X coordinate of the text's left edge in PDF points.
+   *
+   * @see ISO 32000-1:2008 Section 9.4.4 - Text Rendering
    */
   readonly x: number;
+
   /**
-   * Text Y position in PDF points (from bottom edge).
+   * Y coordinate of the text's **bottom edge** in PDF points.
+   *
+   * This is NOT the baseline position. The relationship is:
+   * ```
+   * y = baseline + descender × fontSize / 1000
+   * ```
+   *
+   * Where descender is negative (typically -200), so:
+   * ```
+   * y = baseline - 0.2 × fontSize  (for default descender)
+   * ```
+   *
+   * To recover the baseline position:
+   * ```
+   * baseline = y - descender × fontSize / 1000
+   *          = y + |descender| × fontSize / 1000
+   * ```
+   *
+   * @see ISO 32000-1:2008 Section 9.4.4 - Text Rendering
    */
   readonly y: number;
+
   /**
-   * Text bounding width in PDF points.
+   * Width of the text bounding box in PDF points.
+   *
+   * Calculated from glyph widths using:
+   * ```
+   * width = endX - startX
+   * ```
+   *
+   * Where displacement per glyph is:
+   * ```
+   * tx = ((w0 - Tj/1000) × Tfs + Tc + Tw) × Th
+   * ```
+   *
+   * - w0: glyph width in 1/1000 em units
+   * - Tfs: font size
+   * - Tc: character spacing
+   * - Tw: word spacing (only for space char)
+   * - Th: horizontal scaling / 100
+   *
+   * @see ISO 32000-1:2008 Section 9.4.4 - Text Positioning
    */
   readonly width: number;
+
   /**
-   * Text bounding height in PDF points.
+   * Height of the text bounding box in PDF points.
+   *
+   * Calculated from font metrics:
+   * ```
+   * height = (ascender - descender) × fontSize / 1000
+   * ```
+   *
+   * With default metrics (ascender=800, descender=-200):
+   * ```
+   * height = (800 - (-200)) × fontSize / 1000 = fontSize
+   * ```
+   *
+   * @see ISO 32000-1:2008 Section 9.8 - Font Descriptors
    */
   readonly height: number;
   readonly fontName: string;
@@ -70,6 +150,22 @@ export type PdfText = {
    * If undefined, default values (ascender: 800, descender: -200) are used.
    */
   readonly fontMetrics?: PdfTextFontMetrics;
+
+  // =============================================================================
+  // Font Style (from FontDescriptor or font name)
+  // =============================================================================
+
+  /**
+   * Whether font is bold.
+   * Detected from FontDescriptor Flags (ForceBold) or font name.
+   */
+  readonly isBold?: boolean;
+
+  /**
+   * Whether font is italic/oblique.
+   * Detected from FontDescriptor Flags (Italic) or font name.
+   */
+  readonly isItalic?: boolean;
 };
 
 /**

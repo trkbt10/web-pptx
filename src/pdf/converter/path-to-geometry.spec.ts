@@ -18,8 +18,11 @@ import { px } from "../../ooxml/domain/units";
 import {
   convertToPresetEllipse,
   convertToPresetRect,
+  convertToPresetRoundRect,
   convertPathToGeometry,
+  detectRoundedRectangle,
   isApproximateEllipse,
+  isRoundedRectangle,
   isSimpleRectangle,
 } from "./path-to-geometry";
 import type { ParsedPath } from "../parser/operator-parser";
@@ -545,5 +548,131 @@ describe("pdf/parser/path-builder", () => {
     if (!merged) throw new Error("Expected merged path");
     expect(merged.bounds).toEqual([0, 0, 10, 10]);
     expect(merged.operations).toHaveLength(2);
+  });
+});
+
+describe("isRoundedRectangle", () => {
+  // Bezier constant for circular arc approximation
+  const K = KAPPA;
+
+  /**
+   * Create a rounded rectangle path.
+   * Structure: moveTo, then alternating lineTo/curveTo for edges and corners.
+   */
+  function createRoundedRectPath(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radius: number
+  ): PdfPath {
+    const r = radius;
+    // Start at top-left, after the corner curve ends
+    const ops = [
+      // Start on top edge after top-left corner
+      { type: "moveTo" as const, point: { x: x + r, y: y + height } },
+      // Top edge
+      { type: "lineTo" as const, point: { x: x + width - r, y: y + height } },
+      // Top-right corner
+      {
+        type: "curveTo" as const,
+        cp1: { x: x + width - r + r * K, y: y + height },
+        cp2: { x: x + width, y: y + height - r + r * K },
+        end: { x: x + width, y: y + height - r },
+      },
+      // Right edge
+      { type: "lineTo" as const, point: { x: x + width, y: y + r } },
+      // Bottom-right corner
+      {
+        type: "curveTo" as const,
+        cp1: { x: x + width, y: y + r - r * K },
+        cp2: { x: x + width - r + r * K, y: y },
+        end: { x: x + width - r, y: y },
+      },
+      // Bottom edge
+      { type: "lineTo" as const, point: { x: x + r, y: y } },
+      // Bottom-left corner
+      {
+        type: "curveTo" as const,
+        cp1: { x: x + r - r * K, y: y },
+        cp2: { x: x, y: y + r - r * K },
+        end: { x: x, y: y + r },
+      },
+      // Left edge
+      { type: "lineTo" as const, point: { x: x, y: y + height - r } },
+      // Top-left corner
+      {
+        type: "curveTo" as const,
+        cp1: { x: x, y: y + height - r + r * K },
+        cp2: { x: x + r - r * K, y: y + height },
+        end: { x: x + r, y: y + height },
+      },
+      { type: "closePath" as const },
+    ];
+
+    return {
+      type: "path",
+      operations: ops,
+      paintOp: "fill",
+      graphicsState,
+    };
+  }
+
+  it("detects a rounded rectangle with 10% corner radius", () => {
+    const path = createRoundedRectPath(0, 0, 100, 50, 5); // 5/50 = 10%
+    expect(isRoundedRectangle(path)).toBe(true);
+
+    const ratio = detectRoundedRectangle(path);
+    expect(ratio).not.toBeNull();
+    expect(ratio!).toBeCloseTo(0.1, 1);
+  });
+
+  it("detects a rounded rectangle with 25% corner radius", () => {
+    const path = createRoundedRectPath(0, 0, 100, 100, 25); // 25/100 = 25%
+    expect(isRoundedRectangle(path)).toBe(true);
+
+    const ratio = detectRoundedRectangle(path);
+    expect(ratio).not.toBeNull();
+    expect(ratio!).toBeCloseTo(0.25, 1);
+  });
+
+  it("returns false for a simple rectangle (no curves)", () => {
+    const path: PdfPath = {
+      type: "path",
+      operations: [
+        { type: "moveTo", point: { x: 0, y: 0 } },
+        { type: "lineTo", point: { x: 100, y: 0 } },
+        { type: "lineTo", point: { x: 100, y: 50 } },
+        { type: "lineTo", point: { x: 0, y: 50 } },
+        { type: "closePath" },
+      ],
+      paintOp: "fill",
+      graphicsState,
+    };
+    expect(isRoundedRectangle(path)).toBe(false);
+  });
+
+  it("returns false for an ellipse (4 curves only)", () => {
+    const path = createEllipsePath({
+      cx: 50,
+      cy: 25,
+      rx: 50,
+      ry: 25,
+      paintOp: "fill",
+      closePath: true,
+    });
+    expect(isRoundedRectangle(path)).toBe(false);
+  });
+
+  it("converts rounded rect to roundRect preset", () => {
+    const path = createRoundedRectPath(0, 0, 100, 100, 16.67); // ~16.7%
+    const preset = convertToPresetRoundRect(path, context);
+
+    expect(preset.type).toBe("preset");
+    expect(preset.preset).toBe("roundRect");
+    expect(preset.adjustValues).toHaveLength(1);
+    expect(preset.adjustValues[0]?.name).toBe("adj");
+    // 16.67% * 100000 ≈ 16670
+    expect(preset.adjustValues[0]?.value).toBeCloseTo(16670, -2);
   });
 });

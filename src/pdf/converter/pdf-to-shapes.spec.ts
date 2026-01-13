@@ -2,7 +2,7 @@ import type { PdfImage, PdfPage, PdfPath, PdfText } from "../domain";
 import { createDefaultGraphicsState } from "../domain";
 import { px } from "../../ooxml/domain/units";
 import { convertDocumentToSlides, convertPageToShapes } from "./pdf-to-shapes";
-import { SpatialGroupingStrategy } from "./text-grouping/spatial-grouping";
+import { createSpatialGrouping, spatialGrouping } from "./text-grouping/spatial-grouping";
 
 const graphicsState = {
   ...createDefaultGraphicsState(),
@@ -180,7 +180,9 @@ describe("convertPageToShapes", () => {
     expect(shapes[0]?.type).toBe("sp");
   });
 
-  it("does not group text by default (preserves PDF TextObject structure)", () => {
+  it("groups adjacent text by default with spatialGrouping", () => {
+    // With spatialGrouping (the default), adjacent texts on the same line
+    // with the same font should be grouped into a single TextBox
     const t1: PdfText = {
       type: "text",
       text: "Hello",
@@ -197,7 +199,7 @@ describe("convertPageToShapes", () => {
       type: "text",
       text: "World",
       x: 20,
-      y: 11,
+      y: 11, // Within tolerance (1 < 12 * 0.3 = 3.6)
       width: 10,
       height: 5,
       fontName: "ArialMT",
@@ -213,9 +215,9 @@ describe("convertPageToShapes", () => {
     };
 
     const shapes = convertPageToShapes(page, options);
-    expect(shapes).toHaveLength(2);
+    // With spatialGrouping, both texts should be grouped into one TextBox
+    expect(shapes).toHaveLength(1);
     expect(shapes[0]?.type).toBe("sp");
-    expect(shapes[1]?.type).toBe("sp");
   });
 
   it("throws for invalid minPathComplexity", () => {
@@ -245,7 +247,7 @@ describe("convertPageToShapes", () => {
   });
 });
 
-describe("convertPageToShapes with SpatialGroupingStrategy", () => {
+describe("convertPageToShapes with spatialGrouping", () => {
   it("groups adjacent texts on the same line into one TextBox", () => {
     const t1: PdfText = {
       type: "text",
@@ -280,7 +282,7 @@ describe("convertPageToShapes with SpatialGroupingStrategy", () => {
 
     const shapes = convertPageToShapes(page, {
       ...options,
-      textGroupingStrategy: new SpatialGroupingStrategy(),
+      textGroupingFn: spatialGrouping,
     });
 
     // Should create one TextBox containing both texts
@@ -293,7 +295,9 @@ describe("convertPageToShapes with SpatialGroupingStrategy", () => {
     expect(sp.textBody?.paragraphs[0]?.runs).toHaveLength(2);
   });
 
-  it("groups multi-line text with same font into one TextBox", () => {
+  it("groups multi-line text with same font into one TextBox with flattened paragraph", () => {
+    // Lines with normal spacing (small gap) are flattened into single paragraph
+    // for proper text wrapping in PPTX
     const line1: PdfText = {
       type: "text",
       text: "Line 1",
@@ -310,7 +314,7 @@ describe("convertPageToShapes with SpatialGroupingStrategy", () => {
       type: "text",
       text: "Line 2",
       x: 0,
-      y: 86, // 14pt below (12pt height + 2pt gap)
+      y: 86, // 14pt below (12pt height + 2pt gap) - normal line spacing
       width: 40,
       height: 12,
       fontName: "ArialMT",
@@ -327,15 +331,17 @@ describe("convertPageToShapes with SpatialGroupingStrategy", () => {
 
     const shapes = convertPageToShapes(page, {
       ...options,
-      textGroupingStrategy: new SpatialGroupingStrategy(),
+      textGroupingFn: spatialGrouping,
     });
 
-    // Should create one TextBox with two paragraphs
+    // Should create one TextBox with one flattened paragraph (for text wrapping)
     expect(shapes).toHaveLength(1);
 
     const sp = shapes[0];
     if (sp?.type !== "sp") throw new Error("Expected sp shape");
-    expect(sp.textBody?.paragraphs).toHaveLength(2);
+    // Consecutive lines with normal spacing are flattened into 1 paragraph with 2 runs
+    expect(sp.textBody?.paragraphs).toHaveLength(1);
+    expect(sp.textBody?.paragraphs[0]?.runs).toHaveLength(2);
   });
 
   it("creates separate TextBoxes for texts with different fonts", () => {
@@ -372,7 +378,7 @@ describe("convertPageToShapes with SpatialGroupingStrategy", () => {
 
     const shapes = convertPageToShapes(page, {
       ...options,
-      textGroupingStrategy: new SpatialGroupingStrategy(),
+      textGroupingFn: spatialGrouping,
     });
 
     // Should create two separate TextBoxes
@@ -413,7 +419,7 @@ describe("convertPageToShapes with SpatialGroupingStrategy", () => {
 
     const shapes = convertPageToShapes(page, {
       ...options,
-      textGroupingStrategy: new SpatialGroupingStrategy(),
+      textGroupingFn: spatialGrouping,
     });
 
     // Should create two separate TextBoxes due to large vertical gap

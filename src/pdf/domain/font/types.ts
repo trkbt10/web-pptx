@@ -41,6 +41,21 @@ export type FontInfo = {
    * Only present for CID fonts (Type0 with CIDFont descendants).
    */
   readonly ordering?: CIDOrdering;
+  /**
+   * Encoding map for single-byte fonts.
+   * Used when ToUnicode is not available but font has a known encoding.
+   */
+  readonly encodingMap?: ReadonlyMap<number, string>;
+  /**
+   * Whether the font is bold.
+   * Detected from font name or FontDescriptor Flags.
+   */
+  readonly isBold?: boolean;
+  /**
+   * Whether the font is italic/oblique.
+   * Detected from FontDescriptor Flags (bit 64) or font name.
+   */
+  readonly isItalic?: boolean;
 };
 
 /**

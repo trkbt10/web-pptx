@@ -38,12 +38,17 @@ export { DEFAULT_FONT_METRICS, decodeText } from "../domain/font";
 // =============================================================================
 
 import type { CIDOrdering } from "../domain/font";
-import { detectCIDOrdering } from "../domain/font";
+import { detectCIDOrdering, getEncodingByName, applyEncodingDifferences, glyphNameToUnicode } from "../domain/font";
 
 export type FontExtractionResult = {
   readonly toUnicode: CMapParseResult | null;
   readonly metrics: FontMetrics | null;
   readonly ordering: CIDOrdering | null;
+  readonly encoding: ReadonlyMap<number, string> | null;
+  /** Whether font is bold (from FontDescriptor flags or font name) */
+  readonly isBold: boolean;
+  /** Whether font is italic/oblique (from FontDescriptor flags or font name) */
+  readonly isItalic: boolean;
   readonly errors: readonly string[];
 };
 
@@ -71,7 +76,7 @@ export function extractFontInfoWithDeps<PdfPageT, ResourcesT>(
     resources = deps.getPageResources(pdfPage);
   } catch (error) {
     errors.push(`Failed to get page resources: ${formatError(error)}`);
-    return { toUnicode, metrics, ordering: null, errors };
+    return { toUnicode, metrics, ordering: null, encoding: null, isBold: false, isItalic: false, errors };
   }
 
   try {
@@ -86,9 +91,9 @@ export function extractFontInfoWithDeps<PdfPageT, ResourcesT>(
     errors.push(`Failed to extract metrics for ${fontName}: ${formatError(error)}`);
   }
 
-  // Note: CID ordering is not extracted via deps as it requires PDFPage access
+  // Note: CID ordering and encoding are not extracted via deps as they require PDFPage access
   // This function is primarily for testing; real extraction uses extractFontMappings
-  return { toUnicode, metrics, ordering: null, errors };
+  return { toUnicode, metrics, ordering: null, encoding: null, isBold: false, isItalic: false, errors };
 }
 
 export function logExtractionErrors(result: FontExtractionResult, fontName: string): void {
@@ -104,7 +109,12 @@ export function logExtractionErrors(result: FontExtractionResult, fontName: stri
     successParts.push("metrics");
   }
 
-  if (successParts.length > 0) {
+  // Only log if critical parts (ToUnicode or metrics) failed
+  // CID ordering and encoding failures are expected for many fonts and not critical
+  const hasCriticalFailure = !result.toUnicode || !result.metrics;
+
+  if (successParts.length > 0 && hasCriticalFailure) {
+    // Partial success with critical failure - worth logging
     console.warn(
       `[PDF Font] Partial extraction for "${fontName}": ` +
       `succeeded: [${successParts.join(", ")}], ` +
@@ -113,10 +123,14 @@ export function logExtractionErrors(result: FontExtractionResult, fontName: stri
     return;
   }
 
-  console.warn(
-    `[PDF Font] Complete extraction failure for "${fontName}": ` +
-    result.errors.join("; ")
-  );
+  if (successParts.length === 0) {
+    // Complete failure - always log
+    console.warn(
+      `[PDF Font] Complete extraction failure for "${fontName}": ` +
+      result.errors.join("; ")
+    );
+  }
+  // If ToUnicode and metrics both succeeded, don't log non-critical failures
 }
 
 /**
@@ -217,6 +231,7 @@ function extractFontInfoFromFontDict(
   let toUnicode: CMapParseResult | null = null;
   let metrics: FontMetrics | null = null;
   let ordering: CIDOrdering | null = null;
+  let encoding: ReadonlyMap<number, string> | null = null;
 
   try {
     toUnicode = extractToUnicodeMapping(fontDict, context, options.cmapOptions);
@@ -237,7 +252,17 @@ function extractFontInfoFromFontDict(
     errors.push(`Failed to extract CID ordering for ${fontName}: ${formatError(error)}`);
   }
 
-  return { toUnicode, metrics, ordering, errors };
+  // Extract encoding for single-byte fonts when ToUnicode is not available
+  try {
+    encoding = extractFontEncoding(fontDict, context);
+  } catch (error) {
+    errors.push(`Failed to extract encoding for ${fontName}: ${formatError(error)}`);
+  }
+
+  // Extract bold/italic from font descriptor and name
+  const { isBold, isItalic } = extractBoldItalic(fontDict, context);
+
+  return { toUnicode, metrics, ordering, encoding, isBold, isItalic, errors };
 }
 
 function fontExtractionResultToFontInfo(result: FontExtractionResult): FontInfo {
@@ -248,6 +273,9 @@ function fontExtractionResultToFontInfo(result: FontExtractionResult): FontInfo 
     codeByteWidth: toUnicode.codeByteWidth,
     metrics: result.metrics ?? DEFAULT_FONT_METRICS,
     ordering: result.ordering ?? undefined,
+    encodingMap: result.encoding ?? undefined,
+    isBold: result.isBold || undefined,
+    isItalic: result.isItalic || undefined,
   };
 }
 
@@ -362,13 +390,22 @@ function extractSimpleFontMetrics(
 /**
  * Extract metrics from Type0 (composite/CID) fonts
  * PDF Reference 5.6
+ *
+ * Per ISO 32000-1:2008 Section 9.7.4.3:
+ * "The default value for DW is 1000 (corresponding to 1 unit in glyph space)."
+ *
+ * This is correct for CJK fonts where full-width characters are 1000 units.
+ * For proportional Latin characters in CID fonts, the W array should specify
+ * individual widths (typically ~500 for half-width).
  */
 function extractType0FontMetrics(
   fontDict: PDFDict,
   context: PDFDict["context"]
 ): FontMetrics {
   const widths = new Map<number, number>();
-  let defaultWidth = 1000; // CID font default
+  // ISO 32000-1 Section 9.7.4.3: Default DW is 1000 (full em width)
+  // CJK full-width characters use 1000, half-width (ASCII) use ~500
+  let defaultWidth = 1000;
 
   // Get DescendantFonts
   const descendantsRef = fontDict.get(PDFName.of("DescendantFonts"));
@@ -411,6 +448,12 @@ function extractType0FontMetrics(
 
   // Get ascender/descender from CIDFont's FontDescriptor
   const { ascender, descender } = extractFontDescriptorMetrics(cidFont, context);
+
+  // NOTE: For CID fonts, width lookup uses CID values as keys.
+  // The operator-parser.ts handles 2-byte CID font encoding by combining
+  // highByte * 256 + lowByte to get the CID value for width lookup.
+  // The W array should contain appropriate widths for each CID.
+  // If not found, defaultWidth (DW) is used per PDF spec.
 
   return { widths, defaultWidth, ascender, descender };
 }
@@ -495,6 +538,152 @@ function extractFontDescriptorMetrics(
 }
 
 /**
+ * Extract bold/italic information from font
+ *
+ * Checks multiple sources:
+ * 1. FontDescriptor Flags (Bit 7 = Italic, Bit 19 = ForceBold)
+ * 2. Font name patterns (contains "Bold", "Italic", "Oblique")
+ * 3. ItalicAngle in FontDescriptor (non-zero = italic)
+ *
+ * PDF Reference Table 5.20 - Font Descriptor Flags
+ */
+function extractBoldItalic(
+  fontDict: PDFDict,
+  context: PDFDict["context"]
+): { isBold: boolean; isItalic: boolean } {
+  let isBold = false;
+  let isItalic = false;
+
+  // Get the FontDescriptor, either from fontDict directly or from DescendantFonts for Type0
+  const descriptor = getFontDescriptor(fontDict, context);
+
+  if (descriptor) {
+    // Check Flags
+    const flagsRef = descriptor.get(PDFName.of("Flags"));
+    const flags = getNumberValue(flagsRef);
+
+    if (flags !== null) {
+      // Bit 7 (value 64) = Italic
+      isItalic = (flags & 64) !== 0;
+      // Bit 19 (value 262144) = ForceBold
+      isBold = (flags & 262144) !== 0;
+    }
+
+    // Check ItalicAngle (non-zero indicates italic)
+    if (!isItalic) {
+      const italicAngleRef = descriptor.get(PDFName.of("ItalicAngle"));
+      const italicAngle = getNumberValue(italicAngleRef);
+      if (italicAngle !== null && italicAngle !== 0) {
+        isItalic = true;
+      }
+    }
+
+    // Check font name in FontDescriptor for Bold/Italic patterns
+    const fontNameRef = descriptor.get(PDFName.of("FontName"));
+    if (fontNameRef instanceof PDFName) {
+      const fontName = fontNameRef.asString().toLowerCase();
+      if (!isBold && (fontName.includes("bold") || fontName.includes("-bd"))) {
+        isBold = true;
+      }
+      if (!isItalic && (fontName.includes("italic") || fontName.includes("oblique") || fontName.includes("-it"))) {
+        isItalic = true;
+      }
+    }
+  }
+
+  // Also check BaseFont name for Type0 fonts
+  const baseFontRef = fontDict.get(PDFName.of("BaseFont"));
+  if (baseFontRef instanceof PDFName) {
+    const baseFont = baseFontRef.asString().toLowerCase();
+    if (!isBold && (baseFont.includes("bold") || baseFont.includes("-bd"))) {
+      isBold = true;
+    }
+    if (!isItalic && (baseFont.includes("italic") || baseFont.includes("oblique") || baseFont.includes("-it"))) {
+      isItalic = true;
+    }
+  }
+
+  return { isBold, isItalic };
+}
+
+/**
+ * Get FontDescriptor from font dictionary.
+ * For Type0 fonts, descends into DescendantFonts.
+ */
+function getFontDescriptor(
+  fontDict: PDFDict,
+  context: PDFDict["context"]
+): PDFDict | null {
+  // Check font type
+  const subtype = fontDict.get(PDFName.of("Subtype"));
+  const subtypeStr = subtype instanceof PDFName ? subtype.asString() : "";
+
+  // For Type0 (composite) fonts, look in DescendantFonts
+  if (subtypeStr === "/Type0") {
+    const descendantsRef = fontDict.get(PDFName.of("DescendantFonts"));
+    if (!descendantsRef) {
+      return null;
+    }
+
+    const descendants = descendantsRef instanceof PDFRef
+      ? context.lookup(descendantsRef)
+      : descendantsRef;
+
+    if (!(descendants instanceof PDFArray) || descendants.size() === 0) {
+      return null;
+    }
+
+    const firstRef = descendants.get(0);
+    const cidFont = firstRef instanceof PDFRef ? context.lookup(firstRef) : firstRef;
+
+    if (!(cidFont instanceof PDFDict)) {
+      return null;
+    }
+
+    const descriptorRef = cidFont.get(PDFName.of("FontDescriptor"));
+    if (!descriptorRef) {
+      return null;
+    }
+
+    const descriptor = descriptorRef instanceof PDFRef
+      ? context.lookup(descriptorRef)
+      : descriptorRef;
+
+    return descriptor instanceof PDFDict ? descriptor : null;
+  }
+
+  // For simple fonts
+  const descriptorRef = fontDict.get(PDFName.of("FontDescriptor"));
+  if (!descriptorRef) {
+    return null;
+  }
+
+  const descriptor = descriptorRef instanceof PDFRef
+    ? context.lookup(descriptorRef)
+    : descriptorRef;
+
+  return descriptor instanceof PDFDict ? descriptor : null;
+}
+
+/**
+ * Helper to extract number value from PDF object.
+ * pdf-lib's PDFNumber has .numberValue as a property (not method).
+ */
+function getNumberValue(obj: unknown): number | null {
+  if (typeof obj === "number") {
+    return obj;
+  }
+  if (obj && typeof obj === "object") {
+    const record = obj as Record<string, unknown>;
+    // PDFNumber in pdf-lib has .numberValue as a property getter
+    if ("numberValue" in record && typeof record.numberValue === "number") {
+      return record.numberValue;
+    }
+  }
+  return null;
+}
+
+/**
  * Extract CID ordering from font dictionary
  *
  * For Type0 fonts, the CIDSystemInfo dictionary contains the Ordering string
@@ -569,14 +758,122 @@ function extractCIDOrdering(
 }
 
 /**
+ * Extract font encoding from font dictionary.
+ *
+ * PDF fonts can specify encoding in several ways:
+ * 1. Predefined encoding name: /WinAnsiEncoding, /MacRomanEncoding, /StandardEncoding
+ * 2. Encoding dictionary with BaseEncoding and optional Differences array
+ *
+ * ISO 32000-1, Section 9.6.5 - Character Encoding
+ */
+function extractFontEncoding(
+  fontDict: PDFDict,
+  context: PDFDict["context"]
+): ReadonlyMap<number, string> | null {
+  // Check font type - Type0 (CID) fonts don't use simple encodings
+  const subtype = fontDict.get(PDFName.of("Subtype"));
+  const subtypeStr = subtype instanceof PDFName ? subtype.asString() : "";
+
+  if (subtypeStr === "/Type0") {
+    return null;
+  }
+
+  // Get Encoding entry
+  const encodingRef = fontDict.get(PDFName.of("Encoding"));
+  if (!encodingRef) {
+    return null;
+  }
+
+  // Handle predefined encoding name (e.g., /WinAnsiEncoding)
+  if (encodingRef instanceof PDFName) {
+    const encodingName = encodingRef.asString();
+    return getEncodingByName(encodingName) ?? null;
+  }
+
+  // Handle encoding dictionary
+  const encodingDict = encodingRef instanceof PDFRef
+    ? context.lookup(encodingRef)
+    : encodingRef;
+
+  if (!(encodingDict instanceof PDFDict)) {
+    return null;
+  }
+
+  // Get base encoding
+  let baseEncoding: Map<number, string> | null = null;
+  const baseEncodingRef = encodingDict.get(PDFName.of("BaseEncoding"));
+
+  if (baseEncodingRef instanceof PDFName) {
+    const base = getEncodingByName(baseEncodingRef.asString());
+    if (base) {
+      baseEncoding = new Map(base);
+    }
+  }
+
+  // If no base encoding, start with an empty map
+  // (will be populated by Differences)
+  if (!baseEncoding) {
+    baseEncoding = new Map();
+  }
+
+  // Apply Differences array
+  const differencesRef = encodingDict.get(PDFName.of("Differences"));
+  if (differencesRef) {
+    const differencesArr = differencesRef instanceof PDFRef
+      ? context.lookup(differencesRef)
+      : differencesRef;
+
+    if (differencesArr instanceof PDFArray) {
+      const differences = parseDifferencesArray(differencesArr);
+      return applyEncodingDifferences(baseEncoding, differences);
+    }
+  }
+
+  return baseEncoding.size > 0 ? baseEncoding : null;
+}
+
+/**
+ * Parse a PDF Differences array into a list of entries.
+ *
+ * The Differences array format: [code name1 name2 ... code name ...]
+ * Where code is an integer and names are PDF names representing glyph names.
+ */
+function parseDifferencesArray(arr: PDFArray): (number | string)[] {
+  const result: (number | string)[] = [];
+
+  for (let i = 0; i < arr.size(); i++) {
+    const item = arr.get(i);
+
+    if (typeof item === "number") {
+      result.push(item);
+    } else if (item && typeof item === "object" && "numberValue" in item) {
+      // PDFNumber in pdf-lib has .numberValue as a property getter, not a method
+      const numVal = (item as { numberValue: number }).numberValue;
+      if (typeof numVal === "number") {
+        result.push(numVal);
+      }
+    } else if (item instanceof PDFName) {
+      result.push(item.asString());
+    }
+  }
+
+  return result;
+}
+
+/**
  * Helper to extract number from PDFObject
+ *
+ * pdf-lib's PDFNumber has `numberValue` as a property getter, not a method.
  */
 function getNumber(obj: unknown): number | null {
   if (typeof obj === "number") {
     return obj;
   }
   if (obj && typeof obj === "object" && "numberValue" in obj) {
-    return (obj as { numberValue(): number }).numberValue();
+    const numVal = (obj as { numberValue: number }).numberValue;
+    if (typeof numVal === "number") {
+      return numVal;
+    }
   }
   return null;
 }

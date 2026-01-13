@@ -314,6 +314,9 @@ function convertText(parsed: ParsedText, _pageHeight: number, fontMappings: Font
         ascender,
         descender,
       },
+      // Font style from FontDescriptor or font name
+      isBold: fontInfo?.isBold,
+      isItalic: fontInfo?.isItalic,
     });
   }
 

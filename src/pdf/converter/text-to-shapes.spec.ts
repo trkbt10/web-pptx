@@ -73,6 +73,12 @@ describe("convertTextToShape", () => {
         wrapping: "none",
         anchor: "top",
         anchorCenter: false,
+        insets: {
+          left: px(0),
+          top: px(0),
+          right: px(0),
+          bottom: px(0),
+        },
       },
       paragraphs: [
         {
@@ -335,10 +341,13 @@ describe("convertTextToShape", () => {
     const context = { pdfWidth: 100, pdfHeight: 100, slideWidth: px(100), slideHeight: px(100) } as const;
     const g = createGraphicsState({ colorSpace: "DeviceGray", components: [0] as const });
 
-    it("converts wordSpacing when text contains spaces", () => {
+    it("ignores wordSpacing alone (only charSpacing is used)", () => {
+      // Note: wordSpacing (PDF Tw operator) is intentionally not mapped to PPTX spacing
+      // because PPTX's spacing applies uniformly to all characters, while PDF's Tw
+      // only affects space characters. Averaging Tw produces inaccurate results.
       const pdfText: PdfText = {
         type: "text",
-        text: "Hello World", // 1 space in 11 characters = 10 gaps
+        text: "Hello World", // 1 space in 11 characters
         x: 0,
         y: 50,
         width: 80,
@@ -346,23 +355,21 @@ describe("convertTextToShape", () => {
         fontName: "ArialMT",
         fontSize: 10,
         graphicsState: g,
-        wordSpacing: 5, // 5 points per space
+        wordSpacing: 5, // 5 points per space - NOT used
       };
 
       const shape = convertTextToShape(pdfText, context, "1");
       const run = shape.textBody?.paragraphs[0]?.runs[0];
       if (!run || run.type !== "text") throw new Error("Expected text run");
 
-      // wordSpacing contribution: 5 * 1 / 10 = 0.5 points
-      // In pixels: 0.5 * (96/72) ≈ 0.67
-      expect(run.properties?.spacing).toBeDefined();
-      expect((run.properties?.spacing as number)).toBeCloseTo(0.5 * (96 / 72), 1);
+      // wordSpacing is not mapped to PPTX spacing
+      expect(run.properties?.spacing).toBeUndefined();
     });
 
-    it("combines charSpacing and wordSpacing", () => {
+    it("uses only charSpacing when both charSpacing and wordSpacing present", () => {
       const pdfText: PdfText = {
         type: "text",
-        text: "A B", // 1 space in 3 characters = 2 gaps
+        text: "A B", // 1 space in 3 characters
         x: 0,
         y: 50,
         width: 30,
@@ -370,19 +377,17 @@ describe("convertTextToShape", () => {
         fontName: "ArialMT",
         fontSize: 10,
         graphicsState: g,
-        charSpacing: 2, // 2 points per char
-        wordSpacing: 4, // 4 points per space
+        charSpacing: 2, // 2 points per char - this IS used
+        wordSpacing: 4, // 4 points per space - NOT used
       };
 
       const shape = convertTextToShape(pdfText, context, "1");
       const run = shape.textBody?.paragraphs[0]?.runs[0];
       if (!run || run.type !== "text") throw new Error("Expected text run");
 
-      // charSpacing: 2 points
-      // wordSpacing contribution: 4 * 1 / 2 = 2 points
-      // Total: 4 points = 4 * (96/72) ≈ 5.33 pixels
+      // Only charSpacing: 2 points = 2 * (96/72) ≈ 2.67 pixels
       expect(run.properties?.spacing).toBeDefined();
-      expect((run.properties?.spacing as number)).toBeCloseTo(4 * (96 / 72), 1);
+      expect((run.properties?.spacing as number)).toBeCloseTo(2 * (96 / 72), 1);
     });
 
     it("ignores wordSpacing when text has no spaces", () => {
@@ -396,14 +401,14 @@ describe("convertTextToShape", () => {
         fontName: "ArialMT",
         fontSize: 10,
         graphicsState: g,
-        wordSpacing: 5, // Should contribute nothing
+        wordSpacing: 5, // Not used regardless
       };
 
       const shape = convertTextToShape(pdfText, context, "1");
       const run = shape.textBody?.paragraphs[0]?.runs[0];
       if (!run || run.type !== "text") throw new Error("Expected text run");
 
-      // No spaces, so wordSpacing contribution is 0
+      // No charSpacing and wordSpacing is not used
       expect(run.properties?.spacing).toBeUndefined();
     });
   });
@@ -478,13 +483,15 @@ describe("convertGroupedTextToShape", () => {
     expect(run.text).toBe("Hello");
   });
 
-  it("converts multi-paragraph group to SpShape with multiple paragraphs", () => {
+  it("flattens consecutive lines into single paragraph for text wrapping", () => {
+    // Lines with normal line spacing (baselineDistance ≈ fontSize) are flattened
+    // This enables proper text wrapping in PPTX
     const group: GroupedText = {
       bounds: { x: 10, y: 76, width: 100, height: 24 },
       paragraphs: [
         {
           runs: [createPdfText({ text: "Line 1", y: 88 })],
-          baselineY: 100,
+          baselineY: 100, // 12pt spacing = normal line height
         },
         {
           runs: [createPdfText({ text: "Line 2", y: 76 })],
@@ -495,13 +502,47 @@ describe("convertGroupedTextToShape", () => {
 
     const shape = convertGroupedTextToShape(group, context, "1");
 
+    // Both lines should be flattened into 1 paragraph for text wrapping
+    expect(shape.textBody?.paragraphs).toHaveLength(1);
+    expect(shape.textBody?.paragraphs[0].runs).toHaveLength(2);
+    const run1 = shape.textBody?.paragraphs[0].runs[0];
+    const run2 = shape.textBody?.paragraphs[0].runs[1];
+    if (!run1 || run1.type !== "text") throw new Error("Expected text run");
+    if (!run2 || run2.type !== "text") throw new Error("Expected text run");
+    expect(run1.text).toBe("Line 1");
+    expect(run2.text).toBe("Line 2");
+  });
+
+  it("creates separate paragraphs when there is significant extra space", () => {
+    // When extraSpace > fontSize * 0.5, treat as paragraph break
+    // fontSize=12, threshold=6, so need extraSpace > 6
+    // baselineDistance = 100 - 70 = 30, extraSpace = 30 - 12 = 18 > 6
+    const group: GroupedText = {
+      bounds: { x: 10, y: 58, width: 100, height: 42 },
+      paragraphs: [
+        {
+          runs: [createPdfText({ text: "Paragraph 1", y: 88 })],
+          baselineY: 100,
+        },
+        {
+          runs: [createPdfText({ text: "Paragraph 2", y: 58 })],
+          baselineY: 70, // 30pt spacing with 12pt font = 18pt extra space
+        },
+      ],
+    };
+
+    const shape = convertGroupedTextToShape(group, context, "1");
+
+    // Should be 2 separate paragraphs due to significant extra space
     expect(shape.textBody?.paragraphs).toHaveLength(2);
     const run1 = shape.textBody?.paragraphs[0].runs[0];
     const run2 = shape.textBody?.paragraphs[1].runs[0];
     if (!run1 || run1.type !== "text") throw new Error("Expected text run");
     if (!run2 || run2.type !== "text") throw new Error("Expected text run");
-    expect(run1.text).toBe("Line 1");
-    expect(run2.text).toBe("Line 2");
+    expect(run1.text).toBe("Paragraph 1");
+    expect(run2.text).toBe("Paragraph 2");
+    // Second paragraph should have spaceBefore
+    expect(shape.textBody?.paragraphs[1].properties?.spaceBefore).toBeDefined();
   });
 
   it("converts paragraph with multiple runs", () => {

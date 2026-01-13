@@ -55,19 +55,27 @@ export function decodeText(
     return rawText;
   }
 
-  const { mapping, codeByteWidth, ordering } = fontInfo;
+  const { mapping, codeByteWidth, ordering, encodingMap } = fontInfo;
 
   // For 2-byte CID fonts, try CID fallback if mapping is empty or incomplete
   if (codeByteWidth === 2) {
     return decodeTwoByteText(rawText, mapping, ordering);
   }
 
-  // For single-byte fonts, fall back to raw text if no mapping
-  if (mapping.size === 0) {
-    return rawText;
+  // For single-byte fonts, use ToUnicode mapping if available
+  if (mapping.size > 0) {
+    return decodeSingleByteText(rawText, mapping);
   }
 
-  return decodeSingleByteText(rawText, mapping);
+  // Fall back to encoding map if available (WinAnsi, MacRoman, etc.)
+  if (encodingMap && encodingMap.size > 0) {
+    // Convert ReadonlyMap to Map for decodeSingleByteText
+    const mutableMap = new Map(encodingMap);
+    return decodeSingleByteText(rawText, mutableMap);
+  }
+
+  // No mapping available, return raw text
+  return rawText;
 }
 
 /**
@@ -88,7 +96,6 @@ function decodeTwoByteText(
   ordering?: "Japan1" | "GB1" | "CNS1" | "Korea1"
 ): string {
   const chars: string[] = [];
-  // eslint-disable-next-line no-restricted-syntax -- index iteration for byte processing
   for (let i = 0; i < rawText.length; i += 2) {
     const highByte = rawText.charCodeAt(i);
     const lowByte = i + 1 < rawText.length ? rawText.charCodeAt(i + 1) : 0;

@@ -21,13 +21,49 @@ export type ParsedPath = {
   readonly graphicsState: PdfGraphicsState;
 };
 
+/**
+ * Text run extracted from PDF content stream.
+ *
+ * Represents a single text show operation (Tj, TJ, ', ").
+ *
+ * ## Position Semantics
+ *
+ * x and y represent the **baseline** position (not bounding box):
+ * - x: Start of baseline (left edge of first glyph)
+ * - y: Baseline vertical position
+ *
+ * These are in PDF page space (after CTM transformation).
+ *
+ * @see ISO 32000-1:2008 Section 9.4.4 - Text Rendering
+ */
 export type TextRun = {
   readonly text: string;
+
+  /**
+   * X coordinate of baseline start in PDF points (page space).
+   * This is where the first glyph's origin is positioned.
+   */
   readonly x: number;
+
+  /**
+   * Y coordinate of baseline in PDF points (page space).
+   *
+   * This is the **baseline**, not the bounding box edge.
+   * The baseline is where glyphs sit; ascenders go above, descenders below.
+   *
+   * Calculated as: textMatrix.f + textRise, then transformed by CTM.
+   *
+   * @see ISO 32000-1:2008 Section 9.4.2 - Text Positioning
+   */
   readonly y: number;
+
   readonly fontSize: number;
   readonly fontName: string;
-  /** End X position after rendering this text (from text matrix tracking) */
+
+  /**
+   * X coordinate where text ends (after last glyph).
+   * Used to calculate text width: width = endX - x
+   */
   readonly endX: number;
   /**
    * Effective font size after applying text matrix and CTM scaling.
@@ -91,6 +127,7 @@ export class OperatorParser {
   private currentFontSize = 12;
   private textRuns: TextRun[] = [];
   private currentFontMetrics: FontMetrics = DEFAULT_FONT_METRICS;
+  private currentCodeByteWidth: 1 | 2 = 1;
 
   // Font mappings for glyph width lookup
   private readonly fontMappings: FontMappings;
@@ -518,6 +555,7 @@ export class OperatorParser {
     }
 
     this.currentFontMetrics = fontInfo?.metrics ?? DEFAULT_FONT_METRICS;
+    this.currentCodeByteWidth = fontInfo?.codeByteWidth ?? 1;
   }
 
   /** Tc operator: set character spacing (PDF Reference 9.3.2) */
@@ -682,21 +720,42 @@ export class OperatorParser {
 
     let totalDisplacement = 0;
 
-    for (let i = 0; i < text.length; i++) {
-      const charCode = text.charCodeAt(i);
+    // For 2-byte CID fonts, character codes are encoded as pairs of bytes
+    // Each pair forms a CID value: CID = highByte * 256 + lowByte
+    if (this.currentCodeByteWidth === 2) {
+      for (let i = 0; i + 1 < text.length; i += 2) {
+        const highByte = text.charCodeAt(i);
+        const lowByte = text.charCodeAt(i + 1);
+        const cid = highByte * 256 + lowByte;
 
-      // Get glyph width from font metrics (in 1/1000 em units)
-      const w0 = this.getGlyphWidth(charCode);
+        // Get glyph width from font metrics (in 1/1000 em units)
+        const w0 = this.getGlyphWidth(cid);
 
-      // PDF Reference 9.4.4:
-      // tx = ((w0 - Tj/1000) * Tfs + Tc + Tw) * Th
-      // For Tj operator, Tj adjustment is distributed across text
-      // For single character: tx = (w0 * Tfs / 1000 + Tc + (isSpace ? Tw : 0)) * Th
-      const glyphWidth = (w0 - tjAdjustment) * Tfs / 1000;
-      const isSpace = charCode === 32;
-      const charDisplacement = (glyphWidth + Tc + (isSpace ? Tw : 0)) * Th;
+        const glyphWidth = (w0 - tjAdjustment) * Tfs / 1000;
+        // For CID fonts, space character is typically CID 1 or 32
+        const isSpace = cid === 32 || cid === 1;
+        const charDisplacement = (glyphWidth + Tc + (isSpace ? Tw : 0)) * Th;
 
-      totalDisplacement += charDisplacement;
+        totalDisplacement += charDisplacement;
+      }
+    } else {
+      // Single-byte font
+      for (let i = 0; i < text.length; i++) {
+        const charCode = text.charCodeAt(i);
+
+        // Get glyph width from font metrics (in 1/1000 em units)
+        const w0 = this.getGlyphWidth(charCode);
+
+        // PDF Reference 9.4.4:
+        // tx = ((w0 - Tj/1000) * Tfs + Tc + Tw) * Th
+        // For Tj operator, Tj adjustment is distributed across text
+        // For single character: tx = (w0 * Tfs / 1000 + Tc + (isSpace ? Tw : 0)) * Th
+        const glyphWidth = (w0 - tjAdjustment) * Tfs / 1000;
+        const isSpace = charCode === 32;
+        const charDisplacement = (glyphWidth + Tc + (isSpace ? Tw : 0)) * Th;
+
+        totalDisplacement += charDisplacement;
+      }
     }
 
     return totalDisplacement;
