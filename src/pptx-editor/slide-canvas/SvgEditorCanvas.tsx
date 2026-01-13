@@ -1094,6 +1094,7 @@ export const SvgEditorCanvas = forwardRef<HTMLDivElement, SvgEditorCanvasProps>(
               fontScheme={fontScheme}
               slideWidth={widthNum}
               slideHeight={heightNum}
+              embeddedFontCss={embeddedFontCss}
               onComplete={onTextEditComplete}
               onCancel={onTextEditCancel}
               onSelectionChange={onTextEditSelectionChange}

@@ -46,6 +46,8 @@ export type TextEditControllerProps = {
   /** Slide dimensions for positioning */
   readonly slideWidth: number;
   readonly slideHeight: number;
+  /** Embedded font CSS (@font-face declarations from PDF import) */
+  readonly embeddedFontCss?: string;
   /** Called when editing is complete */
   readonly onComplete: (newText: string) => void;
   /** Called when editing is cancelled */

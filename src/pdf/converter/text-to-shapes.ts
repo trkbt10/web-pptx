@@ -11,7 +11,7 @@ import type { ConversionContext } from "./transform-converter";
 import { convertPoint, convertSize } from "./transform-converter";
 import { convertFill } from "./color-converter";
 import type { CIDOrdering } from "../domain/font";
-import { mapFontName, isBoldFont, isItalicFont, normalizeFontName } from "../domain/font";
+import { normalizeFontFamily, isBoldFont, isItalicFont, normalizeFontName } from "../domain/font";
 import { PT_TO_PX } from "../domain/constants";
 import type { GroupedText, GroupedParagraph, LineSpacingInfo } from "./text-grouping/types";
 import { detectScriptFromText, type ScriptType } from "./unicode-script";
@@ -225,7 +225,7 @@ function createTextRun(pdfText: PdfText): TextRun {
   const bold = pdfText.isBold ?? isBoldFont(normalizedName);
   const italic = pdfText.isItalic ?? isItalicFont(normalizedName);
 
-  const mappedFontName = mapFontName(pdfText.fontName);
+  const mappedFontName = normalizeFontFamily(pdfText.fontName);
 
   // Script type detection (spec-based):
   // 1. CIDOrdering from CIDSystemInfo (ISO 32000-1 Section 9.7.3)

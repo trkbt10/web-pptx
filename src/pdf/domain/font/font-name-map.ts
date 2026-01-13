@@ -161,120 +161,54 @@ const FONT_NAME_MAP: Record<string, string> = {
 /**
  * Normalize PDF font name to a clean font-family name.
  *
- * This is the single source of truth for font name normalization.
- * Used by both @font-face generation (font-extractor) and text rendering.
+ * Single source of truth for font name resolution.
+ * Used by @font-face generation and text rendering.
  *
- * Steps:
- * 1. Remove leading slash (e.g., "/Helvetica" → "Helvetica")
- * 2. Remove subset prefix (e.g., "ABCDEF+Helvetica" → "Helvetica")
- * 3. Replace hyphens with spaces (e.g., "Hiragino-Sans" → "Hiragino Sans")
+ * Resolution order (per PDF specification):
+ * 1. Remove leading "/" and subset prefix (e.g., "ABCDEF+")
+ * 2. Try exact match in FONT_NAME_MAP
+ * 3. Normalize (hyphens → spaces), try FONT_NAME_MAP again
+ * 4. Pattern match PDF standard fonts (Helvetica → Arial)
+ * 5. Return normalized name
  *
- * @param pdfFontName - Raw font name from PDF (BaseFont or resource identifier)
+ * @param pdfFontName - Raw font name from PDF (BaseFont)
  * @returns Normalized font-family name
  */
 export function normalizeFontFamily(pdfFontName: string): string {
   // Remove leading slash if present
-  let name = pdfFontName.startsWith("/") ? pdfFontName.slice(1) : pdfFontName;
+  const cleanName = pdfFontName.startsWith("/") ? pdfFontName.slice(1) : pdfFontName;
 
-  // Remove subset/synthetic prefix (e.g., "ABCDEF+", "CIDFont+")
-  const plusIndex = name.indexOf("+");
-  if (plusIndex > 0) {
-    name = name.slice(plusIndex + 1);
+  // Remove subset prefix (e.g., "ABCDEF+")
+  const plusIndex = cleanName.indexOf("+");
+  const nameWithoutPrefix = plusIndex > 0 ? cleanName.slice(plusIndex + 1) : cleanName;
+
+  // 1. Try exact match with original name (e.g., "MS-PGothic")
+  const directMapped = FONT_NAME_MAP[nameWithoutPrefix];
+  if (directMapped) {
+    return directMapped;
   }
 
-  // Replace hyphens with spaces for common patterns
-  // e.g., "Hiragino-Sans" -> "Hiragino Sans"
-  name = name.replace(/-/g, " ");
-
-  return name;
-}
-
-/**
- * Map PDF font name to standard system font name.
- *
- * For non-embedded fonts, maps PDF font names to available system fonts.
- * For embedded fonts, use normalizeFontFamily() directly instead.
- *
- * @param pdfFontName - Raw font name from PDF
- * @returns Standard system font name
- */
-export function mapFontName(pdfFontName: string): string {
-  // Normalize first
-  const name = normalizeFontFamily(pdfFontName);
-
-  // Check direct mapping
-  const mapped = FONT_NAME_MAP[name];
-  if (mapped) {
-    return mapped;
+  // 2. Normalize (replace hyphens with spaces) and try again
+  const normalizedName = nameWithoutPrefix.replace(/-/g, " ");
+  const normalizedMapped = FONT_NAME_MAP[normalizedName];
+  if (normalizedMapped) {
+    return normalizedMapped;
   }
 
-  // Check for common patterns in embedded font names
-  const lowerName = name.toLowerCase();
-  if (lowerName.includes("arial") || lowerName.includes("helvetica")) {
+  // 3. Pattern matching for PDF standard 14 fonts only
+  const lowerName = normalizedName.toLowerCase();
+  if (lowerName.includes("helvetica") || lowerName === "arial" || lowerName.startsWith("arial ")) {
     return "Arial";
   }
-  if (lowerName.includes("times")) {
+  if (lowerName.includes("times") && (lowerName.includes("roman") || lowerName.includes("new"))) {
     return "Times New Roman";
   }
   if (lowerName.includes("courier")) {
     return "Courier New";
   }
 
-  // Check for CJK font patterns
-  if (lowerName.includes("mincho") || lowerName.includes("ming")) {
-    // Serif CJK font
-    if (lowerName.includes("sc") || lowerName.includes("simp")) {
-      return "SimSun";
-    }
-    if (lowerName.includes("tc") || lowerName.includes("trad")) {
-      return "MingLiU";
-    }
-    return "MS Mincho"; // Default to Japanese
-  }
-  if (lowerName.includes("gothic") || lowerName.includes("hei")) {
-    // Sans-serif CJK font
-    if (lowerName.includes("sc") || lowerName.includes("simp")) {
-      return "SimHei";
-    }
-    if (lowerName.includes("tc") || lowerName.includes("trad")) {
-      return "Microsoft JhengHei";
-    }
-    return "MS Gothic"; // Default to Japanese
-  }
-  if (lowerName.includes("song") || lowerName.includes("sun")) {
-    return "SimSun";
-  }
-  if (lowerName.includes("batang") || lowerName.includes("myungjo")) {
-    return "Batang";
-  }
-  if (lowerName.includes("gulim") || lowerName.includes("dotum")) {
-    return "Gulim";
-  }
-
-  // Hiragino fonts (macOS)
-  if (lowerName.includes("hiragino")) {
-    if (lowerName.includes("mincho")) {
-      return "Hiragino Mincho ProN";
-    }
-    if (lowerName.includes("maru")) {
-      return "Hiragino Maru Gothic ProN";
-    }
-    if (lowerName.includes("gb")) {
-      return "Hiragino Sans GB";
-    }
-    // Default to Hiragino Sans (Kaku Gothic replacement)
-    return "Hiragino Sans";
-  }
-
-  // PingFang fonts (macOS/iOS)
-  if (lowerName.includes("pingfang")) {
-    if (lowerName.includes("tc") || lowerName.includes("hk")) {
-      return "PingFang TC";
-    }
-    return "PingFang SC";
-  }
-
-  // Return as-is if no mapping found
-  return name;
+  // 4. Return normalized name for everything else
+  return normalizedName;
 }
+
 

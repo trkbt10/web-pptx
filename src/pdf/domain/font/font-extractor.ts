@@ -10,6 +10,10 @@
  *
  * The extracted font data can be used to create @font-face declarations
  * for accurate rendering in web contexts.
+ *
+ * For fonts without a cmap table (common in PDF subsetted fonts), we build
+ * one from the ToUnicode mapping. This is essential for web rendering as
+ * browsers require cmap for Unicode → glyph mapping.
  */
 import type { PDFDocument } from "pdf-lib";
 import {
@@ -22,6 +26,9 @@ import {
   decodePDFRawStream,
 } from "pdf-lib";
 import { normalizeFontFamily } from "./font-name-map";
+import { repairFontForWeb } from "./font-repair";
+import { parseToUnicodeCMap } from "./cmap-parser";
+import type { FontMapping } from "./types";
 
 /**
  * Font format detected from PDF
@@ -194,6 +201,12 @@ function extractFontFromDict(
     // Extract font family name
     const fontFamily = extractFontFamily(baseFontRaw, fontDescriptor);
 
+    // For TrueType fonts, build missing tables required for web rendering
+    if (format === "truetype") {
+      const toUnicode = extractToUnicodeFromFontDict(pdfDoc, fontDict);
+      data = repairFontForWeb(data, toUnicode, fontFamily);
+    }
+
     return {
       baseFontName: baseFontRaw,
       fontFamily,
@@ -204,6 +217,68 @@ function extractFontFromDict(
   } catch (e) {
     console.warn(`Failed to extract font ${baseFontRaw}:`, e);
     return null;
+  }
+}
+
+/**
+ * Extract ToUnicode mapping from a font dictionary.
+ *
+ * For Type0 fonts, ToUnicode may be on the font dict or DescendantFonts.
+ * Returns a Map<charCode, unicodeString> for building cmap table.
+ */
+function extractToUnicodeFromFontDict(
+  pdfDoc: PDFDocument,
+  fontDict: PDFDict
+): FontMapping {
+  const emptyMapping: FontMapping = new Map();
+
+  // Try ToUnicode from font dict
+  let toUnicodeRef = fontDict.get(PDFName.of("ToUnicode"));
+
+  // For Type0 fonts, check DescendantFonts if not found
+  if (!toUnicodeRef) {
+    const subtype = fontDict.get(PDFName.of("Subtype"))?.toString();
+    if (subtype === "/Type0") {
+      const descendantsRef = fontDict.get(PDFName.of("DescendantFonts"));
+      if (descendantsRef) {
+        const descendants = descendantsRef instanceof PDFRef
+          ? pdfDoc.context.lookup(descendantsRef) as PDFArray
+          : descendantsRef as PDFArray;
+
+        if (descendants.size() > 0) {
+          const firstRef = descendants.get(0);
+          const cidFontDict = firstRef instanceof PDFRef
+            ? pdfDoc.context.lookup(firstRef) as PDFDict
+            : firstRef as PDFDict;
+
+          toUnicodeRef = cidFontDict.get(PDFName.of("ToUnicode"));
+        }
+      }
+    }
+  }
+
+  if (!toUnicodeRef) {
+    return emptyMapping;
+  }
+
+  // Get the ToUnicode stream
+  const toUnicodeStream = toUnicodeRef instanceof PDFRef
+    ? pdfDoc.context.lookup(toUnicodeRef)
+    : toUnicodeRef;
+
+  if (!(toUnicodeStream instanceof PDFRawStream)) {
+    return emptyMapping;
+  }
+
+  try {
+    // Decode and parse the CMap
+    const decoded = decodePDFRawStream(toUnicodeStream);
+    const cmapData = new TextDecoder("latin1").decode(decoded.decode());
+    const result = parseToUnicodeCMap(cmapData);
+    return result.mapping;
+  } catch (e) {
+    console.warn("Failed to parse ToUnicode CMap:", e);
+    return emptyMapping;
   }
 }
 

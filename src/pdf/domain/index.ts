@@ -30,7 +30,7 @@ export {
   normalizeFontName,
   isBoldFont,
   isItalicFont,
-  mapFontName,
+  normalizeFontFamily,
 } from "./font";
 
 // Coordinate domain

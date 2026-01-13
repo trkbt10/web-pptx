@@ -128,6 +128,7 @@ export function TextEditController({
   fontScheme,
   slideWidth,
   slideHeight,
+  embeddedFontCss,
   onComplete,
   onCancel,
   showSelectionOverlay = true,
@@ -498,6 +499,11 @@ export function TextEditController({
         onDoubleClick={handleSvgDoubleClick}
         onContextMenuCapture={handleSvgContextMenuCapture}
       >
+        {/* Embedded fonts CSS (from PDF import) */}
+        {embeddedFontCss && (
+          <style type="text/css">{embeddedFontCss}</style>
+        )}
+
         <rect
           x={0}
           y={0}
