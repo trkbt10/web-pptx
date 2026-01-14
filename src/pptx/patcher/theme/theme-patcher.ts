@@ -7,18 +7,21 @@
  */
 
 import { createElement, getChild, isXmlElement, type XmlDocument, type XmlElement } from "../../../xml";
-import type { Color } from "../../../ooxml/domain/color";
+import type { Color, SchemeColorName } from "../../../ooxml/domain/color";
 import type { FontScheme } from "../../domain/resolution";
 import type { FormatScheme } from "../../domain/theme/types";
 import { replaceChildByName, updateDocumentRoot } from "../core/xml-mutator";
-import type { SchemeColorName } from "./color-scheme-patcher";
 import { patchSchemeColor } from "./color-scheme-patcher";
 import { patchMajorFont, patchMinorFont } from "./font-scheme-patcher";
 
-export type ThemeColorScheme = Partial<Record<SchemeColorName, Color>>;
+/**
+ * Color scheme patch - partial color changes to apply to a:clrScheme.
+ * Uses Color objects (not hex strings) for proper serialization.
+ */
+export type ColorSchemePatch = Partial<Record<SchemeColorName, Color>>;
 
 export type ThemeChange =
-  | { readonly type: "colorScheme"; readonly scheme: ThemeColorScheme }
+  | { readonly type: "colorScheme"; readonly scheme: ColorSchemePatch }
   | { readonly type: "fontScheme"; readonly scheme: FontScheme }
   | { readonly type: "formatScheme"; readonly scheme: FormatScheme };
 
@@ -66,7 +69,7 @@ function patchFormatSchemeElement(fmtScheme: XmlElement, scheme: FormatScheme): 
   return updated;
 }
 
-function applyColorScheme(themeElements: XmlElement, scheme: ThemeColorScheme): XmlElement {
+function applyColorScheme(themeElements: XmlElement, scheme: ColorSchemePatch): XmlElement {
   const clrScheme = getChild(themeElements, "a:clrScheme");
   if (!clrScheme) {
     throw new Error("patchTheme: missing a:clrScheme.");

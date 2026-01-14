@@ -12,7 +12,8 @@ import type {
 import type { HandlerMap } from "./handler-types";
 import { pushHistory } from "../../../slide/state";
 import type { PresentationDocument } from "../../../../../pptx/app";
-import type { SchemeColorName, ThemePreset } from "../../../../panels/theme-editor/types";
+import type { ThemePreset } from "../../../../panels/theme-editor/types";
+import type { SchemeColorName } from "../../../../../ooxml/domain/color";
 import type { FontSpec } from "../../../../../pptx/domain/resolution";
 
 type SetEditorModeAction = Extract<

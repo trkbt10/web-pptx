@@ -9,16 +9,19 @@
  * - Theme-specific toolbar
  */
 
-import { useState, useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
+import { useState, useCallback, useMemo, useRef, type CSSProperties, type ChangeEvent } from "react";
 import type { ColorScheme } from "../../../pptx/domain/color/context";
 import type { FontScheme, FontSpec } from "../../../pptx/domain/resolution";
+import type { PresentationFile, SlideSize } from "../../../pptx/domain";
+import type { SlideLayoutOption } from "../../../pptx/app";
 import type { SchemeColorName, ThemePreset } from "./types";
-import { THEME_PRESETS } from "./presets";
+import { THEME_PRESETS, OFFICE_THEME } from "./presets";
+import { LayoutEditor } from "./LayoutEditor";
 import { ColorPickerPopover } from "../../ui/color/ColorPickerPopover";
 import { Input } from "../../ui/primitives/Input";
 import { Button } from "../../ui/primitives/Button";
 import { colorTokens, fontTokens, spacingTokens, radiusTokens, iconTokens } from "../../ui/design-tokens";
-import { TileViewIcon, ListViewIcon, UndoIcon, RedoIcon, DownloadIcon } from "../../ui/icons";
+import { TileViewIcon, ListViewIcon, UndoIcon, RedoIcon, DownloadIcon, FolderIcon } from "../../ui/icons";
 import { hexToRgb } from "../../../color";
 
 export type ThemeEditorCanvasProps = {
@@ -33,7 +36,20 @@ export type ThemeEditorCanvasProps = {
   readonly onUndo?: () => void;
   readonly onRedo?: () => void;
   readonly onExport?: () => void;
+  readonly onThemeImport?: (file: File) => void;
+  // Layout editing props
+  readonly presentationFile?: PresentationFile;
+  readonly layoutOptions?: readonly SlideLayoutOption[];
+  readonly currentLayoutPath?: string;
+  readonly slideSize?: SlideSize;
+  readonly onLayoutSelect?: (layoutPath: string) => void;
 };
+
+type ThemeEditorTab = "colors" | "layouts";
+
+// Default color scheme from OFFICE_THEME for consistent fallbacks
+const DEFAULT_COLORS = OFFICE_THEME.colorScheme;
+const DEFAULT_FONTS = OFFICE_THEME.fontScheme;
 
 type ColorViewMode = "tile" | "list";
 
@@ -474,61 +490,155 @@ type SampleSlidePreviewProps = {
 };
 
 function SampleSlidePreview({ colorScheme, fontScheme }: SampleSlidePreviewProps) {
-  const majorFont = fontScheme?.majorFont?.latin ?? "Calibri Light";
-  const minorFont = fontScheme?.minorFont?.latin ?? "Calibri";
+  // Use shared defaults from OFFICE_THEME
+  const majorFont = fontScheme?.majorFont?.latin ?? DEFAULT_FONTS.majorFont.latin ?? "Calibri Light";
+  const minorFont = fontScheme?.minorFont?.latin ?? DEFAULT_FONTS.minorFont.latin ?? "Calibri";
+  const majorEastAsian = fontScheme?.majorFont?.eastAsian;
+  const minorEastAsian = fontScheme?.minorFont?.eastAsian;
 
-  const dk1 = colorScheme?.dk1 ?? "000000";
-  const dk2 = colorScheme?.dk2 ?? "44546A";
-  const lt1 = colorScheme?.lt1 ?? "FFFFFF";
-  const lt2 = colorScheme?.lt2 ?? "E7E6E6";
-  const hlink = colorScheme?.hlink ?? "0563C1";
-  const folHlink = colorScheme?.folHlink ?? "954F72";
-  const accents = [
-    colorScheme?.accent1 ?? "4472C4",
-    colorScheme?.accent2 ?? "ED7D31",
-    colorScheme?.accent3 ?? "A5A5A5",
-    colorScheme?.accent4 ?? "FFC000",
-    colorScheme?.accent5 ?? "5B9BD5",
-    colorScheme?.accent6 ?? "70AD47",
-  ];
+  // Colors with proper defaults
+  const dk1 = colorScheme?.dk1 ?? DEFAULT_COLORS.dk1;
+  const dk2 = colorScheme?.dk2 ?? DEFAULT_COLORS.dk2;
+  const lt1 = colorScheme?.lt1 ?? DEFAULT_COLORS.lt1;
+  const lt2 = colorScheme?.lt2 ?? DEFAULT_COLORS.lt2;
+  const hlink = colorScheme?.hlink ?? DEFAULT_COLORS.hlink;
+  const folHlink = colorScheme?.folHlink ?? DEFAULT_COLORS.folHlink;
+  const accent1 = colorScheme?.accent1 ?? DEFAULT_COLORS.accent1;
+  const accent2 = colorScheme?.accent2 ?? DEFAULT_COLORS.accent2;
+  const accent3 = colorScheme?.accent3 ?? DEFAULT_COLORS.accent3;
+  const accent4 = colorScheme?.accent4 ?? DEFAULT_COLORS.accent4;
+  const accent5 = colorScheme?.accent5 ?? DEFAULT_COLORS.accent5;
+  const accent6 = colorScheme?.accent6 ?? DEFAULT_COLORS.accent6;
+
+  const colorLabelStyle: CSSProperties = {
+    fontSize: "9px",
+    color: colorTokens.text.tertiary,
+    textAlign: "center",
+    marginTop: "2px",
+  };
 
   return (
     <div style={slidePreviewStyle}>
+      {/* Slide Background (lt1) */}
       <div
         style={{
           flex: 1,
           backgroundColor: `#${lt1}`,
-          padding: spacingTokens.xl,
+          padding: spacingTokens.lg,
           display: "flex",
           flexDirection: "column",
-          gap: spacingTokens.md,
+          gap: spacingTokens.sm,
           overflow: "auto",
         }}
       >
-        <div style={{ fontFamily: majorFont, fontSize: "28px", fontWeight: 600, color: `#${dk1}` }}>
-          Presentation Title
+        {/* Title Area (Major Font + dk1) */}
+        <div style={{ marginBottom: spacingTokens.xs }}>
+          <div style={{ fontFamily: majorFont, fontSize: "24px", fontWeight: 600, color: `#${dk1}` }}>
+            Presentation Title
+          </div>
+          {majorEastAsian && (
+            <div style={{ fontFamily: majorEastAsian, fontSize: "14px", color: `#${dk2}`, marginTop: "4px" }}>
+              {majorEastAsian} フォント
+            </div>
+          )}
+          <div style={{ fontFamily: minorFont, fontSize: "14px", color: `#${dk2}`, marginTop: "4px" }}>
+            Subtitle text using {minorFont}
+          </div>
         </div>
-        <div style={{ fontFamily: minorFont, fontSize: "16px", color: `#${dk2}` }}>
-          Subtitle using {minorFont}
-        </div>
-        <div style={{ flex: 1, display: "flex", gap: spacingTokens.lg }}>
+
+        {/* Main Content Area */}
+        <div style={{ flex: 1, display: "flex", gap: spacingTokens.md }}>
+          {/* Left: Text samples */}
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: spacingTokens.xs }}>
-            <div style={{ fontFamily: minorFont, fontSize: "13px", color: `#${dk1}` }}>• Body text</div>
-            <div style={{ fontFamily: minorFont, fontSize: "13px", color: `#${dk2}` }}>• Secondary</div>
-            <div style={{ fontFamily: minorFont, fontSize: "13px" }}>
-              <a href="#" style={{ color: `#${hlink}`, textDecoration: "underline" }}>Link</a>
-              {" / "}
-              <a href="#" style={{ color: `#${folHlink}`, textDecoration: "underline" }}>Visited</a>
+            {/* Body text (Minor Font + dk1/dk2) */}
+            <div style={{ fontFamily: minorFont, fontSize: "12px", color: `#${dk1}` }}>
+              • Primary body text (dk1)
+            </div>
+            <div style={{ fontFamily: minorFont, fontSize: "12px", color: `#${dk2}` }}>
+              • Secondary text (dk2)
+            </div>
+            {minorEastAsian && (
+              <div style={{ fontFamily: minorEastAsian, fontSize: "12px", color: `#${dk1}` }}>
+                • {minorEastAsian} テキスト
+              </div>
+            )}
+
+            {/* Links */}
+            <div style={{ fontFamily: minorFont, fontSize: "12px", marginTop: spacingTokens.xs }}>
+              <span style={{ color: `#${hlink}`, textDecoration: "underline", cursor: "pointer" }}>Hyperlink</span>
+              <span style={{ color: `#${dk2}`, margin: "0 6px" }}>|</span>
+              <span style={{ color: `#${folHlink}`, textDecoration: "underline", cursor: "pointer" }}>Followed Link</span>
+            </div>
+
+            {/* Accent colored text samples */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: spacingTokens.sm }}>
+              <span style={{ fontFamily: minorFont, fontSize: "11px", color: `#${accent1}` }}>Accent 1</span>
+              <span style={{ fontFamily: minorFont, fontSize: "11px", color: `#${accent2}` }}>Accent 2</span>
+              <span style={{ fontFamily: minorFont, fontSize: "11px", color: `#${accent3}` }}>Accent 3</span>
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px", width: "80px" }}>
-            {accents.map((c, i) => (
-              <div key={i} style={{ height: "20px", backgroundColor: `#${c}`, borderRadius: radiusTokens.sm }} />
-            ))}
+
+          {/* Right: Color palette visualization */}
+          <div style={{ width: "100px", display: "flex", flexDirection: "column", gap: spacingTokens.xs }}>
+            {/* Base colors */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3px" }}>
+              <div>
+                <div style={{ height: "20px", backgroundColor: `#${dk1}`, borderRadius: "3px", border: "1px solid rgba(0,0,0,0.1)" }} />
+                <div style={colorLabelStyle}>dk1</div>
+              </div>
+              <div>
+                <div style={{ height: "20px", backgroundColor: `#${lt1}`, borderRadius: "3px", border: "1px solid rgba(0,0,0,0.2)" }} />
+                <div style={colorLabelStyle}>lt1</div>
+              </div>
+              <div>
+                <div style={{ height: "20px", backgroundColor: `#${dk2}`, borderRadius: "3px", border: "1px solid rgba(0,0,0,0.1)" }} />
+                <div style={colorLabelStyle}>dk2</div>
+              </div>
+              <div>
+                <div style={{ height: "20px", backgroundColor: `#${lt2}`, borderRadius: "3px", border: "1px solid rgba(0,0,0,0.1)" }} />
+                <div style={colorLabelStyle}>lt2</div>
+              </div>
+            </div>
+
+            {/* Accent colors */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "3px", marginTop: "4px" }}>
+              {[accent1, accent2, accent3, accent4, accent5, accent6].map((c, i) => (
+                <div key={i}>
+                  <div style={{ height: "16px", backgroundColor: `#${c}`, borderRadius: "3px", border: "1px solid rgba(0,0,0,0.1)" }} />
+                  <div style={colorLabelStyle}>{i + 1}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Link colors */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "3px", marginTop: "4px" }}>
+              <div>
+                <div style={{ height: "14px", backgroundColor: `#${hlink}`, borderRadius: "3px", border: "1px solid rgba(0,0,0,0.1)" }} />
+                <div style={colorLabelStyle}>hlink</div>
+              </div>
+              <div>
+                <div style={{ height: "14px", backgroundColor: `#${folHlink}`, borderRadius: "3px", border: "1px solid rgba(0,0,0,0.1)" }} />
+                <div style={colorLabelStyle}>fol</div>
+              </div>
+            </div>
           </div>
         </div>
-        <div style={{ fontFamily: minorFont, fontSize: "11px", color: `#${dk2}`, borderTop: `1px solid #${lt2}`, paddingTop: spacingTokens.xs }}>
-          Footer • Page 1
+
+        {/* Footer (lt2 background) */}
+        <div
+          style={{
+            fontFamily: minorFont,
+            fontSize: "10px",
+            color: `#${dk2}`,
+            backgroundColor: `#${lt2}`,
+            padding: "6px 8px",
+            borderRadius: "4px",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <span>Footer text on lt2 background</span>
+          <span>Page 1</span>
         </div>
       </div>
     </div>
@@ -630,12 +740,38 @@ export function ThemeEditorCanvas({
   onUndo,
   onRedo,
   onExport,
+  onThemeImport,
+  presentationFile,
+  layoutOptions = [],
+  currentLayoutPath,
+  slideSize,
+  onLayoutSelect,
 }: ThemeEditorCanvasProps) {
   const [colorViewMode, setColorViewMode] = useState<ColorViewMode>("tile");
+  const [activeTab, setActiveTab] = useState<ThemeEditorTab>("colors");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const baseColors = useMemo(() => COLOR_CONFIGS.filter((c) => c.category === "base"), []);
   const accentColors = useMemo(() => COLOR_CONFIGS.filter((c) => c.category === "accent"), []);
   const linkColors = useMemo(() => COLOR_CONFIGS.filter((c) => c.category === "link"), []);
+
+  const handleFileImportClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file && onThemeImport) {
+        onThemeImport(file);
+      }
+      // Reset input to allow selecting the same file again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    },
+    [onThemeImport]
+  );
 
   const renderColorSection = (title: string, colors: readonly ColorConfig[]) => (
     <div style={sectionStyle}>
@@ -658,6 +794,15 @@ export function ThemeEditorCanvas({
 
   return (
     <div style={containerStyle}>
+      {/* Hidden file input for theme import */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pptx"
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
+
       {/* Theme Editor Toolbar */}
       <div style={toolbarStyle}>
         <div style={toolbarSectionStyle}>
@@ -669,8 +814,38 @@ export function ThemeEditorCanvas({
           </Button>
         </div>
         <div style={toolbarDividerStyle} />
-        <span style={{ fontSize: fontTokens.size.md, color: colorTokens.text.secondary }}>Theme Editor</span>
+
+        {/* Tab Pivot */}
+        <div style={pivotContainerStyle}>
+          <button
+            type="button"
+            style={{
+              ...pivotButtonBaseStyle,
+              ...(activeTab === "colors" ? pivotButtonActiveStyle : {}),
+            }}
+            onClick={() => setActiveTab("colors")}
+          >
+            Colors & Fonts
+          </button>
+          <button
+            type="button"
+            style={{
+              ...pivotButtonBaseStyle,
+              ...(activeTab === "layouts" ? pivotButtonActiveStyle : {}),
+            }}
+            onClick={() => setActiveTab("layouts")}
+          >
+            Layouts
+          </button>
+        </div>
+
         <div style={{ flex: 1 }} />
+        {onThemeImport && (
+          <Button variant="ghost" size="sm" onClick={handleFileImportClick} title="Import theme from PPTX">
+            <FolderIcon size={iconTokens.size.md} />
+            <span style={{ marginLeft: spacingTokens.xs }}>Import</span>
+          </Button>
+        )}
         {onExport && (
           <Button variant="secondary" size="sm" onClick={onExport}>
             <DownloadIcon size={iconTokens.size.md} />
@@ -679,52 +854,64 @@ export function ThemeEditorCanvas({
         )}
       </div>
 
-      {/* Main Content */}
-      <div style={mainContentStyle}>
-        {/* Left Panel: Colors */}
-        <div style={leftPanelStyle}>
-          <div style={panelHeaderStyle}>
-            <span style={panelTitleStyle}>Colors</span>
-            <ViewModePivot mode={colorViewMode} onModeChange={setColorViewMode} />
-          </div>
-          <div style={panelContentStyle}>
-            {renderColorSection("Base", baseColors)}
-            {renderColorSection("Accent", accentColors)}
-            {renderColorSection("Links", linkColors)}
-          </div>
-        </div>
-
-        {/* Center: Preview */}
-        <div style={centerPanelStyle}>
-          <div style={{ ...panelTitleStyle, marginBottom: spacingTokens.md }}>Live Preview</div>
-          <div style={previewContainerStyle}>
-            <SampleSlidePreview colorScheme={colorScheme} fontScheme={fontScheme} />
-          </div>
-        </div>
-
-        {/* Right Panel: Fonts & Presets */}
-        <div style={rightPanelStyle}>
-          <div style={panelHeaderStyle}>
-            <span style={panelTitleStyle}>Fonts & Presets</span>
-          </div>
-          <div style={panelContentStyle}>
-            <div style={sectionStyle}>
-              <div style={sectionTitleStyle}>Fonts</div>
-              <FontEditor title="Major Font (Headings)" fontSpec={fontScheme?.majorFont} onChange={onMajorFontChange} />
-              <FontEditor title="Minor Font (Body)" fontSpec={fontScheme?.minorFont} onChange={onMinorFontChange} />
+      {/* Main Content - Conditional based on active tab */}
+      {activeTab === "colors" ? (
+        <div style={mainContentStyle}>
+          {/* Left Panel: Colors */}
+          <div style={leftPanelStyle}>
+            <div style={panelHeaderStyle}>
+              <span style={panelTitleStyle}>Colors</span>
+              <ViewModePivot mode={colorViewMode} onModeChange={setColorViewMode} />
             </div>
+            <div style={panelContentStyle}>
+              {renderColorSection("Base", baseColors)}
+              {renderColorSection("Accent", accentColors)}
+              {renderColorSection("Links", linkColors)}
+            </div>
+          </div>
 
-            <div style={sectionStyle}>
-              <div style={sectionTitleStyle}>Theme Presets</div>
-              <div style={presetGridStyle}>
-                {THEME_PRESETS.map((preset) => (
-                  <PresetCard key={preset.id} preset={preset} onSelect={onPresetSelect} />
-                ))}
+          {/* Center: Preview */}
+          <div style={centerPanelStyle}>
+            <div style={{ ...panelTitleStyle, marginBottom: spacingTokens.md }}>Live Preview</div>
+            <div style={previewContainerStyle}>
+              <SampleSlidePreview colorScheme={colorScheme} fontScheme={fontScheme} />
+            </div>
+          </div>
+
+          {/* Right Panel: Fonts & Presets */}
+          <div style={rightPanelStyle}>
+            <div style={panelHeaderStyle}>
+              <span style={panelTitleStyle}>Fonts & Presets</span>
+            </div>
+            <div style={panelContentStyle}>
+              <div style={sectionStyle}>
+                <div style={sectionTitleStyle}>Fonts</div>
+                <FontEditor title="Major Font (Headings)" fontSpec={fontScheme?.majorFont} onChange={onMajorFontChange} />
+                <FontEditor title="Minor Font (Body)" fontSpec={fontScheme?.minorFont} onChange={onMinorFontChange} />
+              </div>
+
+              <div style={sectionStyle}>
+                <div style={sectionTitleStyle}>Theme Presets</div>
+                <div style={presetGridStyle}>
+                  {THEME_PRESETS.map((preset) => (
+                    <PresetCard key={preset.id} preset={preset} onSelect={onPresetSelect} />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <LayoutEditor
+          presentationFile={presentationFile}
+          layoutOptions={layoutOptions}
+          currentLayoutPath={currentLayoutPath}
+          slideSize={slideSize}
+          onLayoutSelect={onLayoutSelect}
+          onImportTemplate={onThemeImport ? handleFileImportClick : undefined}
+          colorScheme={colorScheme}
+        />
+      )}
     </div>
   );
 }

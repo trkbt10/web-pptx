@@ -10,14 +10,20 @@
 import type { Degrees, Percent } from "./units";
 
 // =============================================================================
-// Scheme Color Value
+// Scheme Color Types
 // =============================================================================
 
 /**
- * Scheme color value
- * @see ECMA-376 Part 1, Section 20.1.10.54 (ST_SchemeColorVal)
+ * Color scheme slot names - the 12 actual colors defined in a:clrScheme.
+ *
+ * These are the children elements of the a:clrScheme element:
+ * - Base colors: dk1, lt1, dk2, lt2 (dark/light primary and secondary)
+ * - Accent colors: accent1-accent6
+ * - Link colors: hlink (hyperlink), folHlink (followed hyperlink)
+ *
+ * @see ECMA-376 Part 1, Section 20.1.6.2 (CT_ColorScheme / a:clrScheme)
  */
-export type SchemeColorValue =
+export type SchemeColorName =
   | "dk1"
   | "lt1"
   | "dk2"
@@ -29,7 +35,20 @@ export type SchemeColorValue =
   | "accent5"
   | "accent6"
   | "hlink"
-  | "folHlink"
+  | "folHlink";
+
+/**
+ * All possible values for a:schemeClr element's val attribute.
+ *
+ * This includes:
+ * - All 12 SchemeColorName values (the actual theme colors)
+ * - Color map references: bg1, bg2, tx1, tx2 (mapped via p:clrMap)
+ * - Placeholder color: phClr (used in shape definitions)
+ *
+ * @see ECMA-376 Part 1, Section 20.1.10.54 (ST_SchemeColorVal)
+ */
+export type SchemeColorValue =
+  | SchemeColorName
   | "bg1"
   | "bg2"
   | "tx1"

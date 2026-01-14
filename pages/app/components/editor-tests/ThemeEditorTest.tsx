@@ -11,7 +11,6 @@ import {
   ColorSchemeEditor,
   FontSchemeEditor,
   ThemePresetSelector,
-  THEME_PRESETS,
 } from "@lib/pptx-editor/panels/theme-editor";
 import type { SchemeColorName, ThemePreset } from "@lib/pptx-editor/panels/theme-editor/types";
 import type { ColorScheme } from "@lib/pptx/domain/color/context";

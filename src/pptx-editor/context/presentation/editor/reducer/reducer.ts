@@ -29,6 +29,7 @@ import { TEXT_EDIT_HANDLERS } from "./text-edit-handlers";
 import { PATH_DRAW_HANDLERS } from "./path-draw-handlers";
 import { PATH_EDIT_HANDLERS } from "./path-edit-handlers";
 import { THEME_HANDLERS } from "./theme-handlers";
+import { LAYOUT_HANDLERS } from "./layout-handlers";
 
 /**
  * Combined handler map from all domains
@@ -45,6 +46,7 @@ const ALL_HANDLERS: HandlerMap = {
   ...PATH_DRAW_HANDLERS,
   ...PATH_EDIT_HANDLERS,
   ...THEME_HANDLERS,
+  ...LAYOUT_HANDLERS,
 };
 
 /**
@@ -65,6 +67,14 @@ export function createPresentationEditorState(
     pathDraw: createIdlePathDrawState(),
     pathEdit: createInactivePathEditState(),
     editorMode: createSlideEditorMode(),
+    layoutEdit: {
+      activeLayoutPath: undefined,
+      layoutShapes: [],
+      layoutBundle: undefined,
+      layoutSelection: createEmptySelection(),
+      layoutDrag: createIdleDragState(),
+      isDirty: false,
+    },
   };
 }
 

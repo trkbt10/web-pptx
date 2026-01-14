@@ -78,8 +78,9 @@ import {
 import { EDITOR_GRID_CONFIG, usePivotTabs, CanvasArea } from "../layout";
 import { SelectedElementTab, SlideInfoTab, LayersTab } from "../panels/right-panel";
 import { AssetPanel, LayoutInfoPanel, ThemeViewerPanel } from "../panels/inspector";
-import { ThemeEditorTabs, ThemeEditorCanvas } from "../panels/theme-editor";
-import type { ThemePreset, SchemeColorName } from "../panels/theme-editor/types";
+import { ThemeEditorTabs, ThemeEditorCanvas, extractThemeFromPptx } from "../panels/theme-editor";
+import type { ThemePreset } from "../panels/theme-editor/types";
+import type { SchemeColorName } from "../../ooxml/domain/color";
 import type { FontSpec } from "../../pptx/domain/resolution";
 import {
   editorContainerStyle,
@@ -251,6 +252,19 @@ function EditorContent({
   const handleThemePresetSelect = useCallback(
     (preset: ThemePreset) => {
       dispatch({ type: "APPLY_THEME_PRESET", preset });
+    },
+    [dispatch],
+  );
+
+  const handleThemeImport = useCallback(
+    async (file: File) => {
+      const result = await extractThemeFromPptx(file);
+      if (result.success) {
+        dispatch({ type: "APPLY_THEME_PRESET", preset: result.theme });
+      } else {
+        // eslint-disable-next-line no-console
+        console.error("Theme import failed:", result.error);
+      }
     },
     [dispatch],
   );
@@ -1106,10 +1120,16 @@ function EditorContent({
               onMajorFontChange={handleMajorFontChange}
               onMinorFontChange={handleMinorFontChange}
               onPresetSelect={handleThemePresetSelect}
+              onThemeImport={handleThemeImport}
               canUndo={canUndo}
               canRedo={canRedo}
               onUndo={() => dispatch({ type: "UNDO" })}
               onRedo={() => dispatch({ type: "REDO" })}
+              presentationFile={document.presentationFile}
+              layoutOptions={layoutOptions}
+              currentLayoutPath={layoutPath}
+              slideSize={{ width, height }}
+              onLayoutSelect={slideCallbacks.handleLayoutChange}
             />
           ) : (
             <GridLayout config={EDITOR_GRID_CONFIG} layers={layers} />

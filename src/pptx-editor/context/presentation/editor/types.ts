@@ -8,10 +8,11 @@
 import type { Slide, Shape, TextBody, SlideSize } from "../../../../pptx/domain";
 import type { ShapeId } from "../../../../pptx/domain/types";
 import type { Pixels, Degrees } from "../../../../ooxml/domain/units";
-import type { PresentationDocument, SlideWithId, SlideId } from "../../../../pptx/app";
+import type { PresentationDocument, SlideWithId, SlideId, SlideLayoutBundle } from "../../../../pptx/app";
 import type { ShapeHierarchyTarget } from "../../../shape";
 import type { FontSpec } from "../../../../pptx/domain/resolution";
-import type { ThemePreset, SchemeColorName } from "../../../panels/theme-editor/types";
+import type { ThemePreset } from "../../../panels/theme-editor/types";
+import type { SchemeColorName } from "../../../../ooxml/domain/color";
 import type {
   UndoRedoHistory,
   SelectionState,
@@ -31,7 +32,7 @@ import type { TextEditState } from "../../../slide/text-edit";
 /**
  * Editor mode - determines the main editing context
  */
-export type EditorMode = "slide" | "theme";
+export type EditorMode = "slide" | "theme" | "layout";
 
 /**
  * Create default slide editor mode
@@ -102,6 +103,31 @@ export function createSelectMode(): CreationMode {
 }
 
 // =============================================================================
+// Layout Editing Types
+// =============================================================================
+
+/**
+ * Layout editing state - active when editorMode is "layout"
+ *
+ * Manages the editing of slide layouts including shape selection,
+ * drag operations, and tracking of unsaved changes.
+ */
+export type LayoutEditState = {
+  /** Currently selected layout path (e.g., "ppt/slideLayouts/slideLayout1.xml") */
+  readonly activeLayoutPath: string | undefined;
+  /** Loaded layout shapes (parsed from PPTX, EMU coordinates) */
+  readonly layoutShapes: readonly Shape[];
+  /** Layout bundle data (includes master/theme for rendering) */
+  readonly layoutBundle: SlideLayoutBundle | undefined;
+  /** Shape selection within the layout */
+  readonly layoutSelection: SelectionState;
+  /** Drag state for layout shapes */
+  readonly layoutDrag: DragState;
+  /** Dirty flag - indicates unsaved changes */
+  readonly isDirty: boolean;
+};
+
+// =============================================================================
 // Presentation Editor State
 // =============================================================================
 
@@ -132,6 +158,8 @@ export type PresentationEditorState = {
   readonly pathEdit: PathEditState;
   /** Current editor mode (slide or theme) */
   readonly editorMode: EditorMode;
+  /** Layout editing state (active when editorMode is "layout") */
+  readonly layoutEdit: LayoutEditState;
 };
 
 // =============================================================================
@@ -351,6 +379,48 @@ export type PresentationEditorAction =
   | {
       readonly type: "APPLY_THEME_PRESET";
       readonly preset: ThemePreset;
+    }
+
+  // Layout editing
+  | { readonly type: "SELECT_LAYOUT"; readonly layoutPath: string }
+  | {
+      readonly type: "LOAD_LAYOUT_SHAPES";
+      readonly layoutPath: string;
+      readonly shapes: readonly Shape[];
+      readonly bundle: SlideLayoutBundle;
+    }
+  | {
+      readonly type: "SELECT_LAYOUT_SHAPE";
+      readonly shapeId: ShapeId;
+      readonly addToSelection: boolean;
+      readonly toggle?: boolean;
+    }
+  | {
+      readonly type: "SELECT_MULTIPLE_LAYOUT_SHAPES";
+      readonly shapeIds: readonly ShapeId[];
+      readonly primaryId?: ShapeId;
+    }
+  | { readonly type: "CLEAR_LAYOUT_SHAPE_SELECTION" }
+  | { readonly type: "START_LAYOUT_MOVE"; readonly startX: Pixels; readonly startY: Pixels }
+  | {
+      readonly type: "START_LAYOUT_RESIZE";
+      readonly handle: ResizeHandlePosition;
+      readonly startX: Pixels;
+      readonly startY: Pixels;
+      readonly aspectLocked: boolean;
+    }
+  | { readonly type: "START_LAYOUT_ROTATE"; readonly startX: Pixels; readonly startY: Pixels }
+  | { readonly type: "PREVIEW_LAYOUT_MOVE"; readonly dx: Pixels; readonly dy: Pixels }
+  | { readonly type: "PREVIEW_LAYOUT_RESIZE"; readonly dx: Pixels; readonly dy: Pixels }
+  | { readonly type: "PREVIEW_LAYOUT_ROTATE"; readonly currentAngle: Degrees }
+  | { readonly type: "COMMIT_LAYOUT_DRAG" }
+  | { readonly type: "END_LAYOUT_DRAG" }
+  | { readonly type: "DELETE_LAYOUT_SHAPES"; readonly shapeIds: readonly ShapeId[] }
+  | { readonly type: "ADD_LAYOUT_SHAPE"; readonly shape: Shape }
+  | {
+      readonly type: "UPDATE_LAYOUT_SHAPE";
+      readonly shapeId: ShapeId;
+      readonly updater: (shape: Shape) => Shape;
     };
 
 // =============================================================================

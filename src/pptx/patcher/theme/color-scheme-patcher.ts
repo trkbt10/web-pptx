@@ -7,13 +7,11 @@
  */
 
 import { createElement, isXmlElement, type XmlElement, type XmlNode } from "../../../xml";
-import type { Color } from "../../../ooxml/domain/color";
+import type { Color, SchemeColorName } from "../../../ooxml/domain/color";
 import { serializeColor } from "../serializer/color";
 
-export type SchemeColorName =
-  | "dk1" | "lt1" | "dk2" | "lt2"
-  | "accent1" | "accent2" | "accent3" | "accent4" | "accent5" | "accent6"
-  | "hlink" | "folHlink";
+// Note: SchemeColorName is defined in ooxml/domain/color.ts (ECMA-376 aligned)
+// Import directly from there for type safety
 
 function schemeChildName(name: SchemeColorName): string {
   return `a:${name}`;
