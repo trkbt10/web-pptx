@@ -241,6 +241,20 @@ export class OperatorParser {
       case "K":
         this.handleStrokeCmyk();
         break;
+      // Color space operators (cs/CS set color space, sc/SC/scn/SCN set color)
+      case "cs":
+      case "CS":
+        // Just consume the color space name - we infer from component count
+        this.popString();
+        break;
+      case "sc":
+      case "scn":
+        this.handleFillColorN();
+        break;
+      case "SC":
+      case "SCN":
+        this.handleStrokeColorN();
+        break;
 
       // === Path Construction Operators ===
       case "m":
@@ -446,6 +460,78 @@ export class OperatorParser {
     const m = this.popNumber();
     const c = this.popNumber();
     this.gfxState.setStrokeCmyk(c, m, y, k);
+  }
+
+  /**
+   * sc/scn operator: set fill color in current color space
+   * We infer the color space from the number of operands on the stack
+   */
+  private handleFillColorN(): void {
+    // Count numeric operands on stack
+    const components = this.collectColorComponents();
+
+    switch (components.length) {
+      case 1:
+        this.gfxState.setFillGray(components[0]);
+        break;
+      case 3:
+        this.gfxState.setFillRgb(components[0], components[1], components[2]);
+        break;
+      case 4:
+        this.gfxState.setFillCmyk(components[0], components[1], components[2], components[3]);
+        break;
+      default:
+        // Unknown color space, default to RGB if 3+ components or gray if 1
+        if (components.length >= 3) {
+          this.gfxState.setFillRgb(components[0], components[1], components[2]);
+        } else if (components.length >= 1) {
+          this.gfxState.setFillGray(components[0]);
+        }
+    }
+  }
+
+  /**
+   * SC/SCN operator: set stroke color in current color space
+   * We infer the color space from the number of operands on the stack
+   */
+  private handleStrokeColorN(): void {
+    const components = this.collectColorComponents();
+
+    switch (components.length) {
+      case 1:
+        this.gfxState.setStrokeGray(components[0]);
+        break;
+      case 3:
+        this.gfxState.setStrokeRgb(components[0], components[1], components[2]);
+        break;
+      case 4:
+        this.gfxState.setStrokeCmyk(components[0], components[1], components[2], components[3]);
+        break;
+      default:
+        if (components.length >= 3) {
+          this.gfxState.setStrokeRgb(components[0], components[1], components[2]);
+        } else if (components.length >= 1) {
+          this.gfxState.setStrokeGray(components[0]);
+        }
+    }
+  }
+
+  /**
+   * Collect all numeric values from the operand stack as color components.
+   * Stops when a non-numeric value (like a color space name) is encountered.
+   */
+  private collectColorComponents(): number[] {
+    const components: number[] = [];
+    // Pop all numeric values (in reverse order since stack is LIFO)
+    while (this.operandStack.length > 0) {
+      const top = this.operandStack[this.operandStack.length - 1];
+      if (typeof top === "number") {
+        components.unshift(this.operandStack.pop() as number);
+      } else {
+        break;
+      }
+    }
+    return components;
   }
 
   // === Path Construction Handlers ===
