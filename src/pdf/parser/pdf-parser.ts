@@ -7,8 +7,8 @@
 
 import { PDFDocument, PDFPage, PDFRawStream, decodePDFRawStream, PDFArray, PDFRef } from "pdf-lib";
 import type { PdfDocument, PdfPage, PdfElement, PdfPath, PdfText, PdfImage, PdfGraphicsState } from "../domain";
-import { tokenizeContentStream } from "./tokenizer";
-import { OperatorParser, type ParsedElement, type ParsedPath, type ParsedText, type ParsedImage } from "./operator-parser";
+import { tokenizeContentStream } from "../domain/content-stream";
+import { parseContentStream, type ParsedElement, type ParsedPath, type ParsedText, type ParsedImage } from "./operator";
 import { buildPath, builtPathToPdfPath } from "./path-builder";
 import { extractImages } from "./image-extractor";
 import { extractFontMappings, decodeText, type FontMappings } from "./font-decoder";
@@ -139,8 +139,7 @@ async function parsePage(
   const tokens = tokenizeContentStream(contentStream);
 
   // Parse operators with font mappings for accurate text displacement
-  const operatorParser = new OperatorParser(fontMappings);
-  const parsedElements = operatorParser.parse(tokens);
+  const parsedElements = [...parseContentStream(tokens, fontMappings)];
 
   // Extract images from XObject resources
   const parsedImages = parsedElements.filter((e): e is ParsedImage => e.type === "image");

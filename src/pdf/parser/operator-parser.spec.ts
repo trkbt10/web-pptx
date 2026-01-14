@@ -3,7 +3,7 @@
  */
 
 import { OperatorParser, type ParsedPath, type ParsedText, type ParsedImage } from "./operator-parser";
-import { tokenizeContentStream } from "./tokenizer";
+import { tokenizeContentStream } from "../domain/content-stream";
 import { DEFAULT_FONT_METRICS, type FontMappings, type FontInfo, type FontMetrics } from "./font-decoder";
 
 describe("OperatorParser", () => {
