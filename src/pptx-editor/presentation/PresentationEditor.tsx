@@ -75,7 +75,14 @@ import {
   applyRunPropertiesToSelection,
   applyParagraphPropertiesToSelection,
 } from "../slide/text-edit/input-support/run-formatting";
-import { EDITOR_GRID_CONFIG, usePivotTabs, CanvasArea } from "../layout";
+import {
+  CanvasArea,
+  createPresentationEditorLayoutSchemas,
+  DEFAULT_EDITOR_LAYOUT_BREAKPOINTS,
+  resolveEditorLayoutMode,
+  useContainerWidth,
+  usePivotTabs,
+} from "../layout";
 import { SelectedElementTab, SlideInfoTab, LayersTab } from "../panels/right-panel";
 import { AssetPanel, LayoutInfoPanel, ThemeViewerPanel } from "../panels/inspector";
 import { ThemeEditorTabs, ThemeEditorCanvas, extractThemeFromPptx } from "../panels/theme-editor";
@@ -94,7 +101,7 @@ import {
 import { PresentationSlideshow, type SlideshowSlideContent } from "../preview/PresentationSlideshow";
 import { usePanelCallbacks, useContextMenuActions, useKeyboardShortcuts, useDragHandlers, useEditorLayers } from "./hooks";
 import type { TabContents } from "./hooks";
-import { PlayIcon } from "../ui/icons";
+import { ListViewIcon, PlayIcon, SettingsIcon } from "../ui/icons";
 import { ExportButton } from "./components";
 import { renderSlideSvg } from "../../pptx/render/svg/renderer";
 import { createCoreRenderContext } from "../../pptx/render";
@@ -134,6 +141,16 @@ function EditorContent({
     autoSwitchOnSelection: false,
   });
 
+  const layoutContainerRef = useRef<HTMLDivElement>(null);
+  const containerWidth = useContainerWidth(layoutContainerRef);
+  const responsiveLayoutMode = useMemo(
+    () => resolveEditorLayoutMode(containerWidth, DEFAULT_EDITOR_LAYOUT_BREAKPOINTS),
+    [containerWidth],
+  );
+
+  const [slidesDrawerOpen, setSlidesDrawerOpen] = useState(false);
+  const [inspectorDrawerOpen, setInspectorDrawerOpen] = useState(false);
+
   const {
     state,
     dispatch,
@@ -171,6 +188,29 @@ function EditorContent({
   const slide = activeSlide?.slide;
   const width = document.slideWidth;
   const height = document.slideHeight;
+
+  const layoutModeResetHandlers = useMemo(() => {
+    return {
+      desktop: () => {
+        setSlidesDrawerOpen(false);
+        setInspectorDrawerOpen(false);
+      },
+      tablet: () => {
+        setSlidesDrawerOpen(false);
+      },
+      mobile: () => undefined,
+    } as const;
+  }, []);
+
+  useEffect(() => {
+    layoutModeResetHandlers[responsiveLayoutMode]();
+  }, [layoutModeResetHandlers, responsiveLayoutMode]);
+
+  useEffect(() => {
+    if (!showInspector && inspectorDrawerOpen) {
+      setInspectorDrawerOpen(false);
+    }
+  }, [showInspector, inspectorDrawerOpen]);
 
   // ==========================================================================
   // Callbacks from extracted hooks
@@ -262,7 +302,6 @@ function EditorContent({
       if (result.success) {
         dispatch({ type: "APPLY_THEME_PRESET", preset: result.theme });
       } else {
-        // eslint-disable-next-line no-console
         console.error("Theme import failed:", result.error);
       }
     },
@@ -1037,6 +1076,40 @@ function EditorContent({
   // Build GridLayout layers
   // ==========================================================================
 
+  const layoutSchemasByMode = useMemo(
+    () =>
+      createPresentationEditorLayoutSchemas({
+        showInspector,
+        slidesDrawerOpen,
+        setSlidesDrawerOpen,
+        inspectorDrawerOpen,
+        setInspectorDrawerOpen,
+      }),
+    [inspectorDrawerOpen, showInspector, slidesDrawerOpen],
+  );
+
+  const layoutSchema = layoutSchemasByMode[responsiveLayoutMode];
+
+  const handleToggleSlidesDrawer = useCallback(() => {
+    setSlidesDrawerOpen((v) => {
+      const next = !v;
+      if (next) {
+        setInspectorDrawerOpen(false);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleToggleInspectorDrawer = useCallback(() => {
+    setInspectorDrawerOpen((v) => {
+      const next = !v;
+      if (next) {
+        setSlidesDrawerOpen(false);
+      }
+      return next;
+    });
+  }, []);
+
   const { layers } = useEditorLayers({
     thumbnailComponent: thumbnailLayerComponent,
     canvasComponent: canvasLayerComponent,
@@ -1046,6 +1119,7 @@ function EditorContent({
     activeTab,
     onTabChange: handleTabChange,
     inspectorPanelStyle,
+    placements: layoutSchema.placements,
   });
 
   // ==========================================================================
@@ -1111,8 +1185,8 @@ function EditorContent({
           </div>
         )}
 
-        <div style={gridContainerStyle}>
-          {editorMode === "theme" ? (
+        <div ref={layoutContainerRef} style={gridContainerStyle}>
+          {editorMode === "theme" && (
             <ThemeEditorCanvas
               colorScheme={colorContext.colorScheme}
               fontScheme={fontScheme}
@@ -1131,8 +1205,37 @@ function EditorContent({
               slideSize={{ width, height }}
               onLayoutSelect={slideCallbacks.handleLayoutChange}
             />
-          ) : (
-            <GridLayout config={EDITOR_GRID_CONFIG} layers={layers} />
+          )}
+          {editorMode !== "theme" && (
+            <>
+              <GridLayout config={layoutSchema.gridLayoutConfig} layers={layers} />
+              {layoutSchema.overlay.show && (
+                <div style={{ position: "absolute", top: 12, left: 12, display: "flex", gap: 8, zIndex: 250 }}>
+                  {layoutSchema.overlay.showSlidesButton && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleToggleSlidesDrawer}
+                      title="Toggle slides"
+                    >
+                      <ListViewIcon size={16} />
+                      <span style={{ marginLeft: "6px" }}>Slides</span>
+                    </Button>
+                  )}
+                  {layoutSchema.overlay.showInspectorButton && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleToggleInspectorDrawer}
+                      title="Toggle inspector"
+                    >
+                      <SettingsIcon size={16} />
+                      <span style={{ marginLeft: "6px" }}>Inspector</span>
+                    </Button>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

@@ -9,6 +9,18 @@ import type { LayerDefinition } from "react-panel-layout";
 import type { PivotBehavior } from "react-panel-layout/pivot";
 import { RIGHT_PANEL_TABS } from "../../layout";
 import { InspectorPanelWithTabs } from "../../panels/inspector";
+import type { LayerPlacement, LayerPlacements } from "../../layout/layer-placements";
+
+function resolveInspectorPlacement(
+  showInspector: boolean,
+  placements: Partial<LayerPlacements> | undefined,
+  defaultPlacement: LayerPlacement,
+): LayerPlacement {
+  if (!showInspector) {
+    return { type: "hidden" };
+  }
+  return placements?.inspector ?? defaultPlacement;
+}
 
 /**
  * Tab contents grouped into 3 categories.
@@ -40,6 +52,7 @@ export type UseEditorLayersParams = {
   readonly activeTab: string;
   readonly onTabChange: (tabId: string) => void;
   readonly inspectorPanelStyle: CSSProperties;
+  readonly placements?: Partial<LayerPlacements>;
 };
 
 export type UseEditorLayersResult = {
@@ -67,6 +80,7 @@ export function useEditorLayers({
   activeTab,
   onTabChange,
   inspectorPanelStyle,
+  placements,
 }: UseEditorLayersParams): UseEditorLayersResult {
   const pivotItems = useMemo(() => buildPivotItems(tabContents, tabLabelOverrides), [tabContents, tabLabelOverrides]);
 
@@ -89,27 +103,52 @@ export function useEditorLayers({
   }, [pivotConfig, inspectorPanelStyle]);
 
   const layers = useMemo<LayerDefinition[]>(() => {
-    const thumbnailLayer: LayerDefinition = {
-      id: "thumbnails",
-      gridArea: "thumbnails",
-      component: thumbnailComponent,
-      scrollable: true,
-    };
-
     const canvasLayer: LayerDefinition = {
       id: "canvas",
       gridArea: "canvas",
       component: canvasComponent,
     };
 
-    const inspectorLayer: LayerDefinition = {
-      id: "inspector",
-      gridArea: "inspector",
-      component: inspectorComponent,
-    };
+    const defaultThumbnailPlacement: LayerPlacement = { type: "grid", gridArea: "thumbnails", scrollable: true };
+    const thumbnailPlacement = placements?.thumbnails ?? defaultThumbnailPlacement;
 
-    return [thumbnailLayer, canvasLayer, inspectorLayer];
-  }, [thumbnailComponent, canvasComponent, inspectorComponent]);
+    const layers: LayerDefinition[] = [];
+
+    if (thumbnailPlacement.type !== "hidden") {
+      layers.push({
+        id: "thumbnails",
+        component: thumbnailComponent,
+        gridArea: thumbnailPlacement.type === "grid" ? thumbnailPlacement.gridArea : undefined,
+        drawer: thumbnailPlacement.type === "drawer" ? thumbnailPlacement.drawer : undefined,
+        width: thumbnailPlacement.type === "drawer" ? thumbnailPlacement.width : undefined,
+        height: thumbnailPlacement.type === "drawer" ? thumbnailPlacement.height : undefined,
+        position: thumbnailPlacement.type === "drawer" ? thumbnailPlacement.position : undefined,
+        zIndex: thumbnailPlacement.type === "drawer" ? thumbnailPlacement.zIndex : undefined,
+        scrollable: thumbnailPlacement.scrollable,
+      });
+    }
+
+    layers.push(canvasLayer);
+
+    const defaultInspectorPlacement: LayerPlacement = { type: "grid", gridArea: "inspector" };
+    const inspectorPlacement = resolveInspectorPlacement(showInspector, placements, defaultInspectorPlacement);
+
+    if (inspectorPlacement.type !== "hidden") {
+      layers.push({
+        id: "inspector",
+        component: inspectorComponent,
+        gridArea: inspectorPlacement.type === "grid" ? inspectorPlacement.gridArea : undefined,
+        drawer: inspectorPlacement.type === "drawer" ? inspectorPlacement.drawer : undefined,
+        width: inspectorPlacement.type === "drawer" ? inspectorPlacement.width : undefined,
+        height: inspectorPlacement.type === "drawer" ? inspectorPlacement.height : undefined,
+        position: inspectorPlacement.type === "drawer" ? inspectorPlacement.position : undefined,
+        zIndex: inspectorPlacement.type === "drawer" ? inspectorPlacement.zIndex : undefined,
+        scrollable: inspectorPlacement.scrollable,
+      });
+    }
+
+    return layers;
+  }, [placements, showInspector, thumbnailComponent, canvasComponent, inspectorComponent]);
 
   return { layers };
 }

@@ -26,6 +26,7 @@ export const toolbarStyle: CSSProperties = {
 export const gridContainerStyle: CSSProperties = {
   flex: 1,
   overflow: "hidden",
+  position: "relative",
 };
 
 export const thumbnailPanelStyle: CSSProperties = {

@@ -94,3 +94,37 @@ export const EDITOR_GRID_CONFIG_NO_INSPECTOR: PanelLayoutConfig = {
   ],
   gap: "0px",
 };
+
+/**
+ * Tablet grid layout configuration.
+ * - Keep thumbnails visible (resizable)
+ * - Inspector is expected to be rendered as a drawer layer (not in the grid)
+ */
+export const EDITOR_GRID_CONFIG_TABLET: PanelLayoutConfig = {
+  areas: [["thumbnails", "canvas"]],
+  rows: [{ size: "1fr" }],
+  columns: [
+    {
+      size: "180px",
+      resizable: true,
+      minSize: 150,
+      maxSize: 320,
+    },
+    {
+      size: "1fr",
+    },
+  ],
+  gap: "0px",
+};
+
+/**
+ * Mobile grid layout configuration.
+ * - Canvas only
+ * - Thumbnails and inspector are expected to be rendered as drawer layers
+ */
+export const EDITOR_GRID_CONFIG_MOBILE: PanelLayoutConfig = {
+  areas: [["canvas"]],
+  rows: [{ size: "1fr" }],
+  columns: [{ size: "1fr" }],
+  gap: "0px",
+};
