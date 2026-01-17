@@ -688,18 +688,18 @@ export function applyEncodingDifferences(
   differences: readonly (number | string)[]
 ): Map<number, string> {
   const result = new Map(baseEncoding);
-  let currentCode = 0;
+  const currentCode = { value: 0 };
 
   for (const entry of differences) {
     if (typeof entry === "number") {
-      currentCode = entry;
+      currentCode.value = entry;
     } else {
       // Convert glyph name to Unicode
       const unicode = glyphNameToUnicode(entry);
       if (unicode !== undefined) {
-        result.set(currentCode, unicode);
+        result.set(currentCode.value, unicode);
       }
-      currentCode++;
+      currentCode.value += 1;
     }
   }
 

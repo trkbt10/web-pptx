@@ -67,8 +67,7 @@ describe("SVG rendering with embedded fonts", () => {
     const fontFaceFamilies: string[] = [];
     styleElements.forEach((style) => {
       const content = style.textContent ?? "";
-      let match;
-      while ((match = fontFaceRegex.exec(content)) !== null) {
+      for (let match = fontFaceRegex.exec(content); match !== null; match = fontFaceRegex.exec(content)) {
         fontFaceFamilies.push(match[1]);
       }
     });
@@ -95,17 +94,17 @@ describe("SVG rendering with embedded fonts", () => {
     });
 
     // Find style element with @font-face
-    let fontFaceStyleFound = false;
-    styleElements.forEach((style) => {
-      if (style.textContent?.includes("@font-face")) {
-        fontFaceStyleFound = true;
-        // Show first @font-face rule structure
-        const firstFontFace = style.textContent.match(/@font-face\s*\{[^}]+\}/);
-        if (firstFontFace) {
-          console.log("\nFirst @font-face rule:");
-          console.log(firstFontFace[0].replace(/data:[^)]+/, "data:...BASE64..."));
-        }
+    const fontFaceStyleFound = Array.from(styleElements).some((style) => {
+      if (!style.textContent?.includes("@font-face")) {
+        return false;
       }
+      // Show first @font-face rule structure
+      const firstFontFace = style.textContent.match(/@font-face\s*\{[^}]+\}/);
+      if (firstFontFace) {
+        console.log("\nFirst @font-face rule:");
+        console.log(firstFontFace[0].replace(/data:[^)]+/, "data:...BASE64..."));
+      }
+      return true;
     });
 
     // Check font data magic bytes and OpenType table structure

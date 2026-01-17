@@ -453,9 +453,11 @@ function flattenToParagraphs(groupedParas: readonly GroupedParagraph[]): Paragra
   }
 
   const result: Paragraph[] = [];
-  let currentRuns: PdfText[] = [...groupedParas[0].runs];
-  let spaceBefore: number | undefined = undefined;
-  let currentLineSpacing: LineSpacingInfo | undefined = groupedParas[0].lineSpacing;
+  const state: { currentRuns: PdfText[]; spaceBefore: number | undefined; currentLineSpacing: LineSpacingInfo | undefined } = {
+    currentRuns: [...groupedParas[0].runs],
+    spaceBefore: undefined,
+    currentLineSpacing: groupedParas[0].lineSpacing,
+  };
 
   for (let i = 1; i < groupedParas.length; i++) {
     const prevPara = groupedParas[i - 1];
@@ -468,7 +470,7 @@ function flattenToParagraphs(groupedParas: readonly GroupedParagraph[]): Paragra
 
     if (prevFontSize === undefined) {
       // Cannot determine paragraph break without font size
-      currentRuns.push(...currPara.runs);
+      state.currentRuns.push(...currPara.runs);
       continue;
     }
 
@@ -480,24 +482,24 @@ function flattenToParagraphs(groupedParas: readonly GroupedParagraph[]): Paragra
 
     if (isParagraphBreak) {
       // Finish current paragraph and start new one
-      result.push(createFlatParagraph(currentRuns, spaceBefore, currentLineSpacing));
-      currentRuns = [...currPara.runs];
+      result.push(createFlatParagraph(state.currentRuns, state.spaceBefore, state.currentLineSpacing));
+      state.currentRuns = [...currPara.runs];
       // Set spaceBefore for the new paragraph
-      spaceBefore = extraSpace > 0 ? extraSpace : undefined;
-      currentLineSpacing = currPara.lineSpacing;
+      state.spaceBefore = extraSpace > 0 ? extraSpace : undefined;
+      state.currentLineSpacing = currPara.lineSpacing;
     } else {
       // Continue same paragraph - add runs from this line
-      currentRuns.push(...currPara.runs);
+      state.currentRuns.push(...currPara.runs);
       // Update line spacing if available
       if (currPara.lineSpacing !== undefined) {
-        currentLineSpacing = currPara.lineSpacing;
+        state.currentLineSpacing = currPara.lineSpacing;
       }
     }
   }
 
   // Don't forget the last paragraph
-  if (currentRuns.length > 0) {
-    result.push(createFlatParagraph(currentRuns, spaceBefore, currentLineSpacing));
+  if (state.currentRuns.length > 0) {
+    result.push(createFlatParagraph(state.currentRuns, state.spaceBefore, state.currentLineSpacing));
   }
 
   return result;

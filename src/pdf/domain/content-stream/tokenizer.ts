@@ -48,9 +48,7 @@ const DELIMITER = /[()<>[\]{}/%]/;
  */
 export function tokenizeContentStream(content: string): PdfToken[] {
   const tokens: PdfToken[] = [];
-  let pos = 0;
-
-  while (pos < content.length) {
+  for (let pos = 0; pos < content.length; ) {
     // Skip whitespace
     while (pos < content.length && WHITESPACE.test(content[pos])) {
       pos++;

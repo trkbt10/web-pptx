@@ -60,7 +60,7 @@ function printGroupInfo(groups: readonly GroupedText[], verbose = false): void {
 describe("spatialGrouping with real PDF", () => {
   const PDF_PATH = join(process.cwd(), "fixtures/samples/k-namingrule-dl.pdf");
 
-  let groups: readonly GroupedText[];
+  const groups: { value: readonly GroupedText[] } = { value: [] };
 
   beforeAll(async () => {
     // Read PDF file - use page 2 for table cell separation testing
@@ -72,20 +72,20 @@ describe("spatialGrouping with real PDF", () => {
     const texts = page.elements.filter((e): e is PdfText => e.type === "text");
 
     // Apply spatial grouping with default options
-    groups = spatialGrouping(texts);
+    groups.value = spatialGrouping(texts);
 
     // Print debug info
-    printGroupInfo(groups);
+    printGroupInfo(groups.value);
   });
 
   it("should create groups from the PDF", () => {
-    expect(groups.length).toBeGreaterThan(0);
+    expect(groups.value.length).toBeGreaterThan(0);
   });
 
   it("should group section header with its description", () => {
     // eslint-disable-next-line no-irregular-whitespace -- Japanese PDF content with full-width space
     // "１　「都道府県コード」と「都道府県名」" section
-    const sectionGroup = groups.find((g) => {
+    const sectionGroup = groups.value.find((g) => {
       const content = getGroupedTextContent(g);
       return content.includes("１　「都道府県コード」と「都道府県名」");
     });
@@ -101,7 +101,7 @@ describe("spatialGrouping with real PDF", () => {
 
   it("should separate table columns into different groups", () => {
     // Prefecture codes (00, 01, 02...) should be in their own column group
-    const codeColumnGroup = groups.find((g) => {
+    const codeColumnGroup = groups.value.find((g) => {
       const content = getGroupedTextContent(g);
       // Check for pattern of prefecture codes
       return content.includes("00") && content.includes("01") && content.includes("02");
@@ -116,7 +116,7 @@ describe("spatialGrouping with real PDF", () => {
 
   it("should separate prefecture names into their own column", () => {
     // Prefecture names (北海道, 青森県...) should be in their own column group
-    const nameColumnGroup = groups.find((g) => {
+    const nameColumnGroup = groups.value.find((g) => {
       const content = getGroupedTextContent(g);
       return content.includes("北海道") && content.includes("青森県");
     });
@@ -130,7 +130,7 @@ describe("spatialGrouping with real PDF", () => {
 
   it("should separate English name column", () => {
     // English prefecture names (hokkaido, aomori...) should be separate
-    const englishColumnGroup = groups.find((g) => {
+    const englishColumnGroup = groups.value.find((g) => {
       const content = getGroupedTextContent(g);
       return content.includes("hokkaido") && content.includes("aomori");
     });
@@ -144,7 +144,7 @@ describe("spatialGrouping with real PDF", () => {
 
   it("groups should not exceed reasonable size", () => {
     // Each group should be a logical unit, not the entire page
-    for (const g of groups) {
+    for (const g of groups.value) {
       const content = getGroupedTextContent(g);
       // A single group shouldn't contain multiple unrelated sections
       expect(content.length).toBeLessThan(2000);
@@ -156,7 +156,7 @@ describe("spatialGrouping with real PDF", () => {
     // but not too many (which would indicate over-fragmentation)
     // and not too few (which would indicate under-grouping)
     // Expected: ~5 groups (title, description, table1, table2, page number)
-    expect(groups.length).toBeGreaterThanOrEqual(4);
-    expect(groups.length).toBeLessThan(100);
+    expect(groups.value.length).toBeGreaterThanOrEqual(4);
+    expect(groups.value.length).toBeLessThan(100);
   });
 });

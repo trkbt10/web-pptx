@@ -22,15 +22,15 @@ function buildPdfWithInlineImage(args: { readonly contentStream: string }): Uint
   const parts: string[] = [header];
   const offsets: number[] = [0];
 
-  let cursor = header.length;
+  const cursor = { value: header.length };
   for (const n of order) {
-    offsets[n] = cursor;
+    offsets[n] = cursor.value;
     const body = `${n} 0 obj\n${objects[n]}\nendobj\n`;
     parts.push(body);
-    cursor += body.length;
+    cursor.value += body.length;
   }
 
-  const xrefStart = cursor;
+  const xrefStart = cursor.value;
   const size = Math.max(...order) + 1;
   const xrefLines: string[] = [];
   xrefLines.push("xref\n");
@@ -74,15 +74,15 @@ function buildPdfWithInlineImageInsideForm(): Uint8Array {
   const parts: string[] = [header];
   const offsets: number[] = [0];
 
-  let cursor = header.length;
+  const cursor = { value: header.length };
   for (const n of order) {
-    offsets[n] = cursor;
+    offsets[n] = cursor.value;
     const body = `${n} 0 obj\n${objects[n]}\nendobj\n`;
     parts.push(body);
-    cursor += body.length;
+    cursor.value += body.length;
   }
 
-  const xrefStart = cursor;
+  const xrefStart = cursor.value;
   const size = Math.max(...order) + 1;
   const xrefLines: string[] = [];
   xrefLines.push("xref\n");

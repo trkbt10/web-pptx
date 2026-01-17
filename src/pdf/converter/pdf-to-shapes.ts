@@ -55,9 +55,13 @@ export function convertPageToShapes(page: PdfPage, options: ConversionOptions): 
   );
 
   const shapes: Shape[] = [];
-  let shapeIdCounter = 1;
+  const shapeIdCounter = { value: 1 };
 
-  const generateId = (): string => String(shapeIdCounter++);
+  const generateId = (): string => {
+    const id = String(shapeIdCounter.value);
+    shapeIdCounter.value += 1;
+    return id;
+  };
 
   const paths: PdfPath[] = [];
   const texts: PdfText[] = [];
@@ -120,28 +124,30 @@ export function convertPageToShapes(page: PdfPage, options: ConversionOptions): 
     }
 
     // Determine if this path should be a blocking zone based on paint operation
-    let isBlockingZone = false;
+    const isBlockingZone = (() => {
+      if (path.paintOp === "stroke" || path.paintOp === "fillStroke") {
+        // Stroked paths (lines, borders) are always blocking zones
+        // They represent visual separators like table borders, divider lines
+        return true;
+      }
+      if (path.paintOp === "fill") {
+        // Fill-only paths need careful consideration:
+        // - Thin fills (divider lines drawn as filled rectangles) should block
+        // - Large filled areas (backgrounds, table cells) should NOT block
 
-    if (path.paintOp === "stroke" || path.paintOp === "fillStroke") {
-      // Stroked paths (lines, borders) are always blocking zones
-      // They represent visual separators like table borders, divider lines
-      isBlockingZone = true;
-    } else if (path.paintOp === "fill") {
-      // Fill-only paths need careful consideration:
-      // - Thin fills (divider lines drawn as filled rectangles) should block
-      // - Large filled areas (backgrounds, table cells) should NOT block
+        // Threshold for "thin" fill: less than 3 points in either dimension
+        const thinThreshold = 3;
+        const isThinFill = width < thinThreshold || height < thinThreshold;
 
-      // Threshold for "thin" fill: less than 3 points in either dimension
-      const thinThreshold = 3;
-      const isThinFill = width < thinThreshold || height < thinThreshold;
+        // Aspect ratio check: very elongated shapes are likely dividers
+        const aspectRatio = Math.max(width, height) / Math.max(Math.min(width, height), 0.1);
+        const isElongated = aspectRatio > 20;
 
-      // Aspect ratio check: very elongated shapes are likely dividers
-      const aspectRatio = Math.max(width, height) / Math.max(Math.min(width, height), 0.1);
-      const isElongated = aspectRatio > 20;
-
-      // Include thin or elongated fills as blocking zones (they're visual separators)
-      isBlockingZone = isThinFill || isElongated;
-    }
+        // Include thin or elongated fills as blocking zones (they're visual separators)
+        return isThinFill || isElongated;
+      }
+      return false;
+    })();
 
     if (isBlockingZone) {
       blockingZones.push({
@@ -266,16 +272,7 @@ function convertPath(path: PdfPath, context: ConversionContext, shapeId: string)
   // (like rect, ellipse) won't represent the actual shape correctly
   const usePresetOptimization = ctmDecomposition.isSimple;
 
-  let geometry: SpShape["properties"]["geometry"];
-  if (usePresetOptimization && isSimpleRectangle(path)) {
-    geometry = convertToPresetRect(path);
-  } else if (usePresetOptimization && isApproximateEllipse(path)) {
-    geometry = convertToPresetEllipse(path);
-  } else if (usePresetOptimization && isRoundedRectangle(path)) {
-    geometry = convertToPresetRoundRect(path);
-  } else {
-    geometry = convertPathToGeometry(path, context);
-  }
+  const geometry = selectPathGeometry(path, context, usePresetOptimization);
 
   const { fill, line } = convertGraphicsStateToStyle(path.graphicsState, path.paintOp);
 
@@ -303,4 +300,21 @@ function convertPath(path: PdfPath, context: ConversionContext, shapeId: string)
       line,
     },
   };
+}
+
+function selectPathGeometry(
+  path: PdfPath,
+  context: ConversionContext,
+  usePresetOptimization: boolean,
+): SpShape["properties"]["geometry"] {
+  if (usePresetOptimization && isSimpleRectangle(path)) {
+    return convertToPresetRect(path);
+  }
+  if (usePresetOptimization && isApproximateEllipse(path)) {
+    return convertToPresetEllipse(path);
+  }
+  if (usePresetOptimization && isRoundedRectangle(path)) {
+    return convertToPresetRoundRect(path);
+  }
+  return convertPathToGeometry(path, context);
 }

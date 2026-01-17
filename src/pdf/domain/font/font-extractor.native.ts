@@ -112,6 +112,22 @@ function extractEmbeddedFontStream(page: NativePdfPage, fontDescriptor: PdfDict)
   return { stream, streamSubtype, fontFile, fontFile2, fontFile3 };
 }
 
+function normalizeEmbeddedFontData(args: {
+  readonly format: FontFormat;
+  readonly rawData: Uint8Array;
+  readonly fontFamily: string;
+  readonly toUnicode: ReadonlyMap<number, string> | null;
+}): { data: Uint8Array; metrics: EmbeddedFontMetrics | undefined } {
+  if (args.format !== "truetype") {
+    return { data: args.rawData, metrics: undefined };
+  }
+
+  const data = repairFontForWeb(args.rawData, new Map(args.toUnicode ?? []), args.fontFamily);
+  const rawMetrics = extractTrueTypeMetrics(data);
+  const metrics = rawMetrics ? normalizeMetricsTo1000(rawMetrics) : undefined;
+  return { data, metrics };
+}
+
 
 
 
@@ -156,14 +172,8 @@ export function extractEmbeddedFontsFromNativePages(pages: readonly NativePdfPag
 
       const fontFamily = normalizeFontFamily(baseFontRaw);
 
-      let data = rawData;
-      let metrics: EmbeddedFontMetrics | undefined;
-      if (format === "truetype") {
-        const toUnicode = extractToUnicodeMap(page, fontDict);
-        data = repairFontForWeb(data, new Map(toUnicode ?? []), fontFamily);
-        const rawMetrics = extractTrueTypeMetrics(data);
-        if (rawMetrics) {metrics = normalizeMetricsTo1000(rawMetrics);}
-      }
+      const toUnicode = extractToUnicodeMap(page, fontDict);
+      const { data, metrics } = normalizeEmbeddedFontData({ format, rawData, fontFamily, toUnicode });
 
       fonts.push({
         baseFontName: baseFontRaw,

@@ -105,26 +105,41 @@ function readInherited(
   rotate: number | null;
   userUnit: number | null;
 } {
-  let cur: PdfDict | null = dict;
-  let resources: PdfDict | null = null;
-  let mediaBox: readonly number[] | null = null;
-  let cropBox: readonly number[] | null = null;
-  let bleedBox: readonly number[] | null = null;
-  let trimBox: readonly number[] | null = null;
-  let artBox: readonly number[] | null = null;
-  let rotate: number | null = null;
-  let userUnit: number | null = null;
-  while (cur) {
-    if (!resources) {
+  const state: {
+    cur: PdfDict | null;
+    resources: PdfDict | null;
+    mediaBox: readonly number[] | null;
+    cropBox: readonly number[] | null;
+    bleedBox: readonly number[] | null;
+    trimBox: readonly number[] | null;
+    artBox: readonly number[] | null;
+    rotate: number | null;
+    userUnit: number | null;
+  } = {
+    cur: dict,
+    resources: null,
+    mediaBox: null,
+    cropBox: null,
+    bleedBox: null,
+    trimBox: null,
+    artBox: null,
+    rotate: null,
+    userUnit: null,
+  };
+
+  while (state.cur) {
+    const cur = state.cur;
+
+    if (!state.resources) {
       const resourcesObj = dictGet(cur, "Resources");
       if (resourcesObj) {
         const resolved = resolver.deref(resourcesObj);
         const resDict = asDict(resolved);
-        if (resDict) {resources = resDict;}
+        if (resDict) {state.resources = resDict;}
       }
     }
 
-    if (!mediaBox) {
+    if (!state.mediaBox) {
       const mediaBoxObj = dictGet(cur, "MediaBox");
       if (mediaBoxObj) {
         const resolved = resolver.deref(mediaBoxObj);
@@ -137,12 +152,12 @@ function readInherited(
             }
             nums.push(item.value);
           }
-          if (nums.length === 4) {mediaBox = nums;}
+          if (nums.length === 4) {state.mediaBox = nums;}
         }
       }
     }
 
-    if (!cropBox) {
+    if (!state.cropBox) {
       const cropBoxObj = dictGet(cur, "CropBox");
       if (cropBoxObj) {
         const resolved = resolver.deref(cropBoxObj);
@@ -155,12 +170,12 @@ function readInherited(
             }
             nums.push(item.value);
           }
-          if (nums.length === 4) {cropBox = nums;}
+          if (nums.length === 4) {state.cropBox = nums;}
         }
       }
     }
 
-    if (!bleedBox) {
+    if (!state.bleedBox) {
       const bleedBoxObj = dictGet(cur, "BleedBox");
       if (bleedBoxObj) {
         const resolved = resolver.deref(bleedBoxObj);
@@ -173,12 +188,12 @@ function readInherited(
             }
             nums.push(item.value);
           }
-          if (nums.length === 4) {bleedBox = nums;}
+          if (nums.length === 4) {state.bleedBox = nums;}
         }
       }
     }
 
-    if (!trimBox) {
+    if (!state.trimBox) {
       const trimBoxObj = dictGet(cur, "TrimBox");
       if (trimBoxObj) {
         const resolved = resolver.deref(trimBoxObj);
@@ -191,12 +206,12 @@ function readInherited(
             }
             nums.push(item.value);
           }
-          if (nums.length === 4) {trimBox = nums;}
+          if (nums.length === 4) {state.trimBox = nums;}
         }
       }
     }
 
-    if (!artBox) {
+    if (!state.artBox) {
       const artBoxObj = dictGet(cur, "ArtBox");
       if (artBoxObj) {
         const resolved = resolver.deref(artBoxObj);
@@ -209,29 +224,49 @@ function readInherited(
             }
             nums.push(item.value);
           }
-          if (nums.length === 4) {artBox = nums;}
+          if (nums.length === 4) {state.artBox = nums;}
         }
       }
     }
 
-    if (rotate == null) {
+    if (state.rotate == null) {
       const rotateObj = resolver.deref(dictGet(cur, "Rotate") ?? { type: "null" });
-      if (rotateObj.type === "number") {rotate = Math.trunc(rotateObj.value);}
+      if (rotateObj.type === "number") {state.rotate = Math.trunc(rotateObj.value);}
     }
 
-    if (userUnit == null) {
+    if (state.userUnit == null) {
       const userUnitObj = resolver.deref(dictGet(cur, "UserUnit") ?? { type: "null" });
-      if (userUnitObj.type === "number" && userUnitObj.value > 0) {userUnit = userUnitObj.value;}
+      if (userUnitObj.type === "number" && userUnitObj.value > 0) {state.userUnit = userUnitObj.value;}
     }
 
-    if (resources && mediaBox && cropBox && bleedBox && trimBox && artBox && rotate != null && userUnit != null) {break;}
+    if (
+      state.resources &&
+      state.mediaBox &&
+      state.cropBox &&
+      state.bleedBox &&
+      state.trimBox &&
+      state.artBox &&
+      state.rotate != null &&
+      state.userUnit != null
+    ) {
+      break;
+    }
 
     const parentRef = asRef(dictGet(cur, "Parent"));
     if (!parentRef) {break;}
     const parent = resolver.getObject(parentRef.obj);
-    cur = asDict(parent);
+    state.cur = asDict(parent);
   }
-  return { resources, mediaBox, cropBox, bleedBox, trimBox, artBox, rotate, userUnit };
+  return {
+    resources: state.resources,
+    mediaBox: state.mediaBox,
+    cropBox: state.cropBox,
+    bleedBox: state.bleedBox,
+    trimBox: state.trimBox,
+    artBox: state.artBox,
+    rotate: state.rotate,
+    userUnit: state.userUnit,
+  };
 }
 
 function collectPages(pagesNode: PdfDict, resolver: PdfResolver): readonly PdfDict[] {

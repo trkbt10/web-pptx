@@ -269,12 +269,10 @@ export function parseContentStream(
   const gfxStack = new GraphicsStateStack();
   const gfxOps = createGfxOpsFromStack(gfxStack);
 
-  let ctx = createInitialContext(fontMappings, options);
-
-  for (const token of tokens) {
-    ctx = processToken(ctx, token, gfxOps);
-  }
-
+  const ctx = tokens.reduce(
+    (ctx, token) => processToken(ctx, token, gfxOps),
+    createInitialContext(fontMappings, options),
+  );
   return ctx.elements;
 }
 
@@ -311,12 +309,10 @@ export function createParser(
   }> = {},
 ): (tokens: readonly PdfToken[]) => readonly ParsedElement[] {
   return (tokens) => {
-    let ctx = createInitialContext(fontMappings, options);
-
-    for (const token of tokens) {
-      ctx = processToken(ctx, token, gfxOps);
-    }
-
+    const ctx = tokens.reduce(
+      (ctx, token) => processToken(ctx, token, gfxOps),
+      createInitialContext(fontMappings, options),
+    );
     return ctx.elements;
   };
 }

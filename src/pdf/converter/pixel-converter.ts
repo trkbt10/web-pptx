@@ -45,6 +45,56 @@ function expandBitsTo8(
   return result;
 }
 
+function getExpectedRawLength(sampleCount: number, bitsPerComponent: number): number {
+  switch (bitsPerComponent) {
+    case 1:
+    case 2:
+    case 4:
+      return Math.ceil((sampleCount * bitsPerComponent) / 8);
+    case 8:
+      return sampleCount;
+    case 16:
+      return sampleCount * 2;
+    default:
+      throw new Error(
+        `[PDF Image] Unsupported bitsPerComponent: ${bitsPerComponent}. Supported values: 1, 2, 4, 8, 16.`
+      );
+  }
+}
+
+function normalizeRawPixelDataTo8BitSamples(
+  data: Uint8Array,
+  bitsPerComponent: number,
+  sampleCount: number,
+): Uint8Array {
+  switch (bitsPerComponent) {
+    case 1:
+    case 2:
+    case 4:
+      return expandBitsTo8(data, bitsPerComponent, sampleCount);
+    case 8:
+      return data;
+    case 16:
+      console.info("[PDF Image] Downsampled 16-bit image to 8-bit");
+      return downsample16to8(data, sampleCount);
+    default:
+      throw new Error(
+        `[PDF Image] Unsupported bitsPerComponent: ${bitsPerComponent}. Supported values: 1, 2, 4, 8, 16.`
+      );
+  }
+}
+
+function applyDecodeIfPresent(
+  data: Uint8Array,
+  componentsPerPixel: number,
+  decode: readonly number[] | undefined,
+): Uint8Array {
+  if (!decode) {return data;}
+  const expectedDecodeLen = componentsPerPixel * 2;
+  if (decode.length !== expectedDecodeLen) {return data;}
+  return applyDecodeArray(data, componentsPerPixel, decode);
+}
+
 // =============================================================================
 // Public API
 // =============================================================================
@@ -75,24 +125,7 @@ export function convertToRgba(
     return rgba;
   }
 
-  let expectedRawLength: number;
-  switch (bitsPerComponent) {
-    case 1:
-    case 2:
-    case 4:
-      expectedRawLength = Math.ceil((sampleCount * bitsPerComponent) / 8);
-      break;
-    case 8:
-      expectedRawLength = sampleCount;
-      break;
-    case 16:
-      expectedRawLength = sampleCount * 2;
-      break;
-    default:
-      throw new Error(
-        `[PDF Image] Unsupported bitsPerComponent: ${bitsPerComponent}. Supported values: 1, 2, 4, 8, 16.`
-      );
-  }
+  const expectedRawLength = getExpectedRawLength(sampleCount, bitsPerComponent);
 
   if (data.length !== expectedRawLength) {
     const message =
@@ -106,32 +139,8 @@ export function convertToRgba(
     }
   }
 
-  let normalizedData: Uint8Array = data;
-  switch (bitsPerComponent) {
-    case 1:
-    case 2:
-    case 4:
-      normalizedData = expandBitsTo8(data, bitsPerComponent, sampleCount);
-      break;
-    case 8:
-      normalizedData = data;
-      break;
-    case 16:
-      normalizedData = downsample16to8(data, sampleCount);
-      console.info("[PDF Image] Downsampled 16-bit image to 8-bit");
-      break;
-    default:
-      throw new Error(
-        `[PDF Image] Unsupported bitsPerComponent: ${bitsPerComponent}. Supported values: 1, 2, 4, 8, 16.`
-      );
-  }
-
-  if (options.decode) {
-    const expectedDecodeLen = componentsPerPixel * 2;
-    if (options.decode.length === expectedDecodeLen) {
-      normalizedData = applyDecodeArray(normalizedData, componentsPerPixel, options.decode);
-    }
-  }
+  const normalizedBase = normalizeRawPixelDataTo8BitSamples(data, bitsPerComponent, sampleCount);
+  const normalizedData = applyDecodeIfPresent(normalizedBase, componentsPerPixel, options.decode);
 
   if (bitsPerComponent === 8 && normalizedData.length !== sampleCount) {
     // Try to auto-detect color space based on data length (8-bit only)

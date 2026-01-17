@@ -15,7 +15,7 @@
  * - Split complex calculations into testable helpers
  */
 
-import type { PdfMatrix, FontMetrics } from "../../domain";
+import type { PdfMatrix, FontMetrics, FontInfo, FontMappings } from "../../domain";
 import { IDENTITY_MATRIX, transformPoint, multiplyMatrices, DEFAULT_FONT_METRICS } from "../../domain";
 import type {
   OperatorHandler,
@@ -80,7 +80,7 @@ export function calculateTextDisplacement(
   tjAdjustment: number = 0
 ): number {
   const Th = horizontalScaling / 100;
-  let totalDisplacement = 0;
+  const totalDisplacement = { value: 0 };
 
   // For 2-byte CID fonts, character codes are encoded as pairs of bytes
   if (codeByteWidth === 2) {
@@ -95,7 +95,7 @@ export function calculateTextDisplacement(
       const isSpace = cid === 32 || cid === 1;
       const charDisplacement = (glyphWidth + charSpacing + (isSpace ? wordSpacing : 0)) * Th;
 
-      totalDisplacement += charDisplacement;
+      totalDisplacement.value += charDisplacement;
     }
   } else {
     // Single-byte font
@@ -106,11 +106,11 @@ export function calculateTextDisplacement(
       const isSpace = charCode === 32;
       const charDisplacement = (glyphWidth + charSpacing + (isSpace ? wordSpacing : 0)) * Th;
 
-      totalDisplacement += charDisplacement;
+      totalDisplacement.value += charDisplacement;
     }
   }
 
-  return totalDisplacement;
+  return totalDisplacement.value;
 }
 
 /**
@@ -191,15 +191,7 @@ const handleSetFont: OperatorHandler = (ctx) => {
 
   // Load font metrics for glyph width calculations
   const cleanName = name.startsWith("/") ? name.slice(1) : name;
-  let fontInfo = ctx.fontMappings.get(cleanName);
-
-  // Try without subset prefix (e.g., "XGIAKD+Arial" → "Arial")
-  if (!fontInfo) {
-    const plusIndex = cleanName.indexOf("+");
-    if (plusIndex > 0) {
-      fontInfo = ctx.fontMappings.get(cleanName.slice(plusIndex + 1));
-    }
-  }
+  const fontInfo = getFontInfo(ctx.fontMappings, cleanName);
 
   return {
     operandStack: stack2,
@@ -213,6 +205,19 @@ const handleSetFont: OperatorHandler = (ctx) => {
     },
   };
 };
+
+function getFontInfo(fontMappings: FontMappings, cleanName: string): FontInfo | undefined {
+  const direct = fontMappings.get(cleanName);
+  if (direct) {return direct;}
+
+  // Try without subset prefix (e.g., "XGIAKD+Arial" → "Arial")
+  const plusIndex = cleanName.indexOf("+");
+  if (plusIndex > 0) {
+    return fontMappings.get(cleanName.slice(plusIndex + 1));
+  }
+
+  return undefined;
+}
 
 /**
  * Tc operator: Set character spacing
@@ -472,9 +477,7 @@ const handleShowTextArray: OperatorHandler = (ctx, gfxOps) => {
   const { horizontalScaling } = state;
   const Th = horizontalScaling / 100;
 
-  let textState = ctx.textState;
-
-  for (const elem of array) {
+  const textState = array.reduce((textState, elem) => {
     if (typeof elem === "string") {
       const { run, newTextMatrix } = createTextRun(elem, textState, {
         ctm: state.ctm,
@@ -483,24 +486,25 @@ const handleShowTextArray: OperatorHandler = (ctx, gfxOps) => {
         wordSpacing: state.wordSpacing,
         horizontalScaling,
       });
-
-      textState = {
+      return {
         ...textState,
         textMatrix: newTextMatrix,
         textRuns: [...textState.textRuns, run],
       };
-    } else if (typeof elem === "number") {
+    }
+    if (typeof elem === "number") {
       // PDF Reference 9.4.3:
       // Number value represents displacement in text space units (1/1000 em)
       // Positive values move left (subtract from position)
       const adjustment = -elem * currentFontSize / 1000 * Th;
       const [a, b, c, d, e, f] = textState.textMatrix;
-      textState = {
+      return {
         ...textState,
         textMatrix: [a, b, c, d, e + adjustment, f],
       };
     }
-  }
+    return textState;
+  }, ctx.textState);
 
   return {
     operandStack: newStack,

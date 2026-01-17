@@ -191,23 +191,22 @@ function extractFontDescriptor(page: NativePdfPage, fontDict: PdfDict): PdfDict 
 
 function computeBoldItalic(baseFont: string | undefined, descriptor: PdfDict | null): { isBold?: boolean; isItalic?: boolean } {
   const name = baseFont ?? "";
-  let isBold = isBoldFont(name);
-  let isItalic = isItalicFont(name);
+  const state = { isBold: isBoldFont(name), isItalic: isItalicFont(name) };
 
   if (descriptor) {
     const flags = asNumber(dictGet(descriptor, "Flags"));
     if (flags != null) {
       // bit 18 (0x40000) for ForceBold sometimes used; but commonly bit 6 (0x40) for Italic
       // We'll keep it minimal and consistent with previous heuristic.
-      if ((flags & 0x40) !== 0) {isItalic = true;}
+      if ((flags & 0x40) !== 0) {state.isItalic = true;}
     }
     const weight = asNumber(dictGet(descriptor, "FontWeight"));
-    if (weight != null && weight >= 700) {isBold = true;}
+    if (weight != null && weight >= 700) {state.isBold = true;}
     const italicAngle = asNumber(dictGet(descriptor, "ItalicAngle"));
-    if (italicAngle != null && italicAngle !== 0) {isItalic = true;}
+    if (italicAngle != null && italicAngle !== 0) {state.isItalic = true;}
   }
 
-  return { isBold, isItalic };
+  return state;
 }
 
 function extractSimpleFontWidths(page: NativePdfPage, fontDict: PdfDict): Pick<FontMetrics, "widths" | "defaultWidth"> {
@@ -258,8 +257,7 @@ function extractCidFontWidths(page: NativePdfPage, fontDict: PdfDict): Pick<Font
   if (!wArr) {return { widths, defaultWidth };}
 
   // W array format: [cFirst [w1 w2 ...] cFirst2 cLast2 w ...]
-  let i = 0;
-  while (i < wArr.items.length) {
+  for (let i = 0; i < wArr.items.length; ) {
     const first = wArr.items[i];
     if (!first || first.type !== "number") {break;}
     const cFirst = Math.trunc(first.value);
