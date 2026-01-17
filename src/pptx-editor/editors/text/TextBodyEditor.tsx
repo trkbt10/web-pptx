@@ -5,10 +5,10 @@
  */
 
 import { useCallback, useState, type CSSProperties, type KeyboardEvent } from "react";
-import { FieldGroup } from "../../ui/layout";
+import { FieldGroup } from "../../../office-editor-components/layout";
 import { ParagraphPropertiesEditor, createDefaultParagraphProperties } from "./ParagraphPropertiesEditor";
 import type { TextBody, Paragraph, ParagraphProperties, TextRun } from "../../../pptx/domain/text";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 // =============================================================================
 // Types

@@ -6,9 +6,9 @@
 
 import type { PicShape } from "../../../pptx/domain/index";
 import type { Percent } from "../../../ooxml/domain/units";
-import { Accordion } from "../../ui/layout/Accordion";
-import { FieldGroup, FieldRow } from "../../ui/layout/index";
-import { Toggle } from "../../ui/primitives/index";
+import { Accordion } from "../../../office-editor-components/layout";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
+import { Toggle } from "../../../office-editor-components/primitives/index";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,

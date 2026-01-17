@@ -6,7 +6,7 @@
 
 import type { GraphicFrame } from "../../../pptx/domain/index";
 import type { Table } from "../../../pptx/domain/table/types";
-import { Accordion } from "../../ui/layout/Accordion";
+import { Accordion } from "../../../office-editor-components/layout";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,

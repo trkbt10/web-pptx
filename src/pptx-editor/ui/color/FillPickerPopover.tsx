@@ -5,8 +5,8 @@
  */
 
 import { useCallback, type CSSProperties, type ReactNode } from "react";
-import { Popover } from "../primitives/Popover";
-import { Select } from "../primitives/Select";
+import { Popover } from "../../../office-editor-components/primitives";
+import { Select } from "../../../office-editor-components/primitives";
 import type { Fill } from "../../../pptx/domain/color/types";
 import { FillPreview } from "./FillPreview";
 import {

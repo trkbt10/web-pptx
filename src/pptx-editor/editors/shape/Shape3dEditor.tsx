@@ -6,8 +6,8 @@
  * @see ECMA-376 Part 1, Section 20.1.5.9 (sp3d)
  */
 
-import { Select, Toggle } from "../../ui/primitives";
-import { FieldGroup, FieldRow } from "../../ui/layout";
+import { Select, Toggle } from "../../../office-editor-components/primitives";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
 import { FillEditor, createNoFill } from "../color/FillEditor";
 import { Bevel3dEditor, createDefaultBevel3d } from "./Bevel3dEditor";
@@ -15,7 +15,7 @@ import { px } from "../../../ooxml/domain/units";
 import type { PresetMaterialType } from "../../../pptx/domain/types";
 import type { Shape3d } from "../../../pptx/domain";
 import type { Fill } from "../../../pptx/domain/color/types";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 
 export type Shape3dEditorProps = EditorProps<Shape3d>;
 

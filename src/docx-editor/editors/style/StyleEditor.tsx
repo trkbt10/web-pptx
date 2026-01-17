@@ -9,6 +9,10 @@ import { useCallback, type CSSProperties } from "react";
 import type { DocxStyle, DocxStyleType } from "../../../docx/domain/styles";
 import type { DocxStyleId } from "../../../docx/domain/types";
 import type { EditorProps } from "../../types";
+import { Input, Select, Toggle } from "../../../office-editor-components/primitives";
+import { FieldGroup } from "../../../office-editor-components/layout";
+import type { SelectOption } from "../../../office-editor-components/types";
+import styles from "./StyleEditor.module.css";
 
 // =============================================================================
 // Types
@@ -26,7 +30,7 @@ export type StyleEditorProps = EditorProps<DocxStyle> & {
 // Constants
 // =============================================================================
 
-const STYLE_TYPE_OPTIONS: { value: DocxStyleType; label: string }[] = [
+const STYLE_TYPE_OPTIONS: SelectOption<DocxStyleType>[] = [
   { value: "paragraph", label: "Paragraph" },
   { value: "character", label: "Character" },
   { value: "table", label: "Table" },
@@ -50,8 +54,8 @@ export function StyleEditor({
   showAdvanced = false,
 }: StyleEditorProps) {
   const handleNameChange = useCallback(
-    (name: string) => {
-      onChange({ ...value, name: { val: name } });
+    (name: string | number) => {
+      onChange({ ...value, name: { val: String(name) } });
     },
     [value, onChange],
   );
@@ -90,13 +94,14 @@ export function StyleEditor({
   );
 
   const handlePriorityChange = useCallback(
-    (priority: number | undefined) => {
-      if (priority === undefined) {
+    (priority: string | number) => {
+      const numPriority = typeof priority === "string" ? parseFloat(priority) : priority;
+      if (priority === "" || isNaN(numPriority)) {
         const { uiPriority: _removed, ...rest } = value;
         void _removed;
         onChange(rest);
       } else {
-        onChange({ ...value, uiPriority: { val: priority } });
+        onChange({ ...value, uiPriority: { val: numPriority } });
       }
     },
     [value, onChange],
@@ -131,157 +136,131 @@ export function StyleEditor({
 
   const paragraphStyles = availableStyles.filter((s) => s.type === "paragraph");
 
+  const basedOnOptions: SelectOption<string>[] = [
+    { value: "", label: "(None)" },
+    ...compatibleStyles
+      .filter((s) => s.id !== value.styleId)
+      .map((s) => ({ value: s.id, label: s.name })),
+  ];
+
+  const nextStyleOptions: SelectOption<string>[] = [
+    { value: "", label: "(Same as current)" },
+    ...paragraphStyles.map((s) => ({ value: s.id, label: s.name })),
+  ];
+
+  const containerClassName = className ? `${styles.container} ${className}` : styles.container;
+
   return (
-    <div className={className} style={style}>
+    <div className={containerClassName} style={style}>
       {/* Style Name */}
-      <div className="style-editor-name">
-        <label>Style Name</label>
-        <input
+      <FieldGroup label="Style Name">
+        <Input
           type="text"
           value={value.name?.val ?? ""}
-          onChange={(e) => handleNameChange(e.target.value)}
+          onChange={handleNameChange}
           disabled={disabled}
           placeholder="Style name"
         />
-      </div>
+      </FieldGroup>
 
       {/* Style Type */}
-      <div className="style-editor-type">
-        <label>Style Type</label>
-        <select
+      <FieldGroup label="Style Type">
+        <Select
           value={value.type}
-          onChange={(e) => handleTypeChange(e.target.value as DocxStyleType)}
+          onChange={handleTypeChange}
+          options={STYLE_TYPE_OPTIONS}
           disabled={disabled}
-        >
-          {STYLE_TYPE_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
+        />
+      </FieldGroup>
 
       {/* Style ID (read-only display) */}
-      <div className="style-editor-id">
-        <label>Style ID</label>
-        <input type="text" value={value.styleId} disabled readOnly />
-      </div>
+      <FieldGroup label="Style ID">
+        <Input type="text" value={value.styleId} onChange={() => {}} disabled />
+      </FieldGroup>
 
       {/* Based On */}
-      <div className="style-editor-based-on">
-        <label>Based On</label>
-        <select
+      <FieldGroup label="Based On">
+        <Select
           value={value.basedOn?.val ?? ""}
-          onChange={(e) => handleBasedOnChange(e.target.value)}
+          onChange={handleBasedOnChange}
+          options={basedOnOptions}
           disabled={disabled}
-        >
-          <option value="">(None)</option>
-          {compatibleStyles
-            .filter((s) => s.id !== value.styleId)
-            .map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-        </select>
-      </div>
+        />
+      </FieldGroup>
 
       {/* Next Style (paragraph styles only) */}
       {value.type === "paragraph" && (
-        <div className="style-editor-next">
-          <label>Next Paragraph Style</label>
-          <select
+        <FieldGroup label="Next Paragraph Style">
+          <Select
             value={value.next?.val ?? ""}
-            onChange={(e) => handleNextChange(e.target.value)}
+            onChange={handleNextChange}
+            options={nextStyleOptions}
             disabled={disabled}
-          >
-            <option value="">(Same as current)</option>
-            {paragraphStyles.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </div>
+          />
+        </FieldGroup>
       )}
 
       {/* UI Priority */}
-      <div className="style-editor-priority">
-        <label>Priority (lower = higher in list)</label>
-        <input
+      <FieldGroup label="Priority (lower = higher in list)">
+        <Input
           type="number"
           value={value.uiPriority?.val ?? ""}
-          onChange={(e) =>
-            handlePriorityChange(e.target.value === "" ? undefined : Number(e.target.value))
-          }
+          onChange={handlePriorityChange}
           disabled={disabled}
           min={0}
           placeholder="Auto"
+          width={80}
         />
-      </div>
+      </FieldGroup>
 
       {/* Quick Access Options */}
-      <div className="style-editor-options">
-        <label>
-          <input
-            type="checkbox"
+      <FieldGroup label="Display Options">
+        <div className={styles.optionsSection}>
+          <Toggle
             checked={value.qFormat ?? false}
-            onChange={(e) => handleBooleanToggle("qFormat", e.target.checked)}
+            onChange={(checked) => handleBooleanToggle("qFormat", checked)}
+            label="Show in Quick Styles gallery"
             disabled={disabled}
           />
-          Show in Quick Styles gallery
-        </label>
-        <label>
-          <input
-            type="checkbox"
+          <Toggle
             checked={value.default ?? false}
-            onChange={(e) => handleBooleanToggle("default", e.target.checked)}
+            onChange={(checked) => handleBooleanToggle("default", checked)}
+            label="Default style for type"
             disabled={disabled}
           />
-          Default style for type
-        </label>
-      </div>
+        </div>
+      </FieldGroup>
 
       {/* Advanced Options */}
       {showAdvanced && (
-        <div className="style-editor-advanced">
-          <label>
-            <input
-              type="checkbox"
+        <FieldGroup label="Advanced">
+          <div className={styles.advancedSection}>
+            <Toggle
               checked={value.semiHidden ?? false}
-              onChange={(e) => handleBooleanToggle("semiHidden", e.target.checked)}
+              onChange={(checked) => handleBooleanToggle("semiHidden", checked)}
+              label="Semi-hidden"
               disabled={disabled}
             />
-            Semi-hidden
-          </label>
-          <label>
-            <input
-              type="checkbox"
+            <Toggle
               checked={value.unhideWhenUsed ?? false}
-              onChange={(e) => handleBooleanToggle("unhideWhenUsed", e.target.checked)}
+              onChange={(checked) => handleBooleanToggle("unhideWhenUsed", checked)}
+              label="Unhide when used"
               disabled={disabled}
             />
-            Unhide when used
-          </label>
-          <label>
-            <input
-              type="checkbox"
+            <Toggle
               checked={value.locked ?? false}
-              onChange={(e) => handleBooleanToggle("locked", e.target.checked)}
+              onChange={(checked) => handleBooleanToggle("locked", checked)}
+              label="Locked (cannot modify)"
               disabled={disabled}
             />
-            Locked (cannot modify)
-          </label>
-          <label>
-            <input
-              type="checkbox"
+            <Toggle
               checked={value.customStyle ?? false}
-              onChange={(e) => handleBooleanToggle("customStyle", e.target.checked)}
+              onChange={(checked) => handleBooleanToggle("customStyle", checked)}
+              label="Custom style"
               disabled={disabled}
             />
-            Custom style
-          </label>
-        </div>
+          </div>
+        </FieldGroup>
       )}
     </div>
   );

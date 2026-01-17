@@ -9,7 +9,7 @@
  */
 
 import type { Effects } from "../../../pptx/domain/types";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 import { EffectsEditorPanel } from "./effects";
 
 export type EffectsEditorProps = EditorProps<Effects>;

@@ -5,10 +5,16 @@
  * width, vertical alignment, borders, and shading.
  */
 
-import { useCallback, type CSSProperties } from "react";
+import { useCallback, type CSSProperties, type ReactNode } from "react";
 import type { DocxTableCellProperties } from "../../../docx/domain/table";
 import type { TableCellVerticalAlignment } from "../../../ooxml/domain/table";
 import type { EditorProps } from "../../types";
+import { ToggleButton, Input, Select, Toggle, Button } from "../../../office-editor-components/primitives";
+import { FieldGroup } from "../../../office-editor-components/layout";
+import type { SelectOption } from "../../../office-editor-components/types";
+import { AlignTopIcon, AlignMiddleIcon, AlignBottomIcon } from "../../../office-editor-components/icons";
+import { iconTokens } from "../../../office-editor-components/design-tokens";
+import styles from "./TableCellPropertiesEditor.module.css";
 
 // =============================================================================
 // Types
@@ -26,19 +32,23 @@ export type TableCellPropertiesEditorProps = EditorProps<DocxTableCellProperties
 // Constants
 // =============================================================================
 
-const VERTICAL_ALIGNMENT_OPTIONS: { value: TableCellVerticalAlignment; label: string }[] = [
-  { value: "top", label: "Top" },
-  { value: "center", label: "Middle" },
-  { value: "bottom", label: "Bottom" },
+const VERTICAL_ALIGNMENT_OPTIONS: { value: TableCellVerticalAlignment; label: string; icon: ReactNode }[] = [
+  { value: "top", label: "Top", icon: <AlignTopIcon size={iconTokens.size.sm} /> },
+  { value: "center", label: "Middle", icon: <AlignMiddleIcon size={iconTokens.size.sm} /> },
+  { value: "bottom", label: "Bottom", icon: <AlignBottomIcon size={iconTokens.size.sm} /> },
 ];
 
-const TEXT_DIRECTION_OPTIONS: {
-  value: NonNullable<DocxTableCellProperties["textDirection"]>;
-  label: string;
-}[] = [
+const TEXT_DIRECTION_OPTIONS: SelectOption<NonNullable<DocxTableCellProperties["textDirection"]>>[] = [
   { value: "lrTb", label: "Horizontal" },
   { value: "tbRl", label: "Vertical (Top to Bottom)" },
   { value: "btLr", label: "Vertical (Bottom to Top)" },
+];
+
+const WIDTH_TYPE_OPTIONS: SelectOption<"auto" | "dxa" | "nil" | "pct">[] = [
+  { value: "auto", label: "Auto" },
+  { value: "dxa", label: "Twips" },
+  { value: "pct", label: "Percent" },
+  { value: "nil", label: "None" },
 ];
 
 // =============================================================================
@@ -90,7 +100,8 @@ export function TableCellPropertiesEditor({
   );
 
   const handleShadingColorChange = useCallback(
-    (color: string) => {
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const color = e.target.value.slice(1); // Remove # prefix
       onChange({
         ...value,
         shd: {
@@ -102,118 +113,109 @@ export function TableCellPropertiesEditor({
     [value, onChange],
   );
 
+  const handleClearShading = useCallback(() => {
+    onChange({
+      ...value,
+      shd: {
+        ...value.shd,
+        fill: undefined,
+      },
+    });
+  }, [value, onChange]);
+
   const widthValue = value.tcW?.value ?? 0;
   const widthType = value.tcW?.type ?? "auto";
 
+  const containerClassName = className ? `${styles.container} ${className}` : styles.container;
+
   return (
-    <div className={className} style={style}>
+    <div className={containerClassName} style={style}>
       {/* Cell Width */}
-      <div className="cell-properties-width">
-        <label>Cell Width</label>
-        <div className="width-inputs">
-          <input
+      <FieldGroup label="Cell Width">
+        <div className={styles.widthInputs}>
+          <Input
             type="number"
             value={widthValue}
-            onChange={(e) => handleWidthChange(Number(e.target.value), widthType)}
+            onChange={(v) => handleWidthChange(Number(v), widthType)}
             disabled={disabled}
             min={0}
+            width={80}
           />
-          <select
+          <Select
             value={widthType}
-            onChange={(e) =>
-              handleWidthChange(widthValue, e.target.value as typeof widthType)
-            }
+            onChange={(type) => handleWidthChange(widthValue, type)}
+            options={WIDTH_TYPE_OPTIONS}
             disabled={disabled}
-          >
-            <option value="auto">Auto</option>
-            <option value="dxa">Twips</option>
-            <option value="pct">Percent</option>
-            <option value="nil">None</option>
-          </select>
+          />
         </div>
-      </div>
+      </FieldGroup>
 
       {/* Vertical Alignment */}
-      <div className="cell-properties-alignment">
-        <label>Vertical Alignment</label>
-        <div className="alignment-buttons">
+      <FieldGroup label="Vertical Alignment">
+        <div className={styles.alignmentButtons}>
           {VERTICAL_ALIGNMENT_OPTIONS.map((option) => (
-            <button
+            <ToggleButton
               key={option.value}
-              type="button"
-              onClick={() => handleVerticalAlignmentChange(option.value)}
+              pressed={value.vAlign === option.value}
+              onChange={() => handleVerticalAlignmentChange(option.value)}
+              label={option.label}
               disabled={disabled}
-              aria-pressed={value.vAlign === option.value}
-              title={option.label}
             >
-              {option.label}
-            </button>
+              {option.icon}
+            </ToggleButton>
           ))}
         </div>
-      </div>
+      </FieldGroup>
 
       {/* Text Direction */}
-      <div className="cell-properties-direction">
-        <label>Text Direction</label>
-        <select
+      <FieldGroup label="Text Direction">
+        <Select
           value={value.textDirection ?? "lrTb"}
-          onChange={(e) =>
-            handleTextDirectionChange(
-              e.target.value as DocxTableCellProperties["textDirection"],
-            )
-          }
+          onChange={handleTextDirectionChange}
+          options={TEXT_DIRECTION_OPTIONS}
           disabled={disabled}
-        >
-          {TEXT_DIRECTION_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
+        />
+      </FieldGroup>
 
       {/* No Wrap */}
-      <div className="cell-properties-wrap">
-        <label>
-          <input
-            type="checkbox"
-            checked={value.noWrap ?? false}
-            onChange={(e) => handleNoWrapChange(e.target.checked)}
-            disabled={disabled}
-          />
-          No text wrapping
-        </label>
-      </div>
+      <FieldGroup label="Text Wrapping">
+        <Toggle
+          checked={value.noWrap ?? false}
+          onChange={handleNoWrapChange}
+          label="No text wrapping"
+          disabled={disabled}
+        />
+      </FieldGroup>
 
       {/* Shading */}
       {showShading && (
-        <div className="cell-properties-shading">
-          <label>Background Color</label>
-          <input
-            type="color"
-            value={value.shd?.fill ? `#${value.shd.fill}` : "#ffffff"}
-            onChange={(e) => handleShadingColorChange(e.target.value.slice(1))}
-            disabled={disabled}
-          />
-          <button
-            type="button"
-            onClick={() => handleShadingColorChange("")}
-            disabled={disabled}
-            title="Clear background color"
-          >
-            Clear
-          </button>
-        </div>
+        <FieldGroup label="Background Color">
+          <div className={styles.shadingSection}>
+            <input
+              type="color"
+              value={value.shd?.fill ? `#${value.shd.fill}` : "#ffffff"}
+              onChange={handleShadingColorChange}
+              disabled={disabled}
+            />
+            <Button
+              onClick={handleClearShading}
+              disabled={disabled}
+              variant="ghost"
+              size="sm"
+            >
+              Clear
+            </Button>
+          </div>
+        </FieldGroup>
       )}
 
       {/* Grid Span */}
-      <div className="cell-properties-span">
-        <label>Column Span</label>
-        <input
+      <FieldGroup label="Column Span">
+        <Input
           type="number"
           value={value.gridSpan ?? 1}
-          onChange={(e) => {
-            const span = Number(e.target.value);
+          onChange={(v) => {
+            const span = Number(v);
             if (span <= 1) {
               const { gridSpan: _removed, ...rest } = value;
               void _removed;
@@ -224,8 +226,9 @@ export function TableCellPropertiesEditor({
           }}
           disabled={disabled}
           min={1}
+          width={60}
         />
-      </div>
+      </FieldGroup>
     </div>
   );
 }

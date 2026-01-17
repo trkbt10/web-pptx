@@ -5,8 +5,8 @@
  */
 
 import type { CxnShape } from "../../../pptx/domain/index";
-import { Accordion } from "../../ui/layout/Accordion";
-import { FieldGroup } from "../../ui/layout/index";
+import { Accordion } from "../../../office-editor-components/layout";
+import { FieldGroup } from "../../../office-editor-components/layout";
 import { LineEditor } from "../../ui/line";
 import {
   NonVisualPropertiesEditor,

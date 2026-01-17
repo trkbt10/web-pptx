@@ -8,7 +8,7 @@ import type { Color } from "../../../../ooxml/domain/color";
 import type { GradientStop } from "../../../../ooxml/domain/fill";
 import { deg, pct } from "../../../../ooxml/domain/units";
 import type { Fill } from "../../../../pptx/domain/color/types";
-import type { SelectOption } from "../../../types";
+import type { SelectOption } from "../../../../office-editor-components/types";
 
 export type FillType = Fill["type"];
 

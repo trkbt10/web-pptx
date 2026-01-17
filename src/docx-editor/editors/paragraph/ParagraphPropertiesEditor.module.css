@@ -1,0 +1,72 @@
+/**
+ * CSS Module for ParagraphPropertiesEditor
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 12px);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 4px);
+}
+
+.sectionLabel {
+  font-size: var(--font-size-sm, 11px);
+  font-weight: 500;
+  color: var(--text-tertiary, #737373);
+}
+
+.alignmentButtons {
+  display: flex;
+  gap: var(--spacing-xs, 4px);
+}
+
+.indentationInputs {
+  display: flex;
+  gap: var(--spacing-sm, 8px);
+  flex-wrap: wrap;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 80px;
+}
+
+.inputLabel {
+  font-size: var(--font-size-xs, 10px);
+  color: var(--text-tertiary, #737373);
+}
+
+.spacingInputs {
+  display: flex;
+  gap: var(--spacing-sm, 8px);
+  flex-wrap: wrap;
+}
+
+.outlineSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 4px);
+}
+
+.breaksSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 4px);
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 4px);
+  font-size: var(--font-size-md, 12px);
+  color: var(--text-primary, #fafafa);
+  cursor: pointer;
+}

@@ -8,8 +8,8 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { Button, Input, Select, Toggle } from "../../ui/primitives";
-import { Accordion, FieldGroup, FieldRow } from "../../ui/layout";
+import { Button, Input, Select, Toggle } from "../../../office-editor-components/primitives";
+import { Accordion, FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { PercentEditor, DegreesEditor } from "../primitives";
 import { LegendEditor, createDefaultLegend } from "./LegendEditor";
 import {
@@ -49,7 +49,7 @@ import type {
   PictureFormat,
 } from "../../../pptx/domain/chart";
 import type { TextBody } from "../../../pptx/domain/text";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 import { TextBodyEditor, createDefaultTextBody } from "../text";
 
 export type ChartEditorProps = EditorProps<Chart> & {

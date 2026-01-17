@@ -13,10 +13,10 @@ import type { PresentationFile } from "../../../pptx/domain";
 import { discoverMediaPaths } from "../../../pptx/app/media-discovery";
 import { toDataUrl, formatSize } from "../../../buffer";
 import { getMimeTypeFromPath } from "../../../pptx/opc";
-import { InspectorSection, Accordion } from "../../ui/layout";
-import { ImageIcon, AudioIcon, VideoIcon, FileIcon, AddIcon, iconTokens } from "../../ui/icons";
-import { colorTokens, fontTokens, spacingTokens } from "../../ui/design-tokens";
-import { Button } from "../../ui/primitives/Button";
+import { InspectorSection, Accordion } from "../../../office-editor-components/layout";
+import { ImageIcon, AudioIcon, VideoIcon, FileIcon, AddIcon } from "../../../office-editor-components/icons";
+import { colorTokens, fontTokens, spacingTokens, iconTokens } from "../../../office-editor-components/design-tokens";
+import { Button } from "../../../office-editor-components/primitives/Button";
 
 export type AssetPanelProps = {
   /** Presentation file for reading asset content */

@@ -18,10 +18,10 @@ import type { SchemeColorName, ThemePreset } from "./types";
 import { THEME_PRESETS, OFFICE_THEME } from "./presets";
 import { LayoutEditor } from "./LayoutEditor";
 import { ColorPickerPopover } from "../../ui/color/ColorPickerPopover";
-import { Input } from "../../ui/primitives/Input";
-import { Button } from "../../ui/primitives/Button";
-import { colorTokens, fontTokens, spacingTokens, radiusTokens, iconTokens } from "../../ui/design-tokens";
-import { TileViewIcon, ListViewIcon, UndoIcon, RedoIcon, DownloadIcon, FolderIcon } from "../../ui/icons";
+import { Input } from "../../../office-editor-components/primitives/Input";
+import { Button } from "../../../office-editor-components/primitives/Button";
+import { colorTokens, fontTokens, spacingTokens, radiusTokens, iconTokens } from "../../../office-editor-components/design-tokens";
+import { TileViewIcon, ListViewIcon, UndoIcon, RedoIcon, DownloadIcon, FolderIcon } from "../../../office-editor-components/icons";
 import { hexToRgb } from "../../../color";
 
 export type ThemeEditorCanvasProps = {

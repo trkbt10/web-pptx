@@ -10,7 +10,7 @@ import type { ShapeId } from "../../../pptx/domain/types";
 import type { SelectionState } from "../../context/slide/state";
 import type { ShapeHierarchyTarget } from "../../shape/hierarchy";
 import { LayerPanel } from "../LayerPanel";
-import { InspectorSection } from "../../ui/layout";
+import { InspectorSection } from "../../../office-editor-components/layout";
 
 export type LayersTabProps = {
   /** Current slide */

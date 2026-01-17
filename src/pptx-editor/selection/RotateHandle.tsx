@@ -5,7 +5,7 @@
  * Uses design tokens for consistent styling.
  */
 
-import { colorTokens } from "../ui/design-tokens/index";
+import { colorTokens } from "../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Types

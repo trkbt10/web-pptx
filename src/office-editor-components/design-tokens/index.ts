@@ -1,7 +1,7 @@
 /**
  * @file Design tokens module
  *
- * Centralized design system for pptx-editor UI components.
+ * Centralized design system for Office Editor UI components.
  */
 
 export {

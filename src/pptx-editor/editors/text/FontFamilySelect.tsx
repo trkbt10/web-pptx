@@ -6,8 +6,8 @@
  */
 
 import { useMemo, type CSSProperties } from "react";
-import { SearchableSelect } from "../../ui/primitives";
-import type { SearchableSelectOption, SearchableSelectItemProps } from "../../ui/primitives/SearchableSelect";
+import { SearchableSelect } from "../../../office-editor-components/primitives";
+import type { SearchableSelectOption, SearchableSelectItemProps } from "../../../office-editor-components/primitives/SearchableSelect";
 import { useDocumentFontFamilies } from "./hooks/useDocumentFontFamilies";
 import { useFontCatalogFamilies } from "./hooks/useFontCatalogFamilies";
 import { useEditorConfig } from "../../context/editor/EditorConfigContext";

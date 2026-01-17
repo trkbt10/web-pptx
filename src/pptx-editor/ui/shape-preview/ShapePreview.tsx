@@ -8,7 +8,7 @@
 import { type CSSProperties, useMemo } from "react";
 import { renderGeometryData } from "../../../pptx/render/svg/geometry";
 import type { PresetGeometry } from "../../../pptx/domain/shape";
-import { colorTokens } from "../design-tokens";
+import { colorTokens } from "../../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Types

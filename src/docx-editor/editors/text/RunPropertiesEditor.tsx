@@ -9,6 +9,10 @@ import { useCallback, type CSSProperties } from "react";
 import type { DocxRunProperties, DocxHighlightColor } from "../../../docx/domain/run";
 import type { HalfPoints } from "../../../docx/domain/types";
 import type { EditorProps } from "../../types";
+import { ToggleButton, Input, Select } from "../../../office-editor-components/primitives";
+import { FieldGroup } from "../../../office-editor-components/layout";
+import type { SelectOption } from "../../../office-editor-components/types";
+import styles from "./RunPropertiesEditor.module.css";
 
 // =============================================================================
 // Types
@@ -21,6 +25,35 @@ export type RunPropertiesEditorProps = EditorProps<DocxRunProperties> & {
   /** Show highlight color selector */
   readonly showHighlight?: boolean;
 };
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+const HIGHLIGHT_OPTIONS: SelectOption<DocxHighlightColor | "none">[] = [
+  { value: "none", label: "No Highlight" },
+  { value: "yellow", label: "Yellow" },
+  { value: "green", label: "Green" },
+  { value: "cyan", label: "Cyan" },
+  { value: "magenta", label: "Magenta" },
+  { value: "blue", label: "Blue" },
+  { value: "red", label: "Red" },
+  { value: "darkBlue", label: "Dark Blue" },
+  { value: "darkCyan", label: "Dark Cyan" },
+  { value: "darkGreen", label: "Dark Green" },
+  { value: "darkMagenta", label: "Dark Magenta" },
+  { value: "darkRed", label: "Dark Red" },
+  { value: "darkYellow", label: "Dark Yellow" },
+  { value: "darkGray", label: "Dark Gray" },
+  { value: "lightGray", label: "Light Gray" },
+  { value: "black", label: "Black" },
+];
+
+const VERTICAL_ALIGN_OPTIONS: SelectOption<"baseline" | "superscript" | "subscript">[] = [
+  { value: "baseline", label: "Normal" },
+  { value: "superscript", label: "Superscript" },
+  { value: "subscript", label: "Subscript" },
+];
 
 // =============================================================================
 // Component
@@ -56,23 +89,27 @@ export function RunPropertiesEditor({
   }, [value, onChange]);
 
   const handleFontSizeChange = useCallback(
-    (size: number) => {
-      const halfPoints = (size * 2) as HalfPoints;
-      onChange({ ...value, sz: halfPoints, szCs: halfPoints });
+    (size: string | number) => {
+      const numSize = typeof size === "string" ? parseFloat(size) : size;
+      if (!isNaN(numSize) && numSize > 0) {
+        const halfPoints = (numSize * 2) as HalfPoints;
+        onChange({ ...value, sz: halfPoints, szCs: halfPoints });
+      }
     },
     [value, onChange],
   );
 
   const handleFontFamilyChange = useCallback(
-    (family: string) => {
+    (family: string | number) => {
+      const familyStr = String(family);
       onChange({
         ...value,
         rFonts: {
           ...value.rFonts,
-          ascii: family,
-          hAnsi: family,
-          eastAsia: family,
-          cs: family,
+          ascii: familyStr,
+          hAnsi: familyStr,
+          eastAsia: familyStr,
+          cs: familyStr,
         },
       });
     },
@@ -80,15 +117,16 @@ export function RunPropertiesEditor({
   );
 
   const handleColorChange = useCallback(
-    (color: string) => {
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const color = e.target.value.slice(1); // Remove # prefix
       onChange({ ...value, color: { val: color } });
     },
     [value, onChange],
   );
 
   const handleHighlightChange = useCallback(
-    (highlight: DocxHighlightColor | undefined) => {
-      if (highlight === undefined || highlight === "none") {
+    (highlight: DocxHighlightColor | "none") => {
+      if (highlight === "none") {
         const { highlight: _removed, ...rest } = value;
         void _removed;
         onChange(rest);
@@ -99,137 +137,121 @@ export function RunPropertiesEditor({
     [value, onChange],
   );
 
-  const fontSizeInPoints = value.sz ? value.sz / 2 : undefined;
+  const handleVertAlignChange = useCallback(
+    (vertAlign: "baseline" | "superscript" | "subscript") => {
+      onChange({ ...value, vertAlign });
+    },
+    [value, onChange],
+  );
+
+  const fontSizeInPoints = value.sz ? value.sz / 2 : "";
   const fontFamily = value.rFonts?.ascii ?? value.rFonts?.hAnsi ?? "";
-  const textColor = value.color?.val ?? "";
+  const textColor = value.color?.val ?? "000000";
+
+  const containerClassName = className ? `${styles.container} ${className}` : styles.container;
 
   return (
-    <div className={className} style={style}>
+    <div className={containerClassName} style={style}>
       {/* Font formatting buttons */}
-      <div className="run-properties-formatting">
-        <button
-          type="button"
-          onClick={handleBoldToggle}
-          disabled={disabled}
-          aria-pressed={value.b ?? false}
-          title="Bold"
-        >
-          <strong>B</strong>
-        </button>
-        <button
-          type="button"
-          onClick={handleItalicToggle}
-          disabled={disabled}
-          aria-pressed={value.i ?? false}
-          title="Italic"
-        >
-          <em>I</em>
-        </button>
-        <button
-          type="button"
-          onClick={handleUnderlineToggle}
-          disabled={disabled}
-          aria-pressed={value.u !== undefined}
-          title="Underline"
-        >
-          <u>U</u>
-        </button>
-        <button
-          type="button"
-          onClick={handleStrikeToggle}
-          disabled={disabled}
-          aria-pressed={value.strike ?? false}
-          title="Strikethrough"
-        >
-          <s>S</s>
-        </button>
-      </div>
+      <FieldGroup label="Formatting">
+        <div className={styles.formatting}>
+          <ToggleButton
+            pressed={value.b ?? false}
+            onChange={handleBoldToggle}
+            label="B"
+            ariaLabel="Bold"
+            disabled={disabled}
+            style={{ fontWeight: 700 }}
+          />
+          <ToggleButton
+            pressed={value.i ?? false}
+            onChange={handleItalicToggle}
+            label="I"
+            ariaLabel="Italic"
+            disabled={disabled}
+            style={{ fontStyle: "italic" }}
+          />
+          <ToggleButton
+            pressed={value.u !== undefined}
+            onChange={handleUnderlineToggle}
+            label="U"
+            ariaLabel="Underline"
+            disabled={disabled}
+            style={{ textDecoration: "underline" }}
+          />
+          <ToggleButton
+            pressed={value.strike ?? false}
+            onChange={handleStrikeToggle}
+            label="S"
+            ariaLabel="Strikethrough"
+            disabled={disabled}
+            style={{ textDecoration: "line-through" }}
+          />
+        </div>
+      </FieldGroup>
 
       {/* Font size and family */}
-      <div className="run-properties-font">
-        <input
-          type="number"
-          value={fontSizeInPoints ?? ""}
-          onChange={(e) => handleFontSizeChange(Number(e.target.value))}
-          disabled={disabled}
-          placeholder="Size"
-          min={1}
-          max={999}
-          title="Font Size (points)"
-        />
-        <input
-          type="text"
-          value={fontFamily}
-          onChange={(e) => handleFontFamilyChange(e.target.value)}
-          disabled={disabled}
-          placeholder="Font Family"
-          title="Font Family"
-        />
-      </div>
+      <FieldGroup label="Font">
+        <div className={styles.fontSection}>
+          <Input
+            type="number"
+            value={fontSizeInPoints}
+            onChange={handleFontSizeChange}
+            disabled={disabled}
+            placeholder="Size"
+            min={1}
+            max={999}
+            width={60}
+          />
+          <Input
+            type="text"
+            value={fontFamily}
+            onChange={handleFontFamilyChange}
+            disabled={disabled}
+            placeholder="Font Family"
+          />
+        </div>
+      </FieldGroup>
 
       {/* Color */}
-      <div className="run-properties-color">
-        <input
-          type="color"
-          value={textColor ? `#${textColor}` : "#000000"}
-          onChange={(e) => handleColorChange(e.target.value.slice(1))}
-          disabled={disabled}
-          title="Text Color"
-        />
-      </div>
+      <FieldGroup label="Color">
+        <div className={styles.colorSection}>
+          <input
+            type="color"
+            value={`#${textColor}`}
+            onChange={handleColorChange}
+            disabled={disabled}
+            title="Text Color"
+          />
+        </div>
+      </FieldGroup>
 
       {/* Highlight color */}
       {showHighlight && (
-        <div className="run-properties-highlight">
-          <select
-            value={value.highlight ?? "none"}
-            onChange={(e) =>
-              handleHighlightChange(
-                e.target.value === "none" ? undefined : (e.target.value as DocxHighlightColor),
-              )
-            }
-            disabled={disabled}
-            title="Highlight Color"
-          >
-            <option value="none">No Highlight</option>
-            <option value="yellow">Yellow</option>
-            <option value="green">Green</option>
-            <option value="cyan">Cyan</option>
-            <option value="magenta">Magenta</option>
-            <option value="blue">Blue</option>
-            <option value="red">Red</option>
-            <option value="darkBlue">Dark Blue</option>
-            <option value="darkCyan">Dark Cyan</option>
-            <option value="darkGreen">Dark Green</option>
-            <option value="darkMagenta">Dark Magenta</option>
-            <option value="darkRed">Dark Red</option>
-            <option value="darkYellow">Dark Yellow</option>
-            <option value="darkGray">Dark Gray</option>
-            <option value="lightGray">Light Gray</option>
-            <option value="black">Black</option>
-          </select>
-        </div>
+        <FieldGroup label="Highlight">
+          <div className={styles.highlightSection}>
+            <Select
+              value={(value.highlight ?? "none") as DocxHighlightColor | "none"}
+              onChange={handleHighlightChange}
+              options={HIGHLIGHT_OPTIONS}
+              disabled={disabled}
+            />
+          </div>
+        </FieldGroup>
       )}
 
       {/* Vertical alignment */}
       {showSpacing && (
-        <div className="run-properties-spacing">
-          <select
-            value={value.vertAlign ?? "baseline"}
-            onChange={(e) =>
-              onChange({
-                ...value,
-                vertAlign: e.target.value as "baseline" | "superscript" | "subscript",
-              })
-            }
-            disabled={disabled}
-            title="Vertical Alignment"
-          >
-            <option value="baseline">Normal</option>
-            <option value="superscript">Superscript</option>
-            <option value="subscript">Subscript</option>
-          </select>
-        </div>
+        <FieldGroup label="Position">
+          <div className={styles.spacingSection}>
+            <Select
+              value={value.vertAlign ?? "baseline"}
+              onChange={handleVertAlignChange}
+              options={VERTICAL_ALIGN_OPTIONS}
+              disabled={disabled}
+            />
+          </div>
+        </FieldGroup>
       )}
     </div>
   );

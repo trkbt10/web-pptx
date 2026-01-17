@@ -5,8 +5,8 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { Button, type ButtonSize } from "../../ui/primitives/Button";
-import { DownloadIcon } from "../../ui/icons";
+import { Button, type ButtonSize } from "../../../office-editor-components/primitives/Button";
+import { DownloadIcon } from "../../../office-editor-components/icons";
 import { useExportPresentation, type UseExportPresentationOptions } from "../hooks";
 
 // =============================================================================

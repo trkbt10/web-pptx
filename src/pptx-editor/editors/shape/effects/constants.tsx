@@ -3,8 +3,8 @@
  */
 
 import React from "react";
-import { FieldGroup, FieldRow } from "../../../ui/layout";
-import { Input, Select, Toggle } from "../../../ui/primitives";
+import { FieldGroup, FieldRow } from "../../../../office-editor-components/layout";
+import { Input, Select, Toggle } from "../../../../office-editor-components/primitives";
 import { PixelsEditor } from "../../primitives/PixelsEditor";
 import { DegreesEditor } from "../../primitives/DegreesEditor";
 import { PercentEditor } from "../../primitives/PercentEditor";
@@ -12,7 +12,7 @@ import { ColorEditor, createDefaultColor } from "../../color/ColorEditor";
 import { px, deg, pct } from "../../../../ooxml/domain/units";
 import { type ShadowEffect, type GlowEffect, type ReflectionEffect, type SoftEdgeEffect, type AlphaBiLevelEffect, type AlphaCeilingEffect, type AlphaFloorEffect, type AlphaInverseEffect, type AlphaModulateEffect, type AlphaModulateFixedEffect, type AlphaOutsetEffect, type AlphaReplaceEffect, type BiLevelEffect, type BlendEffect, type BlendMode, type ColorChangeEffect, type ColorReplaceEffect, type DuotoneEffect, type FillOverlayEffect, type FillEffectType, type GrayscaleEffect, type PresetShadowEffect, type PresetShadowValue, type RelativeOffsetEffect, type EffectContainer, type EffectContainerType } from "../../../../pptx/domain/types";
 import type { Color } from "../../../../ooxml/domain/color";
-import type { SelectOption } from "../../../types";
+import type { SelectOption } from "../../../../office-editor-components/types";
 import type { EffectConfig } from "./types";
 
 const fieldStyle = { flex: 1 };

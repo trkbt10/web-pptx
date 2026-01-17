@@ -11,7 +11,7 @@ import {
   radiusTokens,
   spacingTokens,
   fontTokens,
-} from "../ui/design-tokens/index";
+} from "../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Container styles

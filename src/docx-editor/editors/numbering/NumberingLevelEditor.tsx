@@ -5,11 +5,17 @@
  * format, start value, text pattern, and justification.
  */
 
-import { useCallback, type CSSProperties } from "react";
+import { useCallback, type CSSProperties, type ReactNode } from "react";
 import type { DocxLevel, DocxLevelJustification } from "../../../docx/domain/numbering";
 import type { NumberFormat, LevelSuffix } from "../../../ooxml";
 import type { DocxIlvl } from "../../../docx/domain/types";
 import type { EditorProps } from "../../types";
+import { ToggleButton, Input, Select, Toggle } from "../../../office-editor-components/primitives";
+import { FieldGroup } from "../../../office-editor-components/layout";
+import type { SelectOption } from "../../../office-editor-components/types";
+import { AlignLeftIcon, AlignCenterIcon, AlignRightIcon } from "../../../office-editor-components/icons";
+import { iconTokens } from "../../../office-editor-components/design-tokens";
+import styles from "./NumberingLevelEditor.module.css";
 
 // =============================================================================
 // Types
@@ -27,7 +33,7 @@ export type NumberingLevelEditorProps = EditorProps<DocxLevel> & {
 // Constants
 // =============================================================================
 
-const NUMBER_FORMAT_OPTIONS: { value: NumberFormat; label: string }[] = [
+const NUMBER_FORMAT_OPTIONS: SelectOption<NumberFormat>[] = [
   { value: "decimal", label: "1, 2, 3..." },
   { value: "lowerRoman", label: "i, ii, iii..." },
   { value: "upperRoman", label: "I, II, III..." },
@@ -40,13 +46,13 @@ const NUMBER_FORMAT_OPTIONS: { value: NumberFormat; label: string }[] = [
   { value: "ordinalText", label: "First, Second, Third..." },
 ];
 
-const JUSTIFICATION_OPTIONS: { value: DocxLevelJustification; label: string }[] = [
-  { value: "left", label: "Left" },
-  { value: "center", label: "Center" },
-  { value: "right", label: "Right" },
+const JUSTIFICATION_OPTIONS: { value: DocxLevelJustification; label: string; icon: ReactNode }[] = [
+  { value: "left", label: "Left", icon: <AlignLeftIcon size={iconTokens.size.sm} /> },
+  { value: "center", label: "Center", icon: <AlignCenterIcon size={iconTokens.size.sm} /> },
+  { value: "right", label: "Right", icon: <AlignRightIcon size={iconTokens.size.sm} /> },
 ];
 
-const SUFFIX_OPTIONS: { value: LevelSuffix; label: string }[] = [
+const SUFFIX_OPTIONS: SelectOption<LevelSuffix>[] = [
   { value: "tab", label: "Tab" },
   { value: "space", label: "Space" },
   { value: "nothing", label: "Nothing" },
@@ -67,13 +73,14 @@ export function NumberingLevelEditor({
   style,
 }: NumberingLevelEditorProps) {
   const handleStartChange = useCallback(
-    (start: number | undefined) => {
-      if (start === undefined) {
+    (start: string | number) => {
+      const numStart = typeof start === "string" ? parseInt(start, 10) : start;
+      if (isNaN(numStart)) {
         const { start: _removed, ...rest } = value;
         void _removed;
         onChange(rest);
       } else {
-        onChange({ ...value, start });
+        onChange({ ...value, start: numStart });
       }
     },
     [value, onChange],
@@ -87,10 +94,10 @@ export function NumberingLevelEditor({
   );
 
   const handleTextChange = useCallback(
-    (text: string) => {
+    (text: string | number) => {
       onChange({
         ...value,
-        lvlText: { val: text },
+        lvlText: { val: String(text) },
       });
     },
     [value, onChange],
@@ -111,13 +118,13 @@ export function NumberingLevelEditor({
   );
 
   const handleRestartChange = useCallback(
-    (lvlRestart: number | undefined) => {
-      if (lvlRestart === undefined) {
+    (lvlRestartStr: string) => {
+      if (lvlRestartStr === "") {
         const { lvlRestart: _removed, ...rest } = value;
         void _removed;
         onChange(rest);
       } else {
-        onChange({ ...value, lvlRestart });
+        onChange({ ...value, lvlRestart: Number(lvlRestartStr) });
       }
     },
     [value, onChange],
@@ -136,121 +143,105 @@ export function NumberingLevelEditor({
     [value, onChange],
   );
 
+  const restartOptions: SelectOption<string>[] = [
+    { value: "", label: "Auto" },
+    ...Array.from({ length: value.ilvl }, (_, i) => ({
+      value: String(i),
+      label: `Level ${i + 1}`,
+    })),
+  ];
+
+  const containerClassName = className ? `${styles.container} ${className}` : styles.container;
+
   return (
-    <div className={className} style={style}>
+    <div className={containerClassName} style={style}>
       {/* Level Index (display only) */}
-      <div className="numbering-level-index">
-        <label>Level</label>
-        <span>{value.ilvl + 1}</span>
-      </div>
+      <FieldGroup label="Level">
+        <div className={styles.levelIndex}>
+          <span className={styles.levelValue}>{value.ilvl + 1}</span>
+        </div>
+      </FieldGroup>
 
       {/* Number Format */}
-      <div className="numbering-level-format">
-        <label>Format</label>
-        <select
+      <FieldGroup label="Format">
+        <Select
           value={value.numFmt ?? "decimal"}
-          onChange={(e) => handleFormatChange(e.target.value as NumberFormat)}
+          onChange={handleFormatChange}
+          options={NUMBER_FORMAT_OPTIONS}
           disabled={disabled}
-        >
-          {NUMBER_FORMAT_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
+        />
+      </FieldGroup>
 
       {/* Start Value */}
-      <div className="numbering-level-start">
-        <label>Start At</label>
-        <input
+      <FieldGroup label="Start At">
+        <Input
           type="number"
           value={value.start ?? 1}
-          onChange={(e) => handleStartChange(Number(e.target.value))}
+          onChange={handleStartChange}
           disabled={disabled}
           min={1}
+          width={60}
         />
-      </div>
+      </FieldGroup>
 
       {/* Level Text */}
-      <div className="numbering-level-text">
-        <label>Number Text Pattern</label>
-        <input
+      <FieldGroup label="Number Text Pattern">
+        <Input
           type="text"
           value={value.lvlText?.val ?? ""}
-          onChange={(e) => handleTextChange(e.target.value)}
+          onChange={handleTextChange}
           disabled={disabled}
           placeholder="%1."
         />
-        <small>Use %1, %2, etc. for level numbers</small>
-      </div>
+        <span className={styles.textHint}>Use %1, %2, etc. for level numbers</span>
+      </FieldGroup>
 
       {/* Justification */}
-      <div className="numbering-level-justification">
-        <label>Justification</label>
-        <div className="justification-buttons">
+      <FieldGroup label="Justification">
+        <div className={styles.justificationButtons}>
           {JUSTIFICATION_OPTIONS.map((option) => (
-            <button
+            <ToggleButton
               key={option.value}
-              type="button"
-              onClick={() => handleJustificationChange(option.value)}
+              pressed={value.lvlJc === option.value}
+              onChange={() => handleJustificationChange(option.value)}
+              label={option.label}
               disabled={disabled}
-              aria-pressed={value.lvlJc === option.value}
-              title={option.label}
             >
-              {option.label}
-            </button>
+              {option.icon}
+            </ToggleButton>
           ))}
         </div>
-      </div>
+      </FieldGroup>
 
       {/* Suffix */}
-      <div className="numbering-level-suffix">
-        <label>Follow Number With</label>
-        <select
+      <FieldGroup label="Follow Number With">
+        <Select
           value={value.suff ?? "tab"}
-          onChange={(e) => handleSuffixChange(e.target.value as LevelSuffix)}
+          onChange={handleSuffixChange}
+          options={SUFFIX_OPTIONS}
           disabled={disabled}
-        >
-          {SUFFIX_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
+        />
+      </FieldGroup>
 
       {/* Restart Level */}
-      <div className="numbering-level-restart">
-        <label>Restart After Level</label>
-        <select
-          value={value.lvlRestart ?? ""}
-          onChange={(e) =>
-            handleRestartChange(e.target.value === "" ? undefined : Number(e.target.value))
-          }
+      <FieldGroup label="Restart After Level">
+        <Select
+          value={value.lvlRestart !== undefined ? String(value.lvlRestart) : ""}
+          onChange={handleRestartChange}
+          options={restartOptions}
           disabled={disabled}
-        >
-          <option value="">Auto</option>
-          {Array.from({ length: value.ilvl }, (_, i) => (
-            <option key={i} value={i}>
-              Level {i + 1}
-            </option>
-          ))}
-        </select>
-      </div>
+        />
+      </FieldGroup>
 
       {/* Legal Format */}
-      <div className="numbering-level-legal">
-        <label>
-          <input
-            type="checkbox"
-            checked={value.isLgl ?? false}
-            onChange={(e) => handleLegalChange(e.target.checked)}
-            disabled={disabled}
-          />
-          Legal numbering format
-        </label>
-      </div>
+      <FieldGroup label="Options">
+        <Toggle
+          checked={value.isLgl ?? false}
+          onChange={handleLegalChange}
+          label="Legal numbering format"
+          disabled={disabled}
+        />
+      </FieldGroup>
     </div>
   );
 }

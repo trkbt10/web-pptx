@@ -5,11 +5,11 @@
  * @see ECMA-376 Part 1, Section 20.1.5.7 (rot)
  */
 
-import { FieldGroup, FieldRow } from "../../ui/layout";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { DegreesEditor } from "../primitives/DegreesEditor";
 import { deg } from "../../../ooxml/domain/units";
 import type { Rotation3d } from "../../../pptx/domain";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 export type Rotation3dEditorProps = EditorProps<Rotation3d>;
 

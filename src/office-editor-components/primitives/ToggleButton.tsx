@@ -4,12 +4,13 @@
  * A button-style toggle for compact on/off states.
  */
 
-import { useCallback, type CSSProperties } from "react";
+import { useCallback, type CSSProperties, type ReactNode } from "react";
 import { colorTokens, fontTokens, radiusTokens } from "../design-tokens";
 
 export type ToggleButtonProps = {
   readonly pressed: boolean;
   readonly onChange: (pressed: boolean) => void;
+  /** Text label (displayed if no children provided, always used for aria-label) */
   readonly label: string;
   readonly ariaLabel?: string;
   readonly disabled?: boolean;
@@ -17,6 +18,8 @@ export type ToggleButtonProps = {
   readonly style?: CSSProperties;
   /** Show mixed indicator (for multi-selection with differing values) */
   readonly mixed?: boolean;
+  /** Custom content (icon, etc.) - if provided, replaces label text */
+  readonly children?: ReactNode;
 };
 
 const baseStyle: CSSProperties = {
@@ -69,6 +72,7 @@ export function ToggleButton({
   className,
   style,
   mixed,
+  children,
 }: ToggleButtonProps) {
   const handleClick = useCallback(() => {
     if (!disabled) {
@@ -94,7 +98,7 @@ export function ToggleButton({
       aria-pressed={mixed ? "mixed" : pressed}
       aria-label={ariaLabel ?? label}
     >
-      {label}
+      {children ?? label}
     </button>
   );
 }

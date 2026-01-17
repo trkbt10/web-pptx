@@ -7,10 +7,10 @@ import type { SlideSize, PresentationFile } from "../../../pptx/domain";
 import type { SlideLayoutType } from "../../../pptx/domain/slide";
 import type { SlideLayoutAttributes } from "../../../pptx/parser/slide/layout-parser";
 import type { SlideLayoutOption } from "../../../pptx/app";
-import type { EditorProps, SelectOption } from "../../types";
-import { FieldGroup, FieldRow } from "../../ui/layout";
-import { Input } from "../../ui/primitives/Input";
-import { Select } from "../../ui/primitives/Select";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
+import { Input } from "../../../office-editor-components/primitives/Input";
+import { Select } from "../../../office-editor-components/primitives/Select";
 import { LayoutSelector } from "../../ui/primitives";
 
 export type SlideLayoutEditorProps = EditorProps<SlideLayoutAttributes> & {

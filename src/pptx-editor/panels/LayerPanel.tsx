@@ -49,8 +49,8 @@ import {
   HiddenIcon,
   LockIcon,
   UnlockIcon,
-} from "../ui/icons/index";
-import { colorTokens, fontTokens, iconTokens } from "../ui/design-tokens/index";
+} from "../../office-editor-components/icons";
+import { colorTokens, fontTokens, iconTokens } from "../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Types

@@ -5,13 +5,19 @@
  * width, alignment, borders, and cell spacing.
  */
 
-import { useCallback, type CSSProperties } from "react";
+import { useCallback, type CSSProperties, type ReactNode } from "react";
 import type {
   DocxTableProperties,
   DocxTableLook,
 } from "../../../docx/domain/table";
 import type { TableAlignment, TableLayoutType, TableWidth } from "../../../ooxml/domain/table";
 import type { EditorProps } from "../../types";
+import { ToggleButton, Input, Select, Toggle } from "../../../office-editor-components/primitives";
+import { FieldGroup } from "../../../office-editor-components/layout";
+import type { SelectOption } from "../../../office-editor-components/types";
+import { AlignLeftIcon, AlignCenterIcon, AlignRightIcon } from "../../../office-editor-components/icons";
+import { iconTokens } from "../../../office-editor-components/design-tokens";
+import styles from "./TablePropertiesEditor.module.css";
 
 // =============================================================================
 // Types
@@ -29,15 +35,22 @@ export type TablePropertiesEditorProps = EditorProps<DocxTableProperties> & {
 // Constants
 // =============================================================================
 
-const ALIGNMENT_OPTIONS: { value: TableAlignment; label: string }[] = [
-  { value: "left", label: "Left" },
-  { value: "center", label: "Center" },
-  { value: "right", label: "Right" },
+const ALIGNMENT_OPTIONS: { value: TableAlignment; label: string; icon: ReactNode }[] = [
+  { value: "left", label: "Left", icon: <AlignLeftIcon size={iconTokens.size.sm} /> },
+  { value: "center", label: "Center", icon: <AlignCenterIcon size={iconTokens.size.sm} /> },
+  { value: "right", label: "Right", icon: <AlignRightIcon size={iconTokens.size.sm} /> },
 ];
 
-const LAYOUT_OPTIONS: { value: TableLayoutType; label: string }[] = [
+const LAYOUT_OPTIONS: SelectOption<TableLayoutType>[] = [
   { value: "autofit", label: "Auto Fit" },
   { value: "fixed", label: "Fixed" },
+];
+
+const WIDTH_TYPE_OPTIONS: SelectOption<TableWidth["type"]>[] = [
+  { value: "auto", label: "Auto" },
+  { value: "dxa", label: "Twips" },
+  { value: "pct", label: "Percent" },
+  { value: "nil", label: "None" },
 ];
 
 // =============================================================================
@@ -91,160 +104,132 @@ export function TablePropertiesEditor({
   const widthValue = value.tblW?.value ?? 0;
   const widthType = value.tblW?.type ?? "auto";
 
+  const containerClassName = className ? `${styles.container} ${className}` : styles.container;
+
   return (
-    <div className={className} style={style}>
+    <div className={containerClassName} style={style}>
       {/* Table Width */}
-      <div className="table-properties-width">
-        <label>Table Width</label>
-        <div className="width-inputs">
-          <input
+      <FieldGroup label="Table Width">
+        <div className={styles.widthInputs}>
+          <Input
             type="number"
             value={widthValue}
-            onChange={(e) =>
+            onChange={(v) =>
               handleWidthChange({
-                value: Number(e.target.value),
+                value: Number(v),
                 type: widthType,
               })
             }
             disabled={disabled}
             min={0}
+            width={80}
           />
-          <select
+          <Select
             value={widthType}
-            onChange={(e) =>
+            onChange={(type) =>
               handleWidthChange({
                 value: widthValue,
-                type: e.target.value as TableWidth["type"],
+                type,
               })
             }
+            options={WIDTH_TYPE_OPTIONS}
             disabled={disabled}
-          >
-            <option value="auto">Auto</option>
-            <option value="dxa">Twips</option>
-            <option value="pct">Percent</option>
-            <option value="nil">None</option>
-          </select>
+          />
         </div>
-      </div>
+      </FieldGroup>
 
       {/* Table Alignment */}
-      <div className="table-properties-alignment">
-        <label>Alignment</label>
-        <div className="alignment-buttons">
+      <FieldGroup label="Alignment">
+        <div className={styles.alignmentButtons}>
           {ALIGNMENT_OPTIONS.map((option) => (
-            <button
+            <ToggleButton
               key={option.value}
-              type="button"
-              onClick={() => handleAlignmentChange(option.value)}
+              pressed={value.jc === option.value}
+              onChange={() => handleAlignmentChange(option.value)}
+              label={option.label}
               disabled={disabled}
-              aria-pressed={value.jc === option.value}
-              title={option.label}
             >
-              {option.label}
-            </button>
+              {option.icon}
+            </ToggleButton>
           ))}
         </div>
-      </div>
+      </FieldGroup>
 
       {/* Table Layout */}
-      <div className="table-properties-layout">
-        <label>Layout</label>
-        <select
+      <FieldGroup label="Layout">
+        <Select
           value={value.tblLayout ?? "autofit"}
-          onChange={(e) => handleLayoutChange(e.target.value as TableLayoutType)}
+          onChange={handleLayoutChange}
+          options={LAYOUT_OPTIONS}
           disabled={disabled}
-        >
-          {LAYOUT_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
+        />
+      </FieldGroup>
 
       {/* Style Bands */}
       {showStyleBands && (
-        <div className="table-properties-look">
-          <label>Style Options</label>
-          <div className="look-checkboxes">
-            <label>
-              <input
-                type="checkbox"
-                checked={value.tblLook?.firstRow ?? false}
-                onChange={(e) => handleLookChange({ firstRow: e.target.checked })}
-                disabled={disabled}
-              />
-              Header Row
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={value.tblLook?.lastRow ?? false}
-                onChange={(e) => handleLookChange({ lastRow: e.target.checked })}
-                disabled={disabled}
-              />
-              Total Row
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={value.tblLook?.firstColumn ?? false}
-                onChange={(e) => handleLookChange({ firstColumn: e.target.checked })}
-                disabled={disabled}
-              />
-              First Column
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={value.tblLook?.lastColumn ?? false}
-                onChange={(e) => handleLookChange({ lastColumn: e.target.checked })}
-                disabled={disabled}
-              />
-              Last Column
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={!(value.tblLook?.noHBand ?? false)}
-                onChange={(e) => handleLookChange({ noHBand: !e.target.checked })}
-                disabled={disabled}
-              />
-              Banded Rows
-            </label>
-            <label>
-              <input
-                type="checkbox"
-                checked={!(value.tblLook?.noVBand ?? true)}
-                onChange={(e) => handleLookChange({ noVBand: !e.target.checked })}
-                disabled={disabled}
-              />
-              Banded Columns
-            </label>
+        <FieldGroup label="Style Options">
+          <div className={styles.lookCheckboxes}>
+            <Toggle
+              checked={value.tblLook?.firstRow ?? false}
+              onChange={(checked) => handleLookChange({ firstRow: checked })}
+              label="Header Row"
+              disabled={disabled}
+            />
+            <Toggle
+              checked={value.tblLook?.lastRow ?? false}
+              onChange={(checked) => handleLookChange({ lastRow: checked })}
+              label="Total Row"
+              disabled={disabled}
+            />
+            <Toggle
+              checked={value.tblLook?.firstColumn ?? false}
+              onChange={(checked) => handleLookChange({ firstColumn: checked })}
+              label="First Column"
+              disabled={disabled}
+            />
+            <Toggle
+              checked={value.tblLook?.lastColumn ?? false}
+              onChange={(checked) => handleLookChange({ lastColumn: checked })}
+              label="Last Column"
+              disabled={disabled}
+            />
+            <Toggle
+              checked={!(value.tblLook?.noHBand ?? false)}
+              onChange={(checked) => handleLookChange({ noHBand: !checked })}
+              label="Banded Rows"
+              disabled={disabled}
+            />
+            <Toggle
+              checked={!(value.tblLook?.noVBand ?? true)}
+              onChange={(checked) => handleLookChange({ noVBand: !checked })}
+              label="Banded Columns"
+              disabled={disabled}
+            />
           </div>
-        </div>
+        </FieldGroup>
       )}
 
       {/* Caption and Description */}
-      <div className="table-properties-accessibility">
-        <label>Caption</label>
-        <input
-          type="text"
-          value={value.tblCaption ?? ""}
-          onChange={(e) => onChange({ ...value, tblCaption: e.target.value || undefined })}
-          disabled={disabled}
-          placeholder="Table caption"
-        />
-        <label>Description</label>
-        <textarea
-          value={value.tblDescription ?? ""}
-          onChange={(e) =>
-            onChange({ ...value, tblDescription: e.target.value || undefined })
-          }
-          disabled={disabled}
-          placeholder="Table description for accessibility"
-        />
-      </div>
+      <FieldGroup label="Accessibility">
+        <div className={styles.accessibilitySection}>
+          <Input
+            type="text"
+            value={value.tblCaption ?? ""}
+            onChange={(v) => onChange({ ...value, tblCaption: String(v) || undefined })}
+            disabled={disabled}
+            placeholder="Table caption"
+          />
+          <textarea
+            className={styles.textarea}
+            value={value.tblDescription ?? ""}
+            onChange={(e) =>
+              onChange({ ...value, tblDescription: e.target.value || undefined })
+            }
+            disabled={disabled}
+            placeholder="Table description for accessibility"
+          />
+        </div>
+      </FieldGroup>
     </div>
   );
 }

@@ -5,7 +5,7 @@
 
 import { type CSSProperties, useCallback, useState } from "react";
 import type { MenuItem } from "./types";
-import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../design-tokens";
+import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../../../office-editor-components/design-tokens";
 
 export type ContextMenuItemProps = {
   readonly item: MenuItem;

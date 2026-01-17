@@ -7,8 +7,8 @@
 import { useCallback, type CSSProperties } from "react";
 import type { ColorScheme } from "../../../pptx/domain/color/context";
 import { ColorPickerPopover } from "../../ui/color/ColorPickerPopover";
-import { InspectorSection, Accordion } from "../../ui/layout";
-import { colorTokens, fontTokens, spacingTokens } from "../../ui/design-tokens";
+import { InspectorSection, Accordion } from "../../../office-editor-components/layout";
+import { colorTokens, fontTokens, spacingTokens } from "../../../office-editor-components/design-tokens";
 import { COLOR_SCHEME_KEYS, COLOR_LABELS, type SchemeColorName } from "./types";
 
 export type ColorSchemeEditorProps = {

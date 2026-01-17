@@ -1,5 +1,5 @@
 /**
- * @file Design tokens for pptx-editor UI
+ * @file Design tokens for Office Editor UI
  *
  * Centralized design system constants for colors, spacing, typography, etc.
  * These tokens are used both directly in TypeScript and injected as CSS variables.
@@ -10,7 +10,7 @@
  */
 export const colorTokens = {
   accent: {
-    /** PowerPoint blue - primary actions */
+    /** Primary actions */
     primary: "#4472C4",
     /** Selection state - secondary emphasis */
     secondary: "#3b82f6",

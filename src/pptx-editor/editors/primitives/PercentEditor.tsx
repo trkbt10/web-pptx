@@ -3,9 +3,9 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { Input, Slider } from "../../ui/primitives";
+import { Input, Slider } from "../../../office-editor-components/primitives";
 import { pct, type Percent } from "../../../ooxml/domain/units";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 export type PercentEditorProps = EditorProps<Percent> & {
   readonly min?: number;

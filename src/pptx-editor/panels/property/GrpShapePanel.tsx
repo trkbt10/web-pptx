@@ -6,8 +6,8 @@
 
 import type { GrpShape, Shape } from "../../../pptx/domain/index";
 import type { Transform } from "../../../pptx/domain/types";
-import { Accordion } from "../../ui/layout/Accordion";
-import { FieldGroup } from "../../ui/layout/index";
+import { Accordion } from "../../../office-editor-components/layout";
+import { FieldGroup } from "../../../office-editor-components/layout";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,

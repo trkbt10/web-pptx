@@ -1,5 +1,5 @@
 /**
- * @file Icon exports for pptx-editor
+ * @file Icon exports for Office Editor
  *
  * Re-exports lucide-react icons with semantic names for the editor.
  * Using named exports ensures tree-shaking works correctly.
@@ -95,6 +95,7 @@ export {
   AlignLeft as AlignLeftIcon,
   AlignCenter as AlignCenterIcon,
   AlignRight as AlignRightIcon,
+  AlignJustify as AlignJustifyIcon,
   AlignVerticalJustifyStart as AlignTopIcon,
   AlignVerticalJustifyCenter as AlignMiddleIcon,
   AlignVerticalJustifyEnd as AlignBottomIcon,
@@ -104,5 +105,4 @@ export {
   type LucideProps,
 } from "lucide-react";
 
-// Re-export icon tokens for consistent sizing
-export { iconTokens } from "../design-tokens";
+// Note: iconTokens available from design-tokens module directly

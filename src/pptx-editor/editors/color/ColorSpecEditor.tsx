@@ -6,14 +6,14 @@
  */
 
 import { useCallback, useMemo, type CSSProperties } from "react";
-import { Input, Select } from "../../ui/primitives";
-import { FieldGroup } from "../../ui/layout";
+import { Input, Select } from "../../../office-editor-components/primitives";
+import { FieldGroup } from "../../../office-editor-components/layout";
 import { FillPreview } from "../../ui/color";
 import { PercentEditor, DegreesEditor } from "../primitives";
 import { deg, pct } from "../../../ooxml/domain/units";
 import type { ColorSpec, SrgbColor, SchemeColor, SystemColor, PresetColor, HslColor } from "../../../ooxml/domain/color";
 import type { SolidFill } from "../../../ooxml/domain/fill";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 import type { ColorContext } from "../../../pptx/domain/color/context";
 import { resolveColor } from "../../../pptx/domain/color/resolution";
 import { useEditorConfig } from "../../context/editor/EditorConfigContext";

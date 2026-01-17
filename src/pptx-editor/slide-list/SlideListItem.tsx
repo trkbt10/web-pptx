@@ -10,8 +10,8 @@ import { memo, useState } from "react";
 import type { SlideListItemProps } from "./types";
 import { SlideNumberBadge } from "./SlideNumberBadge";
 import { TransitionEditor } from "../editors";
-import { FxIcon } from "../ui/icons";
-import { Popover } from "../ui/primitives";
+import { FxIcon } from "../../office-editor-components/icons";
+import { Popover } from "../../office-editor-components/primitives";
 import {
   getItemWrapperStyle,
   getThumbnailContainerStyle,

@@ -6,8 +6,8 @@
  */
 
 import { useCallback, useState, type CSSProperties } from "react";
-import { Select, Toggle, Input, Button } from "../../ui/primitives";
-import { Accordion, FieldGroup, FieldRow } from "../../ui/layout";
+import { Select, Toggle, Input, Button } from "../../../office-editor-components/primitives";
+import { Accordion, FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
 import { FillEditor, createNoFill } from "../color/FillEditor";
 import { LineEditor, createDefaultLine } from "../../ui/line";
@@ -24,7 +24,7 @@ import type {
 import type { BevelPresetType } from "../../../pptx/domain";
 import type { Line } from "../../../pptx/domain/color/types";
 import type { PresetMaterialType, LightRigType, LightRigDirection } from "../../../pptx/domain/types";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 
 export type TableCellPropertiesEditorProps = EditorProps<TableCellProperties> & {
   readonly style?: CSSProperties;

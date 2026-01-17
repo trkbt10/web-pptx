@@ -32,12 +32,12 @@ function injectStyles() {
   }
   const style = document.createElement("style");
   style.textContent = `
-    .pptx-editor-input::-webkit-outer-spin-button,
-    .pptx-editor-input::-webkit-inner-spin-button {
+    .office-editor-input::-webkit-outer-spin-button,
+    .office-editor-input::-webkit-inner-spin-button {
       -webkit-appearance: none;
       margin: 0;
     }
-    .pptx-editor-input {
+    .office-editor-input {
       -moz-appearance: textfield;
     }
   `;
@@ -126,7 +126,7 @@ export function Input({
         max={max}
         step={step}
         style={inputInnerStyle(hasSuffix)}
-        className="pptx-editor-input"
+        className="office-editor-input"
       />
       {suffix && <span style={suffixInnerStyle}>{suffix}</span>}
     </div>

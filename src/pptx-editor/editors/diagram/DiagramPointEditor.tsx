@@ -8,9 +8,9 @@ import type { CSSProperties } from "react";
 import type { DiagramPoint, DiagramPropertySet } from "../../../pptx/domain/diagram";
 import type { ShapeProperties } from "../../../pptx/domain/shape";
 import type { TextBody } from "../../../pptx/domain/text";
-import type { EditorProps } from "../../types";
-import { Accordion, FieldGroup, FieldRow } from "../../ui/layout";
-import { Input, Toggle } from "../../ui/primitives";
+import type { EditorProps } from "../../../office-editor-components/types";
+import { Accordion, FieldGroup, FieldRow } from "../../../office-editor-components/layout";
+import { Input, Toggle } from "../../../office-editor-components/primitives";
 import { ShapePropertiesEditor, createDefaultShapeProperties } from "../shape/ShapePropertiesEditor";
 import { TextBodyEditor } from "../text/TextBodyEditor";
 

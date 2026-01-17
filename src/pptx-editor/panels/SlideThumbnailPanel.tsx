@@ -11,7 +11,7 @@ import type { SlideTransition } from "../../pptx/domain/transition";
 import type { SlideId, SlideWithId } from "../../pptx/app";
 import { usePresentationEditor } from "../context/presentation/PresentationEditorContext";
 import { SlideList } from "../slide-list";
-import { colorTokens } from "../ui/design-tokens/index";
+import { colorTokens } from "../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Types

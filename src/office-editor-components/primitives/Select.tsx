@@ -5,7 +5,7 @@
  */
 
 import { useCallback, type ChangeEvent, type CSSProperties } from "react";
-import type { SelectOption } from "../../types";
+import type { SelectOption } from "../types";
 import { colorTokens, fontTokens, radiusTokens } from "../design-tokens";
 
 export type SelectProps<T extends string = string> = {

@@ -5,7 +5,7 @@
  */
 
 import { useMemo, type CSSProperties } from "react";
-import { Toggle } from "../../../ui/primitives";
+import { Toggle } from "../../../../office-editor-components/primitives";
 import type { Effects } from "../../../../pptx/domain/types";
 import { EFFECT_CONFIGS } from "./constants";
 import { EFFECT_CATEGORIES, type EffectKey, type EffectCategory } from "./types";

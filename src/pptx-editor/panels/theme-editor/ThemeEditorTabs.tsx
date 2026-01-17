@@ -11,7 +11,7 @@ import type { ThemePreset, SchemeColorName } from "./types";
 import { ColorSchemeEditor } from "./ColorSchemeEditor";
 import { FontSchemeEditor } from "./FontSchemeEditor";
 import { ThemePresetSelector } from "./ThemePresetSelector";
-import { Tabs, type TabItem } from "../../ui/primitives/Tabs";
+import { Tabs, type TabItem } from "../../../office-editor-components/primitives/Tabs";
 
 export type ThemeEditorTabsProps = {
   readonly colorScheme: ColorScheme;

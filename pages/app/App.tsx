@@ -12,6 +12,7 @@ import { EditorTestPage } from "./pages/EditorTestPage";
 import { DrawingMLTestPage } from "./pages/DrawingMLTestPage";
 import { GlyphTestPage } from "./pages/GlyphTestPage";
 import { TextEditorTestPage } from "./pages/TextEditorTestPage";
+import { DocxEditorTestPage } from "./pages/DocxEditorTestPage";
 import { PresentationEditor } from "@lib/pptx-editor";
 import { convertToPresentationDocument, type PresentationDocument } from "@lib/pptx/app";
 import "./App.css";
@@ -100,6 +101,10 @@ export function App() {
     navigate("/text-editor-test");
   }, [navigate]);
 
+  const handleDocxEditorTest = useCallback(() => {
+    navigate("/docx-editor-test");
+  }, [navigate]);
+
   const handleStartEditor = useCallback(() => {
     navigate("/editor");
   }, [navigate]);
@@ -155,6 +160,7 @@ export function App() {
       onDrawingMLTest={handleDrawingMLTest}
       onGlyphTest={handleGlyphTest}
       onTextEditorTest={handleTextEditorTest}
+      onDocxEditorTest={handleDocxEditorTest}
     />
   );
 
@@ -258,6 +264,7 @@ export function App() {
       <Route path="/drawing-ml/*" element={<DrawingMLTestPage onBack={handleGoHome} />} />
       <Route path="/glyph-test" element={<GlyphTestPage onBack={handleGoHome} />} />
       <Route path="/text-editor-test" element={<TextEditorTestPage onBack={handleGoHome} />} />
+      <Route path="/docx-editor-test" element={<DocxEditorTestPage onBack={handleGoHome} />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

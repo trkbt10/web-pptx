@@ -10,19 +10,19 @@
  */
 
 import { useCallback, type CSSProperties, type ChangeEvent } from "react";
-import { Select, Toggle } from "../../ui/primitives";
-import { FieldRow } from "../../ui/layout";
+import { Select, Toggle } from "../../../office-editor-components/primitives";
+import { FieldRow } from "../../../office-editor-components/layout";
 import { FillPickerPopover, ColorPickerPopover } from "../../ui/color";
 import { createDefaultColor } from "./ColorEditor";
 import { GradientStopsEditor, createDefaultGradientStops } from "./GradientStopsEditor";
 import { DegreesEditor } from "../primitives/DegreesEditor";
-import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../../ui/design-tokens";
+import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../../../office-editor-components/design-tokens";
 import type { NoFill, SolidFill, GradientFill, PatternFill, PatternType, LinearGradient } from "../../../ooxml/domain/fill";
 import { PATTERN_PRESETS } from "../../../ooxml/domain/fill";
 import type { Fill, BlipFill } from "../../../pptx/domain/color/types";
 import { deg } from "../../../ooxml/domain/units";
 import type { ResourceId } from "../../../pptx/domain/types";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 import { useEditorResourceContext } from "../../context/editor/EditorResourceContext";
 
 // =============================================================================

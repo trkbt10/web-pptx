@@ -5,7 +5,7 @@
  */
 
 import type { SpShape } from "../../../pptx/domain/index";
-import { Accordion } from "../../ui/layout/Accordion";
+import { Accordion } from "../../../office-editor-components/layout";
 import { LineEditor } from "../../ui/line";
 import {
   NonVisualPropertiesEditor,

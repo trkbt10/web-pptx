@@ -6,9 +6,9 @@
  */
 
 import { useCallback, useMemo } from "react";
-import { Input, Select, Toggle, SearchableSelect } from "../../ui/primitives";
-import type { SearchableSelectOption, SearchableSelectItemProps } from "../../ui/primitives/SearchableSelect";
-import { FieldGroup, FieldRow } from "../../ui/layout";
+import { Input, Select, Toggle, SearchableSelect } from "../../../office-editor-components/primitives";
+import type { SearchableSelectOption, SearchableSelectItemProps } from "../../../office-editor-components/primitives/SearchableSelect";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { ShapePreview } from "../../ui/shape-preview";
 import type {
   Geometry,
@@ -17,7 +17,7 @@ import type {
   TextRect,
 } from "../../../pptx/domain/shape";
 import type { AdjustValue } from "../../../pptx/domain/types";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 
 export type GeometryEditorProps = EditorProps<Geometry>;
 

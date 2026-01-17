@@ -5,8 +5,8 @@
  */
 
 import { useCallback, useState, type CSSProperties } from "react";
-import { Button, Input, Select, Toggle } from "../../ui/primitives";
-import { FieldGroup, FieldRow } from "../../ui/layout";
+import { Button, Input, Select, Toggle } from "../../../office-editor-components/primitives";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { PercentEditor, PointsEditor } from "../primitives";
 import { ColorEditor, createDefaultColor } from "../color";
 import type {
@@ -18,7 +18,7 @@ import type {
 } from "../../../pptx/domain/text";
 import type { TextTypeface } from "../../../pptx/domain/types";
 import type { Color } from "../../../ooxml/domain/color";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 import { pct, pt, type Percent, type Points } from "../../../ooxml/domain/units";
 
 // =============================================================================

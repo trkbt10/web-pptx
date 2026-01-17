@@ -1,45 +1,23 @@
 /**
  * @file Editor-specific types for DOCX Editor
  *
- * Common types used across all editor components.
+ * Re-exports shared types from office-editor-components
+ * and defines DOCX-specific types.
  */
 
-/**
- * Common props for all editor components.
- */
-export type EditorProps<T> = {
-  readonly value: T;
-  readonly onChange: (value: T) => void;
-  readonly disabled?: boolean;
-  readonly className?: string;
-};
+// Re-export shared types
+export type {
+  EditorProps,
+  EditorState,
+  EditorAction,
+  InputType,
+  ButtonVariant,
+  SelectOption,
+} from "../office-editor-components/types";
 
-/**
- * Editor state for useReducer pattern.
- */
-export type EditorState<T> = {
-  readonly value: T;
-  readonly originalValue: T;
-  readonly isDirty: boolean;
-};
-
-/**
- * Editor actions for useReducer.
- */
-export type EditorAction<T> =
-  | { readonly type: "SET_VALUE"; readonly payload: T }
-  | { readonly type: "UPDATE_FIELD"; readonly path: string; readonly value: unknown }
-  | { readonly type: "RESET" };
-
-/**
- * Input types for primitive components.
- */
-export type InputType = "text" | "number";
-
-/**
- * Button variants.
- */
-export type ButtonVariant = "primary" | "secondary" | "ghost";
+// =============================================================================
+// DOCX-specific types
+// =============================================================================
 
 /**
  * Mixed value type for properties that may have multiple values across selection.

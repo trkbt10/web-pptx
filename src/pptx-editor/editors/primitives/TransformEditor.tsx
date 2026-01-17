@@ -5,13 +5,13 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { FieldGroup, FieldRow } from "../../ui/layout";
-import { Toggle } from "../../ui/primitives";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
+import { Toggle } from "../../../office-editor-components/primitives";
 import { PixelsEditor } from "./PixelsEditor";
 import { DegreesEditor } from "./DegreesEditor";
 import { px, deg } from "../../../ooxml/domain/units";
 import type { Transform } from "../../../pptx/domain/types";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 export type TransformEditorProps = EditorProps<Transform> & {
   readonly style?: CSSProperties;

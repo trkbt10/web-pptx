@@ -5,10 +5,10 @@
  * @see ECMA-376 Part 1, Section 20.1.2.2.23 (hlinkClick/hlinkHover)
  */
 
-import { Input, Toggle } from "../../ui/primitives";
-import { FieldGroup } from "../../ui/layout";
+import { Input, Toggle } from "../../../office-editor-components/primitives";
+import { FieldGroup } from "../../../office-editor-components/layout";
 import type { Hyperlink } from "../../../pptx/domain/types";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 export type HyperlinkEditorProps = EditorProps<Hyperlink | undefined> & {
   /** Custom label for the toggle (default: "Enable") */

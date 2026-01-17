@@ -39,7 +39,7 @@ import type { ShapeBounds as CreationBounds } from "../shape/creation-bounds";
 import { SlideContextMenu, type ContextMenuActions } from "./context-menu/SlideContextMenu";
 import { SelectionBox } from "../selection/SelectionBox";
 import { SlideRenderer } from "../../pptx/render/react";
-import { colorTokens } from "../ui/design-tokens";
+import { colorTokens } from "../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Types

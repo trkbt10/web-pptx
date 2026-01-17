@@ -5,7 +5,7 @@
  * alignment, indentation, spacing, and list numbering.
  */
 
-import { useCallback, type CSSProperties } from "react";
+import { useCallback, type CSSProperties, type ReactNode } from "react";
 import type {
   DocxParagraphProperties,
   DocxParagraphSpacing,
@@ -15,6 +15,17 @@ import type {
 import type { ParagraphAlignment } from "../../../ooxml/domain/text";
 import type { Twips } from "../../../docx/domain/types";
 import type { EditorProps } from "../../types";
+import { ToggleButton, Input, Select, Toggle } from "../../../office-editor-components/primitives";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
+import type { SelectOption } from "../../../office-editor-components/types";
+import {
+  AlignLeftIcon,
+  AlignCenterIcon,
+  AlignRightIcon,
+  AlignJustifyIcon,
+} from "../../../office-editor-components/icons";
+import { iconTokens } from "../../../office-editor-components/design-tokens";
+import styles from "./ParagraphPropertiesEditor.module.css";
 
 // =============================================================================
 // Types
@@ -34,11 +45,19 @@ export type ParagraphPropertiesEditorProps = EditorProps<DocxParagraphProperties
 // Constants
 // =============================================================================
 
-const JUSTIFICATION_OPTIONS: { value: ParagraphAlignment; label: string }[] = [
-  { value: "left", label: "Left" },
-  { value: "center", label: "Center" },
-  { value: "right", label: "Right" },
-  { value: "both", label: "Justify" },
+const JUSTIFICATION_OPTIONS: { value: ParagraphAlignment; label: string; icon: ReactNode }[] = [
+  { value: "left", label: "Left", icon: <AlignLeftIcon size={iconTokens.size.sm} /> },
+  { value: "center", label: "Center", icon: <AlignCenterIcon size={iconTokens.size.sm} /> },
+  { value: "right", label: "Right", icon: <AlignRightIcon size={iconTokens.size.sm} /> },
+  { value: "both", label: "Justify", icon: <AlignJustifyIcon size={iconTokens.size.sm} /> },
+];
+
+const OUTLINE_LEVEL_OPTIONS: SelectOption<string>[] = [
+  { value: "", label: "Body Text" },
+  ...Array.from({ length: 9 }, (_, i) => ({
+    value: String(i),
+    label: `Heading ${i + 1}`,
+  })),
 ];
 
 // =============================================================================
@@ -87,13 +106,13 @@ export function ParagraphPropertiesEditor({
   );
 
   const handleOutlineLevelChange = useCallback(
-    (level: number | undefined) => {
-      if (level === undefined) {
+    (levelStr: string) => {
+      if (levelStr === "") {
         const { outlineLvl: _removed, ...rest } = value;
         void _removed;
         onChange(rest);
       } else {
-        onChange({ ...value, outlineLvl: level as DocxOutlineLevel });
+        onChange({ ...value, outlineLvl: Number(levelStr) as DocxOutlineLevel });
       }
     },
     [value, onChange],
@@ -129,187 +148,159 @@ export function ParagraphPropertiesEditor({
   const indentFirstLineInTwips = value.ind?.firstLine ?? value.ind?.hanging ?? 0;
   const isHangingIndent = value.ind?.hanging !== undefined;
 
+  const containerClassName = className ? `${styles.container} ${className}` : styles.container;
+
   return (
-    <div className={className} style={style}>
+    <div className={containerClassName} style={style}>
       {/* Alignment */}
-      <div className="paragraph-properties-alignment">
-        <label>Alignment</label>
-        <div className="alignment-buttons">
+      <FieldGroup label="Alignment">
+        <div className={styles.alignmentButtons}>
           {JUSTIFICATION_OPTIONS.map((option) => (
-            <button
+            <ToggleButton
               key={option.value}
-              type="button"
-              onClick={() => handleAlignmentChange(option.value)}
+              pressed={value.jc === option.value}
+              onChange={() => handleAlignmentChange(option.value)}
+              label={option.label}
               disabled={disabled}
-              aria-pressed={value.jc === option.value}
-              title={option.label}
             >
-              {option.label}
-            </button>
+              {option.icon}
+            </ToggleButton>
           ))}
         </div>
-      </div>
+      </FieldGroup>
 
       {/* Indentation */}
       {showIndentation && (
-        <div className="paragraph-properties-indentation">
-          <label>Indentation</label>
-          <div className="indentation-inputs">
-            <div>
-              <label>Left (twips)</label>
-              <input
+        <FieldGroup label="Indentation">
+          <div className={styles.indentationInputs}>
+            <div className={styles.inputGroup}>
+              <span className={styles.inputLabel}>Left (twips)</span>
+              <Input
                 type="number"
                 value={indentLeftInTwips}
-                onChange={(e) =>
-                  handleIndentationChange({ left: Number(e.target.value) as Twips })
-                }
+                onChange={(v) => handleIndentationChange({ left: Number(v) as Twips })}
                 disabled={disabled}
                 min={0}
               />
             </div>
-            <div>
-              <label>Right (twips)</label>
-              <input
+            <div className={styles.inputGroup}>
+              <span className={styles.inputLabel}>Right (twips)</span>
+              <Input
                 type="number"
                 value={indentRightInTwips}
-                onChange={(e) =>
-                  handleIndentationChange({ right: Number(e.target.value) as Twips })
-                }
+                onChange={(v) => handleIndentationChange({ right: Number(v) as Twips })}
                 disabled={disabled}
                 min={0}
               />
             </div>
-            <div>
-              <label>{isHangingIndent ? "Hanging" : "First Line"} (twips)</label>
-              <input
-                type="number"
-                value={indentFirstLineInTwips}
-                onChange={(e) => {
-                  const val = Number(e.target.value) as Twips;
-                  if (isHangingIndent) {
-                    handleIndentationChange({ hanging: val, firstLine: undefined });
-                  } else {
-                    handleIndentationChange({ firstLine: val, hanging: undefined });
-                  }
-                }}
-                disabled={disabled}
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  const val = indentFirstLineInTwips as Twips;
-                  if (isHangingIndent) {
-                    handleIndentationChange({ firstLine: val, hanging: undefined });
-                  } else {
-                    handleIndentationChange({ hanging: val, firstLine: undefined });
-                  }
-                }}
-                disabled={disabled}
-                title="Toggle between First Line and Hanging indent"
-              >
-                Toggle
-              </button>
+            <div className={styles.inputGroup}>
+              <span className={styles.inputLabel}>
+                {isHangingIndent ? "Hanging" : "First Line"} (twips)
+              </span>
+              <FieldRow gap={4}>
+                <Input
+                  type="number"
+                  value={indentFirstLineInTwips}
+                  onChange={(v) => {
+                    const val = Number(v) as Twips;
+                    if (isHangingIndent) {
+                      handleIndentationChange({ hanging: val, firstLine: undefined });
+                    } else {
+                      handleIndentationChange({ firstLine: val, hanging: undefined });
+                    }
+                  }}
+                  disabled={disabled}
+                />
+                <Toggle
+                  checked={isHangingIndent}
+                  onChange={(checked) => {
+                    const val = indentFirstLineInTwips as Twips;
+                    if (checked) {
+                      handleIndentationChange({ hanging: val, firstLine: undefined });
+                    } else {
+                      handleIndentationChange({ firstLine: val, hanging: undefined });
+                    }
+                  }}
+                  label="Hang"
+                  disabled={disabled}
+                />
+              </FieldRow>
             </div>
           </div>
-        </div>
+        </FieldGroup>
       )}
 
       {/* Spacing */}
       {showSpacing && (
-        <div className="paragraph-properties-spacing">
-          <label>Spacing</label>
-          <div className="spacing-inputs">
-            <div>
-              <label>Before (twips)</label>
-              <input
+        <FieldGroup label="Spacing">
+          <div className={styles.spacingInputs}>
+            <div className={styles.inputGroup}>
+              <span className={styles.inputLabel}>Before (twips)</span>
+              <Input
                 type="number"
                 value={spacingBeforeInTwips}
-                onChange={(e) =>
-                  handleSpacingChange({ before: Number(e.target.value) as Twips })
-                }
+                onChange={(v) => handleSpacingChange({ before: Number(v) as Twips })}
                 disabled={disabled}
                 min={0}
               />
             </div>
-            <div>
-              <label>After (twips)</label>
-              <input
+            <div className={styles.inputGroup}>
+              <span className={styles.inputLabel}>After (twips)</span>
+              <Input
                 type="number"
                 value={spacingAfterInTwips}
-                onChange={(e) =>
-                  handleSpacingChange({ after: Number(e.target.value) as Twips })
-                }
+                onChange={(v) => handleSpacingChange({ after: Number(v) as Twips })}
                 disabled={disabled}
                 min={0}
               />
             </div>
-            <div>
-              <label>Line (twips, 240=single)</label>
-              <input
+            <div className={styles.inputGroup}>
+              <span className={styles.inputLabel}>Line (240=single)</span>
+              <Input
                 type="number"
                 value={lineSpacingValue}
-                onChange={(e) =>
-                  handleSpacingChange({ line: Number(e.target.value) as Twips })
-                }
+                onChange={(v) => handleSpacingChange({ line: Number(v) as Twips })}
                 disabled={disabled}
                 min={1}
               />
             </div>
           </div>
-        </div>
+        </FieldGroup>
       )}
 
       {/* Outline Level / Heading */}
-      <div className="paragraph-properties-outline">
-        <label>Outline Level</label>
-        <select
-          value={value.outlineLvl ?? ""}
-          onChange={(e) =>
-            handleOutlineLevelChange(
-              e.target.value === "" ? undefined : Number(e.target.value),
-            )
-          }
+      <FieldGroup label="Outline Level">
+        <Select
+          value={value.outlineLvl !== undefined ? String(value.outlineLvl) : ""}
+          onChange={handleOutlineLevelChange}
+          options={OUTLINE_LEVEL_OPTIONS}
           disabled={disabled}
-        >
-          <option value="">Body Text</option>
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8].map((level) => (
-            <option key={level} value={level}>
-              Heading {level + 1}
-            </option>
-          ))}
-        </select>
-      </div>
+        />
+      </FieldGroup>
 
       {/* Page break options */}
-      <div className="paragraph-properties-breaks">
-        <label>
-          <input
-            type="checkbox"
+      <FieldGroup label="Pagination">
+        <div className={styles.breaksSection}>
+          <Toggle
             checked={value.keepNext ?? false}
-            onChange={(e) => handleKeepNextChange(e.target.checked)}
+            onChange={handleKeepNextChange}
+            label="Keep with next"
             disabled={disabled}
           />
-          Keep with next
-        </label>
-        <label>
-          <input
-            type="checkbox"
+          <Toggle
             checked={value.keepLines ?? false}
-            onChange={(e) => handleKeepLinesChange(e.target.checked)}
+            onChange={handleKeepLinesChange}
+            label="Keep lines together"
             disabled={disabled}
           />
-          Keep lines together
-        </label>
-        <label>
-          <input
-            type="checkbox"
+          <Toggle
             checked={value.pageBreakBefore ?? false}
-            onChange={(e) => handlePageBreakBeforeChange(e.target.checked)}
+            onChange={handlePageBreakBeforeChange}
+            label="Page break before"
             disabled={disabled}
           />
-          Page break before
-        </label>
-      </div>
+        </div>
+      </FieldGroup>
     </div>
   );
 }

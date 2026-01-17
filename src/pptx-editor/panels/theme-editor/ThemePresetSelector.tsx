@@ -7,8 +7,8 @@
 import { useCallback, type CSSProperties } from "react";
 import type { ThemePreset } from "./types";
 import { THEME_PRESETS } from "./presets";
-import { InspectorSection } from "../../ui/layout";
-import { colorTokens, fontTokens, spacingTokens, radiusTokens } from "../../ui/design-tokens";
+import { InspectorSection } from "../../../office-editor-components/layout";
+import { colorTokens, fontTokens, spacingTokens, radiusTokens } from "../../../office-editor-components/design-tokens";
 
 export type ThemePresetSelectorProps = {
   readonly currentThemeId?: string;

@@ -3,9 +3,9 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { Input } from "../../ui/primitives";
+import { Input } from "../../../office-editor-components/primitives";
 import { pt, type Points } from "../../../ooxml/domain/units";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 export type PointsEditorProps = EditorProps<Points> & {
   readonly min?: number;

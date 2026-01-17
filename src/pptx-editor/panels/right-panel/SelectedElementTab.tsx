@@ -19,7 +19,7 @@ import { DiagramFramePanel } from "../property/DiagramFramePanel";
 import { OleFramePanel } from "../property/OleFramePanel";
 import { UnknownShapePanel } from "../property/UnknownShapePanel";
 import { TextPropertyPanel } from "../property/TextPropertyPanel";
-import { InspectorSection } from "../../ui/layout";
+import { InspectorSection } from "../../../office-editor-components/layout";
 import { useTextEditContext } from "../../context/slide/TextEditContext";
 import { isTextEditActive } from "../../slide/text-edit";
 

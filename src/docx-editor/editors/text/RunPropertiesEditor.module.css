@@ -1,0 +1,38 @@
+/**
+ * CSS Module for RunPropertiesEditor
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md, 12px);
+}
+
+.formatting {
+  display: flex;
+  gap: var(--spacing-xs, 4px);
+}
+
+.fontSection {
+  display: flex;
+  gap: var(--spacing-sm, 8px);
+  align-items: center;
+}
+
+.colorSection {
+  display: flex;
+  gap: var(--spacing-sm, 8px);
+  align-items: center;
+}
+
+.highlightSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 4px);
+}
+
+.spacingSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 4px);
+}

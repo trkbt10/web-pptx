@@ -6,7 +6,7 @@
 
 import type { GraphicFrame } from "../../../pptx/domain/index";
 import type { OleReference } from "../../../pptx/domain/shape";
-import { Accordion } from "../../ui/layout/Accordion";
+import { Accordion } from "../../../office-editor-components/layout";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,

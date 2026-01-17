@@ -6,14 +6,14 @@
  */
 
 import { useMemo, useCallback, type CSSProperties } from "react";
-import { colorTokens } from "../../ui/design-tokens/index";
+import { colorTokens } from "../../../office-editor-components/design-tokens";
 import type { Shape } from "../../../pptx/domain/index";
 import type { Transform } from "../../../pptx/domain/types";
 import type { Fill, Line } from "../../../pptx/domain/color/types";
 import { px, deg } from "../../../ooxml/domain/units";
 import { type ShapeId } from "../../../pptx/domain/types";
-import { Accordion } from "../../ui/layout/Accordion";
-import { Input } from "../../ui/primitives/index";
+import { Accordion } from "../../../office-editor-components/layout";
+import { Input } from "../../../office-editor-components/primitives/index";
 import { FillEditor } from "../../editors/color/FillEditor";
 import { LineEditor } from "../../ui/line";
 import {

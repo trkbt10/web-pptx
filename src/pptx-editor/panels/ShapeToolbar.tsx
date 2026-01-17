@@ -7,7 +7,7 @@
 
 import { useCallback, useMemo } from "react";
 import type { CSSProperties } from "react";
-import { Button } from "../ui/primitives/Button";
+import { Button } from "../../office-editor-components/primitives/Button";
 import { LinePickerPopover } from "../ui/line/index";
 import type { Line, Shape } from "../../pptx/domain/index";
 import type { Pixels } from "../../ooxml/domain/units";
@@ -21,8 +21,8 @@ import {
   SendToBackIcon,
   BringForwardIcon,
   SendBackwardIcon,
-} from "../ui/icons/index";
-import { colorTokens, iconTokens } from "../ui/design-tokens/index";
+} from "../../office-editor-components/icons";
+import { colorTokens, iconTokens } from "../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Constants

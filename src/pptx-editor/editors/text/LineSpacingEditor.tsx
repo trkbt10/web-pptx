@@ -5,11 +5,11 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { Select } from "../../ui/primitives";
-import { FieldRow } from "../../ui/layout";
+import { Select } from "../../../office-editor-components/primitives";
+import { FieldRow } from "../../../office-editor-components/layout";
 import { PercentEditor, PointsEditor } from "../primitives";
 import type { LineSpacing } from "../../../pptx/domain/text";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 import { pct, pt, type Percent, type Points } from "../../../ooxml/domain/units";
 
 // =============================================================================

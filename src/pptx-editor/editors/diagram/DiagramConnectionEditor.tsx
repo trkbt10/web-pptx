@@ -6,10 +6,10 @@
 
 import type { CSSProperties } from "react";
 import type { DiagramConnection, DiagramCxnType, DiagramPoint } from "../../../pptx/domain/diagram";
-import type { EditorProps } from "../../types";
-import { FieldGroup, FieldRow } from "../../ui/layout";
-import { Select, Button } from "../../ui/primitives";
-import type { SelectOption } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
+import { Select, Button } from "../../../office-editor-components/primitives";
+import type { SelectOption } from "../../../office-editor-components/types";
 
 export type DiagramConnectionEditorProps = EditorProps<DiagramConnection> & {
   readonly style?: CSSProperties;

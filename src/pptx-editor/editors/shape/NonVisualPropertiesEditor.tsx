@@ -7,11 +7,11 @@
  */
 
 import { useCallback } from "react";
-import { Input, Toggle } from "../../ui/primitives";
-import { FieldGroup } from "../../ui/layout";
+import { Input, Toggle } from "../../../office-editor-components/primitives";
+import { FieldGroup } from "../../../office-editor-components/layout";
 import { HyperlinkEditor } from "./HyperlinkEditor";
 import type { NonVisualProperties } from "../../../pptx/domain/shape";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 export type NonVisualPropertiesEditorProps = EditorProps<NonVisualProperties> & {
   /** Show ID field (read-only) */
