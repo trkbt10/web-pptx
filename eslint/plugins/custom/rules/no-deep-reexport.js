@@ -1,11 +1,15 @@
 /**
- * @file Custom rule: prohibit re-exports that cross multiple directory levels.
+ * @file Custom rule: prohibit re-exports that cross module boundaries.
  *
  * Disallows patterns like:
  *   export * from '../../something'
  *   export { foo } from '../../../bar'
  *
- * These "deep re-exports" that cross multiple layers violate module boundaries
+ * Also disallows indirect re-exports (import then export):
+ *   import { foo } from '../domain/bar'
+ *   export { foo }  // <-- This is also prohibited!
+ *
+ * These "boundary-crossing re-exports" violate module boundaries
  * and make the codebase harder to understand and refactor.
  *
  * Allowed:
@@ -52,7 +56,7 @@ export default {
     type: "problem",
     docs: {
       description:
-        "Disallow re-exports (export from) that traverse multiple parent directories",
+        "Disallow re-exports that traverse multiple parent directories, including indirect import-then-export patterns",
       recommended: true,
     },
     schema: [
@@ -73,6 +77,9 @@ export default {
         "Re-export crosses {{depth}} parent directories (max allowed: {{max}}). " +
         "Deep re-exports violate module boundaries. Consider importing and re-exporting from a closer module, " +
         "or restructure the module hierarchy.",
+      indirectReexport:
+        "Re-exporting '{{name}}' that was imported from '{{source}}' ({{depth}} parent dirs). " +
+        "Indirect re-exports violate module boundaries. Import directly from the source instead.",
     },
   },
 
@@ -80,7 +87,10 @@ export default {
     const options = context.options[0] || {};
     const maxParentDepth = options.maxParentDepth ?? 1;
 
-    function checkExport(node) {
+    // Track imports that cross boundaries: Map<localName, { source, depth }>
+    const boundaryImports = new Map();
+
+    function checkDirectReexport(node) {
       if (!isReexport(node)) return;
 
       const sourcePath = node.source?.value;
@@ -100,9 +110,54 @@ export default {
       }
     }
 
+    function trackImport(node) {
+      const sourcePath = node.source?.value;
+      if (!sourcePath) return;
+
+      const depth = countParentTraversals(sourcePath);
+      if (depth <= maxParentDepth) return; // Within allowed boundary
+
+      // Track all imported names from boundary-crossing imports
+      for (const specifier of node.specifiers || []) {
+        const localName = specifier.local?.name;
+        if (localName) {
+          boundaryImports.set(localName, { source: sourcePath, depth });
+        }
+      }
+    }
+
+    function checkIndirectReexport(node) {
+      // Skip if this is a direct re-export (export { x } from '...')
+      if (node.source != null) return;
+
+      // Check each exported specifier
+      for (const specifier of node.specifiers || []) {
+        // For `export { foo }`, local is `foo` (what we're exporting)
+        const localName = specifier.local?.name;
+        if (!localName) continue;
+
+        const importInfo = boundaryImports.get(localName);
+        if (importInfo) {
+          context.report({
+            node: specifier,
+            messageId: "indirectReexport",
+            data: {
+              name: localName,
+              source: importInfo.source,
+              depth: String(importInfo.depth),
+            },
+          });
+        }
+      }
+    }
+
     return {
-      ExportAllDeclaration: checkExport,
-      ExportNamedDeclaration: checkExport,
+      ImportDeclaration: trackImport,
+      ExportAllDeclaration: checkDirectReexport,
+      ExportNamedDeclaration(node) {
+        checkDirectReexport(node);
+        checkIndirectReexport(node);
+      },
     };
   },
 };
