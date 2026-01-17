@@ -108,7 +108,7 @@ function applyAlphaMaskInPlace(
   width: number,
   height: number
 ): void {
-  if (!alpha) return;
+  if (!alpha) {return;}
 
   const expectedLength = width * height;
   if (alpha.length !== expectedLength) {

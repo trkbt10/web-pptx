@@ -68,14 +68,19 @@ export type ExtractFontInfoDeps<PdfPageT, ResourcesT> = Readonly<{
   readonly extractBaseFont?: (resources: ResourcesT, fontName: string) => string | null;
 }>;
 
+
+
+
+
+
 export function extractFontInfoWithDeps<PdfPageT, ResourcesT>(
   pdfPage: PdfPageT,
   fontName: string,
   deps: ExtractFontInfoDeps<PdfPageT, ResourcesT>,
 ): FontExtractionResult {
-  if (!pdfPage) throw new Error("pdfPage is required");
-  if (typeof fontName !== "string" || fontName.length === 0) throw new Error("fontName is required");
-  if (!deps) throw new Error("deps is required");
+  if (!pdfPage) {throw new Error("pdfPage is required");}
+  if (typeof fontName !== "string" || fontName.length === 0) {throw new Error("fontName is required");}
+  if (!deps) {throw new Error("deps is required");}
 
   const errors: string[] = [];
   let toUnicode: CMapParseResult | null = null;
@@ -137,14 +142,19 @@ export function extractFontInfoWithDeps<PdfPageT, ResourcesT>(
   return { toUnicode, metrics, ordering, encoding, isBold, isItalic, baseFont, errors };
 }
 
+
+
+
+
+
 export function logExtractionErrors(result: FontExtractionResult, fontName: string): void {
-  if (!result) throw new Error("result is required");
-  if (typeof fontName !== "string" || fontName.length === 0) throw new Error("fontName is required");
-  if (!result.errors || result.errors.length === 0) return;
+  if (!result) {throw new Error("result is required");}
+  if (typeof fontName !== "string" || fontName.length === 0) {throw new Error("fontName is required");}
+  if (!result.errors || result.errors.length === 0) {return;}
 
   const succeeded: string[] = [];
-  if (result.toUnicode) succeeded.push("ToUnicode");
-  if (result.metrics) succeeded.push("metrics");
+  if (result.toUnicode) {succeeded.push("ToUnicode");}
+  if (result.metrics) {succeeded.push("metrics");}
 
   if (succeeded.length === 0) {
     console.warn(`[PDF Font] Complete extraction failure for "${fontName}": ${result.errors.join("; ")}`);
@@ -161,7 +171,7 @@ export function logExtractionErrors(result: FontExtractionResult, fontName: stri
  * Extract all font mappings for a page.
  */
 export function extractFontMappings(page: NativePdfPage, options: FontExtractionOptions = {}): FontMappings {
-  if (!page) throw new Error("page is required");
+  if (!page) {throw new Error("page is required");}
   return extractFontMappingsNative(page, options);
 }
 
@@ -171,8 +181,8 @@ export function extractFontMappings(page: NativePdfPage, options: FontExtraction
  * This is currently used by analysis/diagnostic specs.
  */
 export function extractFontInfo(page: NativePdfPage, fontName: string, options: FontExtractionOptions = {}): FontExtractionResult {
-  if (!page) throw new Error("page is required");
-  if (typeof fontName !== "string" || fontName.length === 0) throw new Error("fontName is required");
+  if (!page) {throw new Error("page is required");}
+  if (typeof fontName !== "string" || fontName.length === 0) {throw new Error("fontName is required");}
 
   const mappings = extractFontMappingsNative(page, options);
   const info = mappings.get(fontName);

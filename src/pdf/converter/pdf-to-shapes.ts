@@ -208,6 +208,11 @@ export type DocumentConversionResult = {
   readonly slides: readonly Slide[];
 };
 
+
+
+
+
+
 export function convertDocumentToSlides(
   doc: PdfDocument,
   options: ConversionOptions

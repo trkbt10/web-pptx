@@ -394,14 +394,14 @@ export function isSimpleRectangle(path: BuiltPath): boolean {
   const ops = path.operations;
 
   // Must have moveTo + 4 lineTo (or 3 lineTo + close)
-  if (ops.length < 4 || ops.length > 6) return false;
+  if (ops.length < 4 || ops.length > 6) {return false;}
 
   // First must be moveTo
-  if (ops[0].type !== "moveTo") return false;
+  if (ops[0].type !== "moveTo") {return false;}
 
   // Count line operations
   const lineOps = ops.filter((op) => op.type === "lineTo");
-  if (lineOps.length < 3 || lineOps.length > 4) return false;
+  if (lineOps.length < 3 || lineOps.length > 4) {return false;}
 
   // Check if all lines are horizontal or vertical
   const points: { x: number; y: number }[] = [];
@@ -411,7 +411,7 @@ export function isSimpleRectangle(path: BuiltPath): boolean {
     }
   }
 
-  if (points.length < 4) return false;
+  if (points.length < 4) {return false;}
 
   // Floating-point epsilon for near-zero comparison (IEEE 754 precision consideration)
   const FLOAT_EPSILON = 1e-10;
@@ -437,8 +437,8 @@ export function isSimpleRectangle(path: BuiltPath): boolean {
  * into a single compound path
  */
 export function mergePaths(paths: readonly BuiltPath[]): BuiltPath | null {
-  if (paths.length === 0) return null;
-  if (paths.length === 1) return paths[0];
+  if (paths.length === 0) {return null;}
+  if (paths.length === 1) {return paths[0];}
 
   const first = paths[0];
   const allOps: NormalizedPathOp[] = [];

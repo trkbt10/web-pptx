@@ -10,7 +10,7 @@ import { createDefaultGraphicsState, type PdfColor } from "../../domain";
 // Mock GraphicsStateOps for testing with tracking
 function createMockGfxOps() {
   const calls: { method: string; args: unknown[] }[] = [];
-  let state = createDefaultGraphicsState();
+  const state = createDefaultGraphicsState();
 
   return {
     calls,

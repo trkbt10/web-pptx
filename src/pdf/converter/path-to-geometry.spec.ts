@@ -396,7 +396,7 @@ describe("pdf/parser/graphics-state", () => {
   it("inverts matrices when possible", () => {
     const m = translationMatrix(10, 20);
     const inv = invertMatrix(m);
-    if (!inv) throw new Error("Expected invertible matrix");
+    if (!inv) {throw new Error("Expected invertible matrix");}
     expect(transformPoint({ x: 10, y: 20 }, inv)).toEqual({ x: 0, y: 0 });
     expect(invertMatrix([0, 0, 0, 0, 0, 0])).toBeNull();
   });
@@ -545,7 +545,7 @@ describe("pdf/parser/path-builder", () => {
     expect(mergePaths([p1, { ...p2, paintOp: "stroke" as const }])).toBeNull();
 
     const merged = mergePaths([p1, p2]);
-    if (!merged) throw new Error("Expected merged path");
+    if (!merged) {throw new Error("Expected merged path");}
     expect(merged.bounds).toEqual([0, 0, 10, 10]);
     expect(merged.operations).toHaveLength(2);
   });

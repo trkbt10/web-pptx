@@ -55,10 +55,10 @@ function decodeStream(stream: PdfStream): Uint8Array {
 
 function readBox(dict: PdfDict, key: string): readonly number[] | null {
   const mb = dictGet(dict, key);
-  if (!mb || mb.type !== "array") return null;
+  if (!mb || mb.type !== "array") {return null;}
   const nums: number[] = [];
   for (const item of mb.items) {
-    if (item.type !== "number") return null;
+    if (item.type !== "number") {return null;}
     nums.push(item.value);
   }
   return nums.length === 4 ? nums : null;
@@ -66,25 +66,25 @@ function readBox(dict: PdfDict, key: string): readonly number[] | null {
 
 function readRotate(dict: PdfDict): number | null {
   const v = dictGet(dict, "Rotate");
-  if (!v || v.type !== "number") return null;
-  if (!Number.isFinite(v.value)) return null;
+  if (!v || v.type !== "number") {return null;}
+  if (!Number.isFinite(v.value)) {return null;}
   return Math.trunc(v.value);
 }
 
 function normalizeRotate(value: number | null): 0 | 90 | 180 | 270 {
   const raw = value ?? 0;
   const mod = ((raw % 360) + 360) % 360;
-  if (mod === 90) return 90;
-  if (mod === 180) return 180;
-  if (mod === 270) return 270;
+  if (mod === 90) {return 90;}
+  if (mod === 180) {return 180;}
+  if (mod === 270) {return 270;}
   return 0;
 }
 
 function readUserUnit(dict: PdfDict): number | null {
   const v = dictGet(dict, "UserUnit");
-  if (!v || v.type !== "number") return null;
-  if (!Number.isFinite(v.value)) return null;
-  if (v.value <= 0) return null;
+  if (!v || v.type !== "number") {return null;}
+  if (!Number.isFinite(v.value)) {return null;}
+  if (v.value <= 0) {return null;}
   return v.value;
 }
 
@@ -116,7 +116,7 @@ function readInherited(
       if (resourcesObj) {
         const resolved = resolver.deref(resourcesObj);
         const resDict = asDict(resolved);
-        if (resDict) resources = resDict;
+        if (resDict) {resources = resDict;}
       }
     }
 
@@ -133,7 +133,7 @@ function readInherited(
             }
             nums.push(item.value);
           }
-          if (nums.length === 4) mediaBox = nums;
+          if (nums.length === 4) {mediaBox = nums;}
         }
       }
     }
@@ -151,7 +151,7 @@ function readInherited(
             }
             nums.push(item.value);
           }
-          if (nums.length === 4) cropBox = nums;
+          if (nums.length === 4) {cropBox = nums;}
         }
       }
     }
@@ -169,7 +169,7 @@ function readInherited(
             }
             nums.push(item.value);
           }
-          if (nums.length === 4) bleedBox = nums;
+          if (nums.length === 4) {bleedBox = nums;}
         }
       }
     }
@@ -187,7 +187,7 @@ function readInherited(
             }
             nums.push(item.value);
           }
-          if (nums.length === 4) trimBox = nums;
+          if (nums.length === 4) {trimBox = nums;}
         }
       }
     }
@@ -205,25 +205,25 @@ function readInherited(
             }
             nums.push(item.value);
           }
-          if (nums.length === 4) artBox = nums;
+          if (nums.length === 4) {artBox = nums;}
         }
       }
     }
 
     if (rotate == null) {
       const rotateObj = resolver.deref(dictGet(cur, "Rotate") ?? { type: "null" });
-      if (rotateObj.type === "number") rotate = Math.trunc(rotateObj.value);
+      if (rotateObj.type === "number") {rotate = Math.trunc(rotateObj.value);}
     }
 
     if (userUnit == null) {
       const userUnitObj = resolver.deref(dictGet(cur, "UserUnit") ?? { type: "null" });
-      if (userUnitObj.type === "number" && userUnitObj.value > 0) userUnit = userUnitObj.value;
+      if (userUnitObj.type === "number" && userUnitObj.value > 0) {userUnit = userUnitObj.value;}
     }
 
-    if (resources && mediaBox && cropBox && bleedBox && trimBox && artBox && rotate != null && userUnit != null) break;
+    if (resources && mediaBox && cropBox && bleedBox && trimBox && artBox && rotate != null && userUnit != null) {break;}
 
     const parentRef = asRef(dictGet(cur, "Parent"));
-    if (!parentRef) break;
+    if (!parentRef) {break;}
     const parent = resolver.getObject(parentRef.obj);
     cur = asDict(parent);
   }
@@ -232,16 +232,16 @@ function readInherited(
 
 function collectPages(pagesNode: PdfDict, resolver: PdfResolver): readonly PdfDict[] {
   const type = asName(dictGet(pagesNode, "Type"));
-  if (type === "Page") return [pagesNode];
-  if (type !== "Pages") throw new Error("Pages tree: node is neither /Pages nor /Page");
+  if (type === "Page") {return [pagesNode];}
+  if (type !== "Pages") {throw new Error("Pages tree: node is neither /Pages nor /Page");}
 
   const kidsObj = dictGet(pagesNode, "Kids");
-  if (!kidsObj || kidsObj.type !== "array") return [];
+  if (!kidsObj || kidsObj.type !== "array") {return [];}
   const out: PdfDict[] = [];
   for (const kid of kidsObj.items) {
     const resolved = resolver.deref(kid);
     const dict = asDict(resolved);
-    if (!dict) continue;
+    if (!dict) {continue;}
     out.push(...collectPages(dict, resolver));
   }
   return out;
@@ -252,9 +252,9 @@ function extractInfoMetadata(info: PdfDict): NativePdfMetadata {
   const author = asString(dictGet(info, "Author"))?.text;
   const subject = asString(dictGet(info, "Subject"))?.text;
   const out: { title?: string; author?: string; subject?: string } = {};
-  if (title) out.title = title;
-  if (author) out.author = author;
-  if (subject) out.subject = subject;
+  if (title) {out.title = title;}
+  if (author) {out.author = author;}
+  if (subject) {out.subject = subject;}
   return out;
 }
 
@@ -262,13 +262,18 @@ function mergeMetadata(
   info: NativePdfMetadata,
   xmp: NativePdfMetadata | null,
 ): NativePdfMetadata {
-  if (!xmp) return info;
+  if (!xmp) {return info;}
   return {
     title: info.title ?? xmp.title,
     author: info.author ?? xmp.author,
     subject: info.subject ?? xmp.subject,
   };
 }
+
+
+
+
+
 
 export class NativePdfDocument {
   private readonly xref: XRefTable;
@@ -283,9 +288,9 @@ export class NativePdfDocument {
     private readonly bytes: Uint8Array,
     options: NativePdfLoadOptions,
   ) {
-    if (!bytes) throw new Error("bytes is required");
-    if (!options) throw new Error("options is required");
-    if (!options.encryption) throw new Error("options.encryption is required");
+    if (!bytes) {throw new Error("bytes is required");}
+    if (!options) {throw new Error("options is required");}
+    if (!options.encryption) {throw new Error("options.encryption is required");}
 
     this.xref = loadXRef(bytes);
     this.trailer = this.xref.trailer;
@@ -299,12 +304,12 @@ export class NativePdfDocument {
       if (options.encryption.mode === "password") {
         const idArr = asArray(dictGet(this.trailer, "ID"));
         const id0 = idArr && idArr.length > 0 ? asString(idArr[0])?.bytes : null;
-        if (!id0) throw new Error("Encrypted PDF: trailer /ID is missing");
+        if (!id0) {throw new Error("Encrypted PDF: trailer /ID is missing");}
 
         const tmpResolver = new PdfResolver(bytes, this.xref);
         const encryptObj = tmpResolver.getObject(encryptRef.obj);
         const encryptDict = asDict(encryptObj);
-        if (!encryptDict) throw new Error("Encrypted PDF: /Encrypt is not a dictionary");
+        if (!encryptDict) {throw new Error("Encrypted PDF: /Encrypt is not a dictionary");}
 
         const decrypter = createStandardDecrypter({
           encryptDict,
@@ -325,17 +330,17 @@ export class NativePdfDocument {
     }
 
     const rootRef = asRef(dictGet(this.trailer, "Root"));
-    if (!rootRef) throw new Error("Missing trailer /Root");
+    if (!rootRef) {throw new Error("Missing trailer /Root");}
     const catalogObj = this.resolver.getObject(rootRef.obj);
     const catalog = asDict(catalogObj);
-    if (!catalog) throw new Error("/Root is not a dictionary");
+    if (!catalog) {throw new Error("/Root is not a dictionary");}
     this.catalog = catalog;
 
     const pagesRef = asRef(dictGet(this.catalog, "Pages"));
-    if (!pagesRef) throw new Error("Missing catalog /Pages");
+    if (!pagesRef) {throw new Error("Missing catalog /Pages");}
     const pagesObj = this.resolver.getObject(pagesRef.obj);
     const pagesNode = asDict(pagesObj);
-    if (!pagesNode) throw new Error("Catalog /Pages is not a dictionary");
+    if (!pagesNode) {throw new Error("Catalog /Pages is not a dictionary");}
     this.pages = collectPages(pagesNode, this.resolver);
 
     const infoRef = asRef(dictGet(this.trailer, "Info"));
@@ -380,13 +385,13 @@ export class NativePdfDocument {
       const effectiveArtBox = artBox ?? effectiveCropBox;
 
       const scaleBox = (box: readonly number[] | null): readonly number[] | null => {
-        if (!box) return null;
+        if (!box) {return null;}
         return [box[0] ?? 0, box[1] ?? 0, box[2] ?? 0, box[3] ?? 0].map((v) => v * userUnit);
       };
 
       const getSize = () => {
         const box = effectiveCropBox ?? effectiveMediaBox;
-        if (!box) throw new Error("Page MediaBox is missing");
+        if (!box) {throw new Error("Page MediaBox is missing");}
         const [llx, lly, urx, ury] = box;
         const w = ((urx ?? 0) - (llx ?? 0)) * userUnit;
         const h = ((ury ?? 0) - (lly ?? 0)) * userUnit;
@@ -416,7 +421,7 @@ export class NativePdfDocument {
 
       const getDecodedContentStreams = () => {
         const contents = dictGet(pageDict, "Contents");
-        if (!contents) return [];
+        if (!contents) {return [];}
         const resolved = this.resolver.deref(contents);
         const streams: PdfStream[] = [];
         if (resolved.type === "stream") {
@@ -424,7 +429,7 @@ export class NativePdfDocument {
         } else if (resolved.type === "array") {
           for (const item of resolved.items) {
             const obj = this.resolver.deref(item);
-            if (obj.type === "stream") streams.push(obj);
+            if (obj.type === "stream") {streams.push(obj);}
           }
         }
         return streams.map(decodeStream);
@@ -443,9 +448,14 @@ export class NativePdfDocument {
   }
 }
 
+
+
+
+
+
 export function loadNativePdfDocument(data: Uint8Array | ArrayBuffer, options: NativePdfLoadOptions): NativePdfDocument {
-  if (!data) throw new Error("data is required");
-  if (!options) throw new Error("options is required");
+  if (!data) {throw new Error("data is required");}
+  if (!options) {throw new Error("options is required");}
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
   return new NativePdfDocument(bytes, options);
 }

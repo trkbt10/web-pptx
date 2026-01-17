@@ -74,7 +74,7 @@ function lzwEncode(data: Uint8Array, options: LzwEncodeOptions = { earlyChange: 
   const early = options.earlyChange;
 
   const dict = new Map<string, number>();
-  for (let i = 0; i < 256; i += 1) dict.set(String.fromCharCode(i), i);
+  for (let i = 0; i < 256; i += 1) {dict.set(String.fromCharCode(i), i);}
 
   let nextCode = 258;
   let codeSize = 9;
@@ -88,18 +88,18 @@ function lzwEncode(data: Uint8Array, options: LzwEncodeOptions = { earlyChange: 
       w = wc;
       continue;
     }
-    if (w.length > 0) codes.push(dict.get(w)!);
+    if (w.length > 0) {codes.push(dict.get(w)!);}
 
     if (nextCode <= maxCode) {
       dict.set(wc, nextCode);
       nextCode += 1;
       const threshold = early ? (1 << codeSize) - 1 : 1 << codeSize;
-      if (nextCode === threshold && codeSize < 12) codeSize += 1;
+      if (nextCode === threshold && codeSize < 12) {codeSize += 1;}
     }
 
     w = c;
   }
-  if (w.length > 0) codes.push(dict.get(w)!);
+  if (w.length > 0) {codes.push(dict.get(w)!);}
   codes.push(EOD);
 
   const out: number[] = [];
@@ -123,16 +123,16 @@ function lzwEncode(data: Uint8Array, options: LzwEncodeOptions = { earlyChange: 
       codeSize = 9;
       continue;
     }
-    if (code === EOD) break;
+    if (code === EOD) {break;}
 
     if (nextCode <= maxCode) {
       nextCode += 1;
       const threshold = early ? (1 << codeSize) - 1 : 1 << codeSize;
-      if (nextCode === threshold && codeSize < 12) codeSize += 1;
+      if (nextCode === threshold && codeSize < 12) {codeSize += 1;}
     }
   }
 
-  if (bitLen > 0) out.push((bitBuf << (8 - bitLen)) & 0xff);
+  if (bitLen > 0) {out.push((bitBuf << (8 - bitLen)) & 0xff);}
   return new Uint8Array(out);
 }
 
@@ -233,19 +233,69 @@ function buildMinimalPdfWithSmaskImageXObject(args: {
   return new TextEncoder().encode(pdfText);
 }
 
+function buildMinimalPdfWithMaskImageXObject(args: {
+  readonly imageStreamAscii: string;
+  readonly imageDictEntries: string;
+  readonly maskStreamAscii: string;
+  readonly maskDictEntries: string;
+}): Uint8Array {
+  const contentStream = "q 15.36 0 0 15.36 0 0 cm /Im1 Do Q\n";
+  const contentLength = new TextEncoder().encode(contentStream).length;
+  const imageLength = new TextEncoder().encode(args.imageStreamAscii).length;
+  const maskLength = new TextEncoder().encode(args.maskStreamAscii).length;
+
+  const objects: Record<number, string> = {
+    1: "<< /Type /Catalog /Pages 3 0 R >>",
+    3: "<< /Type /Pages /Kids [4 0 R] /Count 1 >>",
+    4: "<< /Type /Page /Parent 3 0 R /MediaBox [0 0 15.36 15.36] /Contents 5 0 R /Resources << /XObject << /Im1 7 0 R >> >> >>",
+    5: `<< /Length ${contentLength} >>\nstream\n${contentStream}endstream`,
+    7: `<< ${args.imageDictEntries} /Mask 8 0 R /Length ${imageLength} >>\nstream\n${args.imageStreamAscii}\nendstream`,
+    8: `<< ${args.maskDictEntries} /Length ${maskLength} >>\nstream\n${args.maskStreamAscii}\nendstream`,
+  };
+
+  const header = "%PDF-1.4\n";
+  const order = [1, 3, 4, 5, 7, 8];
+  const parts: string[] = [header];
+  const offsets: number[] = [0];
+
+  let cursor = header.length;
+  for (const n of order) {
+    offsets[n] = cursor;
+    const body = `${n} 0 obj\n${objects[n]}\nendobj\n`;
+    parts.push(body);
+    cursor += body.length;
+  }
+
+  const xrefStart = cursor;
+  const size = Math.max(...order) + 1;
+  const xrefLines: string[] = [];
+  xrefLines.push("xref\n");
+  xrefLines.push(`0 ${size}\n`);
+  xrefLines.push("0000000000 65535 f \n");
+  for (let i = 1; i < size; i += 1) {
+    const off = offsets[i] ?? 0;
+    const line = `${String(off).padStart(10, "0")} 00000 n \n`;
+    xrefLines.push(line);
+  }
+  const trailer = `trailer\n<< /Size ${size} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
+
+  const pdfText = parts.join("") + xrefLines.join("") + trailer;
+  return new TextEncoder().encode(pdfText);
+}
+
 async function extractFirstCcittImageStreamBytes(pdfBytes: Uint8Array): Promise<Uint8Array> {
   const xref = loadXRef(pdfBytes);
   const resolver = new PdfResolver(pdfBytes, xref);
 
   const readNameArray = (obj: PdfObject | undefined): readonly string[] => {
     const v = obj ? resolver.deref(obj) : undefined;
-    if (!v) return [];
-    if (v.type === "name") return [v.value];
+    if (!v) {return [];}
+    if (v.type === "name") {return [v.value];}
     if (v.type === "array") {
       const out: string[] = [];
       for (const item of v.items) {
         const deref = resolver.deref(item);
-        if (deref.type === "name") out.push(deref.value);
+        if (deref.type === "name") {out.push(deref.value);}
       }
       return out;
     }
@@ -253,15 +303,15 @@ async function extractFirstCcittImageStreamBytes(pdfBytes: Uint8Array): Promise<
   };
 
   for (const [objNum, entry] of xref.entries.entries()) {
-    if (entry.type === 0) continue;
+    if (entry.type === 0) {continue;}
     const obj = resolver.getObject(objNum);
-    if (obj.type !== "stream") continue;
+    if (obj.type !== "stream") {continue;}
 
     const subtype = resolver.deref(obj.dict.map.get("Subtype") ?? { type: "null" });
-    if (subtype.type !== "name" || subtype.value !== "Image") continue;
+    if (subtype.type !== "name" || subtype.value !== "Image") {continue;}
 
     const filters = readNameArray(obj.dict.map.get("Filter"));
-    if (!filters.includes("CCITTFaxDecode")) continue;
+    if (!filters.includes("CCITTFaxDecode")) {continue;}
 
     // When /Length is indirect and we fall back to searching "endstream",
     // stream.data may include a trailing newline before "endstream".
@@ -441,6 +491,35 @@ describe("image-extractor (CCITTFaxDecode)", () => {
     expect(pixelGray(rgba, 0, 0, 16)).toBe(255);
     expect(pixelGray(rgba, 15, 0, 16)).toBe(0);
   });
+
+  it("decodes /CCITTFaxDecode Group3 1D (K=0) with EndOfLine=true", async () => {
+    // Encoded bits: white=8, black=8, then EOL marker (000000000001).
+    // 23 bits => 0x98 0xA0 0x02 (padded).
+    const ccittHex = "98A002>";
+
+    const pdfBytes = buildMinimalPdfWithImageXObject({
+      imageStreamAscii: ccittHex,
+      imageDictEntries:
+        "/Type /XObject /Subtype /Image /Name /Im1 /Width 16 /Height 1 " +
+        "/BitsPerComponent 1 /ColorSpace /DeviceGray " +
+        "/Filter [/ASCIIHexDecode /CCITTFaxDecode] " +
+        "/DecodeParms [null << /K 0 /Columns 16 /Rows 1 /BlackIs1 false /EndOfLine true >>]",
+    });
+
+    const doc = await parsePdf(pdfBytes);
+    const images = doc.pages.flatMap((p) => p.elements.filter((e) => e.type === "image"));
+    expect(images).toHaveLength(1);
+
+    const image = images[0]!;
+    expect(image.width).toBe(16);
+    expect(image.height).toBe(1);
+    expect(image.colorSpace).toBe("DeviceGray");
+    expect(image.bitsPerComponent).toBe(1);
+
+    const rgba = convertToRgba(image.data, image.width, image.height, image.colorSpace, image.bitsPerComponent);
+    expect(pixelGray(rgba, 0, 0, 16)).toBe(255);
+    expect(pixelGray(rgba, 15, 0, 16)).toBe(0);
+  });
 });
 
 describe("image-extractor (LZWDecode)", () => {
@@ -541,6 +620,73 @@ describe("image-extractor (SMask)", () => {
     expect(image.height).toBe(1);
     expect(image.alpha).toBeTruthy();
     expect(Array.from(image.alpha ?? [])).toEqual([0, 255]);
+  });
+
+  it("extracts /SMask alpha when BitsPerComponent=4", async () => {
+    const pdfBytes = buildMinimalPdfWithSmaskImageXObject({
+      imageStreamAscii: "FF000000FF00>",
+      imageDictEntries:
+        "/Type /XObject /Subtype /Image /Name /Im1 /Width 2 /Height 1 " +
+        "/BitsPerComponent 8 /ColorSpace /DeviceRGB /Filter /ASCIIHexDecode",
+      // 2 samples @ 4bpc packed into one byte: 0x0F => [0, 15] => [0, 255]
+      smaskStreamAscii: "0F>",
+      smaskDictEntries:
+        "/Type /XObject /Subtype /Image /Name /SM1 /Width 2 /Height 1 " +
+        "/BitsPerComponent 4 /ColorSpace /DeviceGray /Filter /ASCIIHexDecode",
+    });
+
+    const doc = await parsePdf(pdfBytes);
+    const images = doc.pages.flatMap((p) => p.elements.filter((e) => e.type === "image"));
+    expect(images).toHaveLength(1);
+
+    const image = images[0]!;
+    expect(image.alpha).toBeTruthy();
+    expect(Array.from(image.alpha ?? [])).toEqual([0, 255]);
+  });
+
+  it("extracts /SMask alpha for /CCITTFaxDecode masks (with /Decode inversion)", async () => {
+    const source = decodePdfBase64(CCITT_GROUP4_PDF_BASE64);
+    const ccittBytes = await extractFirstCcittImageStreamBytes(source);
+    const ascii85 = ascii85Encode(ccittBytes);
+
+    const pdfBytes = buildMinimalPdfWithSmaskImageXObject({
+      imageStreamAscii: ascii85,
+      imageDictEntries:
+        "/Type /XObject /Subtype /Image /Name /Im1 /Width 64 /Height 64 " +
+        "/BitsPerComponent 1 /ColorSpace /DeviceGray " +
+        "/Filter [/ASCII85Decode /CCITTFaxDecode] " +
+        "/DecodeParms [null << /K -1 /Columns 64 /Rows 64 /BlackIs1 true >>]",
+      smaskStreamAscii: ascii85,
+      smaskDictEntries:
+        "/Type /XObject /Subtype /Image /Name /SM1 /Width 64 /Height 64 " +
+        "/BitsPerComponent 1 /ColorSpace /DeviceGray " +
+        "/Decode [1 0] " +
+        "/Filter [/ASCII85Decode /CCITTFaxDecode] " +
+        "/DecodeParms [null << /K -1 /Columns 64 /Rows 64 /BlackIs1 true >>]",
+    });
+
+    const doc = await parsePdf(pdfBytes);
+    const images = doc.pages.flatMap((p) => p.elements.filter((e) => e.type === "image"));
+    expect(images).toHaveLength(1);
+
+    const image = images[0]!;
+    expect(image.width).toBe(64);
+    expect(image.height).toBe(64);
+    expect(image.alpha).toBeTruthy();
+
+    const alpha = image.alpha!;
+    expect(alpha).toHaveLength(64 * 64);
+
+    const a00 = alpha[0 * 64 + 0] ?? 0;
+    const a630 = alpha[0 * 64 + 63] ?? 0;
+    const a063 = alpha[63 * 64 + 0] ?? 0;
+    const a6363 = alpha[63 * 64 + 63] ?? 0;
+
+    // Inverted relative to the CCITT image's black/white pattern.
+    expect(a00).toBe(255);
+    expect(a630).toBe(0);
+    expect(a063).toBe(0);
+    expect(a6363).toBe(255);
   });
 });
 
@@ -680,5 +826,91 @@ describe("image-extractor (ImageMask)", () => {
 
     const image = images[0]!;
     expect(Array.from(image.alpha ?? [])).toEqual([0, 255]);
+  });
+});
+
+describe("image-extractor (/Mask)", () => {
+  it("applies color-key /Mask arrays by producing alpha=0 for matching pixels", async () => {
+    // 2 pixels: red then green. Mask out only pure red.
+    const pdfBytes = buildMinimalPdfWithImageXObject({
+      imageStreamAscii: "FF000000FF00>",
+      imageDictEntries:
+        "/Type /XObject /Subtype /Image /Name /Im1 /Width 2 /Height 1 " +
+        "/BitsPerComponent 8 /ColorSpace /DeviceRGB " +
+        "/Mask [255 255 0 0 0 0] " +
+        "/Filter /ASCIIHexDecode",
+    });
+
+    const doc = await parsePdf(pdfBytes);
+    const images = doc.pages.flatMap((p) => p.elements.filter((e) => e.type === "image"));
+    expect(images).toHaveLength(1);
+
+    const image = images[0]!;
+    expect(Array.from(image.alpha ?? [])).toEqual([0, 255]);
+  });
+
+  it("uses explicit /Mask streams as alpha (ImageMask) for base images", async () => {
+    const pdfBytes = buildMinimalPdfWithMaskImageXObject({
+      imageStreamAscii: "FF000000FF00>",
+      imageDictEntries:
+        "/Type /XObject /Subtype /Image /Name /Im1 /Width 2 /Height 1 " +
+        "/BitsPerComponent 8 /ColorSpace /DeviceRGB /Filter /ASCIIHexDecode",
+      maskStreamAscii: "80>",
+      maskDictEntries:
+        "/Type /XObject /Subtype /Image /Name /M1 /Width 2 /Height 1 " +
+        "/ImageMask true /Filter /ASCIIHexDecode",
+    });
+
+    const doc = await parsePdf(pdfBytes);
+    const images = doc.pages.flatMap((p) => p.elements.filter((e) => e.type === "image"));
+    expect(images).toHaveLength(1);
+
+    const image = images[0]!;
+    expect(Array.from(image.alpha ?? [])).toEqual([255, 0]);
+  });
+
+  it("decodes explicit /Mask streams with /CCITTFaxDecode (with /Decode inversion)", async () => {
+    const source = decodePdfBase64(CCITT_GROUP4_PDF_BASE64);
+    const ccittBytes = await extractFirstCcittImageStreamBytes(source);
+    const ascii85 = ascii85Encode(ccittBytes);
+
+    const pdfBytes = buildMinimalPdfWithMaskImageXObject({
+      imageStreamAscii: ascii85,
+      imageDictEntries:
+        "/Type /XObject /Subtype /Image /Name /Im1 /Width 64 /Height 64 " +
+        "/BitsPerComponent 1 /ColorSpace /DeviceGray " +
+        "/Filter [/ASCII85Decode /CCITTFaxDecode] " +
+        "/DecodeParms [null << /K -1 /Columns 64 /Rows 64 /BlackIs1 true >>]",
+      maskStreamAscii: ascii85,
+      maskDictEntries:
+        "/Type /XObject /Subtype /Image /Name /M1 /Width 64 /Height 64 " +
+        "/ImageMask true " +
+        "/Decode [1 0] " +
+        "/Filter [/ASCII85Decode /CCITTFaxDecode] " +
+        "/DecodeParms [null << /K -1 /Columns 64 /Rows 64 /BlackIs1 true >>]",
+    });
+
+    const doc = await parsePdf(pdfBytes);
+    const images = doc.pages.flatMap((p) => p.elements.filter((e) => e.type === "image"));
+    expect(images).toHaveLength(1);
+
+    const image = images[0]!;
+    expect(image.width).toBe(64);
+    expect(image.height).toBe(64);
+    expect(image.alpha).toBeTruthy();
+
+    const alpha = image.alpha!;
+    expect(alpha).toHaveLength(64 * 64);
+
+    const a00 = alpha[0 * 64 + 0] ?? 0;
+    const a630 = alpha[0 * 64 + 63] ?? 0;
+    const a063 = alpha[63 * 64 + 0] ?? 0;
+    const a6363 = alpha[63 * 64 + 63] ?? 0;
+
+    // Decode inverted relative to the CCITT image's black/white pattern.
+    expect(a00).toBe(255);
+    expect(a630).toBe(0);
+    expect(a063).toBe(0);
+    expect(a6363).toBe(255);
   });
 });

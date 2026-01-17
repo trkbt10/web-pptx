@@ -10,12 +10,22 @@ import { parsePdfNative, type PdfParserOptions as NativePdfParserOptions } from 
 
 export type PdfParserOptions = NativePdfParserOptions;
 
+
+
+
+
+
 export async function parsePdf(
   data: Uint8Array | ArrayBuffer,
   options: PdfParserOptions = {},
 ): Promise<PdfDocument> {
   return await parsePdfNative(data, options);
 }
+
+
+
+
+
 
 export async function getPdfPageCount(data: Uint8Array | ArrayBuffer): Promise<number> {
   const pdfDoc = await loadNativePdfDocumentForParser(data, {
@@ -25,6 +35,11 @@ export async function getPdfPageCount(data: Uint8Array | ArrayBuffer): Promise<n
   });
   return pdfDoc.getPageCount();
 }
+
+
+
+
+
 
 export async function getPdfPageDimensions(
   data: Uint8Array | ArrayBuffer,
@@ -37,7 +52,7 @@ export async function getPdfPageDimensions(
   });
 
   const pages = pdfDoc.getPages();
-  if (pageNumber < 1 || pageNumber > pages.length) return null;
+  if (pageNumber < 1 || pageNumber > pages.length) {return null;}
   return pages[pageNumber - 1]!.getSize();
 }
 

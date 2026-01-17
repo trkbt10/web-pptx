@@ -146,7 +146,7 @@ function decodeSingleByteTextWithFallback(
     .map((char) => {
       const code = char.charCodeAt(0);
       const mapped = toUnicode.get(code);
-      if (mapped) return mapped;
+      if (mapped) {return mapped;}
       const fallback = encodingMap?.get(code);
       return fallback ?? char;
     })

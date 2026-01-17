@@ -48,9 +48,9 @@ function asNumber(obj: PdfObject | undefined): number | null {
   return obj?.type === "number" ? obj.value : null;
 }
 function asString(obj: PdfObject | undefined): string | null {
-  if (!obj) return null;
-  if (obj.type === "string") return obj.text;
-  if (obj.type === "name") return `/${obj.value}`;
+  if (!obj) {return null;}
+  if (obj.type === "string") {return obj.text;}
+  if (obj.type === "name") {return `/${obj.value}`;}
   return null;
 }
 function resolve(page: NativePdfPage, obj: PdfObject | undefined): PdfObject | undefined {
@@ -428,7 +428,7 @@ describe("modeling.pdf analysis", () => {
     const pdfBytes = readFileSync(PDF_PATH);
     const pdfDoc = loadNativePdfDocument(pdfBytes, { encryption: { mode: "ignore" } });
     const page = pdfDoc.getPages()[0];
-    if (!page) return;
+    if (!page) {return;}
 
     const resourcesDict = page.getResourcesDict();
     if (!resourcesDict) {
@@ -446,7 +446,7 @@ describe("modeling.pdf analysis", () => {
 
     for (const [fontName, ref] of fontsDict.map.entries()) {
       const fontDict = resolveDict(page, ref);
-      if (!fontDict) continue;
+      if (!fontDict) {continue;}
 
       // Get font subtype
       const subtype = asName(resolve(page, dictGet(fontDict, "Subtype")))?.value ?? "unknown";
@@ -455,13 +455,13 @@ describe("modeling.pdf analysis", () => {
       // For Type0 fonts, look in DescendantFonts
       if (subtype === "Type0") {
         const descendants = asArray(resolve(page, dictGet(fontDict, "DescendantFonts")));
-        if (!descendants || descendants.items.length === 0) continue;
+        if (!descendants || descendants.items.length === 0) {continue;}
 
         const cidFont = asDict(resolve(page, descendants.items[0]));
-        if (!cidFont) continue;
+        if (!cidFont) {continue;}
 
         const cidDescriptor = resolveDict(page, dictGet(cidFont, "FontDescriptor"));
-        if (!cidDescriptor) continue;
+        if (!cidDescriptor) {continue;}
 
         const flags = asNumber(resolve(page, dictGet(cidDescriptor, "Flags")));
         const cidFontName = asString(resolve(page, dictGet(cidDescriptor, "FontName"))) ?? "unknown";
@@ -482,7 +482,7 @@ describe("modeling.pdf analysis", () => {
 
       // Get FontDescriptor for non-Type0 fonts
       const descriptor = resolveDict(page, dictGet(fontDict, "FontDescriptor"));
-      if (!descriptor) continue;
+      if (!descriptor) {continue;}
 
       // Get Flags
       const flags = asNumber(resolve(page, dictGet(descriptor, "Flags")));
@@ -639,30 +639,30 @@ describe("Japanese PDF width analysis", () => {
     const pdfBytes = readFileSync(JP_PDF_PATH);
     const pdfDoc = loadNativePdfDocument(pdfBytes, { encryption: { mode: "ignore" } });
     const page = pdfDoc.getPages()[0];
-    if (!page) return;
+    if (!page) {return;}
 
     const resourcesDict = page.getResourcesDict();
-    if (!resourcesDict) return;
+    if (!resourcesDict) {return;}
 
     const fontsDict = resolveDict(page, dictGet(resourcesDict, "Font"));
-    if (!fontsDict) return;
+    if (!fontsDict) {return;}
 
     console.log("\n=== Font W/DW Analysis for Japanese PDF ===");
 
     for (const [fontName, ref] of fontsDict.map.entries()) {
       const fontDict = resolveDict(page, ref);
-      if (!fontDict) continue;
+      if (!fontDict) {continue;}
 
       const subtype = asName(resolve(page, dictGet(fontDict, "Subtype")))?.value ?? "unknown";
       console.log(`\nFont ${fontName}: Subtype=/${subtype}`);
 
-      if (subtype !== "Type0") continue;
+      if (subtype !== "Type0") {continue;}
 
       const descendants = asArray(resolve(page, dictGet(fontDict, "DescendantFonts")));
-      if (!descendants || descendants.items.length === 0) continue;
+      if (!descendants || descendants.items.length === 0) {continue;}
 
       const cidFont = asDict(resolve(page, descendants.items[0]));
-      if (!cidFont) continue;
+      if (!cidFont) {continue;}
 
       const dw = asNumber(resolve(page, dictGet(cidFont, "DW")));
       console.log(`  DW: ${dw ?? "NOT SET (should default to 1000)"}`);
@@ -688,13 +688,13 @@ describe("Japanese PDF width analysis", () => {
         }
 
         const second = resolve(page, wArr.items[i + 1]);
-        if (!second) break;
+        if (!second) {break;}
 
         if (second.type === "array") {
           const widths: number[] = [];
           for (let j = 0; j < Math.min(5, second.items.length); j += 1) {
             const w = asNumber(resolve(page, second.items[j]));
-            if (w !== null) widths.push(w);
+            if (w !== null) {widths.push(w);}
           }
           const suffix = second.items.length > 5 ? "..." : "";
           console.log(`    CID ${first}: [${widths.join(", ")}${suffix}] (${second.items.length} widths)`);
@@ -723,7 +723,7 @@ describe("Japanese PDF width analysis", () => {
     const pdfBytes = readFileSync(JP_PDF_PATH);
     const pdfDoc = loadNativePdfDocument(pdfBytes, { encryption: { mode: "ignore" } });
     const page = pdfDoc.getPages()[0];
-    if (!page) return;
+    if (!page) {return;}
 
     const fontMappings = extractFontMappings(page);
     const fontInfo = extractFontInfo(page, "F0");
@@ -889,13 +889,13 @@ describe("Text Grouping analysis", () => {
     console.log("\n--- TextBox Details ---");
     textBoxes.slice(0, 5).forEach((shape, i) => {
       const tb = shape.textBody;
-      if (!tb) return;
+      if (!tb) {return;}
       const paras = tb.paragraphs.length;
       const runs = tb.paragraphs.reduce((sum, p) => sum + p.runs.length, 0);
       const allText = tb.paragraphs.flatMap(p => p.runs.filter(r => r.type === "text").map(r => r.text)).join("");
 
       const transform = shape.properties.transform;
-      if (!transform) return;
+      if (!transform) {return;}
       console.log(
         `  [${i}] ${paras} para(s), ${runs} run(s): "${allText.slice(0, 50)}${allText.length > 50 ? "..." : ""}"`
       );
@@ -1000,7 +1000,7 @@ describe("Text Grouping analysis", () => {
 
     for (const shape of textBoxes) {
       const tb = shape.textBody;
-      if (!tb) continue;
+      if (!tb) {continue;}
       const totalRuns = tb.paragraphs.reduce((sum, p) => sum + p.runs.length, 0);
       if (totalRuns > maxRuns) {
         maxRuns = totalRuns;
@@ -1008,7 +1008,7 @@ describe("Text Grouping analysis", () => {
       }
     }
 
-    if (!maxRunsTextBox) return;
+    if (!maxRunsTextBox) {return;}
     const tb = maxRunsTextBox.textBody;
     if (tb) {
       console.log(`\n--- TextBox with most runs (${maxRuns} runs) ---`);

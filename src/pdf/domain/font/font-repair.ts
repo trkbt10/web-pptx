@@ -153,7 +153,7 @@ function injectTable(
   allTables.sort((a, b) => {
     for (let i = 0; i < 4; i++) {
       const diff = a.tag.charCodeAt(i) - b.tag.charCodeAt(i);
-      if (diff !== 0) return diff;
+      if (diff !== 0) {return diff;}
     }
     return 0;
   });

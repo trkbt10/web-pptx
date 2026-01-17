@@ -243,14 +243,14 @@ function isAxisAlignedRectangle(p1: PdfPoint, p2: PdfPoint, p3: PdfPoint, p4: Pd
 export function isApproximateEllipse(pdfPath: PdfPath): boolean {
   const ops = pdfPath.operations;
 
-  if (ops.length !== 5 && ops.length !== 6) return false;
-  if (ops[0]?.type !== "moveTo") return false;
+  if (ops.length !== 5 && ops.length !== 6) {return false;}
+  if (ops[0]?.type !== "moveTo") {return false;}
 
   for (let i = 1; i <= 4; i++) {
-    if (ops[i]?.type !== "curveTo") return false;
+    if (ops[i]?.type !== "curveTo") {return false;}
   }
 
-  if (ops.length === 6 && ops[5]?.type !== "closePath") return false;
+  if (ops.length === 6 && ops[5]?.type !== "closePath") {return false;}
 
   const start = ops[0].point;
   const lastCurve = ops[4];
@@ -301,8 +301,8 @@ export function detectRoundedRectangle(pdfPath: PdfPath): number | null {
   // Common patterns:
   // 1. moveTo, lineTo, curveTo, lineTo, curveTo, lineTo, curveTo, lineTo, curveTo, closePath (10 ops)
   // 2. moveTo, curveTo, lineTo, curveTo, lineTo, curveTo, lineTo, curveTo, closePath (9 ops)
-  if (ops.length < 5 || ops.length > 14) return null;
-  if (ops[0]?.type !== "moveTo") return null;
+  if (ops.length < 5 || ops.length > 14) {return null;}
+  if (ops[0]?.type !== "moveTo") {return null;}
 
   // Count curve operations (corners) and line operations (edges)
   let curveCount = 0;
@@ -323,8 +323,8 @@ export function detectRoundedRectangle(pdfPath: PdfPath): number | null {
   }
 
   // A rounded rectangle should have 4 corners (curves) and some line segments
-  if (curveCount !== 4) return null;
-  if (lineCount < 2) return null; // At least 2 lines (could be 4, but short edges may be omitted)
+  if (curveCount !== 4) {return null;}
+  if (lineCount < 2) {return null;} // At least 2 lines (could be 4, but short edges may be omitted)
 
   // Get bounding box
   const [minX, minY, maxX, maxY] = computePathBBox(pdfPath);
@@ -332,7 +332,7 @@ export function detectRoundedRectangle(pdfPath: PdfPath): number | null {
   const height = maxY - minY;
   const minDimension = Math.min(width, height);
 
-  if (minDimension <= 0) return null;
+  if (minDimension <= 0) {return null;}
 
   // Extract corner curves and estimate radius
   const curves = ops.filter(
@@ -342,7 +342,7 @@ export function detectRoundedRectangle(pdfPath: PdfPath): number | null {
 
   // Estimate radius from the first curve
   const firstCurve = curves[0];
-  if (firstCurve.type !== "curveTo") return null;
+  if (firstCurve.type !== "curveTo") {return null;}
 
   const cp1 = firstCurve.cp1;
   const cp2 = firstCurve.cp2;
@@ -355,10 +355,10 @@ export function detectRoundedRectangle(pdfPath: PdfPath): number | null {
     if (op.type === "moveTo" || op.type === "lineTo") {
       startPoint = op.point;
     }
-    if (ops[i + 1] === firstCurve) break;
+    if (ops[i + 1] === firstCurve) {break;}
   }
 
-  if (!startPoint) return null;
+  if (!startPoint) {return null;}
 
   // For a Bézier curve approximating a 90-degree arc:
   // - Start point to cp1 distance = radius * KAPPA
@@ -376,14 +376,14 @@ export function detectRoundedRectangle(pdfPath: PdfPath): number | null {
   const radiusRatio = estimatedRadius / minDimension;
 
   // Sanity check: ratio should be between 0 and 0.5 (can't be more than half)
-  if (radiusRatio < 0.01 || radiusRatio > 0.55) return null;
+  if (radiusRatio < 0.01 || radiusRatio > 0.55) {return null;}
 
   // Verify all corners have similar control point distances (within 50% tolerance)
   // This catches cases where curves have very different radii
   const radii: number[] = [];
   for (let i = 0; i < curves.length; i++) {
     const curve = curves[i];
-    if (curve.type !== "curveTo") continue;
+    if (curve.type !== "curveTo") {continue;}
 
     // Find the start point for this curve
     let curveStart: PdfPoint | null = null;
@@ -394,10 +394,10 @@ export function detectRoundedRectangle(pdfPath: PdfPath): number | null {
       } else if (op.type === "curveTo" || op.type === "curveToV" || op.type === "curveToY") {
         curveStart = op.end;
       }
-      if (ops[j + 1] === curve) break;
+      if (ops[j + 1] === curve) {break;}
     }
 
-    if (!curveStart) continue;
+    if (!curveStart) {continue;}
 
     const d1 = Math.hypot(curve.cp1.x - curveStart.x, curve.cp1.y - curveStart.y);
     const d2 = Math.hypot(curve.cp2.x - curve.end.x, curve.cp2.y - curve.end.y);

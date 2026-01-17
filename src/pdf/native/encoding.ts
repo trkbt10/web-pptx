@@ -1,5 +1,10 @@
 const LATIN1_DECODER = new TextDecoder("latin1");
 
+
+
+
+
+
 export function decodeLatin1(bytes: Uint8Array): string {
   return LATIN1_DECODER.decode(bytes);
 }
@@ -40,6 +45,11 @@ const PDF_DOC_ENCODING: readonly number[] = [
   0x00f0, 0x00f1, 0x00f2, 0x00f3, 0x00f4, 0x00f5, 0x00f6, 0x00f7,
   0x00f8, 0x00f9, 0x00fa, 0x00fb, 0x00fc, 0x00fd, 0x00fe, 0x00ff,
 ];
+
+
+
+
+
 
 export function decodePdfDocEncoding(bytes: Uint8Array): string {
   const out: number[] = [];
@@ -93,6 +103,11 @@ export function decodePdfStringBytes(bytes: Uint8Array): string {
   }
   return decodePdfDocEncoding(bytes);
 }
+
+
+
+
+
 
 export function encodeAscii(text: string): Uint8Array {
   return new TextEncoder().encode(text);

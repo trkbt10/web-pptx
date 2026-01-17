@@ -40,10 +40,15 @@ function normalizeFilterName(name: string): string {
   }
 }
 
+
+
+
+
+
 export function decodeStreamData(encoded: Uint8Array, options: DecodeStreamOptions): Uint8Array {
-  if (!encoded) throw new Error("encoded is required");
-  if (!options) throw new Error("options is required");
-  if (!options.filters) throw new Error("options.filters is required");
+  if (!encoded) {throw new Error("encoded is required");}
+  if (!options) {throw new Error("options is required");}
+  if (!options.filters) {throw new Error("options.filters is required");}
 
   let data = encoded;
   for (let i = 0; i < options.filters.length; i += 1) {

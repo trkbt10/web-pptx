@@ -6,14 +6,19 @@ export type DecodedJpegRgb = Readonly<{
   readonly data: Uint8Array; // RGB, 3 bytes/pixel
 }>;
 
+
+
+
+
+
 export function decodeJpegToRgb(
   bytes: Uint8Array,
   options: { readonly expectedWidth?: number; readonly expectedHeight?: number } = {},
 ): DecodedJpegRgb {
-  if (!bytes) throw new Error("bytes is required");
+  if (!bytes) {throw new Error("bytes is required");}
 
   const decoded = jpeg.decode(bytes, { useTArray: true });
-  if (!decoded || !decoded.data) throw new Error("Failed to decode JPEG");
+  if (!decoded || !decoded.data) {throw new Error("Failed to decode JPEG");}
 
   const { width, height, data } = decoded;
   if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {

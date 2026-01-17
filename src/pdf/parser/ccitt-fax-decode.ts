@@ -75,6 +75,15 @@ class MsbBitReader {
     }
   }
 
+  public savePosition(): Readonly<{ readonly byteIndex: number; readonly bitIndex: number }> {
+    return { byteIndex: this.byteIndex, bitIndex: this.bitIndex };
+  }
+
+  public restorePosition(pos: Readonly<{ readonly byteIndex: number; readonly bitIndex: number }>): void {
+    this.byteIndex = pos.byteIndex;
+    this.bitIndex = pos.bitIndex;
+  }
+
   public readBit(): 0 | 1 {
     const byte = this.data[this.byteIndex];
     if (byte === undefined) {
@@ -89,8 +98,29 @@ class MsbBitReader {
     return bit as 0 | 1;
   }
 
+  public readBits(count: number): number {
+    if (!Number.isFinite(count) || count <= 0) {
+      throw new Error(`MsbBitReader.readBits: count must be > 0 (got ${count})`);
+    }
+    if (count > 31) {
+      throw new Error(`MsbBitReader.readBits: count must be <= 31 (got ${count})`);
+    }
+    let value = 0;
+    for (let i = 0; i < count; i += 1) {
+      value = (value << 1) | this.readBit();
+    }
+    return value >>> 0;
+  }
+
+  public peekBits(count: number): number {
+    const pos = this.savePosition();
+    const value = this.readBits(count);
+    this.restorePosition(pos);
+    return value;
+  }
+
   public alignToByte(): void {
-    if (this.bitIndex === 0) return;
+    if (this.bitIndex === 0) {return;}
     this.bitIndex = 0;
     this.byteIndex += 1;
   }
@@ -105,10 +135,10 @@ function addToTrie<T>(root: TrieNode<T>, bits: number, code: number, value: T): 
   for (let i = bits - 1; i >= 0; i -= 1) {
     const bit = (code >> i) & 1;
     if (bit === 0) {
-      if (!node.next0) node.next0 = {};
+      if (!node.next0) {node.next0 = {};}
       node = node.next0;
     } else {
-      if (!node.next1) node.next1 = {};
+      if (!node.next1) {node.next1 = {};}
       node = node.next1;
     }
   }
@@ -432,7 +462,7 @@ function decode2DCode(reader: MsbBitReader): TwoDCode {
 // =============================================================================
 
 function clearRangeInRow(row: Uint8Array, startX: number, endX: number): void {
-  if (endX <= startX) return;
+  if (endX <= startX) {return;}
 
   const startByte = Math.floor(startX / 8);
   const endByte = Math.floor((endX - 1) / 8);
@@ -488,11 +518,16 @@ function writeRunsToBitmapRow(
 // Public API
 // =============================================================================
 
+
+
+
+
+
 export function decodeCcittFax(args: DecodeCcittFaxArgs): Uint8Array {
   const { encoded, width, height, parms } = args;
-  if (!encoded) throw new Error("decodeCcittFax: encoded is required");
-  if (!Number.isFinite(width) || width <= 0) throw new Error("decodeCcittFax: width must be > 0");
-  if (!Number.isFinite(height) || height <= 0) throw new Error("decodeCcittFax: height must be > 0");
+  if (!encoded) {throw new Error("decodeCcittFax: encoded is required");}
+  if (!Number.isFinite(width) || width <= 0) {throw new Error("decodeCcittFax: width must be > 0");}
+  if (!Number.isFinite(height) || height <= 0) {throw new Error("decodeCcittFax: height must be > 0");}
 
   // PDF uses Columns/Rows to describe the uncompressed bitmap dimensions.
   // Most PDFs also set Width/Height to the same values; we require them to match
@@ -511,9 +546,6 @@ export function decodeCcittFax(args: DecodeCcittFaxArgs): Uint8Array {
   // are not used and damaged-row resync is irrelevant for our decoder. In that
   // case, accept them as no-ops.
   if (parms.k !== -1) {
-    if (parms.endOfLine) {
-      throw new Error("decodeCcittFax: EndOfLine=true is not supported yet");
-    }
     if (parms.damagedRowsBeforeError !== 0) {
       throw new Error("decodeCcittFax: DamagedRowsBeforeError is not supported yet");
     }
@@ -524,6 +556,29 @@ export function decodeCcittFax(args: DecodeCcittFaxArgs): Uint8Array {
 
   const reader = new MsbBitReader(encoded);
 
+  const EOL_MARKER_12BIT = 0x001; // 000000000001 (11 zeros + 1)
+  const consumeEolMarker = (): void => {
+    // The EOL marker is not necessarily byte-aligned.
+    // Scan forward until we see the 12-bit EOL pattern.
+    let window = 0;
+    for (let i = 0; i < 2048; i += 1) {
+      window = ((window << 1) | reader.readBit()) & 0xfff;
+      if (i >= 11 && window === EOL_MARKER_12BIT) {
+        return;
+      }
+    }
+    throw new Error("CCITT: expected EOL marker but did not find it");
+  };
+
+  const consumeLeadingEolMarkersIfPresent = (): void => {
+    // Some producers emit one or more EOL markers before the first line (and sometimes between lines).
+    // Only consume when the next 12 bits match exactly; otherwise leave the stream untouched.
+    while (reader.peekBits(12) === EOL_MARKER_12BIT) {
+      reader.readBits(12);
+      if (parms.encodedByteAlign) reader.alignToByte();
+    }
+  };
+
   const decode1DLine = (): number[] => {
     const runs: number[] = [];
     let x = 0;
@@ -532,7 +587,7 @@ export function decodeCcittFax(args: DecodeCcittFaxArgs): Uint8Array {
       const w = Math.min(whiteRun, width - x);
       runs.push(w);
       x += w;
-      if (x >= width) break;
+      if (x >= width) {break;}
 
       const blackRun = decodeRunLength(reader, "black");
       const b = Math.min(blackRun, width - x);
@@ -553,7 +608,7 @@ export function decodeCcittFax(args: DecodeCcittFaxArgs): Uint8Array {
     pbIndex += 1;
 
     const checkB1 = (): void => {
-      if (runs.length === 0) return;
+      if (runs.length === 0) {return;}
       while (b1 <= a0 && b1 < width) {
         const r0 = referenceRuns[pbIndex] ?? 0;
         const r1 = referenceRuns[pbIndex + 1] ?? 0;
@@ -564,7 +619,7 @@ export function decodeCcittFax(args: DecodeCcittFaxArgs): Uint8Array {
 
     const setValue = (len: number): void => {
       const value = pending + len;
-      if (value < 0) throw new Error("CCITT: negative run length");
+      if (value < 0) {throw new Error("CCITT: negative run length");}
       runs.push(value);
       a0 += len;
       pending = 0;
@@ -638,12 +693,20 @@ export function decodeCcittFax(args: DecodeCcittFaxArgs): Uint8Array {
   if (parms.k === 0) {
     // Group 3 1D: each line is alternating white/black run lengths.
     for (let y = 0; y < height; y += 1) {
+      if (parms.endOfLine) {
+        consumeLeadingEolMarkersIfPresent();
+      }
       const runs = decode1DLine();
       writeRunsToBitmapRow(out, y * rowBytes, rowBytes, width, runs);
-      if (parms.encodedByteAlign) reader.alignToByte();
+      if (parms.endOfLine) {
+        consumeEolMarker();
+        if (parms.encodedByteAlign) {reader.alignToByte();}
+      } else if (parms.encodedByteAlign) {
+        reader.alignToByte();
+      }
     }
     if (parms.blackIs1) {
-      for (let i = 0; i < out.length; i += 1) out[i] = (out[i] ?? 0) ^ 0xff;
+      for (let i = 0; i < out.length; i += 1) {out[i] = (out[i] ?? 0) ^ 0xff;}
     }
     return out;
   }
@@ -654,14 +717,22 @@ export function decodeCcittFax(args: DecodeCcittFaxArgs): Uint8Array {
     const groupLen = parms.k + 1;
 
     for (let y = 0; y < height; y += 1) {
+      if (parms.endOfLine) {
+        consumeLeadingEolMarkersIfPresent();
+      }
       const runs = y % groupLen === 0 ? decode1DLine() : decode2DLine(referenceRuns);
       writeRunsToBitmapRow(out, y * rowBytes, rowBytes, width, runs);
       referenceRuns = runs;
-      if (parms.encodedByteAlign) reader.alignToByte();
+      if (parms.endOfLine) {
+        consumeEolMarker();
+        if (parms.encodedByteAlign) {reader.alignToByte();}
+      } else if (parms.encodedByteAlign) {
+        reader.alignToByte();
+      }
     }
 
     if (parms.blackIs1) {
-      for (let i = 0; i < out.length; i += 1) out[i] = (out[i] ?? 0) ^ 0xff;
+      for (let i = 0; i < out.length; i += 1) {out[i] = (out[i] ?? 0) ^ 0xff;}
     }
     return out;
   }
@@ -673,11 +744,11 @@ export function decodeCcittFax(args: DecodeCcittFaxArgs): Uint8Array {
     const runs = decode2DLine(referenceRuns);
     writeRunsToBitmapRow(out, y * rowBytes, rowBytes, width, runs);
     referenceRuns = runs;
-    if (parms.encodedByteAlign) reader.alignToByte();
+    if (parms.encodedByteAlign) {reader.alignToByte();}
   }
 
   if (parms.blackIs1) {
-    for (let i = 0; i < out.length; i += 1) out[i] = (out[i] ?? 0) ^ 0xff;
+    for (let i = 0; i < out.length; i += 1) {out[i] = (out[i] ?? 0) ^ 0xff;}
   }
   return out;
 }

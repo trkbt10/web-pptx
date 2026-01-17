@@ -8,7 +8,7 @@ function asDict(entries: Record<string, PdfObject>): PdfDict {
 }
 
 function encodePngSubPredictor(raw: Uint8Array, rowBytes: number, bytesPerPixel: number): Uint8Array {
-  if (raw.length % rowBytes !== 0) throw new Error("raw length must align to rowBytes");
+  if (raw.length % rowBytes !== 0) {throw new Error("raw length must align to rowBytes");}
   const rows = raw.length / rowBytes;
   const out = new Uint8Array(rows * (rowBytes + 1));
   for (let y = 0; y < rows; y += 1) {

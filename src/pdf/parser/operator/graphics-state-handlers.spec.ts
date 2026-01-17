@@ -18,7 +18,7 @@ describe("graphics-state-handlers (gs)", () => {
     const paths = elements.filter((e) => e.type === "path");
     expect(paths).toHaveLength(1);
     const path = paths[0]!;
-    if (path.type !== "path") throw new Error("Expected path");
+    if (path.type !== "path") {throw new Error("Expected path");}
     expect(path.graphicsState.fillAlpha).toBeCloseTo(0.5);
     expect(path.graphicsState.strokeAlpha).toBeCloseTo(0.25);
   });
@@ -57,7 +57,7 @@ describe("graphics-state-handlers (gs)", () => {
     const paths = elements.filter((e) => e.type === "path");
     expect(paths).toHaveLength(1);
     const path = paths[0]!;
-    if (path.type !== "path") throw new Error("Expected path");
+    if (path.type !== "path") {throw new Error("Expected path");}
     expect(path.graphicsState.lineWidth).toBeCloseTo(3);
     expect(path.graphicsState.lineCap).toBe(2);
     expect(path.graphicsState.lineJoin).toBe(1);

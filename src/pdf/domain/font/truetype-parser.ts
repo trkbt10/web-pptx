@@ -41,7 +41,7 @@ export function parseTrueTypeTableDirectory(fontData: Uint8Array): TableEntry[] 
 
   for (let i = 0; i < numTables; i++) {
     const offset = 12 + i * 16;
-    if (offset + 16 > fontData.length) break;
+    if (offset + 16 > fontData.length) {break;}
 
     const tag = String.fromCharCode(
       fontData[offset],

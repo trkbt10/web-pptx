@@ -35,7 +35,7 @@ describe("Embedded font investigation (native)", () => {
     const buffer = fs.readFileSync(pdfPath);
     const pdfDoc = loadNativePdfDocument(buffer, { encryption: { mode: "ignore" } });
     const page = pdfDoc.getPages()[0];
-    if (!page) return;
+    if (!page) {return;}
 
     const resources = page.getResourcesDict();
     if (!resources) {
@@ -53,7 +53,7 @@ describe("Embedded font investigation (native)", () => {
 
     for (const [fontName, fontRef] of fontsDict.map.entries()) {
       const fontDict = asDict(page.lookup(fontRef));
-      if (!fontDict) continue;
+      if (!fontDict) {continue;}
 
       const subtypeObj = dictGet(fontDict, "Subtype");
       const baseFontObj = dictGet(fontDict, "BaseFont");

@@ -191,7 +191,7 @@ export function tokenizeContentStream(content: string): PdfToken[] {
 /* eslint-disable no-restricted-syntax -- parsers require mutable state for position tracking */
 
 function isNumberStart(char: string, nextChar: string | undefined): boolean {
-  if (char >= "0" && char <= "9") return true;
+  if (char >= "0" && char <= "9") {return true;}
   if (char === "-" || char === "+") {
     return nextChar !== undefined && (nextChar >= "0" && nextChar <= "9" || nextChar === ".");
   }
@@ -246,7 +246,7 @@ function parseParenString(content: string, pos: number): [string, number] {
     if (char === "\\") {
       // Escape sequence
       pos++;
-      if (pos >= content.length) break;
+      if (pos >= content.length) {break;}
 
       const escaped = content[pos];
       switch (escaped) {

@@ -1,6 +1,11 @@
+
+
+
+
+
 export function lastIndexOfBytes(haystack: Uint8Array, needle: Uint8Array): number {
-  if (needle.length === 0) return haystack.length;
-  if (needle.length > haystack.length) return -1;
+  if (needle.length === 0) {return haystack.length;}
+  if (needle.length > haystack.length) {return -1;}
   for (let i = haystack.length - needle.length; i >= 0; i -= 1) {
     let ok = true;
     for (let j = 0; j < needle.length; j += 1) {
@@ -9,13 +14,18 @@ export function lastIndexOfBytes(haystack: Uint8Array, needle: Uint8Array): numb
         break;
       }
     }
-    if (ok) return i;
+    if (ok) {return i;}
   }
   return -1;
 }
 
+
+
+
+
+
 export function indexOfBytes(haystack: Uint8Array, needle: Uint8Array, from: number): number {
-  if (needle.length === 0) return from;
+  if (needle.length === 0) {return from;}
   const start = Math.max(0, from);
   for (let i = start; i + needle.length <= haystack.length; i += 1) {
     let ok = true;
@@ -25,10 +35,15 @@ export function indexOfBytes(haystack: Uint8Array, needle: Uint8Array, from: num
         break;
       }
     }
-    if (ok) return i;
+    if (ok) {return i;}
   }
   return -1;
 }
+
+
+
+
+
 
 export function isWhite(byte: number): boolean {
   // 0x00 NUL is treated as whitespace in PDFs.
@@ -41,6 +56,11 @@ export function isWhite(byte: number): boolean {
     byte === 0x20 // SP
   );
 }
+
+
+
+
+
 
 export function isDelimiter(byte: number): boolean {
   // PDF delimiters: ()<>[]{}/%

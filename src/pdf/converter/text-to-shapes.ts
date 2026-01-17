@@ -443,10 +443,10 @@ function createTextBodyFromGroup(group: GroupedText): TextBody {
  * @param groupedParas - PDF paragraphs to flatten
  */
 function flattenToParagraphs(groupedParas: readonly GroupedParagraph[]): Paragraph[] {
-  if (groupedParas.length === 0) return [];
+  if (groupedParas.length === 0) {return [];}
 
   const firstRun = groupedParas[0].runs[0];
-  if (!firstRun) return [];
+  if (!firstRun) {return [];}
 
   if (groupedParas.length === 1) {
     return [createFlatParagraph(groupedParas[0].runs, undefined, groupedParas[0].lineSpacing)];

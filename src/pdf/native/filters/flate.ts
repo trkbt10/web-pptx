@@ -3,8 +3,8 @@ import type { PdfDict, PdfObject } from "../types";
 
 function dictGetNumber(dict: PdfDict, key: string): number | null {
   const v = dict.map.get(key);
-  if (!v || v.type !== "number") return null;
-  if (!Number.isFinite(v.value)) return null;
+  if (!v || v.type !== "number") {return null;}
+  if (!Number.isFinite(v.value)) {return null;}
   return Math.trunc(v.value);
 }
 
@@ -13,9 +13,9 @@ function decodeTiffPredictor2(
   rowBytes: number,
   bytesPerPixel: number,
 ): Uint8Array {
-  if (rowBytes <= 0) throw new Error("Flate predictor: invalid rowBytes");
-  if (bytesPerPixel <= 0) throw new Error("Flate predictor: invalid bytesPerPixel");
-  if (data.length % rowBytes !== 0) throw new Error("Flate predictor: data length is not aligned to row size");
+  if (rowBytes <= 0) {throw new Error("Flate predictor: invalid rowBytes");}
+  if (bytesPerPixel <= 0) {throw new Error("Flate predictor: invalid bytesPerPixel");}
+  if (data.length % rowBytes !== 0) {throw new Error("Flate predictor: data length is not aligned to row size");}
 
   const out = new Uint8Array(data.length);
   out.set(data);
@@ -32,8 +32,8 @@ function paethPredictor(a: number, b: number, c: number): number {
   const pa = Math.abs(p - a);
   const pb = Math.abs(p - b);
   const pc = Math.abs(p - c);
-  if (pa <= pb && pa <= pc) return a;
-  if (pb <= pc) return b;
+  if (pa <= pb && pa <= pc) {return a;}
+  if (pb <= pc) {return b;}
   return c;
 }
 
@@ -42,8 +42,8 @@ function decodePngPredictor(
   rowBytes: number,
   bytesPerPixel: number,
 ): Uint8Array {
-  if (rowBytes <= 0) throw new Error("Flate predictor: invalid rowBytes");
-  if (bytesPerPixel <= 0) throw new Error("Flate predictor: invalid bytesPerPixel");
+  if (rowBytes <= 0) {throw new Error("Flate predictor: invalid rowBytes");}
+  if (bytesPerPixel <= 0) {throw new Error("Flate predictor: invalid bytesPerPixel");}
 
   const rowBytesWithFilter = rowBytes + 1;
   if (data.length % rowBytesWithFilter !== 0) {
@@ -60,7 +60,7 @@ function decodePngPredictor(
 
     switch (filterType) {
       case 0: // None
-        for (let x = 0; x < rowBytes; x += 1) out[dst + x] = data[src + x] ?? 0;
+        for (let x = 0; x < rowBytes; x += 1) {out[dst + x] = data[src + x] ?? 0;}
         break;
       case 1: // Sub
         for (let x = 0; x < rowBytes; x += 1) {
@@ -103,16 +103,16 @@ function decodePngPredictor(
 }
 
 function applyFlateDecodeParms(decoded: Uint8Array, decodeParms: PdfObject | null | undefined): Uint8Array {
-  if (!decodeParms || decodeParms.type !== "dict") return decoded;
+  if (!decodeParms || decodeParms.type !== "dict") {return decoded;}
 
   const predictor = dictGetNumber(decodeParms, "Predictor") ?? 1;
-  if (predictor <= 1) return decoded;
+  if (predictor <= 1) {return decoded;}
 
   const colors = dictGetNumber(decodeParms, "Colors") ?? 1;
   const columns = dictGetNumber(decodeParms, "Columns") ?? 1;
   const bpc = dictGetNumber(decodeParms, "BitsPerComponent") ?? 8;
-  if (bpc !== 8) throw new Error(`Flate predictor: unsupported BitsPerComponent ${bpc}`);
-  if (colors <= 0 || columns <= 0) throw new Error("Flate predictor: invalid Colors/Columns");
+  if (bpc !== 8) {throw new Error(`Flate predictor: unsupported BitsPerComponent ${bpc}`);}
+  if (colors <= 0 || columns <= 0) {throw new Error("Flate predictor: invalid Colors/Columns");}
 
   const bytesPerPixel = colors;
   const rowBytes = columns * bytesPerPixel;
@@ -126,6 +126,11 @@ function applyFlateDecodeParms(decoded: Uint8Array, decodeParms: PdfObject | nul
 
   throw new Error(`Flate predictor: unsupported Predictor ${predictor}`);
 }
+
+
+
+
+
 
 export function decodeFlate(data: Uint8Array, decodeParms?: PdfObject | null): Uint8Array {
   // FlateDecode uses zlib-wrapped DEFLATE per ISO 32000.

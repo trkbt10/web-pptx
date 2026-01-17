@@ -31,7 +31,7 @@ export function extractTextMetricsForDebug(page: PdfPage): TextMetricsDebugInfo[
   const results: TextMetricsDebugInfo[] = [];
 
   for (const elem of page.elements) {
-    if (elem.type !== "text") continue;
+    if (elem.type !== "text") {continue;}
 
     const text = elem as PdfText;
     const charCount = text.text.length;
@@ -88,6 +88,11 @@ function calculateExpectedWidth(text: PdfText): number {
  */
 export type TextAlignment = "left" | "center" | "right" | "unknown";
 
+
+
+
+
+
 export function detectTextAlignment(
   text: PdfText,
   pageWidth: number,
@@ -126,7 +131,7 @@ export function detectGroupAlignment(
   texts: readonly PdfText[],
   pageWidth: number
 ): TextAlignment {
-  if (texts.length === 0) return "unknown";
+  if (texts.length === 0) {return "unknown";}
 
   // Find group bounds
   const minX = Math.min(...texts.map((t) => t.x));

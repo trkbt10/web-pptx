@@ -35,8 +35,8 @@ function dictGet(dict: PdfDict, key: string): PdfObject | undefined {
 }
 
 function asInt(obj: PdfObject | undefined): number | null {
-  if (!obj || obj.type !== "number") return null;
-  if (!Number.isFinite(obj.value)) return null;
+  if (!obj || obj.type !== "number") {return null;}
+  if (!Number.isFinite(obj.value)) {return null;}
   return Math.trunc(obj.value);
 }
 
@@ -48,10 +48,15 @@ function readUIntBE(bytes: Uint8Array, pos: number, width: number): number {
   return value >>> 0;
 }
 
+
+
+
+
+
 export function findStartXrefOffset(bytes: Uint8Array): number {
   const marker = encodeAscii("startxref");
   const idx = lastIndexOfBytes(bytes, marker);
-  if (idx < 0) throw new Error("startxref not found");
+  if (idx < 0) {throw new Error("startxref not found");}
 
   let pos = idx + marker.length;
   // skip whitespace
@@ -75,37 +80,37 @@ export function findStartXrefOffset(bytes: Uint8Array): number {
     }
     break;
   }
-  if (num.length === 0) throw new Error("startxref offset missing");
+  if (num.length === 0) {throw new Error("startxref offset missing");}
   return Number.parseInt(num, 10);
 }
 
 function parseXRefStream(stream: PdfStream): { entries: ReadonlyMap<number, XRefEntry>; trailer: PdfDict } {
   const dict = stream.dict;
   const type = asName(dictGet(dict, "Type"));
-  if (type !== "XRef") throw new Error("xref stream: /Type is not /XRef");
+  if (type !== "XRef") {throw new Error("xref stream: /Type is not /XRef");}
 
   const wArr = asArray(dictGet(dict, "W"));
-  if (!wArr) throw new Error("xref stream: missing /W");
+  if (!wArr) {throw new Error("xref stream: missing /W");}
   const w = wArr.items.map((x) => (x.type === "number" ? Math.trunc(x.value) : 0));
-  if (w.length !== 3) throw new Error("xref stream: /W must have 3 entries");
+  if (w.length !== 3) {throw new Error("xref stream: /W must have 3 entries");}
   const [w0, w1, w2] = w;
 
   const size = asNumber(dictGet(dict, "Size"));
-  if (!size) throw new Error("xref stream: missing /Size");
+  if (!size) {throw new Error("xref stream: missing /Size");}
 
   const indexArr = asArray(dictGet(dict, "Index"));
   const indexPairs = indexArr
     ? indexArr.items.map((x) => (x.type === "number" ? Math.trunc(x.value) : 0))
     : [0, Math.trunc(size)];
 
-  if (indexPairs.length % 2 !== 0) throw new Error("xref stream: /Index must have even length");
+  if (indexPairs.length % 2 !== 0) {throw new Error("xref stream: /Index must have even length");}
 
   const filters = readFilterNames(dict);
   const decodeParms = decodeParmsFromStreamDict(dict, filters.length);
   const decoded = decodeStreamData(stream.data, { filters, decodeParms });
 
   const entryWidth = w0 + w1 + w2;
-  if (entryWidth <= 0) throw new Error("xref stream: invalid /W");
+  if (entryWidth <= 0) {throw new Error("xref stream: invalid /W");}
 
   const out = new Map<number, XRefEntry>();
   let cursor = 0;
@@ -135,12 +140,12 @@ function parseXRefStream(stream: PdfStream): { entries: ReadonlyMap<number, XRef
 
 function readFilterNames(dict: PdfDict): readonly string[] {
   const filterObj = dictGet(dict, "Filter");
-  if (!filterObj) return [];
-  if (filterObj.type === "name") return [filterObj.value];
+  if (!filterObj) {return [];}
+  if (filterObj.type === "name") {return [filterObj.value];}
   if (filterObj.type === "array") {
     const out: string[] = [];
     for (const item of filterObj.items) {
-      if (item.type === "name") out.push(item.value);
+      if (item.type === "name") {out.push(item.value);}
     }
     return out;
   }
@@ -149,13 +154,13 @@ function readFilterNames(dict: PdfDict): readonly string[] {
 
 function decodeParmsFromStreamDict(dict: PdfDict, filterCount: number): readonly (PdfObject | null)[] | undefined {
   const decodeParms = dictGet(dict, "DecodeParms");
-  if (!decodeParms) return undefined;
+  if (!decodeParms) {return undefined;}
 
   if (decodeParms.type === "array") {
     const out: (PdfObject | null)[] = [];
     for (const item of decodeParms.items) {
-      if (item.type === "null") out.push(null);
-      else out.push(item);
+      if (item.type === "null") {out.push(null);}
+      else {out.push(item);}
     }
     return out;
   }
@@ -165,7 +170,7 @@ function decodeParmsFromStreamDict(dict: PdfDict, filterCount: number): readonly
   }
 
   if (decodeParms.type === "dict") {
-    if (filterCount <= 1) return [decodeParms];
+    if (filterCount <= 1) {return [decodeParms];}
     return [decodeParms, ...new Array<null>(Math.max(0, filterCount - 1)).fill(null)];
   }
 
@@ -188,13 +193,13 @@ function readLine(bytes: Uint8Array, pos: number): { line: string; nextPos: numb
   const start = pos;
   while (pos < bytes.length) {
     const b = bytes[pos] ?? 0;
-    if (b === 0x0a || b === 0x0d) break;
+    if (b === 0x0a || b === 0x0d) {break;}
     pos += 1;
   }
   const line = new TextDecoder("latin1").decode(bytes.slice(start, pos));
   if ((bytes[pos] ?? 0) === 0x0d) {
     pos += 1;
-    if ((bytes[pos] ?? 0) === 0x0a) pos += 1;
+    if ((bytes[pos] ?? 0) === 0x0a) {pos += 1;}
   } else if ((bytes[pos] ?? 0) === 0x0a) {
     pos += 1;
   }
@@ -209,7 +214,7 @@ function parseXRefTableAt(bytes: Uint8Array, offset: number): {
 } {
   let pos = skipWs(bytes, offset);
   const first = readLine(bytes, pos);
-  if (first.line.trim() !== "xref") throw new Error("xref table: missing 'xref'");
+  if (first.line.trim() !== "xref") {throw new Error("xref table: missing 'xref'");}
   pos = first.nextPos;
 
   const entries = new Map<number, XRefEntry>();
@@ -219,8 +224,8 @@ function parseXRefTableAt(bytes: Uint8Array, offset: number): {
     const { line, nextPos } = readLine(bytes, pos);
     pos = nextPos;
     const trimmed = line.trim();
-    if (trimmed.length === 0) continue;
-    if (trimmed === "trailer") break;
+    if (trimmed.length === 0) {continue;}
+    if (trimmed === "trailer") {break;}
 
     const parts = trimmed.split(/\s+/);
     const startObj = Number.parseInt(parts[0] ?? "", 10);
@@ -265,11 +270,16 @@ function parseXRefStreamAt(bytes: Uint8Array, offset: number): {
 } {
   const { obj } = parseIndirectObjectAt(bytes, offset);
   const stream = asStream(obj.value);
-  if (!stream) throw new Error("xref stream: object is not a stream");
+  if (!stream) {throw new Error("xref stream: object is not a stream");}
   const parsed = parseXRefStream(stream);
   const prev = asInt(dictGet(parsed.trailer, "Prev"));
   return { entries: parsed.entries, trailer: parsed.trailer, prev, xrefStm: null };
 }
+
+
+
+
+
 
 export function loadXRef(bytes: Uint8Array): XRefTable {
   let offset: number | null = findStartXrefOffset(bytes);
@@ -294,7 +304,7 @@ export function loadXRef(bytes: Uint8Array): XRefTable {
       ? parseXRefTableAt(bytes, offset)
       : parseXRefStreamAt(bytes, offset);
 
-    if (!trailer) trailer = parsed.trailer;
+    if (!trailer) {trailer = parsed.trailer;}
     for (const [objNum, entry] of parsed.entries.entries()) {
       if (!entries.has(objNum)) {
         entries.set(objNum, entry);
@@ -310,15 +320,20 @@ export function loadXRef(bytes: Uint8Array): XRefTable {
           entries.set(objNum, entry);
         }
       }
-      if (!trailer) trailer = hybrid.trailer;
+      if (!trailer) {trailer = hybrid.trailer;}
     }
 
     offset = parsed.prev;
   }
 
-  if (!trailer) throw new Error("Failed to load xref");
+  if (!trailer) {throw new Error("Failed to load xref");}
   return { entries, trailer };
 }
+
+
+
+
+
 
 export function getTrailerRef(trailer: PdfDict, key: string): PdfRef | null {
   const value = trailer.map.get(key);

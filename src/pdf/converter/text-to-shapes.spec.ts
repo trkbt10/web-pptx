@@ -154,8 +154,8 @@ describe("convertTextToShape", () => {
       });
 
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
-      if (!run.properties) throw new Error("Expected run properties");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
+      if (!run.properties) {throw new Error("Expected run properties");}
       expect(run.properties.fontSize).toEqual(pt(fontSize));
     });
 
@@ -174,11 +174,11 @@ describe("convertTextToShape", () => {
 
       const shape = convertTextToShape(pdfText, context, "ml");
       const transform = shape.properties.transform;
-      if (!transform) throw new Error("Expected shape transform");
+      if (!transform) {throw new Error("Expected shape transform");}
       expect(transform.y).toEqual(px(20));
 
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
       expect(run.text).toBe("Line 1\nLine 2");
     });
   });
@@ -238,8 +238,8 @@ describe("convertTextToShape", () => {
     );
 
     const run = shape.textBody?.paragraphs[0]?.runs[0];
-    if (!run || run.type !== "text") throw new Error("Expected text run");
-    if (!run.properties) throw new Error("Expected run properties");
+    if (!run || run.type !== "text") {throw new Error("Expected text run");}
+    if (!run.properties) {throw new Error("Expected run properties");}
     expect(run.properties.bold).toBe(true);
     expect(run.properties.italic).toBe(true);
   });
@@ -266,7 +266,7 @@ describe("convertTextToShape", () => {
       );
 
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
       // Font name is preserved as-is (after removing subset prefix)
       // This ensures @font-face matching for embedded fonts
       expect(run.properties?.fontFamily).toBe("MSGothic");
@@ -291,7 +291,7 @@ describe("convertTextToShape", () => {
       );
 
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
       // YuMincho maps to Yu Mincho
       expect(run.properties?.fontFamilyEastAsian).toBeDefined();
     });
@@ -314,7 +314,7 @@ describe("convertTextToShape", () => {
       );
 
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
       expect(run.properties?.fontFamily).toBe("SimSun");
       expect(run.properties?.fontFamilyEastAsian).toBe("SimSun");
     });
@@ -337,7 +337,7 @@ describe("convertTextToShape", () => {
       );
 
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
       expect(run.properties?.fontFamilyComplexScript).toBe("Traditional Arabic");
       expect(run.properties?.fontFamilyEastAsian).toBeUndefined();
     });
@@ -360,7 +360,7 @@ describe("convertTextToShape", () => {
       );
 
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
       expect(run.properties?.fontFamilyComplexScript).toBe("Angsana New");
     });
 
@@ -382,7 +382,7 @@ describe("convertTextToShape", () => {
       );
 
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
       // ArialMT is not Standard 14, preserved as-is
       expect(run.properties?.fontFamily).toBe("ArialMT");
       expect(run.properties?.fontFamilyEastAsian).toBeUndefined();
@@ -409,7 +409,7 @@ describe("convertTextToShape", () => {
       );
 
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
       expect(run.properties?.fontFamilyEastAsian).toBe("UnknownFont");
     });
 
@@ -432,7 +432,7 @@ describe("convertTextToShape", () => {
       );
 
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
       expect(run.properties?.fontFamilyEastAsian).toBe("CustomFont");
     });
 
@@ -455,7 +455,7 @@ describe("convertTextToShape", () => {
       );
 
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
       expect(run.properties?.fontFamilyEastAsian).toBe("TraditionalFont");
     });
 
@@ -478,7 +478,7 @@ describe("convertTextToShape", () => {
       );
 
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
       expect(run.properties?.fontFamilyEastAsian).toBe("KoreanFont");
     });
 
@@ -502,7 +502,7 @@ describe("convertTextToShape", () => {
       );
 
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
       // CIDOrdering wins: should be East Asian, not Complex Script
       expect(run.properties?.fontFamilyEastAsian).toBe("Arabic-Style-Font");
       expect(run.properties?.fontFamilyComplexScript).toBeUndefined();
@@ -529,7 +529,7 @@ describe("convertTextToShape", () => {
 
       const shape = convertTextToShape(pdfText, context, "1");
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
 
       // 2 points * (96/72) = 2.67 pixels
       expect(run.properties?.spacing).toBeDefined();
@@ -553,7 +553,7 @@ describe("convertTextToShape", () => {
 
       const shape = convertTextToShape(pdfText, context, "1");
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
 
       // 2 points * 1.5 * (96/72) = 4 pixels
       expect(run.properties?.spacing).toBeDefined();
@@ -576,7 +576,7 @@ describe("convertTextToShape", () => {
 
       const shape = convertTextToShape(pdfText, context, "1");
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
 
       expect(run.properties?.spacing).toBeUndefined();
     });
@@ -596,7 +596,7 @@ describe("convertTextToShape", () => {
 
       const shape = convertTextToShape(pdfText, context, "1");
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
 
       expect(run.properties?.spacing).toBeUndefined();
     });
@@ -625,7 +625,7 @@ describe("convertTextToShape", () => {
 
       const shape = convertTextToShape(pdfText, context, "1");
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
 
       // wordSpacing is not mapped to PPTX spacing
       expect(run.properties?.spacing).toBeUndefined();
@@ -648,7 +648,7 @@ describe("convertTextToShape", () => {
 
       const shape = convertTextToShape(pdfText, context, "1");
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
 
       // Only charSpacing: 2 points = 2 * (96/72) ≈ 2.67 pixels
       expect(run.properties?.spacing).toBeDefined();
@@ -671,7 +671,7 @@ describe("convertTextToShape", () => {
 
       const shape = convertTextToShape(pdfText, context, "1");
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
 
       // No charSpacing and wordSpacing is not used
       expect(run.properties?.spacing).toBeUndefined();
@@ -698,7 +698,7 @@ describe("convertTextToShape", () => {
 
       const shape = convertTextToShape(pdfText, context, "1");
       const run = shape.textBody?.paragraphs[0]?.runs[0];
-      if (!run || run.type !== "text") throw new Error("Expected text run");
+      if (!run || run.type !== "text") {throw new Error("Expected text run");}
 
       // 0.01 * (96/72) ≈ 0.013px, should be omitted
       expect(run.properties?.spacing).toBeUndefined();
@@ -744,7 +744,7 @@ describe("convertGroupedTextToShape", () => {
     expect(shape.nonVisual?.textBox).toBe(true);
     expect(shape.textBody?.paragraphs).toHaveLength(1);
     const run = shape.textBody?.paragraphs[0].runs[0];
-    if (!run || run.type !== "text") throw new Error("Expected text run");
+    if (!run || run.type !== "text") {throw new Error("Expected text run");}
     expect(run.text).toBe("Hello");
   });
 
@@ -772,8 +772,8 @@ describe("convertGroupedTextToShape", () => {
     expect(shape.textBody?.paragraphs[0].runs).toHaveLength(2);
     const run1 = shape.textBody?.paragraphs[0].runs[0];
     const run2 = shape.textBody?.paragraphs[0].runs[1];
-    if (!run1 || run1.type !== "text") throw new Error("Expected text run");
-    if (!run2 || run2.type !== "text") throw new Error("Expected text run");
+    if (!run1 || run1.type !== "text") {throw new Error("Expected text run");}
+    if (!run2 || run2.type !== "text") {throw new Error("Expected text run");}
     expect(run1.text).toBe("Line 1");
     expect(run2.text).toBe("Line 2");
   });
@@ -802,8 +802,8 @@ describe("convertGroupedTextToShape", () => {
     expect(shape.textBody?.paragraphs).toHaveLength(2);
     const run1 = shape.textBody?.paragraphs[0].runs[0];
     const run2 = shape.textBody?.paragraphs[1].runs[0];
-    if (!run1 || run1.type !== "text") throw new Error("Expected text run");
-    if (!run2 || run2.type !== "text") throw new Error("Expected text run");
+    if (!run1 || run1.type !== "text") {throw new Error("Expected text run");}
+    if (!run2 || run2.type !== "text") {throw new Error("Expected text run");}
     expect(run1.text).toBe("Paragraph 1");
     expect(run2.text).toBe("Paragraph 2");
     // Second paragraph should have spaceBefore
@@ -829,8 +829,8 @@ describe("convertGroupedTextToShape", () => {
     expect(shape.textBody?.paragraphs[0].runs).toHaveLength(2);
     const run1 = shape.textBody?.paragraphs[0].runs[0];
     const run2 = shape.textBody?.paragraphs[0].runs[1];
-    if (!run1 || run1.type !== "text") throw new Error("Expected text run");
-    if (!run2 || run2.type !== "text") throw new Error("Expected text run");
+    if (!run1 || run1.type !== "text") {throw new Error("Expected text run");}
+    if (!run2 || run2.type !== "text") {throw new Error("Expected text run");}
     expect(run1.text).toBe("Hello ");
     expect(run2.text).toBe("World");
   });

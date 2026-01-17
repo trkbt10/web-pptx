@@ -22,6 +22,11 @@ export type PdfLoadOptions = Readonly<{
 
 export type PdfLoadErrorCode = "INVALID_PDF" | "ENCRYPTED_PDF" | "PARSE_ERROR";
 
+
+
+
+
+
 export class PdfLoadError extends Error {
   constructor(
     message: string,

@@ -47,7 +47,7 @@ function padPassword32(passwordBytes: Uint8Array): Uint8Array {
   const out = new Uint8Array(32);
   const n = Math.min(passwordBytes.length, 32);
   out.set(passwordBytes.subarray(0, n), 0);
-  if (n < 32) out.set(PASSWORD_PADDING.subarray(0, 32 - n), n);
+  if (n < 32) {out.set(PASSWORD_PADDING.subarray(0, 32 - n), n);}
   return out;
 }
 
@@ -90,7 +90,7 @@ function computeFileKeyR3(args: {
 
 function xorKey(key: Uint8Array, value: number): Uint8Array {
   const out = new Uint8Array(key.length);
-  for (let i = 0; i < key.length; i += 1) out[i] = (key[i] ?? 0) ^ (value & 0xff);
+  for (let i = 0; i < key.length; i += 1) {out[i] = (key[i] ?? 0) ^ (value & 0xff);}
   return out;
 }
 
@@ -208,6 +208,11 @@ function deriveObjectKeyRc4(fileKey: Uint8Array, objNum: number, gen: number): U
   return digest.slice(0, n);
 }
 
+
+
+
+
+
 export function createStandardDecrypter(args: {
   readonly encryptDict: PdfDict;
   readonly fileId0: Uint8Array;
@@ -254,7 +259,7 @@ export function createStandardDecrypter(args: {
     });
 
     const fileKey = (() => {
-      if (asUser.ok) return asUser.fileKey;
+      if (asUser.ok) {return asUser.fileKey;}
       return tryFileKeyFromOwnerPasswordR2({
         password: args.password,
         o,
@@ -291,7 +296,7 @@ export function createStandardDecrypter(args: {
     });
 
     const fileKey = (() => {
-      if (asUser.ok) return asUser.fileKey;
+      if (asUser.ok) {return asUser.fileKey;}
       return tryFileKeyFromOwnerPasswordR3({
         password: args.password,
         o,

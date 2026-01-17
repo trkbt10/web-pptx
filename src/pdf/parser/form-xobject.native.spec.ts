@@ -60,16 +60,16 @@ describe("Form XObject (native)", () => {
     expect(paths).toHaveLength(1);
 
     const path = paths[0]!;
-    if (path.type !== "path") throw new Error("Expected path");
+    if (path.type !== "path") {throw new Error("Expected path");}
 
     const ops = path.operations;
     expect(ops[0]?.type).toBe("moveTo");
-    if (ops[0]?.type !== "moveTo") throw new Error("Expected moveTo");
+    if (ops[0]?.type !== "moveTo") {throw new Error("Expected moveTo");}
     expect(ops[0].point.x).toBeCloseTo(100);
     expect(ops[0].point.y).toBeCloseTo(50);
 
     expect(ops[1]?.type).toBe("lineTo");
-    if (ops[1]?.type !== "lineTo") throw new Error("Expected lineTo");
+    if (ops[1]?.type !== "lineTo") {throw new Error("Expected lineTo");}
     expect(ops[1].point.x).toBeCloseTo(110);
     expect(ops[1].point.y).toBeCloseTo(50);
   });
@@ -138,7 +138,7 @@ describe("Form XObject (native)", () => {
     expect(images).toHaveLength(1);
 
     const img = images[0]!;
-    if (img.type !== "image") throw new Error("Expected image");
+    if (img.type !== "image") {throw new Error("Expected image");}
     expect(img.width).toBe(1);
     expect(img.height).toBe(1);
     expect(Array.from(img.data)).toEqual([255, 0, 0]);

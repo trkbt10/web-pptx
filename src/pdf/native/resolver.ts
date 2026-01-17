@@ -28,12 +28,12 @@ function asName(obj: PdfObject | undefined): string | null {
 
 function readFilterNames(dict: PdfDict): readonly string[] {
   const filter = dictGet(dict, "Filter");
-  if (!filter) return [];
-  if (filter.type === "name") return [filter.value];
+  if (!filter) {return [];}
+  if (filter.type === "name") {return [filter.value];}
   if (filter.type === "array") {
     const out: string[] = [];
     for (const item of filter.items) {
-      if (item.type === "name") out.push(item.value);
+      if (item.type === "name") {out.push(item.value);}
     }
     return out;
   }
@@ -42,13 +42,13 @@ function readFilterNames(dict: PdfDict): readonly string[] {
 
 function decodeParmsFromStreamDict(dict: PdfDict, filterCount: number): readonly (PdfObject | null)[] | undefined {
   const decodeParms = dictGet(dict, "DecodeParms");
-  if (!decodeParms) return undefined;
+  if (!decodeParms) {return undefined;}
 
   if (decodeParms.type === "array") {
     const out: (PdfObject | null)[] = [];
     for (const item of decodeParms.items) {
-      if (item.type === "null") out.push(null);
-      else out.push(item);
+      if (item.type === "null") {out.push(null);}
+      else {out.push(item);}
     }
     return out;
   }
@@ -58,12 +58,17 @@ function decodeParmsFromStreamDict(dict: PdfDict, filterCount: number): readonly
   }
 
   if (decodeParms.type === "dict") {
-    if (filterCount <= 1) return [decodeParms];
+    if (filterCount <= 1) {return [decodeParms];}
     return [decodeParms, ...new Array<null>(Math.max(0, filterCount - 1)).fill(null)];
   }
 
   return undefined;
 }
+
+
+
+
+
 
 export class PdfResolver {
   private readonly indirectCache = new Map<number, PdfObject>();
@@ -84,7 +89,7 @@ export class PdfResolver {
 
   getObject(objNum: number): PdfObject {
     const cached = this.indirectCache.get(objNum);
-    if (cached) return cached;
+    if (cached) {return cached;}
 
     const entry = this.xref.entries.get(objNum);
     if (!entry) {
@@ -111,9 +116,9 @@ export class PdfResolver {
 
     const decrypted = (() => {
       const decrypter = this.options.decrypter;
-      if (!decrypter) return value;
+      if (!decrypter) {return value;}
       const skip = this.options.skipDecryptObjectNums;
-      if (skip?.has(objNum)) return value;
+      if (skip?.has(objNum)) {return value;}
       return decryptPdfObject(value, objNum, gen, decrypter);
     })();
 
@@ -125,21 +130,21 @@ export class PdfResolver {
     const cache = this.objStmCache.get(objStmNum);
     const objects = cache ? cache.objects : this.parseObjStm(objStmNum);
     const value = objects.get(index);
-    if (!value) throw new Error(`ObjStm ${objStmNum}: missing object index ${index}`);
+    if (!value) {throw new Error(`ObjStm ${objStmNum}: missing object index ${index}`);}
     return value;
   }
 
   private parseObjStm(objStmNum: number): ReadonlyMap<number, PdfObject> {
     const stmObj = this.getObject(objStmNum);
     const stream = asStream(stmObj);
-    if (!stream) throw new Error(`ObjStm ${objStmNum}: not a stream`);
+    if (!stream) {throw new Error(`ObjStm ${objStmNum}: not a stream`);}
 
     const type = asName(dictGet(stream.dict, "Type"));
-    if (type !== "ObjStm") throw new Error(`ObjStm ${objStmNum}: /Type is not /ObjStm`);
+    if (type !== "ObjStm") {throw new Error(`ObjStm ${objStmNum}: /Type is not /ObjStm`);}
 
     const n = asNumber(dictGet(stream.dict, "N"));
     const first = asNumber(dictGet(stream.dict, "First"));
-    if (n == null || first == null) throw new Error(`ObjStm ${objStmNum}: missing /N or /First`);
+    if (n == null || first == null) {throw new Error(`ObjStm ${objStmNum}: missing /N or /First`);}
 
     const filters = readFilterNames(stream.dict);
     const decodeParms = decodeParmsFromStreamDict(stream.dict, filters.length);
@@ -148,7 +153,7 @@ export class PdfResolver {
     const headerBytes = decoded.slice(0, first);
     const headerText = new TextDecoder("latin1").decode(headerBytes);
     const parts = headerText.trim().split(/\s+/).filter(Boolean);
-    if (parts.length < n * 2) throw new Error(`ObjStm ${objStmNum}: header too short`);
+    if (parts.length < n * 2) {throw new Error(`ObjStm ${objStmNum}: header too short`);}
 
     const offsets: number[] = [];
     for (let i = 0; i < n; i += 1) {

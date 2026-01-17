@@ -40,11 +40,11 @@ function buildPdfWithSinglePage(options: {
   const obj1 = "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n";
   const parentBoxes = (() => {
     const p = options.parentBoxes;
-    if (!p) return "";
+    if (!p) {return "";}
     const parts: string[] = [];
-    if (p.BleedBox) parts.push(`/BleedBox [${p.BleedBox.join(" ")}]`);
-    if (p.TrimBox) parts.push(`/TrimBox [${p.TrimBox.join(" ")}]`);
-    if (p.ArtBox) parts.push(`/ArtBox [${p.ArtBox.join(" ")}]`);
+    if (p.BleedBox) {parts.push(`/BleedBox [${p.BleedBox.join(" ")}]`);}
+    if (p.TrimBox) {parts.push(`/TrimBox [${p.TrimBox.join(" ")}]`);}
+    if (p.ArtBox) {parts.push(`/ArtBox [${p.ArtBox.join(" ")}]`);}
     return parts.length > 0 ? " " + parts.join(" ") : "";
   })();
   const obj2 = `2 0 obj\n<< /Type /Pages /Count 1 /Kids [3 0 R]${parentBoxes} >>\nendobj\n`;

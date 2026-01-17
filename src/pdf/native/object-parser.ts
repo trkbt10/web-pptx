@@ -30,12 +30,12 @@ function expectKeyword(state: ParseState, keyword: string): ParseState {
 
 function parsePrimitiveFromToken(token: PdfToken): PdfObject | null {
   if (token.type === "keyword") {
-    if (token.value === "true") return { type: "bool", value: true } satisfies PdfBool;
-    if (token.value === "false") return { type: "bool", value: false } satisfies PdfBool;
-    if (token.value === "null") return { type: "null" } satisfies PdfNull;
+    if (token.value === "true") {return { type: "bool", value: true } satisfies PdfBool;}
+    if (token.value === "false") {return { type: "bool", value: false } satisfies PdfBool;}
+    if (token.value === "null") {return { type: "null" } satisfies PdfNull;}
   }
-  if (token.type === "number") return { type: "number", value: token.value } satisfies PdfNumber;
-  if (token.type === "name") return { type: "name", value: token.value } satisfies PdfName;
+  if (token.type === "number") {return { type: "number", value: token.value } satisfies PdfNumber;}
+  if (token.type === "name") {return { type: "name", value: token.value } satisfies PdfName;}
   if (token.type === "string") {
     return { type: "string", bytes: token.bytes, text: decodePdfStringBytes(token.bytes) } satisfies PdfString;
   }
@@ -106,6 +106,11 @@ function parseObjectWithInitialToken(state: ParseState, initial: PdfToken): { va
   throw new Error(`Unexpected token: ${initial.type === "keyword" ? initial.value : initial.type}`);
 }
 
+
+
+
+
+
 export function parseObject(state: ParseState): { value: PdfObject; state: ParseState } {
   const { token, next } = nextToken(state.lex);
   return parseObjectWithInitialToken({ lex: next }, token);
@@ -125,14 +130,14 @@ function skipStreamEol(bytes: Uint8Array, pos: number): number {
     const b = bytes[p] ?? 0;
     if (b === 0x0d) {
       p += 1;
-      if ((bytes[p] ?? 0) === 0x0a) p += 1;
+      if ((bytes[p] ?? 0) === 0x0a) {p += 1;}
       return p;
     }
-    if (b === 0x0a) return p + 1;
+    if (b === 0x0a) {return p + 1;}
     return p;
   };
 
-  if (b0 === 0x0d || b0 === 0x0a) return consumeEol(pos);
+  if (b0 === 0x0d || b0 === 0x0a) {return consumeEol(pos);}
 
   // spaces/tabs before EOL
   if (b0 === 0x20 || b0 === 0x09) {
@@ -146,13 +151,13 @@ function skipStreamEol(bytes: Uint8Array, pos: number): number {
       break;
     }
     const b = bytes[p] ?? 0;
-    if (b === 0x0d || b === 0x0a) return consumeEol(p);
+    if (b === 0x0d || b === 0x0a) {return consumeEol(p);}
     if (b === 0x25) {
       // comment until EOL
       p += 1;
       while (p < bytes.length) {
         const c = bytes[p] ?? 0;
-        if (c === 0x0d || c === 0x0a) break;
+        if (c === 0x0d || c === 0x0a) {break;}
         p += 1;
       }
       return consumeEol(p);
@@ -165,7 +170,7 @@ function skipStreamEol(bytes: Uint8Array, pos: number): number {
     let p = pos + 1;
     while (p < bytes.length) {
       const c = bytes[p] ?? 0;
-      if (c === 0x0d || c === 0x0a) break;
+      if (c === 0x0d || c === 0x0a) {break;}
       p += 1;
     }
     return consumeEol(p);
@@ -189,7 +194,7 @@ function parseStreamDataFromRaw(
 
   // Fallback: search for endstream, but avoid obvious false positives inside binary payloads.
   const dataEnd = findEndstreamStart(bytes, streamStart);
-  if (dataEnd < 0) throw new Error("Failed to find endstream");
+  if (dataEnd < 0) {throw new Error("Failed to find endstream");}
   return { data: bytes.slice(streamStart, dataEnd), nextPos: dataEnd };
 }
 
@@ -198,8 +203,8 @@ function dictGet(dict: PdfDict, key: string): PdfObject | undefined {
 }
 
 function asNumber(obj: PdfObject | undefined): number | null {
-  if (!obj) return null;
-  if (obj.type === "number") return obj.value;
+  if (!obj) {return null;}
+  if (obj.type === "number") {return obj.value;}
   return null;
 }
 
@@ -217,7 +222,7 @@ function findEndstreamStart(bytes: Uint8Array, from: number): number {
   let pos = from;
   while (pos >= 0 && pos < bytes.length) {
     const idx = indexOfBytes(bytes, ENDSTREAM, pos);
-    if (idx < 0) return -1;
+    if (idx < 0) {return -1;}
 
     const before = idx > 0 ? (bytes[idx - 1] ?? 0) : 0;
     const after = bytes[idx + ENDSTREAM.length] ?? 0;
@@ -244,6 +249,11 @@ function findEndstreamStart(bytes: Uint8Array, from: number): number {
   return -1;
 }
 
+
+
+
+
+
 export function parseIndirectObjectAt(
   bytes: Uint8Array,
   offset: number,
@@ -252,9 +262,9 @@ export function parseIndirectObjectAt(
   let st: ParseState = { lex: createLexer(bytes, offset) };
 
   const { token: tObj, next: n1 } = nextToken(st.lex);
-  if (tObj.type !== "number" || !tObj.isInt) throw new Error("Indirect object: missing object number");
+  if (tObj.type !== "number" || !tObj.isInt) {throw new Error("Indirect object: missing object number");}
   const { token: tGen, next: n2 } = nextToken(n1);
-  if (tGen.type !== "number" || !tGen.isInt) throw new Error("Indirect object: missing generation number");
+  if (tGen.type !== "number" || !tGen.isInt) {throw new Error("Indirect object: missing generation number");}
   st = { lex: n2 };
   st = expectKeyword(st, "obj");
 
@@ -270,7 +280,7 @@ export function parseIndirectObjectAt(
       const lengthObj = dictGet(value, "Length");
       const length = (() => {
         const direct = asNumber(lengthObj);
-        if (direct != null) return direct;
+        if (direct != null) {return direct;}
         const ref = asRef(lengthObj);
         if (ref && options.resolveObject) {
           const resolved = options.resolveObject(ref.obj);

@@ -11,7 +11,7 @@ function writeBitsMSB(w: BitWriter, n: number, value: number): void {
     const bit = (value >> i) & 1;
     const byteIndex = Math.floor(w.bitPos / 8);
     const within = w.bitPos % 8;
-    if (w.bytes[byteIndex] == null) w.bytes[byteIndex] = 0;
+    if (w.bytes[byteIndex] == null) {w.bytes[byteIndex] = 0;}
     if (bit) {
       w.bytes[byteIndex] |= 1 << (7 - within);
     }
@@ -31,7 +31,7 @@ function lzwEncodePdf(data: Uint8Array, earlyChange: 0 | 1 = 1): Uint8Array {
   const dict = new Map<string, number>();
   const resetDict = () => {
     dict.clear();
-    for (let i = 0; i < 256; i += 1) dict.set(String.fromCharCode(i), i);
+    for (let i = 0; i < 256; i += 1) {dict.set(String.fromCharCode(i), i);}
   };
   resetDict();
 
@@ -57,7 +57,7 @@ function lzwEncodePdf(data: Uint8Array, earlyChange: 0 | 1 = 1): Uint8Array {
     if (nextCode <= 4095) {
       dict.set(nextPhrase, nextCode);
       nextCode += 1;
-      if (shouldIncreaseCodeSize(nextCode, codeSize, earlyChange)) codeSize += 1;
+      if (shouldIncreaseCodeSize(nextCode, codeSize, earlyChange)) {codeSize += 1;}
     }
     phrase = ch;
   }

@@ -171,8 +171,8 @@ function applyDecodeArray(
   componentsPerPixel: number,
   decode: readonly number[],
 ): Uint8Array {
-  if (componentsPerPixel <= 0) return data;
-  if (decode.length !== componentsPerPixel * 2) return data;
+  if (componentsPerPixel <= 0) {return data;}
+  if (decode.length !== componentsPerPixel * 2) {return data;}
 
   const out = new Uint8Array(data.length);
   for (let i = 0; i < data.length; i += 1) {

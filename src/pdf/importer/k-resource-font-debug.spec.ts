@@ -128,7 +128,7 @@ describe("PDF embedded font extraction", () => {
 
     // Check that we can extract metrics from each TrueType font
     for (const font of document.embeddedFonts!) {
-      if (font.format !== "truetype") continue;
+      if (font.format !== "truetype") {continue;}
 
       const rawMetrics = extractTrueTypeMetrics(font.data);
       expect(rawMetrics).not.toBeNull();

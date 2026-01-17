@@ -20,12 +20,17 @@ function dictGet(dict: PdfDict, key: string): PdfObject | undefined {
   return dict.map.get(key);
 }
 
+
+
+
+
+
 export function readLzwDecodeOptions(decodeParms: PdfObject | null | undefined): LzwDecodeOptions {
   const dict = asDict(decodeParms);
-  if (!dict) return {};
+  if (!dict) {return {};}
 
   const early = asNumber(dictGet(dict, "EarlyChange"));
-  if (early == null) return {};
+  if (early == null) {return {};}
   if (early !== 0 && early !== 1) {
     throw new Error(`LZWDecode: invalid EarlyChange=${early}`);
   }
@@ -38,7 +43,7 @@ type BitReader = Readonly<{
 }>;
 
 function readBitsMSB(r: BitReader, n: number): { value: number | null; next: BitReader } {
-  if (n <= 0 || n > 12) throw new Error(`LZWDecode: invalid code size ${n}`);
+  if (n <= 0 || n > 12) {throw new Error(`LZWDecode: invalid code size ${n}`);}
 
   const totalBits = r.bytes.length * 8;
   if (r.bitPos + n > totalBits) {
@@ -75,9 +80,9 @@ function shouldIncreaseCodeSize(nextCode: number, codeSize: number, earlyChange:
  * - Max code size: 12
  */
 export function decodeLzw(encoded: Uint8Array, options: LzwDecodeOptions = {}): Uint8Array {
-  if (!encoded) throw new Error("encoded is required");
+  if (!encoded) {throw new Error("encoded is required");}
   const earlyChange = (options.earlyChange ?? 1) as 0 | 1;
-  if (earlyChange !== 0 && earlyChange !== 1) throw new Error(`LZWDecode: invalid EarlyChange=${earlyChange}`);
+  if (earlyChange !== 0 && earlyChange !== 1) {throw new Error(`LZWDecode: invalid EarlyChange=${earlyChange}`);}
 
   const CLEAR = 256;
   const EOD = 257;
@@ -103,7 +108,7 @@ export function decodeLzw(encoded: Uint8Array, options: LzwDecodeOptions = {}): 
     const read = readBitsMSB(reader, codeSize);
     reader = read.next;
     const code = read.value;
-    if (code == null) break;
+    if (code == null) {break;}
 
     if (code === CLEAR) {
       resetDict();
@@ -118,7 +123,7 @@ export function decodeLzw(encoded: Uint8Array, options: LzwDecodeOptions = {}): 
 
     const entry: Uint8Array = (() => {
       const direct = dict.get(code);
-      if (direct) return direct;
+      if (direct) {return direct;}
       // KwKwK special case: code is nextCode, meaning current = prev + first(prev)
       if (code === nextCode && prev) {
         const first = prev[0] ?? 0;
@@ -130,7 +135,7 @@ export function decodeLzw(encoded: Uint8Array, options: LzwDecodeOptions = {}): 
       throw new Error(`LZWDecode: invalid code ${code}`);
     })();
 
-    for (const b of entry) out.push(b);
+    for (const b of entry) {out.push(b);}
 
     if (prev) {
       const first = entry[0] ?? 0;

@@ -48,16 +48,21 @@ function parseXmpFields(xml: string): { title?: string; author?: string; subject
   return { title, author, subject };
 }
 
+
+
+
+
+
 export function extractXmpMetadata(
   catalog: PdfDict,
   deref: (obj: PdfObject) => PdfObject,
   decodeStream: (stream: PdfStream) => Uint8Array,
 ): { title?: string; author?: string; subject?: string } | null {
   const metadataObj = dictGet(catalog, "Metadata");
-  if (!metadataObj) return null;
+  if (!metadataObj) {return null;}
   const resolved = deref(metadataObj);
   const stream = asStream(resolved);
-  if (!stream) return null;
+  if (!stream) {return null;}
 
   const subtype = dictGet(stream.dict, "Subtype");
   if (subtype?.type === "name" && subtype.value !== "XML") {

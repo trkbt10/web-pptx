@@ -221,7 +221,7 @@ export function parseBfRange(
         const hex = destMatch[1];
         if (hex) {
           const unicode = hexToString(hex);
-          if (unicode) dests.push(unicode);
+          if (unicode) {dests.push(unicode);}
         }
       }
 
@@ -244,7 +244,7 @@ export function parseBfRange(
  * Handles both 2-byte (BMP) and 4-byte (surrogate) encodings
  */
 export function hexToString(hex: string): string | null {
-  if (hex.length === 0 || hex.length % 2 !== 0) return null;
+  if (hex.length === 0 || hex.length % 2 !== 0) {return null;}
 
   try {
     // For 4-digit hex (2 bytes), it's a single BMP character

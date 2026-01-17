@@ -20,6 +20,7 @@ import { loadNativePdfDocumentForParser } from "./native-load";
 import { extractEmbeddedFontsFromNativePages } from "../domain/font/font-extractor.native";
 import type { PdfLoadEncryption } from "./pdf-load-error";
 import { extractExtGStateFromResourcesNative, extractExtGStateNative, type ExtGStateParams } from "./ext-gstate.native";
+import { preprocessInlineImages } from "./inline-image.native";
 
 export type PdfParserOptions = {
   readonly pages?: readonly number[];
@@ -36,6 +37,11 @@ const DEFAULT_OPTIONS: Required<PdfParserOptions> = {
   includePaths: true,
   encryption: { mode: "reject" },
 };
+
+
+
+
+
 
 export async function parsePdfNative(
   data: Uint8Array | ArrayBuffer,
@@ -100,10 +106,29 @@ async function parsePage(
 ): Promise<PdfPage> {
   const { width, height } = page.getSize();
 
-  const contentStreams = page.getDecodedContentStreams();
-  const contentStream = contentStreams.length === 0
-    ? null
-    : contentStreams.map((b) => new TextDecoder("latin1").decode(b)).join("\n");
+  const resources = page.getResourcesDict();
+  const baseXObjects = resources ? resolveDict(page, dictGet(resources, "XObject")) : null;
+
+  let inlineId = 0;
+  const nextInlineId = (): number => {
+    inlineId += 1;
+    return inlineId;
+  };
+
+  const inlineXObjects = new Map<string, PdfStream>();
+  const usedNames = new Set<string>(baseXObjects ? [...baseXObjects.map.keys()] : []);
+  const processedStreams: string[] = [];
+
+  for (const b of page.getDecodedContentStreams()) {
+    const pre = preprocessInlineImages(b, { nextId: nextInlineId, existingNames: usedNames });
+    processedStreams.push(pre.content);
+    for (const [k, v] of pre.xObjects) {
+      inlineXObjects.set(k, v);
+      usedNames.add(k);
+    }
+  }
+
+  const contentStream = processedStreams.length === 0 ? null : processedStreams.join("\n");
 
   if (!contentStream) {
     return { pageNumber, width, height, elements: [] };
@@ -115,12 +140,16 @@ async function parsePage(
   const extGState = extractExtGStateNative(page);
   const parsedElements = [...parseContentStream(tokens, fontMappings, { extGState })];
 
+  const mergedXObjects = mergeXObjects(baseXObjects, inlineXObjects);
+
   const { elements: expandedElements, imageGroups } = expandFormXObjectsNative(
     page,
     parsedElements,
     fontMappings,
     extGState,
     embeddedFontMetrics,
+    mergedXObjects,
+    nextInlineId,
   );
 
   const images: PdfImage[] = [];
@@ -155,7 +184,7 @@ function dictGet(dict: PdfDict, key: string): PdfObject | undefined {
 }
 
 function resolve(page: NativePdfPage, obj: PdfObject | undefined): PdfObject | undefined {
-  if (!obj) return undefined;
+  if (!obj) {return undefined;}
   return page.lookup(obj);
 }
 
@@ -163,14 +192,24 @@ function resolveDict(page: NativePdfPage, obj: PdfObject | undefined): PdfDict |
   return asDict(resolve(page, obj));
 }
 
+function mergeXObjects(base: PdfDict | null, extra: ReadonlyMap<string, PdfStream>): PdfDict | null {
+  if ((!base || base.map.size === 0) && extra.size === 0) {return null;}
+  const merged = new Map<string, PdfObject>();
+  if (base) {
+    for (const [k, v] of base.map.entries()) {merged.set(k, v);}
+  }
+  for (const [k, v] of extra.entries()) {merged.set(k, v);}
+  return { type: "dict", map: merged };
+}
+
 function parseMatrix6(page: NativePdfPage, obj: PdfObject | undefined): PdfMatrix | null {
   const resolved = resolve(page, obj);
   const arr = asArray(resolved);
-  if (!arr || arr.items.length !== 6) return null;
+  if (!arr || arr.items.length !== 6) {return null;}
   const nums: number[] = [];
   for (const item of arr.items) {
     const v = asNumber(resolve(page, item));
-    if (v == null || !Number.isFinite(v)) return null;
+    if (v == null || !Number.isFinite(v)) {return null;}
     nums.push(v);
   }
   return nums as unknown as PdfMatrix;
@@ -193,9 +232,11 @@ function expandFormXObjectsNative(
   fontMappings: FontMappings,
   extGState: ReadonlyMap<string, ExtGStateParams>,
   embeddedFontMetrics: Map<string, { ascender: number; descender: number }>,
+  xObjectsOverride: PdfDict | null,
+  nextInlineId: () => number,
 ): Readonly<{ elements: ParsedElement[]; imageGroups: ImageGroupMap }> {
   const resources = page.getResourcesDict();
-  const xObjects = resources ? resolveDict(page, dictGet(resources, "XObject")) : null;
+  const xObjects = xObjectsOverride ?? (resources ? resolveDict(page, dictGet(resources, "XObject")) : null);
   const outElements: ParsedElement[] = [];
   const imageGroups: ImageGroupMap = new Map();
 
@@ -210,7 +251,7 @@ function expandFormXObjectsNative(
     callStack: Set<string>,
     depth: number,
   ): void => {
-    if (depth > 16) return;
+    if (depth > 16) {return;}
 
     for (const elem of elements) {
       if (elem.type !== "image") {
@@ -219,14 +260,14 @@ function expandFormXObjectsNative(
       }
 
       const xObjDict = scope.xObjects;
-      if (!xObjDict) continue;
+      if (!xObjDict) {continue;}
 
       const cleanName = elem.name.startsWith("/") ? elem.name.slice(1) : elem.name;
       const refOrObj = dictGet(xObjDict, cleanName);
       const stackKey = refOrObj?.type === "ref" ? `${refOrObj.obj} ${refOrObj.gen}` : null;
       const resolved = resolve(page, refOrObj);
       const stream = asStream(resolved);
-      if (!stream) continue;
+      if (!stream) {continue;}
 
       const subtype = asName(dictGet(stream.dict, "Subtype"))?.value ?? "";
       if (subtype === "Image") {
@@ -234,36 +275,41 @@ function expandFormXObjectsNative(
         continue;
       }
 
-      if (subtype !== "Form") continue;
+      if (subtype !== "Form") {continue;}
 
-      if (stackKey && callStack.has(stackKey)) continue;
-      if (stackKey) callStack.add(stackKey);
+      if (stackKey && callStack.has(stackKey)) {continue;}
+      if (stackKey) {callStack.add(stackKey);}
 
       const formResources = resolveDict(page, dictGet(stream.dict, "Resources")) ?? scope.resources;
-      const formXObjects =
+      const formXObjectsBase =
         (formResources ? resolveDict(page, dictGet(formResources, "XObject")) : null) ?? scope.xObjects;
 
       const scopedFonts = new Map(scope.fontMappings);
       const formFonts = formResources ? extractFontMappingsFromResourcesNative(page, formResources) : new Map();
-      for (const [k, v] of formFonts) scopedFonts.set(k, v);
+      for (const [k, v] of formFonts) {scopedFonts.set(k, v);}
       mergeFontMetrics(scopedFonts, embeddedFontMetrics);
       for (const info of formFonts.values()) {
-        if (!info.baseFont) continue;
+        if (!info.baseFont) {continue;}
         const key = normalizeBaseFontForMetricsLookup(info.baseFont);
-        if (!fontMappings.has(key)) fontMappings.set(key, info);
+        if (!fontMappings.has(key)) {fontMappings.set(key, info);}
       }
       mergeFontMetrics(fontMappings, embeddedFontMetrics);
 
       const localExt = formResources ? extractExtGStateFromResourcesNative(page, formResources) : new Map();
       const mergedExt = new Map(scope.extGState);
-      for (const [k, v] of localExt) mergedExt.set(k, v);
+      for (const [k, v] of localExt) {mergedExt.set(k, v);}
 
       const matrix = parseMatrix6(page, dictGet(stream.dict, "Matrix")) ?? ([1, 0, 0, 1, 0, 0] as PdfMatrix);
 
       const decoded = decodePdfStream(stream);
-      const content = new TextDecoder("latin1").decode(decoded);
+      const pre = preprocessInlineImages(decoded, {
+        nextId: nextInlineId,
+        existingNames: new Set<string>(formXObjectsBase ? [...formXObjectsBase.map.keys()] : []),
+      });
+      const content = pre.content;
+      const formXObjects = mergeXObjects(formXObjectsBase, pre.xObjects);
       if (!content) {
-        if (stackKey) callStack.delete(stackKey);
+        if (stackKey) {callStack.delete(stackKey);}
         continue;
       }
 
@@ -278,7 +324,7 @@ function expandFormXObjectsNative(
         inner,
         {
           resources: formResources,
-          xObjects: formXObjects,
+          xObjects: formXObjects ?? scope.xObjects,
           fontMappings: scopedFonts,
           extGState: mergedExt,
         },
@@ -286,7 +332,7 @@ function expandFormXObjectsNative(
         depth + 1,
       );
 
-      if (stackKey) callStack.delete(stackKey);
+      if (stackKey) {callStack.delete(stackKey);}
     }
   };
 
@@ -306,11 +352,11 @@ function mergeFontMetrics(
 ): void {
   for (const [fontName, fontInfo] of fontMappings) {
     const baseFont = fontInfo.baseFont;
-    if (!baseFont) continue;
+    if (!baseFont) {continue;}
 
     const normalizedName = normalizeBaseFontForMetricsLookup(baseFont);
     const embeddedMetrics = embeddedFontMetrics.get(normalizedName);
-    if (!embeddedMetrics) continue;
+    if (!embeddedMetrics) {continue;}
 
     fontMappings.set(fontName, {
       ...fontInfo,
@@ -342,7 +388,7 @@ function convertElements(
       case "path":
         if (opts.includePaths) {
           const pdfPath = convertPath(elem, opts.minPathComplexity);
-          if (pdfPath) elements.push(pdfPath);
+          if (pdfPath) {elements.push(pdfPath);}
         }
         break;
       case "text":
@@ -360,9 +406,9 @@ function convertElements(
 }
 
 function convertPath(parsed: ParsedPath, minComplexity: number): PdfPath | null {
-  if (parsed.paintOp === "none" || parsed.paintOp === "clip") return null;
+  if (parsed.paintOp === "none" || parsed.paintOp === "clip") {return null;}
   const built = buildPath(parsed);
-  if (built.operations.length < minComplexity) return null;
+  if (built.operations.length < minComplexity) {return null;}
   return builtPathToPdfPath(built);
 }
 

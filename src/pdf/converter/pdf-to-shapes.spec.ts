@@ -66,15 +66,15 @@ describe("convertPageToShapes", () => {
     const s0 = shapes[0];
     const s1 = shapes[1];
     const s2 = shapes[2];
-    if (!s0 || s0.type !== "sp") throw new Error("Expected sp shape");
-    if (!s1 || s1.type !== "sp") throw new Error("Expected sp shape");
-    if (!s2 || s2.type !== "pic") throw new Error("Expected pic shape");
+    if (!s0 || s0.type !== "sp") {throw new Error("Expected sp shape");}
+    if (!s1 || s1.type !== "sp") {throw new Error("Expected sp shape");}
+    if (!s2 || s2.type !== "pic") {throw new Error("Expected pic shape");}
     expect(s0.nonVisual.id).toBe("1");
     expect(s1.nonVisual.id).toBe("2");
     expect(s2.nonVisual.id).toBe("3");
 
     const sp0 = shapes[0];
-    if (sp0?.type !== "sp") throw new Error("Expected sp shape");
+    if (sp0?.type !== "sp") {throw new Error("Expected sp shape");}
     expect(sp0.properties.geometry).toEqual({ type: "preset", preset: "rect", adjustValues: [] });
   });
 
@@ -129,11 +129,11 @@ describe("convertPageToShapes", () => {
     expect(shapes).toHaveLength(1);
 
     const sp = shapes[0];
-    if (!sp || sp.type !== "sp") throw new Error("Expected sp shape");
+    if (!sp || sp.type !== "sp") {throw new Error("Expected sp shape");}
 
     expect(sp.properties.geometry).toEqual({ type: "preset", preset: "ellipse", adjustValues: [] });
     const transform = sp.properties.transform;
-    if (!transform) throw new Error("Expected transform");
+    if (!transform) {throw new Error("Expected transform");}
     expect(transform.width).toEqual(px(rx * 2));
     expect(transform.height).toEqual(px(ry * 2));
 
@@ -290,7 +290,7 @@ describe("convertPageToShapes with spatialGrouping", () => {
     expect(shapes[0]?.type).toBe("sp");
 
     const sp = shapes[0];
-    if (sp?.type !== "sp") throw new Error("Expected sp shape");
+    if (sp?.type !== "sp") {throw new Error("Expected sp shape");}
     expect(sp.textBody?.paragraphs).toHaveLength(1);
     expect(sp.textBody?.paragraphs[0]?.runs).toHaveLength(2);
   });
@@ -338,7 +338,7 @@ describe("convertPageToShapes with spatialGrouping", () => {
     expect(shapes).toHaveLength(1);
 
     const sp = shapes[0];
-    if (sp?.type !== "sp") throw new Error("Expected sp shape");
+    if (sp?.type !== "sp") {throw new Error("Expected sp shape");}
     // Consecutive lines with normal spacing are flattened into 1 paragraph with 2 runs
     expect(sp.textBody?.paragraphs).toHaveLength(1);
     expect(sp.textBody?.paragraphs[0]?.runs).toHaveLength(2);

@@ -1,8 +1,13 @@
+
+
+
+
+
 export function rc4(key: Uint8Array, data: Uint8Array): Uint8Array {
-  if (key.length === 0) throw new Error("rc4: key is required");
+  if (key.length === 0) {throw new Error("rc4: key is required");}
 
   const s = new Uint8Array(256);
-  for (let i = 0; i < 256; i += 1) s[i] = i;
+  for (let i = 0; i < 256; i += 1) {s[i] = i;}
 
   let j = 0;
   for (let i = 0; i < 256; i += 1) {

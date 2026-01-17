@@ -60,6 +60,11 @@ export type PageStats = {
   readonly imageCount: number;
 };
 
+
+
+
+
+
 export class PdfImportError extends Error {
   constructor(
     message: string,

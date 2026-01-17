@@ -14,7 +14,7 @@ function dictGet(dict: PdfDict, key: string): PdfObject | undefined {
 }
 
 function resolve(page: NativePdfPage, obj: PdfObject | undefined): PdfObject | undefined {
-  if (!obj) return undefined;
+  if (!obj) {return undefined;}
   return page.lookup(obj);
 }
 
@@ -41,11 +41,11 @@ function isValidCapOrJoin(v: number): v is 0 | 1 | 2 {
 
 function parseDashPattern(obj: PdfObject | undefined): { dashArray: readonly number[]; dashPhase: number } | null {
   const arr = asArray(obj);
-  if (!arr || arr.length < 2) return null;
+  if (!arr || arr.length < 2) {return null;}
   const patternArr = arr[0];
   const phaseObj = arr[1];
-  if (!patternArr || patternArr.type !== "array") return null;
-  if (!phaseObj || phaseObj.type !== "number" || !Number.isFinite(phaseObj.value)) return null;
+  if (!patternArr || patternArr.type !== "array") {return null;}
+  if (!phaseObj || phaseObj.type !== "number" || !Number.isFinite(phaseObj.value)) {return null;}
 
   const dashArray = patternArr.items
     .filter((it): it is { type: "number"; value: number } => it?.type === "number")
@@ -55,12 +55,22 @@ function parseDashPattern(obj: PdfObject | undefined): { dashArray: readonly num
   return { dashArray, dashPhase: phaseObj.value };
 }
 
+
+
+
+
+
 export function extractExtGStateNative(page: NativePdfPage): ReadonlyMap<string, ExtGStateParams> {
   const resources = page.getResourcesDict();
-  if (!resources) return new Map();
+  if (!resources) {return new Map();}
 
   return extractExtGStateFromResourcesNative(page, resources);
 }
+
+
+
+
+
 
 export function extractExtGStateFromResourcesNative(
   page: NativePdfPage,
@@ -68,13 +78,13 @@ export function extractExtGStateFromResourcesNative(
 ): ReadonlyMap<string, ExtGStateParams> {
   const extObj = resolve(page, dictGet(resources, "ExtGState"));
   const ext = asDict(extObj);
-  if (!ext) return new Map();
+  if (!ext) {return new Map();}
 
   const out = new Map<string, ExtGStateParams>();
 
   for (const [name, entry] of ext.map.entries()) {
     const dict = asDict(resolve(page, entry));
-    if (!dict) continue;
+    if (!dict) {continue;}
 
     const ca = asNumber(dictGet(dict, "ca"));
     const CA = asNumber(dictGet(dict, "CA"));
@@ -95,12 +105,12 @@ export function extractExtGStateFromResourcesNative(
       dashPhase?: number;
     } = {};
 
-    if (ca != null && Number.isFinite(ca)) params.fillAlpha = ca;
-    if (CA != null && Number.isFinite(CA)) params.strokeAlpha = CA;
-    if (LW != null && Number.isFinite(LW)) params.lineWidth = LW;
-    if (LC != null && Number.isFinite(LC) && isValidCapOrJoin(LC)) params.lineCap = LC;
-    if (LJ != null && Number.isFinite(LJ) && isValidCapOrJoin(LJ)) params.lineJoin = LJ;
-    if (ML != null && Number.isFinite(ML)) params.miterLimit = ML;
+    if (ca != null && Number.isFinite(ca)) {params.fillAlpha = ca;}
+    if (CA != null && Number.isFinite(CA)) {params.strokeAlpha = CA;}
+    if (LW != null && Number.isFinite(LW)) {params.lineWidth = LW;}
+    if (LC != null && Number.isFinite(LC) && isValidCapOrJoin(LC)) {params.lineCap = LC;}
+    if (LJ != null && Number.isFinite(LJ) && isValidCapOrJoin(LJ)) {params.lineJoin = LJ;}
+    if (ML != null && Number.isFinite(ML)) {params.miterLimit = ML;}
     if (D) {
       params.dashArray = D.dashArray;
       params.dashPhase = D.dashPhase;
@@ -123,14 +133,19 @@ export function extractExtGStateFromResourcesNative(
   return out;
 }
 
+
+
+
+
+
 export function extractExtGStateAlphaNative(page: NativePdfPage): ReadonlyMap<string, ExtGStateAlpha> {
   const full = extractExtGStateNative(page);
   const out = new Map<string, ExtGStateAlpha>();
   for (const [name, params] of full) {
     const alpha: { fillAlpha?: number; strokeAlpha?: number } = {};
-    if (params.fillAlpha != null) alpha.fillAlpha = params.fillAlpha;
-    if (params.strokeAlpha != null) alpha.strokeAlpha = params.strokeAlpha;
-    if (alpha.fillAlpha != null || alpha.strokeAlpha != null) out.set(name, alpha);
+    if (params.fillAlpha != null) {alpha.fillAlpha = params.fillAlpha;}
+    if (params.strokeAlpha != null) {alpha.strokeAlpha = params.strokeAlpha;}
+    if (alpha.fillAlpha != null || alpha.strokeAlpha != null) {out.set(name, alpha);}
   }
   return out;
 }

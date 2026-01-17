@@ -21,7 +21,7 @@ function dictGet(dict: PdfDict, key: string): PdfObject | undefined {
 }
 
 function resolve(page: NativePdfPage, obj: PdfObject | undefined): PdfObject | undefined {
-  if (!obj) return undefined;
+  if (!obj) {return undefined;}
   return page.lookup(obj);
 }
 
@@ -31,18 +31,18 @@ function resolveDict(page: NativePdfPage, obj: PdfObject | undefined): PdfDict |
 
 function extractBaseFontRaw(page: NativePdfPage, fontDict: PdfDict): string | null {
   const base = resolve(page, dictGet(fontDict, "BaseFont"));
-  if (base?.type === "name") return `/${base.value}`;
-  if (base?.type === "string") return base.text;
+  if (base?.type === "name") {return `/${base.value}`;}
+  if (base?.type === "string") {return base.text;}
   return null;
 }
 
 function detectFontFormat(fontFile: PdfObject | undefined, fontFile2: PdfObject | undefined, fontFile3: PdfObject | undefined, subtype: string | undefined): FontFormat {
-  if (fontFile2) return "truetype";
-  if (fontFile) return "type1";
+  if (fontFile2) {return "truetype";}
+  if (fontFile) {return "type1";}
   if (fontFile3) {
-    if (subtype === "Type1C") return "cff";
-    if (subtype === "CIDFontType0C") return "cff";
-    if (subtype === "OpenType") return "opentype";
+    if (subtype === "Type1C") {return "cff";}
+    if (subtype === "CIDFontType0C") {return "cff";}
+    if (subtype === "OpenType") {return "opentype";}
     return "opentype";
   }
   return "truetype";
@@ -68,7 +68,7 @@ function getMimeType(format: FontFormat): string {
 function extractToUnicodeMap(page: NativePdfPage, fontDict: PdfDict): ReadonlyMap<number, string> | null {
   const toUnicodeObj = resolve(page, dictGet(fontDict, "ToUnicode"));
   const stream = asStream(toUnicodeObj);
-  if (!stream) return null;
+  if (!stream) {return null;}
   const decoded = decodePdfStream(stream);
   const cmap = new TextDecoder("latin1").decode(decoded);
   const parsed = parseToUnicodeCMap(cmap);
@@ -82,9 +82,9 @@ function getFontDescriptor(page: NativePdfPage, fontDict: PdfDict): PdfDict | nu
   if (subtype === "Type0") {
     const descendants = resolve(page, dictGet(fontDict, "DescendantFonts"));
     const arr = asArray(descendants);
-    if (!arr || arr.items.length === 0) return null;
+    if (!arr || arr.items.length === 0) {return null;}
     const cidFont = asDict(resolve(page, arr.items[0]));
-    if (!cidFont) return null;
+    if (!cidFont) {return null;}
     return resolveDict(page, dictGet(cidFont, "FontDescriptor"));
   }
 
@@ -97,16 +97,21 @@ function extractEmbeddedFontStream(page: NativePdfPage, fontDescriptor: PdfDict)
   const fontFile = dictGet(fontDescriptor, "FontFile");
 
   const embeddedRef = fontFile3 ?? fontFile2 ?? fontFile;
-  if (!embeddedRef) return null;
+  if (!embeddedRef) {return null;}
 
   const resolved = resolve(page, embeddedRef);
   const stream = asStream(resolved);
-  if (!stream) return null;
+  if (!stream) {return null;}
 
   const subtypeObj = dictGet(stream.dict, "Subtype");
   const streamSubtype = subtypeObj?.type === "name" ? subtypeObj.value : undefined;
   return { stream, streamSubtype, fontFile, fontFile2, fontFile3 };
 }
+
+
+
+
+
 
 export function extractEmbeddedFontsFromNativePages(pages: readonly NativePdfPage[]): EmbeddedFont[] {
   const fonts: EmbeddedFont[] = [];
@@ -114,26 +119,26 @@ export function extractEmbeddedFontsFromNativePages(pages: readonly NativePdfPag
 
   for (const page of pages) {
     const resources = page.getResourcesDict();
-    if (!resources) continue;
+    if (!resources) {continue;}
 
     const fontsObj = resolve(page, dictGet(resources, "Font"));
     const fontsDict = asDict(fontsObj);
-    if (!fontsDict) continue;
+    if (!fontsDict) {continue;}
 
     for (const [, fontRef] of fontsDict.map.entries()) {
       const fontDict = asDict(resolve(page, fontRef));
-      if (!fontDict) continue;
+      if (!fontDict) {continue;}
 
       const baseFontRaw = extractBaseFontRaw(page, fontDict);
-      if (!baseFontRaw) continue;
-      if (seen.has(baseFontRaw)) continue;
+      if (!baseFontRaw) {continue;}
+      if (seen.has(baseFontRaw)) {continue;}
       seen.add(baseFontRaw);
 
       const fontDescriptor = getFontDescriptor(page, fontDict);
-      if (!fontDescriptor) continue;
+      if (!fontDescriptor) {continue;}
 
       const embedded = extractEmbeddedFontStream(page, fontDescriptor);
-      if (!embedded) continue;
+      if (!embedded) {continue;}
 
       const rawData = decodePdfStream(embedded.stream);
       const format = detectFontFormat(embedded.fontFile, embedded.fontFile2, embedded.fontFile3, embedded.streamSubtype);
@@ -147,7 +152,7 @@ export function extractEmbeddedFontsFromNativePages(pages: readonly NativePdfPag
         const toUnicode = extractToUnicodeMap(page, fontDict);
         data = repairFontForWeb(data, new Map(toUnicode ?? []), fontFamily);
         const rawMetrics = extractTrueTypeMetrics(data);
-        if (rawMetrics) metrics = normalizeMetricsTo1000(rawMetrics);
+        if (rawMetrics) {metrics = normalizeMetricsTo1000(rawMetrics);}
       }
 
       fonts.push({

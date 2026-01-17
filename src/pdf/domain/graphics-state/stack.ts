@@ -13,6 +13,11 @@ import type { PdfGraphicsState, PdfLineCap, PdfLineJoin, PdfTextRenderingMode } 
 // Graphics State Stack
 // =============================================================================
 
+
+
+
+
+
 export class GraphicsStateStack {
   private stack: PdfGraphicsState[] = [];
   private current: PdfGraphicsState;

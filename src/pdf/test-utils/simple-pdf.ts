@@ -31,13 +31,13 @@ function formatPdfDate(date: string): string {
 }
 
 function makeInfoDict(info: SimplePdfInfoSpec | undefined): string {
-  if (!info) return "<< >>";
+  if (!info) {return "<< >>";}
   const entries: string[] = [];
-  if (info.title) entries.push(`/Title ${formatPdfStringLiteral(info.title)}`);
-  if (info.creator) entries.push(`/Creator ${formatPdfStringLiteral(info.creator)}`);
-  if (info.producer) entries.push(`/Producer ${formatPdfStringLiteral(info.producer)}`);
-  if (info.creationDate) entries.push(`/CreationDate ${formatPdfStringLiteral(formatPdfDate(info.creationDate))}`);
-  if (info.modDate) entries.push(`/ModDate ${formatPdfStringLiteral(formatPdfDate(info.modDate))}`);
+  if (info.title) {entries.push(`/Title ${formatPdfStringLiteral(info.title)}`);}
+  if (info.creator) {entries.push(`/Creator ${formatPdfStringLiteral(info.creator)}`);}
+  if (info.producer) {entries.push(`/Producer ${formatPdfStringLiteral(info.producer)}`);}
+  if (info.creationDate) {entries.push(`/CreationDate ${formatPdfStringLiteral(formatPdfDate(info.creationDate))}`);}
+  if (info.modDate) {entries.push(`/ModDate ${formatPdfStringLiteral(formatPdfDate(info.modDate))}`);}
   return `<< ${entries.join(" ")} >>`;
 }
 
@@ -61,7 +61,7 @@ function buildXrefAndTrailer(args: {
     lines.push(`${String(off).padStart(10, "0")} 00000 n \n`);
   }
   const trailerParts = [`/Size ${size}`, `/Root ${args.rootObjNum} 0 R`];
-  if (args.infoObjNum) trailerParts.push(`/Info ${args.infoObjNum} 0 R`);
+  if (args.infoObjNum) {trailerParts.push(`/Info ${args.infoObjNum} 0 R`);}
   lines.push(`trailer\n<< ${trailerParts.join(" ")} >>\n`);
   lines.push(`startxref\n${args.xrefStart}\n%%EOF\n`);
   return lines.join("");
@@ -74,9 +74,9 @@ export function buildSimplePdfBytes(args: {
   readonly pages: readonly SimplePdfPageSpec[];
   readonly info?: SimplePdfInfoSpec;
 }): Uint8Array {
-  if (!args) throw new Error("args is required");
-  if (!args.pages) throw new Error("args.pages is required");
-  if (args.pages.length === 0) throw new Error("args.pages must not be empty");
+  if (!args) {throw new Error("args is required");}
+  if (!args.pages) {throw new Error("args.pages is required");}
+  if (args.pages.length === 0) {throw new Error("args.pages must not be empty");}
 
   const header = "%PDF-1.4\n";
   const parts: string[] = [header];
@@ -156,7 +156,7 @@ export function buildSimplePdfBytes(args: {
   const xrefStart = cursor;
   const maxObjNum = Math.max(...objects.map((o) => o.objNum));
   const objectOffsets: Array<number | undefined> = new Array(maxObjNum + 1);
-  for (let i = 0; i <= maxObjNum; i += 1) objectOffsets[i] = offsets[i];
+  for (let i = 0; i <= maxObjNum; i += 1) {objectOffsets[i] = offsets[i];}
 
   parts.push(
     buildXrefAndTrailer({

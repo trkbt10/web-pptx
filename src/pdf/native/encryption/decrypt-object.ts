@@ -4,38 +4,38 @@ import type { PdfDecrypter } from "./standard";
 
 function streamHasCryptIdentity(dict: PdfDict): boolean {
   const filter = dict.map.get("Filter");
-  if (!filter) return false;
+  if (!filter) {return false;}
 
   const filters: string[] = [];
   if (filter.type === "name") {
     filters.push(filter.value);
   } else if (filter.type === "array") {
     for (const item of filter.items) {
-      if (item.type === "name") filters.push(item.value);
+      if (item.type === "name") {filters.push(item.value);}
     }
   }
 
   const cryptIndices: number[] = [];
   for (let i = 0; i < filters.length; i += 1) {
-    if ((filters[i] ?? "") === "Crypt") cryptIndices.push(i);
+    if ((filters[i] ?? "") === "Crypt") {cryptIndices.push(i);}
   }
-  if (cryptIndices.length === 0) return false;
+  if (cryptIndices.length === 0) {return false;}
 
   const decodeParms = dict.map.get("DecodeParms");
   for (const idx of cryptIndices) {
     const parms = (() => {
-      if (!decodeParms) return null;
-      if (decodeParms.type === "dict") return decodeParms;
+      if (!decodeParms) {return null;}
+      if (decodeParms.type === "dict") {return decodeParms;}
       if (decodeParms.type === "array") {
         const v = decodeParms.items[idx];
-        if (!v) return null;
-        if (v.type === "dict") return v;
+        if (!v) {return null;}
+        if (v.type === "dict") {return v;}
         return null;
       }
       return null;
     })();
 
-    if (!parms) continue;
+    if (!parms) {continue;}
     const name = parms.map.get("Name");
     if (name?.type === "name" && name.value === "Identity") {
       return true;
@@ -75,6 +75,11 @@ function decryptStream(value: PdfStream, objNum: number, gen: number, decrypter:
   const data = streamHasCryptIdentity(value.dict) ? value.data : decrypter.decryptBytes(objNum, gen, value.data);
   return { type: "stream", dict, data };
 }
+
+
+
+
+
 
 export function decryptPdfObject(value: PdfObject, objNum: number, gen: number, decrypter: PdfDecrypter): PdfObject {
   switch (value.type) {

@@ -9,7 +9,7 @@ import { createDefaultGraphicsState } from "../../domain";
 
 // Mock GraphicsStateOps for testing
 function createMockGfxOps(): GraphicsStateOps {
-  let state = createDefaultGraphicsState();
+  const state = createDefaultGraphicsState();
   return {
     push: () => {},
     pop: () => {},

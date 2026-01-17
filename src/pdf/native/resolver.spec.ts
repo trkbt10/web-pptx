@@ -15,7 +15,7 @@ function encodeLzw(data: Uint8Array, options: LzwEncodeOptions): Uint8Array {
   const early = options.earlyChange;
 
   const dict = new Map<string, number>();
-  for (let i = 0; i < 256; i += 1) dict.set(String.fromCharCode(i), i);
+  for (let i = 0; i < 256; i += 1) {dict.set(String.fromCharCode(i), i);}
 
   let nextCode = 258;
   let codeSize = 9;
@@ -29,19 +29,19 @@ function encodeLzw(data: Uint8Array, options: LzwEncodeOptions): Uint8Array {
       w = wc;
       continue;
     }
-    if (w.length > 0) codes.push(dict.get(w)!);
+    if (w.length > 0) {codes.push(dict.get(w)!);}
 
     if (nextCode <= maxCode) {
       dict.set(wc, nextCode);
       nextCode += 1;
       const threshold = early ? (1 << codeSize) - 1 : 1 << codeSize;
-      if (nextCode === threshold && codeSize < 12) codeSize += 1;
+      if (nextCode === threshold && codeSize < 12) {codeSize += 1;}
     }
 
     w = c;
   }
 
-  if (w.length > 0) codes.push(dict.get(w)!);
+  if (w.length > 0) {codes.push(dict.get(w)!);}
   codes.push(EOD);
 
   const out: number[] = [];
@@ -65,15 +65,15 @@ function encodeLzw(data: Uint8Array, options: LzwEncodeOptions): Uint8Array {
       codeSize = 9;
       continue;
     }
-    if (code === EOD) break;
+    if (code === EOD) {break;}
 
     if (nextCode <= maxCode) {
       nextCode += 1;
       const threshold = early ? (1 << codeSize) - 1 : 1 << codeSize;
-      if (nextCode === threshold && codeSize < 12) codeSize += 1;
+      if (nextCode === threshold && codeSize < 12) {codeSize += 1;}
     }
   }
-  if (bitLen > 0) out.push((bitBuf << (8 - bitLen)) & 0xff);
+  if (bitLen > 0) {out.push((bitBuf << (8 - bitLen)) & 0xff);}
   return new Uint8Array(out);
 }
 
