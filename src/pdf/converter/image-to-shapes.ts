@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/converter/image-to-shapes.ts
+ */
+
 import type { PdfImage } from "../domain";
 import type { PicShape, BlipFillProperties } from "../../pptx/domain/shape";
 import { deg, pct } from "../../ooxml/domain/units";
@@ -27,9 +31,7 @@ export function convertImageToShape(
 
   const dataUrl = createDataUrl(image);
   const { sourceRect, clippedBBox } = computeRectClipForImage(image.graphicsState.ctm, image.graphicsState.clipBBox);
-  const transform = clippedBBox
-    ? { ...convertBBox(clippedBBox, context), rotation: deg(0), flipH: false, flipV: false }
-    : convertMatrix(image.graphicsState.ctm, context);
+  const transform = createImageTransform(image.graphicsState.ctm, clippedBBox ?? null, context);
 
   if (clippedBBox && ((transform.width as number) <= 0 || (transform.height as number) <= 0)) {
     return null;
@@ -57,6 +59,13 @@ export function convertImageToShape(
       transform,
     },
   };
+}
+
+function createImageTransform(ctm: PdfMatrix, clippedBBox: PdfBBox | null, context: ConversionContext) {
+  if (clippedBBox) {
+    return { ...convertBBox(clippedBBox, context), rotation: deg(0), flipH: false, flipV: false };
+  }
+  return convertMatrix(ctm, context);
 }
 
 /**
@@ -139,11 +148,17 @@ function computeRectClipForImage(
   readonly sourceRect?: Readonly<{ left: number; top: number; right: number; bottom: number }>;
   readonly clippedBBox?: PdfBBox;
 }> {
-  if (!clipBBox) return {};
-  if (!isSimpleTransform(imageCtm)) return {};
+  if (!clipBBox) {
+    return {};
+  }
+  if (!isSimpleTransform(imageCtm)) {
+    return {};
+  }
 
   const [a, , , d, e, f] = imageCtm;
-  if (!Number.isFinite(a) || !Number.isFinite(d) || a === 0 || d === 0) return {};
+  if (!Number.isFinite(a) || !Number.isFinite(d) || a === 0 || d === 0) {
+    return {};
+  }
 
   const x0 = e;
   const x1 = a + e;
@@ -168,7 +183,9 @@ function computeRectClipForImage(
 
   const w = imgMaxX - imgMinX;
   const h = imgMaxY - imgMinY;
-  if (w <= 0 || h <= 0) return {};
+  if (w <= 0 || h <= 0) {
+    return {};
+  }
 
   if (ix2 <= ix1 || iy2 <= iy1) {
     return { clippedBBox: [0, 0, 0, 0] };
@@ -184,10 +201,16 @@ function computeRectClipForImage(
   const vMin = Math.max(0, Math.min(vA, vB));
   const vMax = Math.min(1, Math.max(vA, vB));
 
-  const left = uMin * 100;
-  const right = (1 - uMax) * 100;
-  const bottom = vMin * 100;
-  const top = (1 - vMax) * 100;
+  const roundPercent = (value: number): number => {
+    const clamped = Math.max(0, Math.min(100, value));
+    // OOXML percentages serialize to 100000ths, so 0.001% is the practical resolution.
+    return Math.round(clamped * 1000) / 1000;
+  };
+
+  const left = roundPercent(uMin * 100);
+  const right = roundPercent((1 - uMax) * 100);
+  const bottom = roundPercent(vMin * 100);
+  const top = roundPercent((1 - vMax) * 100);
 
   return {
     sourceRect: { left, top, right, bottom },

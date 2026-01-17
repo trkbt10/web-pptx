@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/importer/slide-builder.spec.ts
+ */
+
 import type { PdfPage, PdfText } from "../domain";
 import { createDefaultGraphicsState } from "../domain";
 import type { Slide } from "../../pptx/domain/slide/types";

@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/form-xobject.native.spec.ts
+ */
+
 import { parsePdfNative } from "./pdf-parser.native";
 
 function buildMinimalPdfWithFormXObject(): Uint8Array {
@@ -25,6 +29,7 @@ function buildMinimalPdfWithFormXObject(): Uint8Array {
   const parts: string[] = [header];
   const offsets: number[] = [0];
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let cursor = header.length;
   for (const n of order) {
     offsets[n] = cursor;
@@ -107,6 +112,7 @@ describe("Form XObject (native)", () => {
     const parts: string[] = [header];
     const offsets: number[] = [0];
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let cursor = header.length;
     for (const n of order) {
       offsets[n] = cursor;

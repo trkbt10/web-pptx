@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/lexer.spec.ts
+ */
+
 import { createLexer, nextToken } from "./lexer";
 
 describe("PDF lexer (hex strings)", () => {

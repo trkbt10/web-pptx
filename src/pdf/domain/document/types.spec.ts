@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/domain/document/types.spec.ts
+ */
+
 import { PDF_UNITS } from "./types";
 
 describe("PDF_UNITS", () => {

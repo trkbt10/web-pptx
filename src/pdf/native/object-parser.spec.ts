@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/object-parser.spec.ts
+ */
+
 import { loadXRef } from "./xref";
 import { PdfResolver } from "./resolver";
 import type { PdfStream } from "./types";

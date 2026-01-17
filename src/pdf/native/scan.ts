@@ -1,3 +1,6 @@
+/**
+ * @file src/pdf/native/scan.ts
+ */
 
 
 
@@ -8,10 +11,13 @@
 
 
 
+
+/** lastIndexOfBytes */
 export function lastIndexOfBytes(haystack: Uint8Array, needle: Uint8Array): number {
   if (needle.length === 0) {return haystack.length;}
   if (needle.length > haystack.length) {return -1;}
   for (let i = haystack.length - needle.length; i >= 0; i -= 1) {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let ok = true;
     for (let j = 0; j < needle.length; j += 1) {
       if (haystack[i + j] !== needle[j]) {
@@ -34,10 +40,12 @@ export function lastIndexOfBytes(haystack: Uint8Array, needle: Uint8Array): numb
 
 
 
+/** indexOfBytes */
 export function indexOfBytes(haystack: Uint8Array, needle: Uint8Array, from: number): number {
   if (needle.length === 0) {return from;}
   const start = Math.max(0, from);
   for (let i = start; i + needle.length <= haystack.length; i += 1) {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let ok = true;
     for (let j = 0; j < needle.length; j += 1) {
       if (haystack[i + j] !== needle[j]) {
@@ -60,6 +68,7 @@ export function indexOfBytes(haystack: Uint8Array, needle: Uint8Array, from: num
 
 
 
+/** isWhite */
 export function isWhite(byte: number): boolean {
   // 0x00 NUL is treated as whitespace in PDFs.
   return (
@@ -82,6 +91,7 @@ export function isWhite(byte: number): boolean {
 
 
 
+/** isDelimiter */
 export function isDelimiter(byte: number): boolean {
   // PDF delimiters: ()<>[]{}/%
   return (

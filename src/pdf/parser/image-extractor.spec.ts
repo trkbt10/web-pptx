@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/image-extractor.spec.ts
+ */
+
 import { parsePdf } from "./pdf-parser";
 import { convertToRgba } from "../converter/pixel-converter";
 import { base64ToArrayBuffer } from "../../buffer/base64";
@@ -46,6 +50,7 @@ function ascii85Encode(data: Uint8Array): string {
     }
 
     const digits = new Array<number>(5);
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let v = value;
     for (let j = 4; j >= 0; j -= 1) {
       digits[j] = v % 85;
@@ -75,10 +80,13 @@ function lzwEncode(data: Uint8Array, options: LzwEncodeOptions = { earlyChange: 
   const dict = new Map<string, number>();
   for (let i = 0; i < 256; i += 1) {dict.set(String.fromCharCode(i), i);}
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let nextCode = 258;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let codeSize = 9;
   const codes: number[] = [CLEAR];
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let w = "";
   for (const b of data) {
     const c = String.fromCharCode(b);
@@ -102,7 +110,9 @@ function lzwEncode(data: Uint8Array, options: LzwEncodeOptions = { earlyChange: 
   codes.push(EOD);
 
   const out: number[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let bitBuf = 0;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let bitLen = 0;
 
   nextCode = 258;
@@ -157,6 +167,7 @@ function buildMinimalPdfWithImageXObject(args: {
   const parts: string[] = [header];
   const offsets: number[] = [0];
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let cursor = header.length;
   for (const n of order) {
     offsets[n] = cursor;
@@ -207,6 +218,7 @@ function buildMinimalPdfWithSmaskImageXObject(args: {
   const parts: string[] = [header];
   const offsets: number[] = [0];
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let cursor = header.length;
   for (const n of order) {
     offsets[n] = cursor;
@@ -257,6 +269,7 @@ function buildMinimalPdfWithMaskImageXObject(args: {
   const parts: string[] = [header];
   const offsets: number[] = [0];
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let cursor = header.length;
   for (const n of order) {
     offsets[n] = cursor;

@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/ext-gstate.native.ts
+ */
+
 import type { NativePdfPage } from "../native";
 import type { PdfDict, PdfObject } from "../native/types";
 
@@ -65,6 +69,7 @@ function parseDashPattern(obj: PdfObject | undefined): { dashArray: readonly num
 
 
 
+/** extractExtGStateNative */
 export function extractExtGStateNative(page: NativePdfPage): ReadonlyMap<string, ExtGStateParams> {
   const resources = page.getResourcesDict();
   if (!resources) {return new Map();}
@@ -82,6 +87,7 @@ export function extractExtGStateNative(page: NativePdfPage): ReadonlyMap<string,
 
 
 
+/** extractExtGStateFromResourcesNative */
 export function extractExtGStateFromResourcesNative(
   page: NativePdfPage,
   resources: PdfDict,
@@ -153,6 +159,7 @@ export function extractExtGStateFromResourcesNative(
 
 
 
+/** extractExtGStateAlphaNative */
 export function extractExtGStateAlphaNative(page: NativePdfPage): ReadonlyMap<string, ExtGStateAlpha> {
   const full = extractExtGStateNative(page);
   const out = new Map<string, ExtGStateAlpha>();

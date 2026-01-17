@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/native-load.spec.ts
+ */
+
 import { existsSync, readFileSync } from "node:fs";
 import { loadNativePdfDocumentForParser } from "./native-load";
 import PDFDocument from "pdfkit";
@@ -27,6 +31,7 @@ function pad10(n: number): string {
 
 function buildXrefTable(entries: ReadonlyArray<{ readonly obj: number; readonly offset: number; readonly gen: number }>, size: number): string {
   const byObj = new Map<number, { offset: number; gen: number }>(entries.map((e) => [e.obj, { offset: e.offset, gen: e.gen }]));
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let out = "xref\n";
   out += `0 ${size}\n`;
   out += "0000000000 65535 f \n";

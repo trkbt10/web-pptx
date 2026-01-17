@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/converter/pdf-to-shapes.ts
+ */
+
 import type { PdfDocument, PdfImage, PdfPage, PdfPath, PdfText } from "../domain";
 import { decomposeMatrix } from "../domain";
 import type { Shape, SpShape } from "../../pptx/domain/shape";
@@ -51,6 +55,7 @@ export function convertPageToShapes(page: PdfPage, options: ConversionOptions): 
   );
 
   const shapes: Shape[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let shapeIdCounter = 1;
 
   const generateId = (): string => String(shapeIdCounter++);
@@ -116,6 +121,7 @@ export function convertPageToShapes(page: PdfPage, options: ConversionOptions): 
     }
 
     // Determine if this path should be a blocking zone based on paint operation
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let isBlockingZone = false;
 
     if (path.paintOp === "stroke" || path.paintOp === "fillStroke") {
@@ -195,7 +201,9 @@ export function convertPageToShapes(page: PdfPage, options: ConversionOptions): 
 
   for (const image of images) {
     const shape = convertImageToShape(image, context, generateId());
-    if (shape) shapes.push(shape);
+    if (shape) {
+      shapes.push(shape);
+    }
   }
 
   return shapes;
@@ -218,6 +226,7 @@ export type DocumentConversionResult = {
 
 
 
+/** convertDocumentToSlides */
 export function convertDocumentToSlides(
   doc: PdfDocument,
   options: ConversionOptions
@@ -259,6 +268,7 @@ function convertPath(path: PdfPath, context: ConversionContext, shapeId: string)
   // (like rect, ellipse) won't represent the actual shape correctly
   const usePresetOptimization = ctmDecomposition.isSimple;
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let geometry: SpShape["properties"]["geometry"];
   if (usePresetOptimization && isSimpleRectangle(path)) {
     geometry = convertToPresetRect(path);

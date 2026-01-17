@@ -21,6 +21,7 @@ export type { EmbeddedFont, EmbeddedFontMetrics, FontFormat } from "./embedded-f
 
 
 
+/** extractEmbeddedFontsFromPages */
 export function extractEmbeddedFontsFromPages(pages: readonly NativePdfPage[]): EmbeddedFont[] {
   if (!pages) {throw new Error("pages is required");}
   return extractEmbeddedFontsFromNativePages(pages);
@@ -36,6 +37,7 @@ export function extractEmbeddedFontsFromPages(pages: readonly NativePdfPage[]): 
 
 
 
+/** extractEmbeddedFonts */
 export function extractEmbeddedFonts(pdfDoc: NativePdfDocument): EmbeddedFont[] {
   if (!pdfDoc) {throw new Error("pdfDoc is required");}
   return extractEmbeddedFontsFromNativePages(pdfDoc.getPages());

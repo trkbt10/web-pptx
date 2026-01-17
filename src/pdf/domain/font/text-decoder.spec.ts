@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/domain/font/text-decoder.spec.ts
+ */
+
 import { decodeText } from "./text-decoder";
 import type { FontInfo, FontMappings } from "./types";
 

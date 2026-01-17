@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/test-utils/simple-pdf.ts
+ */
+
 export type SimplePdfPageSpec = Readonly<{
   readonly width: number;
   readonly height: number;
@@ -105,6 +109,7 @@ export function buildSimplePdfBytes(args: {
 
   // Page objects + content streams.
   const pageObjNums: number[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let nextObjNum = (HELVETICA_FONT ? HELVETICA_FONT + 1 : INFO + 1);
 
   for (const page of args.pages) {
@@ -145,6 +150,7 @@ export function buildSimplePdfBytes(args: {
   // Write objects in objNum order.
   objects.sort((a, b) => a.objNum - b.objNum);
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let cursor = header.length;
   for (const { objNum, body } of objects) {
     offsets[objNum] = cursor;

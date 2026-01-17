@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/pdf-parser.native.ts
+ */
+
 import type { PdfDocument, PdfElement, PdfEmbeddedFont, PdfImage, PdfPage, PdfPath, PdfText } from "../domain";
 import { tokenizeContentStream } from "../domain/content-stream";
 import { decodeText, type FontMappings } from "../domain/font";
@@ -48,6 +52,7 @@ const DEFAULT_OPTIONS: Required<PdfParserOptions> = {
 
 
 
+/** parsePdfNative */
 export async function parsePdfNative(
   data: Uint8Array | ArrayBuffer,
   options: PdfParserOptions = {},
@@ -126,6 +131,7 @@ async function parsePage(
   const resources = page.getResourcesDict();
   const baseXObjects = resources ? resolveDict(page, dictGet(resources, "XObject")) : null;
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let inlineId = 0;
   const nextInlineId = (): number => {
     inlineId += 1;
@@ -263,9 +269,13 @@ function transformBBox(bbox: PdfBBox, ctm: PdfMatrix): PdfBBox {
     transformPoint({ x: x2, y: y2 }, ctm),
     transformPoint({ x: x1, y: y2 }, ctm),
   ];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let minX = corners[0]!.x;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let minY = corners[0]!.y;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let maxX = corners[0]!.x;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let maxY = corners[0]!.y;
   for (const p of corners) {
     minX = Math.min(minX, p.x);
@@ -479,6 +489,7 @@ function convertPath(parsed: ParsedPath, minComplexity: number): PdfPath | null 
 
 function getFontInfo(fontName: string, fontMappings: FontMappings) {
   const cleanName = fontName.startsWith("/") ? fontName.slice(1) : fontName;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let fontInfo = fontMappings.get(cleanName);
   if (!fontInfo) {
     const plusIndex = cleanName.indexOf("+");

@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/ccitt-fax-decode.spec.ts
+ */
+
 import { decodeCcittFax } from "./ccitt-fax-decode";
 
 describe("decodeCcittFax (Group 3 mixed 1D/2D)", () => {

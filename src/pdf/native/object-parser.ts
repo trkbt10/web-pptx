@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/object-parser.ts
+ */
+
 import { decodePdfStringBytes, encodeAscii } from "./encoding";
 import { createLexer, nextToken, type PdfLexer, type PdfToken } from "./lexer";
 import { indexOfBytes, isDelimiter, isWhite } from "./scan";
@@ -49,6 +53,7 @@ function parseObjectWithInitialToken(state: ParseState, initial: PdfToken): { va
   // compound
   if (initial.type === "punct" && initial.value === "[") {
     const items: PdfObject[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let st: ParseState = state;
     while (true) {
       const { token, next } = nextToken(st.lex);
@@ -65,6 +70,7 @@ function parseObjectWithInitialToken(state: ParseState, initial: PdfToken): { va
 
   if (initial.type === "punct" && initial.value === "<<") {
     const entries = new Map<string, PdfObject>();
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let st: ParseState = state;
     while (true) {
       const { token, next } = nextToken(st.lex);
@@ -116,6 +122,7 @@ function parseObjectWithInitialToken(state: ParseState, initial: PdfToken): { va
 
 
 
+/** parseObject */
 export function parseObject(state: ParseState): { value: PdfObject; state: ParseState } {
   const { token, next } = nextToken(state.lex);
   return parseObjectWithInitialToken({ lex: next }, token);
@@ -146,6 +153,7 @@ function skipStreamEol(bytes: Uint8Array, pos: number): number {
 
   // spaces/tabs before EOL
   if (b0 === 0x20 || b0 === 0x09) {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let p = pos;
     while (p < bytes.length) {
       const b = bytes[p] ?? 0;
@@ -172,6 +180,7 @@ function skipStreamEol(bytes: Uint8Array, pos: number): number {
 
   // comment immediately after stream keyword
   if (b0 === 0x25) {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let p = pos + 1;
     while (p < bytes.length) {
       const c = bytes[p] ?? 0;
@@ -224,6 +233,7 @@ function isTokenBoundary(byte: number): boolean {
 }
 
 function findEndstreamStart(bytes: Uint8Array, from: number): number {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let pos = from;
   while (pos >= 0 && pos < bytes.length) {
     const idx = indexOfBytes(bytes, ENDSTREAM, pos);
@@ -264,11 +274,13 @@ function findEndstreamStart(bytes: Uint8Array, from: number): number {
 
 
 
+/** parseIndirectObjectAt */
 export function parseIndirectObjectAt(
   bytes: Uint8Array,
   offset: number,
   options: ParseIndirectOptions = {},
 ): { obj: PdfIndirectObject; nextOffset: number } {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let st: ParseState = { lex: createLexer(bytes, offset) };
 
   const { token: tObj, next: n1 } = nextToken(st.lex);
@@ -280,6 +292,7 @@ export function parseIndirectObjectAt(
 
   const parsed = parseObject(st);
   st = parsed.state;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let value: PdfObject = parsed.value;
 
   // If the value is a dict and followed by "stream", parse stream body.

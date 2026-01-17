@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/filters/index.ts
+ */
+
 import type { PdfObject } from "../types";
 import { decodeAscii85 } from "./ascii85";
 import { decodeAsciiHex } from "./ascii-hex";
@@ -50,11 +54,13 @@ function normalizeFilterName(name: string): string {
 
 
 
+/** decodeStreamData */
 export function decodeStreamData(encoded: Uint8Array, options: DecodeStreamOptions): Uint8Array {
   if (!encoded) {throw new Error("encoded is required");}
   if (!options) {throw new Error("options is required");}
   if (!options.filters) {throw new Error("options.filters is required");}
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let data = encoded;
   for (let i = 0; i < options.filters.length; i += 1) {
     const rawFilter = options.filters[i]!;

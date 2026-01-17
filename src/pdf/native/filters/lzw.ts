@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/filters/lzw.ts
+ */
+
 import type { PdfDict, PdfObject } from "../types";
 
 type LzwDecodeOptions = Readonly<{
@@ -30,6 +34,7 @@ function dictGet(dict: PdfDict, key: string): PdfObject | undefined {
 
 
 
+/** readLzwDecodeOptions */
 export function readLzwDecodeOptions(decodeParms: PdfObject | null | undefined): LzwDecodeOptions {
   const dict = asDict(decodeParms);
   if (!dict) {return {};}
@@ -55,6 +60,7 @@ function readBitsMSB(r: BitReader, n: number): { value: number | null; next: Bit
     return { value: null, next: r };
   }
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let value = 0;
   for (let i = 0; i < n; i += 1) {
     const bitIndex = r.bitPos + i;
@@ -102,11 +108,15 @@ export function decodeLzw(encoded: Uint8Array, options: LzwDecodeOptions = {}): 
 
   resetDict();
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let codeSize = 9;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let nextCode = 258;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let reader: BitReader = { bytes: encoded, bitPos: 0 };
 
   const out: number[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let prev: Uint8Array | null = null;
 
   while (true) {

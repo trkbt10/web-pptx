@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/converter/color-converter.spec.ts
+ */
+
 import type { PdfColor, PdfGraphicsState } from "../domain";
 import { createDefaultGraphicsState } from "../domain";
 import { pct, px } from "../../ooxml/domain/units";

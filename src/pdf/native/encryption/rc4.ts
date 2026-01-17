@@ -1,3 +1,6 @@
+/**
+ * @file src/pdf/native/encryption/rc4.ts
+ */
 
 
 
@@ -8,12 +11,15 @@
 
 
 
+
+/** rc4 */
 export function rc4(key: Uint8Array, data: Uint8Array): Uint8Array {
   if (key.length === 0) {throw new Error("rc4: key is required");}
 
   const s = new Uint8Array(256);
   for (let i = 0; i < 256; i += 1) {s[i] = i;}
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let j = 0;
   for (let i = 0; i < 256; i += 1) {
     j = (j + (s[i] ?? 0) + (key[i % key.length] ?? 0)) & 0xff;
@@ -23,6 +29,7 @@ export function rc4(key: Uint8Array, data: Uint8Array): Uint8Array {
   }
 
   const out = new Uint8Array(data.length);
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let i = 0;
   j = 0;
   for (let k = 0; k < data.length; k += 1) {

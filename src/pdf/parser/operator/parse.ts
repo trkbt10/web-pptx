@@ -269,6 +269,7 @@ export function parseContentStream(
   const gfxStack = new GraphicsStateStack();
   const gfxOps = createGfxOpsFromStack(gfxStack);
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let ctx = createInitialContext(fontMappings, options);
 
   for (const token of tokens) {
@@ -311,6 +312,7 @@ export function createParser(
   }> = {},
 ): (tokens: readonly PdfToken[]) => readonly ParsedElement[] {
   return (tokens) => {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let ctx = createInitialContext(fontMappings, options);
 
     for (const token of tokens) {

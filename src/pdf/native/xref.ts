@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/xref.ts
+ */
+
 import { encodeAscii } from "./encoding";
 import { createLexer } from "./lexer";
 import { parseObject } from "./object-parser";
@@ -41,6 +45,7 @@ function asInt(obj: PdfObject | undefined): number | null {
 }
 
 function readUIntBE(bytes: Uint8Array, pos: number, width: number): number {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let value = 0;
   for (let i = 0; i < width; i += 1) {
     value = (value << 8) | (bytes[pos + i] ?? 0);
@@ -58,11 +63,13 @@ function readUIntBE(bytes: Uint8Array, pos: number, width: number): number {
 
 
 
+/** findStartXrefOffset */
 export function findStartXrefOffset(bytes: Uint8Array): number {
   const marker = encodeAscii("startxref");
   const idx = lastIndexOfBytes(bytes, marker);
   if (idx < 0) {throw new Error("startxref not found");}
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let pos = idx + marker.length;
   // skip whitespace
   while (pos < bytes.length) {
@@ -75,6 +82,7 @@ export function findStartXrefOffset(bytes: Uint8Array): number {
   }
 
   // parse integer line
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let num = "";
   while (pos < bytes.length) {
     const b = bytes[pos] ?? 0;
@@ -116,6 +124,7 @@ function parseXRefStream(stream: PdfStream): { entries: ReadonlyMap<number, XRef
   if (entryWidth <= 0) {throw new Error("xref stream: invalid /W");}
 
   const out = new Map<number, XRefEntry>();
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let cursor = 0;
   for (let i = 0; i < indexPairs.length; i += 2) {
     const start = indexPairs[i] ?? 0;
@@ -222,6 +231,7 @@ function parseXRefTableAt(bytes: Uint8Array, offset: number): {
   prev: number | null;
   xrefStm: number | null;
 } {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let pos = skipWs(bytes, offset);
   const first = readLine(bytes, pos);
   if (first.line.trim() !== "xref") {throw new Error("xref table: missing 'xref'");}
@@ -296,9 +306,12 @@ function parseXRefStreamAt(bytes: Uint8Array, offset: number): {
 
 
 
+/** loadXRef */
 export function loadXRef(bytes: Uint8Array): XRefTable {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let offset: number | null = findStartXrefOffset(bytes);
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let trailer: PdfDict | null = null;
   const entries = new Map<number, XRefEntry>();
 
@@ -364,6 +377,7 @@ function parseXRefSectionAt(
 
 
 
+/** getTrailerRef */
 export function getTrailerRef(trailer: PdfDict, key: string): PdfRef | null {
   const value = trailer.map.get(key);
   return value?.type === "ref" ? value : null;

@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/domain/font/cmap-parser.spec.ts
+ */
+
 import { parseToUnicodeCMap } from "./cmap-parser";
 
 function createConsoleWarnSpy(): Readonly<{

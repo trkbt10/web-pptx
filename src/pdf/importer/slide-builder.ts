@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/importer/slide-builder.ts
+ */
+
 import type { PdfPage } from "../domain";
 import type { Fill } from "../../pptx/domain/color/types";
 import type { Slide, Background } from "../../pptx/domain/slide/types";

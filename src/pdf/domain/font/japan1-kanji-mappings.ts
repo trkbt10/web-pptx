@@ -1,4 +1,8 @@
 /**
+ * @file src/pdf/domain/font/japan1-kanji-mappings.ts
+ */
+
+/**
  * Kanji (CJK Unified Ideographs) CID-to-Unicode mappings for Adobe-Japan1
  *
  * Auto-generated from Adobe CMap resources (UniJIS-UCS2-H)

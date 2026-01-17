@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/types.ts
+ */
+
 export type PdfRef = Readonly<{ type: "ref"; obj: number; gen: number }>;
 
 export type PdfNull = Readonly<{ type: "null" }>;

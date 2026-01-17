@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/filters/lzw.spec.ts
+ */
+
 import { decodeLzw } from "./lzw";
 
 type BitWriter = {
@@ -34,12 +38,15 @@ function lzwEncodePdf(data: Uint8Array, earlyChange: 0 | 1 = 1): Uint8Array {
   };
   resetDict();
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let codeSize = 9;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let nextCode = 258;
 
   const w: BitWriter = { bytes: [], bitPos: 0 };
   writeBitsMSB(w, codeSize, CLEAR);
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let phrase = "";
   for (const b of data) {
     const ch = String.fromCharCode(b);

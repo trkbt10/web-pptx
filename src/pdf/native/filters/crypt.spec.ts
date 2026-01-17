@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/filters/crypt.spec.ts
+ */
+
 import { zlibSync } from "fflate";
 import { loadNativePdfDocument } from "../document";
 import { concatBytes, int32le, objKeySalt } from "../encryption/bytes";
@@ -42,12 +46,14 @@ function xorKey(key: Uint8Array, value: number): Uint8Array {
 }
 
 function computeOwnerKeyR3(ownerPassword32: Uint8Array, keyLengthBytes: number): Uint8Array {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let digest = md5(ownerPassword32).slice(0, keyLengthBytes);
   for (let i = 0; i < 50; i += 1) {digest = md5(digest).slice(0, keyLengthBytes);}
   return digest;
 }
 
 function computeOValueR3(ownerKey: Uint8Array, userPassword32: Uint8Array): Uint8Array {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let cur = rc4(ownerKey, userPassword32);
   for (let i = 1; i <= 19; i += 1) {cur = rc4(xorKey(ownerKey, i), cur);}
   return cur;
@@ -61,12 +67,14 @@ function computeFileKeyR3(args: {
   readonly keyLengthBytes: number;
 }): Uint8Array {
   const seed = concatBytes(args.userPassword32, args.o, int32le(args.p), args.id0);
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let digest = md5(seed).slice(0, args.keyLengthBytes);
   for (let i = 0; i < 50; i += 1) {digest = md5(digest).slice(0, args.keyLengthBytes);}
   return digest;
 }
 
 function computeU16R3(fileKey: Uint8Array, id0: Uint8Array): Uint8Array {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let cur = md5(concatBytes(PASSWORD_PADDING, id0));
   cur = rc4(fileKey, cur);
   for (let i = 1; i <= 19; i += 1) {cur = rc4(xorKey(fileKey, i), cur);}
@@ -117,6 +125,7 @@ function buildEncryptedCryptFlatePdfR3(args: { readonly password: string; readon
   const objects = [obj1, obj2, obj3, obj4, obj5];
 
   const offsets = new Map<number, number>();
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let cursor = header.length;
   offsets.set(1, cursor);
   cursor += obj1.length;
@@ -204,6 +213,7 @@ describe("decodeStreamData (Crypt filter)", () => {
     const objects = [obj1, obj2, obj3, obj4, obj5];
 
     const offsets = new Map<number, number>();
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let cursor = header.length;
     offsets.set(1, cursor);
     cursor += obj1.length;

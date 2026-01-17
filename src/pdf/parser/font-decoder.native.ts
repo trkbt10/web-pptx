@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/font-decoder.native.ts
+ */
+
 import type { NativePdfPage } from "../native";
 import type { PdfArray, PdfDict, PdfName, PdfObject, PdfStream } from "../native";
 import { decodePdfStream } from "../native/stream";
@@ -187,7 +191,9 @@ function extractFontDescriptor(page: NativePdfPage, fontDict: PdfDict): PdfDict 
 
 function computeBoldItalic(baseFont: string | undefined, descriptor: PdfDict | null): { isBold?: boolean; isItalic?: boolean } {
   const name = baseFont ?? "";
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let isBold = isBoldFont(name);
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let isItalic = isItalicFont(name);
 
   if (descriptor) {
@@ -254,6 +260,7 @@ function extractCidFontWidths(page: NativePdfPage, fontDict: PdfDict): Pick<Font
   if (!wArr) {return { widths, defaultWidth };}
 
   // W array format: [cFirst [w1 w2 ...] cFirst2 cLast2 w ...]
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let i = 0;
   while (i < wArr.items.length) {
     const first = wArr.items[i];
@@ -313,6 +320,7 @@ function extractFontMetrics(page: NativePdfPage, fontDict: PdfDict): FontMetrics
 
 
 
+/** extractFontMappingsNative */
 export function extractFontMappingsNative(page: NativePdfPage, options: NativeFontExtractionOptions = {}): FontMappings {
   const mappings: FontMappings = new Map();
   const resources = getResources(page);
@@ -331,6 +339,7 @@ export function extractFontMappingsNative(page: NativePdfPage, options: NativeFo
 
 
 
+/** extractFontMappingsFromResourcesNative */
 export function extractFontMappingsFromResourcesNative(
   page: NativePdfPage,
   resources: PdfDict,

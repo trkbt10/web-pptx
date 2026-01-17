@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/filters/ascii-hex.ts
+ */
+
 import { isWhite } from "../scan";
 
 function hexValue(b: number): number | null {
@@ -17,8 +21,10 @@ function hexValue(b: number): number | null {
 
 
 
+/** decodeAsciiHex */
 export function decodeAsciiHex(data: Uint8Array): Uint8Array {
   const out: number[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let hi: number | null = null;
   for (let i = 0; i < data.length; i += 1) {
     const b = data[i] ?? 0;

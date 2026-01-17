@@ -4,10 +4,10 @@
  * Manages the graphics state stack for PDF rendering.
  */
 
-import type { PdfMatrix } from "../coordinate";
+import type { PdfBBox, PdfMatrix } from "../coordinate";
 import { multiplyMatrices } from "../coordinate";
 import { createDefaultGraphicsState } from "./defaults";
-import type { PdfBBox, PdfGraphicsState, PdfLineCap, PdfLineJoin, PdfTextRenderingMode } from "./types";
+import type { PdfGraphicsState, PdfLineCap, PdfLineJoin, PdfTextRenderingMode } from "./types";
 
 // =============================================================================
 // Graphics State Stack
@@ -23,7 +23,8 @@ import type { PdfBBox, PdfGraphicsState, PdfLineCap, PdfLineJoin, PdfTextRenderi
 
 
 
-export class GraphicsStateStack {
+/** GraphicsStateStack */
+export class GraphicsStateStack { // eslint-disable-line no-restricted-syntax -- Stateful stack API.
   private stack: PdfGraphicsState[] = [];
   private current: PdfGraphicsState;
 
@@ -31,7 +32,7 @@ export class GraphicsStateStack {
     if (initial) {
       this.current = {
         ...initial,
-        clipBBox: initial.clipBBox ? ([...initial.clipBBox] as unknown as PdfBBox) : undefined,
+        clipBBox: initial.clipBBox ? cloneBBox(initial.clipBBox) : undefined,
         fillColor: {
           ...initial.fillColor,
           components: [...initial.fillColor.components],
@@ -51,7 +52,7 @@ export class GraphicsStateStack {
   push(): void {
     this.stack.push({
       ...this.current,
-      clipBBox: this.current.clipBBox ? ([...this.current.clipBBox] as unknown as PdfBBox) : undefined,
+      clipBBox: this.current.clipBBox ? cloneBBox(this.current.clipBBox) : undefined,
     });
   }
 
@@ -67,7 +68,7 @@ export class GraphicsStateStack {
   get(): PdfGraphicsState {
     return {
       ...this.current,
-      clipBBox: this.current.clipBBox ? ([...this.current.clipBBox] as unknown as PdfBBox) : undefined,
+      clipBBox: this.current.clipBBox ? cloneBBox(this.current.clipBBox) : undefined,
     };
   }
 
@@ -91,14 +92,7 @@ export class GraphicsStateStack {
     const maxY = Math.max(y1, y2);
 
     const prev = this.current.clipBBox;
-    const next: PdfBBox = prev
-      ? [
-          Math.max(prev[0], minX),
-          Math.max(prev[1], minY),
-          Math.min(prev[2], maxX),
-          Math.min(prev[3], maxY),
-        ]
-      : [minX, minY, maxX, maxY];
+    const next = intersectBBoxOrDefault(prev, minX, minY, maxX, maxY);
 
     this.current = {
       ...this.current,
@@ -284,4 +278,27 @@ export class GraphicsStateStack {
       textRise: rise,
     };
   }
+}
+
+function cloneBBox(bbox: PdfBBox): PdfBBox {
+  const [x1, y1, x2, y2] = bbox;
+  return [x1, y1, x2, y2];
+}
+
+function intersectBBoxOrDefault(
+  prev: PdfBBox | undefined,
+  minX: number,
+  minY: number,
+  maxX: number,
+  maxY: number,
+): PdfBBox {
+  if (!prev) {
+    return [minX, minY, maxX, maxY];
+  }
+  return [
+    Math.max(prev[0], minX),
+    Math.max(prev[1], minY),
+    Math.min(prev[2], maxX),
+    Math.min(prev[3], maxY),
+  ];
 }

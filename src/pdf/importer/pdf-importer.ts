@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/importer/pdf-importer.ts
+ */
+
 import type { Pixels } from "../../ooxml/domain/units";
 import type { ResourceResolver } from "../../pptx/domain/resource-resolver";
 import type { ColorContext } from "../../pptx/domain/color/context";
@@ -70,6 +74,7 @@ export type PageStats = {
 
 
 
+/** PdfImportError */
 export class PdfImportError extends Error {
   constructor(
     message: string,
@@ -163,6 +168,7 @@ export async function importPdfFromFile(
     throw new PdfImportError("file is required", "PARSE_ERROR");
   }
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let buffer: ArrayBuffer;
   try {
     buffer = await file.arrayBuffer();
@@ -184,6 +190,7 @@ export async function importPdfFromUrl(
     throw new PdfImportError("url is required", "FETCH_ERROR");
   }
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let response: Response;
   try {
     response = await fetch(url);
@@ -198,6 +205,7 @@ export async function importPdfFromUrl(
     );
   }
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let buffer: ArrayBuffer;
   try {
     buffer = await response.arrayBuffer();
@@ -461,8 +469,11 @@ export function createEmptyColorContext(): ColorContext {
 }
 
 function collectPageStats(page: PdfPage, slide: Slide): PageStats {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let pathCount = 0;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let textCount = 0;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let imageCount = 0;
 
   for (const elem of page.elements) {

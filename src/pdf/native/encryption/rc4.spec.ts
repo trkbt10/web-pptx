@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/encryption/rc4.spec.ts
+ */
+
 import { rc4 } from "./rc4";
 
 function hex(bytes: Uint8Array): string {

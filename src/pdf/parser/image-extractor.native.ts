@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/image-extractor.native.ts
+ */
+
 import type { NativePdfPage, PdfArray, PdfBool, PdfDict, PdfName, PdfNumber, PdfObject, PdfStream } from "../native";
 import { decodeStreamData } from "../native/filters";
 import { decodePdfStream } from "../native/stream";
@@ -288,6 +292,7 @@ function applyColorKeyMask(args: {
   const alpha = new Uint8Array(pixelCount);
 
   for (let p = 0; p < pixelCount; p += 1) {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let masked = true;
     for (let c = 0; c < components; c += 1) {
       const sampleIndex = p * components + c;
@@ -583,6 +588,7 @@ function expandIndexedToRgb(args: {
   const out = new Uint8Array(samples.length * 3);
 
   for (let i = 0; i < samples.length; i += 1) {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let idx = samples[i] ?? 0;
     if (decodePair) {
       const dmin = decodePair[0] ?? 0;
@@ -752,6 +758,7 @@ function paethPredictor(a: number, b: number, c: number): number {
 
 
 
+/** extractImagesNative */
 export async function extractImagesNative(
   pdfPage: NativePdfPage,
   parsedImages: readonly ParsedImage[],
@@ -797,6 +804,7 @@ export async function extractImagesNative(
       const alpha = getSoftMaskAlpha8(pdfPage, dict, width, height) ?? undefined;
       const maskEntry = getMaskEntry(pdfPage, dict);
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
       let data: Uint8Array;
       if (imageMask) {
         const decoded = decodePdfStream(imageStream);
@@ -808,6 +816,7 @@ export async function extractImagesNative(
           invert,
           fillColor: parsed.graphicsState.fillColor,
         });
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
         let combinedAlpha = out.alpha;
         // Some PDFs may still provide an /SMask; combine if present.
         if (alpha) {combinedAlpha = combineAlpha(combinedAlpha, alpha);}
@@ -853,6 +862,7 @@ export async function extractImagesNative(
           const jpegBytes = decodePdfStream(imageStream);
           const rgb = decodeJpegToRgb(jpegBytes, { expectedWidth: width, expectedHeight: height });
           data = rgb.data;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
           let combinedAlpha: Uint8Array | undefined = alpha;
           if (maskEntry.kind === "explicit") {
             combinedAlpha = combineAlpha(combinedAlpha, decodeExplicitMaskAlpha8(pdfPage, maskEntry.stream, width, height));
@@ -893,6 +903,7 @@ export async function extractImagesNative(
             decode,
           });
           // For now, only apply explicit /Mask streams (not color-key) after palette expansion.
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
           let combinedAlpha: Uint8Array | undefined = alpha;
           if (maskEntry.kind === "explicit") {
             combinedAlpha = combineAlpha(combinedAlpha, decodeExplicitMaskAlpha8(pdfPage, maskEntry.stream, width, height));
@@ -911,6 +922,7 @@ export async function extractImagesNative(
         }
       }
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
       let combinedAlpha: Uint8Array | undefined = alpha;
       if (maskEntry.kind === "explicit") {
         combinedAlpha = combineAlpha(combinedAlpha, decodeExplicitMaskAlpha8(pdfPage, maskEntry.stream, width, height));

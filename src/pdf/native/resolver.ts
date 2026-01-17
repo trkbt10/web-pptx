@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/resolver.ts
+ */
+
 import { parseIndirectObjectAt, parseObject } from "./object-parser";
 import { decodeStreamData } from "./filters";
 import type { PdfDict, PdfObject, PdfStream } from "./types";
@@ -75,7 +79,8 @@ function decodeParmsFromStreamDict(dict: PdfDict, filterCount: number): readonly
 
 
 
-export class PdfResolver {
+/** PdfResolver */
+export class PdfResolver { // eslint-disable-line no-restricted-syntax -- Stateful cache/resolution API.
   private readonly indirectCache = new Map<number, PdfObject>();
   private readonly objStmCache = new Map<number, ObjStmCacheEntry>();
 

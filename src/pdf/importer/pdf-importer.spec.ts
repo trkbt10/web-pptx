@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/importer/pdf-importer.spec.ts
+ */
+
 import { existsSync, readFileSync } from "node:fs";
 import { px } from "../../ooxml/domain/units";
 import { importPdf, importPdfFromFile, importPdfFromUrl, PdfImportError } from "./pdf-importer";

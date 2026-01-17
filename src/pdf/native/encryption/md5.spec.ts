@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/encryption/md5.spec.ts
+ */
+
 import { md5 } from "./md5";
 
 function hex(bytes: Uint8Array): string {

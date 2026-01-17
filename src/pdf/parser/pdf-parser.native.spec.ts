@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/pdf-parser.native.spec.ts
+ */
+
 import { readFileSync } from "node:fs";
 import { parsePdfNative } from "./pdf-parser.native";
 

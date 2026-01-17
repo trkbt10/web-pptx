@@ -50,9 +50,11 @@ export function repairFontForWeb(
   toUnicode: FontMapping,
   fontName?: string
 ): Uint8Array {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let tables = parseTrueTypeTableDirectory(fontData);
   const existingTags = new Set(tables.map((t) => t.tag));
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let result = fontData;
 
   // Build Unicode → GlyphID mapping from ToUnicode
@@ -158,6 +160,7 @@ function injectTable(
   });
 
   // Assign new offsets
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let currentOffset = newTableDirectoryEnd;
   for (const t of allTables) {
     t.newOffset = currentOffset;
@@ -181,6 +184,7 @@ function injectTable(
   newView.setUint16(10, rangeShift, false);
 
   // Write table directory
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let dirOffset = 12;
   for (const t of allTables) {
     for (let i = 0; i < 4; i++) {

@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/filters/flate.ts
+ */
+
 import { unzlibSync } from "fflate";
 import type { PdfDict, PdfObject } from "../types";
 
@@ -137,6 +141,7 @@ function applyFlateDecodeParms(decoded: Uint8Array, decodeParms: PdfObject | nul
 
 
 
+/** decodeFlate */
 export function decodeFlate(data: Uint8Array, decodeParms?: PdfObject | null): Uint8Array {
   // FlateDecode uses zlib-wrapped DEFLATE per ISO 32000.
   const decoded = unzlibSync(data);

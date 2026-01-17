@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest";
+/**
+ * @file src/pdf/parser/clip-rect.native.spec.ts
+ */
+
 import { parsePdf } from "./pdf-parser";
 
 function buildMinimalPdfWithClipAndImage(args: {
@@ -33,6 +36,7 @@ function buildMinimalPdfWithClipAndImage(args: {
   const parts: string[] = [header];
   const offsets: number[] = [0];
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let cursor = header.length;
   for (const n of order) {
     offsets[n] = cursor;
@@ -73,4 +77,3 @@ describe("clip paths (native)", () => {
     expect(image.graphicsState.clipBBox).toEqual([10, 10, 30, 30]);
   });
 });
-

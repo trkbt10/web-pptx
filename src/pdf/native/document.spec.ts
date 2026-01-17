@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/document.spec.ts
+ */
+
 import { readFileSync } from "node:fs";
 import { loadNativePdfDocument } from "./document";
 
@@ -10,6 +14,7 @@ function buildMinimalXrefTable(
   size: number,
 ): string {
   const byObj = new Map<number, { offset: number; gen: number }>(entries.map((e) => [e.obj, { offset: e.offset, gen: e.gen }]));
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let out = "xref\n";
   out += `0 ${size}\n`;
   out += "0000000000 65535 f \n";

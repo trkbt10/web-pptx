@@ -75,6 +75,7 @@ export function convertToRgba(
     return rgba;
   }
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let expectedRawLength: number;
   switch (bitsPerComponent) {
     case 1:
@@ -106,6 +107,7 @@ export function convertToRgba(
     }
   }
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let normalizedData: Uint8Array = data;
   switch (bitsPerComponent) {
     case 1:

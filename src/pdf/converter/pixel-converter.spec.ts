@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/converter/pixel-converter.spec.ts
+ */
+
 import {
   convertToRgba,
   convertGrayToRgba,

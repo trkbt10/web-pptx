@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/jpeg-decode.ts
+ */
+
 import jpeg from "jpeg-js";
 
 export type DecodedJpegRgb = Readonly<{
@@ -16,6 +20,7 @@ export type DecodedJpegRgb = Readonly<{
 
 
 
+/** decodeJpegToRgb */
 export function decodeJpegToRgb(
   bytes: Uint8Array,
   options: { readonly expectedWidth?: number; readonly expectedHeight?: number } = {},

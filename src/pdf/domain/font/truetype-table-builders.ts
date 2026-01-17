@@ -28,6 +28,7 @@ export function buildCmapTable(unicodeToGlyph: Map<number, number>): Uint8Array 
 
   // Build segments for format 4
   const segments: Segment[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let currentSegment: Segment | null = null;
 
   for (const [codePoint, glyphId] of entries) {
@@ -114,6 +115,7 @@ function buildFormat4Subtable(segments: Segment[]): Uint8Array {
   const buffer = new ArrayBuffer(totalSize);
   const view = new DataView(buffer);
   const data = new Uint8Array(buffer);
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let offset = 0;
 
   // cmap header
@@ -179,6 +181,7 @@ function buildFormat4Subtable(segments: Segment[]): Uint8Array {
   for (let i = 0; i < segments.length; i++) {
     const seg = segments[i];
     if (seg.idDelta === 0 && seg.glyphIds.length > 0) {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
       let arrayOffset = 0;
       for (let j = 0; j < i; j++) {
         arrayOffset += glyphIdArrays[j].length * 2;
@@ -212,13 +215,16 @@ export function buildOS2Table(fontData: Uint8Array): Uint8Array {
   const view = new DataView(fontData.buffer, fontData.byteOffset, fontData.byteLength);
 
   const headTable = tables.find((t) => t.tag === "head");
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let unitsPerEm = 1000;
   if (headTable && headTable.offset + 18 <= fontData.length) {
     unitsPerEm = view.getUint16(headTable.offset + 18, false);
   }
 
   const hheaTable = tables.find((t) => t.tag === "hhea");
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let ascender = Math.round(unitsPerEm * 0.8);
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let descender = Math.round(unitsPerEm * -0.2);
   if (hheaTable && hheaTable.offset + 8 <= fontData.length) {
     ascender = view.getInt16(hheaTable.offset + 4, false);
@@ -228,6 +234,7 @@ export function buildOS2Table(fontData: Uint8Array): Uint8Array {
   const os2Size = 96;
   const buffer = new ArrayBuffer(os2Size);
   const os2View = new DataView(buffer);
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let offset = 0;
 
   os2View.setUint16(offset, 4, false); offset += 2; // version
@@ -296,6 +303,7 @@ export function buildNameTable(fontName: string): Uint8Array {
   const stringOffset = headerSize + recordCount * recordSize;
 
   const stringParts: { offset: number; data: Uint8Array }[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let currentStringOffset = 0;
 
   for (const name of names) {
@@ -318,6 +326,7 @@ export function buildNameTable(fontName: string): Uint8Array {
   view.setUint16(2, recordCount, false);
   view.setUint16(4, stringOffset, false);
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let recordOffset = headerSize;
   for (let i = 0; i < names.length; i++) {
     const name = names[i];

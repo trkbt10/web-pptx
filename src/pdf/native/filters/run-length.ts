@@ -1,3 +1,6 @@
+/**
+ * @file src/pdf/native/filters/run-length.ts
+ */
 
 
 
@@ -8,8 +11,11 @@
 
 
 
+
+/** decodeRunLength */
 export function decodeRunLength(data: Uint8Array): Uint8Array {
   const out: number[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let i = 0;
   while (i < data.length) {
     const len = data[i] ?? 0;

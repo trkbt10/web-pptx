@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/domain/font/font-extractor.native.ts
+ */
+
 import type { NativePdfPage, PdfArray, PdfDict, PdfObject, PdfStream } from "../../native";
 import { decodePdfStream } from "../../native/stream";
 import { normalizeFontFamily } from "./font-name-map";
@@ -118,6 +122,7 @@ function extractEmbeddedFontStream(page: NativePdfPage, fontDescriptor: PdfDict)
 
 
 
+/** extractEmbeddedFontsFromNativePages */
 export function extractEmbeddedFontsFromNativePages(pages: readonly NativePdfPage[]): EmbeddedFont[] {
   const fonts: EmbeddedFont[] = [];
   const seen = new Set<string>();
@@ -151,7 +156,9 @@ export function extractEmbeddedFontsFromNativePages(pages: readonly NativePdfPag
 
       const fontFamily = normalizeFontFamily(baseFontRaw);
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
       let data = rawData;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
       let metrics: EmbeddedFontMetrics | undefined;
       if (format === "truetype") {
         const toUnicode = extractToUnicodeMap(page, fontDict);

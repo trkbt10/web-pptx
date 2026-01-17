@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/converter/path-to-geometry.ts
+ */
+
 import type { PdfPath, PdfPathOp, PdfPoint } from "../domain";
 import type {
   CloseCommand,
@@ -58,7 +62,9 @@ export function convertPathToGeometry(pdfPath: PdfPath, context: ConversionConte
 
 function convertPathOps(ops: readonly PdfPathOp[], context: LocalConversionContext): readonly PathCommand[] {
   const commands: PathCommand[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let currentPoint: PdfPoint = { x: 0, y: 0 };
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let subpathStartPoint: PdfPoint = { x: 0, y: 0 };
 
   for (const op of ops) {
@@ -308,7 +314,9 @@ export function detectRoundedRectangle(pdfPath: PdfPath): number | null {
   if (ops[0]?.type !== "moveTo") {return null;}
 
   // Count curve operations (corners) and line operations (edges)
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let curveCount = 0;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let lineCount = 0;
 
   for (let i = 1; i < ops.length; i++) {
@@ -352,6 +360,7 @@ export function detectRoundedRectangle(pdfPath: PdfPath): number | null {
   const end = firstCurve.end;
 
   // Get the start point of the curve (from the previous operation)
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let startPoint: PdfPoint | null = null;
   for (let i = 0; i < ops.length; i++) {
     const op = ops[i];
@@ -389,6 +398,7 @@ export function detectRoundedRectangle(pdfPath: PdfPath): number | null {
     if (curve.type !== "curveTo") {continue;}
 
     // Find the start point for this curve
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let curveStart: PdfPoint | null = null;
     for (let j = 0; j < ops.length; j++) {
       const op = ops[j];

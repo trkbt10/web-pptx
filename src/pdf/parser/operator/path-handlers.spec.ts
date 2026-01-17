@@ -9,6 +9,7 @@ import { createDefaultGraphicsState } from "../../domain";
 
 // Mock GraphicsStateOps for testing
 function createMockGfxOps(): GraphicsStateOps {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let state = createDefaultGraphicsState();
   const clipCalls: unknown[] = [];
   return {

@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/inline-image.native.ts
+ */
+
 import { tokenizeContentStream } from "../domain/content-stream";
 import type { PdfArray, PdfBool, PdfDict, PdfName, PdfNumber, PdfObject, PdfStream, PdfString } from "../native";
 
@@ -132,6 +136,7 @@ function parseValue(tokens: readonly Token[], start: number): { value: PdfObject
     }
     case "array_start": {
       const items: PdfObject[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
       let i = start + 1;
       while (i < tokens.length) {
         const t = tokens[i];
@@ -147,6 +152,7 @@ function parseValue(tokens: readonly Token[], start: number): { value: PdfObject
     }
     case "dict_start": {
       const entries: Array<readonly [string, PdfObject]> = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
       let i = start + 1;
       while (i < tokens.length) {
         const t = tokens[i];
@@ -174,6 +180,7 @@ function parseInlineImageDict(dictText: string): PdfDict {
   const tokens = tokenizeContentStream(dictText);
   const entries: Array<readonly [string, PdfObject]> = [];
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let i = 0;
   while (i < tokens.length) {
     const t = tokens[i];
@@ -207,6 +214,7 @@ function findInlineImageEnd(content: string, startData: number): number | null {
 }
 
 function findOperatorWithBoundary(content: string, op: string, start: number): number | null {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let pos = start;
   while (pos < content.length) {
     const idx = content.indexOf(op, pos);
@@ -232,6 +240,7 @@ export type PreprocessInlineImagesResult = Readonly<{
 
 
 
+/** preprocessInlineImages */
 export function preprocessInlineImages(
   bytes: Uint8Array,
   options: Readonly<{
@@ -249,6 +258,7 @@ export function preprocessInlineImages(
 
   const used = new Set<string>(options.existingNames ? [...options.existingNames] : []);
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let pos = 0;
   while (pos < content.length) {
     const bi = findOperatorWithBoundary(content, "BI", pos);
@@ -263,6 +273,7 @@ export function preprocessInlineImages(
     const dictText = content.slice(bi + 2, id);
     const dict = parseInlineImageDict(dictText);
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let dataStart = id + 2;
     // Consume the required whitespace separator after ID. Some producers use CRLF.
     if (content[dataStart] === "\r" && content[dataStart + 1] === "\n") {dataStart += 2;}
@@ -274,6 +285,7 @@ export function preprocessInlineImages(
     const dataEnd = Math.max(dataStart, ei - 1); // exclude the whitespace before EI
     const data = latin1ToBytes(content.slice(dataStart, dataEnd));
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
     let name: string;
     do {
       name = `__InlineIm${options.nextId()}`;

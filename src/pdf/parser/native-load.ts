@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/native-load.ts
+ */
+
 import { loadNativePdfDocument, type NativePdfDocument } from "../native/document";
 import { PdfLoadError, type PdfLoadErrorCode, type PdfLoadOptions } from "./pdf-load-error";
 
@@ -32,6 +36,7 @@ function detectPdfLoadErrorCode(error: unknown): PdfLoadErrorCode {
 
 
 
+/** loadNativePdfDocumentForParser */
 export async function loadNativePdfDocumentForParser(
   data: Uint8Array | ArrayBuffer,
   options: PdfLoadOptions,

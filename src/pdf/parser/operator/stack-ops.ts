@@ -110,6 +110,7 @@ export function popArray(stack: OperandStack): [readonly (number | string)[], Op
  */
 export function popNumbers(stack: OperandStack, count: number): [number[], OperandStack] {
   const values: number[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let currentStack = stack;
 
   for (let i = 0; i < count; i++) {
@@ -153,7 +154,9 @@ export function pushValues(stack: OperandStack, values: readonly OperandValue[])
  */
 export function finalizeArray(stack: OperandStack): OperandStack {
   const items: (number | string)[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let currentStack = stack;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let foundStart = false;
 
   while (currentStack.length > 0) {
@@ -192,6 +195,7 @@ export function finalizeArray(stack: OperandStack): OperandStack {
  */
 export function collectColorComponents(stack: OperandStack): [number[], OperandStack] {
   const components: number[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let currentStack = stack;
 
   while (currentStack.length > 0) {

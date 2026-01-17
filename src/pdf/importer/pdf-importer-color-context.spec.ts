@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/importer/pdf-importer-color-context.spec.ts
+ */
+
 import type { Color } from "../../ooxml/domain/color";
 import { resolveColor } from "../../pptx/domain/color/resolution";
 import {

@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/lexer.ts
+ */
+
 import { decodeLatin1 } from "./encoding";
 import { isDelimiter, isWhite } from "./scan";
 
@@ -25,12 +29,14 @@ export type PdfLexer = Readonly<{
 
 
 
+/** createLexer */
 export function createLexer(bytes: Uint8Array, pos: number): PdfLexer {
   return { bytes, pos };
 }
 
 function skipWhitespaceAndComments(lex: PdfLexer): PdfLexer {
   const { bytes } = lex;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let pos = lex.pos;
   while (pos < bytes.length) {
     const b = bytes[pos] ?? 0;
@@ -84,6 +90,7 @@ function hexValue(b: number): number {
 
 function readName(lex: PdfLexer): { value: string; next: number } {
   const { bytes } = lex;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let pos = lex.pos;
   if ((bytes[pos] ?? 0) !== 0x2f) {throw new Error("readName: expected '/'");}
   pos += 1;
@@ -109,11 +116,13 @@ function readName(lex: PdfLexer): { value: string; next: number } {
 
 function readLiteralString(lex: PdfLexer): { bytes: Uint8Array; next: number } {
   const { bytes } = lex;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let pos = lex.pos;
   if ((bytes[pos] ?? 0) !== 0x28) {throw new Error("readLiteralString: expected '('");}
   pos += 1;
 
   const out: number[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let depth = 1;
   while (pos < bytes.length) {
     const b = bytes[pos] ?? 0;
@@ -172,6 +181,7 @@ function readLiteralString(lex: PdfLexer): { bytes: Uint8Array; next: number } {
         default:
           // octal? up to 3 digits
           if (next >= 0x30 && next <= 0x37) {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
             let value = next - 0x30;
             for (let i = 0; i < 2; i += 1) {
               const d = bytes[pos] ?? 0;
@@ -194,6 +204,7 @@ function readLiteralString(lex: PdfLexer): { bytes: Uint8Array; next: number } {
 
 function readHexString(lex: PdfLexer): { bytes: Uint8Array; next: number } {
   const { bytes } = lex;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let pos = lex.pos;
   if ((bytes[pos] ?? 0) !== 0x3c) {throw new Error("readHexString: expected '<'");}
   // caller ensures not '<<'
@@ -223,6 +234,7 @@ function readHexString(lex: PdfLexer): { bytes: Uint8Array; next: number } {
 
 function readNumberOrKeyword(lex: PdfLexer): { token: PdfToken; next: number } {
   const { bytes } = lex;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let pos = lex.pos;
 
   const { text, next } = readWhile(bytes, pos, (b) => !isWhite(b) && !isDelimiter(b));
@@ -249,6 +261,7 @@ function readNumberOrKeyword(lex: PdfLexer): { token: PdfToken; next: number } {
 
 
 
+/** nextToken */
 export function nextToken(lex: PdfLexer): { token: PdfToken; next: PdfLexer } {
   const trimmed = skipWhitespaceAndComments(lex);
   const { bytes } = trimmed;

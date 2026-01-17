@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/converter/image-to-shapes.spec.ts
+ */
+
 import type { PdfImage } from "../domain";
 import { createDefaultGraphicsState } from "../domain";
 import { px } from "../../ooxml/domain/units";
@@ -28,7 +32,9 @@ describe("convertImageToShape", () => {
     };
 
     const shape = convertImageToShape(image, context, "1");
-    if (!shape) throw new Error("Expected shape to be created");
+    if (!shape) {
+      throw new Error("Expected shape to be created");
+    }
     expect(shape.type).toBe("pic");
     expect(shape.nonVisual.id).toBe("1");
     expect(shape.blipFill.resourceId.startsWith("data:image/png;base64,")).toBe(true);
@@ -52,7 +58,9 @@ describe("convertImageToShape", () => {
     };
 
     const shape = convertImageToShape(image, context, "1");
-    if (!shape) throw new Error("Expected shape to be created");
+    if (!shape) {
+      throw new Error("Expected shape to be created");
+    }
     expect(shape.type).toBe("pic");
     expect(shape.nonVisual.id).toBe("1");
     expect(shape.blipFill.resourceId.startsWith("data:image/png;base64,")).toBe(true);
@@ -74,7 +82,9 @@ describe("convertImageToShape", () => {
     };
 
     const shape = convertImageToShape(image, context, "1");
-    if (!shape) throw new Error("Expected shape to be created");
+    if (!shape) {
+      throw new Error("Expected shape to be created");
+    }
     const parsed = parseDataUrl(shape.blipFill.resourceId);
     expect(parsed.mimeType).toBe("image/png");
 
@@ -105,7 +115,9 @@ describe("convertImageToShape", () => {
     };
 
     const shape = convertImageToShape(image, context, "1");
-    if (!shape) throw new Error("Expected shape to be created");
+    if (!shape) {
+      throw new Error("Expected shape to be created");
+    }
     expect(shape.blipFill.resourceId.startsWith("data:image/jpeg;base64,")).toBe(true);
   });
 
@@ -139,7 +151,9 @@ describe("convertImageToShape", () => {
     };
 
     const shape = convertImageToShape(image, context, "1");
-    if (!shape) throw new Error("Expected shape to be created");
+    if (!shape) {
+      throw new Error("Expected shape to be created");
+    }
 
     expect(shape.blipFill.sourceRect).toEqual({
       left: 20,

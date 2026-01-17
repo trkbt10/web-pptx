@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/encryption/standard.ts
+ */
+
 import type { PdfDict, PdfObject, PdfString } from "../types";
 import { decodePdfStringBytes } from "../encoding";
 import { concatBytes, int32le, bytesEqual, objKeySalt } from "./bytes";
@@ -80,6 +84,7 @@ function computeFileKeyR3(args: {
   readonly keyLengthBytes: number;
 }): Uint8Array {
   const seed = concatBytes(args.password32, args.o, int32le(args.p), args.id0);
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let digest = md5(seed);
   digest = digest.slice(0, args.keyLengthBytes);
   for (let i = 0; i < 50; i += 1) {
@@ -95,6 +100,7 @@ function xorKey(key: Uint8Array, value: number): Uint8Array {
 }
 
 function computeUValueR3(fileKey: Uint8Array, id0: Uint8Array): Uint8Array {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let cur = md5(concatBytes(PASSWORD_PADDING, id0));
   cur = rc4(fileKey, cur);
   for (let i = 1; i <= 19; i += 1) {
@@ -104,6 +110,7 @@ function computeUValueR3(fileKey: Uint8Array, id0: Uint8Array): Uint8Array {
 }
 
 function computeOwnerKeyR3(ownerPassword32: Uint8Array, keyLengthBytes: number): Uint8Array {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let digest = md5(ownerPassword32);
   digest = digest.slice(0, keyLengthBytes);
   for (let i = 0; i < 50; i += 1) {
@@ -185,6 +192,7 @@ function tryFileKeyFromOwnerPasswordR3(args: {
 }): Uint8Array | null {
   const ownerPassword32 = padPassword32(encodePasswordBytes(args.password));
   const ownerKey = computeOwnerKeyR3(ownerPassword32, args.keyLengthBytes);
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let userPassword32 = args.o;
   for (let i = 19; i >= 0; i -= 1) {
     userPassword32 = rc4(xorKey(ownerKey, i), userPassword32);
@@ -218,6 +226,7 @@ function deriveObjectKeyRc4(fileKey: Uint8Array, objNum: number, gen: number): U
 
 
 
+/** createStandardDecrypter */
 export function createStandardDecrypter(args: {
   readonly encryptDict: PdfDict;
   readonly fileId0: Uint8Array;

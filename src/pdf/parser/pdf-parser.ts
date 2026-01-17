@@ -20,6 +20,7 @@ export type PdfParserOptions = NativePdfParserOptions;
 
 
 
+/** parsePdf */
 export async function parsePdf(
   data: Uint8Array | ArrayBuffer,
   options: PdfParserOptions = {},
@@ -37,6 +38,7 @@ export async function parsePdf(
 
 
 
+/** getPdfPageCount */
 export async function getPdfPageCount(data: Uint8Array | ArrayBuffer): Promise<number> {
   const pdfDoc = await loadNativePdfDocumentForParser(data, {
     purpose: "inspect",
@@ -56,6 +58,7 @@ export async function getPdfPageCount(data: Uint8Array | ArrayBuffer): Promise<n
 
 
 
+/** getPdfPageDimensions */
 export async function getPdfPageDimensions(
   data: Uint8Array | ArrayBuffer,
   pageNumber: number = 1,

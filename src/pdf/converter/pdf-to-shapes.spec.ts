@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/converter/pdf-to-shapes.spec.ts
+ */
+
 import type { PdfImage, PdfPage, PdfPath, PdfText } from "../domain";
 import { createDefaultGraphicsState } from "../domain";
 import { px } from "../../ooxml/domain/units";

@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/ext-gstate.native.spec.ts
+ */
+
 import { parsePdfNative } from "./pdf-parser.native";
 
 function buildMinimalPdfWithExtGState(args: {
@@ -36,6 +40,7 @@ function buildMinimalPdfWithExtGState(args: {
   const parts: string[] = [header];
   const offsets: number[] = [0];
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let cursor = header.length;
   for (const n of order) {
     offsets[n] = cursor;

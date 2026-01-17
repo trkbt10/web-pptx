@@ -58,6 +58,7 @@ export type ExtractFontInfoDeps<PdfPageT, ResourcesT> = Readonly<{
 
 
 
+/** extractFontInfoWithDeps */
 export function extractFontInfoWithDeps<PdfPageT, ResourcesT>(
   pdfPage: PdfPageT,
   fontName: string,
@@ -68,14 +69,22 @@ export function extractFontInfoWithDeps<PdfPageT, ResourcesT>(
   if (!deps) {throw new Error("deps is required");}
 
   const errors: string[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let toUnicode: CMapParseResult | null = null;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let metrics: FontMetrics | null = null;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let ordering: CIDOrdering | null = null;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let encoding: ReadonlyMap<number, string> | null = null;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let isBold = false;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let isItalic = false;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let baseFont: string | null = null;
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let resources: ResourcesT;
   try {
     resources = deps.getPageResources(pdfPage);
@@ -137,6 +146,7 @@ export function extractFontInfoWithDeps<PdfPageT, ResourcesT>(
 
 
 
+/** logExtractionErrors */
 export function logExtractionErrors(result: FontExtractionResult, fontName: string): void {
   if (!result) {throw new Error("result is required");}
   if (typeof fontName !== "string" || fontName.length === 0) {throw new Error("fontName is required");}

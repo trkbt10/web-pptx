@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/encoding.spec.ts
+ */
+
 import { decodePdfDocEncoding, decodePdfStringBytes } from "./encoding";
 import { createLexer } from "./lexer";
 import { parseObject } from "./object-parser";

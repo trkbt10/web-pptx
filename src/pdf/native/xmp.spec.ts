@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/xmp.spec.ts
+ */
+
 import { loadNativePdfDocument } from "./document";
 
 function pad10(n: number): string {
@@ -6,6 +10,7 @@ function pad10(n: number): string {
 
 function buildXref(entries: ReadonlyArray<{ readonly obj: number; readonly offset: number }>, size: number): string {
   const map = new Map(entries.map((e) => [e.obj, e.offset]));
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let out = "xref\n";
   out += `0 ${size}\n`;
   out += "0000000000 65535 f \n";

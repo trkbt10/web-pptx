@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/font-decoder.native.spec.ts
+ */
+
 import { loadNativePdfDocument } from "../native";
 import { extractFontMappingsNative } from "./font-decoder.native";
 
@@ -31,6 +35,7 @@ function buildMinimalPdfWithType3Font(args: { readonly fontMatrixA: number; read
   const parts: string[] = [header];
   const offsets: number[] = [0];
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let cursor = header.length;
   for (const n of order) {
     offsets[n] = cursor;

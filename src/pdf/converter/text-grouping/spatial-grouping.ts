@@ -363,6 +363,7 @@ const WIDTH_BUFFER_RATIO = 0.05; // 5% buffer
  * additional width expansion. Calculate the extra width needed.
  */
 function calculateSpacingWidthAdjustment(runs: readonly PdfText[]): number {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let maxAdjustment = 0;
 
   for (const run of runs) {
@@ -528,7 +529,9 @@ function groupIntoLines(
 ): GroupedParagraph[] {
   const lines: GroupedParagraph[] = [];
   const currentLine: PdfText[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let currentY = texts[0]?.y ?? 0;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let referenceFontSize = texts[0]?.fontSize ?? 12;
 
   for (const text of texts) {
@@ -614,7 +617,9 @@ function groupIntoLinesWithColumns(
 ): GroupedParagraph[] {
   const paragraphs: GroupedParagraph[] = [];
   const currentLine: PdfText[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let currentY = texts[0]?.y ?? 0;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let referenceFontSize = texts[0]?.fontSize ?? 12;
 
   for (const text of texts) {

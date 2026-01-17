@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/operator/graphics-state-handlers.spec.ts
+ */
+
 import { tokenizeContentStream } from "../../domain/content-stream";
 import { createParser } from "./parse";
 import { GraphicsStateStack } from "../../domain";

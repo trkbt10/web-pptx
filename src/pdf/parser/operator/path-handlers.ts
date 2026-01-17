@@ -229,9 +229,13 @@ const handleEndPath: OperatorHandler = (ctx, gfxOps) => finishPath(ctx, gfxOps, 
 
 function computeRectClipBBoxFromPath(ops: readonly PdfPathOp[], ctm: PdfMatrix): PdfBBox | null {
   // Only support the common `re W` case for now (rectangular clip paths).
-  if (ops.length !== 1) return null;
+  if (ops.length !== 1) {
+    return null;
+  }
   const op = ops[0];
-  if (!op || op.type !== "rect") return null;
+  if (!op || op.type !== "rect") {
+    return null;
+  }
 
   const corners: PdfPoint[] = [
     { x: op.x, y: op.y },
@@ -240,9 +244,13 @@ function computeRectClipBBoxFromPath(ops: readonly PdfPathOp[], ctm: PdfMatrix):
     { x: op.x, y: op.y + op.height },
   ].map((p) => transformPoint(p, ctm));
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let minX = corners[0]!.x;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let minY = corners[0]!.y;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let maxX = corners[0]!.x;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let maxY = corners[0]!.y;
 
   for (const p of corners) {

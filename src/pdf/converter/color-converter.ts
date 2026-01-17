@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/converter/color-converter.ts
+ */
+
 import type { PdfColor, PdfGraphicsState, PdfLineCap, PdfLineJoin, PdfAlternateColorSpace } from "../domain";
 import { grayToRgb, cmykToRgb, rgbToHex, clamp01, toByte } from "../domain/color";
 import type { Color } from "../../ooxml/domain/color";
@@ -135,6 +139,7 @@ export function convertFill(pdfColor: PdfColor, alpha: number = 1): Fill {
   const baseColor = convertColor(pdfColor);
   const a = clamp01(alpha);
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let color: Color = baseColor;
   if (a < 1) {
     color = { ...baseColor, transform: { ...baseColor.transform, alpha: pct(a * 100) } };
@@ -235,7 +240,9 @@ export function convertGraphicsStateToStyle(
   graphicsState: PdfGraphicsState,
   paintOp: "stroke" | "fill" | "fillStroke",
 ): { fill: Fill | undefined; line: Line | undefined } {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let fill: Fill | undefined;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let line: Line | undefined;
 
   if (paintOp === "fill" || paintOp === "fillStroke") {

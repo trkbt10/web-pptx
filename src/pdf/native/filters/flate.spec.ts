@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/filters/flate.spec.ts
+ */
+
 import { zlibSync } from "fflate";
 import { decodeStreamData } from "./index";
 import type { PdfDict, PdfObject } from "../types";

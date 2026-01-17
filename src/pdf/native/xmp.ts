@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/xmp.ts
+ */
+
 import type { PdfDict, PdfObject, PdfStream } from "./types";
 
 function dictGet(dict: PdfDict, key: string): PdfObject | undefined {
@@ -58,6 +62,7 @@ function parseXmpFields(xml: string): { title?: string; author?: string; subject
 
 
 
+/** extractXmpMetadata */
 export function extractXmpMetadata(
   catalog: PdfDict,
   deref: (obj: PdfObject) => PdfObject,

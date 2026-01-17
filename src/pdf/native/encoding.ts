@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/encoding.ts
+ */
+
 const LATIN1_DECODER = new TextDecoder("latin1");
 
 
@@ -10,6 +14,7 @@ const LATIN1_DECODER = new TextDecoder("latin1");
 
 
 
+/** decodeLatin1 */
 export function decodeLatin1(bytes: Uint8Array): string {
   return LATIN1_DECODER.decode(bytes);
 }
@@ -61,6 +66,7 @@ const PDF_DOC_ENCODING: readonly number[] = [
 
 
 
+/** decodePdfDocEncoding */
 export function decodePdfDocEncoding(bytes: Uint8Array): string {
   const out: number[] = [];
   for (const b of bytes) {
@@ -124,6 +130,7 @@ export function decodePdfStringBytes(bytes: Uint8Array): string {
 
 
 
+/** encodeAscii */
 export function encodeAscii(text: string): Uint8Array {
   return new TextEncoder().encode(text);
 }

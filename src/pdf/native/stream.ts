@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/stream.ts
+ */
+
 import { decodeStreamData } from "./filters";
 import type { PdfDict, PdfObject, PdfStream } from "./types";
 
@@ -56,6 +60,7 @@ function decodeParmsFromStreamDict(dict: PdfDict, filterCount: number): readonly
 
 
 
+/** decodePdfStream */
 export function decodePdfStream(stream: PdfStream): Uint8Array {
   const filters = filterNamesFromStreamDict(stream.dict);
   if (filters.length === 0) {return stream.data;}

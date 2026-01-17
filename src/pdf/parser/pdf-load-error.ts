@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/pdf-load-error.ts
+ */
+
 export type PdfLoadPurpose = "parse" | "inspect";
 
 export type PdfLoadEncryption =
@@ -32,6 +36,7 @@ export type PdfLoadErrorCode = "INVALID_PDF" | "ENCRYPTED_PDF" | "PARSE_ERROR";
 
 
 
+/** PdfLoadError */
 export class PdfLoadError extends Error {
   constructor(
     message: string,

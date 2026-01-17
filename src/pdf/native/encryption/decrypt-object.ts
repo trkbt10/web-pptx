@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/encryption/decrypt-object.ts
+ */
+
 import type { PdfArray, PdfDict, PdfObject, PdfStream, PdfString } from "../types";
 import { decodePdfStringBytes } from "../encoding";
 import type { PdfDecrypter } from "./standard";
@@ -86,6 +90,7 @@ function decryptStream(value: PdfStream, objNum: number, gen: number, decrypter:
 
 
 
+/** decryptPdfObject */
 export function decryptPdfObject(value: PdfObject, objNum: number, gen: number, decrypter: PdfDecrypter): PdfObject {
   switch (value.type) {
     case "string":

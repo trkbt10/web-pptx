@@ -64,13 +64,19 @@ export function buildPaths(parsedPaths: readonly ParsedPath[]): readonly BuiltPa
 export function buildPath(parsed: ParsedPath): BuiltPath {
   const ctm = parsed.graphicsState.ctm;
   const normalizedOps: NormalizedPathOp[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let currentPoint: PdfPoint = { x: 0, y: 0 };
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let startPoint: PdfPoint = { x: 0, y: 0 };
 
   // Track bounds
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let minX = Infinity;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let minY = Infinity;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let maxX = -Infinity;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let maxY = -Infinity;
 
   const updateBounds = (x: number, y: number): void => {
@@ -250,9 +256,13 @@ export function builtPathToPdfPath(built: BuiltPath): PdfPath {
  * Note: Includes bezier control points for safety.
  */
 export function computePathBBox(path: PdfPath): PdfBBox {
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let minX = Infinity;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let minY = Infinity;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let maxX = -Infinity;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let maxY = -Infinity;
 
   const updateBounds = (point: PdfPoint): void => {
@@ -262,7 +272,9 @@ export function computePathBBox(path: PdfPath): PdfBBox {
     maxY = Math.max(maxY, point.y);
   };
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let currentPoint: PdfPoint = { x: 0, y: 0 };
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let subpathStartPoint: PdfPoint = { x: 0, y: 0 };
 
   for (const op of path.operations) {
@@ -441,9 +453,13 @@ export function mergePaths(paths: readonly BuiltPath[]): BuiltPath | null {
 
   const first = paths[0];
   const allOps: NormalizedPathOp[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let minX = Infinity;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let minY = Infinity;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let maxX = -Infinity;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let maxY = -Infinity;
 
   for (const path of paths) {

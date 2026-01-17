@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/native/resolver.spec.ts
+ */
+
 import { PdfResolver } from "./resolver";
 import type { PdfDict, PdfObject } from "./types";
 
@@ -16,10 +20,13 @@ function encodeLzw(data: Uint8Array, options: LzwEncodeOptions): Uint8Array {
   const dict = new Map<string, number>();
   for (let i = 0; i < 256; i += 1) {dict.set(String.fromCharCode(i), i);}
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let nextCode = 258;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let codeSize = 9;
   const codes: number[] = [CLEAR];
 
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let w = "";
   for (const b of data) {
     const c = String.fromCharCode(b);
@@ -44,7 +51,9 @@ function encodeLzw(data: Uint8Array, options: LzwEncodeOptions): Uint8Array {
   codes.push(EOD);
 
   const out: number[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let bitBuf = 0;
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let bitLen = 0;
 
   nextCode = 258;

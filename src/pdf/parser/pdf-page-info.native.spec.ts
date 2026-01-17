@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/parser/pdf-page-info.native.spec.ts
+ */
+
 import { readFileSync } from "node:fs";
 import { getPdfPageCount, getPdfPageDimensions } from "./pdf-parser";
 

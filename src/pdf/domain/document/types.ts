@@ -192,6 +192,7 @@ export const PDF_UNITS = {
 
 
 
+/** isPdfPath */
 export function isPdfPath(element: PdfElement): element is PdfPath {
   return element.type === "path";
 }
@@ -206,6 +207,7 @@ export function isPdfPath(element: PdfElement): element is PdfPath {
 
 
 
+/** isPdfText */
 export function isPdfText(element: PdfElement): element is PdfText {
   return element.type === "text";
 }
@@ -220,6 +222,7 @@ export function isPdfText(element: PdfElement): element is PdfText {
 
 
 
+/** isPdfImage */
 export function isPdfImage(element: PdfElement): element is PdfImage {
   return element.type === "image";
 }

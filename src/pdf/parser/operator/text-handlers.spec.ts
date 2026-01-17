@@ -16,6 +16,7 @@ import { createDefaultGraphicsState, IDENTITY_MATRIX, type PdfMatrix, type FontM
 // Mock GraphicsStateOps for testing with tracking
 function createMockGfxOps(overrides: Partial<ReturnType<typeof createDefaultGraphicsState>> = {}) {
   const calls: { method: string; args: unknown[] }[] = [];
+// eslint-disable-next-line no-restricted-syntax -- Local reassignment keeps this parsing/decoding logic straightforward.
   let state = { ...createDefaultGraphicsState(), ...overrides };
 
   return {

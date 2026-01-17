@@ -1,4 +1,8 @@
 /**
+ * @file src/pdf/domain/font/embedded-font.ts
+ */
+
+/**
  * Embedded font types extracted from PDFs.
  *
  * Kept in a pdf-lib-free module so both runtime code and tests can share the

@@ -1,3 +1,7 @@
+/**
+ * @file src/pdf/converter/path-to-geometry.spec.ts
+ */
+
 import type { PdfPath } from "../domain";
 import {
   GraphicsStateStack,
