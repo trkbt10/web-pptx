@@ -7,6 +7,7 @@
 import type { DocxDocument } from "../../../../docx/domain/document";
 import type { DocxParagraph, DocxParagraphProperties } from "../../../../docx/domain/paragraph";
 import type { DocxRunProperties } from "../../../../docx/domain/run";
+import type { DocxTableCellProperties, DocxTableProperties } from "../../../../docx/domain/table";
 import type {
   UndoRedoHistory,
   DocxSelectionState,
@@ -147,6 +148,10 @@ export type DocxEditorAction =
   | { readonly type: "SET_PARAGRAPH_ALIGNMENT"; readonly alignment: "left" | "center" | "right" | "both" }
   | { readonly type: "SET_LINE_SPACING"; readonly spacing: number; readonly rule?: "auto" | "exact" | "atLeast" }
   | { readonly type: "SET_PARAGRAPH_INDENT"; readonly left?: number; readonly right?: number; readonly firstLine?: number }
+
+  // Table Formatting Actions
+  | { readonly type: "APPLY_TABLE_FORMAT"; readonly format: Partial<DocxTableProperties> }
+  | { readonly type: "APPLY_TABLE_CELL_FORMAT"; readonly format: Partial<DocxTableCellProperties> }
 
   // List Actions
   | { readonly type: "TOGGLE_BULLET_LIST" }

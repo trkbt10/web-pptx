@@ -1,0 +1,446 @@
+/**
+ * @file Common text layout type definitions
+ *
+ * Shared types for text measurement and layout results.
+ * Used by both PPTX and DOCX editors for unified text layout.
+ *
+ * This abstraction layer normalizes:
+ * - PPTX DrawingML (DML) text structure
+ * - DOCX WordprocessingML (WML) paragraph/run structure
+ *
+ * @see ECMA-376 Part 1, DrawingML Text (for PPTX)
+ * @see ECMA-376 Part 1, WordprocessingML (for DOCX)
+ */
+
+import type { Pixels, Points, Percent } from "../ooxml/domain/units";
+
+// =============================================================================
+// Text Alignment Types
+// =============================================================================
+
+/**
+ * Horizontal text alignment.
+ * Unified alignment type for both PPTX and DOCX.
+ */
+export type TextAlign =
+  | "left"
+  | "center"
+  | "right"
+  | "justify"
+  | "justifyLow"
+  | "distributed"
+  | "thaiDistributed";
+
+/**
+ * Vertical text anchor.
+ */
+export type TextAnchor = "top" | "center" | "bottom";
+
+// =============================================================================
+// Line Spacing Configuration
+// =============================================================================
+
+/**
+ * Line spacing configuration.
+ *
+ * @see ECMA-376 Part 1, Section 21.1.2.2.5 (a:lnSpc)
+ */
+export type LineSpacing =
+  | { readonly type: "percent"; readonly value: Percent }
+  | { readonly type: "points"; readonly value: Points };
+
+// =============================================================================
+// Text Span Types
+// =============================================================================
+
+/**
+ * Text fill configuration.
+ */
+export type TextFillConfig =
+  | { readonly type: "solid"; readonly color: string }
+  | { readonly type: "gradient"; readonly stops: readonly { position: number; color: string }[] };
+
+/**
+ * Text outline (stroke) configuration.
+ */
+export type TextOutlineConfig = {
+  readonly width: Pixels;
+  readonly color: string;
+  readonly cap: "butt" | "round" | "square";
+  readonly join: "miter" | "round" | "bevel";
+};
+
+/**
+ * Resolved text span for layout.
+ * All values are resolved from source run properties + defaults.
+ */
+export type LayoutSpan = {
+  /** Text content */
+  readonly text: string;
+  /** Font size in points */
+  readonly fontSize: Points;
+  /** Font family name (Latin font) */
+  readonly fontFamily: string;
+  /** East Asian font family for CJK characters */
+  readonly fontFamilyEastAsian: string | undefined;
+  /** Complex Script font family for RTL/complex script characters */
+  readonly fontFamilyComplexScript: string | undefined;
+  /** Font weight (bold: 700, normal: 400) */
+  readonly fontWeight: number;
+  /** Font style (normal/italic) */
+  readonly fontStyle: "normal" | "italic";
+  /** Text decoration (underline, line-through) */
+  readonly textDecoration: string | undefined;
+  /** Text color as hex (with #) */
+  readonly color: string;
+  /** Vertical alignment (baseline/superscript/subscript) */
+  readonly verticalAlign: "baseline" | "superscript" | "subscript";
+  /** Letter spacing in pixels */
+  readonly letterSpacing: Pixels;
+  /** Whether this is a line break */
+  readonly isBreak: boolean;
+  /** Text direction */
+  readonly direction: "ltr" | "rtl";
+  /** Highlight/background color as hex (with #) */
+  readonly highlightColor: string | undefined;
+  /** Text transform (uppercase, etc.) */
+  readonly textTransform: "none" | "uppercase" | "lowercase" | undefined;
+  /** Hyperlink URL or ID */
+  readonly linkId: string | undefined;
+  /** Hyperlink tooltip */
+  readonly linkTooltip: string | undefined;
+  /** Text outline (stroke) configuration */
+  readonly textOutline: TextOutlineConfig | undefined;
+  /** Text fill configuration */
+  readonly textFill: TextFillConfig | undefined;
+  /** Kerning threshold in points */
+  readonly kerning: Points | undefined;
+};
+
+/**
+ * Measured span with computed width.
+ */
+export type MeasuredSpan = LayoutSpan & {
+  /** Computed width in pixels */
+  readonly width: Pixels;
+};
+
+/**
+ * A positioned span within a line.
+ */
+export type PositionedSpan = MeasuredSpan & {
+  /** X offset within the line (for kerning adjustments) */
+  readonly dx: Pixels;
+};
+
+// =============================================================================
+// Bullet Configuration
+// =============================================================================
+
+/**
+ * Bullet configuration for a paragraph.
+ *
+ * @see ECMA-376 Part 1, Section 21.1.2.4 (Bullet properties)
+ */
+export type BulletConfig = {
+  /** Bullet character (for character/auto-number bullets) */
+  readonly char: string;
+  /** Bullet font size in points */
+  readonly fontSize: Points;
+  /** Bullet color as hex (with #) */
+  readonly color: string;
+  /** Bullet font family */
+  readonly fontFamily: string;
+  /** Picture bullet image URL (data URL) */
+  readonly imageUrl?: string;
+};
+
+// =============================================================================
+// Tab Stop Configuration
+// =============================================================================
+
+/**
+ * Tab stop configuration for layout.
+ *
+ * @see ECMA-376 Part 1, Section 21.1.2.2.14 (a:tab)
+ */
+export type LayoutTabStop = {
+  /** Position from left edge in pixels */
+  readonly position: Pixels;
+  /** Tab alignment type */
+  readonly alignment: "left" | "center" | "right" | "decimal";
+};
+
+// =============================================================================
+// Font Alignment
+// =============================================================================
+
+/**
+ * Font alignment for vertical positioning of different font sizes.
+ *
+ * @see ECMA-376 Part 1, Section 21.1.2.1.12 (ST_TextFontAlignType)
+ */
+export type FontAlignment = "auto" | "top" | "center" | "base" | "bottom";
+
+// =============================================================================
+// Paragraph Input Types
+// =============================================================================
+
+/**
+ * Paragraph input for layout.
+ */
+export type LayoutParagraphInput = {
+  /** Text spans in the paragraph */
+  readonly spans: readonly LayoutSpan[];
+  /** Horizontal alignment */
+  readonly alignment: TextAlign;
+  /** Left margin in pixels */
+  readonly marginLeft: Pixels;
+  /** First-line indent in pixels (can be negative for hanging) */
+  readonly indent: Pixels;
+  /** Right margin in pixels */
+  readonly marginRight: Pixels;
+  /** Space before paragraph in points */
+  readonly spaceBefore: Points;
+  /** Space after paragraph in points */
+  readonly spaceAfter: Points;
+  /** Line spacing configuration */
+  readonly lineSpacing: LineSpacing | undefined;
+  /** Bullet configuration if any */
+  readonly bullet: BulletConfig | undefined;
+  /** Font alignment for vertical positioning */
+  readonly fontAlignment: FontAlignment;
+  /** Default tab size in pixels */
+  readonly defaultTabSize: Pixels;
+  /** Custom tab stops */
+  readonly tabStops: readonly LayoutTabStop[];
+  /** East Asian line break rules */
+  readonly eaLineBreak: boolean;
+  /** Latin line break rules */
+  readonly latinLineBreak: boolean;
+  /** Hanging punctuation */
+  readonly hangingPunctuation: boolean;
+  /** Font size for empty paragraphs */
+  readonly endParaFontSize?: Points;
+};
+
+// =============================================================================
+// Layout Result Types
+// =============================================================================
+
+/**
+ * A single laid out line.
+ */
+export type LayoutLine = {
+  /** Positioned spans in this line */
+  readonly spans: readonly PositionedSpan[];
+  /** X position of the line start in pixels */
+  readonly x: Pixels;
+  /** Y position (baseline) of the line in pixels */
+  readonly y: Pixels;
+  /** Total width of the line in pixels */
+  readonly width: Pixels;
+  /** Height of the line in pixels */
+  readonly height: Pixels;
+};
+
+/**
+ * A laid out paragraph.
+ */
+export type LayoutParagraphResult = {
+  /** Lines in this paragraph */
+  readonly lines: readonly LayoutLine[];
+  /** Horizontal alignment */
+  readonly alignment: TextAlign;
+  /** Bullet character if any */
+  readonly bullet: BulletConfig | undefined;
+  /** Bullet width in pixels (for positioning) */
+  readonly bulletWidth: Pixels;
+  /** Font alignment for vertical positioning */
+  readonly fontAlignment: FontAlignment;
+};
+
+/**
+ * Complete layout result.
+ */
+export type LayoutResult = {
+  /** Laid out paragraphs */
+  readonly paragraphs: readonly LayoutParagraphResult[];
+  /** Total height of all content in pixels */
+  readonly totalHeight: Pixels;
+  /** Y offset applied for vertical anchoring in pixels */
+  readonly yOffset: Pixels;
+};
+
+// =============================================================================
+// Text Box Configuration
+// =============================================================================
+
+/**
+ * Text wrapping mode.
+ */
+export type TextWrapping = "none" | "square" | "wrap";
+
+/**
+ * Text overflow behavior.
+ */
+export type TextOverflow = "overflow" | "clip";
+
+/**
+ * Vertical overflow behavior.
+ */
+export type TextVerticalOverflow = "overflow" | "ellipsis" | "clip";
+
+/**
+ * Auto-fit configuration for text scaling.
+ */
+export type AutoFitConfig =
+  | { readonly type: "none" }
+  | { readonly type: "shape" }
+  | {
+      readonly type: "normal";
+      readonly fontScale: Percent;
+      readonly lineSpaceReduction: Percent;
+    };
+
+/**
+ * Text box configuration for layout.
+ */
+export type TextBoxConfig = {
+  /** Total width of the text box in pixels */
+  readonly width: Pixels;
+  /** Total height of the text box in pixels */
+  readonly height: Pixels;
+  /** Left inset in pixels */
+  readonly insetLeft: Pixels;
+  /** Right inset in pixels */
+  readonly insetRight: Pixels;
+  /** Top inset in pixels */
+  readonly insetTop: Pixels;
+  /** Bottom inset in pixels */
+  readonly insetBottom: Pixels;
+  /** Vertical anchor: top, center, or bottom */
+  readonly anchor: TextAnchor;
+  /** Center text horizontally within the text body */
+  readonly anchorCenter: boolean;
+  /** Word wrap mode */
+  readonly wrapMode: TextWrapping | "wrap";
+  /** Auto-fit configuration */
+  readonly autoFit: AutoFitConfig;
+  /** Horizontal overflow behavior */
+  readonly horzOverflow: TextOverflow;
+  /** Vertical overflow behavior */
+  readonly vertOverflow: TextVerticalOverflow;
+  /** Apply paragraph spacing to first and last paragraphs */
+  readonly spcFirstLastPara: boolean;
+};
+
+// =============================================================================
+// Layout Input
+// =============================================================================
+
+/**
+ * Measured paragraph output for custom measurement.
+ */
+export type MeasuredParagraph = {
+  /** Measured spans for the paragraph */
+  readonly spans: readonly MeasuredSpan[];
+  /** Optional bullet width override */
+  readonly bulletWidth?: Pixels;
+};
+
+/**
+ * Complete layout engine input.
+ */
+export type LayoutInput = {
+  /** Text box configuration */
+  readonly textBox: TextBoxConfig;
+  /** Paragraphs to lay out */
+  readonly paragraphs: readonly LayoutParagraphInput[];
+  /** Override paragraph measurement */
+  readonly measureParagraph?: (paragraph: LayoutParagraphInput) => MeasuredParagraph;
+};
+
+// =============================================================================
+// Continuous Document Types (for DOCX)
+// =============================================================================
+
+/**
+ * Page layout result for continuous documents.
+ */
+export type PageLayout = {
+  /** Page index (0-based) */
+  readonly pageIndex: number;
+  /** Y offset of the page from document start in pixels */
+  readonly y: Pixels;
+  /** Page height in pixels */
+  readonly height: Pixels;
+  /** Page width in pixels */
+  readonly width: Pixels;
+  /** Paragraphs on this page */
+  readonly paragraphs: readonly LayoutParagraphResult[];
+};
+
+/**
+ * Paged layout result for continuous documents.
+ */
+export type PagedLayoutResult = {
+  /** Pages in the document */
+  readonly pages: readonly PageLayout[];
+  /** Total document height in pixels */
+  readonly totalHeight: Pixels;
+};
+
+/**
+ * Cursor position in a continuous document.
+ */
+export type ContinuousCursorPosition = {
+  /** Paragraph index (document-level) */
+  readonly paragraphIndex: number;
+  /** Character offset within the paragraph */
+  readonly charOffset: number;
+  /** Page index (optional, computed from layout) */
+  readonly pageIndex?: number;
+  /** Line index within the paragraph (optional) */
+  readonly lineIndex?: number;
+};
+
+/**
+ * Selection in a continuous document.
+ */
+export type ContinuousSelection = {
+  /** Anchor position (where selection started) */
+  readonly anchor: ContinuousCursorPosition;
+  /** Focus position (where selection ends) */
+  readonly focus: ContinuousCursorPosition;
+};
+
+/**
+ * Visual cursor coordinates.
+ */
+export type CursorCoordinates = {
+  /** X position in pixels */
+  readonly x: Pixels;
+  /** Y position in pixels (top of cursor) */
+  readonly y: Pixels;
+  /** Cursor height in pixels */
+  readonly height: Pixels;
+  /** Page index for multi-page documents */
+  readonly pageIndex?: number;
+};
+
+/**
+ * Selection highlight rectangle.
+ */
+export type SelectionRect = {
+  /** X position */
+  readonly x: Pixels;
+  /** Y position */
+  readonly y: Pixels;
+  /** Width */
+  readonly width: Pixels;
+  /** Height */
+  readonly height: Pixels;
+  /** Page index for multi-page documents */
+  readonly pageIndex?: number;
+};

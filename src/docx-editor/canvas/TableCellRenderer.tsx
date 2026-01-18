@@ -10,6 +10,18 @@ import type { DocxParagraph } from "../../docx/domain/paragraph";
 import { ParagraphRenderer } from "./ParagraphRenderer";
 
 // =============================================================================
+// Design Tokens
+// =============================================================================
+
+// Selection colors using design tokens
+const SELECTION_OUTLINE = "2px solid var(--selection-primary)";
+const SELECTION_BG = "color-mix(in srgb, var(--selection-primary) 5%, transparent)";
+// Default border color
+const DEFAULT_BORDER_COLOR = "var(--text-inverse)";
+// Default cell padding
+const DEFAULT_CELL_PADDING = "var(--spacing-xs) var(--spacing-sm)";
+
+// =============================================================================
 // Types
 // =============================================================================
 
@@ -41,7 +53,7 @@ function computeBorderStyle(
   }
 
   const width = edge.sz ? `${edge.sz / 8}pt` : "1px";
-  const color = edge.color ? `#${edge.color}` : "#000000";
+  const color = edge.color ? `#${edge.color}` : DEFAULT_BORDER_COLOR;
 
   // Map border style
   let style = "solid";
@@ -93,7 +105,7 @@ export function computeCellStyles(
   properties: DocxTableCellProperties | undefined
 ): CSSProperties {
   const style: CSSProperties = {
-    padding: "4px 8px",
+    padding: DEFAULT_CELL_PADDING,
     verticalAlign: "top",
   };
 
@@ -204,8 +216,8 @@ export function TableCellRenderer({
 
   // Handle selection styling
   if (isSelected) {
-    cellStyle.outline = "2px solid #0066cc";
-    cellStyle.backgroundColor = cellStyle.backgroundColor ?? "rgba(0, 102, 204, 0.05)";
+    cellStyle.outline = SELECTION_OUTLINE;
+    cellStyle.backgroundColor = cellStyle.backgroundColor ?? SELECTION_BG;
   }
 
   // Get colspan from gridSpan
@@ -259,11 +271,11 @@ export function TableCellRenderer({
               <div
                 key={index}
                 style={{
-                  border: "1px dashed #999",
-                  padding: "4px",
+                  border: "1px dashed var(--border-strong)",
+                  padding: "var(--spacing-xs)",
                   textAlign: "center",
-                  color: "#666",
-                  fontSize: "12px",
+                  color: "var(--text-secondary)",
+                  fontSize: "var(--font-size-md)",
                 }}
               >
                 [Nested table]

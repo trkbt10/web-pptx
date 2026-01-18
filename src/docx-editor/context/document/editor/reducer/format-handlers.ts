@@ -73,4 +73,14 @@ export const formatHandlers: HandlerMap = {
   INCREASE_INDENT: (state) => state,
 
   DECREASE_INDENT: (state) => state,
+
+  // -------------------------------------------------------------------------
+  // Table Formatting (implemented in Phase 4)
+  // -------------------------------------------------------------------------
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- action will be used in Phase 4
+  APPLY_TABLE_FORMAT: (state, _action) => state,
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- action will be used in Phase 4
+  APPLY_TABLE_CELL_FORMAT: (state, _action) => state,
 };

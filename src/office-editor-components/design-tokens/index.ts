@@ -11,6 +11,7 @@ export {
   spacingTokens,
   fontTokens,
   iconTokens,
+  editorLayoutTokens,
   type Tokens,
   type ColorTokens,
   type RadiusTokens,

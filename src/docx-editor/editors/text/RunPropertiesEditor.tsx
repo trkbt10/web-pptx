@@ -24,6 +24,20 @@ export type RunPropertiesEditorProps = EditorProps<DocxRunProperties> & {
   readonly showSpacing?: boolean;
   /** Show highlight color selector */
   readonly showHighlight?: boolean;
+  /**
+   * Mixed state flags for multi-selection.
+   * When true, the corresponding control renders in an indeterminate/mixed state.
+   */
+  readonly mixed?: RunPropertiesMixedState;
+};
+
+export type RunPropertiesMixedState = {
+  readonly b?: boolean;
+  readonly i?: boolean;
+  readonly u?: boolean;
+  readonly strike?: boolean;
+  readonly sz?: boolean;
+  readonly rFonts?: boolean;
 };
 
 // =============================================================================
@@ -70,23 +84,36 @@ export function RunPropertiesEditor({
   style,
   showSpacing = true,
   showHighlight = true,
+  mixed,
 }: RunPropertiesEditorProps) {
-  const handleBoldToggle = useCallback(() => {
-    onChange({ ...value, b: !value.b });
-  }, [value, onChange]);
+  const handleBoldToggle = useCallback(
+    (pressed: boolean) => {
+      onChange({ ...value, b: pressed });
+    },
+    [value, onChange],
+  );
 
-  const handleItalicToggle = useCallback(() => {
-    onChange({ ...value, i: !value.i });
-  }, [value, onChange]);
+  const handleItalicToggle = useCallback(
+    (pressed: boolean) => {
+      onChange({ ...value, i: pressed });
+    },
+    [value, onChange],
+  );
 
-  const handleUnderlineToggle = useCallback(() => {
-    const newU = value.u ? undefined : { val: "single" as const };
-    onChange({ ...value, u: newU });
-  }, [value, onChange]);
+  const handleUnderlineToggle = useCallback(
+    (pressed: boolean) => {
+      const newU = pressed ? { val: "single" as const } : undefined;
+      onChange({ ...value, u: newU });
+    },
+    [value, onChange],
+  );
 
-  const handleStrikeToggle = useCallback(() => {
-    onChange({ ...value, strike: !value.strike });
-  }, [value, onChange]);
+  const handleStrikeToggle = useCallback(
+    (pressed: boolean) => {
+      onChange({ ...value, strike: pressed });
+    },
+    [value, onChange],
+  );
 
   const handleFontSizeChange = useCallback(
     (size: string | number) => {
@@ -144,8 +171,8 @@ export function RunPropertiesEditor({
     [value, onChange],
   );
 
-  const fontSizeInPoints = value.sz ? value.sz / 2 : "";
-  const fontFamily = value.rFonts?.ascii ?? value.rFonts?.hAnsi ?? "";
+  const fontSizeInPoints = mixed?.sz ? "" : value.sz ? value.sz / 2 : "";
+  const fontFamily = mixed?.rFonts ? "" : value.rFonts?.ascii ?? value.rFonts?.hAnsi ?? "";
   const textColor = value.color?.val ?? "000000";
 
   const containerClassName = className ? `${styles.container} ${className}` : styles.container;
@@ -161,6 +188,7 @@ export function RunPropertiesEditor({
             label="B"
             ariaLabel="Bold"
             disabled={disabled}
+            mixed={mixed?.b}
             style={{ fontWeight: 700 }}
           />
           <ToggleButton
@@ -169,6 +197,7 @@ export function RunPropertiesEditor({
             label="I"
             ariaLabel="Italic"
             disabled={disabled}
+            mixed={mixed?.i}
             style={{ fontStyle: "italic" }}
           />
           <ToggleButton
@@ -177,6 +206,7 @@ export function RunPropertiesEditor({
             label="U"
             ariaLabel="Underline"
             disabled={disabled}
+            mixed={mixed?.u}
             style={{ textDecoration: "underline" }}
           />
           <ToggleButton
@@ -185,6 +215,7 @@ export function RunPropertiesEditor({
             label="S"
             ariaLabel="Strikethrough"
             disabled={disabled}
+            mixed={mixed?.strike}
             style={{ textDecoration: "line-through" }}
           />
         </div>
@@ -198,7 +229,7 @@ export function RunPropertiesEditor({
             value={fontSizeInPoints}
             onChange={handleFontSizeChange}
             disabled={disabled}
-            placeholder="Size"
+            placeholder={mixed?.sz ? "Mixed" : "Size"}
             min={1}
             max={999}
             width={60}
@@ -208,7 +239,7 @@ export function RunPropertiesEditor({
             value={fontFamily}
             onChange={handleFontFamilyChange}
             disabled={disabled}
-            placeholder="Font Family"
+            placeholder={mixed?.rFonts ? "Mixed" : "Font Family"}
           />
         </div>
       </FieldGroup>

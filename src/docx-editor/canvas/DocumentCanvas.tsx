@@ -58,6 +58,11 @@ const DEFAULT_PAGE_WIDTH = 816;
 /** Default page margin in pixels */
 const DEFAULT_PAGE_MARGIN = 96;
 
+// Selection colors using design tokens
+const SELECTION_OUTLINE = "2px solid var(--selection-primary)";
+const SELECTION_BG =
+  "color-mix(in srgb, var(--selection-primary) 5%, transparent)";
+
 /** Page shadow for visual effect */
 const PAGE_SHADOW = "0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)";
 
@@ -132,7 +137,7 @@ export function DocumentCanvas({
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    padding: "20px",
+    padding: "var(--spacing-xl)",
     minHeight: "100%",
     ...style,
   };
@@ -142,6 +147,7 @@ export function DocumentCanvas({
     width: pageWidth,
     minHeight: 1056, // 11 inches at 96 DPI
     backgroundColor: "#ffffff",
+    color: "#000000", // Default document text color (can be overridden by run properties)
     boxShadow: PAGE_SHADOW,
     padding: pageMargin,
     boxSizing: "border-box",
@@ -157,11 +163,11 @@ export function DocumentCanvas({
 
     // Placeholder rendering - will be replaced by proper renderers in T1-2, T1-3
     const elementStyle: CSSProperties = {
-      padding: "4px",
-      marginBottom: "4px",
+      padding: "var(--spacing-xs)",
+      marginBottom: "var(--spacing-xs)",
       cursor: "pointer",
-      outline: isSelected ? "2px solid #0066cc" : "none",
-      backgroundColor: isSelected ? "rgba(0, 102, 204, 0.05)" : "transparent",
+      outline: isSelected ? SELECTION_OUTLINE : "none",
+      backgroundColor: isSelected ? SELECTION_BG : "transparent",
     };
 
     return (
@@ -189,10 +195,10 @@ export function DocumentCanvas({
         {content.length === 0 && (
           <div
             style={{
-              color: "#999",
+              color: "var(--text-tertiary)",
               fontStyle: "italic",
               textAlign: "center",
-              padding: "40px",
+              padding: "calc(var(--spacing-xl) + var(--spacing-lg))",
             }}
           >
             Empty document
@@ -201,21 +207,21 @@ export function DocumentCanvas({
         {showPageBreaks && (
           <div
             style={{
-              borderTop: "1px dashed #ccc",
-              margin: "20px 0",
+              borderTop: "1px dashed var(--border-strong)",
+              margin: "var(--spacing-xl) 0",
               position: "relative",
             }}
           >
             <span
               style={{
                 position: "absolute",
-                top: "-10px",
+                top: "calc(-1 * var(--font-size-xs))",
                 left: "50%",
                 transform: "translateX(-50%)",
-                backgroundColor: "#e8e8e8",
-                padding: "0 8px",
-                fontSize: "10px",
-                color: "#666",
+                backgroundColor: "var(--bg-tertiary)",
+                padding: "0 var(--spacing-sm)",
+                fontSize: "var(--font-size-xs)",
+                color: "var(--text-secondary)",
               }}
             >
               Page Break
@@ -264,10 +270,10 @@ function renderPlaceholderContent(element: DocxBlockContent): ReactNode {
       return (
         <div
           style={{
-            border: "1px solid #ccc",
-            padding: "8px",
+            border: "1px solid var(--border-strong)",
+            padding: "var(--spacing-sm)",
             textAlign: "center",
-            color: "#666",
+            color: "var(--text-secondary)",
           }}
         >
           [Table: {element.rows.length} rows]
@@ -278,10 +284,10 @@ function renderPlaceholderContent(element: DocxBlockContent): ReactNode {
       return (
         <div
           style={{
-            borderTop: "1px dashed #999",
-            margin: "8px 0",
-            fontSize: "10px",
-            color: "#666",
+            borderTop: "1px dashed var(--border-strong)",
+            margin: "var(--spacing-sm) 0",
+            fontSize: "var(--font-size-xs)",
+            color: "var(--text-secondary)",
             textAlign: "center",
           }}
         >
@@ -291,7 +297,7 @@ function renderPlaceholderContent(element: DocxBlockContent): ReactNode {
     }
     default: {
       return (
-        <div style={{ color: "#999", fontSize: "12px" }}>
+        <div style={{ color: "var(--text-tertiary)", fontSize: "var(--font-size-md)" }}>
           [Unknown element type]
         </div>
       );

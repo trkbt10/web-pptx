@@ -69,8 +69,12 @@ export const radiusTokens = {
  * Spacing values
  */
 export const spacingTokens = {
+  /** 2x Extra small: 2px */
+  "2xs": "2px",
   /** Extra small: 4px */
   xs: "4px",
+  /** Extra small plus: 6px */
+  "xs-plus": "6px",
   /** Small: 8px */
   sm: "8px",
   /** Medium: 12px */
@@ -122,6 +126,15 @@ export const iconTokens = {
 } as const;
 
 /**
+ * Editor layout tokens
+ * UI-specific constants for document editor layout (not ECMA376-based)
+ */
+export const editorLayoutTokens = {
+  /** Visual gap between pages in multi-page document view (pixels) */
+  pageGap: 24,
+} as const;
+
+/**
  * Combined tokens object for convenience
  */
 export const tokens = {
@@ -130,6 +143,7 @@ export const tokens = {
   spacing: spacingTokens,
   font: fontTokens,
   icon: iconTokens,
+  editorLayout: editorLayoutTokens,
 } as const;
 
 /**

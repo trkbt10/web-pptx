@@ -47,3 +47,28 @@ export {
   createDefaultTableCellProperties,
   type TableCellPropertiesEditorProps,
 } from "./editors/table/TableCellPropertiesEditor";
+
+// Main Document Editor
+export {
+  DocumentEditor,
+  type DocumentEditorProps,
+} from "./document/DocumentEditor";
+
+// Continuous Editor (SVG-based)
+export {
+  ContinuousEditor,
+  type ContinuousEditorProps,
+} from "./text-edit/ContinuousEditor";
+
+// Layout hooks
+export {
+  useDocumentLayout,
+  type UseDocumentLayoutOptions,
+  type DocumentLayoutResult,
+} from "./document/hooks/use-document-layout";
+
+export {
+  useContinuousCursor,
+  type UseContinuousCursorOptions,
+  type ContinuousCursorResult,
+} from "./document/hooks/use-continuous-cursor";

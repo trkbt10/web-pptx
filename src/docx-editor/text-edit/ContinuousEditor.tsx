@@ -1,0 +1,393 @@
+/**
+ * @file Continuous Editor Component
+ *
+ * Main text editing component for DOCX documents.
+ * Uses the same pattern as PPTX TextEditController:
+ * - Hidden textarea captures input and tracks cursor/selection
+ * - Visual text is rendered as SVG on top
+ * - Pointer events (not mouse events) for selection
+ */
+
+import type { ReactNode, CSSProperties, PointerEvent as ReactPointerEvent } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import type { DocxParagraph } from "../../docx/domain/paragraph";
+import type { Pixels } from "../../ooxml/domain/units";
+import { px } from "../../ooxml/domain/units";
+import type {
+  ContinuousCursorPosition,
+  ContinuousSelection,
+  PageFlowConfig,
+  SelectionRect,
+  CursorCoordinates,
+} from "../../office-text-layout";
+import {
+  DEFAULT_PAGE_FLOW_CONFIG,
+  getDocumentPlainText,
+} from "../../office-text-layout";
+import { useDocumentLayout } from "../document/hooks/use-document-layout";
+import {
+  coordinatesToCursorPosition,
+  cursorPositionToCoordinates,
+  cursorPositionToOffset,
+  offsetToCursorPosition,
+  selectionToRects,
+} from "./cursor-utils";
+import { DocumentTextOverlay } from "./DocumentTextOverlay";
+import { applyTextToParagraphs } from "./text-merge";
+
+// =============================================================================
+// Types
+// =============================================================================
+
+export type ContinuousEditorProps = {
+  /** Document paragraphs */
+  readonly paragraphs: readonly DocxParagraph[];
+  /** Content width in pixels */
+  readonly contentWidth?: Pixels;
+  /** Page configuration */
+  readonly pageConfig?: PageFlowConfig;
+  /** Whether the editor is read-only */
+  readonly readOnly?: boolean;
+  /** Called when text is changed */
+  readonly onTextChange?: (text: string) => void;
+  /** Called when selection changes */
+  readonly onSelectionChange?: (selection: ContinuousSelection | undefined) => void;
+  /** Called when cursor position changes */
+  readonly onCursorChange?: (position: ContinuousCursorPosition) => void;
+};
+
+type CursorState = {
+  cursor: CursorCoordinates | undefined;
+  selectionRects: readonly SelectionRect[];
+};
+
+// =============================================================================
+// Styles
+// =============================================================================
+
+const editorContainerStyle: CSSProperties = {
+  position: "relative",
+  outline: "none",
+  width: "100%",
+  height: "100%",
+  overflow: "auto",
+};
+
+const hiddenTextareaStyle: CSSProperties = {
+  position: "absolute",
+  left: -9999,
+  top: 0,
+  width: 1,
+  height: 1,
+  opacity: 0,
+  pointerEvents: "none",
+};
+
+// =============================================================================
+// Helpers
+// =============================================================================
+
+function isPrimaryPointerAction(event: ReactPointerEvent<SVGSVGElement>): boolean {
+  if (event.pointerType === "mouse") {
+    return event.button === 0;
+  }
+  return event.button === 0 || (event.buttons & 1) === 1;
+}
+
+function getSelectionAnchor(textarea: HTMLTextAreaElement): number {
+  if (textarea.selectionDirection === "backward") {
+    return textarea.selectionEnd ?? 0;
+  }
+  return textarea.selectionStart ?? 0;
+}
+
+function applySelectionRange(
+  textarea: HTMLTextAreaElement,
+  anchorOffset: number,
+  focusOffset: number,
+): void {
+  const start = Math.min(anchorOffset, focusOffset);
+  const end = Math.max(anchorOffset, focusOffset);
+  const direction = focusOffset < anchorOffset ? "backward" : "forward";
+  textarea.setSelectionRange(start, end, direction);
+}
+
+/**
+ * Compute selection rectangles for a given range.
+ */
+function computeSelectionRects(
+  start: number,
+  end: number,
+  paragraphs: readonly DocxParagraph[],
+  pagedLayout: Parameters<typeof selectionToRects>[0],
+): readonly SelectionRect[] {
+  if (start === end) {
+    return [];
+  }
+  const startPos = offsetToCursorPosition(paragraphs, start);
+  const endPos = offsetToCursorPosition(paragraphs, end);
+  return selectionToRects(pagedLayout, startPos, endPos);
+}
+
+// =============================================================================
+// Component
+// =============================================================================
+
+/**
+ * Continuous text editor for DOCX documents.
+ */
+export function ContinuousEditor({
+  paragraphs,
+  contentWidth = px(602),
+  pageConfig = DEFAULT_PAGE_FLOW_CONFIG,
+  readOnly = false,
+  onTextChange,
+  onSelectionChange,
+  onCursorChange,
+}: ContinuousEditorProps): ReactNode {
+  // State
+  const [isFocused, setIsFocused] = useState(false);
+  const [currentText, setCurrentText] = useState(() => getDocumentPlainText(paragraphs));
+  // Internal paragraphs state - updated when text changes
+  const [internalParagraphs, setInternalParagraphs] = useState<readonly DocxParagraph[]>(paragraphs);
+  const [cursorState, setCursorState] = useState<CursorState>({
+    cursor: undefined,
+    selectionRects: [],
+  });
+
+  // Refs
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const isDraggingRef = useRef(false);
+  const dragAnchorRef = useRef<number | null>(null);
+
+  // Update internal state when paragraphs prop changes
+  useEffect(() => {
+    setCurrentText(getDocumentPlainText(paragraphs));
+    setInternalParagraphs(paragraphs);
+  }, [paragraphs]);
+
+  // Layout computation - uses internalParagraphs for layout
+  const { pagedLayout } = useDocumentLayout({
+    paragraphs: internalParagraphs,
+    contentWidth,
+    mode: "paged",
+    pageConfig,
+  });
+
+  // Get offset from pointer event using SVG CTM
+  const getOffsetFromPointerEvent = useCallback(
+    (event: ReactPointerEvent<SVGSVGElement>): number | null => {
+      const svg = svgRef.current;
+      if (!svg || pagedLayout.pages.length === 0) {
+        return null;
+      }
+
+      const matrix = svg.getScreenCTM();
+      if (!matrix) {
+        return null;
+      }
+
+      const point = svg.createSVGPoint();
+      point.x = event.clientX;
+      point.y = event.clientY;
+      const local = point.matrixTransform(matrix.inverse());
+
+      const cursorPos = coordinatesToCursorPosition(pagedLayout, local.x, local.y);
+      return cursorPositionToOffset(internalParagraphs, cursorPos);
+    },
+    [pagedLayout, internalParagraphs],
+  );
+
+  // Update cursor position from textarea selection
+  const updateCursorPosition = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? start;
+    const cursorOffset = textarea.selectionDirection === "backward" ? start : end;
+
+    const cursorPos = offsetToCursorPosition(internalParagraphs, cursorOffset);
+    const cursorCoords = cursorPositionToCoordinates(pagedLayout, cursorPos);
+
+    // Calculate selection rects if there's a selection
+    const selRects = computeSelectionRects(start, end, internalParagraphs, pagedLayout);
+
+    setCursorState({
+      cursor: cursorCoords,
+      selectionRects: selRects,
+    });
+
+    // Notify parent
+    onCursorChange?.(cursorPos);
+    if (start !== end) {
+      const startPos = offsetToCursorPosition(internalParagraphs, start);
+      const endPos = offsetToCursorPosition(internalParagraphs, end);
+      onSelectionChange?.({ anchor: startPos, focus: endPos });
+    } else {
+      onSelectionChange?.(undefined);
+    }
+  }, [internalParagraphs, pagedLayout, onCursorChange, onSelectionChange]);
+
+  // Pointer event handlers
+  const handlePointerDown = useCallback(
+    (event: ReactPointerEvent<SVGSVGElement>) => {
+      if (!isPrimaryPointerAction(event)) {
+        event.preventDefault();
+        return;
+      }
+
+      const textarea = textareaRef.current;
+      const offset = getOffsetFromPointerEvent(event);
+      if (!textarea || offset === null) {
+        return;
+      }
+
+      isDraggingRef.current = true;
+      textarea.focus();
+
+      const anchorOffset = event.shiftKey ? getSelectionAnchor(textarea) : offset;
+      dragAnchorRef.current = anchorOffset;
+      applySelectionRange(textarea, anchorOffset, offset);
+      updateCursorPosition();
+
+      event.currentTarget.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    },
+    [getOffsetFromPointerEvent, updateCursorPosition],
+  );
+
+  const handlePointerMove = useCallback(
+    (event: ReactPointerEvent<SVGSVGElement>) => {
+      if (!isDraggingRef.current) {
+        return;
+      }
+
+      const textarea = textareaRef.current;
+      const offset = getOffsetFromPointerEvent(event);
+      if (!textarea || offset === null) {
+        return;
+      }
+
+      const anchorOffset = dragAnchorRef.current ?? getSelectionAnchor(textarea);
+      applySelectionRange(textarea, anchorOffset, offset);
+      updateCursorPosition();
+      event.preventDefault();
+    },
+    [getOffsetFromPointerEvent, updateCursorPosition],
+  );
+
+  const handlePointerUp = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
+    if (!isDraggingRef.current) {
+      return;
+    }
+    isDraggingRef.current = false;
+    dragAnchorRef.current = null;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+    event.preventDefault();
+  }, []);
+
+  const handlePointerCancel = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
+    isDraggingRef.current = false;
+    dragAnchorRef.current = null;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+  }, []);
+
+  // Textarea event handlers
+  const handleTextareaChange = useCallback(
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+      if (readOnly) {
+        return;
+      }
+      const newText = event.target.value;
+      setCurrentText(newText);
+      // Apply text changes to internal paragraphs for visual update
+      const updatedParagraphs = applyTextToParagraphs(internalParagraphs, newText);
+      setInternalParagraphs(updatedParagraphs);
+      onTextChange?.(newText);
+      // Update cursor after state change
+      requestAnimationFrame(() => {
+        updateCursorPosition();
+      });
+    },
+    [readOnly, internalParagraphs, onTextChange, updateCursorPosition],
+  );
+
+  const handleTextareaSelect = useCallback(() => {
+    updateCursorPosition();
+  }, [updateCursorPosition]);
+
+  const handleTextareaKeyDown = useCallback(() => {
+    // Let default behavior handle most keys
+    // Just update cursor after key processing
+    requestAnimationFrame(() => {
+      updateCursorPosition();
+    });
+  }, [updateCursorPosition]);
+
+  const handleFocus = useCallback(() => {
+    setIsFocused(true);
+  }, []);
+
+  const handleBlur = useCallback(() => {
+    setIsFocused(false);
+  }, []);
+
+  // Focus textarea when container is clicked
+  useEffect(() => {
+    const handleContainerClick = () => {
+      textareaRef.current?.focus();
+    };
+
+    const container = containerRef.current;
+    container?.addEventListener("click", handleContainerClick);
+
+    return () => {
+      container?.removeEventListener("click", handleContainerClick);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="docx-continuous-editor"
+      style={editorContainerStyle}
+      tabIndex={-1}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+    >
+      {/* Hidden textarea for input handling */}
+      <textarea
+        ref={textareaRef}
+        style={hiddenTextareaStyle}
+        value={currentText}
+        onChange={handleTextareaChange}
+        onSelect={handleTextareaSelect}
+        onKeyDown={handleTextareaKeyDown}
+        readOnly={readOnly}
+        aria-label="Text editor input"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+      />
+
+      {/* Document overlay with SVG rendering */}
+      <DocumentTextOverlay
+        ref={svgRef}
+        pagedLayout={pagedLayout}
+        cursorState={cursorState}
+        isFocused={isFocused}
+        showCursor={!readOnly}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerCancel}
+      />
+    </div>
+  );
+}

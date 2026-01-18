@@ -9,6 +9,11 @@ import type { DocxTable, DocxTableProperties, DocxTableBorders } from "../../doc
 import type { ElementId } from "./DocumentCanvas";
 import { TableCellRenderer } from "./TableCellRenderer";
 
+// Selection colors using design tokens
+const SELECTION_OUTLINE = "2px solid var(--selection-primary)";
+// Default border color
+const DEFAULT_BORDER_COLOR = "var(--text-inverse)";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -45,7 +50,7 @@ function computeBorderStyle(
   }
 
   const width = edge.sz ? `${edge.sz / 8}pt` : "1px";
-  const color = edge.color ? `#${edge.color}` : "#000000";
+  const color = edge.color ? `#${edge.color}` : DEFAULT_BORDER_COLOR;
 
   // Map border style
   let style = "solid";
@@ -177,9 +182,9 @@ export function TableRenderer({
 
   // Container style for selection state
   const containerStyle: CSSProperties = {
-    margin: "8px 0",
+    margin: "var(--spacing-sm) 0",
     cursor: "default",
-    outline: isSelected ? "2px solid #0066cc" : "none",
+    outline: isSelected ? SELECTION_OUTLINE : "none",
     outlineOffset: "2px",
   };
 

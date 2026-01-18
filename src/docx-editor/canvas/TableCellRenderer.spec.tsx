@@ -65,7 +65,7 @@ function renderCell(cell: DocxTableCell, props?: Partial<Parameters<typeof Table
 describe("computeCellStyles", () => {
   it("returns default styles for undefined properties", () => {
     const result = computeCellStyles(undefined);
-    expect(result.padding).toBe("4px 8px");
+    expect(result.padding).toBe("var(--spacing-xs) var(--spacing-sm)");
     expect(result.verticalAlign).toBe("top");
   });
 
@@ -123,6 +123,18 @@ describe("computeCellStyles", () => {
     };
     const result = computeCellStyles(properties);
     expect(result.whiteSpace).toBe("nowrap");
+  });
+
+  it("uses design token border color when border color is missing", () => {
+    const properties: DocxTableCellProperties = {
+      tcBorders: {
+        top: {
+          val: "single",
+        },
+      },
+    };
+    const result = computeCellStyles(properties);
+    expect(result.borderTop).toBe("1px solid var(--text-inverse)");
   });
 });
 
@@ -208,7 +220,10 @@ describe("TableCellRenderer", () => {
     const { container } = renderCell(cell, { isSelected: true });
 
     const td = container.querySelector("td") as HTMLElement;
-    expect(td.style.outline).toContain("2px solid");
+    expect(td.getAttribute("style") ?? "").toContain("outline: 2px solid var(--selection-primary)");
+    expect(td.getAttribute("style") ?? "").toContain(
+      "background-color: color-mix(in srgb, var(--selection-primary) 5%, transparent)"
+    );
   });
 
   it("renders multiple paragraphs", () => {
@@ -248,11 +263,16 @@ describe("TableCellRenderer", () => {
         {
           type: "table",
           rows: [],
-        } as DocxTableCell["content"][number],
+        },
       ],
     };
     renderCell(cell);
 
-    expect(screen.getByText("[Nested table]")).toBeDefined();
+    const placeholder = screen.getByText("[Nested table]");
+    expect(placeholder).toBeDefined();
+    expect(placeholder.getAttribute("style") ?? "").toContain("border: 1px dashed var(--border-strong)");
+    expect(placeholder.getAttribute("style") ?? "").toContain("padding: var(--spacing-xs)");
+    expect(placeholder.getAttribute("style") ?? "").toContain("color: var(--text-secondary)");
+    expect(placeholder.getAttribute("style") ?? "").toContain("font-size: var(--font-size-md)");
   });
 });

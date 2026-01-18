@@ -94,7 +94,7 @@ export function DocumentViewport({
     width: "100%",
     height: "100%",
     overflow: "auto",
-    backgroundColor: "#e8e8e8",
+    backgroundColor: "var(--bg-tertiary)",
     ...style,
   };
 

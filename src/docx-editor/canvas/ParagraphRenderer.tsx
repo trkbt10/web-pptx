@@ -10,6 +10,11 @@ import type { DocxRun } from "../../docx/domain/run";
 import type { ElementId } from "./DocumentCanvas";
 import { RunRenderer, computeRunStyles } from "./RunRenderer";
 
+// Selection colors using design tokens
+const SELECTION_OUTLINE = "2px solid var(--selection-primary)";
+const SELECTION_BG = "color-mix(in srgb, var(--selection-primary) 5%, transparent)";
+const EDITING_BG = "color-mix(in srgb, var(--selection-primary) 8%, transparent)";
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -154,7 +159,7 @@ function renderParagraphContent(
           href={content.anchor ? `#${content.anchor}` : undefined}
           title={content.tooltip}
           style={{
-            color: "#0066cc",
+            color: "var(--accent-secondary)",
             textDecoration: "underline",
             cursor: "pointer",
           }}
@@ -201,14 +206,14 @@ export function ParagraphRenderer({
   // Container style for selection state
   const containerStyle: CSSProperties = {
     cursor: "text",
-    outline: isSelected ? "2px solid #0066cc" : "none",
-    backgroundColor: isSelected ? "rgba(0, 102, 204, 0.05)" : "transparent",
+    outline: isSelected ? SELECTION_OUTLINE : "none",
+    backgroundColor: isSelected ? SELECTION_BG : "transparent",
     position: "relative",
   };
 
   // Editing mode style
   if (isEditing) {
-    containerStyle.backgroundColor = "rgba(0, 102, 204, 0.08)";
+    containerStyle.backgroundColor = EDITING_BG;
   }
 
   // Handle click

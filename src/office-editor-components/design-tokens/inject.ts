@@ -42,7 +42,9 @@ const CSS_VAR_MAP = {
   "--radius-lg": radiusTokens.lg,
 
   // Spacing
+  "--spacing-2xs": spacingTokens["2xs"],
   "--spacing-xs": spacingTokens.xs,
+  "--spacing-xs-plus": spacingTokens["xs-plus"],
   "--spacing-sm": spacingTokens.sm,
   "--spacing-md": spacingTokens.md,
   "--spacing-lg": spacingTokens.lg,

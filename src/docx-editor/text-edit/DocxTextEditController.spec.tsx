@@ -4,8 +4,8 @@
 
 // @vitest-environment jsdom
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import type { DocxParagraph } from "../../docx/domain/paragraph";
 import type { DocxCursorPosition } from "./cursor";
 import { DocxTextEditController, createInitialState } from "./DocxTextEditController";
@@ -121,6 +121,10 @@ describe("DocxTextEditController", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+  });
+
   it("renders controller container", () => {
     render(<DocxTextEditController {...defaultProps} />);
 
@@ -187,6 +191,10 @@ describe("DocxTextEditController", () => {
       );
 
       const textarea = screen.getByTestId("docx-text-edit-textarea") as HTMLTextAreaElement;
+
+      // Clear mock to ignore initial selection change from mount
+      onSelectionChange.mockClear();
+
       textarea.setSelectionRange(1, 3);
       fireEvent.select(textarea);
 
@@ -198,15 +206,7 @@ describe("DocxTextEditController", () => {
   });
 
   describe("IME composition", () => {
-    it("sets isComposing to true during composition", () => {
-      render(<DocxTextEditController {...defaultProps} />);
-
-      const textarea = screen.getByTestId("docx-text-edit-textarea");
-      fireEvent.compositionStart(textarea);
-
-      // The component should be in composing state
-      // We can't directly check internal state, but we can verify
-      // that selection changes don't fire during composition
+    it("does not trigger selection change during composition", () => {
       const onSelectionChange = vi.fn();
       render(
         <DocxTextEditController
@@ -215,9 +215,13 @@ describe("DocxTextEditController", () => {
         />
       );
 
-      const textarea2 = screen.getAllByTestId("docx-text-edit-textarea")[1];
-      fireEvent.compositionStart(textarea2);
-      fireEvent.select(textarea2);
+      const textarea = screen.getByTestId("docx-text-edit-textarea");
+
+      // Reset the mock to ignore the initial selection change from mount
+      onSelectionChange.mockClear();
+
+      fireEvent.compositionStart(textarea);
+      fireEvent.select(textarea);
 
       // Selection change should not be called during composition
       expect(onSelectionChange).not.toHaveBeenCalled();
@@ -301,13 +305,16 @@ describe("DocxTextEditController", () => {
       expect(controller.style.height).toBe("60px");
     });
 
-    it("applies bounds to textarea", () => {
+    it("applies bounds to textarea (positioned inside container)", () => {
       const bounds = createBounds(50, 100, 400, 60);
       render(<DocxTextEditController {...defaultProps} bounds={bounds} />);
 
       const textarea = screen.getByTestId("docx-text-edit-textarea") as HTMLTextAreaElement;
-      expect(textarea.style.left).toBe("50px");
-      expect(textarea.style.top).toBe("100px");
+      // Textarea is positioned relative to container with 0,0
+      expect(textarea.style.left).toBe("0px");
+      expect(textarea.style.top).toBe("0px");
+      expect(textarea.style.width).toBe("100%");
+      expect(textarea.style.height).toBe("100%");
     });
   });
 

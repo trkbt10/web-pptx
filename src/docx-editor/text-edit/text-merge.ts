@@ -8,7 +8,7 @@ import type {
   DocxParagraph,
   DocxParagraphContent,
 } from "../../docx/domain/paragraph";
-import type { DocxRun, DocxRunProperties, DocxRunContent } from "../../docx/domain/run";
+import type { DocxRun, DocxRunProperties } from "../../docx/domain/run";
 
 // =============================================================================
 // Text Merge
@@ -136,6 +136,20 @@ function getRunPlainText(run: DocxRun): string {
 // =============================================================================
 
 /**
+ * Flush current run and append new item.
+ */
+function flushAndAppend(
+  result: DocxParagraphContent[],
+  currentRun: DocxRun | null,
+  item: DocxParagraphContent,
+): DocxParagraphContent[] {
+  if (currentRun !== null) {
+    return [...result, currentRun, item];
+  }
+  return [...result, item];
+}
+
+/**
  * Merge adjacent runs with the same formatting.
  *
  * @param content - Array of paragraph content items
@@ -148,46 +162,49 @@ export function mergeAdjacentRuns(
     return [];
   }
 
-  const result: DocxParagraphContent[] = [];
-  let currentRun: DocxRun | null = null;
+  type AccumulatorState = {
+    readonly result: DocxParagraphContent[];
+    readonly currentRun: DocxRun | null;
+  };
 
-  for (const item of content) {
-    if (item.type !== "run") {
-      // Non-run content: flush current run and add item
-      if (currentRun) {
-        result.push(currentRun);
-        currentRun = null;
+  const final = content.reduce<AccumulatorState>(
+    (acc, item) => {
+      if (item.type !== "run") {
+        // Non-run content: flush current run and add item
+        const newResult = flushAndAppend(acc.result, acc.currentRun, item);
+        return { result: newResult, currentRun: null };
       }
-      result.push(item);
-      continue;
-    }
 
-    if (!currentRun) {
-      // Start new run
-      currentRun = { ...item, content: [...item.content] };
-      continue;
-    }
+      if (acc.currentRun === null) {
+        // Start new run
+        return { result: acc.result, currentRun: { ...item, content: [...item.content] } };
+      }
 
-    // Check if we can merge
-    if (areRunPropertiesEqual(currentRun.properties, item.properties)) {
-      // Merge content
-      currentRun = {
-        ...currentRun,
-        content: [...currentRun.content, ...item.content],
-      };
-    } else {
+      // Check if we can merge
+      if (areRunPropertiesEqual(acc.currentRun.properties, item.properties)) {
+        // Merge content
+        const mergedRun: DocxRun = {
+          ...acc.currentRun,
+          content: [...acc.currentRun.content, ...item.content],
+        };
+        return { result: acc.result, currentRun: mergedRun };
+      }
+
       // Different formatting: flush and start new
-      result.push(currentRun);
-      currentRun = { ...item, content: [...item.content] };
-    }
-  }
+      return {
+        result: [...acc.result, acc.currentRun],
+        currentRun: { ...item, content: [...item.content] },
+      };
+    },
+    { result: [], currentRun: null },
+  );
 
   // Flush remaining run
-  if (currentRun) {
-    result.push(currentRun);
+  if (final.currentRun !== null) {
+    return [...final.result, final.currentRun];
   }
 
-  return result;
+  return final.result;
 }
 
 /**
@@ -233,28 +250,40 @@ export function getRunPropertiesAtPosition(
   paragraph: DocxParagraph,
   charOffset: number
 ): DocxRunProperties | undefined {
-  let currentOffset = 0;
+  type AccumulatorState = {
+    readonly currentOffset: number;
+    readonly found: DocxRunProperties | undefined;
+  };
 
-  for (const content of paragraph.content) {
-    if (content.type !== "run") {
-      continue;
-    }
+  const result = paragraph.content.reduce<AccumulatorState>(
+    (acc, content) => {
+      if (acc.found !== undefined) {
+        return acc;
+      }
 
-    const runLength = getRunPlainText(content).length;
+      if (content.type !== "run") {
+        return acc;
+      }
 
-    if (currentOffset + runLength >= charOffset) {
-      return content.properties;
-    }
+      const runLength = getRunPlainText(content).length;
 
-    currentOffset += runLength;
+      if (acc.currentOffset + runLength >= charOffset) {
+        return { currentOffset: acc.currentOffset, found: content.properties };
+      }
+
+      return { currentOffset: acc.currentOffset + runLength, found: undefined };
+    },
+    { currentOffset: 0, found: undefined },
+  );
+
+  if (result.found !== undefined) {
+    return result.found;
   }
 
   // Past end of paragraph - use last run's properties
-  for (let i = paragraph.content.length - 1; i >= 0; i--) {
-    const content = paragraph.content[i];
-    if (content.type === "run") {
-      return content.properties;
-    }
+  const runs = paragraph.content.filter((c): c is DocxRun => c.type === "run");
+  if (runs.length > 0) {
+    return runs[runs.length - 1].properties;
   }
 
   return paragraph.properties?.rPr;
@@ -337,17 +366,15 @@ export function deleteTextRange(
  * Get plain text from a paragraph.
  */
 function getParagraphPlainText(paragraph: DocxParagraph): string {
-  let text = "";
-  for (const content of paragraph.content) {
+  return paragraph.content.reduce((acc, content) => {
     if (content.type === "run") {
-      text += getRunPlainText(content);
-    } else if (content.type === "hyperlink") {
-      for (const run of content.content) {
-        text += getRunPlainText(run);
-      }
+      return acc + getRunPlainText(content);
     }
-  }
-  return text;
+    if (content.type === "hyperlink") {
+      return acc + content.content.reduce((hypAcc, run) => hypAcc + getRunPlainText(run), "");
+    }
+    return acc;
+  }, "");
 }
 
 // =============================================================================
@@ -406,4 +433,67 @@ export function applyFormatToRange(
     properties: paragraph.properties,
     content: newRuns,
   };
+}
+
+// =============================================================================
+// Minimal Paragraph Creation
+// =============================================================================
+
+/**
+ * Create a minimal paragraph with the given text.
+ */
+function createMinimalParagraph(text: string): DocxParagraph {
+  if (text.length === 0) {
+    return { type: "paragraph", content: [] };
+  }
+  return {
+    type: "paragraph",
+    content: [{
+      type: "run",
+      content: [{ type: "text", value: text }],
+    }],
+  };
+}
+
+// =============================================================================
+// Apply Text to Document
+// =============================================================================
+
+/**
+ * Apply plain text changes to an array of paragraphs.
+ *
+ * This function synchronizes a plain text string with an array of paragraphs,
+ * preserving the formatting from the original paragraphs where possible.
+ *
+ * @param originalParagraphs - The original paragraphs
+ * @param newText - The new plain text (paragraphs separated by newlines)
+ * @returns New array of paragraphs with the text applied
+ */
+export function applyTextToParagraphs(
+  originalParagraphs: readonly DocxParagraph[],
+  newText: string
+): DocxParagraph[] {
+  const lines = newText.split("\n");
+  const result: DocxParagraph[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const originalPara = originalParagraphs[i];
+
+    if (originalPara !== undefined) {
+      // Reuse original paragraph with new text
+      result.push(mergeTextIntoParagraph(originalPara, line));
+    } else {
+      // Create new paragraph based on last original paragraph's properties
+      const templatePara = originalParagraphs[originalParagraphs.length - 1];
+      if (templatePara !== undefined) {
+        result.push(mergeTextIntoParagraph(templatePara, line));
+      } else {
+        // Create minimal paragraph
+        result.push(createMinimalParagraph(line));
+      }
+    }
+  }
+
+  return result;
 }
