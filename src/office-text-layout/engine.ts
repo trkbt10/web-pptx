@@ -19,7 +19,9 @@ import type {
   BulletConfig,
   LineSpacing,
   TextAlign,
+  WritingMode,
 } from "./types";
+import { isVertical } from "./writing-mode";
 import type { Pixels, Points } from "../ooxml/domain/units";
 import { px, pt, pct } from "../ooxml/domain/units";
 import { measureSpans, estimateBulletWidth, PT_TO_PX } from "./measurer";
@@ -31,7 +33,7 @@ import { getAscenderRatio } from "../text/font-metrics";
 // =============================================================================
 
 /**
- * Get available content width within text box.
+ * Get available content width within text box (physical).
  */
 function getContentWidth(textBox: TextBoxConfig): Pixels {
   const width = (textBox.width as number) - (textBox.insetLeft as number) - (textBox.insetRight as number);
@@ -39,11 +41,35 @@ function getContentWidth(textBox: TextBoxConfig): Pixels {
 }
 
 /**
- * Get available content height within text box.
+ * Get available content height within text box (physical).
  */
 function getContentHeight(textBox: TextBoxConfig): Pixels {
   const height = (textBox.height as number) - (textBox.insetTop as number) - (textBox.insetBottom as number);
   return px(Math.max(0, height));
+}
+
+/**
+ * Get available inline size (line direction) based on writing mode.
+ * - horizontal-tb: inline = width
+ * - vertical-rl/vertical-lr: inline = height
+ */
+function getInlineSize(textBox: TextBoxConfig, writingMode: WritingMode): Pixels {
+  if (isVertical(writingMode)) {
+    return getContentHeight(textBox);
+  }
+  return getContentWidth(textBox);
+}
+
+/**
+ * Get available block size (perpendicular to lines) based on writing mode.
+ * - horizontal-tb: block = height
+ * - vertical-rl/vertical-lr: block = width
+ */
+function getBlockSize(textBox: TextBoxConfig, writingMode: WritingMode): Pixels {
+  if (isVertical(writingMode)) {
+    return getContentWidth(textBox);
+  }
+  return getContentHeight(textBox);
 }
 
 /**
@@ -520,10 +546,22 @@ function applyAutoFit(paragraphs: readonly LayoutParagraphInput[], autoFit: Auto
 
 /**
  * Layout text content within a text box.
+ *
+ * For horizontal text (horizontal-tb):
+ * - Inline direction = X axis (text flows left to right)
+ * - Block direction = Y axis (lines stack top to bottom)
+ *
+ * For vertical text (vertical-rl, vertical-lr):
+ * - Inline direction = Y axis (text flows top to bottom)
+ * - Block direction = X axis (lines stack right-to-left or left-to-right)
+ *
+ * The output coordinates are always in physical (x, y) space.
+ * The writingMode in the result indicates how to render the text.
  */
 export function layoutTextBody(input: LayoutInput): LayoutResult {
   const { textBox, paragraphs: inputParagraphs, measureParagraph } = input;
   const measureParagraphFn = measureParagraph ?? ((para) => ({ spans: measureSpans(para.spans) }));
+  const writingMode: WritingMode = textBox.writingMode ?? "horizontal-tb";
 
   // Apply auto-fit scaling if configured
   const scaledParagraphs = applyAutoFit(inputParagraphs, textBox.autoFit);
@@ -543,15 +581,16 @@ export function layoutTextBody(input: LayoutInput): LayoutResult {
     return para;
   });
 
-  // Get available content width
-  const contentWidth = getContentWidth(textBox);
+  // Get available inline size (line direction) based on writing mode
+  // For horizontal: inline = width, for vertical: inline = height
+  const inlineSize = getInlineSize(textBox, writingMode);
 
-  // Layout all paragraphs
+  // Layout all paragraphs using inline size for line breaking
   const layoutState = { currentY: 0 };
   const layoutedParagraphs: LayoutParagraphResult[] = [];
 
   adjustedParagraphs.forEach((para) => {
-    const { paragraph, endY } = layoutParagraph(para, contentWidth, layoutState.currentY, measureParagraphFn);
+    const { paragraph, endY } = layoutParagraph(para, inlineSize, layoutState.currentY, measureParagraphFn);
     layoutedParagraphs.push(paragraph);
     layoutState.currentY = endY;
   });
@@ -565,6 +604,7 @@ export function layoutTextBody(input: LayoutInput): LayoutResult {
     paragraphs: finalParagraphs,
     totalHeight: px(totalHeight + (textBox.insetTop as number) + (textBox.insetBottom as number)),
     yOffset,
+    writingMode,
   };
 }
 
@@ -573,15 +613,36 @@ export function layoutTextBody(input: LayoutInput): LayoutResult {
 // =============================================================================
 
 /**
+ * Options for document layout.
+ */
+export type DocumentLayoutOptions = {
+  /** Custom measurement function */
+  readonly measureParagraph?: (paragraph: LayoutParagraphInput) => { readonly spans: readonly MeasuredSpan[] };
+  /**
+   * Writing mode for text direction.
+   * Defaults to "horizontal-tb" if not specified.
+   */
+  readonly writingMode?: WritingMode;
+};
+
+/**
  * Layout paragraphs for document flow (no text box constraints).
  * Used by DOCX for continuous document layout.
+ *
+ * @param paragraphs - Paragraphs to lay out
+ * @param contentWidth - Available width (or height for vertical text) for line breaking
+ * @param options - Optional layout options including writingMode
  */
 export function layoutDocument(
   paragraphs: readonly LayoutParagraphInput[],
   contentWidth: Pixels,
-  measureParagraph?: (paragraph: LayoutParagraphInput) => { readonly spans: readonly MeasuredSpan[] },
-): { paragraphs: readonly LayoutParagraphResult[]; totalHeight: Pixels } {
-  const measureFn = measureParagraph ?? ((para) => ({ spans: measureSpans(para.spans) }));
+  options?: DocumentLayoutOptions | ((paragraph: LayoutParagraphInput) => { readonly spans: readonly MeasuredSpan[] }),
+): { paragraphs: readonly LayoutParagraphResult[]; totalHeight: Pixels; writingMode: WritingMode } {
+  // Handle backward-compatible function signature
+  const resolvedOptions: DocumentLayoutOptions =
+    typeof options === "function" ? { measureParagraph: options } : options ?? {};
+  const measureFn = resolvedOptions.measureParagraph ?? ((para) => ({ spans: measureSpans(para.spans) }));
+  const writingMode: WritingMode = resolvedOptions.writingMode ?? "horizontal-tb";
 
   const layoutState = { currentY: 0 };
   const layoutedParagraphs: LayoutParagraphResult[] = [];
@@ -595,5 +656,6 @@ export function layoutDocument(
   return {
     paragraphs: layoutedParagraphs,
     totalHeight: px(layoutState.currentY),
+    writingMode,
   };
 }

@@ -313,6 +313,15 @@ export type DocxSectionProperties = {
   readonly bidi?: boolean;
   /** Right-to-left gutter */
   readonly rtlGutter?: boolean;
+  /**
+   * Text direction for the section.
+   * Controls how text flows and how lines are stacked.
+   *
+   * Values: lrTb, tbRl, btLr, lrTbV, tbRlV, tbLrV
+   * @see ECMA-376-1:2016 Section 17.6.23 (textDirection)
+   * @see ECMA-376-1:2016 Section 17.18.93 (ST_TextDirection)
+   */
+  readonly textDirection?: "lrTb" | "tbRl" | "btLr" | "lrTbV" | "tbRlV" | "tbLrV";
 
   // --- Vertical Alignment ---
   /** Vertical alignment of section content */

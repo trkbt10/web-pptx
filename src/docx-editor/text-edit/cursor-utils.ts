@@ -15,7 +15,9 @@ import type {
   ContinuousCursorPosition,
   SelectionRect,
   CursorCoordinates,
+  WritingMode,
 } from "../../office-text-layout/types";
+import { isVertical } from "../../office-text-layout/writing-mode";
 import {
   getLineTextLength,
   getLineMaxFontInfo,
@@ -113,7 +115,7 @@ function getTextVisualBounds(
 
 /**
  * Get X position at a character offset within a line.
- * Uses font-aware measurement for accurate cursor positioning.
+ * Uses Canvas-based measurement for accurate cursor positioning.
  */
 function getXPositionInLine(line: LayoutLine, charOffset: number): number {
   type AccumulatorState = {
@@ -129,7 +131,7 @@ function getXPositionInLine(line: LayoutLine, charOffset: number): number {
       }
 
       if (acc.remaining <= span.text.length) {
-        // Use accurate text measurement for the first N characters
+        // Use Canvas-based measurement for accurate positioning
         const partialWidth = measureSpanTextWidth(span, acc.remaining);
         return { x: acc.x, remaining: 0, found: acc.x + (partialWidth as number) };
       }
@@ -147,21 +149,27 @@ function getXPositionInLine(line: LayoutLine, charOffset: number): number {
 }
 
 /**
- * Get character offset within a line from X coordinate.
- * Uses font-aware measurement for accurate click-to-cursor mapping.
+ * Get character offset within a line from inline coordinate.
+ * Uses Canvas-based measurement for accurate click-to-cursor mapping.
+ *
+ * @param line - The line to find character position in
+ * @param targetInline - Target coordinate in inline direction (X for horizontal, Y for vertical)
+ * @param writingMode - Writing mode for coordinate interpretation
  */
-function getCharOffsetInLine(line: LayoutLine, targetX: number): number {
+function getCharOffsetInLine(line: LayoutLine, targetInline: number, writingMode: WritingMode = "horizontal-tb"): number {
   if (line.spans.length === 0) {
     return 0;
   }
 
-  const lineStartX = line.x as number;
-  if (targetX <= lineStartX) {
+  // For vertical text, the inline start position is at line.x (which stores the inline origin)
+  // For horizontal text, line.x is the X start position
+  const lineStartInline = line.x as number;
+  if (targetInline <= lineStartInline) {
     return 0;
   }
 
   type AccumulatorState = {
-    readonly currentX: number;
+    readonly currentInline: number;
     readonly charOffset: number;
     readonly found: number | undefined;
   };
@@ -172,21 +180,21 @@ function getCharOffsetInLine(line: LayoutLine, targetX: number): number {
         return acc;
       }
 
-      const spanEnd = acc.currentX + (span.width as number);
-      if (targetX <= spanEnd) {
-        // Within this span - find character using accurate measurement
-        const relativeX = targetX - acc.currentX;
-        const charIndex = getCharIndexAtOffset(span, relativeX);
+      const spanEnd = acc.currentInline + (span.width as number);
+      if (targetInline <= spanEnd) {
+        // Within this span - find character using Canvas-based measurement
+        const relativeOffset = targetInline - acc.currentInline;
+        const charIndex = getCharIndexAtOffset(span, relativeOffset);
         return { ...acc, found: acc.charOffset + charIndex };
       }
 
       return {
-        currentX: spanEnd + (span.dx as number),
+        currentInline: spanEnd + (span.dx as number),
         charOffset: acc.charOffset + span.text.length,
         found: undefined,
       };
     },
-    { currentX: lineStartX, charOffset: 0, found: undefined },
+    { currentInline: lineStartInline, charOffset: 0, found: undefined },
   );
 
   return result.found ?? result.charOffset;
@@ -240,6 +248,12 @@ function getLayoutParagraphTextLength(
 /**
  * Map cursor position to visual coordinates using PagedLayoutResult.
  * Returns coordinates in the combined SVG space (with page Y offsets).
+ *
+ * For horizontal text (horizontal-tb): cursor is a vertical line at x position
+ * For vertical text (vertical-rl/lr): cursor is a horizontal line at y position
+ *
+ * @param pagedLayout - The paged layout result containing pages and writingMode
+ * @param position - The cursor position in paragraph/character coordinates
  */
 export function cursorPositionToCoordinates(
   pagedLayout: PagedLayoutResult,
@@ -247,6 +261,7 @@ export function cursorPositionToCoordinates(
 ): CursorCoordinates | undefined {
   const flatParagraphs = buildFlatParagraphList(pagedLayout);
   const { paragraphIndex, charOffset } = position;
+  const writingMode = pagedLayout.writingMode ?? "horizontal-tb";
 
   if (paragraphIndex >= flatParagraphs.length) {
     return undefined;
@@ -258,16 +273,22 @@ export function cursorPositionToCoordinates(
   }
 
   // Find the line containing the cursor
-  return findCursorCoordinatesInParagraph(paragraph, charOffset, pageYOffset);
+  return findCursorCoordinatesInParagraph(paragraph, charOffset, pageYOffset, writingMode);
 }
 
 /**
  * Find cursor coordinates within a paragraph.
+ *
+ * @param paragraph - The paragraph to search within
+ * @param charOffset - Character offset within the paragraph
+ * @param pageYOffset - Y offset of the page in combined SVG space
+ * @param writingMode - Writing mode for coordinate interpretation
  */
 function findCursorCoordinatesInParagraph(
   paragraph: PagedLayoutResult["pages"][number]["paragraphs"][number],
   charOffset: number,
   pageYOffset: number,
+  writingMode: WritingMode,
 ): CursorCoordinates {
   type AccumulatorState = {
     readonly remainingOffset: number;
@@ -283,7 +304,7 @@ function findCursorCoordinatesInParagraph(
       const lineLength = getLineTextLength(line.spans);
 
       if (acc.remainingOffset <= lineLength) {
-        return { remainingOffset: 0, found: lineToCoordinates(line, acc.remainingOffset, pageYOffset) };
+        return { remainingOffset: 0, found: lineToCoordinates(line, acc.remainingOffset, pageYOffset, writingMode) };
       }
 
       return { remainingOffset: acc.remainingOffset - lineLength, found: undefined };
@@ -297,16 +318,47 @@ function findCursorCoordinatesInParagraph(
 
   // Past end of paragraph - use end of last line
   const lastLine = paragraph.lines[paragraph.lines.length - 1];
-  return lineToCoordinates(lastLine, getLineTextLength(lastLine.spans), pageYOffset);
+  return lineToCoordinates(lastLine, getLineTextLength(lastLine.spans), pageYOffset, writingMode);
 }
 
 /**
  * Convert a line position to cursor coordinates.
  * Uses the maximum font in the line for vertical positioning (compound formatting support).
+ *
+ * For horizontal text: cursor is positioned at (x, y) with height extending downward
+ * For vertical text: cursor coordinates are swapped - the "height" becomes width
+ *
+ * @param line - The line containing the cursor
+ * @param offsetInLine - Character offset within the line
+ * @param pageYOffset - Y offset of the page in combined SVG space
+ * @param writingMode - Writing mode for coordinate interpretation
  */
-function lineToCoordinates(line: LayoutLine, offsetInLine: number, pageYOffset: number): CursorCoordinates {
-  const x = getXPositionInLine(line, offsetInLine);
+function lineToCoordinates(
+  line: LayoutLine,
+  offsetInLine: number,
+  pageYOffset: number,
+  writingMode: WritingMode,
+): CursorCoordinates {
   const { fontSize, fontFamily } = getLineMaxFontInfo(line.spans);
+  const fontSizePx = (fontSize as number) * PT_TO_PX;
+
+  if (isVertical(writingMode)) {
+    // Vertical text: inline direction is Y, block direction is X
+    // The "x" in layout coords represents inline position (vertical position)
+    // The "y" in layout coords represents block position (horizontal position)
+    const inlinePos = getXPositionInLine(line, offsetInLine);
+    const lineX = (line.y as number) + pageYOffset; // Block position becomes X
+    const lineY = (line.x as number); // Inline position becomes Y
+
+    return {
+      x: px(lineX),
+      y: px(lineY + inlinePos),
+      height: px(fontSizePx), // For vertical, cursor "height" is font width
+    };
+  }
+
+  // Horizontal text (default)
+  const x = getXPositionInLine(line, offsetInLine);
   const lineY = (line.y as number) + pageYOffset;
   const bounds = getTextVisualBounds(lineY, fontSize as number, fontFamily);
 
@@ -327,41 +379,70 @@ type LineCandidate = {
 };
 
 /**
- * Calculate distance from Y coordinate to a line.
+ * Calculate distance from block coordinate to a line.
  * Uses the maximum font in the line for accurate bounds calculation.
+ *
+ * @param blockCoord - Coordinate in block direction (Y for horizontal, X for vertical)
+ * @param line - The line to calculate distance to
+ * @param pageYOffset - Y offset of the page in combined SVG space
+ * @param writingMode - Writing mode for coordinate interpretation
  */
 function calculateLineDistance(
-  y: number,
+  blockCoord: number,
   line: LayoutLine,
   pageYOffset: number,
+  writingMode: WritingMode,
 ): number {
   const { fontSize, fontFamily } = getLineMaxFontInfo(line.spans);
+  const fontSizePx = (fontSize as number) * PT_TO_PX;
+
+  if (isVertical(writingMode)) {
+    // Vertical text: block direction is X, line position stored in line.y
+    const lineX = (line.y as number) + pageYOffset;
+    const lineStart = lineX;
+    const lineEnd = lineX + fontSizePx;
+
+    if (blockCoord < lineStart) {
+      return lineStart - blockCoord;
+    }
+    if (blockCoord > lineEnd) {
+      return blockCoord - lineEnd;
+    }
+    return 0;
+  }
+
+  // Horizontal text: block direction is Y
   const lineY = (line.y as number) + pageYOffset;
   const bounds = getTextVisualBounds(lineY, fontSize as number, fontFamily);
   const lineTop = bounds.topY;
   const lineBottom = bounds.topY + bounds.height;
 
-  if (y < lineTop) {
-    return lineTop - y;
+  if (blockCoord < lineTop) {
+    return lineTop - blockCoord;
   }
-  if (y > lineBottom) {
-    return y - lineBottom;
+  if (blockCoord > lineBottom) {
+    return blockCoord - lineBottom;
   }
   return 0;
 }
 
 /**
- * Find the closest line to a Y coordinate.
+ * Find the closest line to a block coordinate.
+ *
+ * @param flatParagraphs - Flattened list of paragraphs with page offsets
+ * @param blockCoord - Coordinate in block direction (Y for horizontal, X for vertical)
+ * @param writingMode - Writing mode for coordinate interpretation
  */
 function findClosestLine(
   flatParagraphs: readonly FlatParagraphInfo[],
-  y: number,
+  blockCoord: number,
+  writingMode: WritingMode,
 ): LineCandidate {
   const allCandidates = flatParagraphs.flatMap((info, pIdx) =>
     info.paragraph.lines.map((line, lIdx) => ({
       paragraphIndex: pIdx,
       lineIndex: lIdx,
-      distance: calculateLineDistance(y, line, info.pageYOffset),
+      distance: calculateLineDistance(blockCoord, line, info.pageYOffset, writingMode),
     })),
   );
 
@@ -378,6 +459,9 @@ function findClosestLine(
  * Map visual coordinates to a cursor position.
  * Searches all pages to find the closest line.
  * Expects coordinates in the combined SVG space (with page Y offsets).
+ *
+ * For horizontal text: Y is used to find the line, X to find character position
+ * For vertical text: X is used to find the line, Y to find character position
  */
 export function coordinatesToCursorPosition(
   pagedLayout: PagedLayoutResult,
@@ -385,12 +469,17 @@ export function coordinatesToCursorPosition(
   y: number,
 ): ContinuousCursorPosition {
   const flatParagraphs = buildFlatParagraphList(pagedLayout);
+  const writingMode = pagedLayout.writingMode ?? "horizontal-tb";
 
   if (flatParagraphs.length === 0) {
     return { paragraphIndex: 0, charOffset: 0 };
   }
 
-  const { paragraphIndex, lineIndex } = findClosestLine(flatParagraphs, y);
+  // For vertical text, swap the meaning of x and y for line finding
+  const blockCoord = isVertical(writingMode) ? x : y;
+  const inlineCoord = isVertical(writingMode) ? y : x;
+
+  const { paragraphIndex, lineIndex } = findClosestLine(flatParagraphs, blockCoord, writingMode);
 
   const { paragraph } = flatParagraphs[paragraphIndex];
   if (paragraph.lines.length === 0) {
@@ -398,7 +487,7 @@ export function coordinatesToCursorPosition(
   }
 
   const targetLine = paragraph.lines[lineIndex];
-  const lineOffset = getCharOffsetInLine(targetLine, x);
+  const lineOffset = getCharOffsetInLine(targetLine, inlineCoord, writingMode);
   const offsetBeforeLine = paragraph.lines
     .slice(0, lineIndex)
     .reduce((sum, line) => sum + getLineTextLength(line.spans), 0);

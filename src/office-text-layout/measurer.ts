@@ -1,10 +1,11 @@
 /**
  * @file Text width measurement
  *
- * Estimates text width using statistical font metrics and kerning tables.
+ * Measures text width using Canvas API for accuracy with browser rendering.
+ * Falls back to font-metrics estimation in non-browser environments.
  * Shared implementation for PPTX and DOCX text layout.
  *
- * @see src/text/font-metrics.ts - Font metrics data
+ * @see src/text/font-metrics.ts - Font metrics data (fallback)
  */
 
 import type { LayoutSpan, MeasuredSpan } from "./types";
@@ -13,6 +14,101 @@ import { px } from "../ooxml/domain/units";
 import { isCjkCodePoint } from "../text/cjk";
 import { getCharWidth, getKerningAdjustment } from "../text/font-metrics";
 import { isMonospace } from "../text/fonts";
+
+// =============================================================================
+// Canvas Measurement
+// =============================================================================
+
+/**
+ * Shared canvas context for text measurement.
+ * Created lazily and reused for performance.
+ */
+let measurementCanvas: HTMLCanvasElement | undefined;
+let measurementContext: CanvasRenderingContext2D | undefined;
+
+/**
+ * Check if Canvas measurement is available.
+ */
+function canUseCanvas(): boolean {
+  if (typeof document === "undefined") {
+    return false;
+  }
+  if (measurementContext !== undefined) {
+    return true;
+  }
+  try {
+    measurementCanvas = document.createElement("canvas");
+    measurementContext = measurementCanvas.getContext("2d") ?? undefined;
+    return measurementContext !== undefined;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Build a CSS font string for Canvas measurement.
+ * Must match the format used by SVG rendering.
+ */
+function buildFontString(
+  fontSizePx: number,
+  fontFamily: string,
+  fontWeight: number,
+  fontStyle: "normal" | "italic",
+): string {
+  const style = fontStyle === "italic" ? "italic " : "";
+  const weight = fontWeight !== 400 ? `${fontWeight} ` : "";
+  return `${style}${weight}${fontSizePx}px ${fontFamily}`;
+}
+
+/**
+ * Measurement cache to avoid redundant Canvas calls.
+ * Key format: "fontString|text"
+ */
+const measurementCache = new Map<string, number>();
+const MAX_CACHE_SIZE = 10000;
+
+/**
+ * Measure text width using Canvas API.
+ * Returns undefined if Canvas is not available.
+ */
+function measureWithCanvas(
+  text: string,
+  fontSizePx: number,
+  fontFamily: string,
+  fontWeight: number,
+  fontStyle: "normal" | "italic",
+  letterSpacing: number,
+): number | undefined {
+  if (!canUseCanvas() || measurementContext === undefined) {
+    return undefined;
+  }
+
+  const fontString = buildFontString(fontSizePx, fontFamily, fontWeight, fontStyle);
+  const cacheKey = `${fontString}|${letterSpacing}|${text}`;
+
+  const cached = measurementCache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  // Set font and letter spacing
+  measurementContext.font = fontString;
+  (measurementContext as CanvasRenderingContext2D & { letterSpacing?: string }).letterSpacing = `${letterSpacing}px`;
+
+  const metrics = measurementContext.measureText(text);
+  const width = metrics.width;
+
+  // Maintain cache size
+  if (measurementCache.size >= MAX_CACHE_SIZE) {
+    const firstKey = measurementCache.keys().next().value;
+    if (firstKey !== undefined) {
+      measurementCache.delete(firstKey);
+    }
+  }
+  measurementCache.set(cacheKey, width);
+
+  return width;
+}
 
 // =============================================================================
 // Constants
@@ -97,20 +193,48 @@ function resolveKerningAdjust(
 }
 
 // =============================================================================
-// Text Width Estimation
+// Text Width Measurement
 // =============================================================================
 
 /**
- * Estimate the width of a text string with font-aware metrics and kerning.
+ * Measure the width of a text string.
+ * Uses Canvas API for accurate browser-consistent measurement.
+ * Falls back to font-metrics estimation in non-browser environments.
  *
  * @param text - Text to measure
  * @param fontSize - Font size in points
  * @param letterSpacing - Additional letter spacing in pixels
  * @param fontFamily - Font family for metrics lookup
  * @param fontWeight - Font weight (default: 400)
+ * @param fontStyle - Font style (default: "normal")
  * @returns Width in pixels
  */
-export function estimateTextWidth(
+export function measureTextWidth(
+  text: string,
+  fontSize: Points,
+  letterSpacing: Pixels,
+  fontFamily: string,
+  fontWeight: number = 400,
+  fontStyle: "normal" | "italic" = "normal",
+): Pixels {
+  const fontSizePx = (fontSize as number) * PT_TO_PX;
+  const letterSpacingNum = letterSpacing as number;
+
+  // Try Canvas measurement first (matches browser rendering)
+  const canvasWidth = measureWithCanvas(text, fontSizePx, fontFamily, fontWeight, fontStyle, letterSpacingNum);
+  if (canvasWidth !== undefined) {
+    return px(canvasWidth);
+  }
+
+  // Fallback to font-metrics estimation
+  return estimateTextWidthFallback(text, fontSize, letterSpacing, fontFamily, fontWeight);
+}
+
+/**
+ * Fallback text width estimation using font metrics.
+ * Used when Canvas is not available (e.g., server-side rendering).
+ */
+function estimateTextWidthFallback(
   text: string,
   fontSize: Points,
   letterSpacing: Pixels,
@@ -128,6 +252,19 @@ export function estimateTextWidth(
   }, 0);
 
   return px(width);
+}
+
+/**
+ * @deprecated Use measureTextWidth instead
+ */
+export function estimateTextWidth(
+  text: string,
+  fontSize: Points,
+  letterSpacing: Pixels,
+  fontFamily: string,
+  fontWeight: number = 400,
+): Pixels {
+  return measureTextWidth(text, fontSize, letterSpacing, fontFamily, fontWeight);
 }
 
 // =============================================================================
@@ -157,7 +294,7 @@ function applyTextTransform(
 
 /**
  * Measure a single span and return MeasuredSpan.
- * Uses font-aware metrics and kerning for accurate width estimation.
+ * Uses Canvas API for accurate browser-consistent measurement.
  * Applies textTransform before measuring to match rendered width.
  * For inline images, uses the image width directly.
  */
@@ -170,12 +307,13 @@ export function measureSpan(span: LayoutSpan): MeasuredSpan {
   } else if (span.breakType === "none") {
     // Apply text transform before measuring (matches rendering)
     const transformedText = applyTextTransform(span.text, span.textTransform);
-    width = estimateTextWidth(
+    width = measureTextWidth(
       transformedText,
       span.fontSize,
       span.letterSpacing,
       span.fontFamily,
       span.fontWeight,
+      span.fontStyle,
     );
   }
 
@@ -197,13 +335,14 @@ export function measureSpans(spans: readonly LayoutSpan[]): MeasuredSpan[] {
 // =============================================================================
 
 /**
- * Estimate bullet character width.
+ * Measure bullet character width.
+ * Uses Canvas API for accurate browser-consistent measurement.
  *
  * Per ECMA-376 21.1.2.2.7, the spacing between bullet and text is controlled
  * by the indent attribute, not by adding extra space to the bullet width.
  */
 export function estimateBulletWidth(bulletChar: string, fontSize: Points, fontFamily: string): Pixels {
-  return estimateTextWidth(bulletChar, fontSize, px(0), fontFamily);
+  return measureTextWidth(bulletChar, fontSize, px(0), fontFamily);
 }
 
 // =============================================================================
@@ -212,7 +351,7 @@ export function estimateBulletWidth(bulletChar: string, fontSize: Points, fontFa
 
 /**
  * Measure the width of the first N characters of a span.
- * Used for accurate cursor positioning within a span.
+ * Uses Canvas API for accurate browser-consistent measurement.
  * Applies textTransform before measuring to match rendered width.
  *
  * @param span - The layout span to measure
@@ -227,12 +366,12 @@ export function measureSpanTextWidth(span: LayoutSpan, charCount: number): Pixel
   // Apply text transform before measuring (matches rendering)
   const transformedText = applyTextTransform(span.text, span.textTransform);
   const text = transformedText.slice(0, Math.min(charCount, transformedText.length));
-  return estimateTextWidth(text, span.fontSize, span.letterSpacing, span.fontFamily, span.fontWeight);
+  return measureTextWidth(text, span.fontSize, span.letterSpacing, span.fontFamily, span.fontWeight, span.fontStyle);
 }
 
 /**
  * Get the character index at a specific X offset within a span.
- * Used for click-to-cursor position mapping.
+ * Uses Canvas API for accurate browser-consistent measurement.
  * Applies textTransform before calculating to match rendered width.
  *
  * @param span - The layout span
@@ -247,23 +386,44 @@ export function getCharIndexAtOffset(span: LayoutSpan, targetX: number): number 
   // Apply text transform before calculating (matches rendering)
   const transformedText = applyTextTransform(span.text, span.textTransform);
   const chars = Array.from(transformedText);
-  const letterSpacingNum = span.letterSpacing as number;
-  let currentX = 0;
 
-  for (let i = 0; i < chars.length; i++) {
-    const prevChar = i > 0 ? chars[i - 1] : undefined;
-    const charResult = calculateCharWidth(chars[i], prevChar, span.fontSize, span.fontFamily, span.fontWeight);
-    const spacing = i > 0 ? letterSpacingNum : 0;
-    const charWidth = (charResult.totalWidth as number) + spacing;
+  // Use binary search with Canvas measurement for efficiency
+  let low = 0;
+  let high = chars.length;
 
-    // Check if target is before the midpoint of this character
-    if (targetX < currentX + charWidth / 2) {
-      return i;
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    const textUpToMid = chars.slice(0, mid + 1).join("");
+    const widthUpToMid = measureTextWidth(
+      textUpToMid,
+      span.fontSize,
+      span.letterSpacing,
+      span.fontFamily,
+      span.fontWeight,
+      span.fontStyle,
+    ) as number;
+
+    // Get width up to previous character for midpoint calculation
+    const textUpToPrev = mid > 0 ? chars.slice(0, mid).join("") : "";
+    const widthUpToPrev = mid > 0 ? (measureTextWidth(
+      textUpToPrev,
+      span.fontSize,
+      span.letterSpacing,
+      span.fontFamily,
+      span.fontWeight,
+      span.fontStyle,
+    ) as number) : 0;
+
+    const charMidpoint = (widthUpToPrev + widthUpToMid) / 2;
+
+    if (targetX < charMidpoint) {
+      high = mid;
+    } else {
+      low = mid + 1;
     }
-    currentX += charWidth;
   }
 
-  return chars.length;
+  return Math.min(low, chars.length);
 }
 
 // =============================================================================

@@ -71,6 +71,7 @@ function headerFooterToLayoutResult(
     paragraphs: layout.paragraphs,
     totalHeight: layout.height,
     yOffset: px(0),
+    writingMode: "horizontal-tb",
   };
 }
 
@@ -91,6 +92,7 @@ export function PageRenderer({
     paragraphs: page.paragraphs,
     totalHeight: page.height,
     yOffset: px(0),
+    writingMode: "horizontal-tb",
   };
 
   // Convert header and footer

@@ -191,6 +191,7 @@ function renderCell(
             paragraphs,
             totalHeight: contentHeight as Pixels,
             yOffset: 0 as Pixels,
+            writingMode: "horizontal-tb",
           }}
         />
       </g>

@@ -166,6 +166,7 @@ export const DocumentTextOverlay = forwardRef<SVGSVGElement, DocumentTextOverlay
         paragraphs,
         totalHeight: totalHeight as Pixels,
         yOffset: 0 as Pixels,
+        writingMode: "horizontal-tb" as const,
       };
     }, [pagedLayout.pages, pageYOffsets, totalHeight]);
 

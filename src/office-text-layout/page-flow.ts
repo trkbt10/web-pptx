@@ -654,6 +654,7 @@ export function flowIntoPages(input: PageFlowInput): PagedLayoutResult {
   return {
     pages: state.pages,
     totalHeight: px(state.totalHeight),
+    writingMode: config.writingMode ?? "horizontal-tb",
   };
 }
 
@@ -664,11 +665,17 @@ export function flowIntoPages(input: PageFlowInput): PagedLayoutResult {
 /**
  * Create a single-page layout (no pagination).
  * Useful for preview or infinite scroll mode.
+ *
+ * @param paragraphs - Paragraphs to include
+ * @param pageWidth - Page width in pixels
+ * @param totalHeight - Total height in pixels
+ * @param writingMode - Optional writing mode (defaults to horizontal-tb)
  */
 export function createSinglePageLayout(
   paragraphs: readonly LayoutParagraphResult[],
   pageWidth: Pixels,
   totalHeight: Pixels,
+  writingMode?: WritingMode,
 ): PagedLayoutResult {
   return {
     pages: [
@@ -681,6 +688,7 @@ export function createSinglePageLayout(
       },
     ],
     totalHeight,
+    writingMode: writingMode ?? "horizontal-tb",
   };
 }
 

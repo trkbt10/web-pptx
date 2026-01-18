@@ -272,6 +272,10 @@ export function serializeRunContent(content: DocxRunContent): XmlElement {
       return serializeBreak(content);
     case "symbol":
       return serializeSymbol(content);
+    case "drawing":
+      // TODO: Implement drawing serialization
+      // For now, return a placeholder comment element
+      throw new Error("Drawing serialization not yet implemented");
   }
 }
 

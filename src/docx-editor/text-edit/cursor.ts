@@ -140,6 +140,8 @@ function getPlainTextFromRunContent(content: DocxRunContent): string {
       return content.breakType === "page" || content.breakType === "column" ? "" : "\n";
     case "symbol":
       return ""; // Symbols are not directly convertible to plain text
+    case "drawing":
+      return ""; // Drawings are not convertible to plain text
   }
 }
 

@@ -13,6 +13,7 @@
  */
 
 import type { Pixels, Points, Percent } from "../ooxml/domain/units";
+import type { WritingMode as WritingModeType } from "./writing-mode";
 
 // Re-export writing mode types for convenience
 export type {
@@ -24,6 +25,9 @@ export type {
   PhysicalSize,
   PhysicalBounds,
 } from "./writing-mode";
+
+// Local alias for internal use
+type WritingMode = WritingModeType;
 
 export {
   textDirectionToWritingMode,
@@ -340,6 +344,13 @@ export type LayoutResult = {
   readonly totalHeight: Pixels;
   /** Y offset applied for vertical anchoring in pixels */
   readonly yOffset: Pixels;
+  /**
+   * Writing mode used for this layout.
+   * Informs the renderer how to interpret coordinates and render text.
+   *
+   * @see ECMA-376-1:2016 Section 17.18.93 (ST_TextDirection)
+   */
+  readonly writingMode: WritingMode;
 };
 
 // =============================================================================
@@ -570,6 +581,17 @@ export type TextBoxConfig = {
   readonly vertOverflow: TextVerticalOverflow;
   /** Apply paragraph spacing to first and last paragraphs */
   readonly spcFirstLastPara: boolean;
+  /**
+   * Writing mode for text direction.
+   * Determines the inline and block flow directions.
+   *
+   * - horizontal-tb: Horizontal text, top to bottom block flow (default)
+   * - vertical-rl: Vertical text, right to left block flow (Japanese/Chinese)
+   * - vertical-lr: Vertical text, left to right block flow (Mongolian)
+   *
+   * @see ECMA-376-1:2016 Section 17.18.93 (ST_TextDirection)
+   */
+  readonly writingMode?: WritingMode;
 };
 
 // =============================================================================
@@ -642,6 +664,13 @@ export type PagedLayoutResult = {
   readonly pages: readonly PageLayout[];
   /** Total document height in pixels */
   readonly totalHeight: Pixels;
+  /**
+   * Writing mode used for this layout.
+   * Informs cursor utilities and renderers how to interpret coordinates.
+   *
+   * @see ECMA-376-1:2016 Section 17.18.93 (ST_TextDirection)
+   */
+  readonly writingMode?: WritingMode;
 };
 
 /**

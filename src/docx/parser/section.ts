@@ -390,6 +390,32 @@ function parseVerticalJc(value: string | undefined): DocxVerticalJc | undefined 
 }
 
 // =============================================================================
+// Text Direction Parsing
+// =============================================================================
+
+/**
+ * Parse text direction value.
+ *
+ * @see ECMA-376-1:2016 Section 17.6.23 (textDirection)
+ * @see ECMA-376-1:2016 Section 17.18.93 (ST_TextDirection)
+ */
+function parseSectionTextDirection(
+  value: string | undefined,
+): "lrTb" | "tbRl" | "btLr" | "lrTbV" | "tbRlV" | "tbLrV" | undefined {
+  switch (value) {
+    case "lrTb":
+    case "tbRl":
+    case "btLr":
+    case "lrTbV":
+    case "tbRlV":
+    case "tbLrV":
+      return value;
+    default:
+      return undefined;
+  }
+}
+
+// =============================================================================
 // Note Properties Parsing
 // =============================================================================
 
@@ -453,6 +479,7 @@ export function parseSectionProperties(element: XmlElement | undefined): DocxSec
     docGrid: parseDocGrid(getChild(element, "docGrid")),
     bidi: getChild(element, "bidi") !== undefined,
     rtlGutter: getChild(element, "rtlGutter") !== undefined,
+    textDirection: parseSectionTextDirection(getChildVal(element, "textDirection")),
     vAlign: parseVerticalJc(getChildVal(element, "vAlign")),
     footnotePr: parseNotePr(getChild(element, "footnotePr")),
     endnotePr: parseNotePr(getChild(element, "endnotePr")),
