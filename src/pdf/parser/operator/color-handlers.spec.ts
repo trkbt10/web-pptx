@@ -317,6 +317,128 @@ describe("color-handlers", () => {
       return out;
     }
 
+    function makeMinimalCmykLutIccProfileBytes(): Uint8Array {
+      const makeMft1CmykToXyzTag = (): Uint8Array => {
+        const inChannels = 4;
+        const outChannels = 3;
+        const gridPoints = 2;
+        const inputEntries = 2;
+        const outputEntries = 2;
+
+        const clutPoints = gridPoints ** inChannels; // 16
+        const headerBytes = 52;
+        const inputTableBytes = inChannels * inputEntries; // u8
+        const clutBytes = clutPoints * outChannels; // u8
+        const outputTableBytes = outChannels * outputEntries; // u8
+        const total = headerBytes + inputTableBytes + clutBytes + outputTableBytes;
+        const bytes = new Uint8Array(total);
+        const view = new DataView(bytes.buffer);
+
+        writeAscii4(bytes, 0, "mft1");
+        bytes[8] = inChannels;
+        bytes[9] = outChannels;
+        bytes[10] = gridPoints;
+
+        const mat = [
+          1, 0, 0,
+          0, 1, 0,
+          0, 0, 1,
+        ];
+        for (let i = 0; i < 9; i += 1) {
+          writeS15Fixed16(view, 12 + i * 4, mat[i] ?? 0);
+        }
+
+        writeU16BE(view, 48, inputEntries);
+        writeU16BE(view, 50, outputEntries);
+
+        let cursor = 52;
+        for (let c = 0; c < inChannels; c += 1) {
+          bytes[cursor++] = 0;
+          bytes[cursor++] = 255;
+        }
+
+        const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
+        const toByte = (v01: number): number => Math.floor(clamp01(v01) * 255);
+        const rgbToXyzD65 = (r: number, g: number, b: number): readonly [number, number, number] => {
+          const X = 0.4124 * r + 0.3576 * g + 0.1805 * b;
+          const Y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          const Z = 0.0193 * r + 0.1192 * g + 0.9505 * b;
+          return [X, Y, Z] as const;
+        };
+
+        for (let k = 0; k <= 1; k += 1) {
+          for (let y = 0; y <= 1; y += 1) {
+            for (let m = 0; m <= 1; m += 1) {
+              for (let c = 0; c <= 1; c += 1) {
+                const r = 1 - c;
+                const gg = 1 - m;
+                const bb = 1 - y;
+                const [X, Y, Z] = rgbToXyzD65(r, gg, bb);
+                bytes[cursor++] = toByte(X);
+                bytes[cursor++] = toByte(Y);
+                bytes[cursor++] = toByte(Z);
+              }
+            }
+          }
+        }
+
+        for (let c = 0; c < outChannels; c += 1) {
+          bytes[cursor++] = 0;
+          bytes[cursor++] = 255;
+        }
+
+        return bytes;
+      };
+
+      const tags: Array<{ sig: string; data: Uint8Array }> = [
+        { sig: "wtpt", data: makeXyzTag(0.9505, 1, 1.089) },
+        { sig: "A2B0", data: makeMft1CmykToXyzTag() },
+      ];
+
+      const headerSize = 128;
+      const tagTableSize = 4 + tags.length * 12;
+      let cursor = pad4(headerSize + tagTableSize);
+
+      const records: Array<{ sig: string; off: number; size: number }> = [];
+      const tagDataParts: Uint8Array[] = [];
+      for (const t of tags) {
+        const off = cursor;
+        const size = t.data.length;
+        records.push({ sig: t.sig, off, size });
+        tagDataParts.push(t.data);
+        cursor = pad4(cursor + size);
+        if (cursor > off + size) {
+          tagDataParts.push(new Uint8Array(cursor - (off + size)));
+        }
+      }
+
+      const totalSize = cursor;
+      const out = new Uint8Array(totalSize);
+      const view = new DataView(out.buffer);
+
+      writeU32BE(view, 0, totalSize);
+      writeAscii4(out, 16, "CMYK");
+      writeAscii4(out, 20, "XYZ ");
+      writeAscii4(out, 36, "acsp");
+
+      writeU32BE(view, 128, tags.length);
+      let tpos = 132;
+      for (const r of records) {
+        writeAscii4(out, tpos, r.sig);
+        writeU32BE(view, tpos + 4, r.off);
+        writeU32BE(view, tpos + 8, r.size);
+        tpos += 12;
+      }
+
+      let dpos = pad4(headerSize + tagTableSize);
+      for (const part of tagDataParts) {
+        out.set(part, dpos);
+        dpos += part.length;
+      }
+
+      return out;
+    }
+
     it("converts ICCBased sc components to DeviceRGB using the parsed ICC profile", () => {
       const profile = parseIccProfile(makeMinimalRgbIccProfileBytes());
       expect(profile?.kind).toBe("rgb");
@@ -348,6 +470,39 @@ describe("color-handlers", () => {
       expect(gs.fillColor.components[1]).toBeCloseTo(0, 6);
       expect(gs.fillColor.components[2]).toBeCloseTo(0, 6);
       expect(gs.fillColorSpaceName).toBe("CS1");
+    });
+
+    it("converts ICCBased CMYK sc components via LUT A2B0 to DeviceRGB", () => {
+      const profile = parseIccProfile(makeMinimalCmykLutIccProfileBytes());
+      expect(profile?.kind).toBe("lut");
+
+      const colorSpaces: ReadonlyMap<string, ParsedNamedColorSpace> = new Map([
+        [
+          "CS2",
+          {
+            kind: "iccBased",
+            n: 4,
+            alternate: "DeviceCMYK",
+            profile,
+          },
+        ],
+      ]);
+
+      const stack = createGraphicsStateStack();
+      const ops = createGfxOpsFromStack(stack);
+
+      let ctx: ParserContext = { ...createContext(["CS2"]), colorSpaces };
+      ctx = { ...ctx, ...colorHandlers.handleFillColorSpace(ctx, ops) };
+
+      ctx = { ...ctx, operandStack: [0, 1, 1, 0] };
+      ctx = { ...ctx, ...colorHandlers.handleFillColorN(ctx, ops) };
+
+      const gs = stack.get();
+      expect(gs.fillColor.colorSpace).toBe("DeviceRGB");
+      expect(gs.fillColor.components[0]).toBeCloseTo(1, 3);
+      expect(gs.fillColor.components[1]).toBeCloseTo(0, 3);
+      expect(gs.fillColor.components[2]).toBeCloseTo(0, 3);
+      expect(gs.fillColorSpaceName).toBe("CS2");
     });
 
     it("resets current fill color space name when using rg", () => {

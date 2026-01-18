@@ -15,7 +15,7 @@
 import type { GraphicsStateOps, OperatorHandler, OperatorHandlerEntry, ParserContext } from "./types";
 import type { PdfColor } from "../../domain";
 import { popNumber, collectColorComponents } from "./stack-ops";
-import { evalIccCurve, makeBradfordAdaptationMatrix, type ParsedIccProfile } from "../icc-profile.native";
+import { evalIccCurve, evalIccLutToPcs01, makeBradfordAdaptationMatrix, type ParsedIccProfile } from "../icc-profile.native";
 
 // =============================================================================
 // Gray Color Handlers
@@ -273,7 +273,6 @@ function iccComponentsToRgbBytes(
   profile: ParsedIccProfile,
   n: number,
 ): readonly [number, number, number] | null {
-  // Only support Gray/RGB for now (deterministic subset).
   if (profile.kind === "gray") {
     if (n !== 1 || components.length < 1) {return null;}
     const g = Math.min(1, Math.max(0, components[0] ?? 0));
@@ -288,6 +287,48 @@ function iccComponentsToRgbBytes(
     return xyzToSrgbBytes(xyz[0], xyz[1], xyz[2]);
   }
 
+  if (profile.kind === "lut") {
+    if (n <= 0 || n !== profile.a2b0.inChannels) {return null;}
+    if (components.length < n) {return null;}
+
+    const inputs: number[] = [];
+    for (let i = 0; i < n; i += 1) {
+      inputs.push(Math.min(1, Math.max(0, components[i] ?? 0)));
+    }
+
+    const pcs01 = evalIccLutToPcs01(profile, inputs);
+    if (!pcs01) {return null;}
+
+    const D65: readonly [number, number, number] = [0.9505, 1, 1.089];
+    if (profile.pcs === "XYZ ") {
+      const adapt = makeBradfordAdaptationMatrix({ srcWhitePoint: profile.whitePoint, dstWhitePoint: D65 });
+      const xyz = applyMat3ToXyz(adapt, pcs01);
+      return xyzToSrgbBytes(xyz[0], xyz[1], xyz[2]);
+    }
+
+    const labToXyzD50 = (Lstar: number, astar: number, bstar: number): readonly [number, number, number] => {
+      const delta = 6 / 29;
+      const finv = (t: number): number => {
+        if (t > delta) {return t * t * t;}
+        return 3 * delta * delta * (t - 4 / 29);
+      };
+      const fy = (Lstar + 16) / 116;
+      const fx = fy + astar / 500;
+      const fz = fy - bstar / 200;
+      const D50: readonly [number, number, number] = [0.9642, 1, 0.8249];
+      return [D50[0] * finv(fx), D50[1] * finv(fy), D50[2] * finv(fz)] as const;
+    };
+
+    const Lstar = Math.min(1, Math.max(0, pcs01[0] ?? 0)) * 100;
+    const astar = Math.min(1, Math.max(0, pcs01[1] ?? 0)) * 255 - 128;
+    const bstar = Math.min(1, Math.max(0, pcs01[2] ?? 0)) * 255 - 128;
+    const xyzD50 = labToXyzD50(Lstar, astar, bstar);
+    const adapt = makeBradfordAdaptationMatrix({ srcWhitePoint: [0.9642, 1, 0.8249], dstWhitePoint: D65 });
+    const xyz = applyMat3ToXyz(adapt, xyzD50);
+    return xyzToSrgbBytes(xyz[0], xyz[1], xyz[2]);
+  }
+
+  if (profile.kind !== "rgb") {return null;}
   if (n !== 3 || components.length < 3) {return null;}
   const r = Math.min(1, Math.max(0, components[0] ?? 0));
   const g = Math.min(1, Math.max(0, components[1] ?? 0));

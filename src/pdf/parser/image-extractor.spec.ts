@@ -243,6 +243,128 @@ function makeMinimalIccProfileBytes(args: { readonly dataColorSpace: "RGB " | "G
   return out;
 }
 
+function makeMinimalCmykLutIccProfileBytes(): Uint8Array {
+  const makeMft1CmykToXyzTag = (): Uint8Array => {
+    const inChannels = 4;
+    const outChannels = 3;
+    const gridPoints = 2;
+    const inputEntries = 2;
+    const outputEntries = 2;
+
+    const clutPoints = gridPoints ** inChannels; // 16
+    const headerBytes = 52;
+    const inputTableBytes = inChannels * inputEntries; // u8
+    const clutBytes = clutPoints * outChannels; // u8
+    const outputTableBytes = outChannels * outputEntries; // u8
+    const total = headerBytes + inputTableBytes + clutBytes + outputTableBytes;
+    const bytes = new Uint8Array(total);
+    const view = new DataView(bytes.buffer);
+
+    writeAscii4(bytes, 0, "mft1");
+    bytes[8] = inChannels;
+    bytes[9] = outChannels;
+    bytes[10] = gridPoints;
+
+    const mat = [
+      1, 0, 0,
+      0, 1, 0,
+      0, 0, 1,
+    ];
+    for (let i = 0; i < 9; i += 1) {
+      writeS15Fixed16(view, 12 + i * 4, mat[i] ?? 0);
+    }
+
+    writeU16BE(view, 48, inputEntries);
+    writeU16BE(view, 50, outputEntries);
+
+    let cursor = 52;
+    for (let c = 0; c < inChannels; c += 1) {
+      bytes[cursor++] = 0;
+      bytes[cursor++] = 255;
+    }
+
+    const clamp01 = (v: number): number => Math.min(1, Math.max(0, v));
+    const toByte = (v01: number): number => Math.floor(clamp01(v01) * 255);
+    const rgbToXyzD65 = (r: number, g: number, b: number): readonly [number, number, number] => {
+      const X = 0.4124 * r + 0.3576 * g + 0.1805 * b;
+      const Y = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      const Z = 0.0193 * r + 0.1192 * g + 0.9505 * b;
+      return [X, Y, Z] as const;
+    };
+
+    for (let k = 0; k <= 1; k += 1) {
+      for (let y = 0; y <= 1; y += 1) {
+        for (let m = 0; m <= 1; m += 1) {
+          for (let c = 0; c <= 1; c += 1) {
+            const r = 1 - c;
+            const gg = 1 - m;
+            const bb = 1 - y;
+            const [X, Y, Z] = rgbToXyzD65(r, gg, bb);
+            bytes[cursor++] = toByte(X);
+            bytes[cursor++] = toByte(Y);
+            bytes[cursor++] = toByte(Z);
+          }
+        }
+      }
+    }
+
+    for (let c = 0; c < outChannels; c += 1) {
+      bytes[cursor++] = 0;
+      bytes[cursor++] = 255;
+    }
+
+    return bytes;
+  };
+
+  const tags: Array<{ sig: string; data: Uint8Array }> = [
+    { sig: "wtpt", data: makeIccXyzTag(0.9505, 1, 1.089) },
+    { sig: "A2B0", data: makeMft1CmykToXyzTag() },
+  ];
+
+  const headerSize = 128;
+  const tagTableSize = 4 + tags.length * 12;
+  let cursor = pad4(headerSize + tagTableSize);
+
+  const records: Array<{ sig: string; off: number; size: number }> = [];
+  const tagDataParts: Uint8Array[] = [];
+  for (const t of tags) {
+    const off = cursor;
+    const size = t.data.length;
+    records.push({ sig: t.sig, off, size });
+    tagDataParts.push(t.data);
+    cursor = pad4(cursor + size);
+    if (cursor > off + size) {
+      tagDataParts.push(new Uint8Array(cursor - (off + size)));
+    }
+  }
+
+  const totalSize = cursor;
+  const out = new Uint8Array(totalSize);
+  const view = new DataView(out.buffer);
+
+  writeU32BE(view, 0, totalSize);
+  writeAscii4(out, 16, "CMYK");
+  writeAscii4(out, 20, "XYZ ");
+  writeAscii4(out, 36, "acsp");
+
+  writeU32BE(view, 128, tags.length);
+  let tpos = 132;
+  for (const r of records) {
+    writeAscii4(out, tpos, r.sig);
+    writeU32BE(view, tpos + 4, r.off);
+    writeU32BE(view, tpos + 8, r.size);
+    tpos += 12;
+  }
+
+  let dpos = pad4(headerSize + tagTableSize);
+  for (const part of tagDataParts) {
+    out.set(part, dpos);
+    dpos += part.length;
+  }
+
+  return out;
+}
+
 function buildMinimalPdfWithImageXObject(args: {
   readonly imageStreamAscii: string;
   readonly imageDictEntries: string;
@@ -1226,6 +1348,34 @@ describe("image-extractor (ICCBased)", () => {
 
     const rgba = convertToRgba(image.data, 1, 1, image.colorSpace, image.bitsPerComponent);
     expect(Array.from(rgba.slice(0, 4))).toEqual([137, 137, 137, 255]);
+  });
+
+  it("extracts ICCBased CMYK images by parsing a LUT-based ICC profile (mft1 A2B0)", async () => {
+    const icc = makeMinimalCmykLutIccProfileBytes();
+    const iccHex = asciiHexEncodeBytes(icc);
+
+    const pdfBytes = buildMinimalPdfWithIccBasedImageXObject({
+      // 1 pixel: C=0, M=1, Y=1, K=0 => red
+      imageStreamAscii: "00FFFF00>",
+      imageDictEntries:
+        "/Type /XObject /Subtype /Image /Name /Im1 /Width 1 /Height 1 " +
+        "/BitsPerComponent 8 " +
+        "/ColorSpace [/ICCBased 8 0 R] " +
+        "/Filter /ASCIIHexDecode",
+      iccProfileDictEntries: "/N 4 /Filter /ASCIIHexDecode",
+      iccProfileStreamAscii: iccHex,
+    });
+
+    const doc = await parsePdf(pdfBytes);
+    const images = doc.pages.flatMap((p) => p.elements.filter((e) => e.type === "image"));
+    expect(images).toHaveLength(1);
+
+    const image = images[0]!;
+    expect(image.colorSpace).toBe("DeviceRGB");
+    expect(image.bitsPerComponent).toBe(8);
+
+    const rgba = convertToRgba(image.data, 1, 1, image.colorSpace, image.bitsPerComponent);
+    expect(Array.from(rgba.slice(0, 4))).toEqual([255, 0, 0, 255]);
   });
 });
 

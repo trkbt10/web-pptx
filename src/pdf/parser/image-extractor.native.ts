@@ -11,7 +11,7 @@ import { cmykToRgb, grayToRgb, rgbToRgbBytes } from "../domain/color";
 import type { ParsedImage } from "./operator-parser";
 import { decodeCcittFax, type CcittFaxDecodeParms } from "./ccitt-fax-decode";
 import { decodeJpegToRgb } from "./jpeg-decode";
-import { evalIccCurve, makeBradfordAdaptationMatrix, parseIccProfile, type ParsedIccProfile } from "./icc-profile.native";
+import { evalIccCurve, evalIccLutToPcs01, makeBradfordAdaptationMatrix, parseIccProfile, type ParsedIccProfile } from "./icc-profile.native";
 import { downsampleJpxTo8Bit, type JpxDecodeFn } from "./jpx-decoder";
 
 export type ImageExtractorOptions = {
@@ -554,6 +554,58 @@ function iccBasedToRgbBytes(args: {
     return rgb;
   }
 
+  if (profile.kind === "lut") {
+    const decodePairs = getDecodePairsN(decode, profile.a2b0.inChannels);
+
+    const labToXyzD50 = (Lstar: number, astar: number, bstar: number): readonly [number, number, number] => {
+      const delta = 6 / 29;
+      const finv = (t: number): number => {
+        if (t > delta) {return t * t * t;}
+        return 3 * delta * delta * (t - 4 / 29);
+      };
+      const fy = (Lstar + 16) / 116;
+      const fx = fy + astar / 500;
+      const fz = fy - bstar / 200;
+      const D50: readonly [number, number, number] = [0.9642, 1, 0.8249];
+      return [D50[0] * finv(fx), D50[1] * finv(fy), D50[2] * finv(fz)] as const;
+    };
+
+    const D50: readonly [number, number, number] = [0.9642, 1, 0.8249];
+    const adaptD50ToD65 = makeBradfordAdaptationMatrix({ srcWhitePoint: D50, dstWhitePoint: D65 });
+
+    for (let p = 0; p < pixelCount; p += 1) {
+      const comps: number[] = [];
+      for (let c = 0; c < profile.a2b0.inChannels; c += 1) {
+        const raw = unpackSample(data, p * profile.a2b0.inChannels + c, bitsPerComponent);
+        const v01 = max > 0 ? raw / max : 0;
+        const decoded = applyDecodeToNormalizedSample(v01, decodePairs ? decodePairs[c] ?? null : null);
+        comps.push(decoded);
+      }
+
+      const pcs01 = evalIccLutToPcs01(profile, comps);
+      if (!pcs01) {continue;}
+
+      const xyz = (() => {
+        if (profile.pcs === "XYZ ") {
+          return pcs01;
+        }
+        const Lstar = clamp01OrZero(pcs01[0]) * 100;
+        const astar = clamp01OrZero(pcs01[1]) * 255 - 128;
+        const bstar = clamp01OrZero(pcs01[2]) * 255 - 128;
+        return labToXyzD50(Lstar, astar, bstar);
+      })();
+
+      const xyzD65 = profile.pcs === "Lab " ? applyMat3ToXyz(adaptD50ToD65, xyz) : applyMat3ToXyz(adapt, xyz);
+      const [r, g, b] = xyzToSrgbBytes(xyzD65[0], xyzD65[1], xyzD65[2]);
+      const off = p * 3;
+      rgb[off] = r;
+      rgb[off + 1] = g;
+      rgb[off + 2] = b;
+    }
+
+    return rgb;
+  }
+
   const decodePairs = getDecodePairs3(decode);
   for (let p = 0; p < pixelCount; p += 1) {
     const rraw = unpackSample(data, p * 3 + 0, bitsPerComponent);
@@ -648,7 +700,7 @@ type ColorSpaceInfo =
   | Readonly<{ kind: "lab"; whitePoint: readonly [number, number, number]; range: readonly [number, number, number, number] }>
   | Readonly<{ kind: "calGray"; whitePoint: readonly [number, number, number]; gamma: number }>
   | Readonly<{ kind: "calRgb"; whitePoint: readonly [number, number, number]; gamma: readonly [number, number, number]; matrix: readonly number[] }>
-  | Readonly<{ kind: "iccBased"; components: 1 | 3; profile: ParsedIccProfile }>;
+  | Readonly<{ kind: "iccBased"; components: 1 | 3 | 4; profile: ParsedIccProfile }>;
 
 function getColorSpaceInfo(page: NativePdfPage, dict: PdfDict): ColorSpaceInfo {
   const csObj = resolve(page, dictGet(dict, "ColorSpace"));
@@ -667,7 +719,7 @@ function getColorSpaceInfo(page: NativePdfPage, dict: PdfDict): ColorSpaceInfo {
         const profileStream = asStream(profile);
         if (profileStream) {
           const n = getNumberValue(profileStream.dict, "N");
-          if (n === 1 || n === 3) {
+          if (n === 1 || n === 3 || n === 4) {
             const bytes = (() => {
               try {
                 return decodePdfStream(profileStream);
@@ -676,8 +728,13 @@ function getColorSpaceInfo(page: NativePdfPage, dict: PdfDict): ColorSpaceInfo {
               }
             })();
             const parsed = bytes ? parseIccProfile(bytes) : null;
-            if (parsed && ((n === 1 && parsed.kind === "gray") || (n === 3 && parsed.kind === "rgb"))) {
-              return { kind: "iccBased", components: n, profile: parsed };
+            if (
+              parsed &&
+              ((n === 1 && parsed.kind === "gray") ||
+                (n === 3 && parsed.kind === "rgb") ||
+                (n === 4 && parsed.kind === "lut" && parsed.a2b0.inChannels === 4 && parsed.a2b0.outChannels === 3))
+            ) {
+              return { kind: "iccBased", components: n as 1 | 3 | 4, profile: parsed };
             }
           }
           if (n === 1) {return { kind: "direct", colorSpace: "DeviceGray" };}
