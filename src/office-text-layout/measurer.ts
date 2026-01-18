@@ -131,18 +131,42 @@ export function estimateTextWidth(
 }
 
 // =============================================================================
+// Text Transform
+// =============================================================================
+
+/**
+ * Apply text transform (uppercase/lowercase) to text.
+ * Must match the transform applied during rendering.
+ */
+function applyTextTransform(
+  text: string,
+  transform: "none" | "uppercase" | "lowercase" | undefined,
+): string {
+  if (transform === "uppercase") {
+    return text.toUpperCase();
+  }
+  if (transform === "lowercase") {
+    return text.toLowerCase();
+  }
+  return text;
+}
+
+// =============================================================================
 // Span Measurement
 // =============================================================================
 
 /**
  * Measure a single span and return MeasuredSpan.
  * Uses font-aware metrics and kerning for accurate width estimation.
+ * Applies textTransform before measuring to match rendered width.
  */
 export function measureSpan(span: LayoutSpan): MeasuredSpan {
   let width = px(0);
   if (!span.isBreak) {
+    // Apply text transform before measuring (matches rendering)
+    const transformedText = applyTextTransform(span.text, span.textTransform);
     width = estimateTextWidth(
-      span.text,
+      transformedText,
       span.fontSize,
       span.letterSpacing,
       span.fontFamily,
@@ -184,6 +208,7 @@ export function estimateBulletWidth(bulletChar: string, fontSize: Points, fontFa
 /**
  * Measure the width of the first N characters of a span.
  * Used for accurate cursor positioning within a span.
+ * Applies textTransform before measuring to match rendered width.
  *
  * @param span - The layout span to measure
  * @param charCount - Number of characters from the start to measure
@@ -194,13 +219,16 @@ export function measureSpanTextWidth(span: LayoutSpan, charCount: number): Pixel
     return px(0);
   }
 
-  const text = span.text.slice(0, Math.min(charCount, span.text.length));
+  // Apply text transform before measuring (matches rendering)
+  const transformedText = applyTextTransform(span.text, span.textTransform);
+  const text = transformedText.slice(0, Math.min(charCount, transformedText.length));
   return estimateTextWidth(text, span.fontSize, span.letterSpacing, span.fontFamily, span.fontWeight);
 }
 
 /**
  * Get the character index at a specific X offset within a span.
  * Used for click-to-cursor position mapping.
+ * Applies textTransform before calculating to match rendered width.
  *
  * @param span - The layout span
  * @param targetX - Target X offset from span start in pixels
@@ -211,7 +239,9 @@ export function getCharIndexAtOffset(span: LayoutSpan, targetX: number): number 
     return 0;
   }
 
-  const chars = Array.from(span.text);
+  // Apply text transform before calculating (matches rendering)
+  const transformedText = applyTextTransform(span.text, span.textTransform);
+  const chars = Array.from(transformedText);
   const letterSpacingNum = span.letterSpacing as number;
   let currentX = 0;
 

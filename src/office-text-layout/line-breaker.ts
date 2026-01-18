@@ -50,26 +50,47 @@ function isBreakChar(char: string): boolean {
   return char === " " || char === "\t" || char === "-";
 }
 
+/**
+ * Apply text transform (uppercase/lowercase) to text.
+ * Must match the transform applied during rendering.
+ */
+function applyTextTransform(
+  text: string,
+  transform: "none" | "uppercase" | "lowercase" | undefined,
+): string {
+  if (transform === "uppercase") {
+    return text.toUpperCase();
+  }
+  if (transform === "lowercase") {
+    return text.toLowerCase();
+  }
+  return text;
+}
+
 // =============================================================================
 // Span Breaking
 // =============================================================================
 
 /**
  * Create an overflow span if there's remaining text.
+ * Applies textTransform before measuring to match rendered width.
  */
 function createOverflowSpan(span: MeasuredSpan, overflowText: string): MeasuredSpan | null {
   if (overflowText.length === 0) {
     return null;
   }
+  // Apply text transform before measuring (matches rendering)
+  const transformedText = applyTextTransform(overflowText, span.textTransform);
   return {
     ...span,
     text: overflowText,
-    width: estimateTextWidth(overflowText, span.fontSize, span.letterSpacing, span.fontFamily, span.fontWeight),
+    width: estimateTextWidth(transformedText, span.fontSize, span.letterSpacing, span.fontFamily, span.fontWeight),
   };
 }
 
 /**
  * Break a single span into multiple spans at word boundaries.
+ * Applies textTransform for width calculations to match rendered width.
  */
 function breakSpanAtWidth(
   span: MeasuredSpan,
@@ -84,13 +105,17 @@ function breakSpanAtWidth(
   }
 
   const text = span.text;
+  // Apply text transform for width calculations (matches rendering)
+  const transformedText = applyTextTransform(text, span.textTransform);
   const state = { breakIndex: -1, accumulatedWidth: 0 };
 
   // Find the best break point
   for (const i of Array.from({ length: text.length }, (_, index) => index)) {
     const char = text[i];
+    // Use transformed character for width calculation
+    const transformedChar = transformedText[i];
     const charWidth =
-      (estimateTextWidth(char, span.fontSize, px(0), span.fontFamily, span.fontWeight) as number) +
+      (estimateTextWidth(transformedChar, span.fontSize, px(0), span.fontFamily, span.fontWeight) as number) +
       (i > 0 ? (span.letterSpacing as number) : 0);
 
     if (state.accumulatedWidth + charWidth > availableWidth && state.breakIndex >= 0) {
@@ -100,7 +125,7 @@ function breakSpanAtWidth(
 
     state.accumulatedWidth += charWidth;
 
-    // Check for break opportunities
+    // Check for break opportunities (use original char for break detection)
     const charCode = char.charCodeAt(0);
     if (isBreakChar(char)) {
       // Break after space/hyphen
@@ -123,8 +148,10 @@ function breakSpanAtWidth(
       // Force break - find where we exceed the width
       state.accumulatedWidth = 0;
       for (const i of Array.from({ length: text.length }, (_, index) => index)) {
+        // Use transformed character for width calculation
+        const transformedChar = transformedText[i];
         const charWidth =
-          (estimateTextWidth(text[i], span.fontSize, px(0), span.fontFamily, span.fontWeight) as number) +
+          (estimateTextWidth(transformedChar, span.fontSize, px(0), span.fontFamily, span.fontWeight) as number) +
           (i > 0 ? (span.letterSpacing as number) : 0);
         if (state.accumulatedWidth + charWidth > availableWidth && i > 0) {
           state.breakIndex = i;
@@ -145,10 +172,12 @@ function breakSpanAtWidth(
   const fitsText = text.slice(0, state.breakIndex);
   const overflowText = text.slice(state.breakIndex);
 
+  // Apply text transform before measuring (matches rendering)
+  const transformedFitsText = applyTextTransform(fitsText, span.textTransform);
   const fitsSpan: MeasuredSpan = {
     ...span,
     text: fitsText,
-    width: estimateTextWidth(fitsText, span.fontSize, span.letterSpacing, span.fontFamily, span.fontWeight),
+    width: estimateTextWidth(transformedFitsText, span.fontSize, span.letterSpacing, span.fontFamily, span.fontWeight),
   };
 
   return { fits: fitsSpan, overflow: createOverflowSpan(span, overflowText) };

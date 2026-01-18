@@ -15,10 +15,85 @@ import type { DocxRun, DocxRunProperties } from "../../docx/domain/run";
 // =============================================================================
 
 /**
+ * Build a character-to-properties map from a paragraph.
+ * Each index corresponds to a character position and contains the run properties for that character.
+ */
+function buildCharacterPropertiesMap(paragraph: DocxParagraph): (DocxRunProperties | undefined)[] {
+  const map: (DocxRunProperties | undefined)[] = [];
+
+  for (const content of paragraph.content) {
+    if (content.type === "run") {
+      const text = getRunPlainText(content);
+      for (let i = 0; i < text.length; i++) {
+        map.push(content.properties);
+      }
+    } else if (content.type === "hyperlink") {
+      for (const run of content.content) {
+        const text = getRunPlainText(run);
+        for (let i = 0; i < text.length; i++) {
+          map.push(run.properties);
+        }
+      }
+    }
+  }
+
+  return map;
+}
+
+/**
+ * Create runs from text and a properties map.
+ * Groups consecutive characters with the same properties into runs.
+ */
+function createRunsFromPropertiesMap(
+  text: string,
+  propertiesMap: (DocxRunProperties | undefined)[],
+  defaultProperties: DocxRunProperties | undefined,
+): DocxRun[] {
+  if (text.length === 0) {
+    return [];
+  }
+
+  const runs: DocxRun[] = [];
+  let currentText = "";
+  let currentProps: DocxRunProperties | undefined = propertiesMap[0] ?? defaultProperties;
+
+  for (let i = 0; i < text.length; i++) {
+    const props = propertiesMap[i] ?? defaultProperties;
+
+    if (areRunPropertiesEqual(props, currentProps)) {
+      currentText += text[i];
+    } else {
+      // Flush current run
+      if (currentText.length > 0) {
+        runs.push({
+          type: "run",
+          properties: currentProps,
+          content: [{ type: "text", value: currentText }],
+        });
+      }
+      currentText = text[i];
+      currentProps = props;
+    }
+  }
+
+  // Flush remaining text
+  if (currentText.length > 0) {
+    runs.push({
+      type: "run",
+      properties: currentProps,
+      content: [{ type: "text", value: currentText }],
+    });
+  }
+
+  return runs;
+}
+
+/**
  * Merge plain text into a paragraph while preserving formatting.
  *
  * This function replaces the text content of the paragraph with the new text,
  * while attempting to preserve the formatting from the original runs.
+ * It uses a character-level mapping to preserve inline formatting.
  *
  * @param paragraph - The original paragraph
  * @param plainText - The new plain text to merge in
@@ -37,21 +112,75 @@ export function mergeTextIntoParagraph(
     };
   }
 
-  // Get the base run properties to use for the new text
-  const baseProperties = getBaseRunProperties(paragraph);
+  // Build character-to-properties map from original paragraph
+  const originalMap = buildCharacterPropertiesMap(paragraph);
+  const originalText = getParagraphPlainText(paragraph);
+  const defaultProps = getBaseRunProperties(paragraph);
 
-  // Create a single run with the new text
-  const newRun: DocxRun = {
-    type: "run",
-    properties: baseProperties,
-    content: [{ type: "text", value: plainText }],
-  };
+  // If text is unchanged, return original paragraph
+  if (plainText === originalText) {
+    return paragraph;
+  }
+
+  // Find the common prefix and suffix lengths
+  const { prefixLen, suffixLen } = findCommonPrefixSuffix(originalText, plainText);
+
+  // Build new properties map by preserving formatting from unchanged regions
+  const newMap: (DocxRunProperties | undefined)[] = [];
+
+  // Copy prefix properties
+  for (let i = 0; i < prefixLen; i++) {
+    newMap.push(originalMap[i]);
+  }
+
+  // For the changed middle section, use properties from the edit point
+  const editStartProps = originalMap[prefixLen] ?? defaultProps;
+  const changedLength = plainText.length - prefixLen - suffixLen;
+  for (let i = 0; i < changedLength; i++) {
+    newMap.push(editStartProps);
+  }
+
+  // Copy suffix properties
+  const originalSuffixStart = originalText.length - suffixLen;
+  for (let i = 0; i < suffixLen; i++) {
+    newMap.push(originalMap[originalSuffixStart + i]);
+  }
+
+  // Create runs from the new properties map
+  const newRuns = createRunsFromPropertiesMap(plainText, newMap, defaultProps);
 
   return {
     type: "paragraph",
     properties: paragraph.properties,
-    content: [newRun],
+    content: newRuns,
   };
+}
+
+/**
+ * Find the length of common prefix and suffix between two strings.
+ */
+function findCommonPrefixSuffix(
+  original: string,
+  modified: string,
+): { prefixLen: number; suffixLen: number } {
+  // Find common prefix
+  let prefixLen = 0;
+  const minLen = Math.min(original.length, modified.length);
+  while (prefixLen < minLen && original[prefixLen] === modified[prefixLen]) {
+    prefixLen++;
+  }
+
+  // Find common suffix (but don't overlap with prefix)
+  let suffixLen = 0;
+  const maxSuffixLen = minLen - prefixLen;
+  while (
+    suffixLen < maxSuffixLen &&
+    original[original.length - 1 - suffixLen] === modified[modified.length - 1 - suffixLen]
+  ) {
+    suffixLen++;
+  }
+
+  return { prefixLen, suffixLen };
 }
 
 /**
