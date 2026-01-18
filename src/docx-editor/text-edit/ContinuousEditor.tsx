@@ -63,6 +63,7 @@ export type ContinuousEditorProps = {
 type CursorState = {
   cursor: CursorCoordinates | undefined;
   selectionRects: readonly SelectionRect[];
+  isBlinking: boolean;
 };
 
 // =============================================================================
@@ -166,6 +167,7 @@ export function ContinuousEditor({
   const [cursorState, setCursorState] = useState<CursorState>({
     cursor: undefined,
     selectionRects: [],
+    isBlinking: true,
   });
 
   // Refs
@@ -176,6 +178,11 @@ export function ContinuousEditor({
   const dragAnchorRef = useRef<number | null>(null);
   // Preferred X position for vertical cursor movement (maintained across up/down arrow presses)
   const preferredXRef = useRef<number | null>(null);
+  // Timeout for resuming cursor blink after movement
+  const blinkResumeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** Delay before resuming cursor blink after movement (ms) */
+  const BLINK_RESUME_DELAY = 500;
 
   // Update internal state when paragraphs prop changes
   useEffect(() => {
@@ -191,6 +198,27 @@ export function ContinuousEditor({
     pageConfig,
     numbering,
   });
+
+  // Cleanup blink resume timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (blinkResumeTimeoutRef.current !== null) {
+        clearTimeout(blinkResumeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Pause cursor blinking and schedule resume
+  const pauseBlinking = useCallback(() => {
+    if (blinkResumeTimeoutRef.current !== null) {
+      clearTimeout(blinkResumeTimeoutRef.current);
+    }
+    setCursorState((prev) => ({ ...prev, isBlinking: false }));
+    blinkResumeTimeoutRef.current = setTimeout(() => {
+      setCursorState((prev) => ({ ...prev, isBlinking: true }));
+      blinkResumeTimeoutRef.current = null;
+    }, BLINK_RESUME_DELAY);
+  }, []);
 
   // Get offset from pointer event using SVG CTM
   const getOffsetFromPointerEvent = useCallback(
@@ -233,10 +261,11 @@ export function ContinuousEditor({
     // Calculate selection rects if there's a selection
     const selRects = computeSelectionRects(start, end, internalParagraphs, pagedLayout);
 
-    setCursorState({
+    setCursorState((prev) => ({
+      ...prev,
       cursor: cursorCoords,
       selectionRects: selRects,
-    });
+    }));
 
     // Notify parent
     onCursorChange?.(cursorPos);
@@ -269,12 +298,13 @@ export function ContinuousEditor({
       const anchorOffset = event.shiftKey ? getSelectionAnchor(textarea) : offset;
       dragAnchorRef.current = anchorOffset;
       applySelectionRange(textarea, anchorOffset, offset);
+      pauseBlinking();
       updateCursorPosition();
 
       event.currentTarget.setPointerCapture(event.pointerId);
       event.preventDefault();
     },
-    [getOffsetFromPointerEvent, updateCursorPosition],
+    [getOffsetFromPointerEvent, pauseBlinking, updateCursorPosition],
   );
 
   const handlePointerMove = useCallback(
@@ -291,10 +321,11 @@ export function ContinuousEditor({
 
       const anchorOffset = dragAnchorRef.current ?? getSelectionAnchor(textarea);
       applySelectionRange(textarea, anchorOffset, offset);
+      pauseBlinking();
       updateCursorPosition();
       event.preventDefault();
     },
-    [getOffsetFromPointerEvent, updateCursorPosition],
+    [getOffsetFromPointerEvent, pauseBlinking, updateCursorPosition],
   );
 
   const handlePointerUp = useCallback((event: ReactPointerEvent<SVGSVGElement>) => {
@@ -376,6 +407,7 @@ export function ContinuousEditor({
 
           // Store the X position for consecutive vertical movements
           preferredXRef.current = result.xPosition;
+          pauseBlinking();
           updateCursorPosition();
         }
         return;
@@ -384,6 +416,7 @@ export function ContinuousEditor({
       // Reset preferred X on horizontal movement or other keys
       if (key === "ArrowLeft" || key === "ArrowRight" || key === "Home" || key === "End") {
         preferredXRef.current = null;
+        pauseBlinking();
       }
 
       // Let default behavior handle most keys
@@ -392,7 +425,7 @@ export function ContinuousEditor({
         updateCursorPosition();
       });
     },
-    [internalParagraphs, pagedLayout, updateCursorPosition],
+    [internalParagraphs, pagedLayout, pauseBlinking, updateCursorPosition],
   );
 
   const handleFocus = useCallback(() => {

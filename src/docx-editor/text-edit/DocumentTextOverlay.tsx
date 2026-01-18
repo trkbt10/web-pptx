@@ -24,6 +24,7 @@ import { colorTokens, editorLayoutTokens } from "../../office-editor-components/
 type CursorState = {
   cursor: CursorCoordinates | undefined;
   selectionRects: readonly SelectionRect[];
+  isBlinking?: boolean;
 };
 
 export type DocumentTextOverlayProps = {
@@ -254,7 +255,7 @@ export const DocumentTextOverlay = forwardRef<SVGSVGElement, DocumentTextOverlay
               y2={(adjustedCursor.y as number) + (adjustedCursor.height as number)}
               stroke="#000000"
               strokeWidth={1}
-              style={{ animation: "cursor-blink 1s step-end infinite" }}
+              style={cursorState.isBlinking !== false ? { animation: "cursor-blink 1s step-end infinite" } : undefined}
             />
           )}
         </svg>
