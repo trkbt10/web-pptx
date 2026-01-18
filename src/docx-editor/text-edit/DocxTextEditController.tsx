@@ -25,7 +25,7 @@ import {
   type DocxCursorPosition,
   getPlainTextFromParagraph,
 } from "./cursor";
-import { mergeTextIntoParagraph } from "./text-merge";
+import { mergeTextIntoParagraph } from "./text-merge/paragraph-edit";
 import { DocxTextInputFrame } from "./DocxTextInputFrame";
 import {
   layoutParagraphText,

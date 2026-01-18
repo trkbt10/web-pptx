@@ -44,6 +44,8 @@ const HIDDEN_TEXTAREA_STYLE: CSSProperties = {
   padding: 0,
   margin: 0,
   cursor: "text",
+  // Prevent iOS auto-zoom on focus (requires font-size >= 16px)
+  fontSize: 16,
 };
 
 function clampSelection(value: string, start: number, end: number): readonly [number, number] {

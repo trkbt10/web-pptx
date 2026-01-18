@@ -31,7 +31,7 @@ import {
   Underline,
 } from "lucide-react";
 import { useDocumentEditor } from "../context/document/DocumentEditorContext";
-import { getRunPropertiesAtPosition } from "../text-edit/text-merge";
+import { getRunPropertiesAtPosition } from "../text-edit/text-merge/run-properties";
 
 // =============================================================================
 // Types

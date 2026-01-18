@@ -61,8 +61,6 @@ const overlayContainerStyle: CSSProperties = {
 const svgStyle: CSSProperties = {
   display: "block",
   userSelect: "none",
-  backgroundColor: "white",
-  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
   cursor: "text",
 };
 
@@ -199,6 +197,13 @@ export const DocumentTextOverlay = forwardRef<SVGSVGElement, DocumentTextOverlay
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel}
         >
+          {/* SVG filters for page shadows */}
+          <defs>
+            <filter id="page-shadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="rgba(0, 0, 0, 0.15)" />
+            </filter>
+          </defs>
+
           {/* Transparent rect to capture pointer events */}
           <rect
             x={0}
@@ -209,7 +214,7 @@ export const DocumentTextOverlay = forwardRef<SVGSVGElement, DocumentTextOverlay
             pointerEvents="all"
           />
 
-          {/* Page backgrounds */}
+          {/* Page backgrounds with individual shadows */}
           {pagedLayout.pages.map((page, index) => (
             <rect
               key={`page-bg-${index}`}
@@ -218,8 +223,7 @@ export const DocumentTextOverlay = forwardRef<SVGSVGElement, DocumentTextOverlay
               width={page.width as number}
               height={page.height as number}
               fill="white"
-              stroke="#e0e0e0"
-              strokeWidth={1}
+              filter="url(#page-shadow)"
             />
           ))}
 

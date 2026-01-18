@@ -121,8 +121,16 @@ export type LayoutSpan = {
   readonly verticalAlign: "baseline" | "superscript" | "subscript";
   /** Letter spacing in pixels */
   readonly letterSpacing: Pixels;
-  /** Whether this is a line break */
-  readonly isBreak: boolean;
+  /**
+   * Break type for this span.
+   * - "none": No break
+   * - "page": Page break (w:br type="page")
+   * - "column": Column break (w:br type="column")
+   * - "line": Line break (w:br without type, or type="textWrapping")
+   *
+   * @see ECMA-376-1:2016 Section 17.3.3.1 (br)
+   */
+  readonly breakType: "none" | "page" | "column" | "line";
   /** Text direction */
   readonly direction: "ltr" | "rtl";
   /** Highlight/background color as hex (with #) */
@@ -266,6 +274,13 @@ export type LayoutLine = {
   readonly width: Pixels;
   /** Height of the line in pixels */
   readonly height: Pixels;
+  /**
+   * Page break after this line.
+   * Set when the line ends with w:br type="page".
+   *
+   * @see ECMA-376-1:2016 Section 17.3.3.1 (br)
+   */
+  readonly pageBreakAfter?: boolean;
 };
 
 /**

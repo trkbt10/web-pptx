@@ -195,10 +195,32 @@ function runContentToText(content: DocxRunContent): string {
 }
 
 /**
- * Check if run content is a line break.
+ * Check if run content is a non-inline break (page or column).
  */
-function isLineBreak(content: DocxRunContent): boolean {
+function isNonInlineBreak(content: DocxRunContent): boolean {
   return content.type === "break" && content.breakType !== "textWrapping";
+}
+
+/**
+ * Get break type for layout span.
+ *
+ * @see ECMA-376-1:2016 Section 17.3.3.1 (br)
+ */
+function getBreakType(content: DocxRunContent): "none" | "page" | "column" | "line" {
+  if (content.type !== "break") {
+    return "none";
+  }
+  switch (content.breakType) {
+    case "page":
+      return "page";
+    case "column":
+      return "column";
+    case "textWrapping":
+    case undefined:
+      return "line";
+    default:
+      return "none";
+  }
 }
 
 /**
@@ -215,7 +237,10 @@ function runToSpans(
 
   for (const content of run.content) {
     const text = runContentToText(content);
-    if (text.length === 0 && !isLineBreak(content)) {
+    const breakType = getBreakType(content);
+
+    // Skip empty text unless it's a break
+    if (text.length === 0 && breakType === "none") {
       continue;
     }
 
@@ -231,7 +256,7 @@ function runToSpans(
       color: props.color,
       verticalAlign: props.verticalAlign,
       letterSpacing: props.letterSpacing,
-      isBreak: content.type === "break" && content.breakType !== "textWrapping",
+      breakType,
       direction: props.direction,
       highlightColor: props.highlightColor,
       textTransform: props.textTransform,

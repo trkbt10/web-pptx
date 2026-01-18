@@ -138,7 +138,7 @@ function layoutParagraph(
   const wrapMode = measuredSpans.length === 0 ? "none" : "wrap";
 
   // Break into lines
-  const { lines: spanLines, lineHeights } = breakIntoLines(measuredSpans, firstLineWidth, nextLineWidth, wrapMode);
+  const { lines: spanLines, lineHeights, pageBreaksAfter } = breakIntoLines(measuredSpans, firstLineWidth, nextLineWidth, wrapMode);
 
   // Add space before
   const layoutState = { currentY: startY + (para.spaceBefore as number) * PT_TO_PX };
@@ -172,12 +172,14 @@ function layoutParagraph(
     // Convert spans to positioned spans
     const positionedSpans = positionSpans(lineSpans);
 
+    const hasPageBreakAfter = pageBreaksAfter[index] ?? false;
     lines.push({
       spans: positionedSpans,
       x: px(x),
       y: px(baseline),
       width: lineWidth,
       height: px(lineHeight),
+      pageBreakAfter: hasPageBreakAfter || undefined,
     });
 
     layoutState.currentY += lineHeight;

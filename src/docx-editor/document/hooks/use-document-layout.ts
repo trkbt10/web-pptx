@@ -15,6 +15,7 @@ import type {
   LayoutParagraphInput,
   PagedLayoutResult,
   PageFlowConfig,
+  PageBreakHint,
 } from "../../../office-text-layout";
 import {
   layoutDocument,
@@ -57,6 +58,43 @@ export type DocumentLayoutResult = {
   /** Layout inputs (for cursor/selection calculations) */
   readonly layoutInputs: readonly LayoutParagraphInput[];
 };
+
+// =============================================================================
+// Page Break Hint Extraction
+// =============================================================================
+
+/**
+ * Extract page break hints from DOCX paragraphs.
+ *
+ * @see ECMA-376-1:2016 Section 17.3.1.25 (pageBreakBefore)
+ * @see ECMA-376-1:2016 Section 17.3.1.14 (keepNext)
+ * @see ECMA-376-1:2016 Section 17.3.1.15 (keepLines)
+ */
+function extractPageBreakHints(
+  paragraphs: readonly DocxParagraph[],
+): readonly (PageBreakHint | undefined)[] {
+  return paragraphs.map((para) => {
+    const props = para.properties;
+    if (props === undefined) {
+      return undefined;
+    }
+
+    const hasHint =
+      props.pageBreakBefore === true ||
+      props.keepNext === true ||
+      props.keepLines === true;
+
+    if (!hasHint) {
+      return undefined;
+    }
+
+    return {
+      breakBefore: props.pageBreakBefore,
+      keepWithNext: props.keepNext,
+      keepTogether: props.keepLines,
+    };
+  });
+}
 
 // =============================================================================
 // Hook Implementation
@@ -110,6 +148,11 @@ export function useDocumentLayout({
     return layoutDocument(layoutInputs, contentWidth);
   }, [layoutInputs, contentWidth]);
 
+  // Extract page break hints from paragraphs
+  const pageBreakHints = useMemo(() => {
+    return extractPageBreakHints(paragraphs);
+  }, [paragraphs]);
+
   // Compute paged layout
   const pagedLayout = useMemo(() => {
     if (mode === "continuous") {
@@ -117,12 +160,13 @@ export function useDocumentLayout({
       return createSinglePageLayout(layoutedParagraphs, contentWidth, totalHeight);
     }
 
-    // Paged mode - split into pages
+    // Paged mode - split into pages with page break hints
     return flowIntoPages({
       paragraphs: layoutedParagraphs,
+      hints: pageBreakHints,
       config: pageConfig,
     });
-  }, [layoutedParagraphs, mode, pageConfig, contentWidth, totalHeight]);
+  }, [layoutedParagraphs, pageBreakHints, mode, pageConfig, contentWidth, totalHeight]);
 
   return {
     pagedLayout,

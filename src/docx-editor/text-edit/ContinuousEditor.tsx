@@ -33,7 +33,7 @@ import {
   selectionToRects,
 } from "./cursor-utils";
 import { DocumentTextOverlay } from "./DocumentTextOverlay";
-import { applyTextToParagraphs } from "./text-merge";
+import { syncParagraphsWithPlainText } from "./text-merge/paragraph-sync";
 
 // =============================================================================
 // Types
@@ -74,13 +74,21 @@ const editorContainerStyle: CSSProperties = {
 };
 
 const hiddenTextareaStyle: CSSProperties = {
-  position: "absolute",
-  left: -9999,
+  position: "fixed",
+  left: 0,
   top: 0,
   width: 1,
   height: 1,
   opacity: 0,
   pointerEvents: "none",
+  // Prevent browser from scrolling to this element
+  overflow: "hidden",
+  resize: "none",
+  border: "none",
+  padding: 0,
+  margin: 0,
+  // Prevent iOS auto-zoom on focus (requires font-size >= 16px)
+  fontSize: 16,
 };
 
 // =============================================================================
@@ -306,7 +314,7 @@ export function ContinuousEditor({
       const newText = event.target.value;
       setCurrentText(newText);
       // Apply text changes to internal paragraphs for visual update
-      const updatedParagraphs = applyTextToParagraphs(internalParagraphs, newText);
+      const updatedParagraphs = syncParagraphsWithPlainText(internalParagraphs, newText);
       setInternalParagraphs(updatedParagraphs);
       onTextChange?.(newText);
       // Update cursor after state change

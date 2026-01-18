@@ -229,13 +229,20 @@ export function flowIntoPages(input: PageFlowInput): PagedLayoutResult {
     const paragraph = paragraphs[i];
     const hint = hints?.[i];
 
-    // Handle page break before
+    // Handle page break before (from paragraph properties)
     if (hint?.breakBefore === true && state.currentPage.paragraphs.length > 0) {
       startNewPage(state, config);
     }
 
     // Add paragraph to page
     addParagraphToPage(state, paragraph, config);
+
+    // Handle inline page breaks (w:br type="page")
+    // Check if any line in the paragraph has pageBreakAfter
+    const hasInlinePageBreak = paragraph.lines.some((line) => line.pageBreakAfter === true);
+    if (hasInlinePageBreak) {
+      startNewPage(state, config);
+    }
   }
 
   // Finalize last page

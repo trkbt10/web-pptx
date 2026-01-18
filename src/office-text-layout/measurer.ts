@@ -162,7 +162,7 @@ function applyTextTransform(
  */
 export function measureSpan(span: LayoutSpan): MeasuredSpan {
   let width = px(0);
-  if (!span.isBreak) {
+  if (span.breakType === "none") {
     // Apply text transform before measuring (matches rendering)
     const transformedText = applyTextTransform(span.text, span.textTransform);
     width = estimateTextWidth(
@@ -215,7 +215,7 @@ export function estimateBulletWidth(bulletChar: string, fontSize: Points, fontFa
  * @returns Width in pixels
  */
 export function measureSpanTextWidth(span: LayoutSpan, charCount: number): Pixels {
-  if (charCount <= 0 || span.isBreak) {
+  if (charCount <= 0 || span.breakType !== "none") {
     return px(0);
   }
 
@@ -235,7 +235,7 @@ export function measureSpanTextWidth(span: LayoutSpan, charCount: number): Pixel
  * @returns Character index (0-based)
  */
 export function getCharIndexAtOffset(span: LayoutSpan, targetX: number): number {
-  if (targetX <= 0 || span.isBreak || span.text.length === 0) {
+  if (targetX <= 0 || span.breakType !== "none" || span.text.length === 0) {
     return 0;
   }
 

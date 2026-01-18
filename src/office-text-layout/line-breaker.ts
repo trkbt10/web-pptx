@@ -37,6 +37,13 @@ export type LineBreakResult = {
   readonly lines: readonly (readonly MeasuredSpan[])[];
   /** Height of each line in points */
   readonly lineHeights: readonly Points[];
+  /**
+   * Page break flags for each line.
+   * True if the line ends with a page break (w:br type="page").
+   *
+   * @see ECMA-376-1:2016 Section 17.3.3.1 (br)
+   */
+  readonly pageBreaksAfter: readonly boolean[];
 };
 
 // =============================================================================
@@ -198,9 +205,10 @@ export function breakIntoLines(
 ): LineBreakResult {
   const lines: MeasuredSpan[][] = [];
   const lineHeights: Points[] = [];
+  const pageBreaksAfter: boolean[] = [];
 
   if (spans.length === 0) {
-    return { lines: [[]], lineHeights: [pt(0)] };
+    return { lines: [[]], lineHeights: [pt(0)], pageBreaksAfter: [false] };
   }
 
   type State = {
@@ -224,18 +232,20 @@ export function breakIntoLines(
     state.currentMaxWidth = nextLineWidth;
   };
 
-  const pushLine = (height: number) => {
+  const pushLine = (height: number, pageBreak: boolean = false) => {
     lines.push(state.currentLine);
     lineHeights.push(pt(height));
+    pageBreaksAfter.push(pageBreak);
     resetLineState();
   };
 
   for (const spanItem of spans) {
     const pending: MeasuredSpan[] = [spanItem];
 
-    // Handle explicit line breaks
-    if (spanItem.isBreak) {
-      pushLine(state.currentLineHeight);
+    // Handle explicit breaks (page, column, or line)
+    if (spanItem.breakType !== "none") {
+      const isPageBreak = spanItem.breakType === "page";
+      pushLine(state.currentLineHeight, isPageBreak);
       continue;
     }
 
@@ -272,9 +282,10 @@ export function breakIntoLines(
     lines.push(state.currentLine);
     const fallbackFontSize = (spans[0]?.fontSize ?? pt(DEFAULT_FONT_SIZE_PT)) as number;
     lineHeights.push(pt(state.currentLineHeight !== 0 ? state.currentLineHeight : fallbackFontSize));
+    pageBreaksAfter.push(false); // Last line doesn't have a page break after it
   }
 
-  return { lines, lineHeights };
+  return { lines, lineHeights, pageBreaksAfter };
 }
 
 // =============================================================================
