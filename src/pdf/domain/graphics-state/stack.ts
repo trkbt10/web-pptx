@@ -38,6 +38,8 @@ export type GraphicsStateStack = Readonly<{
   setBlendMode(mode: string): void;
   setSoftMaskAlpha(alpha: number): void;
   setSoftMask(mask: PdfSoftMask | undefined): void;
+  setFillPatternName(name: string): void;
+  setStrokePatternName(name: string): void;
   setFillGray(gray: number): void;
   setStrokeGray(gray: number): void;
   setFillRgb(r: number, g: number, b: number): void;
@@ -136,9 +138,26 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     };
   };
 
+  const setFillPatternName = (name: string): void => {
+    current.value = {
+      ...current.value,
+      fillPatternName: name,
+      fillColor: { colorSpace: "Pattern", components: [] },
+    };
+  };
+
+  const setStrokePatternName = (name: string): void => {
+    current.value = {
+      ...current.value,
+      strokePatternName: name,
+      strokeColor: { colorSpace: "Pattern", components: [] },
+    };
+  };
+
   const setFillGray = (gray: number): void => {
     current.value = {
       ...current.value,
+      fillPatternName: undefined,
       fillColor: {
         colorSpace: "DeviceGray",
         components: [gray],
@@ -149,6 +168,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
   const setStrokeGray = (gray: number): void => {
     current.value = {
       ...current.value,
+      strokePatternName: undefined,
       strokeColor: {
         colorSpace: "DeviceGray",
         components: [gray],
@@ -159,6 +179,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
   const setFillRgb = (r: number, g: number, b: number): void => {
     current.value = {
       ...current.value,
+      fillPatternName: undefined,
       fillColor: {
         colorSpace: "DeviceRGB",
         components: [r, g, b],
@@ -169,6 +190,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
   const setStrokeRgb = (r: number, g: number, b: number): void => {
     current.value = {
       ...current.value,
+      strokePatternName: undefined,
       strokeColor: {
         colorSpace: "DeviceRGB",
         components: [r, g, b],
@@ -179,6 +201,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
   const setFillCmyk = (c: number, m: number, y: number, k: number): void => {
     current.value = {
       ...current.value,
+      fillPatternName: undefined,
       fillColor: {
         colorSpace: "DeviceCMYK",
         components: [c, m, y, k],
@@ -189,6 +212,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
   const setStrokeCmyk = (c: number, m: number, y: number, k: number): void => {
     current.value = {
       ...current.value,
+      strokePatternName: undefined,
       strokeColor: {
         colorSpace: "DeviceCMYK",
         components: [c, m, y, k],
@@ -298,6 +322,8 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     setBlendMode,
     setSoftMaskAlpha,
     setSoftMask,
+    setFillPatternName,
+    setStrokePatternName,
     setFillGray,
     setStrokeGray,
     setFillRgb,
@@ -324,6 +350,8 @@ function cloneState(state: PdfGraphicsState): PdfGraphicsState {
   return {
     ...state,
     clipBBox: state.clipBBox ? cloneBBox(state.clipBBox) : undefined,
+    fillPatternName: state.fillPatternName,
+    strokePatternName: state.strokePatternName,
     fillColor: {
       ...state.fillColor,
       components: [...state.fillColor.components],

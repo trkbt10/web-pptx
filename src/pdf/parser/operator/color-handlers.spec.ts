@@ -23,6 +23,8 @@ function createMockGfxOps() {
       setBlendMode: () => {},
       setSoftMaskAlpha: () => {},
       setSoftMask: () => {},
+      setFillPatternName: (n: string) => calls.push({ method: "setFillPatternName", args: [n] }),
+      setStrokePatternName: (n: string) => calls.push({ method: "setStrokePatternName", args: [n] }),
       setLineWidth: () => {},
       setLineCap: () => {},
       setLineJoin: () => {},
@@ -54,6 +56,10 @@ function createContext(operandStack: (number | string | (number | string)[])[] =
     inTextObject: false,
     textState: createInitialTextState(),
     fontMappings: new Map(),
+    pageBBox: [0, 0, 0, 0],
+    shadings: new Map(),
+    shadingMaxSize: 0,
+    patterns: new Map(),
     extGState: new Map(),
   };
 }
@@ -166,7 +172,7 @@ describe("color-handlers", () => {
   });
 
   describe("handleFillColorNWithOptionalName (scn)", () => {
-    it("consumes trailing pattern name operand", () => {
+    it("falls back to black when pattern is not injected", () => {
       const { calls, ops } = createMockGfxOps();
       const ctx = createContext([0.25, "/P1"]);
       const update = colorHandlers.handleFillColorNWithOptionalName(ctx, ops);
@@ -175,7 +181,34 @@ describe("color-handlers", () => {
       expect(update.operandStack).toEqual([]);
     });
 
-    it("consumes name even when there are no numeric components", () => {
+    it("sets fill pattern when supported pattern is injected", () => {
+      const { calls, ops } = createMockGfxOps();
+      const ctx: ParserContext = {
+        ...createContext(["/P1"]),
+        patterns: new Map([
+          [
+            "P1",
+            {
+              patternType: 2,
+              matrix: [1, 0, 0, 1, 0, 0],
+              shading: {
+                shadingType: 2,
+                colorSpace: "DeviceRGB",
+                coords: [0, 0, 1, 0],
+                extend: [true, true],
+                fn: { type: "FunctionType2", c0: [0, 0, 0], c1: [1, 1, 1], n: 1, domain: [0, 1] },
+              },
+            },
+          ],
+        ]),
+      };
+      const update = colorHandlers.handleFillColorNWithOptionalName(ctx, ops);
+
+      expect(calls).toEqual([{ method: "setFillPatternName", args: ["/P1"] }]);
+      expect(update.operandStack).toEqual([]);
+    });
+
+    it("consumes name even when there are no numeric components (unsupported -> black)", () => {
       const { calls, ops } = createMockGfxOps();
       const ctx = createContext(["/P1"]);
       const update = colorHandlers.handleFillColorNWithOptionalName(ctx, ops);
@@ -195,7 +228,7 @@ describe("color-handlers", () => {
   });
 
   describe("handleStrokeColorNWithOptionalName (SCN)", () => {
-    it("consumes trailing pattern name operand", () => {
+    it("falls back to black when pattern is not injected", () => {
       const { calls, ops } = createMockGfxOps();
       const ctx = createContext([1, 0, 0, "/P1"]);
       const update = colorHandlers.handleStrokeColorNWithOptionalName(ctx, ops);
@@ -204,7 +237,34 @@ describe("color-handlers", () => {
       expect(update.operandStack).toEqual([]);
     });
 
-    it("consumes name even when there are no numeric components", () => {
+    it("sets stroke pattern when supported pattern is injected", () => {
+      const { calls, ops } = createMockGfxOps();
+      const ctx: ParserContext = {
+        ...createContext(["/P1"]),
+        patterns: new Map([
+          [
+            "P1",
+            {
+              patternType: 2,
+              matrix: [1, 0, 0, 1, 0, 0],
+              shading: {
+                shadingType: 2,
+                colorSpace: "DeviceRGB",
+                coords: [0, 0, 1, 0],
+                extend: [true, true],
+                fn: { type: "FunctionType2", c0: [0, 0, 0], c1: [1, 1, 1], n: 1, domain: [0, 1] },
+              },
+            },
+          ],
+        ]),
+      };
+      const update = colorHandlers.handleStrokeColorNWithOptionalName(ctx, ops);
+
+      expect(calls).toEqual([{ method: "setStrokePatternName", args: ["/P1"] }]);
+      expect(update.operandStack).toEqual([]);
+    });
+
+    it("consumes name even when there are no numeric components (unsupported -> black)", () => {
       const { calls, ops } = createMockGfxOps();
       const ctx = createContext(["/P1"]);
       const update = colorHandlers.handleStrokeColorNWithOptionalName(ctx, ops);

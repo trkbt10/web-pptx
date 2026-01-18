@@ -91,6 +91,16 @@ export type PdfGraphicsState = {
    * This is currently a limited subset (e.g. single-image masks with simple transforms).
    */
   readonly softMask?: PdfSoftMask;
+  /**
+   * Current fill pattern name (set via `/Pattern cs` + `scn`/`sc` with a name).
+   *
+   * Only a subset is supported (shading patterns are rasterized at parse time).
+   */
+  readonly fillPatternName?: string;
+  /**
+   * Current stroke pattern name (set via `/Pattern CS` + `SCN`/`SC` with a name).
+   */
+  readonly strokePatternName?: string;
   readonly fillColor: PdfColor;
   readonly strokeColor: PdfColor;
   /**

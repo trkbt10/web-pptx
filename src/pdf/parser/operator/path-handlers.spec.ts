@@ -23,6 +23,8 @@ function createMockGfxOps(): GraphicsStateOps {
     setBlendMode: () => {},
     setSoftMaskAlpha: () => {},
     setSoftMask: () => {},
+    setFillPatternName: () => {},
+    setStrokePatternName: () => {},
     setLineWidth: () => {},
     setLineCap: () => {},
     setLineJoin: () => {},
@@ -53,6 +55,10 @@ function createContext(operandStack: (number | string | (number | string)[])[] =
     inTextObject: false,
     textState: createInitialTextState(),
     fontMappings: new Map(),
+    pageBBox: [0, 0, 0, 0],
+    shadings: new Map(),
+    shadingMaxSize: 0,
+    patterns: new Map(),
     extGState: new Map(),
   };
 }

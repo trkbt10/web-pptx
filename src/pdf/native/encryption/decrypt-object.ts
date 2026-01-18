@@ -118,9 +118,20 @@ function decryptDict(value: PdfDict, objNum: number, gen: number, decrypter: Pdf
 
 function decryptStream(value: PdfStream, objNum: number, gen: number, decrypter: PdfDecrypter): PdfStream {
   const dict = decryptDict(value.dict, objNum, gen, decrypter);
+  const streamType = value.dict.map.get("Type");
+  const isEmbeddedFile = streamType?.type === "name"
+    ? streamType.value === "EmbeddedFile"
+    : streamType?.type === "string"
+      ? streamType.text === "EmbeddedFile"
+      : false;
   const data = streamHasCryptIdentity(value.dict)
     ? value.data
-    : decrypter.decryptBytes(objNum, gen, value.data, { kind: "stream", cryptFilterName: getCryptFilterName(value.dict) ?? undefined });
+    : decrypter.decryptBytes(
+      objNum,
+      gen,
+      value.data,
+      { kind: isEmbeddedFile ? "embeddedFile" : "stream", cryptFilterName: getCryptFilterName(value.dict) ?? undefined },
+    );
   return { type: "stream", dict, data };
 }
 

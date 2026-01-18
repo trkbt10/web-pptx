@@ -10,13 +10,14 @@ import { rc4 } from "./rc4";
 import { aes128CbcDecryptPkcs7, aes256CbcDecryptNoPadWithIv, aes256CbcDecryptPkcs7 } from "./aes";
 import { sha256 } from "./sha256";
 import { computeR6HardenedHash } from "./r6-hash";
+import { saslprep } from "./saslprep";
 
 export type PdfDecrypter = Readonly<{
   decryptBytes: (
     objNum: number,
     gen: number,
     bytes: Uint8Array,
-    options: Readonly<{ kind: "string" | "stream"; cryptFilterName?: string }> | null,
+    options: Readonly<{ kind: "string" | "stream" | "embeddedFile"; cryptFilterName?: string }> | null,
   ) => Uint8Array;
 }>;
 
@@ -71,11 +72,9 @@ function encodePasswordBytes(password: string): Uint8Array {
 }
 
 function encodePasswordBytesR5(password: string): Uint8Array {
-  const raw = new TextEncoder().encode(password);
-  const n = Math.min(raw.length, 127);
-  const out = new Uint8Array(n);
-  out.set(raw.subarray(0, n), 0);
-  return out;
+  const prepared = saslprep(password);
+  const raw = new TextEncoder().encode(prepared);
+  return raw.subarray(0, Math.min(raw.length, 127));
 }
 
 function padPassword32(passwordBytes: Uint8Array): Uint8Array {
@@ -272,6 +271,7 @@ function parseCryptFilterMethod(dict: PdfDict): CryptMethod | null {
 function parseCryptFilters(encryptDict: PdfDict): {
   readonly strF: string;
   readonly stmF: string;
+  readonly eff: string | null;
   readonly filters: ReadonlyMap<string, CryptFilter>;
 } {
   const cf = asDict(dictGet(encryptDict, "CF"));
@@ -280,6 +280,8 @@ function parseCryptFilters(encryptDict: PdfDict): {
   const strF = asNameOrString(dictGet(encryptDict, "StrF"));
   const stmF = asNameOrString(dictGet(encryptDict, "StmF"));
   if (!strF || !stmF) {throw new Error("Invalid encryption dictionary for V=4/5: /StrF or /StmF is missing");}
+
+  const eff = asNameOrString(dictGet(encryptDict, "EFF"));
 
   const out = new Map<string, CryptFilter>();
   for (const [name, value] of cf.map.entries()) {
@@ -290,7 +292,7 @@ function parseCryptFilters(encryptDict: PdfDict): {
     out.set(name, { method });
   }
 
-  return { strF, stmF, filters: out };
+  return { strF, stmF, eff, filters: out };
 }
 
 function resolveCryptFilter(filters: ReadonlyMap<string, CryptFilter>, name: string): CryptFilter {
@@ -465,9 +467,9 @@ export function createStandardDecrypter(args: {
         if (!options) {throw new Error("decrypt options are required for V=4/R=4");}
 
         const kind = options.kind;
-        if (kind !== "string" && kind !== "stream") {throw new Error("Invalid decrypt kind");}
+        if (kind !== "string" && kind !== "stream" && kind !== "embeddedFile") {throw new Error("Invalid decrypt kind");}
 
-        const filterName = options.cryptFilterName ?? (kind === "string" ? cf.strF : cf.stmF);
+        const filterName = options.cryptFilterName ?? (kind === "string" ? cf.strF : kind === "embeddedFile" ? (cf.eff ?? cf.stmF) : cf.stmF);
         const filter = resolveCryptFilter(cf.filters, filterName);
 
         switch (filter.method) {
@@ -563,9 +565,9 @@ export function createStandardDecrypter(args: {
         void gen;
 
         const kind = options.kind;
-        if (kind !== "string" && kind !== "stream") {throw new Error("Invalid decrypt kind");}
+        if (kind !== "string" && kind !== "stream" && kind !== "embeddedFile") {throw new Error("Invalid decrypt kind");}
 
-        const filterName = options.cryptFilterName ?? (kind === "string" ? cf.strF : cf.stmF);
+        const filterName = options.cryptFilterName ?? (kind === "string" ? cf.strF : kind === "embeddedFile" ? (cf.eff ?? cf.stmF) : cf.stmF);
         const filter = resolveCryptFilter(cf.filters, filterName);
 
         switch (filter.method) {
@@ -656,9 +658,9 @@ export function createStandardDecrypter(args: {
         void gen;
 
         const kind = options.kind;
-        if (kind !== "string" && kind !== "stream") {throw new Error("Invalid decrypt kind");}
+        if (kind !== "string" && kind !== "stream" && kind !== "embeddedFile") {throw new Error("Invalid decrypt kind");}
 
-        const filterName = options.cryptFilterName ?? (kind === "string" ? cf.strF : cf.stmF);
+        const filterName = options.cryptFilterName ?? (kind === "string" ? cf.strF : kind === "embeddedFile" ? (cf.eff ?? cf.stmF) : cf.stmF);
         const filter = resolveCryptFilter(cf.filters, filterName);
 
         switch (filter.method) {

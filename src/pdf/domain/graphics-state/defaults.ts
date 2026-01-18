@@ -36,6 +36,8 @@ export function createDefaultGraphicsState(): PdfGraphicsState {
     blendMode: "Normal",
     softMaskAlpha: 1,
     softMask: undefined,
+    fillPatternName: undefined,
+    strokePatternName: undefined,
     fillColor: DEFAULT_FILL_COLOR,
     strokeColor: DEFAULT_STROKE_COLOR,
     lineWidth: 1,

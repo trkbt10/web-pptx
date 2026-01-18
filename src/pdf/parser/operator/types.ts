@@ -17,9 +17,12 @@ import type {
   PdfMatrix,
   PdfBBox,
   PdfSoftMask,
+  PdfImage,
   FontMappings,
   FontMetrics,
 } from "../../domain";
+import type { PdfShading } from "../shading.types";
+import type { PdfPattern } from "../pattern.types";
 
 // =============================================================================
 // Parsed Element Types
@@ -162,7 +165,12 @@ export type ParsedImage = {
   readonly graphicsState: PdfGraphicsState;
 };
 
-export type ParsedElement = ParsedPath | ParsedText | ParsedImage;
+export type ParsedRasterImage = {
+  readonly type: "rasterImage";
+  readonly image: PdfImage;
+};
+
+export type ParsedElement = ParsedPath | ParsedText | ParsedImage | ParsedRasterImage;
 
 // =============================================================================
 // Operand Stack Type
@@ -205,6 +213,25 @@ export type ParserContext = {
   readonly inTextObject: boolean;
   readonly textState: TextObjectState;
   readonly fontMappings: FontMappings;
+  /**
+   * Page bounding box in page space, used as a fallback paint region for operators
+   * that fill the current clip (e.g. `sh`) when no clip has been established yet.
+   */
+  readonly pageBBox: PdfBBox;
+  /**
+   * Extracted `/Shading` resources for the current page/scope (name → supported shading).
+   */
+  readonly shadings: ReadonlyMap<string, PdfShading>;
+  /**
+   * When > 0, enables rasterization for `sh` (shading fill) operators.
+   *
+   * The value is the maximum of `{width,height}` for the generated raster image.
+   */
+  readonly shadingMaxSize: number;
+  /**
+   * Extracted `/Pattern` resources for the current page/scope (name → supported pattern).
+   */
+  readonly patterns: ReadonlyMap<string, PdfPattern>;
   /**
    * Extracted `/ExtGState` resources for the current page (name → supported params).
    *
@@ -262,6 +289,8 @@ export type GraphicsStateOps = {
   readonly setBlendMode: (mode: string) => void;
   readonly setSoftMaskAlpha: (alpha: number) => void;
   readonly setSoftMask: (mask: PdfSoftMask | undefined) => void;
+  readonly setFillPatternName: (name: string) => void;
+  readonly setStrokePatternName: (name: string) => void;
   readonly setLineWidth: (width: number) => void;
   readonly setLineCap: (cap: 0 | 1 | 2) => void;
   readonly setLineJoin: (join: 0 | 1 | 2) => void;

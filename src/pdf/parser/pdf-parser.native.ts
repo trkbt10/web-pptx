@@ -24,11 +24,15 @@ import { loadNativePdfDocumentForParser } from "./native-load";
 import { extractEmbeddedFontsFromNativePages } from "../domain/font/font-extractor.native";
 import type { PdfLoadEncryption } from "./pdf-load-error";
 import { extractExtGStateFromResourcesNative, extractExtGStateNative, type ExtGStateParams } from "./ext-gstate.native";
+import { extractShadingFromResourcesNative, extractShadingNative } from "./shading.native";
+import { extractPatternsFromResourcesNative, extractPatternsNative } from "./pattern.native";
 import { preprocessInlineImages } from "./inline-image.native";
 import { expandType3TextElementsNative } from "./type3-expand.native";
 import { rasterizeSoftMaskedFillPath } from "./soft-mask-raster.native";
 import { applyGraphicsSoftMaskToPdfImage } from "./soft-mask-apply.native";
 import { rasterizeSoftMaskedText } from "./soft-mask-text-raster.native";
+import type { PdfShading } from "./shading.types";
+import type { PdfPattern } from "./pattern.types";
 
 export type PdfParserOptions = {
   readonly pages?: readonly number[];
@@ -43,6 +47,13 @@ export type PdfParserOptions = {
    * Set to `0` (default) to keep this feature disabled.
    */
   readonly softMaskVectorMaxSize?: number;
+  /**
+   * Enables rasterization for `sh` (shading fill) operators. This sets the
+   * maximum `{width,height}` of the generated shading raster.
+   *
+   * Set to `0` (default) to keep this feature disabled.
+   */
+  readonly shadingMaxSize?: number;
   readonly encryption?: PdfLoadEncryption;
 };
 
@@ -52,6 +63,7 @@ const DEFAULT_OPTIONS: Required<PdfParserOptions> = {
   includeText: true,
   includePaths: true,
   softMaskVectorMaxSize: 0,
+  shadingMaxSize: 0,
   encryption: { mode: "reject" },
 };
 
@@ -73,6 +85,9 @@ export async function parsePdfNative(
   const opts = { ...DEFAULT_OPTIONS, ...options };
   if (!Number.isFinite(opts.softMaskVectorMaxSize) || opts.softMaskVectorMaxSize < 0) {
     throw new Error(`softMaskVectorMaxSize must be >= 0 (got ${opts.softMaskVectorMaxSize})`);
+  }
+  if (!Number.isFinite(opts.shadingMaxSize) || opts.shadingMaxSize < 0) {
+    throw new Error(`shadingMaxSize must be >= 0 (got ${opts.shadingMaxSize})`);
   }
 
   const pdfDoc = await loadNativePdfDocumentForParser(data, {
@@ -143,6 +158,7 @@ async function parsePage(
   embeddedFontMetrics: Map<string, { ascender: number; descender: number }>,
 ): Promise<PdfPage> {
   const { width, height } = page.getSize();
+  const pageBBox: PdfBBox = [0, 0, width, height];
 
   const resources = page.getResourcesDict();
   const baseXObjects = resources ? resolveDict(page, dictGet(resources, "XObject")) : null;
@@ -178,7 +194,11 @@ async function parsePage(
   const extGState = extractExtGStateNative(page, {
     vectorSoftMaskMaxSize: opts.softMaskVectorMaxSize > 0 ? opts.softMaskVectorMaxSize : undefined,
   });
-  const parsedElements = [...parseContentStream(tokens, fontMappings, { extGState })];
+  const shadings = extractShadingNative(page);
+  const patterns = extractPatternsNative(page);
+  const parsedElements = [
+    ...parseContentStream(tokens, fontMappings, { extGState, shadings, patterns, shadingMaxSize: opts.shadingMaxSize, pageBBox }),
+  ];
 
   const registerType3XObjectStream = (stream: PdfStream): string => {
     let name = "";
@@ -206,6 +226,10 @@ async function parsePage(
     parsedWithType3,
     fontMappings,
     extGState,
+    shadings,
+    patterns,
+    opts.shadingMaxSize,
+    pageBBox,
     embeddedFontMetrics,
     mergedXObjects,
     nextInlineId,
@@ -345,6 +369,10 @@ function expandFormXObjectsNative(
   parsedElements: readonly ParsedElement[],
   fontMappings: FontMappings,
   extGState: ReadonlyMap<string, ExtGStateParams>,
+  shadings: ReadonlyMap<string, PdfShading>,
+  patterns: ReadonlyMap<string, PdfPattern>,
+  shadingMaxSize: number,
+  pageBBox: PdfBBox,
   embeddedFontMetrics: Map<string, { ascender: number; descender: number }>,
   xObjectsOverride: PdfDict | null,
   nextInlineId: () => number,
@@ -354,6 +382,20 @@ function expandFormXObjectsNative(
   const outElements: ParsedElement[] = [];
   const imageGroups: ImageGroupMap = new Map();
 
+  const mergeShadings = (base: ReadonlyMap<string, PdfShading>, local: ReadonlyMap<string, PdfShading>): ReadonlyMap<string, PdfShading> => {
+    if (base.size === 0 && local.size === 0) {return new Map();}
+    const merged = new Map<string, PdfShading>(base);
+    for (const [k, v] of local) {merged.set(k, v);}
+    return merged;
+  };
+
+  const mergePatterns = (base: ReadonlyMap<string, PdfPattern>, local: ReadonlyMap<string, PdfPattern>): ReadonlyMap<string, PdfPattern> => {
+    if (base.size === 0 && local.size === 0) {return new Map();}
+    const merged = new Map<string, PdfPattern>(base);
+    for (const [k, v] of local) {merged.set(k, v);}
+    return merged;
+  };
+
   const expandInScope = (
     elements: readonly ParsedElement[],
     scope: Readonly<{
@@ -361,6 +403,8 @@ function expandFormXObjectsNative(
       readonly xObjects: PdfDict | null;
       readonly fontMappings: FontMappings;
       readonly extGState: ReadonlyMap<string, ExtGStateParams>;
+      readonly shadings: ReadonlyMap<string, PdfShading>;
+      readonly patterns: ReadonlyMap<string, PdfPattern>;
     }>,
     callStack: Set<string>,
     depth: number,
@@ -413,6 +457,12 @@ function expandFormXObjectsNative(
       const mergedExt = new Map(scope.extGState);
       for (const [k, v] of localExt) {mergedExt.set(k, v);}
 
+      const localShadings = formResources ? extractShadingFromResourcesNative(page, formResources) : new Map();
+      const mergedShadings = mergeShadings(scope.shadings, localShadings);
+
+      const localPatterns = formResources ? extractPatternsFromResourcesNative(page, formResources) : new Map();
+      const mergedPatterns = mergePatterns(scope.patterns, localPatterns);
+
       const matrix = parseMatrix6(page, dictGet(stream.dict, "Matrix")) ?? ([1, 0, 0, 1, 0, 0] as PdfMatrix);
       const bbox = parseBBox4(page, dictGet(stream.dict, "BBox"));
 
@@ -435,7 +485,13 @@ function expandFormXObjectsNative(
       }
       const gfxOps = createGfxOpsFromStack(gfxStack);
       const tokens = tokenizeContentStream(content);
-      const parse = createParser(gfxOps, scopedFonts, { extGState: mergedExt });
+      const parse = createParser(gfxOps, scopedFonts, {
+        extGState: mergedExt,
+        shadings: mergedShadings,
+        patterns: mergedPatterns,
+        shadingMaxSize,
+        pageBBox,
+      });
       const inner = parse(tokens);
 
       expandInScope(
@@ -445,6 +501,8 @@ function expandFormXObjectsNative(
           xObjects: formXObjects ?? scope.xObjects,
           fontMappings: scopedFonts,
           extGState: mergedExt,
+          shadings: mergedShadings,
+          patterns: mergedPatterns,
         },
         callStack,
         depth + 1,
@@ -456,7 +514,7 @@ function expandFormXObjectsNative(
 
   expandInScope(
     parsedElements,
-    { resources, xObjects: xObjects ?? null, fontMappings, extGState },
+    { resources, xObjects: xObjects ?? null, fontMappings, extGState, shadings, patterns },
     new Set(),
     0,
   );
@@ -526,6 +584,9 @@ function convertElements(
         }
         break;
       case "image":
+        break;
+      case "rasterImage":
+        elements.push(elem.image);
         break;
     }
   }

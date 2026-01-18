@@ -20,8 +20,10 @@ import type {
   OperatorHandler,
   OperatorHandlerEntry,
   ParsedPath,
+  ParsedRasterImage,
 } from "./types";
 import { popNumber, popNumbers } from "./stack-ops";
+import { rasterizeShadingPatternFillPath } from "../pattern-fill-raster";
 
 // =============================================================================
 // Path Construction Handlers
@@ -164,6 +166,32 @@ function finishPath(
     graphicsState: gfxOps.get(),
   };
 
+  // PatternType 2 (shading) fills: rasterize now so resource scoping is correct.
+  if ((paintOp === "fill" || paintOp === "fillStroke") && element.graphicsState.fillPatternName) {
+    const name = element.graphicsState.fillPatternName;
+    const key = name.startsWith("/") ? name.slice(1) : name;
+    const pattern = ctx.patterns.get(key);
+    if (pattern && pattern.patternType === 2 && ctx.shadingMaxSize > 0) {
+      const image = rasterizeShadingPatternFillPath(element, pattern, {
+        shadingMaxSize: ctx.shadingMaxSize,
+        pageBBox: ctx.pageBBox,
+      });
+      if (image) {
+        const rasterElem: ParsedRasterImage = { type: "rasterImage", image };
+        const elements: Array<ParsedRasterImage | ParsedPath> = [rasterElem];
+
+        if (paintOp === "fillStroke") {
+          elements.push({ ...element, paintOp: "stroke", fillRule: undefined });
+        }
+
+        return {
+          currentPath: [],
+          elements: [...ctx.elements, ...elements],
+        };
+      }
+    }
+  }
+
   return {
     currentPath: [],
     elements: [...ctx.elements, element],
@@ -193,6 +221,26 @@ function closeAndFinishPath(
     fillRule,
     graphicsState: gfxOps.get(),
   };
+
+  if ((paintOp === "fill" || paintOp === "fillStroke") && element.graphicsState.fillPatternName) {
+    const name = element.graphicsState.fillPatternName;
+    const key = name.startsWith("/") ? name.slice(1) : name;
+    const pattern = ctx.patterns.get(key);
+    if (pattern && pattern.patternType === 2 && ctx.shadingMaxSize > 0) {
+      const image = rasterizeShadingPatternFillPath(element, pattern, {
+        shadingMaxSize: ctx.shadingMaxSize,
+        pageBBox: ctx.pageBBox,
+      });
+      if (image) {
+        const rasterElem: ParsedRasterImage = { type: "rasterImage", image };
+        const elements: Array<ParsedRasterImage | ParsedPath> = [rasterElem];
+        if (paintOp === "fillStroke") {
+          elements.push({ ...element, paintOp: "stroke", fillRule: undefined });
+        }
+        return { currentPath: [], elements: [...ctx.elements, ...elements] };
+      }
+    }
+  }
 
   return {
     currentPath: [],

@@ -199,7 +199,9 @@ function popOptionalName(
 ): readonly [name: string | null, newStack: readonly (number | string | readonly (number | string)[])[]] {
   if (stack.length === 0) {return [null, stack];}
   const top = stack[stack.length - 1];
-  if (typeof top !== "string" || !top.startsWith("/")) {return [null, stack];}
+  // Content stream names are tokenized without the leading "/" (e.g. "/P1" → "P1").
+  // For scn/SCN, a trailing name operand is significant for patterns/separations.
+  if (typeof top !== "string" || top.length === 0) {return [null, stack];}
   return [top, stack.slice(0, -1)];
 }
 
@@ -214,11 +216,16 @@ const handleFillColorNWithOptionalName: OperatorHandler = (ctx, gfxOps) => {
   const [name, stackAfterName] = popOptionalName(ctx.operandStack);
   const [components, newStack] = collectColorComponents(stackAfterName);
   if (name) {
-    // Pattern color space (`/Pattern`) can be set as: `/Pattern cs /P1 scn`.
-    // Uncolored tiling patterns can also be set as: `/Pattern cs c1 ... cn /P1 scn`.
-    // We don't render patterns yet; make the fallback deterministic (black) and
-    // avoid incorrectly using the numeric components as a solid fill.
-    gfxOps.setFillRgb(0, 0, 0);
+    const key = name.startsWith("/") ? name.slice(1) : name;
+    const pattern = ctx.patterns.get(key);
+    if (pattern) {
+      gfxOps.setFillPatternName(name);
+    } else {
+      // Pattern color space (`/Pattern`) can be set as: `/Pattern cs /P1 scn`.
+      // Uncolored tiling patterns can also be set as: `/Pattern cs c1 ... cn /P1 scn`.
+      // Unsupported patterns must be deterministic; avoid leaking a previous fill.
+      gfxOps.setFillRgb(0, 0, 0);
+    }
     return { operandStack: newStack };
   }
   applyFillColorN(components, gfxOps);
@@ -229,7 +236,13 @@ const handleStrokeColorNWithOptionalName: OperatorHandler = (ctx, gfxOps) => {
   const [name, stackAfterName] = popOptionalName(ctx.operandStack);
   const [components, newStack] = collectColorComponents(stackAfterName);
   if (name) {
-    gfxOps.setStrokeRgb(0, 0, 0);
+    const key = name.startsWith("/") ? name.slice(1) : name;
+    const pattern = ctx.patterns.get(key);
+    if (pattern) {
+      gfxOps.setStrokePatternName(name);
+    } else {
+      gfxOps.setStrokeRgb(0, 0, 0);
+    }
     return { operandStack: newStack };
   }
   applyStrokeColorN(components, gfxOps);

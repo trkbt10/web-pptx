@@ -12,7 +12,7 @@
  */
 
 import type { PdfToken } from "../../domain/content-stream";
-import type { FontMappings, PdfSoftMask } from "../../domain";
+import type { FontMappings, PdfBBox, PdfSoftMask } from "../../domain";
 import { createGraphicsStateStack, type GraphicsStateStack } from "../../domain";
 import type {
   ParserContext,
@@ -28,6 +28,9 @@ import { COLOR_HANDLERS } from "./color-handlers";
 import { GRAPHICS_STATE_HANDLERS } from "./graphics-state-handlers";
 import { TEXT_HANDLERS } from "./text-handlers";
 import { XOBJECT_HANDLERS } from "./xobject-handlers";
+import { SHADING_HANDLERS } from "./shading-handlers";
+import type { PdfShading } from "../shading.types";
+import type { PdfPattern } from "../pattern.types";
 
 // =============================================================================
 // Handler Registry
@@ -44,6 +47,7 @@ export const OPERATOR_HANDLERS: ReadonlyMap<string, OperatorHandlerEntry> = new 
   ...PATH_CONSTRUCTION_HANDLERS,
   ...PATH_PAINTING_HANDLERS,
   ...TEXT_HANDLERS,
+  ...SHADING_HANDLERS,
   ...XOBJECT_HANDLERS,
 ]);
 
@@ -90,6 +94,10 @@ export function createInitialContext(
         readonly dashPhase?: number;
       }
     >;
+    readonly shadings?: ReadonlyMap<string, PdfShading>;
+    readonly shadingMaxSize?: number;
+    readonly pageBBox?: PdfBBox;
+    readonly patterns?: ReadonlyMap<string, PdfPattern>;
   }> = {},
 ): ParserContext {
   return {
@@ -99,6 +107,10 @@ export function createInitialContext(
     inTextObject: false,
     textState: createInitialTextState(),
     fontMappings,
+    pageBBox: options.pageBBox ?? [0, 0, 0, 0],
+    shadings: options.shadings ?? new Map(),
+    shadingMaxSize: options.shadingMaxSize ?? 0,
+    patterns: options.patterns ?? new Map(),
     extGState: options.extGState ?? new Map(),
   };
 }
@@ -116,6 +128,10 @@ export function applyUpdate(ctx: ParserContext, update: ParserStateUpdate): Pars
     inTextObject: update.inTextObject ?? ctx.inTextObject,
     textState: update.textState ?? ctx.textState,
     fontMappings: ctx.fontMappings,
+    pageBBox: ctx.pageBBox,
+    shadings: ctx.shadings,
+    shadingMaxSize: ctx.shadingMaxSize,
+    patterns: ctx.patterns,
     extGState: ctx.extGState,
   };
 }
@@ -139,6 +155,8 @@ export function createGfxOpsFromStack(stack: GraphicsStateStack): GraphicsStateO
     setBlendMode: (m) => stack.setBlendMode(m),
     setSoftMaskAlpha: (a) => stack.setSoftMaskAlpha(a),
     setSoftMask: (m) => stack.setSoftMask(m),
+    setFillPatternName: (n) => stack.setFillPatternName(n),
+    setStrokePatternName: (n) => stack.setStrokePatternName(n),
     setLineWidth: (w) => stack.setLineWidth(w),
     setLineCap: (c) => stack.setLineCap(c),
     setLineJoin: (j) => stack.setLineJoin(j),
@@ -273,6 +291,10 @@ export function parseContentStream(
         readonly dashPhase?: number;
       }
     >;
+    readonly shadings?: ReadonlyMap<string, PdfShading>;
+    readonly shadingMaxSize?: number;
+    readonly pageBBox?: PdfBBox;
+    readonly patterns?: ReadonlyMap<string, PdfPattern>;
   }> = {},
 ): readonly ParsedElement[] {
   const gfxStack = createGraphicsStateStack();
@@ -318,6 +340,10 @@ export function createParser(
         readonly dashPhase?: number;
       }
     >;
+    readonly shadings?: ReadonlyMap<string, PdfShading>;
+    readonly shadingMaxSize?: number;
+    readonly pageBBox?: PdfBBox;
+    readonly patterns?: ReadonlyMap<string, PdfPattern>;
   }> = {},
 ): (tokens: readonly PdfToken[]) => readonly ParsedElement[] {
   return (tokens) => {
