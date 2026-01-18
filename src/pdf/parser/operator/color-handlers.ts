@@ -12,12 +12,9 @@
  * - Lookup objects instead of switch (Rule 1)
  */
 
-import type {
-  GraphicsStateOps,
-  OperatorHandler,
-  OperatorHandlerEntry,
-} from "./types";
-import { popNumber, popString, collectColorComponents } from "./stack-ops";
+import type { GraphicsStateOps, OperatorHandler, OperatorHandlerEntry } from "./types";
+import type { PdfColor } from "../../domain";
+import { popNumber, collectColorComponents } from "./stack-ops";
 
 // =============================================================================
 // Gray Color Handlers
@@ -111,8 +108,36 @@ const handleStrokeCmyk: OperatorHandler = (ctx, gfxOps) => {
  * Just consumes the color space name - we infer from component count when
  * the actual color is set.
  */
-const handleColorSpace: OperatorHandler = (ctx) => {
-  const [, newStack] = popString(ctx.operandStack);
+function parsePatternUnderlyingColorSpace(
+  operand: unknown,
+): "DeviceGray" | "DeviceRGB" | "DeviceCMYK" | null {
+  if (!Array.isArray(operand) || operand.length < 2) {return null;}
+  const family = operand[0];
+  const base = operand[1];
+  if (family !== "Pattern") {return null;}
+  if (base === "DeviceGray" || base === "DeviceRGB" || base === "DeviceCMYK") {return base;}
+  return null;
+}
+
+const handleFillColorSpace: OperatorHandler = (ctx, gfxOps) => {
+  const top = ctx.operandStack.length > 0 ? ctx.operandStack[ctx.operandStack.length - 1] : undefined;
+  const newStack = ctx.operandStack.slice(0, -1);
+  if (!top) {return { operandStack: ctx.operandStack };}
+
+  const base = parsePatternUnderlyingColorSpace(top);
+  gfxOps.setFillPatternUnderlyingColorSpace(base ?? undefined);
+
+  return { operandStack: newStack };
+};
+
+const handleStrokeColorSpace: OperatorHandler = (ctx, gfxOps) => {
+  const top = ctx.operandStack.length > 0 ? ctx.operandStack[ctx.operandStack.length - 1] : undefined;
+  const newStack = ctx.operandStack.slice(0, -1);
+  if (!top) {return { operandStack: ctx.operandStack };}
+
+  const base = parsePatternUnderlyingColorSpace(top);
+  gfxOps.setStrokePatternUnderlyingColorSpace(base ?? undefined);
+
   return { operandStack: newStack };
 };
 
@@ -220,6 +245,11 @@ const handleFillColorNWithOptionalName: OperatorHandler = (ctx, gfxOps) => {
     const pattern = ctx.patterns.get(key);
     if (pattern) {
       gfxOps.setFillPatternName(name);
+      if (pattern.patternType === 1 && pattern.paintType === 2) {
+        const base = gfxOps.get().fillPatternUnderlyingColorSpace ?? inferDeviceColorSpaceFromComponentCount(components.length);
+        const color = base ? buildDeviceColor(base, components) : null;
+        gfxOps.setFillPatternColor(color ?? { colorSpace: "DeviceRGB", components: [0, 0, 0] });
+      }
     } else {
       // Pattern color space (`/Pattern`) can be set as: `/Pattern cs /P1 scn`.
       // Uncolored tiling patterns can also be set as: `/Pattern cs c1 ... cn /P1 scn`.
@@ -240,6 +270,11 @@ const handleStrokeColorNWithOptionalName: OperatorHandler = (ctx, gfxOps) => {
     const pattern = ctx.patterns.get(key);
     if (pattern) {
       gfxOps.setStrokePatternName(name);
+      if (pattern.patternType === 1 && pattern.paintType === 2) {
+        const base = gfxOps.get().strokePatternUnderlyingColorSpace ?? inferDeviceColorSpaceFromComponentCount(components.length);
+        const color = base ? buildDeviceColor(base, components) : null;
+        gfxOps.setStrokePatternColor(color ?? { colorSpace: "DeviceRGB", components: [0, 0, 0] });
+      }
     } else {
       gfxOps.setStrokeRgb(0, 0, 0);
     }
@@ -267,8 +302,8 @@ export const COLOR_HANDLERS: ReadonlyMap<string, OperatorHandlerEntry> = new Map
   ["k", { handler: handleFillCmyk, category: "color", description: "Set fill CMYK" }],
   ["K", { handler: handleStrokeCmyk, category: "color", description: "Set stroke CMYK" }],
   // Color space
-  ["cs", { handler: handleColorSpace, category: "color", description: "Set fill color space" }],
-  ["CS", { handler: handleColorSpace, category: "color", description: "Set stroke color space" }],
+  ["cs", { handler: handleFillColorSpace, category: "color", description: "Set fill color space" }],
+  ["CS", { handler: handleStrokeColorSpace, category: "color", description: "Set stroke color space" }],
   // General color
   ["sc", { handler: handleFillColorN, category: "color", description: "Set fill color (current space)" }],
   ["scn", { handler: handleFillColorNWithOptionalName, category: "color", description: "Set fill color (pattern/separation)" }],
@@ -287,7 +322,8 @@ export const colorHandlers = {
   handleStrokeRgb,
   handleFillCmyk,
   handleStrokeCmyk,
-  handleColorSpace,
+  handleFillColorSpace,
+  handleStrokeColorSpace,
   handleFillColorN,
   handleStrokeColorN,
   handleFillColorNWithOptionalName,
@@ -295,3 +331,28 @@ export const colorHandlers = {
   applyFillColorN,
   applyStrokeColorN,
 } as const;
+
+function inferDeviceColorSpaceFromComponentCount(
+  count: number,
+): "DeviceGray" | "DeviceRGB" | "DeviceCMYK" | null {
+  if (count === 1) {return "DeviceGray";}
+  if (count === 3) {return "DeviceRGB";}
+  if (count === 4) {return "DeviceCMYK";}
+  return null;
+}
+
+function buildDeviceColor(
+  colorSpace: "DeviceGray" | "DeviceRGB" | "DeviceCMYK",
+  components: readonly number[],
+): PdfColor | null {
+  if (colorSpace === "DeviceGray") {
+    if (components.length !== 1) {return null;}
+    return { colorSpace, components: [components[0] ?? 0] };
+  }
+  if (colorSpace === "DeviceRGB") {
+    if (components.length !== 3) {return null;}
+    return { colorSpace, components: [components[0] ?? 0, components[1] ?? 0, components[2] ?? 0] };
+  }
+  if (components.length !== 4) {return null;}
+  return { colorSpace, components: [components[0] ?? 0, components[1] ?? 0, components[2] ?? 0, components[3] ?? 0] };
+}

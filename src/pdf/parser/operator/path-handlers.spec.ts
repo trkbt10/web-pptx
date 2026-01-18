@@ -20,11 +20,16 @@ function createMockGfxOps(): GraphicsStateOps {
       clipCalls.push(bbox);
       state.value = { ...state.value, clipBBox: bbox };
     },
+    setClipMask: () => {},
     setBlendMode: () => {},
     setSoftMaskAlpha: () => {},
     setSoftMask: () => {},
     setFillPatternName: () => {},
     setStrokePatternName: () => {},
+    setFillPatternUnderlyingColorSpace: () => {},
+    setStrokePatternUnderlyingColorSpace: () => {},
+    setFillPatternColor: () => {},
+    setStrokePatternColor: () => {},
     setLineWidth: () => {},
     setLineCap: () => {},
     setLineJoin: () => {},
@@ -58,6 +63,7 @@ function createContext(operandStack: (number | string | (number | string)[])[] =
     pageBBox: [0, 0, 0, 0],
     shadings: new Map(),
     shadingMaxSize: 0,
+    clipPathMaxSize: 0,
     patterns: new Map(),
     extGState: new Map(),
   };

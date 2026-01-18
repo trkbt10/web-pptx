@@ -15,6 +15,8 @@ import { decodeJpegToRgb } from "./jpeg-decode";
 import { calculateTextDisplacement, createGfxOpsFromStack, createParser, type ParsedElement, type ParsedText, type TextRun } from "./operator";
 import { rasterizeSoftMaskedFillPath } from "./soft-mask-raster.native";
 import { extractFontMappingsFromResourcesNative } from "./font-decoder.native";
+import { extractShadingFromResourcesNative } from "./shading.native";
+import { extractPatternsFromResourcesNative } from "./pattern.native";
 
 function asDict(obj: PdfObject | undefined): PdfDict | null {
   return obj?.type === "dict" ? obj : null;
@@ -69,6 +71,13 @@ export type ExtGStateExtractOptions = Readonly<{
    * The value is the maximum of `{width,height}` for the generated mask grid.
    */
   readonly vectorSoftMaskMaxSize?: number;
+  /**
+   * Enables rasterization for `sh` (shading fill) inside per-pixel `/SMask` groups.
+   *
+   * The value is the maximum of `{width,height}` for any generated shading raster.
+   * Set to `0` (or leave undefined) to keep shading rasterization disabled.
+   */
+  readonly shadingMaxSize?: number;
 }>;
 
 function asArray(obj: PdfObject | undefined): readonly PdfObject[] | null {
@@ -470,6 +479,85 @@ function parseColorSpaceName(page: NativePdfPage, dict: PdfDict): PdfColorSpace 
     if (csObj.value === "DeviceCMYK") {return "DeviceCMYK";}
     return null;
   }
+  if (csObj.type === "array") {
+    const items = csObj.items;
+    const cs0 = items[0];
+    if (!cs0 || cs0.type !== "name") {return null;}
+    if (cs0.value === "DeviceGray") {return "DeviceGray";}
+    if (cs0.value === "DeviceRGB") {return "DeviceRGB";}
+    if (cs0.value === "DeviceCMYK") {return "DeviceCMYK";}
+    if (cs0.value === "ICCBased") {
+      const profileRef = items[1];
+      const profileObj = resolve(page, profileRef);
+      const profileStream = asStream(profileObj);
+      const profileDict = profileStream ? profileStream.dict : asDict(profileObj);
+      if (!profileDict) {return "DeviceRGB";}
+      const nObj = resolve(page, dictGet(profileDict, "N"));
+      const n = nObj?.type === "number" && Number.isFinite(nObj.value) ? nObj.value : null;
+      if (n === 1) {return "DeviceGray";}
+      if (n === 3) {return "DeviceRGB";}
+      if (n === 4) {return "DeviceCMYK";}
+      return "DeviceRGB";
+    }
+    return null;
+  }
+  return null;
+}
+
+function parseDeviceColorSpaceNameFromObject(page: NativePdfPage, obj: PdfObject | undefined): PdfColorSpace | null {
+  const resolved = resolve(page, obj);
+  const name = asName(resolved) ?? (() => {
+    const items = asArray(resolved);
+    const first = items?.[0];
+    return first?.type === "name" ? first.value : null;
+  })();
+  if (name === "DeviceGray") {return "DeviceGray";}
+  if (name === "DeviceRGB") {return "DeviceRGB";}
+  if (name === "DeviceCMYK") {return "DeviceCMYK";}
+  return null;
+}
+
+function parseSoftMaskBackdropRgb(
+  page: NativePdfPage,
+  softMaskDict: PdfDict,
+  groupColorSpace: PdfColorSpace | null,
+): readonly [number, number, number] | null {
+  const bc = resolve(page, dictGet(softMaskDict, "BC"));
+  const arr = asArray(bc);
+  if (!arr || arr.length === 0) {return null;}
+
+  const comps: number[] = [];
+  for (const item of arr) {
+    if (!item || item.type !== "number" || !Number.isFinite(item.value)) {return null;}
+    comps.push(item.value);
+  }
+
+  const cs = groupColorSpace ?? (() => {
+    if (comps.length === 1) {return "DeviceGray" as const;}
+    if (comps.length === 3) {return "DeviceRGB" as const;}
+    if (comps.length === 4) {return "DeviceCMYK" as const;}
+    return null;
+  })();
+  if (!cs) {return null;}
+
+  if (cs === "DeviceGray") {
+    const g = clamp01(comps[0] ?? 0);
+    return grayToRgb(g);
+  }
+  if (cs === "DeviceRGB") {
+    const r = toByte(clamp01(comps[0] ?? 0));
+    const g = toByte(clamp01(comps[1] ?? 0));
+    const b = toByte(clamp01(comps[2] ?? 0));
+    return [r, g, b];
+  }
+  if (cs === "DeviceCMYK") {
+    return cmykToRgb(
+      clamp01(comps[0] ?? 0),
+      clamp01(comps[1] ?? 0),
+      clamp01(comps[2] ?? 0),
+      clamp01(comps[3] ?? 0),
+    );
+  }
   return null;
 }
 
@@ -498,6 +586,8 @@ function tryExtractPerPixelSoftMaskFromElements(
   fontMappings: FontMappings,
   options: ExtGStateExtractOptions,
   groupKnockout: boolean,
+  groupIsolated: boolean,
+  backdropRgb: readonly [number, number, number] | null,
 ): PdfSoftMask | null {
   const decodeImageStreamToRgba = (imageStream: PdfStream): { readonly width: number; readonly height: number; readonly rgba: Uint8ClampedArray } | null => {
     const imageDict = imageStream.dict;
@@ -542,6 +632,14 @@ function tryExtractPerPixelSoftMaskFromElements(
       readonly imageMatrixInv: PdfMatrix;
     }>
     | Readonly<{
+      readonly kind: "pdfImage";
+      readonly width: number;
+      readonly height: number;
+      readonly data: Uint8Array;
+      readonly alpha: Uint8Array | null;
+      readonly imageMatrixInv: PdfMatrix;
+    }>
+    | Readonly<{
       readonly kind: "raster";
       readonly width: number;
       readonly height: number;
@@ -551,13 +649,15 @@ function tryExtractPerPixelSoftMaskFromElements(
 
   type RasterLayer = Extract<MaskLayer, { readonly kind: "raster" }>;
 
-  const hasOnlyImagesPathsOrText = elements.every((e) => e.type === "image" || e.type === "path" || e.type === "text");
+  const hasOnlyImagesPathsOrText = elements.every((e) => e.type === "image" || e.type === "path" || e.type === "text" || e.type === "rasterImage");
   if (!hasOnlyImagesPathsOrText) {return null;}
 
   const imageElements = elements.filter((e): e is Extract<ParsedElement, { readonly type: "image" }> => e.type === "image");
   const pathElements = elements.filter((e): e is Extract<ParsedElement, { readonly type: "path" }> => e.type === "path");
   const textElements = elements.filter((e): e is Extract<ParsedElement, { readonly type: "text" }> => e.type === "text");
-  const hasImages = imageElements.length > 0;
+  const rasterImageElements = elements.filter((e): e is Extract<ParsedElement, { readonly type: "rasterImage" }> => e.type === "rasterImage");
+  const hasXObjectImages = imageElements.length > 0;
+  const hasRasterImages = rasterImageElements.length > 0;
 
   const rasterizeTextElementToGrid = (
     elem: ParsedText,
@@ -677,7 +777,7 @@ function tryExtractPerPixelSoftMaskFromElements(
     return { kind: "raster", width, height, data, alpha };
   };
 
-  if (!hasImages) {
+  if (!hasXObjectImages && !hasRasterImages) {
     const maxSize = options.vectorSoftMaskMaxSize;
     if (maxSize == null) {return null;}
     if (!Number.isFinite(maxSize) || maxSize <= 0) {throw new Error(`vectorSoftMaskMaxSize must be > 0 (got ${maxSize})`);}
@@ -710,11 +810,13 @@ function tryExtractPerPixelSoftMaskFromElements(
       for (const elem of elements) {
         if (elem.type === "path") {
           if (elem.paintOp === "none" || elem.paintOp === "clip") {continue;}
+          if (elem.graphicsState.softMask) {return null;}
 
-          const raster = rasterizeSoftMaskedFillPath({
-            ...elem,
-            graphicsState: { ...elem.graphicsState, softMaskAlpha: 1, softMask: renderGrid },
-          });
+          const ctmInv = invertMatrix(elem.graphicsState.ctm);
+          if (!ctmInv) {return null;}
+          const gridInMaskSpace: PdfSoftMask = { ...renderGrid, matrix: ctmInv };
+
+          const raster = rasterizeSoftMaskedFillPath({ ...elem, graphicsState: { ...elem.graphicsState, softMask: gridInMaskSpace } });
           if (!raster || raster.type !== "image" || !raster.alpha) {return null;}
           if (raster.width !== width || raster.height !== height) {return null;}
 
@@ -757,16 +859,28 @@ function tryExtractPerPixelSoftMaskFromElements(
     const premG = new Uint32Array(pixelCount);
     const premB = new Uint32Array(pixelCount);
 
+    if (!groupIsolated && backdropRgb) {
+      const [br, bg, bb] = backdropRgb;
+      for (let i = 0; i < pixelCount; i += 1) {
+        outA[i] = 255;
+        premR[i] = br * 255;
+        premG[i] = bg * 255;
+        premB[i] = bb * 255;
+      }
+    }
+
     for (const elem of elements) {
       let layer: RasterLayer | null | undefined = undefined;
 
       if (elem.type === "path") {
         if (elem.paintOp === "none" || elem.paintOp === "clip") {continue;}
+        if (elem.graphicsState.softMask) {return null;}
 
-        const raster = rasterizeSoftMaskedFillPath({
-          ...elem,
-          graphicsState: { ...elem.graphicsState, softMaskAlpha: 1, softMask: renderGrid },
-        });
+        const ctmInv = invertMatrix(elem.graphicsState.ctm);
+        if (!ctmInv) {return null;}
+        const gridInMaskSpace: PdfSoftMask = { ...renderGrid, matrix: ctmInv };
+
+        const raster = rasterizeSoftMaskedFillPath({ ...elem, graphicsState: { ...elem.graphicsState, softMask: gridInMaskSpace } });
         if (!raster || raster.type !== "image" || !raster.alpha) {return null;}
         if (raster.width !== width || raster.height !== height) {return null;}
         layer = { kind: "raster", width, height, data: raster.data, alpha: raster.alpha };
@@ -818,8 +932,8 @@ function tryExtractPerPixelSoftMaskFromElements(
     return { kind, width, height, alpha: out, bbox: [bbox[0], bbox[1], bbox[2], bbox[3]], matrix };
   }
 
-  const xObjects = getXObjectsDict(page, resources);
-  if (!xObjects) {return null;}
+  const xObjects = hasXObjectImages ? getXObjectsDict(page, resources) : null;
+  if (hasXObjectImages && !xObjects) {return null;}
 
   const decodedImagesByName = new Map<
     string,
@@ -829,61 +943,75 @@ function tryExtractPerPixelSoftMaskFromElements(
   let width: number | null = null;
   let height: number | null = null;
 
-  for (const img of imageElements) {
-    const key = img.name;
-    const cached = decodedImagesByName.get(key);
-    if (cached) {
+  if (hasXObjectImages) {
+    for (const img of imageElements) {
+      const key = img.name;
+      const cached = decodedImagesByName.get(key);
+      if (cached) {
+        if (width == null || height == null) {
+          width = cached.width;
+          height = cached.height;
+        } else if (cached.width !== width || cached.height !== height) {
+          return null;
+        }
+        continue;
+      }
+
+      if (!xObjects) {return null;}
+      const stream = resolveXObjectStreamByName(page, xObjects, img.name);
+      if (!stream) {return null;}
+
+      const dict = stream.dict;
+      const subtype = asName(dictGet(dict, "Subtype"));
+      if (subtype !== "Image") {return null;}
+
+      const w = getNumberValue(page, dict, "Width") ?? 0;
+      const h = getNumberValue(page, dict, "Height") ?? 0;
+      if (w <= 0 || h <= 0) {return null;}
+
+      const baseDecoded = decodeImageStreamToRgba(stream);
+      if (!baseDecoded) {return null;}
+      if (baseDecoded.width !== w || baseDecoded.height !== h) {return null;}
+
       if (width == null || height == null) {
-        width = cached.width;
-        height = cached.height;
-      } else if (cached.width !== width || cached.height !== height) {
+        width = w;
+        height = h;
+      } else if (w !== width || h !== height) {
         return null;
       }
-      continue;
+
+      const smaskStream = asStream(resolve(page, dictGet(dict, "SMask")));
+      const smaskDecoded = smaskStream ? decodeImageStreamToRgba(smaskStream) : null;
+      const smaskAlpha = (() => {
+        if (!smaskDecoded) {return null;}
+        if (!width || !height) {return null;}
+        if (smaskDecoded.width !== width || smaskDecoded.height !== height) {return null;}
+        const out = new Uint8Array(width * height);
+        for (let i = 0; i < width * height; i += 1) {
+          out[i] = smaskDecoded.rgba[i * 4] ?? 0;
+        }
+        return out;
+      })();
+
+      if (width == null || height == null) {return null;}
+      decodedImagesByName.set(key, {
+        width,
+        height,
+        rgba: baseDecoded.rgba,
+        smaskAlpha,
+      });
     }
+  }
 
-    const stream = resolveXObjectStreamByName(page, xObjects, img.name);
-    if (!stream) {return null;}
-
-    const dict = stream.dict;
-    const subtype = asName(dictGet(dict, "Subtype"));
-    if (subtype !== "Image") {return null;}
-
-    const w = getNumberValue(page, dict, "Width") ?? 0;
-    const h = getNumberValue(page, dict, "Height") ?? 0;
-    if (w <= 0 || h <= 0) {return null;}
-
-    const baseDecoded = decodeImageStreamToRgba(stream);
-    if (!baseDecoded) {return null;}
-    if (baseDecoded.width !== w || baseDecoded.height !== h) {return null;}
-
-    if (width == null || height == null) {
-      width = w;
-      height = h;
-    } else if (w !== width || h !== height) {
-      return null;
+  if (width == null || height == null) {
+    for (const ri of rasterImageElements) {
+      const img = ri.image;
+      const w = img.width ?? 0;
+      const h = img.height ?? 0;
+      if (w <= 0 || h <= 0) {continue;}
+      width = Math.max(width ?? 0, w);
+      height = Math.max(height ?? 0, h);
     }
-
-    const smaskStream = asStream(resolve(page, dictGet(dict, "SMask")));
-    const smaskDecoded = smaskStream ? decodeImageStreamToRgba(smaskStream) : null;
-    const smaskAlpha = (() => {
-      if (!smaskDecoded) {return null;}
-      if (!width || !height) {return null;}
-      if (smaskDecoded.width !== width || smaskDecoded.height !== height) {return null;}
-      const out = new Uint8Array(width * height);
-      for (let i = 0; i < width * height; i += 1) {
-        out[i] = smaskDecoded.rgba[i * 4] ?? 0;
-      }
-      return out;
-    })();
-
-    if (width == null || height == null) {return null;}
-    decodedImagesByName.set(key, {
-      width,
-      height,
-      rgba: baseDecoded.rgba,
-      smaskAlpha,
-    });
   }
 
   if (width == null || height == null) {return null;}
@@ -924,16 +1052,34 @@ function tryExtractPerPixelSoftMaskFromElements(
       });
       continue;
     }
+    if (elem.type === "rasterImage") {
+      const img = elem.image;
+      if (img.colorSpace !== "DeviceRGB" || img.bitsPerComponent !== 8) {return null;}
+      const imageMatrixInv = invertMatrix(img.graphicsState.ctm);
+      if (!imageMatrixInv) {return null;}
+      layers.push({
+        kind: "pdfImage",
+        width: img.width,
+        height: img.height,
+        data: img.data,
+        alpha: img.alpha ?? null,
+        imageMatrixInv,
+      });
+      continue;
+    }
     if (elem.type === "path") {
       if (elem.paintOp === "none" || elem.paintOp === "clip") {
         continue;
       }
+      if (elem.graphicsState.softMask) {return null;}
+      const ctmInv = invertMatrix(elem.graphicsState.ctm);
+      if (!ctmInv) {return null;}
+      const gridInMaskSpace: PdfSoftMask = { ...renderGrid, matrix: ctmInv };
       const raster = rasterizeSoftMaskedFillPath({
         ...elem,
         graphicsState: {
           ...elem.graphicsState,
-          softMaskAlpha: 1,
-          softMask: renderGrid,
+          softMask: gridInMaskSpace,
         },
       });
       if (!raster || raster.type !== "image") {
@@ -971,6 +1117,25 @@ function tryExtractPerPixelSoftMaskFromElements(
           let srcA = 0;
           if (layer.kind === "raster") {
             srcA = layer.alpha[idx] ?? 0;
+          } else if (layer.kind === "pdfImage") {
+            const imagePoint = transformPoint({ x: maskX, y: maskY }, layer.imageMatrixInv);
+            const u = imagePoint.x;
+            const v = imagePoint.y;
+            if (u < 0 || u >= 1 || v < 0 || v >= 1) {
+              continue;
+            }
+            const srcCol = Math.min(layer.width - 1, Math.max(0, Math.floor(u * layer.width)));
+            const srcRow = Math.min(layer.height - 1, Math.max(0, Math.floor((1 - v) * layer.height)));
+            const srcIdx = srcRow * layer.width + srcCol;
+            srcA = layer.alpha ? (layer.alpha[srcIdx] ?? 0) : -1;
+            if (srcA < 0) {
+              const o = srcIdx * 3;
+              const r = layer.data[o] ?? 0;
+              const g = layer.data[o + 1] ?? 0;
+              const b = layer.data[o + 2] ?? 0;
+              if (r !== g || g !== b) {return null;}
+              srcA = r;
+            }
           } else {
             const imagePoint = transformPoint({ x: maskX, y: maskY }, layer.imageMatrixInv);
             const u = imagePoint.x;
@@ -978,9 +1143,9 @@ function tryExtractPerPixelSoftMaskFromElements(
             if (u < 0 || u >= 1 || v < 0 || v >= 1) {
               continue;
             }
-            const srcCol = Math.min(width - 1, Math.max(0, Math.floor(u * width)));
-            const srcRow = Math.min(height - 1, Math.max(0, Math.floor((1 - v) * height)));
-            const srcIdx = srcRow * width + srcCol;
+            const srcCol = Math.min(layer.width - 1, Math.max(0, Math.floor(u * layer.width)));
+            const srcRow = Math.min(layer.height - 1, Math.max(0, Math.floor((1 - v) * layer.height)));
+            const srcIdx = srcRow * layer.width + srcCol;
 
             srcA = layer.smaskAlpha ? (layer.smaskAlpha[srcIdx] ?? 0) : -1;
             if (srcA < 0) {
@@ -1010,6 +1175,14 @@ function tryExtractPerPixelSoftMaskFromElements(
       let premG = 0;
       let premB = 0;
 
+      if (!groupIsolated && backdropRgb) {
+        const [br, bg, bb] = backdropRgb;
+        outA = 255;
+        premR = br * 255;
+        premG = bg * 255;
+        premB = bb * 255;
+      }
+
       for (const layer of layers) {
         let srcA = 0;
         let r = 0;
@@ -1023,6 +1196,24 @@ function tryExtractPerPixelSoftMaskFromElements(
           r = layer.data[o] ?? 0;
           g = layer.data[o + 1] ?? 0;
           b = layer.data[o + 2] ?? 0;
+        } else if (layer.kind === "pdfImage") {
+          const imagePoint = transformPoint({ x: maskX, y: maskY }, layer.imageMatrixInv);
+          const u = imagePoint.x;
+          const v = imagePoint.y;
+          if (u < 0 || u >= 1 || v < 0 || v >= 1) {
+            continue;
+          }
+          const srcCol = Math.min(layer.width - 1, Math.max(0, Math.floor(u * layer.width)));
+          const srcRow = Math.min(layer.height - 1, Math.max(0, Math.floor((1 - v) * layer.height)));
+          const srcIdx = srcRow * layer.width + srcCol;
+
+          srcA = layer.alpha ? (layer.alpha[srcIdx] ?? 0) : 255;
+          if (srcA === 0) {continue;}
+
+          const o = srcIdx * 3;
+          r = layer.data[o] ?? 0;
+          g = layer.data[o + 1] ?? 0;
+          b = layer.data[o + 2] ?? 0;
         } else {
           const imagePoint = transformPoint({ x: maskX, y: maskY }, layer.imageMatrixInv);
           const u = imagePoint.x;
@@ -1030,9 +1221,9 @@ function tryExtractPerPixelSoftMaskFromElements(
           if (u < 0 || u >= 1 || v < 0 || v >= 1) {
             continue;
           }
-          const srcCol = Math.min(width - 1, Math.max(0, Math.floor(u * width)));
-          const srcRow = Math.min(height - 1, Math.max(0, Math.floor((1 - v) * height)));
-          const srcIdx = srcRow * width + srcCol;
+          const srcCol = Math.min(layer.width - 1, Math.max(0, Math.floor(u * layer.width)));
+          const srcRow = Math.min(layer.height - 1, Math.max(0, Math.floor((1 - v) * layer.height)));
+          const srcIdx = srcRow * layer.width + srcCol;
 
           srcA = layer.smaskAlpha ? (layer.smaskAlpha[srcIdx] ?? 0) : 255;
           if (srcA === 0) {continue;}
@@ -1118,15 +1309,27 @@ function parseSoftMask(page: NativePdfPage, obj: PdfObject | undefined, options:
     const resources = asDict(resolve(page, dictGet(g.dict, "Resources")));
     const extGState = resources ? extractExtGStateFromResourcesNative(page, resources, options) : new Map();
     const fontMappings = resources ? extractFontMappingsFromResourcesNative(page, resources) : new Map();
+    const shadings = resources ? extractShadingFromResourcesNative(page, resources) : new Map();
+    const patterns = resources ? extractPatternsFromResourcesNative(page, resources) : new Map();
 
     const group = asDict(resolve(page, dictGet(g.dict, "Group")));
     const groupKnockout = group ? (asBool(resolve(page, dictGet(group, "K"))) === true) : false;
+    const groupIsolated = group ? (asBool(resolve(page, dictGet(group, "I"))) === true) : false;
+    const groupColorSpace = group ? parseDeviceColorSpaceNameFromObject(page, dictGet(group, "CS")) : null;
+    const backdropRgb = kind === "Luminosity" && !groupIsolated ? parseSoftMaskBackdropRgb(page, smask, groupColorSpace) : null;
 
     const content = new TextDecoder("latin1").decode(decodePdfStream(g));
     const tokens = tokenizeContentStream(content);
     const gfxStack = createGraphicsStateStack();
     const gfxOps = createGfxOpsFromStack(gfxStack);
-    const parse = createParser(gfxOps, fontMappings, { extGState });
+    const parse = createParser(gfxOps, fontMappings, {
+      extGState,
+      shadings,
+      patterns,
+      shadingMaxSize: options.shadingMaxSize ?? 0,
+      clipPathMaxSize: 0,
+      pageBBox: [bbox[0], bbox[1], bbox[2], bbox[3]],
+    });
     const elements = parse(tokens);
 
     const extracted = tryExtractConstantSoftMaskValueFromElements(elements, bbox, kind);
@@ -1134,7 +1337,19 @@ function parseSoftMask(page: NativePdfPage, obj: PdfObject | undefined, options:
       return { present: true, softMaskAlpha: extracted, softMask: undefined };
     }
 
-    const perPixel = tryExtractPerPixelSoftMaskFromElements(page, elements, bbox, matrix, kind, resources, fontMappings, options, groupKnockout);
+    const perPixel = tryExtractPerPixelSoftMaskFromElements(
+      page,
+      elements,
+      bbox,
+      matrix,
+      kind,
+      resources,
+      fontMappings,
+      options,
+      groupKnockout,
+      groupIsolated,
+      backdropRgb,
+    );
     if (perPixel) {
       return { present: true, softMaskAlpha: 1, softMask: perPixel };
     }

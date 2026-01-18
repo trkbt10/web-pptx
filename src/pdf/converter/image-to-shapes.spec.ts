@@ -224,6 +224,101 @@ describe("convertImageToShape", () => {
 
     expect(convertImageToShape(image, context, "1")).toBeNull();
   });
+
+  it("warps sheared images into an axis-aligned PNG (bbox-based)", () => {
+    // 2x2 RGB image (row-major, top-to-bottom): red, green / blue, yellow.
+    const image: PdfImage = {
+      type: "image",
+      data: new Uint8Array([
+        255, 0, 0,    // top-left: red
+        0, 255, 0,    // top-right: green
+        0, 0, 255,    // bottom-left: blue
+        255, 255, 0,  // bottom-right: yellow
+      ]),
+      width: 2,
+      height: 2,
+      colorSpace: "DeviceRGB",
+      bitsPerComponent: 8,
+      graphicsState: {
+        ...graphicsState,
+        // x' = 10x + 5y, y' = 10y (shear in X).
+        ctm: [10, 0, 5, 10, 0, 0],
+      },
+    };
+
+    const shape = convertImageToShape(image, context, "1");
+    if (!shape) {throw new Error("Expected shape to be created");}
+
+    expect(shape.blipFill.sourceRect).toEqual({ left: 0, top: 0, right: 0, bottom: 0 });
+    expect(shape.properties.transform).toMatchObject({ x: 0, y: 90, width: 15, height: 10 });
+
+    const parsed = parseDataUrl(shape.blipFill.resourceId);
+    expect(parsed.mimeType).toBe("image/png");
+
+    type PngReadResult = Readonly<{ readonly width: number; readonly height: number; readonly data: Uint8Array }>;
+    type PngjsModule = Readonly<{ readonly PNG: Readonly<{ readonly sync: Readonly<{ readonly read: (bytes: Buffer) => PngReadResult }> }> }>;
+
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- pngjs is CJS
+    const pngjs = require("pngjs") as PngjsModule;
+    const decoded = pngjs.PNG.sync.read(Buffer.from(parsed.data));
+
+    expect(decoded.width).toBe(15);
+    expect(decoded.height).toBe(10);
+
+    const pxAt = (x: number, y: number): readonly [number, number, number, number] => {
+      const i = (y * decoded.width + x) * 4;
+      return [decoded.data[i] ?? 0, decoded.data[i + 1] ?? 0, decoded.data[i + 2] ?? 0, decoded.data[i + 3] ?? 0];
+    };
+
+    // Outside the sheared parallelogram → transparent.
+    expect(pxAt(0, 0)[3]).toBe(0);
+    expect(pxAt(14, 9)[3]).toBe(0);
+
+    // Inside samples map into the original 2x2 image.
+    expect(pxAt(14, 0)).toEqual([0, 255, 0, 255]); // top-right → green
+    expect(pxAt(0, 9)).toEqual([0, 0, 255, 255]); // bottom-left → blue
+  });
+
+  it("applies clipBBox for rotated images by baking the transform into a clipped PNG (bbox-only)", () => {
+    const image: PdfImage = {
+      type: "image",
+      data: new Uint8Array([
+        255, 0, 0,    // top-left: red
+        0, 255, 0,    // top-right: green
+        0, 0, 255,    // bottom-left: blue
+        255, 255, 0,  // bottom-right: yellow
+      ]),
+      width: 2,
+      height: 2,
+      colorSpace: "DeviceRGB",
+      bitsPerComponent: 8,
+      graphicsState: {
+        ...graphicsState,
+        // 90° rotation with scale 10 around (0,0), then translate to keep in +X/+Y:
+        // (0,1) maps to (0,0), (1,1) maps to (0,10), (0,0) maps to (10,0), (1,0) maps to (10,10).
+        ctm: [0, 10, -10, 0, 10, 0],
+        clipBBox: [0, 0, 5, 10],
+      },
+    };
+
+    const shape = convertImageToShape(image, context, "1");
+    if (!shape) {throw new Error("Expected shape to be created");}
+
+    // Clipped bbox is applied by shrinking the placed image bounds.
+    expect(shape.properties.transform).toMatchObject({ x: 0, y: 90, width: 5, height: 10 });
+
+    const parsed = parseDataUrl(shape.blipFill.resourceId);
+    expect(parsed.mimeType).toBe("image/png");
+
+    type PngReadResult = Readonly<{ readonly width: number; readonly height: number; readonly data: Uint8Array }>;
+    type PngjsModule = Readonly<{ readonly PNG: Readonly<{ readonly sync: Readonly<{ readonly read: (bytes: Buffer) => PngReadResult }> }> }>;
+
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- pngjs is CJS
+    const pngjs = require("pngjs") as PngjsModule;
+    const decoded = pngjs.PNG.sync.read(Buffer.from(parsed.data));
+    expect(decoded.width).toBe(5);
+    expect(decoded.height).toBe(10);
+  });
 });
 
 describe("buffer/data-url + buffer/base64", () => {

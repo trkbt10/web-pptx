@@ -6,13 +6,13 @@ import type { PdfColorSpace, PdfImage } from "../domain";
 import type { PicShape, BlipFillProperties } from "../../pptx/domain/shape";
 import { deg, pct } from "../../ooxml/domain/units";
 import type { ConversionContext } from "./transform-converter";
-import { convertBBox, convertMatrix } from "./transform-converter";
+import { convertBBox, convertMatrix, convertSize } from "./transform-converter";
 import { toDataUrl } from "../../buffer/data-url";
 import { encodeRgbaToPngDataUrl, isPng } from "../../png";
 import { isJpeg } from "../../jpeg";
 import { convertToRgba } from "./pixel-converter";
-import type { PdfBBox, PdfMatrix } from "../domain";
-import { clamp01, cmykToRgb, grayToRgb, isSimpleTransform, rgbToRgbBytes } from "../domain";
+import type { PdfBBox, PdfMatrix, PdfSoftMask } from "../domain";
+import { clamp01, cmykToRgb, grayToRgb, hasShear, invertMatrix, isSimpleTransform, rgbToRgbBytes, transformPoint } from "../domain";
 
 /**
  * PdfImageをPicShapeに変換
@@ -35,6 +35,103 @@ export function convertImageToShape(
     if (!bboxIntersects(imageBBox, clipBBox)) {
       return null;
     }
+  }
+
+  const ctm = image.graphicsState.ctm;
+  const clipMask = image.graphicsState.clipMask;
+
+  if (clipMask) {
+    const imageBBox = computeImageBBoxFromCtm(ctm);
+    const clipped = intersectBBoxes(imageBBox, clipMask.bbox);
+    if (!clipped) {
+      return null;
+    }
+    const warped = warpTransformedImageToPngDataUrl(image, context, clipped, { clipMask });
+    if (warped) {
+      return {
+        type: "pic",
+        nonVisual: {
+          id: shapeId,
+          name: `Picture ${shapeId}`,
+        },
+        blipFill: {
+          resourceId: warped.dataUrl,
+          sourceRect: {
+            left: pct(0),
+            top: pct(0),
+            right: pct(0),
+            bottom: pct(0),
+          },
+          stretch: true,
+        },
+        properties: {
+          transform: { ...convertBBox(warped.bbox, context), rotation: deg(0), flipH: false, flipV: false },
+        },
+      };
+    }
+  }
+
+  // PPTX cannot represent arbitrary clipping for rotated/sheared images.
+  // For bbox-only clipBBox, preserve appearance by baking the transform into a PNG and
+  // placing it axis-aligned at the clipped bbox.
+  if (clipBBox && !isSimpleTransform(ctm)) {
+    const imageBBox = computeImageBBoxFromCtm(ctm);
+    const clipped = intersectBBoxes(imageBBox, clipBBox);
+    if (!clipped) {
+      return null;
+    }
+    if (!isBBoxEqual(clipped, imageBBox)) {
+      const warped = warpTransformedImageToPngDataUrl(image, context, clipped);
+      if (warped) {
+        return {
+          type: "pic",
+          nonVisual: {
+            id: shapeId,
+            name: `Picture ${shapeId}`,
+          },
+          blipFill: {
+            resourceId: warped.dataUrl,
+            sourceRect: {
+              left: pct(0),
+              top: pct(0),
+              right: pct(0),
+              bottom: pct(0),
+            },
+            stretch: true,
+          },
+          properties: {
+            transform: { ...convertBBox(warped.bbox, context), rotation: deg(0), flipH: false, flipV: false },
+          },
+        };
+      }
+    }
+  }
+
+  // PPTX Transform cannot represent shear; preserve appearance by baking into a PNG.
+  if (hasShear(ctm)) {
+    const imageBBox = computeImageBBoxFromCtm(ctm);
+    const warped = warpTransformedImageToPngDataUrl(image, context, imageBBox);
+    if (!warped) {return null;}
+    return {
+      type: "pic",
+      nonVisual: {
+        id: shapeId,
+        name: `Picture ${shapeId}`,
+      },
+      blipFill: {
+        resourceId: warped.dataUrl,
+        sourceRect: {
+          left: pct(0),
+          top: pct(0),
+          right: pct(0),
+          bottom: pct(0),
+        },
+        stretch: true,
+      },
+      properties: {
+        transform: { ...convertBBox(warped.bbox, context), rotation: deg(0), flipH: false, flipV: false },
+      },
+    };
   }
 
   const dataUrl = createDataUrl(image);
@@ -74,6 +171,74 @@ function createImageTransform(ctm: PdfMatrix, clippedBBox: PdfBBox | null, conte
     return { ...convertBBox(clippedBBox, context), rotation: deg(0), flipH: false, flipV: false };
   }
   return convertMatrix(ctm, context);
+}
+
+function warpTransformedImageToPngDataUrl(
+  image: PdfImage,
+  context: ConversionContext,
+  bbox: PdfBBox,
+  options: Readonly<{ readonly clipMask?: PdfSoftMask }> = {},
+): Readonly<{ readonly bbox: PdfBBox; readonly dataUrl: string }> | null {
+  const format = detectImageFormat(image.data);
+  if (format !== "raw") {
+    return null;
+  }
+
+  const ctm = image.graphicsState.ctm;
+  const inv = invertMatrix(ctm);
+  if (!inv) {
+    return null;
+  }
+
+  const [llx, lly, urx, ury] = bbox;
+  const bw = urx - llx;
+  const bh = ury - lly;
+  if (!Number.isFinite(bw) || !Number.isFinite(bh) || bw <= 0 || bh <= 0) {
+    return null;
+  }
+
+  const size = convertSize(bw, bh, context);
+  const outWidth = Math.max(1, Math.round(size.width as number));
+  const outHeight = Math.max(1, Math.round(size.height as number));
+
+  const srcRgba = convertToRgba(image.data, image.width, image.height, image.colorSpace, image.bitsPerComponent, { decode: image.decode });
+  applySoftMaskMatteInPlace(srcRgba, image.alpha, image.softMaskMatte, image.colorSpace, image.width, image.height);
+  applyAlphaMaskInPlace(srcRgba, image.alpha, image.width, image.height);
+
+  const out = new Uint8ClampedArray(outWidth * outHeight * 4);
+
+  for (let row = 0; row < outHeight; row += 1) {
+    const y = ury - ((row + 0.5) / outHeight) * bh;
+    for (let col = 0; col < outWidth; col += 1) {
+      const x = llx + ((col + 0.5) / outWidth) * bw;
+      const uv = transformPoint({ x, y }, inv);
+      const u = uv.x;
+      const v = uv.y;
+      if (u < 0 || u >= 1 || v < 0 || v >= 1) {continue;}
+
+      const srcCol = Math.min(image.width - 1, Math.max(0, Math.floor(u * image.width)));
+      const srcRow = Math.min(image.height - 1, Math.max(0, Math.floor((1 - v) * image.height)));
+      const srcIdx = (srcRow * image.width + srcCol) * 4;
+      const dstIdx = (row * outWidth + col) * 4;
+
+      out[dstIdx] = srcRgba[srcIdx] ?? 0;
+      out[dstIdx + 1] = srcRgba[srcIdx + 1] ?? 0;
+      out[dstIdx + 2] = srcRgba[srcIdx + 2] ?? 0;
+      const baseA = srcRgba[srcIdx + 3] ?? 0;
+      const mask = options.clipMask;
+      if (!mask || baseA === 0) {
+        out[dstIdx + 3] = baseA;
+      } else {
+        const clipA = sampleMaskAlpha(mask, x, y);
+        out[dstIdx + 3] = Math.round((baseA * clipA) / 255);
+      }
+    }
+  }
+
+  return {
+    bbox,
+    dataUrl: encodeRgbaToPngDataUrl(out, outWidth, outHeight),
+  };
 }
 
 /**
@@ -333,4 +498,51 @@ function bboxIntersects(a: PdfBBox, b: PdfBBox): boolean {
   const bMaxX = Math.max(bx1, bx2);
   const bMaxY = Math.max(by1, by2);
   return aMaxX > bMinX && aMinX < bMaxX && aMaxY > bMinY && aMinY < bMaxY;
+}
+
+function sampleMaskAlpha(mask: PdfSoftMask, x: number, y: number): number {
+  const [llx, lly, urx, ury] = mask.bbox;
+  const bw = urx - llx;
+  const bh = ury - lly;
+  if (!Number.isFinite(bw) || !Number.isFinite(bh) || bw <= 0 || bh <= 0) {return 0;}
+
+  const nx = (x - llx) / bw;
+  const ny = (ury - y) / bh; // top-down mapping
+  if (!Number.isFinite(nx) || !Number.isFinite(ny)) {return 0;}
+  if (nx < 0 || nx >= 1 || ny < 0 || ny >= 1) {return 0;}
+
+  const col = Math.min(mask.width - 1, Math.max(0, Math.floor(nx * mask.width)));
+  const row = Math.min(mask.height - 1, Math.max(0, Math.floor(ny * mask.height)));
+  return mask.alpha[row * mask.width + col] ?? 0;
+}
+
+function isBBoxEqual(a: PdfBBox, b: PdfBBox): boolean {
+  const eps = 1e-6;
+  return (
+    Math.abs((a[0] ?? 0) - (b[0] ?? 0)) < eps &&
+    Math.abs((a[1] ?? 0) - (b[1] ?? 0)) < eps &&
+    Math.abs((a[2] ?? 0) - (b[2] ?? 0)) < eps &&
+    Math.abs((a[3] ?? 0) - (b[3] ?? 0)) < eps
+  );
+}
+
+function intersectBBoxes(a: PdfBBox, b: PdfBBox): PdfBBox | null {
+  const [ax1, ay1, ax2, ay2] = a;
+  const [bx1, by1, bx2, by2] = b;
+  const aMinX = Math.min(ax1, ax2);
+  const aMinY = Math.min(ay1, ay2);
+  const aMaxX = Math.max(ax1, ax2);
+  const aMaxY = Math.max(ay1, ay2);
+  const bMinX = Math.min(bx1, bx2);
+  const bMinY = Math.min(by1, by2);
+  const bMaxX = Math.max(bx1, bx2);
+  const bMaxY = Math.max(by1, by2);
+
+  const ix1 = Math.max(aMinX, bMinX);
+  const iy1 = Math.max(aMinY, bMinY);
+  const ix2 = Math.min(aMaxX, bMaxX);
+  const iy2 = Math.min(aMaxY, bMaxY);
+
+  if (ix2 <= ix1 || iy2 <= iy1) {return null;}
+  return [ix1, iy1, ix2, iy2];
 }

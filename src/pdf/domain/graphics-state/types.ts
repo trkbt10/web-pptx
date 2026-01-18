@@ -72,6 +72,15 @@ export type PdfGraphicsState = {
    */
   readonly clipBBox?: PdfBBox;
   /**
+   * Optional per-pixel clip mask in PDF page space.
+   *
+   * This is a higher-fidelity representation than `clipBBox`, used when the PDF
+   * establishes a non-rectangular clipping path that cannot be represented in PPTX.
+   *
+   * The mask is stored in page space (i.e., its `/BBox` is page coordinates).
+   */
+  readonly clipMask?: PdfSoftMask;
+  /**
    * Current blend mode (ExtGState `/BM`).
    *
    * Stored for completeness; rendering semantics are applied (or ignored)
@@ -82,7 +91,7 @@ export type PdfGraphicsState = {
    * Soft mask multiplier (ExtGState `/SMask`) when it can be reduced to a constant alpha.
    *
    * This is a conservative subset to support common “uniform opacity mask” PDFs.
-   * Full per-pixel /SMask evaluation is not implemented.
+   * Per-pixel masks are represented separately via `softMask`.
    */
   readonly softMaskAlpha?: number;
   /**
@@ -101,6 +110,20 @@ export type PdfGraphicsState = {
    * Current stroke pattern name (set via `/Pattern CS` + `SCN`/`SC` with a name).
    */
   readonly strokePatternName?: string;
+  /**
+   * Underlying base color space for uncolored (PaintType 2) tiling patterns.
+   *
+   * Set via `cs/CS` with an array like `[/Pattern /DeviceRGB]`.
+   */
+  readonly fillPatternUnderlyingColorSpace?: "DeviceGray" | "DeviceRGB" | "DeviceCMYK";
+  readonly strokePatternUnderlyingColorSpace?: "DeviceGray" | "DeviceRGB" | "DeviceCMYK";
+  /**
+   * Base color to apply for PaintType 2 tiling patterns.
+   *
+   * Set via `scn/SCN` components + pattern name.
+   */
+  readonly fillPatternColor?: PdfColor;
+  readonly strokePatternColor?: PdfColor;
   readonly fillColor: PdfColor;
   readonly strokeColor: PdfColor;
   /**

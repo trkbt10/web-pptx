@@ -35,11 +35,16 @@ export type GraphicsStateStack = Readonly<{
   /** cm operator: concatenate matrix to CTM */
   concatMatrix(matrix: PdfMatrix): void;
   setClipBBox(bbox: PdfBBox): void;
+  setClipMask(mask: PdfSoftMask | undefined): void;
   setBlendMode(mode: string): void;
   setSoftMaskAlpha(alpha: number): void;
   setSoftMask(mask: PdfSoftMask | undefined): void;
   setFillPatternName(name: string): void;
   setStrokePatternName(name: string): void;
+  setFillPatternUnderlyingColorSpace(space: "DeviceGray" | "DeviceRGB" | "DeviceCMYK" | undefined): void;
+  setStrokePatternUnderlyingColorSpace(space: "DeviceGray" | "DeviceRGB" | "DeviceCMYK" | undefined): void;
+  setFillPatternColor(color: PdfGraphicsState["fillPatternColor"] | undefined): void;
+  setStrokePatternColor(color: PdfGraphicsState["strokePatternColor"] | undefined): void;
   setFillGray(gray: number): void;
   setStrokeGray(gray: number): void;
   setFillRgb(r: number, g: number, b: number): void;
@@ -117,6 +122,13 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     };
   };
 
+  const setClipMask = (mask: PdfSoftMask | undefined): void => {
+    current.value = {
+      ...current.value,
+      clipMask: mask,
+    };
+  };
+
   const setBlendMode = (mode: string): void => {
     current.value = {
       ...current.value,
@@ -142,6 +154,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     current.value = {
       ...current.value,
       fillPatternName: name,
+      fillPatternColor: undefined,
       fillColor: { colorSpace: "Pattern", components: [] },
     };
   };
@@ -150,7 +163,36 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     current.value = {
       ...current.value,
       strokePatternName: name,
+      strokePatternColor: undefined,
       strokeColor: { colorSpace: "Pattern", components: [] },
+    };
+  };
+
+  const setFillPatternUnderlyingColorSpace = (space: "DeviceGray" | "DeviceRGB" | "DeviceCMYK" | undefined): void => {
+    current.value = {
+      ...current.value,
+      fillPatternUnderlyingColorSpace: space,
+    };
+  };
+
+  const setStrokePatternUnderlyingColorSpace = (space: "DeviceGray" | "DeviceRGB" | "DeviceCMYK" | undefined): void => {
+    current.value = {
+      ...current.value,
+      strokePatternUnderlyingColorSpace: space,
+    };
+  };
+
+  const setFillPatternColor = (color: PdfGraphicsState["fillPatternColor"] | undefined): void => {
+    current.value = {
+      ...current.value,
+      fillPatternColor: color,
+    };
+  };
+
+  const setStrokePatternColor = (color: PdfGraphicsState["strokePatternColor"] | undefined): void => {
+    current.value = {
+      ...current.value,
+      strokePatternColor: color,
     };
   };
 
@@ -158,6 +200,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     current.value = {
       ...current.value,
       fillPatternName: undefined,
+      fillPatternColor: undefined,
       fillColor: {
         colorSpace: "DeviceGray",
         components: [gray],
@@ -169,6 +212,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     current.value = {
       ...current.value,
       strokePatternName: undefined,
+      strokePatternColor: undefined,
       strokeColor: {
         colorSpace: "DeviceGray",
         components: [gray],
@@ -180,6 +224,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     current.value = {
       ...current.value,
       fillPatternName: undefined,
+      fillPatternColor: undefined,
       fillColor: {
         colorSpace: "DeviceRGB",
         components: [r, g, b],
@@ -191,6 +236,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     current.value = {
       ...current.value,
       strokePatternName: undefined,
+      strokePatternColor: undefined,
       strokeColor: {
         colorSpace: "DeviceRGB",
         components: [r, g, b],
@@ -202,6 +248,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     current.value = {
       ...current.value,
       fillPatternName: undefined,
+      fillPatternColor: undefined,
       fillColor: {
         colorSpace: "DeviceCMYK",
         components: [c, m, y, k],
@@ -213,6 +260,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     current.value = {
       ...current.value,
       strokePatternName: undefined,
+      strokePatternColor: undefined,
       strokeColor: {
         colorSpace: "DeviceCMYK",
         components: [c, m, y, k],
@@ -319,11 +367,16 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     get,
     concatMatrix,
     setClipBBox,
+    setClipMask,
     setBlendMode,
     setSoftMaskAlpha,
     setSoftMask,
     setFillPatternName,
     setStrokePatternName,
+    setFillPatternUnderlyingColorSpace,
+    setStrokePatternUnderlyingColorSpace,
+    setFillPatternColor,
+    setStrokePatternColor,
     setFillGray,
     setStrokeGray,
     setFillRgb,
@@ -347,11 +400,18 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
 }
 
 function cloneState(state: PdfGraphicsState): PdfGraphicsState {
+  const fillPatternColor = clonePatternColor(state.fillPatternColor);
+  const strokePatternColor = clonePatternColor(state.strokePatternColor);
   return {
     ...state,
     clipBBox: state.clipBBox ? cloneBBox(state.clipBBox) : undefined,
+    clipMask: state.clipMask,
     fillPatternName: state.fillPatternName,
     strokePatternName: state.strokePatternName,
+    fillPatternUnderlyingColorSpace: state.fillPatternUnderlyingColorSpace,
+    strokePatternUnderlyingColorSpace: state.strokePatternUnderlyingColorSpace,
+    fillPatternColor,
+    strokePatternColor,
     fillColor: {
       ...state.fillColor,
       components: [...state.fillColor.components],
@@ -361,6 +421,16 @@ function cloneState(state: PdfGraphicsState): PdfGraphicsState {
       components: [...state.strokeColor.components],
     },
     dashArray: [...state.dashArray],
+  };
+}
+
+function clonePatternColor(color: PdfGraphicsState["fillPatternColor"]): PdfGraphicsState["fillPatternColor"] {
+  if (!color) {
+    return undefined;
+  }
+  return {
+    ...color,
+    components: [...color.components],
   };
 }
 

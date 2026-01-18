@@ -229,6 +229,13 @@ export type ParserContext = {
    */
   readonly shadingMaxSize: number;
   /**
+   * When > 0, enables per-pixel clip mask generation for `W`/`W*` clipping paths.
+   *
+   * The value is the maximum of `{width,height}` for the generated clip mask grid.
+   * Set to `0` to keep clip mask generation disabled (bbox-only clipping remains).
+   */
+  readonly clipPathMaxSize: number;
+  /**
    * Extracted `/Pattern` resources for the current page/scope (name → supported pattern).
    */
   readonly patterns: ReadonlyMap<string, PdfPattern>;
@@ -286,11 +293,16 @@ export type GraphicsStateOps = {
   readonly get: () => PdfGraphicsState;
   readonly concatMatrix: (matrix: PdfMatrix) => void;
   readonly setClipBBox: (bbox: PdfBBox) => void;
+  readonly setClipMask: (mask: PdfSoftMask | undefined) => void;
   readonly setBlendMode: (mode: string) => void;
   readonly setSoftMaskAlpha: (alpha: number) => void;
   readonly setSoftMask: (mask: PdfSoftMask | undefined) => void;
   readonly setFillPatternName: (name: string) => void;
   readonly setStrokePatternName: (name: string) => void;
+  readonly setFillPatternUnderlyingColorSpace: (space: "DeviceGray" | "DeviceRGB" | "DeviceCMYK" | undefined) => void;
+  readonly setStrokePatternUnderlyingColorSpace: (space: "DeviceGray" | "DeviceRGB" | "DeviceCMYK" | undefined) => void;
+  readonly setFillPatternColor: (color: PdfGraphicsState["fillPatternColor"] | undefined) => void;
+  readonly setStrokePatternColor: (color: PdfGraphicsState["strokePatternColor"] | undefined) => void;
   readonly setLineWidth: (width: number) => void;
   readonly setLineCap: (cap: 0 | 1 | 2) => void;
   readonly setLineJoin: (join: 0 | 1 | 2) => void;

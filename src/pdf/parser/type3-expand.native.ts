@@ -10,7 +10,11 @@ import type { FontMappings } from "../domain";
 import type { NativePdfPage, PdfDict, PdfName, PdfObject, PdfStream } from "../native";
 import { extractExtGStateFromResourcesNative, type ExtGStateParams } from "./ext-gstate.native";
 import { extractFontMappingsFromResourcesNative } from "./font-decoder.native";
+import { extractPatternsFromResourcesNative } from "./pattern.native";
+import { extractShadingFromResourcesNative } from "./shading.native";
 import type { ParsedElement, ParsedImage, ParsedText } from "./operator";
+import type { PdfPattern } from "./pattern.types";
+import type { PdfShading } from "./shading.types";
 import { renderType3TextRun } from "./type3-glyph.native";
 
 function asDict(obj: PdfObject | undefined): PdfDict | null {
@@ -45,6 +49,8 @@ type Type3ResourceScope = Readonly<{
   readonly fontName: string;
   readonly xObjects: PdfDict | null;
   readonly extGState: ReadonlyMap<string, ExtGStateParams>;
+  readonly shadings: ReadonlyMap<string, PdfShading>;
+  readonly patterns: ReadonlyMap<string, PdfPattern>;
   readonly fontMappings: FontMappings;
 }>;
 
@@ -65,8 +71,10 @@ function buildType3Scopes(page: NativePdfPage, resources: PdfDict): ReadonlyMap<
     const xObjects = res ? resolveDict(page, dictGet(res, "XObject")) : null;
     const extGState = res ? extractExtGStateFromResourcesNative(page, res) : new Map();
     const fontMappings = res ? extractFontMappingsFromResourcesNative(page, res) : new Map();
+    const shadings = res ? extractShadingFromResourcesNative(page, res) : new Map();
+    const patterns = res ? extractPatternsFromResourcesNative(page, res) : new Map();
 
-    out.set(fontName, { fontName, xObjects, extGState, fontMappings });
+    out.set(fontName, { fontName, xObjects, extGState, shadings, patterns, fontMappings });
   }
 
   return out;
@@ -164,6 +172,9 @@ export function expandType3TextElementsNative(args: {
   readonly parsedElements: readonly ParsedElement[];
   readonly fontMappings: FontMappings;
   readonly pageExtGState: ReadonlyMap<string, ExtGStateParams>;
+  readonly shadingMaxSize: number;
+  readonly clipPathMaxSize: number;
+  readonly pageBBox: readonly [number, number, number, number];
   readonly registerXObjectStream: (stream: PdfStream) => string;
 }): ParsedElement[] {
   if (!args.resources) {return [...args.parsedElements];}
@@ -207,7 +218,14 @@ export function expandType3TextElementsNative(args: {
       const scope = type3Scopes.get(cleanFont);
       const mergedExt = mergeExtGState(args.pageExtGState, scope?.extGState ?? new Map());
       const scopedFonts = scope ? mergeFontMappingsWithOverride(args.fontMappings, scope.fontMappings) : args.fontMappings;
-      const rendered = renderType3TextRun(run, info, type3, scopedFonts, { extGState: mergedExt });
+      const rendered = renderType3TextRun(run, info, type3, scopedFonts, {
+        extGState: mergedExt,
+        shadings: scope?.shadings ?? new Map(),
+        patterns: scope?.patterns ?? new Map(),
+        shadingMaxSize: args.shadingMaxSize,
+        clipPathMaxSize: args.clipPathMaxSize,
+        pageBBox: args.pageBBox,
+      });
       const remapped = remapType3ImageXObjects(args.page, rendered, scope?.xObjects ?? null, args.registerXObjectStream);
       out.push(...tagType3Sources(remapped));
     }

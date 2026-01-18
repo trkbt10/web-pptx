@@ -11,8 +11,9 @@
  */
 
 import type { PdfPathOp, PdfPaintOp } from "../../domain";
-import type { PdfBBox, PdfMatrix, PdfPoint } from "../../domain";
-import { transformPoint } from "../../domain";
+import type { PdfBBox, PdfMatrix, PdfPoint, PdfSoftMask } from "../../domain";
+import { IDENTITY_MATRIX, invertMatrix, transformPoint } from "../../domain";
+import type { PdfPattern } from "../pattern.types";
 import type {
   ParserContext,
   ParserStateUpdate,
@@ -24,10 +25,24 @@ import type {
 } from "./types";
 import { popNumber, popNumbers } from "./stack-ops";
 import { rasterizeShadingPatternFillPath } from "../pattern-fill-raster";
+import { rasterizeTilingPatternFillPath } from "../pattern-tiling-raster";
+import { rasterizeSoftMaskedFillPath } from "../soft-mask-raster.native";
 
 // =============================================================================
 // Path Construction Handlers
 // =============================================================================
+
+function rasterizePatternFillPath(
+  parsed: ParsedPath,
+  pattern: PdfPattern,
+  ctx: Pick<ParserContext, "shadingMaxSize" | "pageBBox">,
+): ReturnType<typeof rasterizeShadingPatternFillPath> {
+  const options = { shadingMaxSize: ctx.shadingMaxSize, pageBBox: ctx.pageBBox };
+  if (pattern.patternType === 2) {
+    return rasterizeShadingPatternFillPath(parsed, pattern, options);
+  }
+  return rasterizeTilingPatternFillPath(parsed, pattern, options);
+}
 
 /**
  * m operator: Move to point (begin new subpath)
@@ -171,23 +186,22 @@ function finishPath(
     const name = element.graphicsState.fillPatternName;
     const key = name.startsWith("/") ? name.slice(1) : name;
     const pattern = ctx.patterns.get(key);
-    if (pattern && pattern.patternType === 2 && ctx.shadingMaxSize > 0) {
-      const image = rasterizeShadingPatternFillPath(element, pattern, {
-        shadingMaxSize: ctx.shadingMaxSize,
-        pageBBox: ctx.pageBBox,
-      });
+    if (pattern && ctx.shadingMaxSize > 0) {
+      const image = rasterizePatternFillPath(element, pattern, ctx);
       if (image) {
         const rasterElem: ParsedRasterImage = { type: "rasterImage", image };
         const elements: Array<ParsedRasterImage | ParsedPath> = [rasterElem];
 
         if (paintOp === "fillStroke") {
-          elements.push({ ...element, paintOp: "stroke", fillRule: undefined });
+          elements.push({
+            ...element,
+            paintOp: "stroke",
+            fillRule: undefined,
+            graphicsState: { ...element.graphicsState, fillPatternName: undefined },
+          });
         }
 
-        return {
-          currentPath: [],
-          elements: [...ctx.elements, ...elements],
-        };
+        return { currentPath: [], elements: [...ctx.elements, ...elements] };
       }
     }
   }
@@ -226,16 +240,18 @@ function closeAndFinishPath(
     const name = element.graphicsState.fillPatternName;
     const key = name.startsWith("/") ? name.slice(1) : name;
     const pattern = ctx.patterns.get(key);
-    if (pattern && pattern.patternType === 2 && ctx.shadingMaxSize > 0) {
-      const image = rasterizeShadingPatternFillPath(element, pattern, {
-        shadingMaxSize: ctx.shadingMaxSize,
-        pageBBox: ctx.pageBBox,
-      });
+    if (pattern && ctx.shadingMaxSize > 0) {
+      const image = rasterizePatternFillPath(element, pattern, ctx);
       if (image) {
         const rasterElem: ParsedRasterImage = { type: "rasterImage", image };
         const elements: Array<ParsedRasterImage | ParsedPath> = [rasterElem];
         if (paintOp === "fillStroke") {
-          elements.push({ ...element, paintOp: "stroke", fillRule: undefined });
+          elements.push({
+            ...element,
+            paintOp: "stroke",
+            fillRule: undefined,
+            graphicsState: { ...element.graphicsState, fillPatternName: undefined },
+          });
         }
         return { currentPath: [], elements: [...ctx.elements, ...elements] };
       }
@@ -357,8 +373,115 @@ function computeClipBBoxFromPath(ops: readonly PdfPathOp[], ctm: PdfMatrix): Pdf
   return [bounds.minX, bounds.minY, bounds.maxX, bounds.maxY];
 }
 
-/** W operator: Set clipping path (nonzero) */
-const handleClip: OperatorHandler = (ctx, gfxOps) => {
+function intersectBBoxes(prev: PdfBBox | undefined, next: PdfBBox): PdfBBox {
+  if (!prev) {return next;}
+  return [
+    Math.max(prev[0], next[0]),
+    Math.max(prev[1], next[1]),
+    Math.min(prev[2], next[2]),
+    Math.min(prev[3], next[3]),
+  ];
+}
+
+function sampleMaskAlpha(mask: PdfSoftMask, x: number, y: number): number {
+  const [llx, lly, urx, ury] = mask.bbox;
+  const bw = urx - llx;
+  const bh = ury - lly;
+  if (!Number.isFinite(bw) || !Number.isFinite(bh) || bw <= 0 || bh <= 0) {return 0;}
+
+  const nx = (x - llx) / bw;
+  const ny = (ury - y) / bh; // top-down mapping
+  if (!Number.isFinite(nx) || !Number.isFinite(ny)) {return 0;}
+  if (nx < 0 || nx >= 1 || ny < 0 || ny >= 1) {return 0;}
+
+  const col = Math.min(mask.width - 1, Math.max(0, Math.floor(nx * mask.width)));
+  const row = Math.min(mask.height - 1, Math.max(0, Math.floor(ny * mask.height)));
+  return mask.alpha[row * mask.width + col] ?? 0;
+}
+
+function rasterizeClipPathToMask(
+  ctx: ParserContext,
+  gfxOps: GraphicsStateOps,
+  fillRule: "nonzero" | "evenodd",
+  bbox: PdfBBox,
+): PdfSoftMask | null {
+  const maxSize = ctx.clipPathMaxSize;
+  if (!(maxSize > 0)) {return null;}
+  if (!Number.isFinite(maxSize) || maxSize <= 0) {throw new Error(`clipPathMaxSize must be > 0 (got ${maxSize})`);}
+  if (ctx.currentPath.length === 0) {return null;}
+
+  const [llx, lly, urx, ury] = bbox;
+  const bw = urx - llx;
+  const bh = ury - lly;
+  if (!Number.isFinite(bw) || !Number.isFinite(bh) || bw <= 0 || bh <= 0) {return null;}
+
+  const maxDim = Math.max(bw, bh);
+  const scale = maxSize / maxDim;
+  const width = Math.max(1, Math.round(bw * scale));
+  const height = Math.max(1, Math.round(bh * scale));
+
+  const pixelCount = width * height;
+  const opaque = new Uint8Array(pixelCount);
+  opaque.fill(255);
+  const renderGrid: PdfSoftMask = {
+    kind: "Alpha",
+    width,
+    height,
+    alpha: opaque,
+    bbox: [bbox[0], bbox[1], bbox[2], bbox[3]],
+    matrix: IDENTITY_MATRIX,
+  };
+
+  const gs = gfxOps.get();
+  const ctmInv = invertMatrix(gs.ctm);
+  if (!ctmInv) {return null;}
+
+  const clipAsSoftMaskedFill: ParsedPath = {
+    type: "path",
+    operations: ctx.currentPath,
+    paintOp: "fill",
+    fillRule,
+    graphicsState: {
+      ...gs,
+      softMaskAlpha: 1,
+      softMask: { ...renderGrid, matrix: ctmInv },
+      fillAlpha: 1,
+      strokeAlpha: 1,
+      fillColor: { colorSpace: "DeviceGray", components: [0] },
+      strokeColor: { colorSpace: "DeviceGray", components: [0] },
+    },
+  };
+
+  const raster = rasterizeSoftMaskedFillPath(clipAsSoftMaskedFill);
+  if (!raster || !raster.alpha) {return null;}
+  if (raster.width !== width || raster.height !== height) {return null;}
+
+  const prev = gs.clipMask;
+  if (!prev) {
+    return { kind: "Alpha", width, height, alpha: raster.alpha, bbox: [bbox[0], bbox[1], bbox[2], bbox[3]], matrix: IDENTITY_MATRIX };
+  }
+
+  const out = new Uint8Array(pixelCount);
+  for (let row = 0; row < height; row += 1) {
+    const y = ury - ((row + 0.5) / height) * bh;
+    for (let col = 0; col < width; col += 1) {
+      const x = llx + ((col + 0.5) / width) * bw;
+      const idx = row * width + col;
+      const a = raster.alpha[idx] ?? 0;
+      if (a === 0) {continue;}
+      const p = sampleMaskAlpha(prev, x, y);
+      out[idx] = Math.round((a * p) / 255);
+    }
+  }
+
+  return { kind: "Alpha", width, height, alpha: out, bbox: [bbox[0], bbox[1], bbox[2], bbox[3]], matrix: IDENTITY_MATRIX };
+}
+
+function handleClipInternal(
+  ctx: ParserContext,
+  gfxOps: GraphicsStateOps,
+  fillRule: "nonzero" | "evenodd",
+): ParserStateUpdate {
   if (ctx.currentPath.length === 0) {
     return {};
   }
@@ -366,7 +489,12 @@ const handleClip: OperatorHandler = (ctx, gfxOps) => {
   const gs = gfxOps.get();
   const bbox = computeClipBBoxFromPath(ctx.currentPath, gs.ctm);
   if (bbox) {
+    const merged = intersectBBoxes(gs.clipBBox, bbox);
     gfxOps.setClipBBox(bbox);
+    if (ctx.clipPathMaxSize > 0) {
+      const mask = rasterizeClipPathToMask(ctx, gfxOps, fillRule, merged);
+      gfxOps.setClipMask(mask ?? undefined);
+    }
   }
 
   return {
@@ -374,10 +502,12 @@ const handleClip: OperatorHandler = (ctx, gfxOps) => {
   };
 };
 
+/** W operator: Set clipping path (nonzero) */
+const handleClip: OperatorHandler = (ctx, gfxOps) => handleClipInternal(ctx, gfxOps, "nonzero");
+
 /** W* operator: Set clipping path (even-odd) */
 const handleClipEvenOdd: OperatorHandler = (ctx, gfxOps) => {
-  // For rectangular clips, the even-odd rule doesn't change the result.
-  return handleClip(ctx, gfxOps);
+  return handleClipInternal(ctx, gfxOps, "evenodd");
 };
 
 // =============================================================================

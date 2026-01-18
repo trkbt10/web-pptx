@@ -96,6 +96,7 @@ export function createInitialContext(
     >;
     readonly shadings?: ReadonlyMap<string, PdfShading>;
     readonly shadingMaxSize?: number;
+    readonly clipPathMaxSize?: number;
     readonly pageBBox?: PdfBBox;
     readonly patterns?: ReadonlyMap<string, PdfPattern>;
   }> = {},
@@ -110,6 +111,7 @@ export function createInitialContext(
     pageBBox: options.pageBBox ?? [0, 0, 0, 0],
     shadings: options.shadings ?? new Map(),
     shadingMaxSize: options.shadingMaxSize ?? 0,
+    clipPathMaxSize: options.clipPathMaxSize ?? 0,
     patterns: options.patterns ?? new Map(),
     extGState: options.extGState ?? new Map(),
   };
@@ -131,6 +133,7 @@ export function applyUpdate(ctx: ParserContext, update: ParserStateUpdate): Pars
     pageBBox: ctx.pageBBox,
     shadings: ctx.shadings,
     shadingMaxSize: ctx.shadingMaxSize,
+    clipPathMaxSize: ctx.clipPathMaxSize,
     patterns: ctx.patterns,
     extGState: ctx.extGState,
   };
@@ -152,11 +155,16 @@ export function createGfxOpsFromStack(stack: GraphicsStateStack): GraphicsStateO
     get: () => stack.get(),
     concatMatrix: (m) => stack.concatMatrix(m),
     setClipBBox: (b) => stack.setClipBBox(b),
+    setClipMask: (m) => stack.setClipMask(m),
     setBlendMode: (m) => stack.setBlendMode(m),
     setSoftMaskAlpha: (a) => stack.setSoftMaskAlpha(a),
     setSoftMask: (m) => stack.setSoftMask(m),
     setFillPatternName: (n) => stack.setFillPatternName(n),
     setStrokePatternName: (n) => stack.setStrokePatternName(n),
+    setFillPatternUnderlyingColorSpace: (s) => stack.setFillPatternUnderlyingColorSpace(s),
+    setStrokePatternUnderlyingColorSpace: (s) => stack.setStrokePatternUnderlyingColorSpace(s),
+    setFillPatternColor: (c) => stack.setFillPatternColor(c),
+    setStrokePatternColor: (c) => stack.setStrokePatternColor(c),
     setLineWidth: (w) => stack.setLineWidth(w),
     setLineCap: (c) => stack.setLineCap(c),
     setLineJoin: (j) => stack.setLineJoin(j),
@@ -293,6 +301,7 @@ export function parseContentStream(
     >;
     readonly shadings?: ReadonlyMap<string, PdfShading>;
     readonly shadingMaxSize?: number;
+    readonly clipPathMaxSize?: number;
     readonly pageBBox?: PdfBBox;
     readonly patterns?: ReadonlyMap<string, PdfPattern>;
   }> = {},
@@ -342,6 +351,7 @@ export function createParser(
     >;
     readonly shadings?: ReadonlyMap<string, PdfShading>;
     readonly shadingMaxSize?: number;
+    readonly clipPathMaxSize?: number;
     readonly pageBBox?: PdfBBox;
     readonly patterns?: ReadonlyMap<string, PdfPattern>;
   }> = {},

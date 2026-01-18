@@ -31,8 +31,20 @@ import { expandType3TextElementsNative } from "./type3-expand.native";
 import { rasterizeSoftMaskedFillPath } from "./soft-mask-raster.native";
 import { applyGraphicsSoftMaskToPdfImage } from "./soft-mask-apply.native";
 import { rasterizeSoftMaskedText } from "./soft-mask-text-raster.native";
+import { applyGraphicsClipMaskToPdfImage, buildPageSpaceSoftMaskForClipMask } from "./clip-mask-apply.native";
 import type { PdfShading } from "./shading.types";
 import type { PdfPattern } from "./pattern.types";
+
+function extractExtGStateFromResourcesNativeOrEmpty(
+  page: NativePdfPage,
+  resources: PdfDict | null,
+  options: Readonly<{ readonly vectorSoftMaskMaxSize?: number; readonly shadingMaxSize: number }>,
+): ReadonlyMap<string, ExtGStateParams> {
+  if (!resources) {
+    return new Map();
+  }
+  return extractExtGStateFromResourcesNative(page, resources, options);
+}
 
 export type PdfParserOptions = {
   readonly pages?: readonly number[];
@@ -54,6 +66,13 @@ export type PdfParserOptions = {
    * Set to `0` (default) to keep this feature disabled.
    */
   readonly shadingMaxSize?: number;
+  /**
+   * Enables per-pixel clip mask generation for `W`/`W*` clipping paths.
+   *
+   * The value is the maximum of `{width,height}` for the generated clip mask grid.
+   * Set to `0` (default) to keep bbox-only clipping.
+   */
+  readonly clipPathMaxSize?: number;
   readonly encryption?: PdfLoadEncryption;
 };
 
@@ -64,6 +83,7 @@ const DEFAULT_OPTIONS: Required<PdfParserOptions> = {
   includePaths: true,
   softMaskVectorMaxSize: 0,
   shadingMaxSize: 0,
+  clipPathMaxSize: 0,
   encryption: { mode: "reject" },
 };
 
@@ -88,6 +108,9 @@ export async function parsePdfNative(
   }
   if (!Number.isFinite(opts.shadingMaxSize) || opts.shadingMaxSize < 0) {
     throw new Error(`shadingMaxSize must be >= 0 (got ${opts.shadingMaxSize})`);
+  }
+  if (!Number.isFinite(opts.clipPathMaxSize) || opts.clipPathMaxSize < 0) {
+    throw new Error(`clipPathMaxSize must be >= 0 (got ${opts.clipPathMaxSize})`);
   }
 
   const pdfDoc = await loadNativePdfDocumentForParser(data, {
@@ -193,11 +216,19 @@ async function parsePage(
   const tokens = tokenizeContentStream(contentStream);
   const extGState = extractExtGStateNative(page, {
     vectorSoftMaskMaxSize: opts.softMaskVectorMaxSize > 0 ? opts.softMaskVectorMaxSize : undefined,
+    shadingMaxSize: opts.shadingMaxSize > 0 ? opts.shadingMaxSize : 0,
   });
   const shadings = extractShadingNative(page);
   const patterns = extractPatternsNative(page);
   const parsedElements = [
-    ...parseContentStream(tokens, fontMappings, { extGState, shadings, patterns, shadingMaxSize: opts.shadingMaxSize, pageBBox }),
+    ...parseContentStream(tokens, fontMappings, {
+      extGState,
+      shadings,
+      patterns,
+      shadingMaxSize: opts.shadingMaxSize,
+      clipPathMaxSize: opts.clipPathMaxSize,
+      pageBBox,
+    }),
   ];
 
   const registerType3XObjectStream = (stream: PdfStream): string => {
@@ -216,6 +247,9 @@ async function parsePage(
     parsedElements,
     fontMappings,
     pageExtGState: extGState,
+    shadingMaxSize: opts.shadingMaxSize,
+    clipPathMaxSize: opts.clipPathMaxSize,
+    pageBBox,
     registerXObjectStream: registerType3XObjectStream,
   });
 
@@ -229,6 +263,8 @@ async function parsePage(
     shadings,
     patterns,
     opts.shadingMaxSize,
+    opts.clipPathMaxSize,
+    opts.softMaskVectorMaxSize,
     pageBBox,
     embeddedFontMetrics,
     mergedXObjects,
@@ -372,6 +408,8 @@ function expandFormXObjectsNative(
   shadings: ReadonlyMap<string, PdfShading>,
   patterns: ReadonlyMap<string, PdfPattern>,
   shadingMaxSize: number,
+  clipPathMaxSize: number,
+  softMaskVectorMaxSize: number,
   pageBBox: PdfBBox,
   embeddedFontMetrics: Map<string, { ascender: number; descender: number }>,
   xObjectsOverride: PdfDict | null,
@@ -453,7 +491,12 @@ function expandFormXObjectsNative(
       }
       mergeFontMetrics(fontMappings, embeddedFontMetrics);
 
-      const localExt = formResources ? extractExtGStateFromResourcesNative(page, formResources) : new Map();
+      const vectorSoftMaskMaxSize = softMaskVectorMaxSize > 0 ? softMaskVectorMaxSize : undefined;
+      const localShadingMaxSize = shadingMaxSize > 0 ? shadingMaxSize : 0;
+      const localExt = extractExtGStateFromResourcesNativeOrEmpty(page, formResources, {
+        vectorSoftMaskMaxSize,
+        shadingMaxSize: localShadingMaxSize,
+      });
       const mergedExt = new Map(scope.extGState);
       for (const [k, v] of localExt) {mergedExt.set(k, v);}
 
@@ -490,6 +533,7 @@ function expandFormXObjectsNative(
         shadings: mergedShadings,
         patterns: mergedPatterns,
         shadingMaxSize,
+        clipPathMaxSize,
         pageBBox,
       });
       const inner = parse(tokens);
@@ -565,8 +609,29 @@ function convertElements(
         if (opts.includePaths || (opts.includeText && elem.source === "type3")) {
           const masked = rasterizeSoftMaskedFillPath(elem);
           if (masked) {
-            elements.push(masked);
+            const clipMasked = elem.graphicsState.clipMask ? applyGraphicsClipMaskToPdfImage(masked) : masked;
+            elements.push(clipMasked);
             break;
+          }
+
+          const clipMask = elem.graphicsState.clipMask;
+          if (clipMask) {
+            const softMask = buildPageSpaceSoftMaskForClipMask(elem.graphicsState.ctm, clipMask);
+            if (softMask) {
+              const clipped = rasterizeSoftMaskedFillPath({
+                ...elem,
+                graphicsState: {
+                  ...elem.graphicsState,
+                  clipMask: undefined,
+                  softMaskAlpha: 1,
+                  softMask,
+                },
+              });
+              if (clipped) {
+                elements.push(clipped);
+                break;
+              }
+            }
           }
           const pdfPath = convertPath(elem, opts.minPathComplexity);
           if (pdfPath) {elements.push(pdfPath);}
@@ -576,8 +641,32 @@ function convertElements(
         if (opts.includeText) {
           const masked = rasterizeSoftMaskedText(elem, fontMappings);
           if (masked) {
-            elements.push(masked);
+            const clipMasked = elem.graphicsState.clipMask ? applyGraphicsClipMaskToPdfImage(masked) : masked;
+            elements.push(clipMasked);
             break;
+          }
+
+          const clipMask = elem.graphicsState.clipMask;
+          if (clipMask) {
+            const softMask = buildPageSpaceSoftMaskForClipMask(elem.graphicsState.ctm, clipMask);
+            if (softMask) {
+              const clipped = rasterizeSoftMaskedText(
+                {
+                  ...elem,
+                  graphicsState: {
+                    ...elem.graphicsState,
+                    clipMask: undefined,
+                    softMaskAlpha: 1,
+                    softMask,
+                  },
+                },
+                fontMappings,
+              );
+              if (clipped) {
+                elements.push(clipped);
+                break;
+              }
+            }
           }
           const pdfTexts = convertText(elem, fontMappings);
           elements.push(...pdfTexts);

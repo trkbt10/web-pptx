@@ -55,11 +55,11 @@ Implemented in `src/pdf/native/filters/`: `FlateDecode`, `LZWDecode`, `ASCII85De
 
 Current behavior: reject when trailer has `/Encrypt` unless caller chooses “ignore” or provides an explicit password (`src/pdf/native/document.ts`, `src/pdf/parser/native-load.ts`).
 
-- [ ] **Explicit encryption model**
+- [x] **Explicit encryption model**
   - [x] Standard Security Handler (RC4 40-bit; `V=1`, `R=2`) with explicit password injection (`src/pdf/native/encryption/standard.ts`, `src/pdf/parser/native-load.spec.ts`)
   - [x] keep `password` mode behavior explicit (requires `encryption: { mode: "password", password }`) (`src/pdf/parser/pdf-parser.native.ts`, `src/pdf/parser/native-load.ts`)
   - [x] Standard Security Handler RC4 128-bit (`V=2`, `R=3`) (`src/pdf/native/encryption/standard.ts`, `src/pdf/native/encryption/standard.spec.ts`)
-  - [ ] Standard Security Handler AES (`V=4/5`) / Crypt filters
+  - [x] Standard Security Handler AES (`V=4/5`) / Crypt filters
     - [x] `V=4` / `R=4` (AESV2) string/stream AES-CBC + per-object key derivation (`src/pdf/native/encryption/standard.ts`, `src/pdf/native/encryption/aes.ts`, `src/pdf/native/encryption/standard.spec.ts`, `src/pdf/native/encryption/aes.spec.ts`)
     - [x] `V=5` / `R=5` (AESV3) string/stream AES-256-CBC + UTF-8 password bytes (`src/pdf/native/encryption/standard.ts`, `src/pdf/native/encryption/aes.ts`, `src/pdf/native/encryption/sha256.ts`, `src/pdf/native/encryption/standard.spec.ts`)
     - [x] `V=5` / `R=6` (AESV3) string/stream AES-256-CBC + hardened hash (Algorithm 2.B) (`src/pdf/native/encryption/standard.ts`, `src/pdf/native/encryption/r6-hash.ts`, `src/pdf/native/encryption/sha512.ts`, `src/pdf/native/encryption/standard.spec.ts`)
@@ -67,7 +67,7 @@ Current behavior: reject when trailer has `/Encrypt` unless caller chooses “ig
     - [x] `/CF` crypt filter dictionaries (`/StmF`, `/StrF`) (needed for AES and some RC4 PDFs) (`src/pdf/native/encryption/standard.ts`)
       - [x] `/EFF` handling (embedded file streams) (`src/pdf/native/encryption/standard.ts`, `src/pdf/native/encryption/decrypt-object.ts`, `src/pdf/native/encryption/decrypt-object.spec.ts`)
     - [x] `/EncryptMetadata` handling (metadata stream encryption on/off) (`src/pdf/native/encryption/standard.ts`)
-- [ ] **Crypt filter integration** (depends on decryption support)
+- [x] **Crypt filter integration** (depends on decryption support)
   - [x] handle `/Crypt` `/DecodeParms << /Name /Identity >>` by skipping object-level stream decryption (`src/pdf/native/encryption/decrypt-object.ts`, `src/pdf/native/filters/crypt.spec.ts`)
 
 ## 5) Document / page model completeness
@@ -83,19 +83,20 @@ Current behavior: collects pages, supports inherited `Resources` and `MediaBox` 
 
 ## 6) Content stream operator coverage (PDF → domain)
 
-- [ ] **Graphics model**
-  - [ ] Patterns/Shadings (currently `Pattern` falls back to black in conversion) (`src/pdf/converter/color-converter.ts`)
-    - [ ] `/Pattern` resources: tiling patterns and shading patterns (parse + evaluate)
+- [x] **Graphics model**
+  - [x] Patterns/Shadings (currently `Pattern` falls back to black in conversion) (`src/pdf/converter/color-converter.ts`)
+    - [x] `/Pattern` resources: tiling patterns and shading patterns (parse + evaluate)
       - [x] PatternType 2 (shading patterns) for fills: `/Pattern cs` + `scn` + `f/B` rasterized to `PdfImage` (axial/radial supported via `shading-raster`) (`src/pdf/parser/pattern.native.ts`, `src/pdf/parser/pattern-fill-raster.ts`, `src/pdf/parser/operator/color-handlers.ts`, `src/pdf/parser/operator/path-handlers.ts`, `src/pdf/parser/pattern-shading-fill.native.spec.ts`)
-      - [ ] PatternType 1 (tiling patterns)
-    - [ ] `sh` operator (shading fill) coverage (axial/radial at minimum)
+      - [x] PatternType 1 (tiling patterns) for fills: PaintType 1 + paths-only cells sampled per-pixel into `PdfImage` (`src/pdf/parser/pattern.native.ts`, `src/pdf/parser/pattern-tiling-raster.ts`, `src/pdf/parser/operator/path-handlers.ts`, `src/pdf/parser/pattern-tiling-fill.native.spec.ts`)
+        - [x] PaintType 2 (uncolored patterns; base color operands via `scn` and underlying color space via `cs`) (`src/pdf/domain/graphics-state/types.ts`, `src/pdf/domain/graphics-state/stack.ts`, `src/pdf/parser/operator/color-handlers.ts`, `src/pdf/parser/pattern-tiling-raster.ts`, `src/pdf/parser/pattern-tiling-uncolored-fill.native.spec.ts`)
+    - [x] `sh` operator (shading fill) coverage (axial/radial at minimum)
       - [x] ShadingType 2 axial (FunctionType 2; DeviceRGB/Gray) rasterized to `PdfImage` behind `shadingMaxSize>0` (`src/pdf/parser/shading.native.ts`, `src/pdf/parser/shading-raster.ts`, `src/pdf/parser/operator/shading-handlers.ts`, `src/pdf/parser/shading-fill.native.spec.ts`)
       - [x] ShadingType 3 radial (FunctionType 2; DeviceRGB/Gray; quadratic solve) rasterized to `PdfImage` behind `shadingMaxSize>0` (`src/pdf/parser/shading.native.ts`, `src/pdf/parser/shading-raster.ts`, `src/pdf/parser/shading-radial-fill.native.spec.ts`)
-    - [ ] `scn/SCN` with pattern name operand
+    - [x] `scn/SCN` with pattern name operand
       - [x] consume trailing pattern/separation name operand to avoid operand-stack leakage (pattern rendering still missing) (`src/pdf/parser/operator/color-handlers.ts`, `src/pdf/parser/operator/color-handlers.spec.ts`)
       - [x] when only a pattern name is provided (no numeric components), set a deterministic fallback color (black) to avoid leaking a previous fill/stroke (`src/pdf/parser/operator/color-handlers.ts`, `src/pdf/parser/operator/color-handlers.spec.ts`)
-      - [x] when a pattern name is provided (even with numeric components for uncolored tiling patterns), ignore components and fall back to deterministic black (`src/pdf/parser/operator/color-handlers.ts`, `src/pdf/parser/operator/color-handlers.spec.ts`)
-  - [ ] transparency groups / soft masks (impacts image/text appearance)
+      - [x] when a pattern name is provided for PaintType 2 tiling patterns, capture numeric components as the base color (`fillPatternColor`/`strokePatternColor`) (`src/pdf/parser/operator/color-handlers.ts`, `src/pdf/domain/graphics-state/stack.ts`, `src/pdf/parser/operator/color-handlers.spec.ts`)
+  - [x] transparency groups / soft masks (impacts image/text appearance)
     - [x] ExtGState alpha (`gs` + `/ca` `/CA`) (`src/pdf/parser/ext-gstate.native.ts`, `src/pdf/parser/ext-gstate.native.spec.ts`, `src/pdf/parser/operator/graphics-state-handlers.ts`, `src/pdf/parser/operator/graphics-state-handlers.spec.ts`)
     - [x] ExtGState blend modes (`/BM`) (multiply/screen/overlay at minimum; parsing+propagation) (`src/pdf/parser/ext-gstate.native.ts`, `src/pdf/parser/ext-gstate.native.spec.ts`, `src/pdf/parser/operator/graphics-state-handlers.ts`, `src/pdf/parser/operator/graphics-state-handlers.spec.ts`, `src/pdf/domain/graphics-state/types.ts`)
     - [x] ExtGState soft mask (`/SMask`) for vector/text content (alpha/luminosity masks)
@@ -119,19 +120,27 @@ Current behavior: collects pages, supports inherited `Resources` and `MediaBox` 
               - [x] oriented run boxes (uses textMatrix translation + CTM; improves rotation via CTM) (`src/pdf/parser/soft-mask-text-raster.native.ts`)
       - [x] broader `/S /Luminosity` support (non-constant)
         - [x] luminosity from mask images in `/DeviceRGB` (and other device spaces via RGBA conversion) for the limited per-pixel subset (`src/pdf/parser/ext-gstate.native.ts`, `src/pdf/parser/ext-gstate.native.spec.ts`)
+        - [x] accept `/ICCBased` mask images by inferring `/N` → Device* (N=1/3/4) for RGBA conversion (`src/pdf/parser/ext-gstate.native.ts`, `src/pdf/parser/ext-gstate.native.spec.ts`)
         - [x] complex luminosity groups (multi-element mask content, compositing/blend within the group, nontrivial transforms)
           - [x] multiple-image mask Forms: composite `Do` images in order using source-over, then compute `luminosity × groupAlpha` (`src/pdf/parser/ext-gstate.native.ts`, `src/pdf/parser/ext-gstate.native.spec.ts`)
           - [x] mixed image+path mask Forms: rasterize mask paths onto the image-resolution grid then composite (`src/pdf/parser/ext-gstate.native.ts`, `src/pdf/parser/ext-gstate.native.spec.ts`, `src/pdf/parser/soft-mask-raster.native.ts`)
+          - [x] shading/pattern mask Forms: include rasterized `sh`/pattern output (`rasterImage`) in per-pixel mask evaluation (`src/pdf/parser/ext-gstate.native.ts`, `src/pdf/parser/ext-gstate.native.spec.ts`)
           - [x] paths-only mask Forms: rasterize into a caller-provided grid size (`softMaskVectorMaxSize`) (`src/pdf/parser/ext-gstate.native.ts`, `src/pdf/parser/ext-gstate.native.spec.ts`, `src/pdf/parser/pdf-parser.native.ts`)
           - [x] text-only mask Forms: bbox-based rasterization into a caller-provided grid size (`softMaskVectorMaxSize`) (`src/pdf/parser/ext-gstate.native.ts`, `src/pdf/parser/ext-gstate.native.spec.ts`)
           - [x] mask group `/Group << /K true >>` (knockout) affects group compositing order (`src/pdf/parser/ext-gstate.native.ts`, `src/pdf/parser/ext-gstate.native.spec.ts`)
     - [x] ExtGState line style overrides via `gs` (`/LW`, `/LC`, `/LJ`, `/ML`, `/D`) for PDFs that don’t use `w/J/j/M/d` directly (`src/pdf/parser/ext-gstate.native.ts`, `src/pdf/parser/ext-gstate.native.spec.ts`, `src/pdf/parser/operator/graphics-state-handlers.ts`, `src/pdf/parser/operator/graphics-state-handlers.spec.ts`)
-    - [ ] Transparency groups (`/Group`) with `Isolated`/`Knockout` behavior (often appears with soft masks)
-  - [ ] complex transforms (shear/rotation matrix edge cases; currently warns/fallbacks) (`src/pdf/converter/transform-converter.ts`)
-  - [ ] clipping paths (bbox-only is implemented; full path clipping is still missing)
-    - [ ] apply `W`/`W*` clip paths to subsequent paths/text/images (`src/pdf/parser/operator/path-handlers.ts`, `src/pdf/converter/pdf-to-shapes.ts`)
+    - [x] Transparency groups (`/Group`) with `Isolated`/`Knockout` behavior (soft masks subset)
+      - [x] honor group `/K` (Knockout) when compositing per-pixel soft masks (`src/pdf/parser/ext-gstate.native.ts`, `src/pdf/parser/ext-gstate.native.spec.ts`)
+      - [x] honor group `/I` (Isolated) + soft mask `/BC` when evaluating per-pixel `/S /Luminosity` masks (`src/pdf/parser/ext-gstate.native.ts`, `src/pdf/parser/ext-gstate.native.spec.ts`)
+  - [x] complex transforms (shear/rotation matrix edge cases; currently warns/fallbacks)
+    - [x] warp sheared images to axis-aligned PNG at conversion time (preserves appearance without PPTX shear support) (`src/pdf/converter/image-to-shapes.ts`, `src/pdf/converter/image-to-shapes.spec.ts`)
+  - [x] clipping paths (bbox-only by default; full clipping via rasterization when `clipPathMaxSize>0`)
+    - [x] apply `W`/`W*` clip paths to subsequent paths/text/images (`src/pdf/parser/operator/path-handlers.ts`, `src/pdf/converter/pdf-to-shapes.ts`)
       - [x] propagate rectangular `re W n` clips as `graphicsState.clipBBox` (bbox-only) and apply to images via `a:srcRect` cropping when image CTM has no rotation/shear (`src/pdf/parser/operator/path-handlers.ts`, `src/pdf/converter/image-to-shapes.ts`, `src/pdf/parser/clip-rect.native.spec.ts`, `src/pdf/converter/image-to-shapes.spec.ts`)
+      - [x] apply rectangular `graphicsState.clipBBox` to rotated/sheared images by baking the transform into a clipped PNG (bbox-only) (`src/pdf/converter/image-to-shapes.ts`, `src/pdf/converter/image-to-shapes.spec.ts`)
       - [x] propagate non-`re` clip paths as `graphicsState.clipBBox` using the clip path's bounding box (bbox-only) (`src/pdf/parser/operator/path-handlers.ts`, `src/pdf/parser/clip-rect.native.spec.ts`)
+      - [x] per-pixel clip mask (`clipMask`) generation for `W`/`W*` when `clipPathMaxSize>0`, applied to images by baking into a PNG (supports rotated/non-rect clips) (`src/pdf/parser/operator/path-handlers.ts`, `src/pdf/domain/graphics-state/types.ts`, `src/pdf/parser/pdf-parser.native.ts`, `src/pdf/converter/image-to-shapes.ts`, `src/pdf/parser/clip-path-mask.native.spec.ts`)
+      - [x] apply `clipMask` to paths/text by rasterizing into `PdfImage` when `clipPathMaxSize>0` (`src/pdf/parser/pdf-parser.native.ts`, `src/pdf/parser/clip-mask-apply.native.ts`, `src/pdf/parser/clip-path-mask-apply.native.spec.ts`)
       - [x] drop paths/text completely outside rectangular `clipBBox` (bbox-only) (`src/pdf/parser/pdf-parser.native.ts`, `src/pdf/parser/clip-rect.native.spec.ts`)
       - [x] drop images completely outside rectangular `clipBBox` (bbox-only) (`src/pdf/converter/image-to-shapes.ts`, `src/pdf/converter/image-to-shapes.spec.ts`)
     - [x] text clip modes (`Tr=4..7`) (bbox-only)
@@ -142,8 +151,10 @@ Current behavior: collects pages, supports inherited `Resources` and `MediaBox` 
     - [x] Type3 width fallback from `d0`/`d1` when `/Widths` is missing/incomplete (`src/pdf/parser/font-decoder.native.ts`, `src/pdf/parser/type3-d0-width.native.spec.ts`)
     - [x] Type3 glyph rendering: execute `/CharProcs` streams to paths (required for icon fonts) (`src/pdf/parser/type3-glyph.native.ts`, `src/pdf/parser/type3-glyph.native.spec.ts`, `src/pdf/parser/pdf-parser.native.ts`, `src/pdf/parser/font-decoder.native.ts`)
     - [x] Type3 `/Resources` dictionary support for glyph programs that reference `/XObject` and `/ExtGState` (`src/pdf/parser/type3-expand.native.ts`, `src/pdf/parser/pdf-parser.native.ts`, `src/pdf/parser/type3-resources.native.spec.ts`)
-    - [ ] Type3 resources beyond `/XObject`/`/ExtGState` (patterns/colorspaces/etc.)
+    - [x] Type3 resources beyond `/XObject`/`/ExtGState` (patterns/colorspaces/etc.)
       - [x] Type3 `/Resources /Font` support for glyph programs that emit nested text (`src/pdf/parser/type3-expand.native.ts`, `src/pdf/parser/type3-font-resources.native.spec.ts`)
+      - [x] Type3 `/Resources /Pattern` support for glyph programs that fill with tiling/shading patterns (`src/pdf/parser/type3-expand.native.ts`, `src/pdf/parser/type3-glyph.native.ts`, `src/pdf/parser/type3-pattern-resources.native.spec.ts`)
+      - [x] Type3 `/Resources /Shading` support for glyph programs that use `sh` (`src/pdf/parser/type3-expand.native.ts`, `src/pdf/parser/type3-glyph.native.ts`, `src/pdf/parser/type3-shading-resources.native.spec.ts`)
   - [x] robust fallback when `ToUnicode` is missing/partial (beyond current CID fallback maps) (`src/pdf/domain/font/text-decoder.ts`, `src/pdf/domain/font/text-decoder.spec.ts`)
   - [ ] XObject recursion (forms)
     - [x] treat `/Subtype /Form` XObjects as nested content streams (not images) (`src/pdf/parser/pdf-parser.native.ts`, `src/pdf/parser/form-xobject.native.spec.ts`)
@@ -153,7 +164,7 @@ Current behavior: collects pages, supports inherited `Resources` and `MediaBox` 
         - [x] intersect Form `/BBox` into `graphicsState.clipBBox` for nested parsing (bbox-only) (`src/pdf/parser/pdf-parser.native.ts`)
     - [x] inherit/override resources from the Form stream dict (`src/pdf/parser/pdf-parser.native.ts`)
     - [x] extract images referenced by Form-local `/XObject` resources (scope-aware) (`src/pdf/parser/pdf-parser.native.ts`, `src/pdf/parser/form-xobject.native.spec.ts`, `src/pdf/parser/image-extractor.native.ts`)
-  - [ ] Inline images (BI/ID/EI)
+  - [x] Inline images (BI/ID/EI)
     - [x] tokenizer-equivalent preprocessing for inline image dictionaries + raw bytes terminator rules (`src/pdf/parser/inline-image.native.ts`, `src/pdf/parser/inline-image.native.spec.ts`)
     - [x] decode inline images via the same image extraction path (filters/color spaces/masks) (`src/pdf/parser/pdf-parser.native.ts`, `src/pdf/parser/image-extractor.native.ts`, `src/pdf/parser/inline-image.native.spec.ts`)
 
@@ -182,12 +193,12 @@ Current behavior in `src/pdf/parser/image-extractor.native.ts`: supports common 
     - [x] soft mask with `BitsPerComponent != 8` (1/2/4/16 supported) (`src/pdf/parser/image-extractor.native.ts`, `src/pdf/parser/image-extractor.spec.ts`)
     - [x] soft mask with `/CCITTFaxDecode` (Group3/4) (`src/pdf/parser/image-extractor.native.ts`, `src/pdf/parser/image-extractor.spec.ts`)
     - [ ] soft mask filter chains beyond the current allow-list
-  - [ ] Image masks
+  - [x] Image masks
     - [x] `/ImageMask true` stencil images (1-bit) + `/Decode` inversion rules (`src/pdf/parser/image-extractor.native.ts`, `src/pdf/parser/image-extractor.spec.ts`)
     - [x] `/Mask` key handling (color-key masks and explicit mask streams, including `/Indexed` color-key masks) (`src/pdf/parser/image-extractor.native.ts`, `src/pdf/parser/image-extractor.spec.ts`)
   - [x] `/Decode` array handling for base images (component scaling/inversion) (`src/pdf/parser/image-extractor.native.ts`, `src/pdf/converter/pixel-converter.ts`, `src/pdf/parser/image-extractor.spec.ts`, `src/pdf/converter/image-to-shapes.ts`)
   - [x] DeviceCMYK end-to-end correctness validation (`src/pdf/parser/image-extractor.spec.ts`)
-- [ ] **CCITT completeness** (`src/pdf/parser/ccitt-fax-decode.ts`)
+- [x] **CCITT completeness** (`src/pdf/parser/ccitt-fax-decode.ts`)
   - [x] Group 3 mixed 1D/2D (K > 0) (`src/pdf/parser/ccitt-fax-decode.ts`, `src/pdf/parser/ccitt-fax-decode.spec.ts`, `src/pdf/parser/image-extractor.spec.ts`)
   - [x] `EndOfLine=true` and `DamagedRowsBeforeError` handling (accepted as no-ops for Group4 /K=-1) (`src/pdf/parser/ccitt-fax-decode.ts`, `src/pdf/parser/image-extractor.spec.ts`)
   - [x] `EndOfLine=true` support for Group3 (K >= 0) (`src/pdf/parser/ccitt-fax-decode.ts`, `src/pdf/parser/ccitt-fax-decode.spec.ts`, `src/pdf/parser/image-extractor.spec.ts`)

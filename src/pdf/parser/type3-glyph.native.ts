@@ -8,9 +8,12 @@
  */
 
 import { tokenizeContentStream } from "../domain/content-stream";
+import type { PdfBBox } from "../domain";
 import { createGraphicsStateStack, multiplyMatrices, type PdfMatrix, type FontInfo, type FontMappings } from "../domain";
 import { createGfxOpsFromStack, createParser, type ParsedElement, type TextRun } from "./operator";
 import type { ExtGStateParams } from "./ext-gstate.native";
+import type { PdfPattern } from "./pattern.types";
+import type { PdfShading } from "./shading.types";
 
 type Type3Info = NonNullable<FontInfo["type3"]>;
 
@@ -63,7 +66,14 @@ export function renderType3TextRun(
   fontInfo: FontInfo,
   type3: Type3Info,
   fontMappings: FontMappings,
-  options: Readonly<{ readonly extGState: ReadonlyMap<string, ExtGStateParams> }>,
+  options: Readonly<{
+    readonly extGState: ReadonlyMap<string, ExtGStateParams>;
+    readonly shadings: ReadonlyMap<string, PdfShading>;
+    readonly patterns: ReadonlyMap<string, PdfPattern>;
+    readonly shadingMaxSize: number;
+    readonly clipPathMaxSize: number;
+    readonly pageBBox: PdfBBox;
+  }>,
 ): readonly ParsedElement[] {
   if (fontInfo.codeByteWidth !== 1) {return [];}
 
@@ -89,7 +99,14 @@ export function renderType3TextRun(
         stack.concatMatrix(glyphToUser);
 
         const gfxOps = createGfxOpsFromStack(stack);
-        const parse = createParser(gfxOps, fontMappings, { extGState: options.extGState });
+        const parse = createParser(gfxOps, fontMappings, {
+          extGState: options.extGState,
+          shadings: options.shadings,
+          patterns: options.patterns,
+          shadingMaxSize: options.shadingMaxSize,
+          clipPathMaxSize: options.clipPathMaxSize,
+          pageBBox: options.pageBBox,
+        });
         const tokens = tokenizeContentStream(decodeCharProcBytes(procBytes));
         out.push(...parse(tokens));
       }

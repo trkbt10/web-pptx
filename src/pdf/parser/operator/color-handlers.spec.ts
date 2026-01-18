@@ -20,11 +20,16 @@ function createMockGfxOps() {
       get: () => state,
       concatMatrix: () => {},
       setClipBBox: () => {},
+      setClipMask: () => {},
       setBlendMode: () => {},
       setSoftMaskAlpha: () => {},
       setSoftMask: () => {},
       setFillPatternName: (n: string) => calls.push({ method: "setFillPatternName", args: [n] }),
       setStrokePatternName: (n: string) => calls.push({ method: "setStrokePatternName", args: [n] }),
+      setFillPatternUnderlyingColorSpace: (cs: unknown) => calls.push({ method: "setFillPatternUnderlyingColorSpace", args: [cs] }),
+      setStrokePatternUnderlyingColorSpace: (cs: unknown) => calls.push({ method: "setStrokePatternUnderlyingColorSpace", args: [cs] }),
+      setFillPatternColor: (c: unknown) => calls.push({ method: "setFillPatternColor", args: [c] }),
+      setStrokePatternColor: (c: unknown) => calls.push({ method: "setStrokePatternColor", args: [c] }),
       setLineWidth: () => {},
       setLineCap: () => {},
       setLineJoin: () => {},
@@ -59,6 +64,7 @@ function createContext(operandStack: (number | string | (number | string)[])[] =
     pageBBox: [0, 0, 0, 0],
     shadings: new Map(),
     shadingMaxSize: 0,
+    clipPathMaxSize: 0,
     patterns: new Map(),
     extGState: new Map(),
   };
@@ -125,14 +131,25 @@ describe("color-handlers", () => {
     });
   });
 
-  describe("handleColorSpace", () => {
-    it("consumes color space name from stack", () => {
+  describe("handleFillColorSpace", () => {
+    it("consumes top operand and stores Pattern base color space when provided as array", () => {
       const { calls, ops } = createMockGfxOps();
-      const ctx = createContext(["/DeviceRGB"]);
-      const update = colorHandlers.handleColorSpace(ctx, ops);
+      const ctx = createContext([["Pattern", "DeviceRGB"]]);
+      const update = colorHandlers.handleFillColorSpace(ctx, ops);
 
       expect(update.operandStack).toEqual([]);
-      expect(calls).toEqual([]); // No color operation called
+      expect(calls).toEqual([{ method: "setFillPatternUnderlyingColorSpace", args: ["DeviceRGB"] }]);
+    });
+  });
+
+  describe("handleStrokeColorSpace", () => {
+    it("consumes top operand and stores Pattern base color space when provided as array", () => {
+      const { calls, ops } = createMockGfxOps();
+      const ctx = createContext([["Pattern", "DeviceCMYK"]]);
+      const update = colorHandlers.handleStrokeColorSpace(ctx, ops);
+
+      expect(update.operandStack).toEqual([]);
+      expect(calls).toEqual([{ method: "setStrokePatternUnderlyingColorSpace", args: ["DeviceCMYK"] }]);
     });
   });
 
@@ -217,12 +234,41 @@ describe("color-handlers", () => {
       expect(update.operandStack).toEqual([]);
     });
 
-    it("consumes numeric components for uncolored patterns and still falls back to black", () => {
+    it("consumes numeric components when pattern is not injected (falls back to black)", () => {
       const { calls, ops } = createMockGfxOps();
       const ctx = createContext([1, 0, 0, "/P1"]);
       const update = colorHandlers.handleFillColorNWithOptionalName(ctx, ops);
 
       expect(calls).toEqual([{ method: "setFillRgb", args: [0, 0, 0] }]);
+      expect(update.operandStack).toEqual([]);
+    });
+
+    it("stores base color for PaintType 2 tiling patterns (uncolored)", () => {
+      const { calls, ops } = createMockGfxOps();
+      const ctx: ParserContext = {
+        ...createContext([0, 1, 0, "/P1"]),
+        patterns: new Map([
+          [
+            "P1",
+            {
+              patternType: 1,
+              paintType: 2,
+              tilingType: 1,
+              bbox: [0, 0, 1, 1],
+              xStep: 2,
+              yStep: 2,
+              matrix: [1, 0, 0, 1, 0, 0],
+              content: "0 0 1 1 re f",
+            },
+          ],
+        ]),
+      };
+      const update = colorHandlers.handleFillColorNWithOptionalName(ctx, ops);
+
+      expect(calls).toEqual([
+        { method: "setFillPatternName", args: ["/P1"] },
+        { method: "setFillPatternColor", args: [{ colorSpace: "DeviceRGB", components: [0, 1, 0] }] },
+      ]);
       expect(update.operandStack).toEqual([]);
     });
   });
@@ -270,6 +316,35 @@ describe("color-handlers", () => {
       const update = colorHandlers.handleStrokeColorNWithOptionalName(ctx, ops);
 
       expect(calls).toEqual([{ method: "setStrokeRgb", args: [0, 0, 0] }]);
+      expect(update.operandStack).toEqual([]);
+    });
+
+    it("stores base color for PaintType 2 tiling patterns (uncolored)", () => {
+      const { calls, ops } = createMockGfxOps();
+      const ctx: ParserContext = {
+        ...createContext([0.25, "/P1"]),
+        patterns: new Map([
+          [
+            "P1",
+            {
+              patternType: 1,
+              paintType: 2,
+              tilingType: 1,
+              bbox: [0, 0, 1, 1],
+              xStep: 2,
+              yStep: 2,
+              matrix: [1, 0, 0, 1, 0, 0],
+              content: "0 0 1 1 re f",
+            },
+          ],
+        ]),
+      };
+      const update = colorHandlers.handleStrokeColorNWithOptionalName(ctx, ops);
+
+      expect(calls).toEqual([
+        { method: "setStrokePatternName", args: ["/P1"] },
+        { method: "setStrokePatternColor", args: [{ colorSpace: "DeviceGray", components: [0.25] }] },
+      ]);
       expect(update.operandStack).toEqual([]);
     });
   });
