@@ -6,7 +6,7 @@
 
 import React from "react";
 import type { AnchorPointType } from "../types";
-import { colorTokens } from "../../ui/design-tokens/tokens";
+import { colorTokens } from "../../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Types

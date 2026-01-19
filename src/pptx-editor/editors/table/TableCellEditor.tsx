@@ -5,8 +5,8 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { Accordion, FieldGroup } from "../../ui/layout";
-import { Input } from "../../ui/primitives";
+import { Accordion, FieldGroup } from "../../../office-editor-components/layout";
+import { Input } from "../../../office-editor-components/primitives";
 import { TextBodyEditor, createDefaultTextBody } from "../text/TextBodyEditor";
 import {
   TableCellPropertiesEditor,
@@ -14,7 +14,7 @@ import {
 } from "./TableCellPropertiesEditor";
 import type { TableCell, TableCellProperties } from "../../../pptx/domain/table/types";
 import type { TextBody } from "../../../pptx/domain/text";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 export type TableCellEditorProps = EditorProps<TableCell> & {
   readonly style?: CSSProperties;

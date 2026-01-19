@@ -5,7 +5,7 @@
  */
 
 import type { CSSProperties } from "react";
-import { Slider } from "../primitives/Slider";
+import { Slider } from "../../../office-editor-components/primitives";
 
 export type LabeledSliderProps = {
   /** Label text (e.g., "A", "°") */

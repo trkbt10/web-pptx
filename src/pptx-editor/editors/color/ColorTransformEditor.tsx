@@ -5,12 +5,12 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { FieldGroup } from "../../ui/layout";
-import { Toggle } from "../../ui/primitives";
+import { FieldGroup } from "../../../office-editor-components/layout";
+import { Toggle } from "../../../office-editor-components/primitives";
 import { PercentEditor, DegreesEditor } from "../primitives";
 import { pct, deg, type Percent, type Degrees } from "../../../ooxml/domain/units";
 import type { ColorTransform } from "../../../ooxml/domain/color";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 export type ColorTransformEditorProps = EditorProps<ColorTransform | undefined> & {
   readonly style?: CSSProperties;

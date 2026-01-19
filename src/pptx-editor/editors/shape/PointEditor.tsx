@@ -5,11 +5,11 @@
  * @see ECMA-376 Part 1, Section 20.1.7.6 (pt)
  */
 
-import { FieldGroup, FieldRow } from "../../ui/layout";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
 import { px } from "../../../ooxml/domain/units";
 import type { Point } from "../../../pptx/domain/types";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 export type PointEditorProps = EditorProps<Point>;
 

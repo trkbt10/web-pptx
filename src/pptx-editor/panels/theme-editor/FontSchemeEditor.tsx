@@ -6,9 +6,9 @@
 
 import { useCallback, type CSSProperties } from "react";
 import type { FontScheme, FontSpec } from "../../../pptx/domain/resolution";
-import { InspectorSection, Accordion, FieldGroup, FieldRow } from "../../ui/layout";
-import { Input } from "../../ui/primitives/Input";
-import { colorTokens, fontTokens, spacingTokens } from "../../ui/design-tokens";
+import { InspectorSection, Accordion, FieldGroup, FieldRow } from "../../../office-editor-components/layout";
+import { Input } from "../../../office-editor-components/primitives/Input";
+import { colorTokens, fontTokens, spacingTokens } from "../../../office-editor-components/design-tokens";
 
 export type FontSchemeEditorProps = {
   readonly fontScheme?: FontScheme;

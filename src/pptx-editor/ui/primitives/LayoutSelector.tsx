@@ -10,7 +10,7 @@ import { px } from "../../../ooxml/domain/units";
 import type { SlideSize, PresentationFile, Shape } from "../../../pptx/domain";
 import type { SlideLayoutOption } from "../../../pptx/app";
 import { LayoutThumbnail, useLayoutThumbnails } from "../../thumbnail";
-import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../design-tokens";
+import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Types

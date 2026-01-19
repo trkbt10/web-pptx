@@ -13,7 +13,7 @@
 import type { ResizeHandlePosition } from "../context/slide/state";
 import { ResizeHandle } from "./ResizeHandle";
 import { RotateHandle } from "./RotateHandle";
-import { colorTokens } from "../ui/design-tokens/index";
+import { colorTokens } from "../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Types

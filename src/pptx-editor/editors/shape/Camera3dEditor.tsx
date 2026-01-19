@@ -5,15 +5,15 @@
  * @see ECMA-376 Part 1, Section 20.1.5.2 (camera)
  */
 
-import { Select, Toggle } from "../../ui/primitives";
-import { FieldGroup, FieldRow } from "../../ui/layout";
+import { Select, Toggle } from "../../../office-editor-components/primitives";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { DegreesEditor } from "../primitives/DegreesEditor";
 import { PercentEditor } from "../primitives/PercentEditor";
 import { Rotation3dEditor, createDefaultRotation3d } from "./Rotation3dEditor";
 import { deg, pct } from "../../../ooxml/domain/units";
 import type { PresetCameraType } from "../../../pptx/domain/types";
 import type { Camera3d } from "../../../pptx/domain";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 
 export type Camera3dEditorProps = EditorProps<Camera3d>;
 

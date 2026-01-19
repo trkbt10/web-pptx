@@ -9,9 +9,9 @@
 import { useCallback, type CSSProperties } from "react";
 import type { SlideSize, SlideSizeType } from "../../../pptx/domain";
 import { px, type Pixels } from "../../../ooxml/domain/units";
-import type { EditorProps, SelectOption } from "../../types";
-import { FieldGroup, FieldRow } from "../../ui/layout";
-import { Input, Select } from "../../ui/primitives";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
+import { Input, Select } from "../../../office-editor-components/primitives";
 
 // =============================================================================
 // Types

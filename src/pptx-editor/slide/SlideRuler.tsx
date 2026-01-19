@@ -5,7 +5,7 @@
  */
 
 import { useMemo, type CSSProperties } from "react";
-import { colorTokens, fontTokens } from "../ui/design-tokens";
+import { colorTokens, fontTokens } from "../../office-editor-components/design-tokens";
 
 export type SlideRulerProps = {
   readonly orientation: "horizontal" | "vertical";

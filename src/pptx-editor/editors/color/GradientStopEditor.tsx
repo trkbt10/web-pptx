@@ -6,14 +6,14 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { Button } from "../../ui/primitives";
-import { FieldGroup } from "../../ui/layout";
+import { Button } from "../../../office-editor-components/primitives";
+import { FieldGroup } from "../../../office-editor-components/layout";
 import { PercentEditor } from "../primitives";
 import { ColorEditor } from "./ColorEditor";
 import type { Color } from "../../../ooxml/domain/color";
 import type { GradientStop } from "../../../ooxml/domain/fill";
 import { pct, type Percent } from "../../../ooxml/domain/units";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 export type GradientStopEditorProps = EditorProps<GradientStop> & {
   readonly style?: CSSProperties;

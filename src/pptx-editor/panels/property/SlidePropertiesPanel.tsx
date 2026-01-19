@@ -8,10 +8,10 @@ import { useCallback, type CSSProperties } from "react";
 import type { SlideSize, PresentationFile } from "../../../pptx/domain";
 import type { Background } from "../../../pptx/domain/slide";
 import type { SlideLayoutAttributes } from "../../../pptx/parser/slide/layout-parser";
-import { Accordion } from "../../ui/layout/Accordion";
+import { Accordion } from "../../../office-editor-components/layout";
 import type { SlideLayoutOption } from "../../../pptx/app";
 import { BackgroundEditor, SlideLayoutEditor, SlideSizeEditor, createDefaultBackground } from "../../editors/index";
-import { Button } from "../../ui/primitives";
+import { Button } from "../../../office-editor-components/primitives";
 
 // =============================================================================
 // Types

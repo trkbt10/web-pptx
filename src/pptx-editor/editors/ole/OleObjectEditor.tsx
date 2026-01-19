@@ -6,10 +6,10 @@
 
 import type { CSSProperties } from "react";
 import type { OleReference, OleObjectFollowColorScheme } from "../../../pptx/domain/shape";
-import type { EditorProps } from "../../types";
-import type { SelectOption } from "../../types";
-import { FieldGroup, FieldRow } from "../../ui/layout";
-import { Input, Select, Toggle } from "../../ui/primitives";
+import type { EditorProps } from "../../../office-editor-components/types";
+import type { SelectOption } from "../../../office-editor-components/types";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
+import { Input, Select, Toggle } from "../../../office-editor-components/primitives";
 
 export type OleObjectEditorProps = EditorProps<OleReference> & {
   readonly style?: CSSProperties;

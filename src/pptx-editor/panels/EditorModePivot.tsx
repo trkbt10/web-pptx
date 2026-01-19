@@ -7,7 +7,7 @@
 
 import { useCallback, type CSSProperties } from "react";
 import type { EditorMode } from "../context/presentation/editor/types";
-import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../ui/design-tokens";
+import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "../../office-editor-components/design-tokens";
 
 export type EditorModePivotProps = {
   readonly mode: EditorMode;

@@ -7,10 +7,10 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { Input, Select } from "../../ui/primitives";
-import { FieldGroup, FieldRow } from "../../ui/layout";
+import { Input, Select } from "../../../office-editor-components/primitives";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import type { Layout, ManualLayout } from "../../../pptx/domain/chart";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 
 export type LayoutEditorProps = EditorProps<Layout | undefined> & {
   readonly style?: CSSProperties;

@@ -6,7 +6,7 @@
  */
 
 import { type CSSProperties, type ReactNode } from "react";
-import { Popover } from "../primitives/Popover";
+import { Popover } from "../../../office-editor-components/primitives";
 import { LineSwatch, type LineSwatchSize } from "./LineSwatch";
 import { LineEditor } from "./LineEditor";
 import type { Line } from "../../../pptx/domain/color/types";

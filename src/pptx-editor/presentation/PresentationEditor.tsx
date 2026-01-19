@@ -65,7 +65,7 @@ import { SvgEditorCanvas, type AssetDropData } from "../slide-canvas/SvgEditorCa
 import type { ViewportTransform } from "../../pptx/render/svg-viewport";
 import { TextEditContextProvider, useTextEditContextValue } from "../context/slide/TextEditContext";
 import { PresentationPreviewProvider, usePresentationPreview } from "../context/presentation/PresentationPreviewContext";
-import { Button } from "../ui/primitives/Button";
+import { Button } from "../../office-editor-components/primitives/Button";
 import {
   type TextSelectionContext,
   getParagraphsInSelection,
@@ -101,7 +101,7 @@ import {
 import { PresentationSlideshow, type SlideshowSlideContent } from "../preview/PresentationSlideshow";
 import { usePanelCallbacks, useContextMenuActions, useKeyboardShortcuts, useDragHandlers, useEditorLayers } from "./hooks";
 import type { TabContents } from "./hooks";
-import { ListViewIcon, PlayIcon, SettingsIcon } from "../ui/icons";
+import { ListViewIcon, PlayIcon, SettingsIcon } from "../../office-editor-components/icons";
 import { ExportButton } from "./components";
 import { renderSlideSvg } from "../../pptx/render/svg/renderer";
 import { createCoreRenderContext } from "../../pptx/render";

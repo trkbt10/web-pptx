@@ -7,7 +7,7 @@
 import type { GraphicFrame } from "../../../pptx/domain/index";
 import type { DiagramDataModel } from "../../../pptx/domain/diagram";
 import type { Shape } from "../../../pptx/domain/index";
-import { Accordion } from "../../ui/layout/Accordion";
+import { Accordion } from "../../../office-editor-components/layout";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,

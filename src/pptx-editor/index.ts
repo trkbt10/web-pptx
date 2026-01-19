@@ -30,7 +30,7 @@ export type {
   InputType,
   ButtonVariant,
   SelectOption,
-} from "./types";
+} from "../office-editor-components/types";
 
 // Context - EditorConfig
 export {
@@ -59,7 +59,7 @@ export {
   type TabItem,
   type TabsProps,
   type ToggleProps,
-} from "./ui/primitives";
+} from "../office-editor-components/primitives";
 
 // UI Layout
 export {
@@ -71,7 +71,7 @@ export {
   type FieldGroupProps,
   type FieldRowProps,
   type PanelProps,
-} from "./ui/layout";
+} from "../office-editor-components/layout";
 
 // UI Color
 export {

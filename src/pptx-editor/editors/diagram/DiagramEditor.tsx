@@ -10,9 +10,9 @@ import type {
   DiagramPoint,
   DiagramConnection,
 } from "../../../pptx/domain/diagram";
-import type { EditorProps } from "../../types";
-import { Accordion } from "../../ui/layout";
-import { Button } from "../../ui/primitives";
+import type { EditorProps } from "../../../office-editor-components/types";
+import { Accordion } from "../../../office-editor-components/layout";
+import { Button } from "../../../office-editor-components/primitives";
 import { DiagramPointEditor, createDefaultDiagramPoint } from "./DiagramPointEditor";
 import { DiagramConnectionEditor, createDefaultDiagramConnection } from "./DiagramConnectionEditor";
 

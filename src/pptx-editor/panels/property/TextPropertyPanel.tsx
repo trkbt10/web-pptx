@@ -7,7 +7,7 @@
  */
 
 import { useMemo, type CSSProperties } from "react";
-import { Accordion } from "../../ui/layout/Accordion";
+import { Accordion } from "../../../office-editor-components/layout";
 import { MixedRunPropertiesEditor } from "../../editors/text/MixedRunPropertiesEditor";
 import { MixedParagraphPropertiesEditor } from "../../editors/text/MixedParagraphPropertiesEditor";
 import { useTextEditContext } from "../../context/slide/TextEditContext";

@@ -9,11 +9,11 @@
 import { useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
 import type { SolidFill } from "../../../ooxml/domain/fill";
 import { pct } from "../../../ooxml/domain/units";
-import { Popover } from "../primitives/Popover";
+import { Popover } from "../../../office-editor-components/primitives";
 import { LabeledSlider } from "../common";
 import { FillPreview } from "./FillPreview";
 import { HexColorEditor } from "./components";
-import { colorTokens, radiusTokens, spacingTokens } from "../design-tokens";
+import { colorTokens, radiusTokens, spacingTokens } from "../../../office-editor-components/design-tokens";
 
 export type ColorPickerPopoverProps = {
   /** Hex color value (6 characters, no #) */

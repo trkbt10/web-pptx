@@ -5,7 +5,7 @@
  */
 
 import type { CSSProperties } from "react";
-import { colorTokens, radiusTokens, fontTokens, iconTokens } from "../ui/design-tokens/index";
+import { colorTokens, radiusTokens, fontTokens, iconTokens } from "../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Icon size

@@ -10,8 +10,8 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { Input, Select, Toggle } from "../../ui/primitives";
-import { Accordion, FieldGroup, FieldRow } from "../../ui/layout";
+import { Input, Select, Toggle } from "../../../office-editor-components/primitives";
+import { Accordion, FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { PercentEditor } from "../primitives";
 import { TextBodyEditor, createDefaultTextBody } from "../text";
 import { ChartShapePropertiesEditor } from "./ChartShapePropertiesEditor";
@@ -34,7 +34,7 @@ import type {
   DisplayUnits,
 } from "../../../pptx/domain/chart";
 import type { TextBody } from "../../../pptx/domain/text";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 
 export type AxisEditorProps = EditorProps<Axis> & {
   readonly style?: CSSProperties;

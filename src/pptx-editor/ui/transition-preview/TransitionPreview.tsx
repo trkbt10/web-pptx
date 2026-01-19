@@ -11,7 +11,7 @@ import {
   applyBrowserEffect,
   type BrowserEffectType,
 } from "../../../pptx/render/animation/browser-effects";
-import { colorTokens } from "../design-tokens";
+import { colorTokens } from "../../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Types

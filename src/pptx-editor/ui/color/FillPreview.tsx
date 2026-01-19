@@ -10,7 +10,7 @@ import type { CSSProperties } from "react";
 import type { GradientFill } from "../../../ooxml/domain/fill";
 import type { Fill } from "../../../pptx/domain/color/types";
 import { getHexFromColor, getStopHex } from "./fill/fill-utils";
-import { colorTokens } from "../design-tokens";
+import { colorTokens } from "../../../office-editor-components/design-tokens";
 
 const containerStyle: CSSProperties = {
   width: "100%",

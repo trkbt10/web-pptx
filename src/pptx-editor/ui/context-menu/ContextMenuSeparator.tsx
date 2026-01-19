@@ -4,7 +4,7 @@
  */
 
 import type { CSSProperties } from "react";
-import { colorTokens, spacingTokens } from "../design-tokens";
+import { colorTokens, spacingTokens } from "../../../office-editor-components/design-tokens";
 
 const separatorStyle: CSSProperties = {
   height: "1px",

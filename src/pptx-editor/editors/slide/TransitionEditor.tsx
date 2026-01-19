@@ -6,10 +6,10 @@
 
 import { useCallback, type CSSProperties } from "react";
 import type { SlideTransition, TransitionType } from "../../../pptx/domain/transition";
-import type { EditorProps } from "../../types";
-import { FieldGroup, FieldRow } from "../../ui/layout";
-import { Toggle, Input, SearchableSelect } from "../../ui/primitives";
-import type { SearchableSelectOption, SearchableSelectItemProps } from "../../ui/primitives/SearchableSelect";
+import type { EditorProps } from "../../../office-editor-components/types";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
+import { Toggle, Input, SearchableSelect } from "../../../office-editor-components/primitives";
+import type { SearchableSelectOption, SearchableSelectItemProps } from "../../../office-editor-components/primitives/SearchableSelect";
 import { TransitionPreview } from "../../ui/transition-preview";
 
 export type TransitionEditorProps = EditorProps<SlideTransition | undefined> & {

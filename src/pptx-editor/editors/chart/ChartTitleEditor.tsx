@@ -6,14 +6,14 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { Toggle } from "../../ui/primitives";
-import { Accordion, FieldGroup, FieldRow } from "../../ui/layout";
+import { Toggle } from "../../../office-editor-components/primitives";
+import { Accordion, FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { TextBodyEditor, createDefaultTextBody } from "../text";
 import { ChartShapePropertiesEditor } from "./ChartShapePropertiesEditor";
 import { LayoutEditor } from "./LayoutEditor";
 import type { ChartTitle, Layout, ChartShapeProperties } from "../../../pptx/domain/chart";
 import type { TextBody } from "../../../pptx/domain/text";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 export type ChartTitleEditorProps = EditorProps<ChartTitle | undefined> & {
   readonly style?: CSSProperties;

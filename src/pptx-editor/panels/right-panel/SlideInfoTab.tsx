@@ -11,7 +11,7 @@ import type { Background } from "../../../pptx/domain/slide";
 import type { SlideLayoutAttributes } from "../../../pptx/parser/slide/layout-parser";
 import type { SlideLayoutOption } from "../../../pptx/app";
 import { SlidePropertiesPanel } from "../property/SlidePropertiesPanel";
-import { InspectorSection } from "../../ui/layout";
+import { InspectorSection } from "../../../office-editor-components/layout";
 
 export type SlideInfoTabProps = {
   /** Current slide background */

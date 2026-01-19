@@ -25,7 +25,7 @@ import {
   getLineRangeForPosition,
 } from "../input-support/cursor";
 import { mergeTextIntoBody, extractDefaultRunProperties } from "../input-support/text-body-merge";
-import { colorTokens } from "../../../ui/design-tokens";
+import { colorTokens } from "../../../../office-editor-components/design-tokens";
 import { TextOverlay } from "../text-render/TextOverlay";
 import { CursorCaret } from "../text-render/CursorCaret";
 import { EMPTY_COLOR_CONTEXT } from "../input-support/color-context";

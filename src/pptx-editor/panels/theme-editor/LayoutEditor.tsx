@@ -13,10 +13,10 @@ import { loadSlideLayoutBundle } from "../../../pptx/app";
 import { parseShapeTree } from "../../../pptx/parser/shape-parser";
 import { getByPath, getChild } from "../../../xml";
 import { useLayoutThumbnails, LayoutThumbnail } from "../../thumbnail";
-import { colorTokens, fontTokens, spacingTokens, radiusTokens } from "../../ui/design-tokens";
+import { colorTokens, fontTokens, spacingTokens, radiusTokens } from "../../../office-editor-components/design-tokens";
 import { px } from "../../../ooxml/domain/units";
-import { CheckIcon, AddIcon } from "../../ui/icons";
-import { Button } from "../../ui/primitives/Button";
+import { CheckIcon, AddIcon } from "../../../office-editor-components/icons";
+import { Button } from "../../../office-editor-components/primitives/Button";
 import { usePresentationEditor } from "../../context/presentation/PresentationEditorContext";
 import { LayoutEditorCanvas } from "./LayoutEditorCanvas";
 

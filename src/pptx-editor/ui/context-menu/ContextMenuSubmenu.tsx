@@ -10,8 +10,8 @@ import type { MenuSubmenu, MenuEntry } from "./types";
 import { ContextMenuItem } from "./ContextMenuItem";
 import { ContextMenuSeparator } from "./ContextMenuSeparator";
 import { isSeparator, isSubmenu } from "./types";
-import { colorTokens, fontTokens, radiusTokens, spacingTokens, iconTokens } from "../design-tokens";
-import { ChevronRightIcon } from "../icons";
+import { colorTokens, fontTokens, radiusTokens, spacingTokens, iconTokens } from "../../../office-editor-components/design-tokens";
+import { ChevronRightIcon } from "../../../office-editor-components/icons";
 
 export type ContextMenuSubmenuProps = {
   readonly item: MenuSubmenu;

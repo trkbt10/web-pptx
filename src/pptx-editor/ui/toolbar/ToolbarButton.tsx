@@ -7,7 +7,7 @@
 
 import { type CSSProperties, type MouseEvent, useState, useCallback } from "react";
 import type { LucideIcon } from "lucide-react";
-import { colorTokens, radiusTokens, iconTokens } from "../design-tokens";
+import { colorTokens, radiusTokens, iconTokens } from "../../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Types

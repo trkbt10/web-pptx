@@ -4,7 +4,7 @@
  * Shared zoom and snapping utilities for the editor.
  */
 
-import type { SelectOption } from "../types";
+import type { SelectOption } from "../../office-editor-components/types";
 
 /**
  * Zoom mode type.

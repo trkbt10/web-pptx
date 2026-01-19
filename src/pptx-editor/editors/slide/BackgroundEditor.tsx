@@ -7,9 +7,9 @@
 import type { CSSProperties } from "react";
 import type { Background } from "../../../pptx/domain/slide";
 import type { Fill } from "../../../pptx/domain/color/types";
-import type { EditorProps } from "../../types";
-import { FieldGroup } from "../../ui/layout";
-import { Toggle } from "../../ui/primitives";
+import type { EditorProps } from "../../../office-editor-components/types";
+import { FieldGroup } from "../../../office-editor-components/layout";
+import { Toggle } from "../../../office-editor-components/primitives";
 import { FillEditor, createDefaultSolidFill } from "../color";
 
 export type BackgroundEditorProps = EditorProps<Background> & {

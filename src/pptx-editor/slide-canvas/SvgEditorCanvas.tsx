@@ -50,7 +50,7 @@ import {
   type TextEditState,
   type SelectionChangeEvent,
 } from "../slide/text-edit";
-import { colorTokens } from "../ui/design-tokens";
+import { colorTokens } from "../../office-editor-components/design-tokens";
 import { SvgRulers } from "./SvgRulers";
 import { ViewportOverlay } from "./ViewportOverlay";
 import { useSvgViewport } from "./use-svg-viewport";

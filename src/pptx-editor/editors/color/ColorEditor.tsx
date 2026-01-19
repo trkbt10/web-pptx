@@ -7,12 +7,12 @@
  */
 
 import { useCallback, useMemo, useState, type CSSProperties } from "react";
-import { Button, Select } from "../../ui/primitives";
+import { Button, Select } from "../../../office-editor-components/primitives";
 import { ColorPickerPopover } from "../../ui/color";
 import { ColorTransformEditor } from "./ColorTransformEditor";
 import { createDefaultSrgbColor } from "./ColorSpecEditor";
 import type { Color, ColorSpec, ColorTransform, SrgbColor, SchemeColor } from "../../../ooxml/domain/color";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 import type { ColorContext } from "../../../pptx/domain/color/context";
 import { resolveColor } from "../../../pptx/domain/color/resolution";
 import { useEditorConfig } from "../../context/editor/EditorConfigContext";

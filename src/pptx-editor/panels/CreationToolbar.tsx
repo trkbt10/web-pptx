@@ -9,8 +9,8 @@ import { useCallback, useState, type CSSProperties } from "react";
 import type { LucideIcon } from "lucide-react";
 import type { CreationMode } from "../context/presentation/editor/types";
 import { ToolbarButton } from "../ui/toolbar/index";
-import { Popover } from "../ui/primitives/Popover";
-import { Button } from "../ui/primitives/Button";
+import { Popover } from "../../office-editor-components/primitives/Popover";
+import { Button } from "../../office-editor-components/primitives/Button";
 import {
   SelectIcon,
   RectIcon,
@@ -26,8 +26,8 @@ import {
   ChartIcon,
   DiagramIcon,
   ChevronDownIcon,
-} from "../ui/icons/index";
-import { colorTokens, radiusTokens } from "../ui/design-tokens/index";
+} from "../../office-editor-components/icons";
+import { colorTokens, radiusTokens } from "../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Types

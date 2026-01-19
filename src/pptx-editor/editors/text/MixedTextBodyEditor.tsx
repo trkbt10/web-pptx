@@ -7,7 +7,7 @@
  */
 
 import { useMemo, type CSSProperties } from "react";
-import { Accordion } from "../../ui/layout/Accordion";
+import { Accordion } from "../../../office-editor-components/layout";
 import { MixedRunPropertiesEditor } from "./MixedRunPropertiesEditor";
 import { MixedParagraphPropertiesEditor } from "./MixedParagraphPropertiesEditor";
 import {
@@ -16,7 +16,7 @@ import {
   mergeRunProperties,
 } from "./mixed-properties";
 import type { TextBody, RunProperties, ParagraphProperties, Paragraph, TextRun } from "../../../pptx/domain/text";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 // =============================================================================
 // Types

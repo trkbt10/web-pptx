@@ -24,7 +24,7 @@ import {
   CloseIcon,
   EnterFullscreenIcon,
   ExitFullscreenIcon,
-} from "../ui/icons";
+} from "../../office-editor-components/icons";
 import "./SlideshowPlayer.css";
 
 export type SlideshowSlideContent = {

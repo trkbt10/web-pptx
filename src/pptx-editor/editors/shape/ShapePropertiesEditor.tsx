@@ -6,7 +6,7 @@
  * @see ECMA-376 Part 1, Section 20.1.2.2.35 (spPr)
  */
 
-import { Toggle } from "../../ui/primitives";
+import { Toggle } from "../../../office-editor-components/primitives";
 import { TransformEditor, createDefaultTransform } from "../primitives/TransformEditor";
 import { FillEditor, createNoFill } from "../color/FillEditor";
 import { LineEditor, createDefaultLine } from "../../ui/line";
@@ -16,7 +16,7 @@ import { Scene3dEditor, createDefaultScene3d } from "./Scene3dEditor";
 import { Shape3dEditor, createDefaultShape3d } from "./Shape3dEditor";
 import type { ShapeProperties, Geometry } from "../../../pptx/domain/shape";
 import type { Scene3d, Shape3d } from "../../../pptx/domain";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 import type { Transform, Effects } from "../../../pptx/domain/types";
 import type { Fill, Line } from "../../../pptx/domain/color/types";
 

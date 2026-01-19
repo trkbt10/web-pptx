@@ -6,7 +6,7 @@
  */
 
 import type { ResizeHandlePosition } from "../context/slide/state";
-import { colorTokens } from "../ui/design-tokens/index";
+import { colorTokens } from "../../office-editor-components/design-tokens";
 
 // =============================================================================
 // Types

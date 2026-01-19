@@ -6,14 +6,14 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { Input, Select, ToggleButton } from "../../ui/primitives";
-import { FieldGroup, FieldRow } from "../../ui/layout";
+import { Input, Select, ToggleButton } from "../../../office-editor-components/primitives";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { PointsEditor, PixelsEditor } from "../primitives";
 import { ColorEditor, createDefaultColor } from "../color";
 import type { RunProperties, UnderlineStyle, StrikeStyle } from "../../../pptx/domain/text";
 import type { TextCaps, TextTypeface } from "../../../pptx/domain/types";
 import type { Color } from "../../../ooxml/domain/color";
-import type { SelectOption } from "../../types";
+import type { SelectOption } from "../../../office-editor-components/types";
 import { pt, px, type Points } from "../../../ooxml/domain/units";
 import type { MixedRunProperties, PropertyExtraction } from "./mixed-properties";
 import { getExtractionValue, isMixed } from "./mixed-properties";

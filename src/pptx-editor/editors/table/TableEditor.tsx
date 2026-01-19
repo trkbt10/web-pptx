@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useState, type CSSProperties, type KeyboardEvent } from "react";
-import { Accordion, FieldGroup } from "../../ui/layout";
+import { Accordion, FieldGroup } from "../../../office-editor-components/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
 import { TablePropertiesEditor, createDefaultTableProperties } from "./TablePropertiesEditor";
 import { TableCellEditor, createDefaultTableCell } from "./TableCellEditor";
@@ -18,7 +18,7 @@ import type {
   TableCell,
   TableColumn,
 } from "../../../pptx/domain/table/types";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 
 export type TableEditorProps = EditorProps<Table> & {
   readonly style?: CSSProperties;

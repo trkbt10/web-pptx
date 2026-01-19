@@ -5,10 +5,10 @@
  * @see ECMA-376 Part 1, Section 20.1.5.1 (backdrop)
  */
 
-import { FieldGroup } from "../../ui/layout";
+import { FieldGroup } from "../../../office-editor-components/layout";
 import { px } from "../../../ooxml/domain/units";
 import type { Backdrop3d } from "../../../pptx/domain";
-import type { EditorProps } from "../../types";
+import type { EditorProps } from "../../../office-editor-components/types";
 import { PointEditor, createDefaultPoint } from "./PointEditor";
 
 export type Backdrop3dEditorProps = EditorProps<Backdrop3d>;

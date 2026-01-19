@@ -10,8 +10,8 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import { Input, Select, Toggle } from "../../ui/primitives";
-import { Accordion, FieldGroup, FieldRow } from "../../ui/layout";
+import { Input, Select, Toggle } from "../../../office-editor-components/primitives";
+import { Accordion, FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { PercentEditor, DegreesEditor } from "../primitives";
 import { DataLabelsEditor, createDefaultDataLabels } from "./DataLabelsEditor";
 import { ChartShapePropertiesEditor } from "./ChartShapePropertiesEditor";
@@ -40,7 +40,7 @@ import type {
   SeriesText,
   BandFormat,
 } from "../../../pptx/domain/chart";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 
 export type ChartSeriesEditorProps = EditorProps<ChartSeries> & {
   readonly style?: CSSProperties;

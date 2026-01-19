@@ -5,11 +5,11 @@
  */
 
 import { useMemo, type CSSProperties } from "react";
-import { Button } from "../ui/primitives/Button";
-import { Select } from "../ui/primitives/Select";
-import { Toggle } from "../ui/primitives/Toggle";
-import { Popover } from "../ui/primitives/Popover";
-import { AddIcon, LineIcon, SettingsIcon } from "../ui/icons";
+import { Button } from "../../office-editor-components/primitives/Button";
+import { Select } from "../../office-editor-components/primitives/Select";
+import { Toggle } from "../../office-editor-components/primitives/Toggle";
+import { Popover } from "../../office-editor-components/primitives/Popover";
+import { AddIcon, LineIcon, SettingsIcon } from "../../office-editor-components/icons";
 import {
   getClosestZoomIndex,
   getNextZoomValue,

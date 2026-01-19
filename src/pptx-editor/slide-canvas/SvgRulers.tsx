@@ -7,7 +7,7 @@
 
 import { useMemo } from "react";
 import type { ViewportTransform, ViewportSize, SlideSize } from "../../pptx/render/svg-viewport";
-import { colorTokens, fontTokens } from "../ui/design-tokens";
+import { colorTokens, fontTokens } from "../../office-editor-components/design-tokens";
 
 export type SvgRulersProps = {
   /** Current viewport transform */

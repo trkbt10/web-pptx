@@ -13,7 +13,7 @@ import { ContextMenuItem } from "./ContextMenuItem";
 import { ContextMenuSeparator } from "./ContextMenuSeparator";
 import { ContextMenuSubmenu } from "./ContextMenuSubmenu";
 import { isSeparator, isSubmenu } from "./types";
-import { colorTokens, radiusTokens } from "../design-tokens";
+import { colorTokens, radiusTokens } from "../../../office-editor-components/design-tokens";
 
 export type ContextMenuProps = {
   /** X coordinate (client) */

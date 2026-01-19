@@ -10,8 +10,8 @@ import type { SlideSize, PresentationFile } from "../../../pptx/domain";
 import { px } from "../../../ooxml/domain/units";
 import type { SlideLayoutAttributes } from "../../../pptx/parser/slide/layout-parser";
 import type { SlideLayoutOption } from "../../../pptx/app";
-import { InspectorSection, Accordion } from "../../ui/layout";
-import { colorTokens, fontTokens, spacingTokens } from "../../ui/design-tokens";
+import { InspectorSection, Accordion } from "../../../office-editor-components/layout";
+import { colorTokens, fontTokens, spacingTokens } from "../../../office-editor-components/design-tokens";
 import { LayoutThumbnail, useLayoutThumbnails, type LayoutThumbnailData } from "../../thumbnail";
 
 export type LayoutInfoPanelProps = {

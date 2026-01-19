@@ -15,7 +15,7 @@ import type {
   CSSProperties,
 } from "react";
 import type { TextEditBounds } from "../input-support/state";
-import { colorTokens } from "../../../ui/design-tokens";
+import { colorTokens } from "../../../../office-editor-components/design-tokens";
 
 export type TextEditInputFrameProps = {
   readonly bounds: TextEditBounds;

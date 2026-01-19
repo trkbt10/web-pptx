@@ -5,11 +5,11 @@
  * @see ECMA-376 Part 1, Section 20.1.5.3 (lightRig)
  */
 
-import { Select, Toggle } from "../../ui/primitives";
-import { FieldGroup, FieldRow } from "../../ui/layout";
+import { Select, Toggle } from "../../../office-editor-components/primitives";
+import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { Rotation3dEditor, createDefaultRotation3d } from "./Rotation3dEditor";
 import type { LightRigType, LightRigDirection, LightRig } from "../../../pptx/domain";
-import type { EditorProps, SelectOption } from "../../types";
+import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 
 export type LightRigEditorProps = EditorProps<LightRig>;
 
