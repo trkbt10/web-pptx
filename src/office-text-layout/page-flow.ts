@@ -22,6 +22,7 @@ import type {
   FloatingImageConfig,
   PositionedFloatingImage,
 } from "./types";
+import { isVertical } from "./writing-mode";
 
 // =============================================================================
 // Types
@@ -173,6 +174,151 @@ function adjustParagraphPosition(
   return {
     ...paragraph,
     lines: paragraph.lines.map((line) => adjustLinePosition(line, xOffset, yOffset)),
+  };
+}
+
+// =============================================================================
+// Vertical Text Coordinate Transformation (ECMA-376 Section 17.18.93)
+// =============================================================================
+
+/**
+ * Transform a line's coordinates from logical (horizontal) to physical (vertical-rl).
+ *
+ * ECMA-376-1:2016 Section 17.18.93 defines tbRl (top-to-bottom, right-to-left):
+ * - Inline direction: top to bottom (text flows downward)
+ * - Block direction: right to left (columns flow from right edge)
+ *
+ * Logical coordinates (horizontal layout):
+ * - x = inline position (left to right, includes marginLeft)
+ * - y = block position (baseline Y, includes marginTop)
+ * - width = inline extent (text width)
+ * - height = block extent (line height)
+ *
+ * Physical coordinates (vertical-rl layout):
+ * - x = block position (right to left from page right edge)
+ * - y = inline position (top to bottom)
+ * - width = block extent (column width = line height)
+ * - height = inline extent (column height = text width)
+ *
+ * @param line - Line with logical coordinates
+ * @param config - Page configuration
+ * @returns Line with physical coordinates for vertical-rl rendering
+ */
+function transformLineToVerticalRl(
+  line: LayoutLine,
+  config: PageFlowConfig,
+): LayoutLine {
+  const marginLeft = config.marginLeft as number;
+  const marginRight = config.marginRight as number;
+  const marginTop = config.marginTop as number;
+  const pageWidth = config.pageWidth as number;
+
+  const logicalX = line.x as number;
+  const logicalY = line.y as number;
+  const logicalWidth = line.width as number;
+  const logicalHeight = line.height as number;
+
+  // Block offset from content start (how far down the column is from the first column)
+  const blockOffset = logicalY - marginTop;
+
+  // Physical X: columns flow right-to-left
+  // First column starts at right edge of content area
+  // X is the LEFT edge of the column box
+  const physicalX = pageWidth - marginRight - blockOffset - logicalHeight;
+
+  // Physical Y: inline position becomes vertical position
+  // marginTop becomes the inline start
+  const physicalY = marginTop + (logicalX - marginLeft);
+
+  return {
+    ...line,
+    x: px(physicalX),
+    y: px(physicalY),
+    width: px(logicalHeight),  // Block extent becomes width
+    height: px(logicalWidth),  // Inline extent becomes height
+  };
+}
+
+/**
+ * Transform a line's coordinates from logical (horizontal) to physical (vertical-lr).
+ *
+ * ECMA-376-1:2016 Section 17.18.93 defines tbLrV (top-to-bottom, left-to-right):
+ * - Inline direction: top to bottom
+ * - Block direction: left to right (columns flow from left edge)
+ */
+function transformLineToVerticalLr(
+  line: LayoutLine,
+  config: PageFlowConfig,
+): LayoutLine {
+  const marginLeft = config.marginLeft as number;
+  const marginTop = config.marginTop as number;
+
+  const logicalX = line.x as number;
+  const logicalY = line.y as number;
+  const logicalWidth = line.width as number;
+  const logicalHeight = line.height as number;
+
+  // Block offset from content start
+  const blockOffset = logicalY - marginTop;
+
+  // Physical X: columns flow left-to-right from left margin
+  const physicalX = marginLeft + blockOffset;
+
+  // Physical Y: inline position becomes vertical position
+  const physicalY = marginTop + (logicalX - marginLeft);
+
+  return {
+    ...line,
+    x: px(physicalX),
+    y: px(physicalY),
+    width: px(logicalHeight),
+    height: px(logicalWidth),
+  };
+}
+
+/**
+ * Transform a paragraph's coordinates for vertical writing mode.
+ */
+function transformParagraphForVertical(
+  paragraph: LayoutParagraphResult,
+  writingMode: WritingMode,
+  config: PageFlowConfig,
+): LayoutParagraphResult {
+  if (writingMode === "horizontal-tb") {
+    return paragraph;
+  }
+
+  const transformLine = writingMode === "vertical-rl"
+    ? (line: LayoutLine) => transformLineToVerticalRl(line, config)
+    : (line: LayoutLine) => transformLineToVerticalLr(line, config);
+
+  return {
+    ...paragraph,
+    lines: paragraph.lines.map(transformLine),
+  };
+}
+
+/**
+ * Transform page dimensions for vertical writing mode.
+ * In vertical mode, logical width/height are swapped for physical display.
+ */
+function transformPageForVertical(
+  page: PageLayout,
+  writingMode: WritingMode,
+  config: PageFlowConfig,
+): PageLayout {
+  if (writingMode === "horizontal-tb") {
+    return page;
+  }
+
+  return {
+    ...page,
+    // Swap page dimensions for vertical layout
+    width: config.pageHeight,
+    height: config.pageWidth,
+    paragraphs: page.paragraphs.map((para) =>
+      transformParagraphForVertical(para, writingMode, config)
+    ),
   };
 }
 
@@ -879,11 +1025,15 @@ export function flowIntoPages(input: PageFlowInput): PagedLayoutResult {
 
   // Position floating images on pages
   const floatingImages = input.floatingImages ?? [];
+  const writingMode = config.writingMode ?? "horizontal-tb";
+
+  // Get pages with floating images if present
+  let finalPages: PageLayout[] = state.pages;
   if (floatingImages.length > 0) {
     const imagesByPage = positionFloatingImages(floatingImages, state.pages, config);
 
     // Add floating images to each page
-    const pagesWithImages: PageLayout[] = state.pages.map((page, pageIndex) => {
+    finalPages = state.pages.map((page, pageIndex) => {
       const pageImages = imagesByPage.get(pageIndex);
       if (pageImages === undefined) {
         return page;
@@ -894,18 +1044,19 @@ export function flowIntoPages(input: PageFlowInput): PagedLayoutResult {
         floatingImagesFront: pageImages.front.length > 0 ? pageImages.front : undefined,
       };
     });
+  }
 
-    return {
-      pages: pagesWithImages,
-      totalHeight: px(state.totalHeight),
-      writingMode: config.writingMode ?? "horizontal-tb",
-    };
+  // Transform pages for vertical writing mode (ECMA-376 Section 17.18.93)
+  if (isVertical(writingMode)) {
+    finalPages = finalPages.map((page) =>
+      transformPageForVertical(page, writingMode, config)
+    );
   }
 
   return {
-    pages: state.pages,
+    pages: finalPages,
     totalHeight: px(state.totalHeight),
-    writingMode: config.writingMode ?? "horizontal-tb",
+    writingMode,
   };
 }
 
@@ -920,14 +1071,37 @@ export function flowIntoPages(input: PageFlowInput): PagedLayoutResult {
  * @param paragraphs - Paragraphs to include
  * @param pageWidth - Page width in pixels
  * @param totalHeight - Total height in pixels
- * @param writingMode - Optional writing mode (defaults to horizontal-tb)
+ * @param config - Optional page config for vertical text transformation
  */
 export function createSinglePageLayout(
   paragraphs: readonly LayoutParagraphResult[],
   pageWidth: Pixels,
   totalHeight: Pixels,
-  writingMode?: WritingMode,
+  config?: PageFlowConfig,
 ): PagedLayoutResult {
+  const writingMode = config?.writingMode ?? "horizontal-tb";
+
+  // For vertical mode, transform coordinates and swap dimensions
+  if (isVertical(writingMode) && config !== undefined) {
+    const transformedParagraphs = paragraphs.map((para) =>
+      transformParagraphForVertical(para, writingMode, config)
+    );
+
+    return {
+      pages: [
+        {
+          pageIndex: 0,
+          y: px(0),
+          height: pageWidth,  // Swap: logical width becomes physical height
+          width: totalHeight as Pixels,  // Swap: logical height becomes physical width
+          paragraphs: [...transformedParagraphs],
+        },
+      ],
+      totalHeight: pageWidth,  // Physical height is the logical width
+      writingMode,
+    };
+  }
+
   return {
     pages: [
       {
@@ -939,7 +1113,7 @@ export function createSinglePageLayout(
       },
     ],
     totalHeight,
-    writingMode: writingMode ?? "horizontal-tb",
+    writingMode,
   };
 }
 

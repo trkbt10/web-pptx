@@ -343,17 +343,20 @@ function lineToCoordinates(
   const fontSizePx = (fontSize as number) * PT_TO_PX;
 
   if (isVertical(writingMode)) {
-    // Vertical text: inline direction is Y, block direction is X
-    // The "x" in layout coords represents inline position (vertical position)
-    // The "y" in layout coords represents block position (horizontal position)
-    const inlinePos = getXPositionInLine(line, offsetInLine);
-    const lineX = (line.y as number) + pageYOffset; // Block position becomes X
-    const lineY = (line.x as number); // Inline position becomes Y
+    // Vertical text: coordinates already transformed by page-flow
+    // line.x = physical column X position
+    // line.y = physical inline Y position
+    // getXPositionInLine returns absolute position starting from line.x
+    // We need the relative inline offset for vertical Y calculation
+    const inlineAbsPos = getXPositionInLine(line, offsetInLine);
+    const lineX = line.x as number;
+    const inlineOffset = inlineAbsPos - lineX; // Convert to relative offset
+    const lineY = (line.y as number) + pageYOffset + inlineOffset;
 
     return {
       x: px(lineX),
-      y: px(lineY + inlinePos),
-      height: px(fontSizePx), // For vertical, cursor "height" is font width
+      y: px(lineY),
+      height: px(fontSizePx), // Column width (for horizontal cursor line)
     };
   }
 
@@ -397,10 +400,13 @@ function calculateLineDistance(
   const fontSizePx = (fontSize as number) * PT_TO_PX;
 
   if (isVertical(writingMode)) {
-    // Vertical text: block direction is X, line position stored in line.y
-    const lineX = (line.y as number) + pageYOffset;
+    // Vertical text: block direction is X
+    // After page-flow transformation: line.x = physical column X position
+    // line.width = column width (fontSizePx after transformation)
+    const lineX = line.x as number;
+    const columnWidth = line.width as number;
     const lineStart = lineX;
-    const lineEnd = lineX + fontSizePx;
+    const lineEnd = lineX + columnWidth;
 
     if (blockCoord < lineStart) {
       return lineStart - blockCoord;
@@ -505,23 +511,50 @@ export function coordinatesToCursorPosition(
 /**
  * Create a selection rect for a line segment.
  * Uses the maximum font in the line for consistent selection height.
+ *
+ * For vertical mode:
+ * - line.x = column X position (physical)
+ * - line.y = inline Y position (physical)
+ * - Selection rect extends vertically (inline direction)
  */
 function createLineSelectionRect(
   line: LayoutLine,
   selStart: number,
   selEnd: number,
   pageYOffset: number,
+  writingMode: WritingMode = "horizontal-tb",
 ): SelectionRect {
-  const startX = getXPositionInLine(line, selStart);
-  const endX = getXPositionInLine(line, selEnd);
+  const startInline = getXPositionInLine(line, selStart);
+  const endInline = getXPositionInLine(line, selEnd);
   const { fontSize, fontFamily } = getLineMaxFontInfo(line.spans);
+  const fontSizePx = (fontSize as number) * PT_TO_PX;
+
+  if (isVertical(writingMode)) {
+    // Vertical text: selection extends along Y axis (inline direction)
+    // line.x is the column X position, line.y is the inline start
+    // startInline/endInline are absolute positions starting from line.x
+    // Convert to relative offsets for vertical Y calculation
+    const lineX = line.x as number;
+    const lineY = (line.y as number) + pageYOffset;
+    const startOffset = startInline - lineX;
+    const endOffset = endInline - lineX;
+
+    return {
+      x: px(lineX),
+      y: px(lineY + startOffset),
+      width: px(fontSizePx),  // Column width
+      height: px(endOffset - startOffset),  // Inline extent
+    };
+  }
+
+  // Horizontal text: selection extends along X axis
   const lineY = (line.y as number) + pageYOffset;
   const bounds = getTextVisualBounds(lineY, fontSize as number, fontFamily);
 
   return {
-    x: px(startX),
+    x: px(startInline),
     y: px(bounds.topY),
-    width: px(endX - startX),
+    width: px(endInline - startInline),
     height: px(bounds.height),
   };
 }
@@ -534,6 +567,7 @@ function getParagraphSelectionRects(
   pageYOffset: number,
   paraStartOffset: number,
   paraEndOffset: number,
+  writingMode: WritingMode = "horizontal-tb",
 ): readonly SelectionRect[] {
   type LineAccumulator = {
     readonly lineStartOffset: number;
@@ -549,7 +583,7 @@ function getParagraphSelectionRects(
       if (paraStartOffset < lineEndOffset && paraEndOffset > acc.lineStartOffset) {
         const selStart = Math.max(paraStartOffset - acc.lineStartOffset, 0);
         const selEnd = Math.min(paraEndOffset - acc.lineStartOffset, lineLength);
-        const rect = createLineSelectionRect(line, selStart, selEnd, pageYOffset);
+        const rect = createLineSelectionRect(line, selStart, selEnd, pageYOffset, writingMode);
         return {
           lineStartOffset: lineEndOffset,
           rects: [...acc.rects, rect],
@@ -575,6 +609,7 @@ export function selectionToRects(
 ): readonly SelectionRect[] {
   const flatParagraphs = buildFlatParagraphList(pagedLayout);
   const [normalizedStart, normalizedEnd] = normalizeSelection(startPos, endPos);
+  const writingMode = pagedLayout.writingMode ?? "horizontal-tb";
 
   // Generate paragraph indices in range
   const paragraphIndices = Array.from(
@@ -589,7 +624,7 @@ export function selectionToRects(
     const paraStartOffset = pIdx === normalizedStart.paragraphIndex ? normalizedStart.charOffset : 0;
     const paraEndOffset = pIdx === normalizedEnd.paragraphIndex ? normalizedEnd.charOffset : paraLength;
 
-    return getParagraphSelectionRects(paragraph, pageYOffset, paraStartOffset, paraEndOffset);
+    return getParagraphSelectionRects(paragraph, pageYOffset, paraStartOffset, paraEndOffset, writingMode);
   });
 }
 

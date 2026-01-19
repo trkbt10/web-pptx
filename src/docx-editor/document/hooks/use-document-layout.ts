@@ -174,8 +174,8 @@ export function useDocumentLayout({
   // Compute paged layout
   const pagedLayout = useMemo(() => {
     if (mode === "continuous") {
-      // Single page mode - no pagination
-      return createSinglePageLayout(layoutedParagraphs, contentWidth, totalHeight);
+      // Single page mode - no pagination, pass config for vertical mode support
+      return createSinglePageLayout(layoutedParagraphs, contentWidth, totalHeight, pageConfig);
     }
 
     // Paged mode - split into pages with page break hints and floating images

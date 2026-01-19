@@ -11,6 +11,7 @@
 import type { ReactNode, CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useState, useCallback, useRef, useEffect } from "react";
 import type { DocxParagraph } from "../../docx/domain/paragraph";
+import type { DocxSectionProperties } from "../../docx/domain/section";
 import type { DocxNumbering } from "../../docx/domain/numbering";
 import type { Pixels } from "../../ooxml/domain/units";
 import { px } from "../../ooxml/domain/units";
@@ -44,11 +45,13 @@ import { syncParagraphsWithPlainText } from "./text-merge/paragraph-sync";
 export type ContinuousEditorProps = {
   /** Document paragraphs */
   readonly paragraphs: readonly DocxParagraph[];
+  /** Section properties (for page config and text direction) */
+  readonly sectPr?: DocxSectionProperties;
   /** Numbering definitions (for list rendering) */
   readonly numbering?: DocxNumbering;
   /** Content width in pixels */
   readonly contentWidth?: Pixels;
-  /** Page configuration */
+  /** Page configuration (overrides sectPr if provided) */
   readonly pageConfig?: PageFlowConfig;
   /** Whether the editor is read-only */
   readonly readOnly?: boolean;
@@ -153,9 +156,10 @@ function computeSelectionRects(
  */
 export function ContinuousEditor({
   paragraphs,
+  sectPr,
   numbering,
-  contentWidth = px(602),
-  pageConfig = DEFAULT_PAGE_FLOW_CONFIG,
+  contentWidth,
+  pageConfig,
   readOnly = false,
   onTextChange,
   onSelectionChange,
@@ -199,6 +203,7 @@ export function ContinuousEditor({
     contentWidth,
     mode: "paged",
     pageConfig,
+    sectPr,
     numbering,
   });
 

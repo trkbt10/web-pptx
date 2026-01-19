@@ -15,10 +15,12 @@ import type {
   FontAlignment,
   SelectionRect,
   CursorCoordinates,
+  WritingMode,
 } from "../types";
 import { PT_TO_PX } from "../measurer";
 import { getAscenderRatio } from "../../text/font-metrics";
 import { colorTokens } from "../../office-editor-components/design-tokens";
+import { isVertical } from "../writing-mode";
 
 // =============================================================================
 // Utility Functions
@@ -187,6 +189,11 @@ function renderInlineImage(
 
 /**
  * Render a single text span with all its styling.
+ *
+ * For vertical text (ECMA-376 tbRl/tbLrV):
+ * - Coordinates are already transformed by page-flow
+ * - Apply CSS writing-mode for proper character orientation
+ * - CJK characters remain upright, Latin characters rotate
  */
 function renderSpan(
   span: PositionedSpan,
@@ -194,6 +201,7 @@ function renderSpan(
   lineY: number,
   dominantBaseline: string | undefined,
   key: string,
+  writingMode: WritingMode = "horizontal-tb",
 ): ReactNode {
   // Handle inline images
   if (span.inlineImage !== undefined) {
@@ -201,30 +209,42 @@ function renderSpan(
   }
 
   const fontSizePx = fontSizeToPixels(span.fontSize);
-  const bounds = getTextVisualBounds(lineY as Pixels, span.fontSize, span.fontFamily);
+  const isVerticalMode = isVertical(writingMode);
   const elements: ReactNode[] = [];
 
   // Handle highlight background
   if (span.highlightColor !== undefined) {
-    elements.push(
-      <rect
-        key={`hl-${key}`}
-        x={x}
-        y={bounds.topY as number}
-        width={span.width as number}
-        height={fontSizePx as number}
-        fill={span.highlightColor}
-      />,
-    );
+    if (isVerticalMode) {
+      // Vertical mode: highlight extends horizontally (column width) and vertically (text extent)
+      elements.push(
+        <rect
+          key={`hl-${key}`}
+          x={x}
+          y={lineY}
+          width={fontSizePx as number}
+          height={span.width as number}
+          fill={span.highlightColor}
+        />,
+      );
+    } else {
+      const bounds = getTextVisualBounds(lineY as Pixels, span.fontSize, span.fontFamily);
+      elements.push(
+        <rect
+          key={`hl-${key}`}
+          x={x}
+          y={bounds.topY as number}
+          width={span.width as number}
+          height={fontSizePx as number}
+          fill={span.highlightColor}
+        />,
+      );
+    }
   }
 
   // Build text props
   const textProps: Record<string, string | number | undefined> = {
-    x,
-    y: applyVerticalAlign(lineY, fontSizePx as number, span.verticalAlign),
     fontSize: `${fontSizePx as number}px`,
     fontFamily: buildFontFamily(span),
-    dominantBaseline,
     xmlSpace: "preserve",
   };
 
@@ -280,15 +300,39 @@ function renderSpan(
     }
   }
 
-  // Build the text element with optional hyperlink styling
-  const textElement = isHyperlink ? (
-    <text key={`text-${key}`} {...textProps} style={{ cursor: "pointer" }}>
+  // Build style object
+  let textStyle: CSSProperties = {};
+  if (isHyperlink) {
+    textStyle.cursor = "pointer";
+  }
+
+  // For vertical mode, apply CSS writing-mode and text-orientation
+  if (isVerticalMode) {
+    textStyle = {
+      ...textStyle,
+      writingMode: writingMode === "vertical-rl" ? "vertical-rl" : "vertical-lr",
+      textOrientation: "mixed",
+    };
+    // Position for vertical text: x is the right edge of the column
+    textProps.x = x + (fontSizePx as number);
+    textProps.y = lineY;
+    textProps.dominantBaseline = "text-before-edge";
+  } else {
+    textProps.x = x;
+    textProps.y = applyVerticalAlign(lineY, fontSizePx as number, span.verticalAlign);
+    textProps.dominantBaseline = dominantBaseline;
+  }
+
+  const hasStyle = Object.keys(textStyle).length > 0;
+  const textElement = hasStyle ? (
+    <text key={`text-${key}`} {...textProps} style={textStyle}>
       {textContent}
-      {span.linkTooltip !== undefined && <title>{span.linkTooltip}</title>}
+      {isHyperlink && span.linkTooltip !== undefined && <title>{span.linkTooltip}</title>}
     </text>
   ) : (
     <text key={`text-${key}`} {...textProps}>
       {textContent}
+      {isHyperlink && span.linkTooltip !== undefined && <title>{span.linkTooltip}</title>}
     </text>
   );
 
@@ -303,27 +347,55 @@ function renderSpan(
 
 /**
  * Render a line of text with all its spans.
+ *
+ * For vertical mode:
+ * - line.x = column X position (left edge of column)
+ * - line.y = inline start Y position
+ * - Spans advance along Y axis (inline direction)
  */
 function renderLine(
   line: LayoutLine,
   fontAlignment: FontAlignment,
   paragraphIndex: number,
   lineIndex: number,
+  writingMode: WritingMode = "horizontal-tb",
 ): ReactNode[] {
   const elements: ReactNode[] = [];
-  let cursorX = line.x as number;
   const dominantBaseline = toSvgDominantBaseline(fontAlignment);
+  const isVerticalMode = isVertical(writingMode);
 
-  for (let spanIndex = 0; spanIndex < line.spans.length; spanIndex++) {
-    const span = line.spans[spanIndex];
-    if (span.text.length === 0) {
-      continue;
+  if (isVerticalMode) {
+    // Vertical mode: spans advance along Y axis
+    let cursorY = line.y as number;
+    const columnX = line.x as number;
+
+    for (let spanIndex = 0; spanIndex < line.spans.length; spanIndex++) {
+      const span = line.spans[spanIndex];
+      if (span.text.length === 0) {
+        continue;
+      }
+
+      const key = `p${paragraphIndex}-l${lineIndex}-s${spanIndex}`;
+      const element = renderSpan(span, columnX, cursorY, dominantBaseline, key, writingMode);
+      elements.push(element);
+      // In vertical mode, span.width is the inline extent (height in physical space)
+      cursorY += (span.width as number) + (span.dx as number);
     }
+  } else {
+    // Horizontal mode: spans advance along X axis
+    let cursorX = line.x as number;
 
-    const key = `p${paragraphIndex}-l${lineIndex}-s${spanIndex}`;
-    const element = renderSpan(span, cursorX, line.y as number, dominantBaseline, key);
-    elements.push(element);
-    cursorX += (span.width as number) + (span.dx as number);
+    for (let spanIndex = 0; spanIndex < line.spans.length; spanIndex++) {
+      const span = line.spans[spanIndex];
+      if (span.text.length === 0) {
+        continue;
+      }
+
+      const key = `p${paragraphIndex}-l${lineIndex}-s${spanIndex}`;
+      const element = renderSpan(span, cursorX, line.y as number, dominantBaseline, key, writingMode);
+      elements.push(element);
+      cursorX += (span.width as number) + (span.dx as number);
+    }
   }
 
   return elements;
@@ -341,9 +413,11 @@ function renderBullet(
   bulletX: number,
   bulletY: number,
   key: string,
+  writingMode: WritingMode = "horizontal-tb",
 ): ReactNode {
   const bulletFontSizePx = fontSizeToPixels(bullet.fontSize);
   const bulletBounds = getTextVisualBounds(bulletY as Pixels, bullet.fontSize, bullet.fontFamily);
+  const isVerticalMode = isVertical(writingMode);
 
   if (bullet.imageUrl !== undefined) {
     const imageSize = bulletFontSizePx as number;
@@ -352,7 +426,7 @@ function renderBullet(
         key={`bullet-${key}`}
         href={bullet.imageUrl}
         x={bulletX}
-        y={bulletBounds.topY as number}
+        y={isVerticalMode ? bulletY : bulletBounds.topY as number}
         width={imageSize}
         height={imageSize}
         preserveAspectRatio="xMidYMid meet"
@@ -360,7 +434,29 @@ function renderBullet(
     );
   }
 
-  return (
+  // For vertical mode, apply writing-mode style
+  const bulletStyle: CSSProperties = isVerticalMode
+    ? {
+        writingMode: writingMode === "vertical-rl" ? "vertical-rl" : "vertical-lr",
+        textOrientation: "mixed",
+      }
+    : {};
+  const hasStyle = Object.keys(bulletStyle).length > 0;
+
+  return hasStyle ? (
+    <text
+      key={`bullet-${key}`}
+      x={bulletX + (bulletFontSizePx as number)}
+      y={bulletY}
+      fontSize={`${bulletFontSizePx as number}px`}
+      fill={bullet.color}
+      fontFamily={bullet.fontFamily}
+      dominantBaseline="text-before-edge"
+      style={bulletStyle}
+    >
+      {bullet.char}
+    </text>
+  ) : (
     <text
       key={`bullet-${key}`}
       x={bulletX}
@@ -452,6 +548,9 @@ export type TextOverlayProps = {
 
 /**
  * Renders text from LayoutResult as SVG elements.
+ *
+ * Supports both horizontal (lrTb) and vertical (tbRl, tbLrV) writing modes
+ * as specified in ECMA-376-1:2016 Section 17.18.93.
  */
 export function TextOverlay({
   layoutResult,
@@ -460,6 +559,8 @@ export function TextOverlay({
   showCursor = true,
 }: TextOverlayProps): ReactNode {
   const elements: ReactNode[] = [];
+  const writingMode = layoutResult.writingMode;
+  const isVerticalMode = isVertical(writingMode);
 
   // Render selection first (behind text)
   if (selection !== undefined && selection.length > 0) {
@@ -475,16 +576,24 @@ export function TextOverlay({
     // Render bullet if present
     if (para.bullet !== undefined && para.lines.length > 0) {
       const firstLine = para.lines[0];
-      const bulletX = (firstLine.x as number) - (para.bulletWidth as number);
-      const bulletY = firstLine.y as number;
 
-      elements.push(renderBullet(para.bullet, bulletX, bulletY, `p${paragraphIndex}`));
+      // Bullet position depends on writing mode:
+      // - Horizontal: bullet is to the LEFT of the line (X - bulletWidth)
+      // - Vertical: bullet is ABOVE the line (Y - bulletWidth)
+      const bulletX = isVerticalMode
+        ? firstLine.x as number
+        : (firstLine.x as number) - (para.bulletWidth as number);
+      const bulletY = isVerticalMode
+        ? (firstLine.y as number) - (para.bulletWidth as number)
+        : firstLine.y as number;
+
+      elements.push(renderBullet(para.bullet, bulletX, bulletY, `p${paragraphIndex}`, writingMode));
     }
 
     // Render lines
     for (let lineIndex = 0; lineIndex < para.lines.length; lineIndex++) {
       const line = para.lines[lineIndex];
-      const lineElements = renderLine(line, para.fontAlignment, paragraphIndex, lineIndex);
+      const lineElements = renderLine(line, para.fontAlignment, paragraphIndex, lineIndex, writingMode);
       elements.push(...lineElements);
     }
   }

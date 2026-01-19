@@ -218,9 +218,9 @@ export const DocumentTextOverlay = forwardRef<SVGSVGElement, DocumentTextOverlay
         paragraphs,
         totalHeight: totalHeight as Pixels,
         yOffset: 0 as Pixels,
-        writingMode: "horizontal-tb" as const,
+        writingMode: pagedLayout.writingMode ?? "horizontal-tb",
       };
-    }, [pagedLayout.pages, pageYOffsets, totalHeight]);
+    }, [pagedLayout.pages, pageYOffsets, totalHeight, pagedLayout.writingMode]);
 
     // Adjust selection rects for combined SVG
     const adjustedSelectionRects = useMemo(() => {

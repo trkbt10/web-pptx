@@ -599,6 +599,7 @@ const documentEditorContainerStyle: CSSProperties = {
 };
 
 function DocumentEditorTest() {
+  const [isVertical, setIsVertical] = useState(false);
   const demoParagraphs = useMemo<DocxParagraph[]>(() => [
     createDemoParagraph("DOCX グラフィカルテキストエディタ", { bold: true, fontSize: 48 }),
     createDemoParagraph(""),
@@ -737,7 +738,25 @@ function DocumentEditorTest() {
     <div style={containerStyle}>
       {/* Header */}
       <div style={panelHeaderStyle}>
-        <h2 style={panelTitleStyle}>Document Editor</h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h2 style={panelTitleStyle}>Document Editor</h2>
+          <button
+            type="button"
+            onClick={() => setIsVertical((v) => !v)}
+            style={{
+              padding: "8px 16px",
+              borderRadius: "6px",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "14px",
+              fontWeight: 500,
+              backgroundColor: isVertical ? "var(--accent-blue, #0070f3)" : "var(--bg-tertiary)",
+              color: isVertical ? "white" : "var(--text-secondary)",
+            }}
+          >
+            {isVertical ? "縦書き" : "横書き"}
+          </button>
+        </div>
         <p style={descriptionStyle}>
           統一レイアウトエンジンを使用したSVGベースのテキストエディタです。
           クリックでカーソル位置を設定、矢印キーでカーソル移動ができます。
@@ -754,8 +773,8 @@ function DocumentEditorTest() {
         <ContinuousEditor
           paragraphs={demoParagraphs}
           numbering={demoNumbering}
-          contentWidth={px(602)}
           onCursorChange={handleCursorChange}
+          sectPr={isVertical ? { textDirection: "tbRl" } : undefined}
         />
       </div>
 
