@@ -9,9 +9,9 @@ import type { Presentation } from "../../pptx/domain";
 import type { PresentationDocument, SlideWithId } from "../../pptx/app/presentation-document";
 import type { Slide } from "../../pptx/domain/slide/types";
 import { openPresentation } from "../../pptx/app/open-presentation";
-import { parsePdf } from "../parser/pdf-parser";
+import { parsePdf } from "../parser/core/pdf-parser";
 import type { PdfPage } from "../domain";
-import { PdfLoadError } from "../parser/pdf-load-error";
+import { PdfLoadError } from "../parser/core/pdf-load-error";
 import {
   buildSlideFromPage,
   createPageNumberShape,

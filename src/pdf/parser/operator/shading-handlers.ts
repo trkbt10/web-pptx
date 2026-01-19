@@ -10,7 +10,7 @@
 
 import type { OperatorHandler, OperatorHandlerEntry, ParsedRasterImage } from "./types";
 import { popString } from "./stack-ops";
-import { rasterizeShadingFill } from "../shading-raster";
+import { rasterizeShadingFill } from "../shading/shading-raster";
 
 const handleShadingFill: OperatorHandler = (ctx, gfxOps) => {
   const [name, newStack] = popString(ctx.operandStack);
@@ -52,4 +52,3 @@ export const SHADING_HANDLERS: ReadonlyMap<string, OperatorHandlerEntry> = new M
 export const shadingHandlers = {
   handleShadingFill,
 } as const;
-

@@ -10,8 +10,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadNativePdfDocument } from "../../src/pdf/native";
-import { parsePdf } from "../../src/pdf/parser/pdf-parser";
-import type { PdfPath, PdfPaintOp } from "../../src/pdf/domain";
+import { isPdfPath, parsePdf, type PdfPaintOp, type PdfPath } from "../../src/pdf";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PDF_PATH = path.join(__dirname, "..", "..", "fixtures", "samples", "panel2.pdf");
@@ -45,9 +44,9 @@ describe("Shape Fill Diagnostic for panel2.pdf", () => {
     // Collect path information
     const pathElements: PdfPath[] = [];
     for (const element of page1.elements) {
-      if (element.type === "path") {
+      if (isPdfPath(element)) {
         pathElements.push(element);
-        paintOpCounts[element.paintOp]++;
+        paintOpCounts[element.paintOp] += 1;
       }
     }
 

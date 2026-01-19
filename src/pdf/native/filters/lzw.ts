@@ -2,7 +2,7 @@
  * @file src/pdf/native/filters/lzw.ts
  */
 
-import type { PdfDict, PdfObject } from "../types";
+import type { PdfDict, PdfObject } from "../core/types";
 
 type LzwDecodeOptions = Readonly<{
   /**

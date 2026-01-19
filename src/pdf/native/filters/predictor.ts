@@ -2,7 +2,7 @@
  * @file src/pdf/native/filters/predictor.ts
  */
 
-import type { PdfDict, PdfObject } from "../types";
+import type { PdfDict, PdfObject } from "../core/types";
 
 function dictGetNumber(dict: PdfDict, key: string): number | null {
   const v = dict.map.get(key);
@@ -129,4 +129,3 @@ export function applyPredictorDecodeParms(decoded: Uint8Array, decodeParms: PdfO
 
   throw new Error(`Predictor: unsupported Predictor ${predictor}`);
 }
-

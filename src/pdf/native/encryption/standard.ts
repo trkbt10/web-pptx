@@ -2,8 +2,8 @@
  * @file src/pdf/native/encryption/standard.ts
  */
 
-import type { PdfDict, PdfObject, PdfString } from "../types";
-import { decodePdfStringBytes } from "../encoding";
+import type { PdfDict, PdfObject, PdfString } from "../core/types";
+import { decodePdfStringBytes } from "../core/encoding";
 import { concatBytes, int32le, bytesEqual, objKeySalt } from "./bytes";
 import { md5 } from "./md5";
 import { rc4 } from "./rc4";

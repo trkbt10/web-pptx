@@ -4,7 +4,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parsePdf } from "../../src/pdf";
-import type { PdfParserOptions } from "../../src/pdf/parser/pdf-parser";
+import type { PdfParserOptions } from "../../src/pdf";
 
 type FixtureExpectation = Readonly<{
   readonly fileName: string;

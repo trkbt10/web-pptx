@@ -4,7 +4,7 @@
  * Browser-compatible `/JPXDecode` implementation (pure TS/JS).
  */
 
-import type { JpxDecodedImage, JpxDecodeFn } from "../jpx-decoder";
+import type { JpxDecodedImage, JpxDecodeFn } from "./jpx-decoder";
 import { extractJp2Codestream } from "./jp2";
 import { decodeJ2kCodestreamToRgb } from "./j2k";
 
@@ -28,4 +28,3 @@ export const decodeJpxNative: JpxDecodeFn = (jpxBytes, options): JpxDecodedImage
     data: decoded.data,
   };
 };
-

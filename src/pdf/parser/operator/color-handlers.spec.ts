@@ -7,8 +7,8 @@ import type { ParserContext, GraphicsStateOps } from "./types";
 import { createInitialTextState } from "./text-handlers";
 import { createDefaultGraphicsState, createGraphicsStateStack } from "../../domain";
 import { createGfxOpsFromStack } from "./parse";
-import { parseIccProfile } from "../icc-profile.native";
-import type { ParsedNamedColorSpace } from "../color-space.native";
+import { parseIccProfile } from "../color/icc-profile.native";
+import type { ParsedNamedColorSpace } from "../color/color-space.native";
 
 // Mock GraphicsStateOps for testing with tracking
 function createMockGfxOps() {

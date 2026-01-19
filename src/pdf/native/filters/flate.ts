@@ -3,7 +3,7 @@
  */
 
 import { unzlibSync } from "fflate";
-import type { PdfObject } from "../types";
+import type { PdfObject } from "../core/types";
 import { applyPredictorDecodeParms } from "./predictor";
 
 

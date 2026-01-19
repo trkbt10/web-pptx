@@ -2,7 +2,7 @@
  * @file src/pdf/native/filters/index.ts
  */
 
-import type { PdfObject } from "../types";
+import type { PdfObject } from "../core/types";
 import { decodeAscii85 } from "./ascii85";
 import { decodeAsciiHex } from "./ascii-hex";
 import { decodeFlate } from "./flate";

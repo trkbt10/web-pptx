@@ -5,7 +5,7 @@
 import { createCipheriv } from "node:crypto";
 import { createHash } from "node:crypto";
 import PDFDocument from "pdfkit";
-import { loadNativePdfDocument } from "../document";
+import { loadNativePdfDocument } from "../document/document";
 import { concatBytes, int32le, objKeySalt } from "./bytes";
 import { md5 } from "./md5";
 import { rc4 } from "./rc4";

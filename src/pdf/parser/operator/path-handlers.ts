@@ -13,7 +13,7 @@
 import type { PdfPathOp, PdfPaintOp } from "../../domain";
 import type { PdfBBox, PdfMatrix, PdfPoint, PdfSoftMask } from "../../domain";
 import { IDENTITY_MATRIX, invertMatrix, transformPoint } from "../../domain";
-import type { PdfPattern } from "../pattern.types";
+import type { PdfPattern } from "../pattern/pattern.types";
 import type {
   ParserContext,
   ParserStateUpdate,
@@ -24,9 +24,9 @@ import type {
   ParsedRasterImage,
 } from "./types";
 import { popNumber, popNumbers } from "./stack-ops";
-import { rasterizeShadingPatternFillPath } from "../pattern-fill-raster";
-import { rasterizeTilingPatternFillPath } from "../pattern-tiling-raster";
-import { rasterizeSoftMaskedFillPath } from "../soft-mask-raster.native";
+import { rasterizeShadingPatternFillPath } from "../pattern/pattern-fill-raster";
+import { rasterizeTilingPatternFillPath } from "../pattern/pattern-tiling-raster";
+import { rasterizeSoftMaskedFillPath } from "../soft-mask/soft-mask-raster.native";
 
 // =============================================================================
 // Path Construction Handlers

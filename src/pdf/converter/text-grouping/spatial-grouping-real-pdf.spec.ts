@@ -8,7 +8,7 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { parsePdf } from "../../parser/pdf-parser";
+import { parsePdf } from "../../parser/core/pdf-parser";
 import type { PdfText } from "../../domain";
 import { spatialGrouping } from "./spatial-grouping";
 import type { GroupedText } from "./types";

@@ -2,7 +2,7 @@
  * @file src/pdf/native/filters/ascii-hex.ts
  */
 
-import { isWhite } from "../scan";
+import { isWhite } from "../core/scan";
 
 function hexValue(b: number): number | null {
   if (b >= 0x30 && b <= 0x39) {return b - 0x30;}

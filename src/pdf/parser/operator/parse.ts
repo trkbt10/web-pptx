@@ -29,9 +29,9 @@ import { GRAPHICS_STATE_HANDLERS } from "./graphics-state-handlers";
 import { TEXT_HANDLERS } from "./text-handlers";
 import { XOBJECT_HANDLERS } from "./xobject-handlers";
 import { SHADING_HANDLERS } from "./shading-handlers";
-import type { PdfShading } from "../shading.types";
-import type { PdfPattern } from "../pattern.types";
-import type { ParsedNamedColorSpace } from "../color-space.native";
+import type { ParsedNamedColorSpace } from "../color/color-space.native";
+import type { PdfPattern } from "../pattern/pattern.types";
+import type { PdfShading } from "../shading/shading.types";
 
 // =============================================================================
 // Handler Registry

@@ -2,8 +2,8 @@
  * @file src/pdf/native/encryption/decrypt-object.ts
  */
 
-import type { PdfArray, PdfDict, PdfObject, PdfStream, PdfString } from "../types";
-import { decodePdfStringBytes } from "../encoding";
+import type { PdfArray, PdfDict, PdfObject, PdfStream, PdfString } from "../core/types";
+import { decodePdfStringBytes } from "../core/encoding";
 import type { PdfDecrypter } from "./standard";
 
 function getCryptFilterName(dict: PdfDict): string | null {

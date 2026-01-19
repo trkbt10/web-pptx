@@ -18,11 +18,11 @@
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { parsePdf } from "../parser/pdf-parser";
+import { parsePdf } from "../parser/core/pdf-parser";
 import type { PdfText, PdfPath, PdfImage, PdfElement } from "../domain";
 import { spatialGrouping } from "./text-grouping/spatial-grouping";
-import { extractFontMappings, extractFontInfo } from "../parser/font-decoder";
-import { computePathBBox } from "../parser/path-builder";
+import { extractFontInfo, extractFontMappings } from "../parser/font/font-decoder";
+import { computePathBBox } from "../parser/path/path-builder";
 import { px } from "../../ooxml/domain/units";
 import { convertPageToShapes } from "./pdf-to-shapes";
 import { loadNativePdfDocument } from "../native";

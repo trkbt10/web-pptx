@@ -3,7 +3,7 @@
  */
 
 import { zlibSync } from "fflate";
-import { loadNativePdfDocument } from "../document";
+import { loadNativePdfDocument } from "../document/document";
 import { concatBytes, int32le, objKeySalt } from "../encryption/bytes";
 import { md5 } from "../encryption/md5";
 import { rc4 } from "../encryption/rc4";

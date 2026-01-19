@@ -29,7 +29,7 @@ import {
   isRoundedRectangle,
   isSimpleRectangle,
 } from "./path-to-geometry";
-import type { ParsedPath } from "../parser/operator-parser";
+import type { ParsedPath } from "../parser/core/operator-parser";
 import {
   buildPath,
   buildPaths,
@@ -41,7 +41,7 @@ import {
   isDegenerate,
   isSimpleRectangle as isBuiltPathSimpleRectangle,
   mergePaths,
-} from "../parser/path-builder";
+} from "../parser/path/path-builder";
 
 const graphicsState = createDefaultGraphicsState();
 

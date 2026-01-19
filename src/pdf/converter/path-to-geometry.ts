@@ -17,7 +17,7 @@ import type { Pixels } from "../../ooxml/domain/units";
 import { px } from "../../ooxml/domain/units";
 import type { ConversionContext } from "./transform-converter";
 import { convertBBox, convertPoint } from "./transform-converter";
-import { computePathBBox } from "../parser/path-builder";
+import { computePathBBox } from "../parser/path/path-builder";
 
 type LocalConversionContext = ConversionContext & {
   readonly offsetX: number;

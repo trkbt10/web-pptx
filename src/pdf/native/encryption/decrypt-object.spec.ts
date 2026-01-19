@@ -3,7 +3,7 @@
  */
 
 import { createCipheriv } from "node:crypto";
-import type { PdfDict, PdfObject, PdfString } from "../types";
+import type { PdfDict, PdfObject, PdfString } from "../core/types";
 import { decryptPdfObject } from "./decrypt-object";
 import { createStandardDecrypter } from "./standard";
 import { concatBytes, int32le, objKeySalt } from "./bytes";

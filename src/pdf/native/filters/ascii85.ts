@@ -2,7 +2,7 @@
  * @file src/pdf/native/filters/ascii85.ts
  */
 
-import { isWhite } from "../scan";
+import { isWhite } from "../core/scan";
 
 function decodeAscii85Group(group: ReadonlyArray<number>): number {
   return group.reduce((value, digit) => (value * 85) + digit, 0);

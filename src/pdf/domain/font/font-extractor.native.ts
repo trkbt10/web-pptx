@@ -3,7 +3,7 @@
  */
 
 import type { NativePdfPage, PdfArray, PdfDict, PdfObject, PdfStream } from "../../native";
-import { decodePdfStream } from "../../native/stream";
+import { decodePdfStream } from "../../native/stream/stream";
 import { normalizeFontFamily } from "./font-name-map";
 import { repairFontForWeb } from "./font-repair";
 import { parseToUnicodeCMap } from "./cmap-parser";

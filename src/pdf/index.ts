@@ -75,8 +75,8 @@ export { PT_TO_PX, PX_TO_PT } from "./domain";
 // Parser API
 // =============================================================================
 
-export { parsePdf, getPdfPageCount, getPdfPageDimensions } from "./parser/pdf-parser";
-export type { PdfParserOptions } from "./parser/pdf-parser";
+export { parsePdf, getPdfPageCount, getPdfPageDimensions } from "./parser/core/pdf-parser";
+export type { PdfParserOptions } from "./parser/core/pdf-parser";
 
 // =============================================================================
 // Importer API

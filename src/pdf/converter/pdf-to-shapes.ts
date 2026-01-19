@@ -22,7 +22,7 @@ import {
 import { convertGraphicsStateToStyle } from "./color-converter";
 import { convertGroupedTextToShape } from "./text-to-shapes";
 import { convertImageToShape } from "./image-to-shapes";
-import { computePathBBox } from "../parser/path-builder";
+import { computePathBBox } from "../parser/path/path-builder";
 import type { BlockingZone, GroupingContext, TextGroupingFn } from "./text-grouping/types";
 import { spatialGrouping } from "./text-grouping/spatial-grouping";
 

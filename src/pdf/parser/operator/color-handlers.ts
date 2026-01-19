@@ -15,7 +15,12 @@
 import type { GraphicsStateOps, OperatorHandler, OperatorHandlerEntry, ParserContext } from "./types";
 import type { PdfColor } from "../../domain";
 import { popNumber, collectColorComponents } from "./stack-ops";
-import { evalIccCurve, evalIccLutToPcs01, makeBradfordAdaptationMatrix, type ParsedIccProfile } from "../icc-profile.native";
+import {
+  evalIccCurve,
+  evalIccLutToPcs01,
+  makeBradfordAdaptationMatrix,
+  type ParsedIccProfile,
+} from "../color/icc-profile.native";
 
 // =============================================================================
 // Gray Color Handlers

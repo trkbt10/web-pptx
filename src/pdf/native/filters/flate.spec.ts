@@ -4,7 +4,7 @@
 
 import { zlibSync } from "fflate";
 import { decodeStreamData } from "./index";
-import type { PdfDict, PdfObject } from "../types";
+import type { PdfDict, PdfObject } from "../core/types";
 
 function asDict(entries: Record<string, PdfObject>): PdfDict {
   return { type: "dict", map: new Map(Object.entries(entries)) };

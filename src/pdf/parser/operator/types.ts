@@ -21,9 +21,9 @@ import type {
   FontMappings,
   FontMetrics,
 } from "../../domain";
-import type { PdfShading } from "../shading.types";
-import type { PdfPattern } from "../pattern.types";
-import type { ParsedNamedColorSpace } from "../color-space.native";
+import type { ParsedNamedColorSpace } from "../color/color-space.native";
+import type { PdfPattern } from "../pattern/pattern.types";
+import type { PdfShading } from "../shading/shading.types";
 
 // =============================================================================
 // Parsed Element Types
