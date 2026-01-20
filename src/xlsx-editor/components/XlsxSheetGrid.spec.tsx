@@ -59,6 +59,16 @@ function SelectionDebugger() {
   return <div data-testid="activeCell">{text}</div>;
 }
 
+function RangeDebugger() {
+  const { selection } = useXlsxWorkbookEditor();
+  const range = selection.selectedRange;
+  if (!range) {
+    return <div data-testid="selectedRange">none</div>;
+  }
+  const text = `${Number(range.start.col)},${Number(range.start.row)}-${Number(range.end.col)},${Number(range.end.row)}`;
+  return <div data-testid="selectedRange">{text}</div>;
+}
+
 function CellValueDebugger() {
   const { workbook } = useXlsxWorkbookEditor();
   const sheet = workbook.sheets[0];
@@ -117,6 +127,116 @@ describe("XlsxSheetGrid", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("activeCell").textContent).toBe("1,1");
+    });
+  });
+
+  it("selects a column by clicking its header", async () => {
+    const workbook = createWorkbook();
+
+    render(
+      <XlsxWorkbookEditorProvider initialWorkbook={workbook}>
+        <div style={{ width: 320, height: 200 }}>
+          <XlsxSheetGrid
+            sheetIndex={0}
+            metrics={{
+              rowCount: 20,
+              colCount: 10,
+              rowHeightPx: 22,
+              colWidthPx: 120,
+              headerSizePx: 32,
+              overscanRows: 2,
+              overscanCols: 2,
+            }}
+          />
+        </div>
+        <RangeDebugger />
+      </XlsxWorkbookEditorProvider>,
+    );
+
+    act(() => {
+      triggerResizeObservers([createResizeObserverEntry(320, 200)]);
+    });
+
+    expect(screen.getByTestId("selectedRange").textContent).toBe("none");
+
+    act(() => {
+      fireEvent.mouseDown(screen.getByTestId("xlsx-col-header-1"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("selectedRange").textContent).toBe("1,1-1,20");
+    });
+  });
+
+  it("selects a row by clicking its header", async () => {
+    const workbook = createWorkbook();
+
+    render(
+      <XlsxWorkbookEditorProvider initialWorkbook={workbook}>
+        <div style={{ width: 320, height: 200 }}>
+          <XlsxSheetGrid
+            sheetIndex={0}
+            metrics={{
+              rowCount: 20,
+              colCount: 10,
+              rowHeightPx: 22,
+              colWidthPx: 120,
+              headerSizePx: 32,
+              overscanRows: 2,
+              overscanCols: 2,
+            }}
+          />
+        </div>
+        <RangeDebugger />
+      </XlsxWorkbookEditorProvider>,
+    );
+
+    act(() => {
+      triggerResizeObservers([createResizeObserverEntry(320, 200)]);
+    });
+
+    act(() => {
+      fireEvent.mouseDown(screen.getByTestId("xlsx-row-header-1"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("selectedRange").textContent).toBe("1,1-10,1");
+    });
+  });
+
+  it("selects all cells by clicking the corner", async () => {
+    const workbook = createWorkbook();
+
+    render(
+      <XlsxWorkbookEditorProvider initialWorkbook={workbook}>
+        <div style={{ width: 320, height: 200 }}>
+          <XlsxSheetGrid
+            sheetIndex={0}
+            metrics={{
+              rowCount: 20,
+              colCount: 10,
+              rowHeightPx: 22,
+              colWidthPx: 120,
+              headerSizePx: 32,
+              overscanRows: 2,
+              overscanCols: 2,
+            }}
+          />
+        </div>
+        <RangeDebugger />
+      </XlsxWorkbookEditorProvider>,
+    );
+
+    act(() => {
+      triggerResizeObservers([createResizeObserverEntry(320, 200)]);
+    });
+
+    act(() => {
+      fireEvent.mouseDown(screen.getByTestId("xlsx-select-all"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("selectedRange").textContent).toBe("1,1-10,20");
     });
   });
 

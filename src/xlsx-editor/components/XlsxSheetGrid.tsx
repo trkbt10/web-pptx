@@ -15,10 +15,15 @@ import {
   type MenuEntry,
 } from "../../office-editor-components";
 import type { XlsxWorksheet } from "../../xlsx/domain/workbook";
+import type { Cell } from "../../xlsx/domain/cell/types";
 import { colIdx, rowIdx, type ColIndex, type RowIndex } from "../../xlsx/domain/types";
 import { indexToColumnLetter, type CellAddress } from "../../xlsx/domain/cell/address";
 import { getCell } from "../cell/query";
 import { useXlsxWorkbookEditor } from "../context/workbook/XlsxWorkbookEditorContext";
+import { createFormulaEvaluator } from "../../xlsx/formula/evaluator";
+import { toDisplayText } from "../../xlsx/formula/types";
+import { resolveCellRenderStyle } from "../selectors/cell-render-style";
+import { buildBorderOverlayLines } from "../selectors/border-overlay";
 import {
   columnWidthCharToPixels,
   createSheetLayout,
@@ -79,9 +84,6 @@ const cellBaseStyle: CSSProperties = {
   textOverflow: "ellipsis",
   fontSize: 12,
   color: `var(--text-primary, ${colorTokens.text.primary})`,
-  backgroundColor: `var(--bg-primary, ${colorTokens.background.primary})`,
-  borderRight: `1px solid var(--border-primary, ${colorTokens.border.primary})`,
-  borderBottom: `1px solid var(--border-primary, ${colorTokens.border.primary})`,
 };
 
 const selectionOutlineStyle: CSSProperties = {
@@ -169,6 +171,29 @@ function getSelectedRangeRect(
   };
 }
 
+function clipRectToViewport(
+  rect: { left: number; top: number; width: number; height: number } | null,
+  viewportWidth: number,
+  viewportHeight: number,
+): { left: number; top: number; width: number; height: number } | null {
+  if (!rect) {
+    return null;
+  }
+
+  const left = Math.max(0, rect.left);
+  const top = Math.max(0, rect.top);
+  const right = Math.min(viewportWidth, rect.left + rect.width);
+  const bottom = Math.min(viewportHeight, rect.top + rect.height);
+
+  const width = Math.max(0, right - left);
+  const height = Math.max(0, bottom - top);
+  if (width === 0 || height === 0) {
+    return null;
+  }
+
+  return { left, top, width, height };
+}
+
 function createAddress(col: ColIndex, row: RowIndex): CellAddress {
   return {
     col,
@@ -195,16 +220,72 @@ function formatCellValue(value: XlsxWorksheet["rows"][number]["cells"][number]["
   }
 }
 
+function getCellDisplayText(
+  cell: Cell | undefined,
+  sheetIndex: number,
+  address: CellAddress,
+  formulaEvaluator: ReturnType<typeof createFormulaEvaluator>,
+): string {
+  if (!cell) {
+    return "";
+  }
+  if (cell.formula) {
+    return toDisplayText(formulaEvaluator.evaluateCell(sheetIndex, address));
+  }
+  return formatCellValue(cell.value);
+}
+
+type GridLine = { readonly pos: number; readonly key: string };
+
+function getVisibleGridLines(params: {
+  readonly rowRange: { readonly start: number; readonly end: number };
+  readonly colRange: { readonly start: number; readonly end: number };
+  readonly layout: ReturnType<typeof createSheetLayout>;
+  readonly scrollTop: number;
+  readonly scrollLeft: number;
+  readonly viewportWidth: number;
+  readonly viewportHeight: number;
+}): { readonly vertical: readonly GridLine[]; readonly horizontal: readonly GridLine[] } {
+  const { rowRange, colRange, layout, scrollTop, scrollLeft, viewportWidth, viewportHeight } = params;
+
+  const vertical: GridLine[] = [];
+  const horizontal: GridLine[] = [];
+
+  const maxColBoundary = colRange.end + 1;
+  for (let col0 = colRange.start; col0 <= maxColBoundary; col0 += 1) {
+    const x = layout.cols.getBoundaryOffsetPx(col0) - scrollLeft;
+    if (x < -1 || x > viewportWidth + 1) {
+      continue;
+    }
+    vertical.push({ pos: x, key: `v-${col0}` });
+  }
+
+  const maxRowBoundary = rowRange.end + 1;
+  for (let row0 = rowRange.start; row0 <= maxRowBoundary; row0 += 1) {
+    const y = layout.rows.getBoundaryOffsetPx(row0) - scrollTop;
+    if (y < -1 || y > viewportHeight + 1) {
+      continue;
+    }
+    horizontal.push({ pos: y, key: `h-${row0}` });
+  }
+
+  return { vertical, horizontal };
+}
+
 function XlsxSheetGridLayers({
+  sheetIndex,
   sheet,
   metrics,
   layout,
+  formulaEvaluator,
 }: {
+  readonly sheetIndex: number;
   readonly sheet: XlsxWorksheet;
   readonly metrics: XlsxGridMetrics;
   readonly layout: ReturnType<typeof createSheetLayout>;
+  readonly formulaEvaluator: ReturnType<typeof createFormulaEvaluator>;
 }) {
-  const { dispatch, selection, state, activeSheetIndex } = useXlsxWorkbookEditor();
+  const { dispatch, selection, state, activeSheetIndex, workbook } = useXlsxWorkbookEditor();
   const { scrollTop, scrollLeft, viewportWidth, viewportHeight } = useVirtualScrollContext();
   const [isMouseSelecting, setIsMouseSelecting] = useState(false);
   const [headerMenu, setHeaderMenu] = useState<HeaderMenuState | null>(null);
@@ -234,7 +315,40 @@ function XlsxSheetGridLayers({
     metrics.colCount - 1,
   );
 
-  const selectedRangeRect = getSelectedRangeRect(selection.selectedRange, layout, scrollTop, scrollLeft);
+  const selectedRangeRect = useMemo(() => {
+    const rect = getSelectedRangeRect(selection.selectedRange, layout, scrollTop, scrollLeft);
+    return clipRectToViewport(rect, gridViewportWidth, gridViewportHeight);
+  }, [gridViewportHeight, gridViewportWidth, layout, scrollLeft, scrollTop, selection.selectedRange]);
+
+  const gridLines = useMemo(() => {
+    if (sheet.sheetView?.showGridLines === false) {
+      return { vertical: [], horizontal: [] } as const;
+    }
+    return getVisibleGridLines({
+      rowRange,
+      colRange,
+      layout,
+      scrollTop,
+      scrollLeft,
+      viewportWidth: gridViewportWidth,
+      viewportHeight: gridViewportHeight,
+    });
+  }, [colRange, gridViewportHeight, gridViewportWidth, layout, rowRange, scrollLeft, scrollTop, sheet.sheetView?.showGridLines]);
+
+  const borderLines = useMemo(() => {
+    return buildBorderOverlayLines({
+      sheet,
+      styles: workbook.styles,
+      layout,
+      rowRange,
+      colRange,
+      rowCount: metrics.rowCount,
+      colCount: metrics.colCount,
+      scrollTop,
+      scrollLeft,
+      defaultBorderColor: `var(--border-primary, ${colorTokens.border.primary})`,
+    });
+  }, [colRange, layout, metrics.colCount, metrics.rowCount, rowRange, scrollLeft, scrollTop, sheet, workbook.styles]);
 
   useEffect(() => {
     if (!isMouseSelecting) {
@@ -402,7 +516,6 @@ function XlsxSheetGridLayers({
       if (headerMenu.kind === "col") {
         const col = headerMenu.colIndex;
         const colNumber = col as number;
-        const col0 = colNumber - 1;
 
         if (actionId === "insert-left") {
           dispatch({ type: "INSERT_COLUMNS", startCol: col, count: 1 });
@@ -456,7 +569,6 @@ function XlsxSheetGridLayers({
 
       const row = headerMenu.rowIndex;
       const rowNumber = row as number;
-      const row0 = rowNumber - 1;
 
       if (actionId === "insert-above") {
         dispatch({ type: "INSERT_ROWS", startRow: row, count: 1 });
@@ -537,6 +649,7 @@ function XlsxSheetGridLayers({
     <div style={layerRootStyle}>
       {/* Corner */}
       <div
+        data-testid="xlsx-select-all"
         style={{
           ...headerCellBaseStyle,
           position: "absolute",
@@ -544,6 +657,17 @@ function XlsxSheetGridLayers({
           top: 0,
           width: rowHeaderWidthPx,
           height: colHeaderHeightPx,
+        }}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          focusGridRoot(e.target);
+          dispatch({
+            type: "SELECT_RANGE",
+            range: {
+              start: createAddress(colIdx(1), rowIdx(1)),
+              end: createAddress(colIdx(metrics.colCount), rowIdx(metrics.rowCount)),
+            },
+          });
         }}
       />
 
@@ -570,6 +694,7 @@ function XlsxSheetGridLayers({
             return (
               <div
                 key={`col-${col1}`}
+                data-testid={`xlsx-col-header-${col1}`}
                 style={{
                   ...headerCellBaseStyle,
                   position: "absolute",
@@ -577,6 +702,17 @@ function XlsxSheetGridLayers({
                   top: 0,
                   width,
                   height: colHeaderHeightPx,
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  focusGridRoot(e.target);
+                  dispatch({
+                    type: "SELECT_RANGE",
+                    range: {
+                      start: createAddress(colIdx(col1), rowIdx(1)),
+                      end: createAddress(colIdx(col1), rowIdx(metrics.rowCount)),
+                    },
+                  });
                 }}
                 onContextMenu={(e) => {
                   e.preventDefault();
@@ -639,6 +775,7 @@ function XlsxSheetGridLayers({
             return (
               <div
                 key={`row-${row1}`}
+                data-testid={`xlsx-row-header-${row1}`}
                 style={{
                   ...headerCellBaseStyle,
                   position: "absolute",
@@ -646,6 +783,17 @@ function XlsxSheetGridLayers({
                   top: layout.rows.getOffsetPx(row0),
                   width: rowHeaderWidthPx,
                   height,
+                }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  focusGridRoot(e.target);
+                  dispatch({
+                    type: "SELECT_RANGE",
+                    range: {
+                      start: createAddress(colIdx(1), rowIdx(row1)),
+                      end: createAddress(colIdx(metrics.colCount), rowIdx(row1)),
+                    },
+                  });
                 }}
                 onContextMenu={(e) => {
                   e.preventDefault();
@@ -693,14 +841,45 @@ function XlsxSheetGridLayers({
           right: 0,
           bottom: 0,
           overflow: "hidden",
+          backgroundColor: `var(--bg-primary, ${colorTokens.background.primary})`,
         }}
       >
-        <div
-          style={{
-            position: "absolute",
-            transform: `translate(${-scrollLeft}px, ${-scrollTop}px)`,
-          }}
-        >
+        {sheet.sheetView?.showGridLines !== false && gridViewportWidth > 0 && gridViewportHeight > 0 && (
+          <svg
+            data-testid="xlsx-gridlines"
+            style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+            width={gridViewportWidth}
+            height={gridViewportHeight}
+            viewBox={`0 0 ${gridViewportWidth} ${gridViewportHeight}`}
+          >
+            {gridLines.vertical.map((line) => (
+              <line
+                key={line.key}
+                x1={line.pos}
+                y1={0}
+                x2={line.pos}
+                y2={gridViewportHeight}
+                stroke={`var(--border-subtle, ${colorTokens.border.subtle})`}
+                strokeWidth={1}
+                shapeRendering="crispEdges"
+              />
+            ))}
+            {gridLines.horizontal.map((line) => (
+              <line
+                key={line.key}
+                x1={0}
+                y1={line.pos}
+                x2={gridViewportWidth}
+                y2={line.pos}
+                stroke={`var(--border-subtle, ${colorTokens.border.subtle})`}
+                strokeWidth={1}
+                shapeRendering="crispEdges"
+              />
+            ))}
+          </svg>
+        )}
+
+        <div style={{ position: "absolute", transform: `translate(${-scrollLeft}px, ${-scrollTop}px)` }}>
           {Array.from({ length: rowRange.end - rowRange.start + 1 }).map((_, r) => {
             const row0 = rowRange.start + r;
             const row1 = row0 + 1;
@@ -715,7 +894,13 @@ function XlsxSheetGridLayers({
               const colIndex = colIdx(col1);
               const address = createAddress(colIndex, rowIndex);
               const cell = getCell(sheet, address);
-              const text = cell ? formatCellValue(cell.value) : "";
+              const text = getCellDisplayText(cell, sheetIndex, address, formulaEvaluator);
+              const cellRenderStyle = resolveCellRenderStyle({
+                styles: workbook.styles,
+                sheet,
+                address,
+                cell,
+              });
               const width = layout.cols.getSizePx(col0);
               if (width <= 0) {
                 return null;
@@ -725,6 +910,7 @@ function XlsxSheetGridLayers({
                   key={`cell-${col1}-${row1}`}
                   style={{
                     ...cellBaseStyle,
+                    ...cellRenderStyle,
                     position: "absolute",
                     left: layout.cols.getOffsetPx(col0),
                     top: layout.rows.getOffsetPx(row0),
@@ -760,6 +946,31 @@ function XlsxSheetGridLayers({
             });
           })}
         </div>
+
+        {borderLines.length > 0 && gridViewportWidth > 0 && gridViewportHeight > 0 && (
+          <svg
+            data-testid="xlsx-borders"
+            style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
+            width={gridViewportWidth}
+            height={gridViewportHeight}
+            viewBox={`0 0 ${gridViewportWidth} ${gridViewportHeight}`}
+          >
+            {borderLines.map((line) => (
+              <line
+                key={line.key}
+                x1={line.x1}
+                y1={line.y1}
+                x2={line.x2}
+                y2={line.y2}
+                stroke={line.stroke}
+                strokeWidth={line.strokeWidth}
+                strokeDasharray={line.strokeDasharray}
+                shapeRendering="crispEdges"
+                strokeLinecap="square"
+              />
+            ))}
+          </svg>
+        )}
 
         {selectedRangeRect && (
           <div
@@ -869,6 +1080,8 @@ export function XlsxSheetGrid({
       defaultColWidthPx: metrics.colWidthPx,
     });
   }, [metrics.colCount, metrics.colWidthPx, metrics.rowCount, metrics.rowHeightPx, sheet]);
+
+  const formulaEvaluator = useMemo(() => createFormulaEvaluator(workbook), [workbook]);
 
   const contentWidth = rowHeaderWidthPx + layout.totalColsWidthPx;
   const contentHeight = colHeaderHeightPx + layout.totalRowsHeightPx;
@@ -988,7 +1201,13 @@ export function XlsxSheetGrid({
           }
         }}
       >
-        <XlsxSheetGridLayers sheet={sheet} metrics={metrics} layout={layout} />
+        <XlsxSheetGridLayers
+          sheetIndex={sheetIndex}
+          sheet={sheet}
+          metrics={metrics}
+          layout={layout}
+          formulaEvaluator={formulaEvaluator}
+        />
       </VirtualScroll>
     </div>
   );

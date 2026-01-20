@@ -6,7 +6,7 @@ import { useCallback, useMemo, useState, type CSSProperties } from "react";
 import { XlsxWorkbookEditor } from "@lib/xlsx-editor";
 import type { XlsxWorkbook } from "@lib/xlsx/domain/workbook";
 import { createDefaultStyleSheet } from "@lib/xlsx/domain/style/types";
-import { colIdx, rowIdx, type ColIndex, type RowIndex } from "@lib/xlsx/domain/types";
+import { borderId, colIdx, fillId, fontId, numFmtId, rowIdx, styleId, type ColIndex, type RowIndex } from "@lib/xlsx/domain/types";
 import type { CellAddress } from "@lib/xlsx/domain/cell/address";
 import { Button, Input } from "@lib/office-editor-components/primitives";
 import { parseXlsxWorkbook } from "@lib/xlsx/parser";
@@ -83,26 +83,76 @@ function createAddress(col: ColIndex, row: RowIndex): CellAddress {
 }
 
 function createTestWorkbook(): XlsxWorkbook {
+  const styles = createDefaultStyleSheet();
+
+  const redBoldFontIndex = styles.fonts.length;
+  const yellowFillIndex = styles.fills.length;
+  const thinBorderIndex = styles.borders.length;
+
+  const cellXfs = [
+    ...styles.cellXfs,
+    // styleId(1): yellow fill
+    { numFmtId: numFmtId(0), fontId: fontId(0), fillId: fillId(yellowFillIndex), borderId: borderId(0), applyFill: true },
+    // styleId(2): red + bold font
+    { numFmtId: numFmtId(0), fontId: fontId(redBoldFontIndex), fillId: fillId(0), borderId: borderId(0), applyFont: true },
+    // styleId(3): thin border
+    { numFmtId: numFmtId(0), fontId: fontId(0), fillId: fillId(0), borderId: borderId(thinBorderIndex), applyBorder: true },
+    // styleId(4): wrap + alignment
+    {
+      numFmtId: numFmtId(0),
+      fontId: fontId(0),
+      fillId: fillId(0),
+      borderId: borderId(0),
+      alignment: { wrapText: true, horizontal: "left", vertical: "top" },
+      applyAlignment: true,
+    },
+  ];
+
   return {
     sheets: [
       {
         name: "Sheet1",
         sheetId: 1,
         state: "visible",
+        sheetView: { showGridLines: true, showRowColHeaders: true },
         rows: [
           {
             rowNumber: rowIdx(1),
             cells: [
-              { address: createAddress(colIdx(1), rowIdx(1)), value: { type: "string", value: "Hello" } },
-              { address: createAddress(colIdx(2), rowIdx(1)), value: { type: "string", value: "World" } },
-              { address: createAddress(colIdx(3), rowIdx(1)), value: { type: "number", value: 123.45 } },
+              { address: createAddress(colIdx(1), rowIdx(1)), value: { type: "number", value: 10 }, styleId: styleId(1) },
+              { address: createAddress(colIdx(2), rowIdx(1)), value: { type: "number", value: 20 }, styleId: styleId(2) },
+              { address: createAddress(colIdx(3), rowIdx(1)), value: { type: "empty" }, formula: "A1+B1", styleId: styleId(3) },
             ],
           },
           {
             rowNumber: rowIdx(2),
             cells: [
-              { address: createAddress(colIdx(1), rowIdx(2)), value: { type: "boolean", value: true } },
-              { address: createAddress(colIdx(2), rowIdx(2)), value: { type: "error", value: "#DIV/0!" } },
+              { address: createAddress(colIdx(1), rowIdx(2)), value: { type: "number", value: 1 } },
+              { address: createAddress(colIdx(2), rowIdx(2)), value: { type: "empty" }, formula: 'IF(A2>0,"OK","NG")' },
+              { address: createAddress(colIdx(3), rowIdx(2)), value: { type: "empty" }, formula: "SUM(A1:B1)" },
+            ],
+          },
+          {
+            rowNumber: rowIdx(3),
+            cells: [
+              { address: createAddress(colIdx(1), rowIdx(3)), value: { type: "number", value: 1 } },
+              { address: createAddress(colIdx(2), rowIdx(3)), value: { type: "empty" }, formula: "SUM(A3:A4)" },
+            ],
+          },
+          {
+            rowNumber: rowIdx(4),
+            cells: [{ address: createAddress(colIdx(1), rowIdx(4)), value: { type: "number", value: 2 } }],
+          },
+          {
+            rowNumber: rowIdx(5),
+            cells: [
+              { address: createAddress(colIdx(1), rowIdx(5)), value: { type: "empty" }, formula: "Sheet2!A1+1" },
+              { address: createAddress(colIdx(2), rowIdx(5)), value: { type: "empty" }, formula: "NoSuchSheet!A1" },
+              {
+                address: createAddress(colIdx(3), rowIdx(5)),
+                value: { type: "string", value: "Long text wraps onto multiple lines if wrapText is applied." },
+                styleId: styleId(4),
+              },
             ],
           },
         ],
@@ -112,11 +162,37 @@ function createTestWorkbook(): XlsxWorkbook {
         name: "Sheet2",
         sheetId: 2,
         state: "visible",
-        rows: [],
+        sheetView: { showGridLines: true, showRowColHeaders: true },
+        rows: [
+          {
+            rowNumber: rowIdx(1),
+            cells: [{ address: createAddress(colIdx(1), rowIdx(1)), value: { type: "number", value: 41 } }],
+          },
+        ],
         xmlPath: "xl/worksheets/sheet2.xml",
       },
     ],
-    styles: createDefaultStyleSheet(),
+    styles: {
+      ...styles,
+      fonts: [
+        ...styles.fonts,
+        { name: "Calibri", size: 11, scheme: "minor", bold: true, color: { type: "rgb", value: "FFFF0000" } },
+      ],
+      fills: [
+        ...styles.fills,
+        { type: "pattern", pattern: { patternType: "solid", fgColor: { type: "rgb", value: "FFFFFF00" } } },
+      ],
+      borders: [
+        ...styles.borders,
+        {
+          left: { style: "thin", color: { type: "rgb", value: "FF000000" } },
+          right: { style: "thin", color: { type: "rgb", value: "FF000000" } },
+          top: { style: "thin", color: { type: "rgb", value: "FF000000" } },
+          bottom: { style: "thin", color: { type: "rgb", value: "FF000000" } },
+        },
+      ],
+      cellXfs,
+    },
     sharedStrings: [],
   };
 }
@@ -187,6 +263,19 @@ export function XlsxEditorTestPage({ onBack }: XlsxEditorTestPageProps) {
       </div>
 
       <div style={controlsStyle}>
+        <Button
+          disabled={isBusy}
+          onClick={() => {
+            const demo = createTestWorkbook();
+            setSourceName("test-workbook.xlsx");
+            setWorkbook(demo);
+            setCurrentWorkbook(demo);
+            setGridSize(computeInitialGridSize(demo));
+          }}
+        >
+          Load demo (formulas)
+        </Button>
+
         <input
           type="file"
           accept=".xlsx,.xlsm"
