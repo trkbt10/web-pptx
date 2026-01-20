@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 import { formatFormula } from "./format";
 import { parseFormula } from "./parser";
 
@@ -13,4 +12,3 @@ describe("xlsx/formula/format", () => {
     expect(formatFormula(ast)).toBe("'My Sheet'!A1+1");
   });
 });
-

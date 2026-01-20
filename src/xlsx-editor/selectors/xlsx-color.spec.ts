@@ -6,7 +6,7 @@ import { xlsxColorToCss } from "./xlsx-color";
 
 describe("xlsx-editor/selectors/xlsx-color", () => {
   it("converts ARGB rgb into css color", () => {
-    expect(xlsxColorToCss({ type: "rgb", value: "FF112233" })).toBe("rgb(17, 34, 51)");
+    expect(xlsxColorToCss({ type: "rgb", value: "FF112233" })).toBe("#112233");
     expect(xlsxColorToCss({ type: "rgb", value: "#80112233" })).toBe("rgba(17, 34, 51, 0.5019607843137255)");
   });
 
@@ -24,4 +24,3 @@ describe("xlsx-editor/selectors/xlsx-color", () => {
     expect(xlsxColorToCss({ type: "theme", theme: 4, tint: -0.5 })).toBe("#28415F");
   });
 });
-

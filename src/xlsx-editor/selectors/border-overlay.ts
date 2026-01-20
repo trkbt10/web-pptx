@@ -11,6 +11,7 @@ import { colIdx, rowIdx } from "../../xlsx/domain/types";
 import { getCell } from "../cell/query";
 import { resolveCellBorderDecoration, type CellBorderEdgeDecoration } from "./cell-render-style";
 import { createSheetLayout } from "./sheet-layout";
+import { findMergeForCell, normalizeMergeRange, type NormalizedMergeRange } from "../sheet/merge-range";
 
 export type SvgBorderLine = {
   readonly x1: number;
@@ -122,9 +123,48 @@ export function buildBorderOverlayLines(params: {
 }): readonly SvgBorderLine[] {
   const { sheet, styles, layout, rowRange, colRange, rowCount, colCount, scrollTop, scrollLeft, defaultBorderColor } = params;
 
+  const normalizedMerges = (sheet.mergeCells ?? []).map((m) => normalizeMergeRange(m));
+  const mergesByKey = new Map<string, NormalizedMergeRange>(normalizedMerges.map((m) => [m.key, m]));
+  const mergeKeyCache = new Map<string, string | null>();
+
+  const getMergeKey = (col0: number, row0: number): string | undefined => {
+    if (normalizedMerges.length === 0) {
+      return undefined;
+    }
+    const key = `${col0}:${row0}`;
+    if (mergeKeyCache.has(key)) {
+      return mergeKeyCache.get(key) ?? undefined;
+    }
+    const col1 = col0 + 1;
+    const row1 = row0 + 1;
+    const merge = findMergeForCell(
+      normalizedMerges,
+      { col: colIdx(col1), row: rowIdx(row1), colAbsolute: false, rowAbsolute: false },
+    );
+    mergeKeyCache.set(key, merge?.key ?? null);
+    return merge?.key;
+  };
+
   const edgeCache = new Map<string, ReturnType<typeof resolveCellBorderDecoration> | null>();
+  const mergeEdgeCache = new Map<string, ReturnType<typeof resolveCellBorderDecoration> | null>();
 
   const getCellEdges = (col0: number, row0: number): ReturnType<typeof resolveCellBorderDecoration> | undefined => {
+    const mergeKey = getMergeKey(col0, row0);
+    if (mergeKey) {
+      if (mergeEdgeCache.has(mergeKey)) {
+        return mergeEdgeCache.get(mergeKey) ?? undefined;
+      }
+      const merge = mergesByKey.get(mergeKey);
+      if (!merge) {
+        mergeEdgeCache.set(mergeKey, null);
+        return undefined;
+      }
+      const originCell = getCell(sheet, merge.origin);
+      const resolved = resolveCellBorderDecoration({ styles, sheet, address: merge.origin, cell: originCell, defaultBorderColor });
+      mergeEdgeCache.set(mergeKey, resolved ?? null);
+      return resolved;
+    }
+
     const key = `${col0}:${row0}`;
     if (edgeCache.has(key)) {
       return edgeCache.get(key) ?? undefined;
@@ -150,9 +190,13 @@ export function buildBorderOverlayLines(params: {
       const y1 = layout.rows.getBoundaryOffsetPx(row0) - scrollTop;
       const y2 = layout.rows.getBoundaryOffsetPx(row0 + 1) - scrollTop;
 
+      const leftMergeKey = boundaryCol0 > 0 ? getMergeKey(boundaryCol0 - 1, row0) : undefined;
+      const rightMergeKey = boundaryCol0 < colCount ? getMergeKey(boundaryCol0, row0) : undefined;
+      const isInternalMergeBoundary = Boolean(leftMergeKey && leftMergeKey === rightMergeKey);
+
       const leftCell = boundaryCol0 > 0 ? getCellEdges(boundaryCol0 - 1, row0) : undefined;
       const rightCell = boundaryCol0 < colCount ? getCellEdges(boundaryCol0, row0) : undefined;
-      const chosen = pickEdge(leftCell?.right, rightCell?.left, true);
+      const chosen = isInternalMergeBoundary ? undefined : pickEdge(leftCell?.right, rightCell?.left, true);
 
       if (!chosen) {
         if (active) {
@@ -188,9 +232,13 @@ export function buildBorderOverlayLines(params: {
       const x1 = layout.cols.getBoundaryOffsetPx(col0) - scrollLeft;
       const x2 = layout.cols.getBoundaryOffsetPx(col0 + 1) - scrollLeft;
 
+      const topMergeKey = boundaryRow0 > 0 ? getMergeKey(col0, boundaryRow0 - 1) : undefined;
+      const bottomMergeKey = boundaryRow0 < rowCount ? getMergeKey(col0, boundaryRow0) : undefined;
+      const isInternalMergeBoundary = Boolean(topMergeKey && topMergeKey === bottomMergeKey);
+
       const topCell = boundaryRow0 > 0 ? getCellEdges(col0, boundaryRow0 - 1) : undefined;
       const bottomCell = boundaryRow0 < rowCount ? getCellEdges(col0, boundaryRow0) : undefined;
-      const chosen = pickEdge(topCell?.bottom, bottomCell?.top, true);
+      const chosen = isInternalMergeBoundary ? undefined : pickEdge(topCell?.bottom, bottomCell?.top, true);
 
       if (!chosen) {
         if (active) {

@@ -1,4 +1,3 @@
-import { describe, expect, it } from "vitest";
 import { shiftFormulaReferences } from "./shift";
 
 describe("xlsx/formula/shift", () => {
@@ -22,4 +21,3 @@ describe("xlsx/formula/shift", () => {
     expect(shiftFormulaReferences("A1", -1, 0)).toBe("#REF!");
   });
 });
-

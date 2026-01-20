@@ -42,18 +42,18 @@ function argbToRgba(argb: string): { readonly r: number; readonly g: number; rea
   return { r, g, b, a };
 }
 
-function rgbaToCss(rgba: { readonly r: number; readonly g: number; readonly b: number; readonly a: number }): string {
-  const { r, g, b, a } = rgba;
-  if (a >= 255) {
-    return `rgb(${r}, ${g}, ${b})`;
-  }
-  const alpha = Math.max(0, Math.min(1, a / 255));
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
 function rgbToHex6(r: number, g: number, b: number): string {
   const to2 = (n: number): string => clampByte(n).toString(16).padStart(2, "0").toUpperCase();
   return `#${to2(r)}${to2(g)}${to2(b)}`;
+}
+
+function rgbaToCss(rgba: { readonly r: number; readonly g: number; readonly b: number; readonly a: number }): string {
+  const { r, g, b, a } = rgba;
+  if (a >= 255) {
+    return rgbToHex6(r, g, b);
+  }
+  const alpha = Math.max(0, Math.min(1, a / 255));
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function applyTint(channel: number, tint: number): number {
@@ -208,4 +208,3 @@ export function xlsxColorToCss(color: XlsxColorLike | undefined): string | undef
   }
   return undefined;
 }
-

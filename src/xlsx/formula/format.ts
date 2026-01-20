@@ -124,31 +124,36 @@ function formatNode(node: FormulaAstNode, parentPrec: Prec, position: "left" | "
         return `${node.name}(${node.args.map((arg) => formatNode(arg, 0, "left")).join(",")})`;
       case "Unary": {
         const arg = formatNode(node.argument, selfPrec, "right", node.operator);
-        const wrapped = needsParens({ child: node.argument, parentPrec: selfPrec, position: "right", parentOperator: node.operator })
-          ? `(${arg})`
-          : arg;
+        let wrapped = arg;
+        if (needsParens({ child: node.argument, parentPrec: selfPrec, position: "right", parentOperator: node.operator })) {
+          wrapped = `(${arg})`;
+        }
         return `${node.operator}${wrapped}`;
       }
       case "Binary": {
         const left = formatNode(node.left, selfPrec, "left", node.operator);
         const right = formatNode(node.right, selfPrec, "right", node.operator);
-        const leftWrapped = needsParens({ child: node.left, parentPrec: selfPrec, position: "left", parentOperator: node.operator })
-          ? `(${left})`
-          : left;
-        const rightWrapped = needsParens({ child: node.right, parentPrec: selfPrec, position: "right", parentOperator: node.operator })
-          ? `(${right})`
-          : right;
+        let leftWrapped = left;
+        if (needsParens({ child: node.left, parentPrec: selfPrec, position: "left", parentOperator: node.operator })) {
+          leftWrapped = `(${left})`;
+        }
+        let rightWrapped = right;
+        if (needsParens({ child: node.right, parentPrec: selfPrec, position: "right", parentOperator: node.operator })) {
+          rightWrapped = `(${right})`;
+        }
         return `${leftWrapped}${node.operator}${rightWrapped}`;
       }
       case "Compare": {
         const left = formatNode(node.left, selfPrec, "left", node.operator);
         const right = formatNode(node.right, selfPrec, "right", node.operator);
-        const leftWrapped = needsParens({ child: node.left, parentPrec: selfPrec, position: "left", parentOperator: node.operator })
-          ? `(${left})`
-          : left;
-        const rightWrapped = needsParens({ child: node.right, parentPrec: selfPrec, position: "right", parentOperator: node.operator })
-          ? `(${right})`
-          : right;
+        let leftWrapped = left;
+        if (needsParens({ child: node.left, parentPrec: selfPrec, position: "left", parentOperator: node.operator })) {
+          leftWrapped = `(${left})`;
+        }
+        let rightWrapped = right;
+        if (needsParens({ child: node.right, parentPrec: selfPrec, position: "right", parentOperator: node.operator })) {
+          rightWrapped = `(${right})`;
+        }
         return `${leftWrapped}${node.operator}${rightWrapped}`;
       }
     }
@@ -163,4 +168,3 @@ function formatNode(node: FormulaAstNode, parentPrec: Prec, position: "left" | "
 export function formatFormula(ast: FormulaAstNode): string {
   return formatNode(ast, 0, "left");
 }
-

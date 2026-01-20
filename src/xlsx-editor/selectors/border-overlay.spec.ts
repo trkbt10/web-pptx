@@ -87,5 +87,51 @@ describe("buildBorderOverlayLines", () => {
     expect(lines.some((line) => line.y1 === 0 && line.y2 === 0 && line.x1 === 0 && line.x2 === 100)).toBe(true);
     expect(lines.some((line) => line.y1 === 20 && line.y2 === 20 && line.x1 === 0 && line.x2 === 100)).toBe(true);
   });
-});
 
+  it("suppresses internal borders inside merged cells and uses the merge origin style for the whole region", () => {
+    const styles = createDemoStyles();
+    const sheet: XlsxWorksheet = {
+      name: "Sheet1",
+      sheetId: 1,
+      state: "visible",
+      rows: [
+        {
+          rowNumber: rowIdx(1),
+          cells: [{ address: createAddress(1, 1), value: { type: "empty" }, styleId: styleId(1) }],
+        },
+      ],
+      mergeCells: [{ start: createAddress(1, 1), end: createAddress(2, 2) }],
+      xmlPath: "xl/worksheets/sheet1.xml",
+    };
+
+    const layout = createSheetLayout(sheet, {
+      rowCount: 10,
+      colCount: 10,
+      defaultRowHeightPx: 20,
+      defaultColWidthPx: 50,
+    });
+
+    const lines = buildBorderOverlayLines({
+      sheet,
+      styles,
+      layout,
+      rowRange: { start: 0, end: 1 },
+      colRange: { start: 0, end: 1 },
+      rowCount: 10,
+      colCount: 10,
+      scrollTop: 0,
+      scrollLeft: 0,
+      defaultBorderColor: "black",
+    });
+
+    // A1:B2 merged with the origin cell (A1) having "all edges" borders:
+    // - no internal boundaries at x=50 or y=20
+    // - 4 outer edges around the merged region
+    expect(lines).toHaveLength(4);
+
+    expect(lines.some((line) => line.x1 === 0 && line.x2 === 0 && line.y1 === 0 && line.y2 === 40)).toBe(true);
+    expect(lines.some((line) => line.x1 === 100 && line.x2 === 100 && line.y1 === 0 && line.y2 === 40)).toBe(true);
+    expect(lines.some((line) => line.y1 === 0 && line.y2 === 0 && line.x1 === 0 && line.x2 === 100)).toBe(true);
+    expect(lines.some((line) => line.y1 === 40 && line.y2 === 40 && line.x1 === 0 && line.x2 === 100)).toBe(true);
+  });
+});
