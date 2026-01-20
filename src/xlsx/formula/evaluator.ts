@@ -76,7 +76,7 @@ function buildWorkbookMatrix(workbook: XlsxWorkbook): WorkbookMatrix {
       const rowNumber = row.rowNumber as number;
       const rowMap = rows.get(rowNumber) ?? new Map<number, FormulaCellData>();
       for (const cell of row.cells) {
-        rowMap.set(cell.address.col as number, { value: cell.value, formula: cell.formula });
+        rowMap.set(cell.address.col as number, { value: cell.value, formula: cell.formula?.expression });
       }
       rows.set(rowNumber, rowMap);
     }

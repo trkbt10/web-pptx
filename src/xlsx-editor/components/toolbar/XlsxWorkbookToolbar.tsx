@@ -6,13 +6,14 @@
 
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Button, Input, ToggleButton, spacingTokens } from "../../../office-editor-components";
-import { indexToColumnLetter, type CellAddress } from "../../../xlsx/domain/cell/address";
+import { indexToColumnLetter, type CellAddress, type CellRange } from "../../../xlsx/domain/cell/address";
 import { colIdx, rowIdx, styleId } from "../../../xlsx/domain/types";
 import { parseCellUserInput } from "../cell-input/parse-cell-user-input";
 import { formatCellEditText } from "../cell-input/format-cell-edit-text";
 import { useXlsxWorkbookEditor } from "../../context/workbook/XlsxWorkbookEditorContext";
 import { getCell } from "../../cell/query";
 import { resolveCellStyleDetails } from "../../selectors/cell-style-details";
+import { resolveSelectionFormatFlags } from "../../selectors/selection-format-flags";
 import type { XlsxFont } from "../../../xlsx/domain/style/font";
 
 export type XlsxWorkbookToolbarProps = {
@@ -49,7 +50,7 @@ function getDefaultActiveCell(): CellAddress {
   return { col: colIdx(1), row: rowIdx(1), colAbsolute: false, rowAbsolute: false };
 }
 
-function getTargetRange(params: { readonly activeCell: CellAddress | undefined; readonly selectedRange: { readonly start: CellAddress; readonly end: CellAddress } | undefined }) {
+function getTargetRange(params: { readonly activeCell: CellAddress | undefined; readonly selectedRange: CellRange | undefined }): CellRange | undefined {
   if (params.selectedRange) {
     return params.selectedRange;
   }
@@ -128,6 +129,12 @@ export function XlsxWorkbookToolbar({ sheetIndex, isFormatPanelOpen, onToggleFor
 
   const font = styleDetails?.font;
   const toolbarCanFormat = Boolean(targetRange && font && !disableInputs);
+  const selectionFormatFlags = useMemo(() => {
+    if (!targetRange) {
+      return undefined;
+    }
+    return resolveSelectionFormatFlags({ sheet, styles: workbook.styles, range: targetRange });
+  }, [sheet, targetRange, workbook.styles]);
 
   return (
     <div style={barStyle}>
@@ -153,6 +160,7 @@ export function XlsxWorkbookToolbar({ sheetIndex, isFormatPanelOpen, onToggleFor
       <ToggleButton
         label="B"
         pressed={font?.bold === true}
+        mixed={selectionFormatFlags?.bold.mixed ?? false}
         disabled={!toolbarCanFormat}
         onChange={(pressed) => {
           if (!targetRange || !font) {
@@ -164,6 +172,7 @@ export function XlsxWorkbookToolbar({ sheetIndex, isFormatPanelOpen, onToggleFor
       <ToggleButton
         label="I"
         pressed={font?.italic === true}
+        mixed={selectionFormatFlags?.italic.mixed ?? false}
         disabled={!toolbarCanFormat}
         onChange={(pressed) => {
           if (!targetRange || !font) {
@@ -175,6 +184,7 @@ export function XlsxWorkbookToolbar({ sheetIndex, isFormatPanelOpen, onToggleFor
       <ToggleButton
         label="U"
         pressed={font?.underline !== undefined && font.underline !== "none"}
+        mixed={selectionFormatFlags?.underline.mixed ?? false}
         disabled={!toolbarCanFormat}
         onChange={(pressed) => {
           if (!targetRange || !font) {

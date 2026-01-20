@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { CellAddress } from "../../../xlsx/domain/cell/address";
 import type { Cell } from "../../../xlsx/domain/cell/types";
 import type { XlsxStyleSheet } from "../../../xlsx/domain/style/types";
@@ -82,9 +82,26 @@ export function XlsxSheetGridCellsLayer({
   formulaEvaluator,
 }: XlsxSheetGridCellsLayerProps) {
   const [isMouseSelecting, setIsMouseSelecting] = useState(false);
+  const endRangeSelectListener = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    return () => {
+      const handler = endRangeSelectListener.current;
+      if (handler) {
+        window.removeEventListener("mouseup", handler);
+      }
+      endRangeSelectListener.current = null;
+    };
+  }, []);
 
   const startRangeSelectFromCell = useCallback(
     (address: CellAddress): void => {
+      const previous = endRangeSelectListener.current;
+      if (previous) {
+        window.removeEventListener("mouseup", previous);
+        previous();
+      }
+
       const merge = normalizedMerges.length > 0 ? findMergeForCell(normalizedMerges, address) : undefined;
       const startCell = merge ? merge.origin : address;
       const currentCell = merge ? merge.range.end : address;
@@ -92,21 +109,19 @@ export function XlsxSheetGridCellsLayer({
       dispatch({ type: "START_RANGE_SELECT", startCell });
       dispatch({ type: "PREVIEW_RANGE_SELECT", currentCell });
       setIsMouseSelecting(true);
+
+      const onMouseUp = (): void => {
+        window.removeEventListener("mouseup", onMouseUp);
+        endRangeSelectListener.current = null;
+        setIsMouseSelecting(false);
+        dispatch({ type: "END_RANGE_SELECT" });
+      };
+
+      endRangeSelectListener.current = onMouseUp;
+      window.addEventListener("mouseup", onMouseUp);
     },
     [dispatch, normalizedMerges],
   );
-
-  useEffect(() => {
-    if (!isMouseSelecting) {
-      return;
-    }
-    const onMouseUp = (): void => {
-      setIsMouseSelecting(false);
-      dispatch({ type: "END_RANGE_SELECT" });
-    };
-    window.addEventListener("mouseup", onMouseUp);
-    return () => window.removeEventListener("mouseup", onMouseUp);
-  }, [dispatch, isMouseSelecting]);
 
   const cellNodes = useMemo(() => {
     const nodes: ReactNode[] = [];
@@ -153,15 +168,19 @@ export function XlsxSheetGridCellsLayer({
                 top: topPx,
                 width,
                 height: mergedHeight,
-              }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                focusGridRoot(e.target);
-                if (e.shiftKey) {
-                  dispatch({ type: "SELECT_CELL", address: originAddress, extend: true });
-                  return;
-                }
-                startRangeSelectFromCell(originAddress);
+            }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              focusGridRoot(e.target);
+              if (e.metaKey || e.ctrlKey) {
+                dispatch({ type: "ADD_RANGE_TO_SELECTION", range: merge.range });
+                return;
+              }
+              if (e.shiftKey) {
+                dispatch({ type: "SELECT_CELL", address: originAddress, extend: true });
+                return;
+              }
+              startRangeSelectFromCell(originAddress);
               }}
               onDoubleClick={(e) => {
                 e.preventDefault();
@@ -199,6 +218,10 @@ export function XlsxSheetGridCellsLayer({
             onMouseDown={(e) => {
               e.preventDefault();
               focusGridRoot(e.target);
+              if (e.metaKey || e.ctrlKey) {
+                dispatch({ type: "ADD_RANGE_TO_SELECTION", range: { start: address, end: address } });
+                return;
+              }
               if (e.shiftKey) {
                 dispatch({ type: "SELECT_CELL", address, extend: true });
                 return;

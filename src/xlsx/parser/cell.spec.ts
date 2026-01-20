@@ -221,7 +221,7 @@ describe("parseCell", () => {
   it("should parse cell with formula", () => {
     const xml = `<c r="C3"><f>A1+B1</f><v>10</v></c>`;
     const result = parseCell(parseRoot(xml), defaultContext);
-    expect(result.formula).toBe("A1+B1");
+    expect(result.formula).toMatchObject({ type: "normal", expression: "A1+B1" });
     expect(result.value).toEqual({ type: "number", value: 10 });
   });
 
@@ -275,7 +275,7 @@ describe("parseCell", () => {
     expect(result.address.col).toBe(26);
     expect(result.address.row).toBe(100);
     expect(result.value).toEqual({ type: "string", value: "Test Value" });
-    expect(result.formula).toBe("A1");
+    expect(result.formula).toMatchObject({ type: "normal", expression: "A1" });
     expect(result.styleId).toBe(10);
   });
 

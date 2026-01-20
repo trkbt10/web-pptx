@@ -7,7 +7,7 @@
 import type { XlsxWorkbook } from "../../../../../xlsx/domain/workbook";
 import { createDefaultStyleSheet } from "../../../../../xlsx/domain/style/types";
 import { parseCellRef, parseRange } from "../../../../../xlsx/domain/cell/address";
-import { rowIdx } from "../../../../../xlsx/domain/types";
+import { colIdx, rowIdx } from "../../../../../xlsx/domain/types";
 import { createHistory } from "../../state/history";
 import { createEmptyCellSelection, createIdleDragState, type XlsxEditorState } from "../types";
 import { dragHandlers } from "./drag-handlers";
@@ -162,5 +162,61 @@ describe("xlsx-editor/context/workbook/editor/reducer/drag-handlers", () => {
     expect(row1?.customHeight).toBe(true);
     expect(next.drag.type).toBe("idle");
     expect(state.workbookHistory.present).toBe(workbook);
+  });
+
+  it("COMMIT_FILL_DRAG: fills numeric series and pushes history", () => {
+    const workbook: XlsxWorkbook = {
+      sheets: [
+        {
+          name: "Sheet1",
+          sheetId: 1,
+          state: "visible",
+          rows: [
+            {
+              rowNumber: rowIdx(1),
+              cells: [
+                {
+                  address: { col: colIdx(1), row: rowIdx(1), colAbsolute: false, rowAbsolute: false },
+                  value: { type: "number", value: 5 },
+                },
+              ],
+            },
+          ],
+          xmlPath: "xl/worksheets/sheet1.xml",
+        },
+      ],
+      styles: createDefaultStyleSheet(),
+      sharedStrings: [],
+    };
+
+    const state: XlsxEditorState = {
+      workbookHistory: createHistory(workbook),
+      activeSheetIndex: 0,
+      cellSelection: createEmptyCellSelection(),
+      drag: createIdleDragState(),
+      clipboard: undefined,
+      editingCell: undefined,
+    };
+
+    const startHandler = dragHandlers.START_FILL_DRAG;
+    const previewHandler = dragHandlers.PREVIEW_FILL_DRAG;
+    const commitHandler = dragHandlers.COMMIT_FILL_DRAG;
+    if (!startHandler) {throw new Error("START_FILL_DRAG handler is not defined");}
+    if (!previewHandler) {throw new Error("PREVIEW_FILL_DRAG handler is not defined");}
+    if (!commitHandler) {throw new Error("COMMIT_FILL_DRAG handler is not defined");}
+
+    const started = startHandler(state, { type: "START_FILL_DRAG", sourceRange: parseRange("A1") });
+    const previewed = previewHandler(started, { type: "PREVIEW_FILL_DRAG", targetRange: parseRange("A1:A3") });
+    const next = commitHandler(previewed, { type: "COMMIT_FILL_DRAG" });
+
+    expect(next.workbookHistory.past).toHaveLength(1);
+    expect(next.drag.type).toBe("idle");
+    expect(next.cellSelection.selectedRange).toEqual(parseRange("A1:A3"));
+
+    const sheet1 = next.workbookHistory.present.sheets[0];
+    const row2 = sheet1?.rows.find((r) => r.rowNumber === rowIdx(2));
+    const row3 = sheet1?.rows.find((r) => r.rowNumber === rowIdx(3));
+    expect(row2?.cells[0]?.value).toEqual({ type: "number", value: 6 });
+    expect(row3?.cells[0]?.value).toEqual({ type: "number", value: 7 });
   });
 });

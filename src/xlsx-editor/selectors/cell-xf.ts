@@ -74,6 +74,11 @@ function mergeCellXf(styles: XlsxStyleSheet, xf: XlsxCellXf): XlsxCellXf {
   };
 }
 
+export function resolveMergedCellXfFromStyleId(styles: XlsxStyleSheet, styleId: number | undefined): XlsxCellXf {
+  const xf = getCellXf(styles, styleId) ?? styles.cellXfs[0]!;
+  return mergeCellXf(styles, xf);
+}
+
 export function resolveCellXf(params: {
   readonly styles: XlsxStyleSheet;
   readonly sheet: XlsxWorksheet;
@@ -82,7 +87,5 @@ export function resolveCellXf(params: {
 }): { readonly styleId: number | undefined; readonly xf: XlsxCellXf } {
   const { styles, sheet, address, cell } = params;
   const styleId = resolveEffectiveStyleId(sheet, address, cell);
-  const xf = getCellXf(styles, styleId) ?? styles.cellXfs[0]!;
-  return { styleId, xf: mergeCellXf(styles, xf) };
+  return { styleId, xf: resolveMergedCellXfFromStyleId(styles, styleId) };
 }
-

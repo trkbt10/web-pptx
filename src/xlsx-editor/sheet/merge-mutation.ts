@@ -69,7 +69,7 @@ function clearNonOriginCellContentsInMerge(
     }
 
     const hasNonEmptyValue = cell.value.type !== "empty";
-    const hasFormula = typeof cell.formula === "string";
+    const hasFormula = cell.formula !== undefined;
     if (!hasNonEmptyValue && !hasFormula) {
       return cell;
     }

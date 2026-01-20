@@ -20,6 +20,7 @@ import {
   startColumnResizeDrag,
   endDrag,
 } from "../../state/drag";
+import { applyAutofillToWorksheet } from "../../../../cell/autofill";
 import { setColumnWidth, setRowHeight } from "../../../../row-col/mutation";
 import { updateWorksheetInWorkbook } from "../../utils/worksheet-updater";
 
@@ -128,8 +129,29 @@ function handleCommitFillDrag(state: XlsxEditorState): XlsxEditorState {
     return state;
   }
 
+  const sheetIndex = state.activeSheetIndex;
+  if (sheetIndex === undefined) {
+    return {
+      ...state,
+      drag: endDrag(),
+      cellSelection: createRangeSelection(drag.targetRange),
+    };
+  }
+
+  const updatedWorkbook = updateWorksheetInWorkbook(
+    state.workbookHistory.present,
+    sheetIndex,
+    (worksheet) =>
+      applyAutofillToWorksheet({
+        worksheet,
+        baseRange: drag.sourceRange,
+        targetRange: drag.targetRange,
+      }),
+  );
+
   return {
     ...state,
+    workbookHistory: pushHistory(state.workbookHistory, updatedWorkbook),
     drag: endDrag(),
     cellSelection: createRangeSelection(drag.targetRange),
   };
@@ -252,4 +274,3 @@ export const dragHandlers: HandlerMap = {
   COMMIT_COLUMN_RESIZE: (state) => handleCommitColumnResize(state),
   END_DRAG: (state) => ({ ...state, drag: endDrag() }),
 };
-

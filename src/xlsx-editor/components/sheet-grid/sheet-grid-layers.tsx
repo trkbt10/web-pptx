@@ -4,6 +4,7 @@ import type { XlsxWorksheet } from "../../../xlsx/domain/workbook";
 import type { FormulaEvaluator } from "../../../xlsx/formula/evaluator";
 import { useXlsxWorkbookEditor } from "../../context/workbook/XlsxWorkbookEditorContext";
 import { normalizeMergeRange } from "../../sheet/merge-range";
+import { getAllSelectedRanges } from "../../context/workbook/state/selection";
 import { getRangeBounds } from "./selection-geometry";
 import { XlsxSheetGridHeaderLayer } from "./header-layer";
 import { XlsxSheetGridCellViewport } from "./cell-viewport";
@@ -64,6 +65,10 @@ export function XlsxSheetGridLayers({
     }
     return merges.map((m) => normalizeMergeRange(m));
   }, [sheet.mergeCells]);
+
+  const selectedRanges = useMemo(() => {
+    return getAllSelectedRanges(selection);
+  }, [selection]);
 
   const selectionBounds = useMemo(() => {
     const range = selection.selectedRange;
@@ -127,7 +132,8 @@ export function XlsxSheetGridLayers({
         viewportWidth={viewportWidth}
         viewportHeight={viewportHeight}
         selection={{
-          selectedRange: selection.selectedRange,
+          selectedRanges,
+          activeRange: selection.selectedRange,
           activeCell: selection.activeCell,
         }}
         state={{

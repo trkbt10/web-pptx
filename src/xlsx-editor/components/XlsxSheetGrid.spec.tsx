@@ -70,6 +70,12 @@ function RangeDebugger() {
   return <div data-testid="selectedRange">{text}</div>;
 }
 
+function MultiRangeDebugger() {
+  const { selection } = useXlsxWorkbookEditor();
+  const count = selection.multiRanges?.length ?? 0;
+  return <div data-testid="multiRanges">{String(count)}</div>;
+}
+
 function CellValueDebugger() {
   const { workbook } = useXlsxWorkbookEditor();
   const sheet = workbook.sheets[0];
@@ -200,6 +206,76 @@ describe("XlsxSheetGrid", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("activeCell").textContent).toBe("1,1");
+    });
+  });
+
+  it("adds a range to selection via Ctrl/Cmd+Click", async () => {
+    const workbook: XlsxWorkbook = {
+      sheets: [
+        {
+          name: "Sheet1",
+          sheetId: 1,
+          state: "visible",
+          rows: [
+            {
+              rowNumber: rowIdx(1),
+              cells: [
+                { address: createAddress(1, 1), value: { type: "string", value: "A1" } },
+                { address: createAddress(2, 1), value: { type: "string", value: "B1" } },
+              ],
+            },
+          ],
+          mergeCells: [],
+          xmlPath: "xl/worksheets/sheet1.xml",
+        },
+      ],
+      styles: createDefaultStyleSheet(),
+      sharedStrings: [],
+    };
+
+    render(
+      <XlsxWorkbookEditorProvider initialWorkbook={workbook}>
+        <div style={{ width: 320, height: 200 }}>
+          <XlsxSheetGrid
+            sheetIndex={0}
+            metrics={{
+              rowCount: 20,
+              colCount: 10,
+              rowHeightPx: 22,
+              colWidthPx: 120,
+              headerSizePx: 32,
+              overscanRows: 2,
+              overscanCols: 2,
+            }}
+          />
+        </div>
+        <RangeDebugger />
+        <MultiRangeDebugger />
+      </XlsxWorkbookEditorProvider>,
+    );
+
+    act(() => {
+      triggerResizeObservers([createResizeObserverEntry(320, 200)]);
+    });
+
+    act(() => {
+      fireEvent.mouseDown(screen.getByText("A1"));
+      fireEvent.mouseUp(window);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("selectedRange").textContent).toBe("1,1-1,1");
+      expect(screen.getByTestId("multiRanges").textContent).toBe("0");
+    });
+
+    act(() => {
+      fireEvent.mouseDown(screen.getByText("B1"), { ctrlKey: true });
+      fireEvent.mouseUp(window);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId("selectedRange").textContent).toBe("2,1-2,1");
+      expect(screen.getByTestId("multiRanges").textContent).toBe("1");
     });
   });
 

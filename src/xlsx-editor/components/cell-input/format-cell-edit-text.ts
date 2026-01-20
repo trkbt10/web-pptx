@@ -12,7 +12,7 @@ export function formatCellEditText(sheet: XlsxWorksheet, address: CellAddress): 
     return "";
   }
   if (cell.formula) {
-    return `=${cell.formula}`;
+    return `=${cell.formula.expression}`;
   }
   switch (cell.value.type) {
     case "string":
@@ -29,4 +29,3 @@ export function formatCellEditText(sheet: XlsxWorksheet, address: CellAddress): 
       return "";
   }
 }
-

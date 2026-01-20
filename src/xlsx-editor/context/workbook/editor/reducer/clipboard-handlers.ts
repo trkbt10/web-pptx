@@ -8,6 +8,7 @@ import type { HandlerMap } from "./handler-types";
 import type { XlsxClipboardContent, XlsxEditorState } from "../types";
 import type { CellAddress, CellRange } from "../../../../../xlsx/domain/cell/address";
 import type { Cell, CellValue } from "../../../../../xlsx/domain/cell/types";
+import type { Formula } from "../../../../../xlsx/domain/cell/formula";
 import type { XlsxWorksheet } from "../../../../../xlsx/domain/workbook";
 import { colIdx, rowIdx, type StyleId } from "../../../../../xlsx/domain/types";
 import { shiftFormulaReferences } from "../../../../../xlsx/formula/shift";
@@ -90,7 +91,7 @@ function buildClipboardContent(
     styleLookup.set(rowNumber, rowStyles);
 
     const rowFormulas = formulaLookup.get(rowNumber) ?? new Map<number, string | undefined>();
-    rowFormulas.set(colNumber, cell.formula);
+    rowFormulas.set(colNumber, cell.formula?.expression);
     formulaLookup.set(rowNumber, rowFormulas);
   }
 
@@ -167,9 +168,10 @@ function applyFormulaPatch(cell: Cell, formula: string | undefined): Cell {
   if (formula === undefined) {
     return cell;
   }
+  const nextFormula: Formula = { type: "normal", expression: formula };
   const { formula: removed, ...withoutFormula } = cell;
   void removed;
-  return { ...withoutFormula, value: { type: "empty" }, formula };
+  return { ...withoutFormula, value: { type: "empty" }, formula: nextFormula };
 }
 
 function applyValuePatch(cell: Cell, value: CellValue): Cell {

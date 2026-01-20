@@ -40,7 +40,7 @@ function cellAt(
     address: addr(col, row),
     value,
     ...(opts?.styleId !== undefined ? { styleId: styleId(opts.styleId) } : {}),
-    ...(opts?.formula !== undefined ? { formula: opts.formula } : {}),
+    ...(opts?.formula !== undefined ? { formula: { type: "normal", expression: opts.formula } } : {}),
   };
 }
 
@@ -191,7 +191,7 @@ describe("xlsx-editor/context/workbook/editor/reducer/clipboard-handlers", () =>
     expect(getCell(nextSheet!, addr(3, 3))?.styleId).toEqual(styleId(2));
 
     expect(getCellValue(nextSheet!, addr(4, 3))).toEqual({ type: "empty" });
-    expect(getCell(nextSheet!, addr(4, 3))?.formula).toBe("C3+1");
+    expect(getCell(nextSheet!, addr(4, 3))?.formula).toEqual({ type: "normal", expression: "C3+1" });
 
     expect(getCellValue(nextSheet!, addr(3, 4))).toEqual({ type: "string", value: "A2" });
     expect(getCell(nextSheet!, addr(4, 4))?.value).toEqual({ type: "empty" });
@@ -221,6 +221,6 @@ describe("xlsx-editor/context/workbook/editor/reducer/clipboard-handlers", () =>
     expect(next).toBeDefined();
 
     const nextSheet = next?.workbookHistory.present.sheets[0];
-    expect(getCell(nextSheet!, addr(3, 3))?.formula).toBe("C3+$A$1+C$1+$A3");
+    expect(getCell(nextSheet!, addr(3, 3))?.formula).toEqual({ type: "normal", expression: "C3+$A$1+C$1+$A3" });
   });
 });

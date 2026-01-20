@@ -334,7 +334,7 @@ describe("serializeCell", () => {
     const cell: Cell = {
       address: addr(6, 1),
       value: { type: "number", value: 55 },
-      formula: "SUM(A1:A10)",
+      formula: { type: "normal", expression: "SUM(A1:A10)" },
     };
     const sharedStrings = createMockSharedStrings();
     const element = serializeCell(cell, sharedStrings);
@@ -441,7 +441,7 @@ describe("Child element order", () => {
     const cell: Cell = {
       address: addr(1, 1),
       value: { type: "number", value: 55 },
-      formula: "SUM(A1:A10)",
+      formula: { type: "normal", expression: "SUM(A1:A10)" },
     };
     const sharedStrings = createMockSharedStrings();
     const element = serializeCell(cell, sharedStrings);
@@ -507,7 +507,7 @@ describe("Edge cases", () => {
     const cell: Cell = {
       address: addr(1, 1),
       value: { type: "number", value: 10 },
-      formula: "IF(A1>5,\"Yes\",\"No\")",
+      formula: { type: "normal", expression: "IF(A1>5,\"Yes\",\"No\")" },
     };
     const sharedStrings = createMockSharedStrings();
     const element = serializeCell(cell, sharedStrings);
@@ -554,7 +554,7 @@ describe("Round-trip compatibility", () => {
     const cell: Cell = {
       address: addr(1, 10),
       value: { type: "number", value: 45 },
-      formula: "SUM(A1:A9)",
+      formula: { type: "normal", expression: "SUM(A1:A9)" },
     };
     const sharedStrings = createMockSharedStrings();
     const element = serializeCell(cell, sharedStrings);

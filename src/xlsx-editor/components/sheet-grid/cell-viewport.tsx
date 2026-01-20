@@ -1,14 +1,15 @@
-import { useCallback, useMemo, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, type CSSProperties } from "react";
 import type { CellAddress } from "../../../xlsx/domain/cell/address";
 import type { XlsxStyleSheet } from "../../../xlsx/domain/style/types";
 import type { XlsxWorksheet } from "../../../xlsx/domain/workbook";
 import { colorTokens } from "../../../office-editor-components";
+import { colIdx, rowIdx } from "../../../xlsx/domain/types";
 import { XlsxCellEditorOverlay } from "../cell-input/XlsxCellEditorOverlay";
 import type { ParseCellUserInputResult } from "../cell-input/parse-cell-user-input";
 import { buildBorderOverlayLines } from "../../selectors/border-overlay";
 import { findMergeForCell, type NormalizedMergeRange } from "../../sheet/merge-range";
 import { getVisibleGridLineSegments } from "./gridline-geometry";
-import { clipRectToViewport, getActiveCellRect, getSelectedRangeRect } from "./selection-geometry";
+import { clipRectToViewport, getActiveCellRect, getRangeBounds, getSelectedRangeRect } from "./selection-geometry";
 import { createSheetLayout } from "../../selectors/sheet-layout";
 import type { XlsxEditorAction } from "../../context/workbook/editor/types";
 
@@ -19,10 +20,37 @@ const selectionOutlineStyle: CSSProperties = {
   boxSizing: "border-box",
 };
 
+const multiSelectionOutlineStyle: CSSProperties = {
+  position: "absolute",
+  border: `1px solid var(--accent, ${colorTokens.accent.primary})`,
+  pointerEvents: "none",
+  boxSizing: "border-box",
+  opacity: 0.7,
+};
+
 const selectionFillStyle: CSSProperties = {
   position: "absolute",
   backgroundColor: `color-mix(in srgb, var(--accent, ${colorTokens.accent.primary}) 18%, transparent)`,
   pointerEvents: "none",
+};
+
+const multiSelectionFillStyle: CSSProperties = {
+  position: "absolute",
+  backgroundColor: `color-mix(in srgb, var(--accent, ${colorTokens.accent.primary}) 8%, transparent)`,
+  pointerEvents: "none",
+};
+
+const FILL_HANDLE_SIZE_PX = 8;
+
+const fillHandleStyle: CSSProperties = {
+  position: "absolute",
+  width: FILL_HANDLE_SIZE_PX,
+  height: FILL_HANDLE_SIZE_PX,
+  backgroundColor: `var(--accent, ${colorTokens.accent.primary})`,
+  border: `1px solid var(--bg-primary, ${colorTokens.background.primary})`,
+  boxSizing: "border-box",
+  cursor: "crosshair",
+  pointerEvents: "auto",
 };
 
 export type XlsxSheetGridCellViewportProps = {
@@ -42,7 +70,8 @@ export type XlsxSheetGridCellViewportProps = {
   readonly viewportWidth: number;
   readonly viewportHeight: number;
   readonly selection: {
-    readonly selectedRange: { readonly start: CellAddress; readonly end: CellAddress } | undefined;
+    readonly selectedRanges: readonly { readonly start: CellAddress; readonly end: CellAddress }[];
+    readonly activeRange: { readonly start: CellAddress; readonly end: CellAddress } | undefined;
     readonly activeCell: CellAddress | undefined;
   };
   readonly state: {
@@ -72,16 +101,35 @@ export function XlsxSheetGridCellViewport({
   dispatch,
   children,
 }: XlsxSheetGridCellViewportProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const fillDragListener = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    return () => {
+      const cleanup = fillDragListener.current;
+      if (cleanup) {
+        cleanup();
+      }
+      fillDragListener.current = null;
+    };
+  }, []);
+
   const rowHeaderWidthPx = metrics.rowHeaderWidthPx;
   const colHeaderHeightPx = metrics.colHeaderHeightPx;
 
   const gridViewportWidth = Math.max(0, viewportWidth - rowHeaderWidthPx);
   const gridViewportHeight = Math.max(0, viewportHeight - colHeaderHeightPx);
 
-  const selectedRangeRect = useMemo(() => {
-    const rect = getSelectedRangeRect(selection.selectedRange, layout, scrollTop, scrollLeft);
+  const selectedRangeRects = useMemo(() => {
+    return selection.selectedRanges
+      .map((range) => clipRectToViewport(getSelectedRangeRect(range, layout, scrollTop, scrollLeft), gridViewportWidth, gridViewportHeight))
+      .filter((rect) => rect !== null);
+  }, [gridViewportHeight, gridViewportWidth, layout, scrollLeft, scrollTop, selection.selectedRanges]);
+
+  const activeRangeRect = useMemo(() => {
+    const rect = getSelectedRangeRect(selection.activeRange, layout, scrollTop, scrollLeft);
     return clipRectToViewport(rect, gridViewportWidth, gridViewportHeight);
-  }, [gridViewportHeight, gridViewportWidth, layout, scrollLeft, scrollTop, selection.selectedRange]);
+  }, [gridViewportHeight, gridViewportWidth, layout, scrollLeft, scrollTop, selection.activeRange]);
 
   const gridLineSegments = useMemo(() => {
     if (sheet.sheetView?.showGridLines === false) {
@@ -172,8 +220,120 @@ export function XlsxSheetGridCellViewport({
     [activeSheetIndex, dispatch, editingCell],
   );
 
+  const handleFillHandleMouseDown = useCallback(
+    (event: React.MouseEvent): void => {
+      const activeRange = selection.activeRange;
+      if (!activeRange) {
+        return;
+      }
+      if (state.editingCell) {
+        return;
+      }
+      const container = containerRef.current;
+      if (!container) {
+        throw new Error("Expected fill handle container");
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const sourceBounds = getRangeBounds(activeRange);
+      dispatch({ type: "START_FILL_DRAG", sourceRange: activeRange });
+
+      const cleanupPrevious = fillDragListener.current;
+      if (cleanupPrevious) {
+        cleanupPrevious();
+      }
+
+      const getTargetAddress = (e: MouseEvent): CellAddress => {
+        const rect = container.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const sheetX = scrollLeft + x;
+        const sheetY = scrollTop + y;
+
+        const col0 = layout.cols.findIndexAtOffset(sheetX);
+        const row0 = layout.rows.findIndexAtOffset(sheetY);
+
+        const clampedCol0 = Math.max(0, Math.min(metrics.colCount - 1, col0));
+        const clampedRow0 = Math.max(0, Math.min(metrics.rowCount - 1, row0));
+
+        const address: CellAddress = {
+          col: colIdx(clampedCol0 + 1),
+          row: rowIdx(clampedRow0 + 1),
+          colAbsolute: false,
+          rowAbsolute: false,
+        };
+
+        const merge = normalizedMerges.length > 0 ? findMergeForCell(normalizedMerges, address) : undefined;
+        return merge ? merge.range.end : address;
+      };
+
+      const computeTargetRange = (target: CellAddress): { readonly start: CellAddress; readonly end: CellAddress } => {
+        const targetRow = target.row as number;
+        const targetCol = target.col as number;
+
+        const getDistanceOutside = (value: number, min: number, max: number): number => {
+          if (value < min) {
+            return min - value;
+          }
+          if (value > max) {
+            return value - max;
+          }
+          return 0;
+        };
+
+        const rowDist = getDistanceOutside(targetRow, sourceBounds.minRow, sourceBounds.maxRow);
+        const colDist = getDistanceOutside(targetCol, sourceBounds.minCol, sourceBounds.maxCol);
+
+        if (rowDist === 0 && colDist === 0) {
+          return activeRange;
+        }
+
+        if (rowDist >= colDist) {
+          const minRow = targetRow < sourceBounds.minRow ? targetRow : sourceBounds.minRow;
+          const maxRow = targetRow > sourceBounds.maxRow ? targetRow : sourceBounds.maxRow;
+          return {
+            start: { col: colIdx(sourceBounds.minCol), row: rowIdx(minRow), colAbsolute: false, rowAbsolute: false },
+            end: { col: colIdx(sourceBounds.maxCol), row: rowIdx(maxRow), colAbsolute: false, rowAbsolute: false },
+          };
+        }
+
+        const minCol = targetCol < sourceBounds.minCol ? targetCol : sourceBounds.minCol;
+        const maxCol = targetCol > sourceBounds.maxCol ? targetCol : sourceBounds.maxCol;
+        return {
+          start: { col: colIdx(minCol), row: rowIdx(sourceBounds.minRow), colAbsolute: false, rowAbsolute: false },
+          end: { col: colIdx(maxCol), row: rowIdx(sourceBounds.maxRow), colAbsolute: false, rowAbsolute: false },
+        };
+      };
+
+      const onMouseMove = (e: MouseEvent): void => {
+        const address = getTargetAddress(e);
+        dispatch({ type: "PREVIEW_FILL_DRAG", targetRange: computeTargetRange(address) });
+      };
+
+      const onMouseUp = (): void => {
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+        fillDragListener.current = null;
+        dispatch({ type: "COMMIT_FILL_DRAG" });
+      };
+
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+
+      fillDragListener.current = () => {
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+      };
+    },
+    [dispatch, layout.cols, layout.rows, metrics.colCount, metrics.rowCount, normalizedMerges, scrollLeft, scrollTop, selection.activeRange, state.editingCell],
+  );
+
   return (
     <div
+      ref={containerRef}
       style={{
         position: "absolute",
         left: rowHeaderWidthPx,
@@ -246,26 +406,67 @@ export function XlsxSheetGridCellViewport({
         </svg>
       )}
 
-      {selectedRangeRect && (
+      {selectedRangeRects.map((rect, idx) => (
         <div
+          key={`multi-selection-fill-${idx}`}
+          data-testid="xlsx-selection-fill-multi"
+          style={{
+            ...multiSelectionFillStyle,
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height,
+          }}
+        />
+      ))}
+      {selectedRangeRects.map((rect, idx) => (
+        <div
+          key={`multi-selection-outline-${idx}`}
+          data-testid="xlsx-selection-outline-multi"
+          style={{
+            ...multiSelectionOutlineStyle,
+            left: rect.left,
+            top: rect.top,
+            width: rect.width,
+            height: rect.height,
+          }}
+        />
+      ))}
+
+      {activeRangeRect && (
+        <div
+          data-testid="xlsx-selection-fill"
           style={{
             ...selectionFillStyle,
-            left: selectedRangeRect.left,
-            top: selectedRangeRect.top,
-            width: selectedRangeRect.width,
-            height: selectedRangeRect.height,
+            left: activeRangeRect.left,
+            top: activeRangeRect.top,
+            width: activeRangeRect.width,
+            height: activeRangeRect.height,
           }}
         />
       )}
-      {selectedRangeRect && (
+      {activeRangeRect && (
         <div
+          data-testid="xlsx-selection-outline"
           style={{
             ...selectionOutlineStyle,
-            left: selectedRangeRect.left,
-            top: selectedRangeRect.top,
-            width: selectedRangeRect.width,
-            height: selectedRangeRect.height,
+            left: activeRangeRect.left,
+            top: activeRangeRect.top,
+            width: activeRangeRect.width,
+            height: activeRangeRect.height,
           }}
+        />
+      )}
+
+      {activeRangeRect && selection.activeRange && !state.editingCell && (
+        <div
+          data-testid="xlsx-selection-fill-handle"
+          style={{
+            ...fillHandleStyle,
+            left: activeRangeRect.left + activeRangeRect.width - FILL_HANDLE_SIZE_PX,
+            top: activeRangeRect.top + activeRangeRect.height - FILL_HANDLE_SIZE_PX,
+          }}
+          onMouseDown={handleFillHandleMouseDown}
         />
       )}
 

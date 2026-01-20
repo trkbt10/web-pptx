@@ -51,7 +51,7 @@ describe("xlsx-editor/sheet/merge-mutation", () => {
     const worksheet = createWorksheet([
       { address: addr(1, 1), value: { type: "string", value: "A1" } },
       { address: addr(2, 1), value: { type: "string", value: "B1" } },
-      { address: addr(1, 2), value: { type: "empty" }, formula: "1+1" },
+      { address: addr(1, 2), value: { type: "empty" }, formula: { type: "normal", expression: "1+1" } },
     ]);
 
     const merged = mergeCells(worksheet, range(2, 2, 1, 1));
@@ -83,4 +83,3 @@ describe("xlsx-editor/sheet/merge-mutation", () => {
     expect(unmerged.mergeCells).toEqual([range(5, 5, 6, 6)]);
   });
 });
-

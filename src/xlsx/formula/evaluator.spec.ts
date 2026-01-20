@@ -16,7 +16,7 @@ function formulaCell(col: number, row: number, formula: string): Cell {
   return {
     address: { col: colIdx(col), row: rowIdx(row), colAbsolute: false, rowAbsolute: false },
     value: { type: "empty" },
-    formula,
+    formula: { type: "normal", expression: formula },
   };
 }
 

@@ -148,7 +148,7 @@ export function parseCell(
   return {
     address,
     value,
-    formula: formula?.expression, // Tentative: keep as string
+    formula,
     styleId: s ? styleId(parseInt(s, 10)) : undefined,
   };
 }

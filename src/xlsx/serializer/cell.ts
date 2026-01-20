@@ -270,12 +270,7 @@ export function serializeCell(
 
   // Formula element (if present)
   if (cell.formula) {
-    // For simple string formula, convert to Formula object
-    const formulaElement = serializeFormula({
-      expression: cell.formula,
-      type: "normal",
-    });
-    children.push(formulaElement);
+    children.push(serializeFormula(cell.formula));
   }
 
   // Value element (if present)

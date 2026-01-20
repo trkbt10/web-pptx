@@ -11,7 +11,7 @@ import { XlsxWorkbookEditorProvider, useXlsxWorkbookEditor } from "../context/wo
 import { XlsxSheetGrid, type XlsxGridMetrics } from "./XlsxSheetGrid";
 import { XlsxWorkbookToolbar } from "./toolbar/XlsxWorkbookToolbar";
 import { generateUniqueName } from "../sheet/mutation";
-import { XlsxCellFormatPanel } from "./inspector/XlsxCellFormatPanel";
+import { XlsxCellFormatPanel } from "./format-panel/XlsxCellFormatPanel";
 
 export type XlsxWorkbookEditorProps = {
   readonly workbook: XlsxWorkbook;
