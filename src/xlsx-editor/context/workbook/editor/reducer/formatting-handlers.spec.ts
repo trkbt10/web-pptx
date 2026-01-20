@@ -58,6 +58,39 @@ describe("xlsx-editor/context/workbook/editor/reducer/formatting-handlers", () =
     expect(sheet.rows).toEqual([{ rowNumber: rowIdx(3), cells: [], styleId: styleId(9) }]);
   });
 
+  it("SET_SELECTION_FORMAT creates a new styleId and applies it to the range", () => {
+    const workbook = createWorkbook([createWorksheet("Sheet1", 1)]);
+    // eslint-disable-next-line no-restricted-syntax -- test requires sequential state updates
+    let state = createInitialState(workbook);
+
+    const baseFont = workbook.styles.fonts[0]!;
+    state = xlsxEditorReducer(state, {
+      type: "SET_SELECTION_FORMAT",
+      range: range(1, 1, 1, 1),
+      format: {
+        font: { ...baseFont, bold: true },
+      },
+    });
+
+    expect(state.workbookHistory.past).toHaveLength(1);
+    expect(state.workbookHistory.present.styles.fonts).toHaveLength(2);
+    expect(state.workbookHistory.present.styles.cellXfs).toHaveLength(2);
+
+    const sheet = state.workbookHistory.present.sheets[0]!;
+    expect(sheet.rows).toEqual([
+      {
+        rowNumber: rowIdx(1),
+        cells: [
+          {
+            address: { col: colIdx(1), row: rowIdx(1), colAbsolute: false, rowAbsolute: false },
+            value: { type: "empty" },
+            styleId: styleId(1),
+          },
+        ],
+      },
+    ]);
+  });
+
   it("MERGE_CELLS adds a mergeCells range", () => {
     const workbook = createWorkbook([createWorksheet("Sheet1", 1)]);
     // eslint-disable-next-line no-restricted-syntax -- test requires sequential state updates

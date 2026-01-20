@@ -1,0 +1,37 @@
+import type { XlsxColor as XlsxFontColor } from "../../../xlsx/domain/style/font";
+import type { XlsxColor as XlsxFillColor } from "../../../xlsx/domain/style/fill";
+
+export function normalizeRgbHexInput(input: string): string | undefined {
+  const trimmed = input.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+  const withoutHash = trimmed.startsWith("#") ? trimmed.slice(1) : trimmed;
+  if (!/^[0-9a-fA-F]{6}$/u.test(withoutHash)) {
+    return undefined;
+  }
+  return withoutHash.toUpperCase();
+}
+
+export function rgbHexFromXlsxColor(color: XlsxFontColor | XlsxFillColor | undefined): string | undefined {
+  if (!color) {
+    return undefined;
+  }
+  if (color.type !== "rgb") {
+    return undefined;
+  }
+  const value = color.value.trim();
+  if (!/^[0-9a-fA-F]{8}$/u.test(value)) {
+    return undefined;
+  }
+  return value.slice(2).toUpperCase();
+}
+
+export function makeXlsxRgbColor(hex: string): XlsxFontColor & XlsxFillColor {
+  if (!/^[0-9A-F]{6}$/u.test(hex)) {
+    throw new Error(`Expected RRGGBB hex color: ${hex}`);
+  }
+  const value = `FF${hex}`;
+  return { type: "rgb", value };
+}
+

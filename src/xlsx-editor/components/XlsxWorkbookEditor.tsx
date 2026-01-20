@@ -4,13 +4,14 @@
  * Minimal workbook editor UI (sheet tabs + grid).
  */
 
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import type { XlsxWorkbook } from "../../xlsx/domain/workbook";
 import { Button, Tabs, spacingTokens } from "../../office-editor-components";
 import { XlsxWorkbookEditorProvider, useXlsxWorkbookEditor } from "../context/workbook/XlsxWorkbookEditorContext";
 import { XlsxSheetGrid, type XlsxGridMetrics } from "./XlsxSheetGrid";
 import { XlsxWorkbookToolbar } from "./toolbar/XlsxWorkbookToolbar";
 import { generateUniqueName } from "../sheet/mutation";
+import { XlsxCellFormatPanel } from "./inspector/XlsxCellFormatPanel";
 
 export type XlsxWorkbookEditorProps = {
   readonly workbook: XlsxWorkbook;
@@ -21,15 +22,25 @@ export type XlsxWorkbookEditorProps = {
 
 function XlsxWorkbookEditorInner({ grid }: { readonly grid: XlsxGridMetrics }) {
   const { workbook, activeSheetIndex, dispatch } = useXlsxWorkbookEditor();
+  const [isFormatPanelOpen, setIsFormatPanelOpen] = useState<boolean>(true);
 
   const items = workbook.sheets.map((sheet, idx) => ({
     id: String(idx),
     label: sheet.name,
     content: (
       <div style={{ display: "flex", flexDirection: "column", gap: spacingTokens.sm, minHeight: 0, flex: 1 }}>
-        <XlsxWorkbookToolbar sheetIndex={idx} />
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <XlsxSheetGrid sheetIndex={idx} metrics={grid} />
+        <XlsxWorkbookToolbar
+          sheetIndex={idx}
+          isFormatPanelOpen={isFormatPanelOpen}
+          onToggleFormatPanel={() => setIsFormatPanelOpen((v) => !v)}
+        />
+        <div style={{ flex: 1, minHeight: 0, display: "flex", gap: spacingTokens.sm }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <XlsxSheetGrid sheetIndex={idx} metrics={grid} />
+          </div>
+          {isFormatPanelOpen && (
+            <XlsxCellFormatPanel sheetIndex={idx} onClose={() => setIsFormatPanelOpen(false)} />
+          )}
         </div>
       </div>
     ),

@@ -5,15 +5,20 @@
  */
 
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
-import { Button, Input, spacingTokens } from "../../../office-editor-components";
+import { Button, Input, ToggleButton, spacingTokens } from "../../../office-editor-components";
 import { indexToColumnLetter, type CellAddress } from "../../../xlsx/domain/cell/address";
 import { colIdx, rowIdx, styleId } from "../../../xlsx/domain/types";
 import { parseCellUserInput } from "../cell-input/parse-cell-user-input";
 import { formatCellEditText } from "../cell-input/format-cell-edit-text";
 import { useXlsxWorkbookEditor } from "../../context/workbook/XlsxWorkbookEditorContext";
+import { getCell } from "../../cell/query";
+import { resolveCellStyleDetails } from "../../selectors/cell-style-details";
+import type { XlsxFont } from "../../../xlsx/domain/style/font";
 
 export type XlsxWorkbookToolbarProps = {
   readonly sheetIndex: number;
+  readonly isFormatPanelOpen: boolean;
+  readonly onToggleFormatPanel: () => void;
 };
 
 const barStyle: CSSProperties = {
@@ -54,7 +59,18 @@ function getTargetRange(params: { readonly activeCell: CellAddress | undefined; 
   return undefined;
 }
 
-export function XlsxWorkbookToolbar({ sheetIndex }: XlsxWorkbookToolbarProps) {
+function toggleFontFlag(font: XlsxFont, flag: "bold" | "italic", pressed: boolean): XlsxFont {
+  if (flag === "bold") {
+    return { ...font, bold: pressed ? true : undefined };
+  }
+  return { ...font, italic: pressed ? true : undefined };
+}
+
+function setUnderline(font: XlsxFont, pressed: boolean): XlsxFont {
+  return { ...font, underline: pressed ? "single" : undefined };
+}
+
+export function XlsxWorkbookToolbar({ sheetIndex, isFormatPanelOpen, onToggleFormatPanel }: XlsxWorkbookToolbarProps) {
   const { dispatch, workbook, canUndo, canRedo, selection, state } = useXlsxWorkbookEditor();
   const sheet = workbook.sheets[sheetIndex];
   if (!sheet) {
@@ -102,6 +118,17 @@ export function XlsxWorkbookToolbar({ sheetIndex }: XlsxWorkbookToolbarProps) {
     return styleId(n);
   }, [styleIdInput]);
 
+  const styleDetails = useMemo(() => {
+    if (!activeCell) {
+      return undefined;
+    }
+    const cell = getCell(sheet, activeCell);
+    return resolveCellStyleDetails({ styles: workbook.styles, sheet, address: activeCell, cell });
+  }, [activeCell, sheet, workbook.styles]);
+
+  const font = styleDetails?.font;
+  const toolbarCanFormat = Boolean(targetRange && font && !disableInputs);
+
   return (
     <div style={barStyle}>
       <Button
@@ -118,6 +145,44 @@ export function XlsxWorkbookToolbar({ sheetIndex }: XlsxWorkbookToolbarProps) {
       >
         Redo
       </Button>
+
+      <Button size="sm" onClick={onToggleFormatPanel} disabled={disableInputs}>
+        {isFormatPanelOpen ? "Hide format" : "Show format"}
+      </Button>
+
+      <ToggleButton
+        label="B"
+        pressed={font?.bold === true}
+        disabled={!toolbarCanFormat}
+        onChange={(pressed) => {
+          if (!targetRange || !font) {
+            return;
+          }
+          dispatch({ type: "SET_SELECTION_FORMAT", range: targetRange, format: { font: toggleFontFlag(font, "bold", pressed) } });
+        }}
+      />
+      <ToggleButton
+        label="I"
+        pressed={font?.italic === true}
+        disabled={!toolbarCanFormat}
+        onChange={(pressed) => {
+          if (!targetRange || !font) {
+            return;
+          }
+          dispatch({ type: "SET_SELECTION_FORMAT", range: targetRange, format: { font: toggleFontFlag(font, "italic", pressed) } });
+        }}
+      />
+      <ToggleButton
+        label="U"
+        pressed={font?.underline !== undefined && font.underline !== "none"}
+        disabled={!toolbarCanFormat}
+        onChange={(pressed) => {
+          if (!targetRange || !font) {
+            return;
+          }
+          dispatch({ type: "SET_SELECTION_FORMAT", range: targetRange, format: { font: setUnderline(font, pressed) } });
+        }}
+      />
 
       <Input
         value={activeCellText}

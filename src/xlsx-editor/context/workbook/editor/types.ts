@@ -10,6 +10,10 @@
 import type { XlsxWorkbook } from "../../../../xlsx/domain/workbook";
 import type { CellAddress, CellRange } from "../../../../xlsx/domain/cell/address";
 import type { CellValue } from "../../../../xlsx/domain/cell/types";
+import type { XlsxAlignment } from "../../../../xlsx/domain/style/types";
+import type { XlsxFont } from "../../../../xlsx/domain/style/font";
+import type { XlsxFill } from "../../../../xlsx/domain/style/fill";
+import type { XlsxBorder } from "../../../../xlsx/domain/style/border";
 import type { ColIndex, RowIndex, StyleId } from "../../../../xlsx/domain/types";
 
 // =============================================================================
@@ -180,6 +184,19 @@ export type CellUpdate = {
   readonly value: CellValue;
 };
 
+export type SelectionNumberFormat =
+  | { readonly type: "builtin"; readonly numFmtId: number }
+  | { readonly type: "custom"; readonly formatCode: string };
+
+export type SelectionFormatUpdate = {
+  readonly font?: XlsxFont;
+  readonly fill?: XlsxFill;
+  readonly border?: XlsxBorder;
+  /** `null` clears alignment, `undefined` keeps current alignment */
+  readonly alignment?: XlsxAlignment | null;
+  readonly numberFormat?: SelectionNumberFormat;
+};
+
 /**
  * Actions for XLSX editor reducer
  */
@@ -239,6 +256,7 @@ export type XlsxEditorAction =
 
   // Formatting
   | { readonly type: "APPLY_STYLE"; readonly range: CellRange; readonly styleId: StyleId }
+  | { readonly type: "SET_SELECTION_FORMAT"; readonly range: CellRange; readonly format: SelectionFormatUpdate }
   | { readonly type: "MERGE_CELLS"; readonly range: CellRange }
   | { readonly type: "UNMERGE_CELLS"; readonly range: CellRange }
 
