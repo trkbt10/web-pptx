@@ -58,7 +58,7 @@ function clearNonOriginCellContentsInMerge(
     return { row, changed: false };
   }
 
-  let changed = false;
+  const state = { changed: false };
   const cells = row.cells.map((cell): Cell => {
     const colNumber = toColNumber(cell.address.col);
     if (colNumber < merge.minCol || colNumber > merge.maxCol) {
@@ -74,13 +74,13 @@ function clearNonOriginCellContentsInMerge(
       return cell;
     }
 
-    changed = true;
+    state.changed = true;
     const { formula: removedFormula, ...withoutFormula } = cell;
     void removedFormula;
     return { ...withoutFormula, value: { type: "empty" } };
   });
 
-  if (!changed) {
+  if (!state.changed) {
     return { row, changed: false };
   }
   return { row: { ...row, cells }, changed: true };

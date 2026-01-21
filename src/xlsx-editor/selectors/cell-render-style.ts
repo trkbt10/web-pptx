@@ -84,6 +84,11 @@ export type CellBorderDecoration = {
   readonly bottom?: CellBorderEdgeDecoration;
 };
 
+/**
+ * Resolve a cell's render style (font, fill, alignment) to be applied as CSS.
+ *
+ * Borders are intentionally handled separately as an SVG overlay.
+ */
 export function resolveCellRenderStyle(params: {
   readonly styles: XlsxStyleSheet;
   readonly sheet: XlsxWorksheet;
@@ -98,11 +103,17 @@ export function resolveCellRenderStyle(params: {
   if (font) {
     css.fontFamily = font.name;
     css.fontSize = pointsToCssPx(font.size);
-    if (font.bold) css.fontWeight = 700;
-    if (font.italic) css.fontStyle = "italic";
+    if (font.bold) {
+      css.fontWeight = 700;
+    }
+    if (font.italic) {
+      css.fontStyle = "italic";
+    }
     if (font.color) {
       const color = xlsxColorToCss(font.color as XlsxColorLike);
-      if (color) css.color = color;
+      if (color) {
+        css.color = color;
+      }
     }
 
     const decorations: string[] = [];
@@ -130,6 +141,11 @@ export function resolveCellRenderStyle(params: {
   return css;
 }
 
+/**
+ * Resolve a cell's border decoration (left/right/top/bottom) from styles.xml.
+ *
+ * This does not apply any DOM borders. Callers typically render this via an SVG overlay.
+ */
 export function resolveCellBorderDecoration(params: {
   readonly styles: XlsxStyleSheet;
   readonly sheet: XlsxWorksheet;
@@ -150,31 +166,38 @@ export function resolveCellBorderDecoration(params: {
   const top = border.top ? borderStyleToCss(border.top.style) : undefined;
   const bottom = border.bottom ? borderStyleToCss(border.bottom.style) : undefined;
 
-  let result: CellBorderDecoration = {};
-  if (left) {
-    result = {
-      ...result,
-      left: { ...left, color: xlsxColorToCss(border.left?.color as XlsxColorLike | undefined) ?? fallback },
-    };
-  }
-  if (right) {
-    result = {
-      ...result,
-      right: { ...right, color: xlsxColorToCss(border.right?.color as XlsxColorLike | undefined) ?? fallback },
-    };
-  }
-  if (top) {
-    result = {
-      ...result,
-      top: { ...top, color: xlsxColorToCss(border.top?.color as XlsxColorLike | undefined) ?? fallback },
-    };
-  }
-  if (bottom) {
-    result = {
-      ...result,
-      bottom: { ...bottom, color: xlsxColorToCss(border.bottom?.color as XlsxColorLike | undefined) ?? fallback },
-    };
-  }
+  const toEdgeDecoration = (
+    side: "left" | "right" | "top" | "bottom",
+    edge: Pick<CellBorderEdgeDecoration, "width" | "style"> | undefined,
+    color: string | undefined,
+  ): CellBorderDecoration => {
+    if (!edge) {
+      return {};
+    }
+    const decorated: CellBorderEdgeDecoration = { ...edge, color: color ?? fallback };
+    if (side === "left") {
+      return { left: decorated };
+    }
+    if (side === "right") {
+      return { right: decorated };
+    }
+    if (side === "top") {
+      return { top: decorated };
+    }
+    return { bottom: decorated };
+  };
+
+  const leftDecoration = toEdgeDecoration("left", left, xlsxColorToCss(border.left?.color as XlsxColorLike | undefined));
+  const rightDecoration = toEdgeDecoration("right", right, xlsxColorToCss(border.right?.color as XlsxColorLike | undefined));
+  const topDecoration = toEdgeDecoration("top", top, xlsxColorToCss(border.top?.color as XlsxColorLike | undefined));
+  const bottomDecoration = toEdgeDecoration("bottom", bottom, xlsxColorToCss(border.bottom?.color as XlsxColorLike | undefined));
+
+  const result: CellBorderDecoration = {
+    ...leftDecoration,
+    ...rightDecoration,
+    ...topDecoration,
+    ...bottomDecoration,
+  };
 
   const hasAny = Boolean(result.left || result.right || result.top || result.bottom);
   return hasAny ? result : undefined;

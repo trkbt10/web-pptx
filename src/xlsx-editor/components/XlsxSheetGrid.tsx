@@ -35,6 +35,11 @@ const rootStyle: CSSProperties = {
   minWidth: 0,
 };
 
+/**
+ * Spreadsheet grid view for a single worksheet.
+ *
+ * Provides virtualized scrolling and delegates rendering/interaction to layered grid components.
+ */
 export function XlsxSheetGrid({
   sheetIndex,
   metrics,
@@ -192,4 +197,3 @@ export function XlsxSheetGrid({
     </div>
   );
 }
-

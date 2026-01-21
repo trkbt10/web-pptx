@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for gridline geometry calculations (visible segments).
+ */
+
 import type { XlsxWorksheet } from "../../../xlsx/domain/workbook";
 import { createSheetLayout } from "../../selectors/sheet-layout";
 import { getVisibleGridLineSegments } from "./gridline-geometry";

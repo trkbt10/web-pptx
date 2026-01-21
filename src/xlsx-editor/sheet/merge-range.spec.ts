@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for merge range normalization and lookup helpers.
+ */
+
 import { colIdx, rowIdx } from "../../xlsx/domain/types";
 import type { CellAddress } from "../../xlsx/domain/cell/address";
 import { findMergeForCell, normalizeMergeRange } from "./merge-range";
@@ -23,4 +27,3 @@ describe("xlsx-editor/sheet/merge-range", () => {
     expect(findMergeForCell([m], addr(3, 3))).toBeUndefined();
   });
 });
-

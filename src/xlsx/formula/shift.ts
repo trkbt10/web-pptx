@@ -1,3 +1,11 @@
+/**
+ * @file Formula reference shifting
+ *
+ * Shifts relative cell/range references inside a formula string by (deltaCols, deltaRows),
+ * preserving absolute ($) references and returning `#REF!` when a shifted reference overflows
+ * the Excel sheet bounds.
+ */
+
 import type { CellAddress, CellRange } from "../domain/cell/address";
 import { EXCEL_MAX_COLS, EXCEL_MAX_ROWS } from "../domain/constants";
 import { colIdx, rowIdx } from "../domain/types";
@@ -87,15 +95,24 @@ function shiftAst(node: FormulaAstNode, deltaCols: number, deltaRows: number): F
   }
 }
 
+/**
+ * Shift relative references inside a formula string by the given deltas.
+ *
+ * On parse failure, this returns the original formula unchanged.
+ */
 export function shiftFormulaReferences(formula: string, deltaCols: number, deltaRows: number): string {
   if (deltaCols === 0 && deltaRows === 0) {
     return formula;
   }
 
-  let parsed: FormulaAstNode;
-  try {
-    parsed = parseFormula(formula);
-  } catch {
+  const parsed = (() => {
+    try {
+      return parseFormula(formula);
+    } catch {
+      return undefined;
+    }
+  })();
+  if (!parsed) {
     return formula;
   }
 

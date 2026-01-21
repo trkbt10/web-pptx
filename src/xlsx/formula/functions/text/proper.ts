@@ -48,15 +48,15 @@ export const properFunction: FormulaFunctionEagerDefinition = {
     }
     const [textArg] = args;
     const text = helpers.coerceText(textArg, "PROPER text");
-    let shouldCapitalize = true;
+    const state = { shouldCapitalize: true };
     const result = Array.from(text).map((character) => {
       const lower = character.toLocaleLowerCase();
       if (isLetter(lower)) {
-        const next = shouldCapitalize ? lower.toLocaleUpperCase() : lower;
-        shouldCapitalize = false;
+        const next = state.shouldCapitalize ? lower.toLocaleUpperCase() : lower;
+        state.shouldCapitalize = false;
         return next;
       }
-      shouldCapitalize = true;
+      state.shouldCapitalize = true;
       return character;
     });
     return result.join("");

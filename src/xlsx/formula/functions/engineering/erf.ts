@@ -14,32 +14,30 @@ const computeErfSeries = (x: number): number => {
   if (x === 0) {
     return 0;
   }
-  let term = x;
-  let sum = x;
+  const state = { term: x, sum: x };
   for (let n = 1; n < ERF_SERIES_MAX_ITERATIONS; n += 1) {
-    term *= (-x * x) / n;
-    const contribution = term / (2 * n + 1);
-    sum += contribution;
+    state.term *= (-x * x) / n;
+    const contribution = state.term / (2 * n + 1);
+    state.sum += contribution;
     if (Math.abs(contribution) < ERF_SERIES_TOLERANCE) {
       break;
     }
   }
-  return TWO_OVER_SQRT_PI * sum;
+  return TWO_OVER_SQRT_PI * state.sum;
 };
 
 const computeErfcComplement = (x: number): number => {
   const inverseSquare = 1 / (x * x);
-  let term = 1;
-  let sum = 1;
+  const state = { term: 1, sum: 1 };
   for (let n = 1; n < ERFC_MAX_ITERATIONS; n += 1) {
-    term *= -((2 * n - 1) * inverseSquare) / 2;
-    sum += term;
-    if (Math.abs(term) < ERFC_TOLERANCE) {
+    state.term *= -((2 * n - 1) * inverseSquare) / 2;
+    state.sum += state.term;
+    if (Math.abs(state.term) < ERFC_TOLERANCE) {
       break;
     }
   }
   const prefactor = Math.exp(-x * x) / (x * Math.sqrt(Math.PI));
-  return prefactor * sum;
+  return prefactor * state.sum;
 };
 
 const computeErf = (x: number): number => {

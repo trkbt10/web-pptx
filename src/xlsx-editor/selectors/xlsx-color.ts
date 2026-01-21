@@ -183,6 +183,11 @@ function themeToRgb(theme: number): { readonly r: number; readonly g: number; re
   return DEFAULT_THEME_RGB[theme];
 }
 
+/**
+ * Convert an OOXML color value into a CSS hex string (e.g. `#RRGGBB`).
+ *
+ * Supports rgb/indexed/theme colors and applies theme tint when present.
+ */
 export function xlsxColorToCss(color: XlsxColorLike | undefined): string | undefined {
   if (!color) {
     return undefined;

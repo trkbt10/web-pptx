@@ -1,3 +1,10 @@
+/**
+ * @file Formula AST Types
+ *
+ * Defines the AST node shapes produced by the formula parser and consumed by the evaluator.
+ * This is a minimal subset to represent the formula features supported in this project.
+ */
+
 import type { CellAddress, CellRange } from "../domain/cell/address";
 import type { FormulaScalar } from "./types";
 

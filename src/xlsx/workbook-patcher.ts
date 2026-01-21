@@ -146,18 +146,8 @@ function patchSheetXml(
     throw new Error(`patchSheetXml: worksheet element not found in ${sheet.xmlPath}`);
   }
 
-  // Update dimension if provided
-  let updatedWorksheet = worksheetEl;
-  if (dimension) {
-    updatedWorksheet = updateDimension(updatedWorksheet, dimension);
-  }
-
-  // Get or create sheetData
-  let sheetDataEl = getChild(updatedWorksheet, "sheetData");
-  if (!sheetDataEl) {
-    sheetDataEl = createElement("sheetData", {}, []);
-    updatedWorksheet = appendChildElement(updatedWorksheet, sheetDataEl);
-  }
+  const worksheetWithDimension = dimension ? updateDimension(worksheetEl, dimension) : worksheetEl;
+  const { worksheet: updatedWorksheet, sheetData: sheetDataEl } = ensureSheetDataElement(worksheetWithDimension);
 
   // Apply cell updates
   const updatedSheetData = applyCellUpdates(sheetDataEl, cells, sharedStrings);
@@ -188,6 +178,16 @@ function updateDimension(worksheet: XmlElement, dimension: string): XmlElement {
   }
   // Add dimension after sheetViews or at start
   return insertChildAfter(worksheet, "sheetViews", createElement("dimension", { ref: dimension }));
+}
+
+function ensureSheetDataElement(worksheet: XmlElement): { readonly worksheet: XmlElement; readonly sheetData: XmlElement } {
+  const existing = getChild(worksheet, "sheetData");
+  if (existing) {
+    return { worksheet, sheetData: existing };
+  }
+  const sheetData = createElement("sheetData", {}, []);
+  const updatedWorksheet = appendChildElement(worksheet, sheetData);
+  return { worksheet: updatedWorksheet, sheetData };
 }
 
 /**
@@ -349,32 +349,26 @@ function appendChildElement(parent: XmlElement, child: XmlElement): XmlElement {
 }
 
 function insertChildAfter(parent: XmlElement, afterName: string, child: XmlElement): XmlElement {
-  const newChildren: XmlNode[] = [];
-  let inserted = false;
+  const reduced = parent.children.reduce(
+    (acc, existing): { readonly children: readonly XmlNode[]; readonly inserted: boolean } => {
+      const nextChildren = [...acc.children, existing];
+      if (!acc.inserted && isXmlElement(existing) && existing.name === afterName) {
+        return { children: [...nextChildren, child], inserted: true };
+      }
+      return { children: nextChildren, inserted: acc.inserted };
+    },
+    { children: [] as readonly XmlNode[], inserted: false },
+  );
 
-  for (const existing of parent.children) {
-    newChildren.push(existing);
-    if (!inserted && isXmlElement(existing) && existing.name === afterName) {
-      newChildren.push(child);
-      inserted = true;
-    }
+  if (reduced.inserted) {
+    return createElement(parent.name, parent.attrs, [...reduced.children]);
   }
-
-  if (!inserted) {
-    // Insert at start if afterName not found
-    newChildren.unshift(child);
-  }
-
-  return createElement(parent.name, parent.attrs, newChildren);
+  return createElement(parent.name, parent.attrs, [child, ...reduced.children]);
 }
 
 function columnLetterToIndex(col: string): number {
-  let index = 0;
   const upper = col.toUpperCase();
-  for (let i = 0; i < upper.length; i++) {
-    index = index * 26 + (upper.charCodeAt(i) - 64);
-  }
-  return index;
+  return [...upper].reduce((acc, char) => acc * 26 + (char.charCodeAt(0) - 64), 0);
 }
 
 // =============================================================================

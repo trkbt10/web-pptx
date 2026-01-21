@@ -1,8 +1,18 @@
+/**
+ * @file Autofill series detection
+ *
+ * Detects numeric/date sequences in the base range and computes fill values.
+ * When the base includes formulas or mixed types, autofill falls back to pattern repeat.
+ */
+
 import type { CellValue } from "../../../xlsx/domain/cell/types";
 import type { PatternCell, PatternSeries } from "./types";
 
 export type RepeatDirection = "forward" | "backward";
 
+/**
+ * Get the index into a repeating pattern for a given step, supporting reverse (up/left) fill.
+ */
 export function getRepeatIndex(stepIndex: number, length: number, direction: RepeatDirection): number {
   if (length <= 0) {
     return 0;
@@ -14,6 +24,13 @@ export function getRepeatIndex(stepIndex: number, length: number, direction: Rep
   return (length - 1 - cycle + length) % length;
 }
 
+/**
+ * Infer a numeric or date series from a base pattern, if possible.
+ *
+ * - Returns `numeric` only when all values are numbers and there are no formulas.
+ * - Returns `date` only when all values are dates and there are no formulas.
+ * - Otherwise returns `repeat`.
+ */
 export function computeNumericSeries(values: readonly PatternCell[]): PatternSeries {
   if (values.length === 0) {
     return { type: "repeat" };
@@ -37,10 +54,16 @@ export function computeNumericSeries(values: readonly PatternCell[]): PatternSer
   return { type: "repeat" };
 }
 
+/**
+ * Add whole days to a Date (UTC-millisecond arithmetic).
+ */
 export function addDays(base: Date, days: number): Date {
   return new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
 }
 
+/**
+ * Compute the next numeric value for a series fill.
+ */
 export function computeNumericFillValue(series: Extract<PatternSeries, { type: "numeric" }>, stepAmount: number, isForward: boolean): number {
   if (isForward) {
     return series.last + series.stepForward * stepAmount;
@@ -48,10 +71,12 @@ export function computeNumericFillValue(series: Extract<PatternSeries, { type: "
   return series.first - series.stepBackward * stepAmount;
 }
 
+/**
+ * Compute the next date value for a series fill.
+ */
 export function computeDateFillValue(series: Extract<PatternSeries, { type: "date" }>, stepAmount: number, isForward: boolean): Date {
   if (isForward) {
     return addDays(series.last, series.stepForwardDays * stepAmount);
   }
   return addDays(series.first, -series.stepBackwardDays * stepAmount);
 }
-

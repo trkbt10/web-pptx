@@ -80,18 +80,18 @@ function applyStyleToRowCells(params: {
   }
 
   const nextCells: Cell[] = [];
-  let i = 0;
+  const cursor = { index: 0 };
 
-  while (i < existing.length && toColNumber(existing[i]!.address.col) < minCol) {
-    nextCells.push(existing[i]!);
-    i += 1;
+  while (cursor.index < existing.length && toColNumber(existing[cursor.index]!.address.col) < minCol) {
+    nextCells.push(existing[cursor.index]!);
+    cursor.index += 1;
   }
 
   for (let col = minCol; col <= maxCol; col += 1) {
-    const current = existing[i];
+    const current = existing[cursor.index];
     if (current && toColNumber(current.address.col) === col) {
       nextCells.push(applyStyleIdToCell(current, styleId));
-      i += 1;
+      cursor.index += 1;
       continue;
     }
     nextCells.push({
@@ -101,9 +101,9 @@ function applyStyleToRowCells(params: {
     });
   }
 
-  while (i < existing.length) {
-    nextCells.push(existing[i]!);
-    i += 1;
+  while (cursor.index < existing.length) {
+    nextCells.push(existing[cursor.index]!);
+    cursor.index += 1;
   }
 
   return { ...row, cells: nextCells };

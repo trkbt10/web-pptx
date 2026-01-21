@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for NPV (net present value) financial function.
+ */
+
 import { formulaFunctionHelpers, type FormulaFunctionDefinition } from "../../functionRegistry";
 import type { EvalResult } from "../helpers";
 import { invokeFormulaFunction, makeEvalArgs } from "../testHelpers";
@@ -24,4 +28,3 @@ describe("NPV", () => {
     expect(npv).toBeCloseTo(expected, 6);
   });
 });
-

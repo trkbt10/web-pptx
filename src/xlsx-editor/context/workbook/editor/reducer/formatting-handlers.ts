@@ -28,6 +28,39 @@ type SetSelectionFormatAction = Extract<XlsxEditorAction, { type: "SET_SELECTION
 type MergeCellsAction = Extract<XlsxEditorAction, { type: "MERGE_CELLS" }>;
 type UnmergeCellsAction = Extract<XlsxEditorAction, { type: "UNMERGE_CELLS" }>;
 
+function resolveNextAlignment(params: {
+  readonly baseAlignment: XlsxCellXf["alignment"];
+  readonly requested: SetSelectionFormatAction["format"]["alignment"];
+}): XlsxCellXf["alignment"] {
+  const { baseAlignment, requested } = params;
+  if (requested === undefined) {
+    return baseAlignment;
+  }
+  if (requested === null) {
+    return undefined;
+  }
+  return requested;
+}
+
+function resolveNumberFormatMutation(params: {
+  readonly styles: ReturnType<typeof upsertFont>["styles"];
+  readonly baseNumFmtId: XlsxCellXf["numFmtId"];
+  readonly numberFormat: SetSelectionFormatAction["format"]["numberFormat"];
+}): { readonly styles: ReturnType<typeof upsertFont>["styles"]; readonly numFmtId: XlsxCellXf["numFmtId"] } {
+  const { styles, baseNumFmtId, numberFormat } = params;
+  if (!numberFormat) {
+    return { styles, numFmtId: baseNumFmtId };
+  }
+  if (numberFormat.type === "builtin") {
+    return useBuiltinNumberFormat(styles, numberFormat.numFmtId);
+  }
+  const formatCode = numberFormat.formatCode.trim();
+  if (formatCode.length === 0) {
+    throw new Error("Custom number format code must not be empty");
+  }
+  return upsertCustomNumberFormat(styles, formatCode);
+}
+
 function handleApplyStyle(
   state: XlsxEditorState,
   action: ApplyStyleAction,
@@ -77,38 +110,17 @@ function handleSetSelectionFormat(
   const nextFont = action.format.font ?? base.font;
   const nextFill = action.format.fill ?? base.fill;
   const nextBorder = action.format.border ?? base.border;
-  const nextAlignment = (() => {
-    if (action.format.alignment === undefined) {
-      return baseXf.alignment;
-    }
-    if (action.format.alignment === null) {
-      return undefined;
-    }
-    return action.format.alignment;
-  })();
+  const nextAlignment = resolveNextAlignment({ baseAlignment: baseXf.alignment, requested: action.format.alignment });
 
-  let styles = currentWorkbook.styles;
-  const fontResult = upsertFont(styles, nextFont);
-  styles = fontResult.styles;
-  const fillResult = upsertFill(styles, nextFill);
-  styles = fillResult.styles;
-  const borderResult = upsertBorder(styles, nextBorder);
-  styles = borderResult.styles;
+  const fontResult = upsertFont(currentWorkbook.styles, nextFont);
+  const fillResult = upsertFill(fontResult.styles, nextFill);
+  const borderResult = upsertBorder(fillResult.styles, nextBorder);
 
-  const numFmtResult = (() => {
-    if (!action.format.numberFormat) {
-      return { styles, numFmtId: baseXf.numFmtId };
-    }
-    if (action.format.numberFormat.type === "builtin") {
-      return useBuiltinNumberFormat(styles, action.format.numberFormat.numFmtId);
-    }
-    const formatCode = action.format.numberFormat.formatCode.trim();
-    if (formatCode.length === 0) {
-      throw new Error("Custom number format code must not be empty");
-    }
-    return upsertCustomNumberFormat(styles, formatCode);
-  })();
-  styles = numFmtResult.styles;
+  const numFmtResult = resolveNumberFormatMutation({
+    styles: borderResult.styles,
+    baseNumFmtId: baseXf.numFmtId,
+    numberFormat: action.format.numberFormat,
+  });
 
   const xf: XlsxCellXf = {
     numFmtId: numFmtResult.numFmtId,
@@ -118,8 +130,8 @@ function handleSetSelectionFormat(
     alignment: nextAlignment,
   };
 
-  const xfResult = upsertCellXf(styles, xf);
-  styles = xfResult.styles;
+  const xfResult = upsertCellXf(numFmtResult.styles, xf);
+  const styles = xfResult.styles;
   const nextStyleId: StyleId = xfResult.styleId;
 
   const workbookWithSheetUpdated = updateWorksheetInWorkbook(

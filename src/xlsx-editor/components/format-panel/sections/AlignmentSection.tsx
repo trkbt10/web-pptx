@@ -1,3 +1,9 @@
+/**
+ * @file Alignment section (format panel)
+ *
+ * UI controls for editing cell alignment and wrap settings in the selection format panel.
+ */
+
 import { Accordion, Button, FieldGroup, FieldRow, Select, ToggleButton } from "../../../../office-editor-components";
 import type { XlsxAlignment } from "../../../../xlsx/domain/style/types";
 import { HORIZONTAL_OPTIONS, VERTICAL_OPTIONS } from "../options";
@@ -12,6 +18,9 @@ export type AlignmentSectionProps = {
   readonly onWrapTextChange: (wrapText: boolean) => void;
 };
 
+/**
+ * Format panel section for alignment controls (horizontal/vertical + wrap).
+ */
 export function AlignmentSection(props: AlignmentSectionProps) {
   const alignment = props.alignment;
 

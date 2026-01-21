@@ -1,3 +1,15 @@
+/**
+ * @file Pointer drag helpers for spreadsheet UI
+ *
+ * Provides a small abstraction for pointer-based drags that are tracked via `window` listeners.
+ * The handlers are filtered by `pointerId` so concurrent pointers do not interfere.
+ */
+
+/**
+ * Start a pointer drag sequence by attaching `pointermove`/`pointerup`/`pointercancel` to `window`.
+ *
+ * Returns a cleanup function that removes listeners. `onUp`/`onCancel` are invoked after cleanup.
+ */
 export function startWindowPointerDrag(params: {
   readonly pointerId: number;
   readonly onMove?: (e: PointerEvent) => void;
@@ -6,13 +18,13 @@ export function startWindowPointerDrag(params: {
 }): () => void {
   const { pointerId, onMove, onUp, onCancel } = params;
 
-  let active = true;
+  const state = { active: true };
 
   const cleanup = (): void => {
-    if (!active) {
+    if (!state.active) {
       return;
     }
-    active = false;
+    state.active = false;
     window.removeEventListener("pointermove", handlePointerMove);
     window.removeEventListener("pointerup", handlePointerUp);
     window.removeEventListener("pointercancel", handlePointerCancel);
@@ -47,4 +59,3 @@ export function startWindowPointerDrag(params: {
 
   return cleanup;
 }
-

@@ -49,6 +49,16 @@ function setSolidFill(hex: string): XlsxFill {
   };
 }
 
+function resolveSolidFillColor(fill: XlsxFill): string {
+  if (fill.type !== "pattern") {
+    return "";
+  }
+  if (fill.pattern.patternType !== "solid") {
+    return "";
+  }
+  return rgbHexFromXlsxColor(fill.pattern.fgColor) ?? "";
+}
+
 function toggleBold(font: XlsxFont, pressed: boolean): XlsxFont {
   return { ...font, bold: pressed ? true : undefined };
 }
@@ -65,6 +75,12 @@ function toggleUnderline(font: XlsxFont, pressed: boolean): XlsxFont {
   return { ...font, underline: pressed ? "single" : undefined };
 }
 
+/**
+ * Formatting side panel for the current selection.
+ *
+ * This component edits workbook style records (fonts/fills/borders/numFmts/xf) and applies the
+ * resulting styleId to the selected cell range.
+ */
 export function XlsxCellFormatPanel({ sheetIndex, onClose }: XlsxCellFormatPanelProps) {
   const { workbook, selection, state, dispatch } = useXlsxWorkbookEditor();
   const sheet = workbook.sheets[sheetIndex];
@@ -120,12 +136,7 @@ export function XlsxCellFormatPanel({ sheetIndex, onClose }: XlsxCellFormatPanel
     }
     setFontSizeDraft(details.font.size);
     setFontColorDraft(rgbHexFromXlsxColor(details.font.color) ?? "");
-
-    let nextFillColor = "";
-    if (details.fill.type === "pattern" && details.fill.pattern.patternType === "solid") {
-      nextFillColor = rgbHexFromXlsxColor(details.fill.pattern.fgColor) ?? "";
-    }
-    setFillColorDraft(nextFillColor);
+    setFillColorDraft(resolveSolidFillColor(details.fill));
     setBorderColorDraft(rgbHexFromXlsxColor(details.border.left?.color) ?? "");
     setCustomFormatDraft(details.formatCode);
     setScientificDigits(3);

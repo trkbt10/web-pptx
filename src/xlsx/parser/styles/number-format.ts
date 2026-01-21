@@ -72,7 +72,9 @@ export function parseNumFmt(numFmtElement: XmlElement): XlsxNumberFormat {
 export function parseNumFmts(
   numFmtsElement: XmlElement | undefined,
 ): readonly XlsxNumberFormat[] {
-  if (!numFmtsElement) return [];
+  if (!numFmtsElement) {
+    return [];
+  }
 
   const result: XlsxNumberFormat[] = [];
   const numFmtElements = getChildren(numFmtsElement, "numFmt");

@@ -57,13 +57,16 @@ export const lookupFunction: FormulaFunctionEagerDefinition = {
       "LOOKUP lookup",
     );
 
-    let resultVector = lookupVector;
-    if (args.length === 3) {
-      resultVector = ensureVector(
+    const resolveResultVector = (): FormulaEvaluationResult[] => {
+      if (args.length !== 3) {
+        return lookupVector;
+      }
+      return ensureVector(
         helpers.flattenResult(args[2]).map((value) => (value ?? null) as FormulaEvaluationResult),
         "LOOKUP result",
       );
-    }
+    };
+    const resultVector = resolveResultVector();
 
     if (resultVector.length !== lookupVector.length) {
       throw new Error("LOOKUP result vector must match lookup vector length");
@@ -78,7 +81,7 @@ export const lookupFunction: FormulaFunctionEagerDefinition = {
       throw new Error("LOOKUP requires numeric lookup value when no exact match is found");
     }
 
-    let candidateIndex: number | null = null;
+    const state = { candidateIndex: null as number | null };
     for (let index = 0; index < lookupVector.length; index += 1) {
       const candidate = lookupVector[index];
       if (typeof candidate !== "number") {
@@ -87,14 +90,14 @@ export const lookupFunction: FormulaFunctionEagerDefinition = {
       if (candidate > lookupValue) {
         break;
       }
-      candidateIndex = index;
+      state.candidateIndex = index;
     }
 
-    if (candidateIndex === null) {
+    if (state.candidateIndex === null) {
       throw new Error("LOOKUP could not find an approximate match");
     }
 
-    return resultVector[candidateIndex] ?? null;
+    return resultVector[state.candidateIndex] ?? null;
   },
 };
 

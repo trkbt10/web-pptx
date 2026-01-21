@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for XIRR (irregular IRR) financial function.
+ */
+
 import { formulaFunctionHelpers, type FormulaFunctionDefinition } from "../../functionRegistry";
 import type { EvalResult } from "../helpers";
 import { invokeFormulaFunction, makeEvalArgs } from "../testHelpers";
@@ -31,4 +35,3 @@ describe("XIRR", () => {
     expect(residual).toBeCloseTo(0, 4);
   });
 });
-

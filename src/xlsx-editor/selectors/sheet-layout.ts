@@ -48,6 +48,9 @@ export type SheetLayout = {
 
 const SCREEN_DPI = 96;
 
+/**
+ * Convert typographic points (1/72 inch) to pixels using the editor's assumed screen DPI.
+ */
 export function pointsToPixels(points: number): number {
   if (!Number.isFinite(points)) {
     throw new Error(`points must be finite: ${points}`);
@@ -55,6 +58,9 @@ export function pointsToPixels(points: number): number {
   return (points * SCREEN_DPI) / 72;
 }
 
+/**
+ * Convert pixels to typographic points (1/72 inch) using the editor's assumed screen DPI.
+ */
 export function pixelsToPoints(pixels: number): number {
   if (!Number.isFinite(pixels)) {
     throw new Error(`pixels must be finite: ${pixels}`);
@@ -72,6 +78,9 @@ export type ColumnWidthConversionOptions = {
   readonly paddingPx?: number;
 };
 
+/**
+ * Convert an Excel column width (in "characters") to pixels using an Excel-like approximation.
+ */
 export function columnWidthCharToPixels(widthChars: number, options?: ColumnWidthConversionOptions): number {
   if (!Number.isFinite(widthChars)) {
     throw new Error(`widthChars must be finite: ${widthChars}`);
@@ -87,6 +96,9 @@ export function columnWidthCharToPixels(widthChars: number, options?: ColumnWidt
   return Math.max(0, Math.floor(widthChars * maxDigitWidthPx + paddingPx));
 }
 
+/**
+ * Convert pixels to an Excel column width (in "characters") using an Excel-like approximation.
+ */
 export function pixelsToColumnWidthChar(pixels: number, options?: ColumnWidthConversionOptions): number {
   if (!Number.isFinite(pixels)) {
     throw new Error(`pixels must be finite: ${pixels}`);
@@ -133,16 +145,17 @@ function mergeAdjacentSegments(
     merged.push(seg);
   }
 
-  const withOffsets: Segment[] = [];
-  let offset = 0;
-  for (const seg of merged) {
-    const length = seg.endExclusive - seg.start;
-    const endOffset = offset + length * seg.sizePx;
-    withOffsets.push({ ...seg, offsetPx: offset, endOffsetPx: endOffset });
-    offset = endOffset;
-  }
+  const accumulator = merged.reduce(
+    (acc, seg) => {
+      const length = seg.endExclusive - seg.start;
+      const endOffset = acc.offsetPx + length * seg.sizePx;
+      acc.segments.push({ ...seg, offsetPx: acc.offsetPx, endOffsetPx: endOffset });
+      return { offsetPx: endOffset, segments: acc.segments };
+    },
+    { offsetPx: 0, segments: [] as Segment[] },
+  );
 
-  return withOffsets;
+  return accumulator.segments;
 }
 
 function buildAxisLayoutFromSegments(segments: readonly Segment[], count: number): SheetAxisLayout {
@@ -158,22 +171,21 @@ function buildAxisLayoutFromSegments(segments: readonly Segment[], count: number
   const totalSizePx = last.endOffsetPx;
 
   const getSegmentForIndex = (index0: number): Segment => {
-    let lo = 0;
-    let hi = segments.length - 1;
-    while (lo <= hi) {
+    const search = (lo: number, hi: number): Segment => {
+      if (lo > hi) {
+        throw new Error(`No segment found for index0=${index0}`);
+      }
       const mid = Math.floor((lo + hi) / 2);
       const seg = segments[mid]!;
       if (index0 < seg.start) {
-        hi = mid - 1;
-        continue;
+        return search(lo, mid - 1);
       }
       if (index0 >= seg.endExclusive) {
-        lo = mid + 1;
-        continue;
+        return search(mid + 1, hi);
       }
       return seg;
-    }
-    throw new Error(`No segment found for index0=${index0}`);
+    };
+    return search(0, segments.length - 1);
   };
 
   const getSegmentForOffset = (offsetPx: number): Segment | undefined => {
@@ -182,22 +194,21 @@ function buildAxisLayoutFromSegments(segments: readonly Segment[], count: number
     }
 
     const clamped = Math.max(0, Math.min(totalSizePx, offsetPx));
-    let lo = 0;
-    let hi = segments.length - 1;
-    while (lo <= hi) {
+    const search = (lo: number, hi: number): Segment | undefined => {
+      if (lo > hi) {
+        return undefined;
+      }
       const mid = Math.floor((lo + hi) / 2);
       const seg = segments[mid]!;
       if (clamped < seg.offsetPx) {
-        hi = mid - 1;
-        continue;
+        return search(lo, mid - 1);
       }
       if (clamped >= seg.endOffsetPx) {
-        lo = mid + 1;
-        continue;
+        return search(mid + 1, hi);
       }
       return seg;
-    }
-    return undefined;
+    };
+    return search(0, segments.length - 1);
   };
 
   const findIndexAtOffset = (offsetPx: number): number => {
@@ -271,11 +282,14 @@ function buildRowSegments(worksheet: XlsxWorksheet, options: SheetLayoutOptions)
   const sorted = [...boundaries].sort((a, b) => a - b);
   const base: Omit<Segment, "offsetPx" | "endOffsetPx">[] = [];
 
-  for (let i = 0; i < sorted.length - 1; i += 1) {
-    const start = sorted[i]!;
-    const endExclusive = sorted[i + 1]!;
-    const sizePx = overrides.get(start) ?? options.defaultRowHeightPx;
-    base.push({ start, endExclusive, sizePx });
+  const pairs = sorted.slice(0, -1).map((start, index) => {
+    const endExclusive = sorted[index + 1]!;
+    return { start, endExclusive };
+  });
+
+  for (const pair of pairs) {
+    const sizePx = overrides.get(pair.start) ?? options.defaultRowHeightPx;
+    base.push({ start: pair.start, endExclusive: pair.endExclusive, sizePx });
   }
 
   return mergeAdjacentSegments(base);
@@ -298,37 +312,43 @@ function buildColumnSegments(worksheet: XlsxWorksheet, options: SheetLayoutOptio
   const base: Omit<Segment, "offsetPx" | "endOffsetPx">[] = [];
   const defs = worksheet.columns ?? [];
 
-  for (let i = 0; i < sorted.length - 1; i += 1) {
-    const start = sorted[i]!;
-    const endExclusive = sorted[i + 1]!;
+  const pairs = sorted.slice(0, -1).map((start, index) => {
+    const endExclusive = sorted[index + 1]!;
+    return { start, endExclusive };
+  });
+
+  const findColumnDef = (col1: number): XlsxColumnDef | undefined => {
+    return defs.reduce<XlsxColumnDef | undefined>((match, d) => {
+      if ((d.min as number) <= col1 && col1 <= (d.max as number)) {
+        return d;
+      }
+      return match;
+    }, undefined);
+  };
+
+  const resolveColSizePx = (def: XlsxColumnDef | undefined): number => {
+    if (!def) {
+      return options.defaultColWidthPx;
+    }
+    if (def.hidden) {
+      return 0;
+    }
+    if (def.width !== undefined) {
+      return columnWidthCharToPixels(def.width);
+    }
+    return options.defaultColWidthPx;
+  };
+
+  for (const pair of pairs) {
+    const start = pair.start;
+    const endExclusive = pair.endExclusive;
     if (start === endExclusive) {
       continue;
     }
 
     const col1 = start + 1;
-    const def = (() => {
-      // Last-match wins (covers overlapping defs without requiring normalization).
-      let match: XlsxColumnDef | undefined;
-      for (const d of defs) {
-        if ((d.min as number) <= col1 && col1 <= (d.max as number)) {
-          match = d;
-        }
-      }
-      return match;
-    })();
-
-    const sizePx = (() => {
-      if (!def) {
-        return options.defaultColWidthPx;
-      }
-      if (def.hidden) {
-        return 0;
-      }
-      if (def.width !== undefined) {
-        return columnWidthCharToPixels(def.width);
-      }
-      return options.defaultColWidthPx;
-    })();
+    const def = findColumnDef(col1);
+    const sizePx = resolveColSizePx(def);
 
     base.push({ start, endExclusive, sizePx });
   }
@@ -336,6 +356,9 @@ function buildColumnSegments(worksheet: XlsxWorksheet, options: SheetLayoutOptio
   return mergeAdjacentSegments(base);
 }
 
+/**
+ * Create a layout model for a worksheet that can answer size/offset queries without dense arrays.
+ */
 export function createSheetLayout(worksheet: XlsxWorksheet, options: SheetLayoutOptions): SheetLayout {
   if (options.rowCount <= 0 || options.colCount <= 0) {
     throw new Error("rowCount/colCount must be > 0");
@@ -357,6 +380,9 @@ export function createSheetLayout(worksheet: XlsxWorksheet, options: SheetLayout
   };
 }
 
+/**
+ * Convert a 1-based `RowIndex` to a 0-based index.
+ */
 export function toRowIndex0(row: RowIndex): number {
   const n = row as number;
   if (!Number.isInteger(n) || n < 1) {
@@ -365,6 +391,9 @@ export function toRowIndex0(row: RowIndex): number {
   return n - 1;
 }
 
+/**
+ * Convert a 1-based `ColIndex` to a 0-based index.
+ */
 export function toColIndex0(col: ColIndex): number {
   const n = col as number;
   if (!Number.isInteger(n) || n < 1) {
@@ -373,6 +402,9 @@ export function toColIndex0(col: ColIndex): number {
   return n - 1;
 }
 
+/**
+ * Convert a 0-based row index to a 1-based `RowIndex`.
+ */
 export function toRowIndex1(row0: number): RowIndex {
   if (!Number.isInteger(row0) || row0 < 0) {
     throw new Error(`row0 must be a 0-based integer: ${row0}`);
@@ -380,10 +412,12 @@ export function toRowIndex1(row0: number): RowIndex {
   return rowIdx(row0 + 1);
 }
 
+/**
+ * Convert a 0-based column index to a 1-based `ColIndex`.
+ */
 export function toColIndex1(col0: number): ColIndex {
   if (!Number.isInteger(col0) || col0 < 0) {
     throw new Error(`col0 must be a 0-based integer: ${col0}`);
   }
   return colIdx(col0 + 1);
 }
-

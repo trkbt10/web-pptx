@@ -56,14 +56,17 @@ export const vlookupFunction: FormulaFunctionEagerDefinition = {
       throw new Error("VLOOKUP column index must be greater than or equal to 1");
     }
 
-    let approximateMatch = true;
-    if (args.length === 4) {
+    const resolveApproximateMatch = (): boolean => {
+      if (args.length !== 4) {
+        return true;
+      }
       const rangeLookup = helpers.coerceScalar(args[3], "VLOOKUP range lookup");
       if (typeof rangeLookup !== "boolean") {
         throw new Error("VLOOKUP range lookup flag must be boolean");
       }
-      approximateMatch = rangeLookup;
-    }
+      return rangeLookup;
+    };
+    const approximateMatch = resolveApproximateMatch();
 
     if (!approximateMatch) {
       const matchIndex = table.findIndex((_, rowIndex) => {
@@ -80,7 +83,7 @@ export const vlookupFunction: FormulaFunctionEagerDefinition = {
       throw new Error("VLOOKUP approximate match requires numeric lookup value");
     }
 
-    let candidateIndex: number | null = null;
+    const state = { candidateIndex: null as number | null };
     for (let rowIndex = 0; rowIndex < table.length; rowIndex += 1) {
       const firstColumn = readTableCell(table, rowIndex, 0, "VLOOKUP");
       if (typeof firstColumn !== "number") {
@@ -89,14 +92,14 @@ export const vlookupFunction: FormulaFunctionEagerDefinition = {
       if (firstColumn > lookupValue) {
         break;
       }
-      candidateIndex = rowIndex;
+      state.candidateIndex = rowIndex;
     }
 
-    if (candidateIndex === null) {
+    if (state.candidateIndex === null) {
       throw new Error("VLOOKUP could not find an approximate match");
     }
 
-    return readTableCell(table, candidateIndex, columnIndex - 1, "VLOOKUP");
+    return readTableCell(table, state.candidateIndex, columnIndex - 1, "VLOOKUP");
   },
 };
 

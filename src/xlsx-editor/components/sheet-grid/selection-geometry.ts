@@ -1,3 +1,10 @@
+/**
+ * @file Selection geometry (sheet grid)
+ *
+ * Converts `CellAddress`/ranges into pixel rectangles in the sheet viewport, and clips them to the
+ * current visible area. Used for selection overlays and cell editor positioning.
+ */
+
 import type { CellAddress } from "../../../xlsx/domain/cell/address";
 import { createSheetLayout, toColIndex0, toRowIndex0 } from "../../selectors/sheet-layout";
 
@@ -8,6 +15,9 @@ export type RangeBounds = {
   readonly maxCol: number;
 };
 
+/**
+ * Normalize a `start/end` address pair into numeric bounds (min/max row/col).
+ */
 export function getRangeBounds(range: { readonly start: CellAddress; readonly end: CellAddress }): RangeBounds {
   const startRow = range.start.row as number;
   const endRow = range.end.row as number;
@@ -24,6 +34,9 @@ export function getRangeBounds(range: { readonly start: CellAddress; readonly en
 
 export type CellRect = { readonly left: number; readonly top: number; readonly width: number; readonly height: number };
 
+/**
+ * Get the on-screen rectangle for an active cell, relative to the cells viewport origin.
+ */
 export function getActiveCellRect(
   cell: CellAddress | undefined,
   layout: ReturnType<typeof createSheetLayout>,
@@ -49,6 +62,9 @@ export function getActiveCellRect(
   };
 }
 
+/**
+ * Get the on-screen rectangle for a selected range, relative to the cells viewport origin.
+ */
 export function getSelectedRangeRect(
   range: { readonly start: CellAddress; readonly end: CellAddress } | undefined,
   layout: ReturnType<typeof createSheetLayout>,
@@ -84,6 +100,9 @@ export function getSelectedRangeRect(
   };
 }
 
+/**
+ * Clip a rectangle to the viewport size. Returns `null` when the result would be empty.
+ */
 export function clipRectToViewport(
   rect: CellRect | null,
   viewportWidth: number,

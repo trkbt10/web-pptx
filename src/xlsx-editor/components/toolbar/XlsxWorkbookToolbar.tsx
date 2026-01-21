@@ -71,6 +71,11 @@ function setUnderline(font: XlsxFont, pressed: boolean): XlsxFont {
   return { ...font, underline: pressed ? "single" : undefined };
 }
 
+/**
+ * Workbook toolbar for a single sheet.
+ *
+ * Provides undo/redo and a simple formula/value bar bound to the current selection.
+ */
 export function XlsxWorkbookToolbar({ sheetIndex, isFormatPanelOpen, onToggleFormatPanel }: XlsxWorkbookToolbarProps) {
   const { dispatch, workbook, canUndo, canRedo, selection, state } = useXlsxWorkbookEditor();
   const sheet = workbook.sheets[sheetIndex];

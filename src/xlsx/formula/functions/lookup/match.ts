@@ -75,7 +75,7 @@ export const matchFunction: FormulaFunctionEagerDefinition = {
     }
 
     if (matchType === 1) {
-      let candidateIndex: number | null = null;
+      const state = { candidateIndex: null as number | null };
       for (let index = 0; index < lookupVector.length; index += 1) {
         const candidate = lookupVector[index];
         if (typeof candidate !== "number") {
@@ -84,29 +84,29 @@ export const matchFunction: FormulaFunctionEagerDefinition = {
         if (candidate > lookupValue) {
           break;
         }
-        candidateIndex = index;
+        state.candidateIndex = index;
       }
-      if (candidateIndex === null) {
+      if (state.candidateIndex === null) {
         throw new Error("MATCH could not find an approximate match for match type 1");
       }
-      return candidateIndex + 1;
+      return state.candidateIndex + 1;
     }
 
     if (matchType === -1) {
-      let candidateIndex: number | null = null;
+      const state = { candidateIndex: null as number | null };
       for (let index = 0; index < lookupVector.length; index += 1) {
         const candidate = lookupVector[index];
         if (typeof candidate !== "number") {
           throw new Error("MATCH with match type -1 requires numeric lookup vector");
         }
         if (candidate >= lookupValue) {
-          candidateIndex = index;
+          state.candidateIndex = index;
         }
       }
-      if (candidateIndex === null) {
+      if (state.candidateIndex === null) {
         throw new Error("MATCH could not find an approximate match for match type -1");
       }
-      return candidateIndex + 1;
+      return state.candidateIndex + 1;
     }
 
     throw new Error("MATCH match type must be -1, 0, or 1");

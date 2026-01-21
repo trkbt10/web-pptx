@@ -18,8 +18,12 @@ const NUMBER_LIKE = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/;
 
 function parseBooleanLiteral(trimmed: string): boolean | undefined {
   const upper = trimmed.toUpperCase();
-  if (upper === "TRUE") return true;
-  if (upper === "FALSE") return false;
+  if (upper === "TRUE") {
+    return true;
+  }
+  if (upper === "FALSE") {
+    return false;
+  }
   return undefined;
 }
 
@@ -34,6 +38,15 @@ function parseNumberLiteral(trimmed: string): number | undefined {
   return n;
 }
 
+/**
+ * Parse user-entered text into a value or formula commit.
+ *
+ * - Empty input becomes `CellValue(empty)`
+ * - A leading `=` becomes a formula only when it has a non-empty expression
+ * - `TRUE`/`FALSE` become boolean values
+ * - Number-like inputs become numbers
+ * - Otherwise the original (untrimmed) string is preserved
+ */
 export function parseCellUserInput(input: string): ParseCellUserInputResult {
   const trimmed = input.trim();
 
@@ -61,4 +74,3 @@ export function parseCellUserInput(input: string): ParseCellUserInputResult {
 
   return { type: "value", value: { type: "string", value: input } };
 }
-

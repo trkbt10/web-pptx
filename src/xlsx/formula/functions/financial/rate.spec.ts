@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for RATE (interest rate) financial function.
+ */
+
 import { formulaFunctionHelpers, type FormulaFunctionDefinition } from "../../functionRegistry";
 import type { EvalResult } from "../helpers";
 import { invokeFormulaFunction, makeEvalArgs } from "../testHelpers";

@@ -38,6 +38,11 @@ const inputStyleBase: CSSProperties = {
   color: `var(--text-primary, ${colorTokens.text.primary})`,
 };
 
+/**
+ * Inline cell editor overlay shown on top of the active cell.
+ *
+ * Converts user text into a cell value or formula and calls `onCommitValue` when committed.
+ */
 export function XlsxCellEditorOverlay({
   sheet,
   address,

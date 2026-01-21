@@ -1,3 +1,9 @@
+/**
+ * @file Border section (format panel)
+ *
+ * UI controls for editing the selection border style and color.
+ */
+
 import { Accordion, Button, FieldGroup, FieldRow, Input, Select } from "../../../../office-editor-components";
 import type { XlsxBorder, XlsxBorderEdge, XlsxBorderStyle } from "../../../../xlsx/domain/style/border";
 import { BORDER_STYLE_OPTIONS } from "../options";
@@ -19,6 +25,9 @@ function updateBorderEdge(border: XlsxBorder, edge: "left" | "right" | "top" | "
   return { ...border, [edge]: next };
 }
 
+/**
+ * Format panel section for applying border styles to the selection.
+ */
 export function BorderSection(props: BorderSectionProps) {
   const border = props.border;
 
@@ -59,4 +68,3 @@ export function BorderSection(props: BorderSectionProps) {
     </Accordion>
   );
 }
-

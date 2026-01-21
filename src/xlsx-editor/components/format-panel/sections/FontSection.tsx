@@ -1,3 +1,9 @@
+/**
+ * @file Font section (format panel)
+ *
+ * UI controls for editing the selection font (name/size/color + bold/italic/underline/strike).
+ */
+
 import { Accordion, Button, FieldGroup, FieldRow, Input, Select, ToggleButton, type SelectOption } from "../../../../office-editor-components";
 import type { XlsxFont } from "../../../../xlsx/domain/style/font";
 
@@ -28,6 +34,9 @@ export type FontSectionProps = {
   readonly onToggleStrikethrough: (pressed: boolean) => void;
 };
 
+/**
+ * Format panel section for font attributes.
+ */
 export function FontSection(props: FontSectionProps) {
   const font = props.font;
 

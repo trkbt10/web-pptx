@@ -1,3 +1,11 @@
+/**
+ * @file Formula Evaluator
+ *
+ * Evaluates a parsed formula AST against a workbook snapshot.
+ * This module is intentionally side-effect free: it reads cell values/formulas from the workbook,
+ * resolves references/ranges, and executes registered functions with caching and cycle detection.
+ */
+
 import type { CellAddress } from "../domain/cell/address";
 import { parseRange } from "../domain/cell/address";
 import type { CellValue, ErrorValue } from "../domain/cell/types";
@@ -119,6 +127,23 @@ type EvalScope = {
   readonly origin: { readonly sheetName: string; readonly address: CellAddress };
 };
 
+function resolveScopeSheetIndex(scope: EvalScope, explicitSheetName: string | undefined): number | undefined {
+  if (!explicitSheetName) {
+    return scope.defaultSheetIndex;
+  }
+  return scope.resolveSheetIndexByName(explicitSheetName);
+}
+
+function compareOrder(left: FormulaEvaluationResult, right: FormulaEvaluationResult): number | undefined {
+  if (typeof left === "number" && typeof right === "number") {
+    return left - right;
+  }
+  if (typeof left === "string" && typeof right === "string") {
+    return left.localeCompare(right);
+  }
+  return undefined;
+}
+
 function compareScalars(
   left: FormulaEvaluationResult,
   right: FormulaEvaluationResult,
@@ -141,23 +166,23 @@ function compareScalars(
     throw createFormulaError("#VALUE!");
   }
 
-  const cmp = (() => {
-    if (typeof left === "number" && typeof right === "number") {
-      return left - right;
-    }
-    if (typeof left === "string" && typeof right === "string") {
-      return left.localeCompare(right);
-    }
-    return undefined;
-  })();
+  const cmp = compareOrder(left, right);
   if (cmp === undefined) {
     throw createFormulaError("#VALUE!");
   }
 
-  if (op === ">") return cmp > 0;
-  if (op === "<") return cmp < 0;
-  if (op === ">=") return cmp >= 0;
-  if (op === "<=") return cmp <= 0;
+  if (op === ">") {
+    return cmp > 0;
+  }
+  if (op === "<") {
+    return cmp < 0;
+  }
+  if (op === ">=") {
+    return cmp >= 0;
+  }
+  if (op === "<=") {
+    return cmp <= 0;
+  }
   throw createFormulaError("#NAME?");
 }
 
@@ -170,24 +195,14 @@ function evaluateNode(node: FormulaAstNode, scope: EvalScope): EvalResult {
       return node.value;
     }
     case "Reference": {
-      const sheetIndex = (() => {
-        if (!node.sheetName) {
-          return scope.defaultSheetIndex;
-        }
-        return scope.resolveSheetIndexByName(node.sheetName);
-      })();
+      const sheetIndex = resolveScopeSheetIndex(scope, node.sheetName);
       if (sheetIndex === undefined) {
         throw createFormulaError("#REF!");
       }
       return scope.resolveCell(sheetIndex, node.reference);
     }
     case "Range": {
-      const sheetIndex = (() => {
-        if (!node.range.sheetName) {
-          return scope.defaultSheetIndex;
-        }
-        return scope.resolveSheetIndexByName(node.range.sheetName);
-      })();
+      const sheetIndex = resolveScopeSheetIndex(scope, node.range.sheetName);
       if (sheetIndex === undefined) {
         throw createFormulaError("#REF!");
       }
@@ -268,6 +283,15 @@ export type FormulaEvaluator = {
   readonly evaluateFormulaResult: (sheetIndex: number, origin: CellAddress, formula: string) => EvalResult | FormulaScalar;
 };
 
+/**
+ * Create a workbook-scoped formula evaluator.
+ *
+ * The returned evaluator caches parsed ASTs and computed cell results, and detects cycles
+ * (returning `#REF!`) to avoid infinite recursion when formulas reference each other.
+ *
+ * @param workbook - Workbook snapshot to evaluate against
+ * @returns Evaluator instance bound to the workbook
+ */
 export function createFormulaEvaluator(workbook: XlsxWorkbook): FormulaEvaluator {
   const matrix = buildWorkbookMatrix(workbook);
   const astCache = new Map<string, FormulaAstNode | null>();
@@ -336,6 +360,20 @@ export function createFormulaEvaluator(workbook: XlsxWorkbook): FormulaEvaluator
     }
   };
 
+  const computeCellScalarValue = (
+    sheetIndex: number,
+    address: CellAddress,
+    cellData: FormulaCellData | undefined,
+  ): FormulaScalar => {
+    if (!cellData) {
+      return null;
+    }
+    if (cellData.formula) {
+      return evaluateFormulaInternal(sheetIndex, address, cellData.formula);
+    }
+    return cellValueToFormulaScalar(cellData.value);
+  };
+
   const resolveCellScalar = (sheetIndex: number, address: CellAddress): FormulaScalar => {
     const key = `${sheetIndex}|${address.col as number}:${address.row as number}`;
     const cached = valueCache.get(key);
@@ -351,14 +389,7 @@ export function createFormulaEvaluator(workbook: XlsxWorkbook): FormulaEvaluator
     const sheet = matrix.sheets[sheetIndex];
     const cellData = sheet?.rows.get(address.row as number)?.get(address.col as number);
 
-    let result: FormulaScalar = null;
-    if (cellData) {
-      if (cellData.formula) {
-        result = evaluateFormulaInternal(sheetIndex, address, cellData.formula);
-      } else {
-        result = cellValueToFormulaScalar(cellData.value);
-      }
-    }
+    const result = computeCellScalarValue(sheetIndex, address, cellData);
 
     valueCache.set(key, result);
     inProgress.delete(key);

@@ -1,3 +1,10 @@
+/**
+ * @file Selection format flags selector
+ *
+ * Computes "mixed" formatting flags (bold/italic/underline/strike/wrap) for a selected range.
+ * This is used to render toolbar/panel states for multi-cell selections.
+ */
+
 import type { CellRange } from "../../xlsx/domain/cell/address";
 import type { StyleId } from "../../xlsx/domain/types";
 import type { XlsxStyleSheet } from "../../xlsx/domain/style/types";
@@ -61,6 +68,17 @@ function styleIdToNumber(id: StyleId | undefined): number | undefined {
   return id as number | undefined;
 }
 
+/**
+ * Resolve selection format flags for a range.
+ *
+ * This avoids an O(rows×cols) scan by:
+ * - Considering row-level styles for rows in the range
+ * - Considering column-level styles only when some rows have no row style
+ * - Considering explicit cell-level style overrides within the range
+ *
+ * If the computed cell count exceeds `maxCellsToAnalyze`, returns `tooLarge: true` and treats
+ * all flags as mixed.
+ */
 export function resolveSelectionFormatFlags(params: {
   readonly sheet: XlsxWorksheet;
   readonly styles: XlsxStyleSheet;
@@ -84,31 +102,33 @@ export function resolveSelectionFormatFlags(params: {
     };
   }
 
-  let hasAny = false;
-  let bold = toMixedBoolean(false);
-  let italic = toMixedBoolean(false);
-  let underline = toMixedBoolean(false);
-  let strikethrough = toMixedBoolean(false);
-  let wrapText = toMixedBoolean(false);
+  const accumulator = {
+    hasAny: false,
+    bold: toMixedBoolean(false),
+    italic: toMixedBoolean(false),
+    underline: toMixedBoolean(false),
+    strikethrough: toMixedBoolean(false),
+    wrapText: toMixedBoolean(false),
+  };
 
   const styleFlagsCache = new Map<number, StyleFlags>();
-  let undefinedStyleFlags: StyleFlags | undefined;
+  const undefinedStyleFlags = { value: undefined as StyleFlags | undefined };
 
   const getStyleFlags = (styleIdValue: number | undefined): StyleFlags => {
     if (styleIdValue === undefined) {
-      if (undefinedStyleFlags) {
-        return undefinedStyleFlags;
+      if (undefinedStyleFlags.value) {
+        return undefinedStyleFlags.value;
       }
       const xf = resolveMergedCellXfFromStyleId(params.styles, undefined);
       const font = params.styles.fonts[xf.fontId] ?? params.styles.fonts[0]!;
-      undefinedStyleFlags = {
+      undefinedStyleFlags.value = {
         bold: font.bold === true,
         italic: font.italic === true,
         underline: font.underline !== undefined && font.underline !== "none",
         strikethrough: font.strikethrough === true,
         wrapText: xf.alignment?.wrapText === true,
       };
-      return undefinedStyleFlags;
+      return undefinedStyleFlags.value;
     }
 
     const cached = styleFlagsCache.get(styleIdValue);
@@ -129,21 +149,21 @@ export function resolveSelectionFormatFlags(params: {
   };
 
   const incorporateStyleFlags = (flags: StyleFlags): void => {
-    if (!hasAny) {
-      hasAny = true;
-      bold = toMixedBoolean(flags.bold);
-      italic = toMixedBoolean(flags.italic);
-      underline = toMixedBoolean(flags.underline);
-      strikethrough = toMixedBoolean(flags.strikethrough);
-      wrapText = toMixedBoolean(flags.wrapText);
+    if (!accumulator.hasAny) {
+      accumulator.hasAny = true;
+      accumulator.bold = toMixedBoolean(flags.bold);
+      accumulator.italic = toMixedBoolean(flags.italic);
+      accumulator.underline = toMixedBoolean(flags.underline);
+      accumulator.strikethrough = toMixedBoolean(flags.strikethrough);
+      accumulator.wrapText = toMixedBoolean(flags.wrapText);
       return;
     }
 
-    bold = mixBoolean(bold, flags.bold);
-    italic = mixBoolean(italic, flags.italic);
-    underline = mixBoolean(underline, flags.underline);
-    strikethrough = mixBoolean(strikethrough, flags.strikethrough);
-    wrapText = mixBoolean(wrapText, flags.wrapText);
+    accumulator.bold = mixBoolean(accumulator.bold, flags.bold);
+    accumulator.italic = mixBoolean(accumulator.italic, flags.italic);
+    accumulator.underline = mixBoolean(accumulator.underline, flags.underline);
+    accumulator.strikethrough = mixBoolean(accumulator.strikethrough, flags.strikethrough);
+    accumulator.wrapText = mixBoolean(accumulator.wrapText, flags.wrapText);
   };
 
   const incorporateStyleId = (styleIdValue: number | undefined): void => {
@@ -152,8 +172,9 @@ export function resolveSelectionFormatFlags(params: {
 
   // Collect column baseline style IDs (used only for rows that do not have row-level style).
   const columnBaselineStyleIds = new Set<number | undefined>();
-  for (let col = bounds.minCol; col <= bounds.maxCol; col += 1) {
-    columnBaselineStyleIds.add(styleIdToNumber(getColumnStyleId(params.sheet, col)));
+  const columnNumbers = Array.from({ length: bounds.maxCol - bounds.minCol + 1 }, (_, i) => bounds.minCol + i);
+  for (const colNumber of columnNumbers) {
+    columnBaselineStyleIds.add(styleIdToNumber(getColumnStyleId(params.sheet, colNumber)));
   }
 
   const rowStyleIds = new Set<number>();
@@ -183,13 +204,8 @@ export function resolveSelectionFormatFlags(params: {
   }
 
   // If any row within the selection lacks row-level style, the effective style can depend on column styles.
-  let includesRowsWithoutRowStyle = false;
-  for (let rowNumber = bounds.minRow; rowNumber <= bounds.maxRow; rowNumber += 1) {
-    if (!rowsWithRowStyle.has(rowNumber)) {
-      includesRowsWithoutRowStyle = true;
-      break;
-    }
-  }
+  const rowNumbers = Array.from({ length: bounds.maxRow - bounds.minRow + 1 }, (_, i) => bounds.minRow + i);
+  const includesRowsWithoutRowStyle = rowNumbers.some((rowNumber) => !rowsWithRowStyle.has(rowNumber));
 
   for (const styleIdValue of rowStyleIds) {
     incorporateStyleId(styleIdValue);
@@ -204,11 +220,11 @@ export function resolveSelectionFormatFlags(params: {
   }
 
   return {
-    bold,
-    italic,
-    underline,
-    strikethrough,
-    wrapText,
+    bold: accumulator.bold,
+    italic: accumulator.italic,
+    underline: accumulator.underline,
+    strikethrough: accumulator.strikethrough,
+    wrapText: accumulator.wrapText,
     tooLarge: false,
   };
 }

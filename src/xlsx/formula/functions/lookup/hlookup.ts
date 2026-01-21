@@ -56,14 +56,17 @@ export const hlookupFunction: FormulaFunctionEagerDefinition = {
       throw new Error("HLOOKUP row index is out of bounds");
     }
 
-    let approximateMatch = true;
-    if (args.length === 4) {
+    const resolveApproximateMatch = (): boolean => {
+      if (args.length !== 4) {
+        return true;
+      }
       const rangeLookup = helpers.coerceScalar(args[3], "HLOOKUP range lookup");
       if (typeof rangeLookup !== "boolean") {
         throw new Error("HLOOKUP range lookup flag must be boolean");
       }
-      approximateMatch = rangeLookup;
-    }
+      return rangeLookup;
+    };
+    const approximateMatch = resolveApproximateMatch();
 
     const targetRowIndex = rowIndex - 1;
 
@@ -81,7 +84,7 @@ export const hlookupFunction: FormulaFunctionEagerDefinition = {
       throw new Error("HLOOKUP approximate match requires numeric lookup value");
     }
 
-    let candidateColumn: number | null = null;
+    const state = { candidateColumn: null as number | null };
     const columnCount = table[0].length;
     for (let columnIndex = 0; columnIndex < columnCount; columnIndex += 1) {
       const firstRowValue = readTableCell(table, 0, columnIndex, "HLOOKUP");
@@ -91,14 +94,14 @@ export const hlookupFunction: FormulaFunctionEagerDefinition = {
       if (firstRowValue > lookupValue) {
         break;
       }
-      candidateColumn = columnIndex;
+      state.candidateColumn = columnIndex;
     }
 
-    if (candidateColumn === null) {
+    if (state.candidateColumn === null) {
       throw new Error("HLOOKUP could not find an approximate match");
     }
 
-    return readTableCell(table, targetRowIndex, candidateColumn, "HLOOKUP");
+    return readTableCell(table, targetRowIndex, state.candidateColumn, "HLOOKUP");
   },
 };
 

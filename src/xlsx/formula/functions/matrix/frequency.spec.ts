@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for FREQUENCY matrix/statistical function.
+ */
+
 import { formulaFunctionHelpers, type FormulaFunctionDefinition } from "../../functionRegistry";
 import type { EvalResult } from "../helpers";
 import { invokeFormulaFunction, makeEvalArgs } from "../testHelpers";
@@ -19,4 +23,3 @@ describe("FREQUENCY", () => {
     expect(() => evaluate(frequencyFunction, [1, 2, 3], [10, 5])).toThrowError(/ascending/);
   });
 });
-

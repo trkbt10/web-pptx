@@ -9,13 +9,13 @@ const BESSEL_TOLERANCE = 1e-12;
 
 const computeBesselSeries = (order: number, x: number, alternating: boolean): number => {
   const halfX = x / 2;
-  let term = 1;
+  const state = { term: 1, sum: 0 };
   if (order > 0) {
     for (let k = 1; k <= order; k += 1) {
-      term *= halfX / k;
+      state.term *= halfX / k;
     }
   }
-  let sum = term;
+  state.sum = state.term;
   for (let m = 0; m < BESSEL_MAX_ITERATIONS; m += 1) {
     const denominator = (m + 1) * (m + 1 + order);
     if (denominator === 0) {
@@ -23,18 +23,18 @@ const computeBesselSeries = (order: number, x: number, alternating: boolean): nu
     }
     const ratioBase = (halfX * halfX) / denominator;
     const ratio = alternating ? -ratioBase : ratioBase;
-    term *= ratio;
-    sum += term;
-    if (!Number.isFinite(term) || !Number.isFinite(sum)) {
+    state.term *= ratio;
+    state.sum += state.term;
+    if (!Number.isFinite(state.term) || !Number.isFinite(state.sum)) {
       throw new Error("Bessel series failed to converge");
     }
-    const magnitude = Math.abs(sum);
+    const magnitude = Math.abs(state.sum);
     const tolerance = magnitude > 1 ? BESSEL_TOLERANCE * magnitude : BESSEL_TOLERANCE;
-    if (Math.abs(term) < tolerance) {
+    if (Math.abs(state.term) < tolerance) {
       break;
     }
   }
-  return sum;
+  return state.sum;
 };
 
 export const besseliFunction: FormulaFunctionEagerDefinition = {

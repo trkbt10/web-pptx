@@ -8,15 +8,14 @@ import { coerceDateSerial } from "../datetime/coerceDateSerial";
 import { serialToDate } from "../datetime/serialDate";
 
 const hasOpposingSigns = (values: number[]): boolean => {
-  let hasPositive = false;
-  let hasNegative = false;
+  const state = { hasPositive: false, hasNegative: false };
   for (const value of values) {
     if (value > 0) {
-      hasPositive = true;
+      state.hasPositive = true;
     } else if (value < 0) {
-      hasNegative = true;
+      state.hasNegative = true;
     }
-    if (hasPositive && hasNegative) {
+    if (state.hasPositive && state.hasNegative) {
       return true;
     }
   }
@@ -82,31 +81,29 @@ export const xirrFunction: FormulaFunctionEagerDefinition = {
     });
 
     const guess = guessArg ? helpers.requireNumber(guessArg, "XIRR guess") : 0.1;
-    let rate = guess <= -0.999999 ? -0.999999 : guess;
+    const clampRate = (value: number): number => (value <= -0.9999999999 ? -0.9999999999 : value);
+    const rateState = { rate: guess <= -0.999999 ? -0.999999 : guess };
     const delta = 1e-6;
 
     for (let iteration = 0; iteration < FINANCE_MAX_ITERATIONS; iteration += 1) {
-      const value = helpers.computeXNPV(rate, values, dayDifferences);
+      const value = helpers.computeXNPV(rateState.rate, values, dayDifferences);
       if (Math.abs(value) <= FINANCE_EPSILON) {
-        return rate;
+        return rateState.rate;
       }
 
-      const forward = helpers.computeXNPV(rate + delta, values, dayDifferences);
-      const backward = helpers.computeXNPV(rate - delta, values, dayDifferences);
+      const forward = helpers.computeXNPV(rateState.rate + delta, values, dayDifferences);
+      const backward = helpers.computeXNPV(rateState.rate - delta, values, dayDifferences);
       const derivative = (forward - backward) / (2 * delta);
 
       if (!Number.isFinite(derivative) || Math.abs(derivative) <= FINANCE_EPSILON) {
         break;
       }
 
-      let nextRate = rate - value / derivative;
-      if (nextRate <= -0.9999999999) {
-        nextRate = -0.9999999999;
-      }
-      if (Math.abs(nextRate - rate) <= FINANCE_EPSILON) {
+      const nextRate = clampRate(rateState.rate - value / derivative);
+      if (Math.abs(nextRate - rateState.rate) <= FINANCE_EPSILON) {
         return nextRate;
       }
-      rate = nextRate;
+      rateState.rate = nextRate;
     }
 
     throw new Error("XIRR did not converge");

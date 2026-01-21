@@ -17,6 +17,12 @@ const ERROR_TYPE_NUMBER_MAP: Record<FormulaErrorCode, number> = {
   "#GETTING_DATA": 8,
 };
 
+/**
+ * Error type carrying an ECMA-376/Excel-style error code (e.g. `#DIV/0!`).
+ *
+ * The evaluator throws this to short-circuit computation while preserving the spreadsheet error
+ * semantics; callers can map it back to a cell error value.
+ */
 export class FormulaError extends Error {
   constructor(readonly code: FormulaErrorCode, message?: string) {
     super(message ?? code);

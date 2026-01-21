@@ -25,6 +25,11 @@ export type XlsxWorkbookEditorContextValue = {
 
 const XlsxWorkbookEditorContext = createContext<XlsxWorkbookEditorContextValue | null>(null);
 
+/**
+ * Context provider for the XLSX workbook editor.
+ *
+ * Owns the reducer state and exposes it (plus derived selectors) to child components.
+ */
 export function XlsxWorkbookEditorProvider({
   children,
   initialWorkbook,
@@ -70,6 +75,11 @@ export function XlsxWorkbookEditorProvider({
   );
 }
 
+/**
+ * Hook to access the XLSX workbook editor context.
+ *
+ * Throws when used outside `XlsxWorkbookEditorProvider`.
+ */
 export function useXlsxWorkbookEditor(): XlsxWorkbookEditorContextValue {
   const context = useContext(XlsxWorkbookEditorContext);
   if (!context) {
@@ -78,6 +88,9 @@ export function useXlsxWorkbookEditor(): XlsxWorkbookEditorContextValue {
   return context;
 }
 
+/**
+ * Hook to access the XLSX workbook editor context, returning `null` outside the provider.
+ */
 export function useXlsxWorkbookEditorOptional(): XlsxWorkbookEditorContextValue | null {
   return useContext(XlsxWorkbookEditorContext);
 }

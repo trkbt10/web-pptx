@@ -57,20 +57,19 @@ export const substituteFunction: FormulaFunctionEagerDefinition = {
     if (instanceNumber <= 0) {
       throw new Error("SUBSTITUTE instance must be greater than or equal to 1");
     }
-    let searchIndex = 0;
-    let occurrence = 0;
-    while (searchIndex <= text.length) {
-      const foundIndex = text.indexOf(oldText, searchIndex);
+    const state = { searchIndex: 0, occurrence: 0 };
+    while (state.searchIndex <= text.length) {
+      const foundIndex = text.indexOf(oldText, state.searchIndex);
       if (foundIndex === -1) {
         return text;
       }
-      occurrence += 1;
-      if (occurrence === instanceNumber) {
+      state.occurrence += 1;
+      if (state.occurrence === instanceNumber) {
         const prefix = text.slice(0, foundIndex);
         const suffix = text.slice(foundIndex + oldText.length);
         return `${prefix}${newText}${suffix}`;
       }
-      searchIndex = foundIndex + oldText.length;
+      state.searchIndex = foundIndex + oldText.length;
     }
     return text;
   },

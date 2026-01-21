@@ -104,19 +104,20 @@ export const offsetFunction: FormulaFunctionLazyDefinition = {
     const rowOffset = context.helpers.requireInteger(rowOffsetValue, "OFFSET rows must be an integer");
     const columnOffset = context.helpers.requireInteger(columnOffsetValue, "OFFSET columns must be an integer");
 
+    const resolveOptionalNumber = (node: FormulaAstNode | undefined, fallback: number, label: string): number => {
+      if (!node) {
+        return fallback;
+      }
+      return context.helpers.requireNumber(context.evaluate(node), label);
+    };
+
     if (referenceNode.type !== "Reference" && referenceNode.type !== "Range") {
       const base = normalizeMatrix(context.evaluate(referenceNode), "OFFSET");
       const baseHeight = base.length;
       const baseWidth = base[0]?.length ?? 0;
 
-      let heightValue = baseHeight;
-      if (heightNode) {
-        heightValue = context.helpers.requireNumber(context.evaluate(heightNode), "OFFSET height");
-      }
-      let widthValue = baseWidth;
-      if (widthNode) {
-        widthValue = context.helpers.requireNumber(context.evaluate(widthNode), "OFFSET width");
-      }
+      const heightValue = resolveOptionalNumber(heightNode, baseHeight, "OFFSET height");
+      const widthValue = resolveOptionalNumber(widthNode, baseWidth, "OFFSET width");
 
       const height = context.helpers.requireInteger(heightValue, "OFFSET height must be an integer");
       const width = context.helpers.requireInteger(widthValue, "OFFSET width must be an integer");
@@ -152,14 +153,8 @@ export const offsetFunction: FormulaFunctionLazyDefinition = {
     const bounds = resolveReferenceBounds(referenceNode, "OFFSET");
     const sheetName = bounds.sheetName ?? context.origin.sheetName;
 
-    let heightValue = bounds.height;
-    if (heightNode) {
-      heightValue = context.helpers.requireNumber(context.evaluate(heightNode), "OFFSET height");
-    }
-    let widthValue = bounds.width;
-    if (widthNode) {
-      widthValue = context.helpers.requireNumber(context.evaluate(widthNode), "OFFSET width");
-    }
+    const heightValue = resolveOptionalNumber(heightNode, bounds.height, "OFFSET height");
+    const widthValue = resolveOptionalNumber(widthNode, bounds.width, "OFFSET width");
 
     const height = context.helpers.requireInteger(heightValue, "OFFSET height must be an integer");
     const width = context.helpers.requireInteger(widthValue, "OFFSET width must be an integer");

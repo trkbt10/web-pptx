@@ -1,3 +1,10 @@
+/**
+ * @file Style Equality Helpers
+ *
+ * Provides structural equality checks for style-domain objects (font/fill/border/xf).
+ * Used by mutation/upsert logic to deduplicate style records when constructing or patching workbooks.
+ */
+
 import type { XlsxBorder, XlsxBorderEdge } from "../border";
 import type { XlsxFill, XlsxColor as XlsxFillColor } from "../fill";
 import type { XlsxFont, XlsxColor as XlsxFontColor } from "../font";
@@ -146,4 +153,3 @@ export const isEqualCellXf = (left: XlsxCellXf, right: XlsxCellXf): boolean => {
     left.applyProtection === right.applyProtection
   );
 };
-

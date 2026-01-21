@@ -68,13 +68,16 @@ export const weekNumFunction: FormulaFunctionEagerDefinition = {
       throw new Error("WEEKNUM expects one or two arguments");
     }
     const serial = helpers.requireNumber(args[0], "WEEKNUM serial");
-    let returnType = 1;
-    if (args.length === 2) {
-      returnType = helpers.requireInteger(
+    const resolveReturnType = (): number => {
+      if (args.length !== 2) {
+        return 1;
+      }
+      return helpers.requireInteger(
         helpers.requireNumber(args[1], "WEEKNUM return_type"),
         "WEEKNUM return_type must be integer",
       );
-    }
+    };
+    const returnType = resolveReturnType();
     return computeWeekNumber(serial, returnType);
   },
 };

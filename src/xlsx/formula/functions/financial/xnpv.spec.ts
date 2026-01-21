@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for XNPV (irregular NPV) financial function.
+ */
+
 import { formulaFunctionHelpers, type FormulaFunctionDefinition } from "../../functionRegistry";
 import type { EvalResult } from "../helpers";
 import { invokeFormulaFunction, makeEvalArgs } from "../testHelpers";
@@ -31,4 +35,3 @@ describe("XNPV", () => {
     expect(xnpv).toBeCloseTo(expected, 6);
   });
 });
-

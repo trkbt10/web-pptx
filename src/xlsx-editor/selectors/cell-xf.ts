@@ -24,6 +24,10 @@ function getRowStyleId(sheet: XlsxWorksheet, rowNumber: number): number | undefi
   return row?.styleId as number | undefined;
 }
 
+/**
+ * Resolve the effective `styleId` for a cell address based on SpreadsheetML inheritance:
+ * cell → row → column.
+ */
 export function resolveEffectiveStyleId(
   sheet: XlsxWorksheet,
   address: CellAddress,
@@ -74,11 +78,17 @@ function mergeCellXf(styles: XlsxStyleSheet, xf: XlsxCellXf): XlsxCellXf {
   };
 }
 
+/**
+ * Resolve a merged CellXf from a `styleId`, applying `cellStyleXfs[xfId]` as the base when present.
+ */
 export function resolveMergedCellXfFromStyleId(styles: XlsxStyleSheet, styleId: number | undefined): XlsxCellXf {
   const xf = getCellXf(styles, styleId) ?? styles.cellXfs[0]!;
   return mergeCellXf(styles, xf);
 }
 
+/**
+ * Resolve both the effective styleId (cell → row → column) and its merged CellXf.
+ */
 export function resolveCellXf(params: {
   readonly styles: XlsxStyleSheet;
   readonly sheet: XlsxWorksheet;

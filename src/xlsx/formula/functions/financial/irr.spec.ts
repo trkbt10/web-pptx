@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for IRR (internal rate of return) financial function.
+ */
+
 import { formulaFunctionHelpers, type FormulaFunctionDefinition } from "../../functionRegistry";
 import type { EvalResult } from "../helpers";
 import { invokeFormulaFunction, makeEvalArgs } from "../testHelpers";
@@ -24,4 +28,3 @@ describe("IRR", () => {
     expect(residual).toBeCloseTo(0, 4);
   });
 });
-

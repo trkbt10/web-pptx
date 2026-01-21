@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for PPMT (principal payment) financial function.
+ */
+
 import { formulaFunctionHelpers, type FormulaFunctionDefinition } from "../../functionRegistry";
 import type { EvalResult } from "../helpers";
 import { invokeFormulaFunction, makeEvalArgs } from "../testHelpers";
@@ -28,4 +32,3 @@ describe("PPMT", () => {
     expect(principal).toBeCloseTo(payment - interest, 6);
   });
 });
-

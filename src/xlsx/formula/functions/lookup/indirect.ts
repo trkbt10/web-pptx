@@ -5,7 +5,7 @@
 import type { FormulaFunctionLazyDefinition } from "../../functionRegistry";
 
 const splitRangeReference = (text: string): { start: string; end: string | null } => {
-  let inQuote = false;
+  const state = { inQuote: false };
   for (let index = 0; index < text.length; index += 1) {
     const character = text[index];
     if (character === "'") {
@@ -14,10 +14,10 @@ const splitRangeReference = (text: string): { start: string; end: string | null 
         index += 1;
         continue;
       }
-      inQuote = !inQuote;
+      state.inQuote = !state.inQuote;
       continue;
     }
-    if (character === ":" && !inQuote) {
+    if (character === ":" && !state.inQuote) {
       return {
         start: text.slice(0, index).trim(),
         end: text.slice(index + 1).trim(),

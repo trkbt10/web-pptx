@@ -76,31 +76,29 @@ export const rateFunction: FormulaFunctionEagerDefinition = {
       throw new Error("RATE type must be 0 or 1");
     }
 
-    let rate = guess <= -0.999999 ? -0.999999 : guess;
+    const clampRate = (value: number): number => (value <= -0.9999999999 ? -0.9999999999 : value);
+    const rateState = { rate: guess <= -0.999999 ? -0.999999 : guess };
     const delta = 1e-6;
 
     for (let iteration = 0; iteration < FINANCE_MAX_ITERATIONS; iteration += 1) {
-      const value = evaluateBalance(rate, periods, payment, pv, fv, type);
+      const value = evaluateBalance(rateState.rate, periods, payment, pv, fv, type);
       if (Math.abs(value) <= FINANCE_EPSILON) {
-        return rate;
+        return rateState.rate;
       }
 
-      const forward = evaluateBalance(rate + delta, periods, payment, pv, fv, type);
-      const backward = evaluateBalance(rate - delta, periods, payment, pv, fv, type);
+      const forward = evaluateBalance(rateState.rate + delta, periods, payment, pv, fv, type);
+      const backward = evaluateBalance(rateState.rate - delta, periods, payment, pv, fv, type);
       const derivative = (forward - backward) / (2 * delta);
 
       if (!Number.isFinite(derivative) || Math.abs(derivative) <= FINANCE_EPSILON) {
         break;
       }
 
-      let nextRate = rate - value / derivative;
-      if (nextRate <= -0.9999999999) {
-        nextRate = -0.9999999999;
-      }
-      if (Math.abs(nextRate - rate) <= FINANCE_EPSILON) {
+      const nextRate = clampRate(rateState.rate - value / derivative);
+      if (Math.abs(nextRate - rateState.rate) <= FINANCE_EPSILON) {
         return nextRate;
       }
-      rate = nextRate;
+      rateState.rate = nextRate;
     }
 
     throw new Error("RATE did not converge");

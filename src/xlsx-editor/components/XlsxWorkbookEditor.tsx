@@ -154,6 +154,11 @@ function XlsxWorkbookEditorInner({ grid }: { readonly grid: XlsxGridMetrics }) {
   );
 }
 
+/**
+ * Top-level XLSX workbook editor component.
+ *
+ * Mounts workbook editor state provider and renders the workbook UI (tabs + grid).
+ */
 export function XlsxWorkbookEditor({ workbook, grid, style, onWorkbookChange }: XlsxWorkbookEditorProps) {
   return (
     <div

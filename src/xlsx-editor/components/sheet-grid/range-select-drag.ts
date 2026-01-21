@@ -1,3 +1,10 @@
+/**
+ * @file Range selection drag controller
+ *
+ * Pointer-based drag handler for click-and-drag range selection within the sheet grid.
+ * This is UI-only: it emits reducer actions based on pointer movement.
+ */
+
 import type { CellAddress } from "../../../xlsx/domain/cell/address";
 import type { XlsxEditorAction } from "../../context/workbook/editor/types";
 import type { createSheetLayout } from "../../selectors/sheet-layout";
@@ -13,6 +20,13 @@ type GridMetrics = {
   readonly colCount: number;
 };
 
+/**
+ * Start a range selection drag sequence from `startAddress`.
+ *
+ * The initial START/PREVIEW uses merge-aware origin/end:
+ * - If the pointer starts inside a merge, selection anchors at the merge origin and covers the merge range.
+ * - Subsequent move events are hit-tested (merge-aware) and dispatched as PREVIEW updates.
+ */
 export function startRangeSelectPointerDrag(params: {
   readonly pointerId: number;
   readonly captureTarget: HTMLElement;
@@ -57,4 +71,3 @@ export function startRangeSelectPointerDrag(params: {
     safeReleasePointerCapture(captureTarget, pointerId);
   };
 }
-

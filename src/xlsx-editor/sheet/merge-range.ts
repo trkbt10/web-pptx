@@ -1,3 +1,9 @@
+/**
+ * @file Merge range helpers
+ *
+ * Normalizes SpreadsheetML merge ranges and provides lookup helpers for merge-aware rendering.
+ */
+
 import type { CellAddress, CellRange } from "../../xlsx/domain/cell/address";
 import { colIdx, rowIdx } from "../../xlsx/domain/types";
 
@@ -11,6 +17,11 @@ export type NormalizedMergeRange = {
   readonly origin: CellAddress;
 };
 
+/**
+ * Normalize a merge range so `start` is the top-left and `end` is the bottom-right.
+ *
+ * Also computes numeric bounds and a stable key for caching/lookup.
+ */
 export function normalizeMergeRange(range: Pick<CellRange, "start" | "end">): NormalizedMergeRange {
   const startRow = range.start.row as number;
   const endRow = range.end.row as number;
@@ -39,6 +50,9 @@ export function normalizeMergeRange(range: Pick<CellRange, "start" | "end">): No
   };
 }
 
+/**
+ * Find the merge range that contains `address`, if any.
+ */
 export function findMergeForCell(
   merges: readonly NormalizedMergeRange[],
   address: CellAddress,
@@ -47,4 +61,3 @@ export function findMergeForCell(
   const row = address.row as number;
   return merges.find((m) => col >= m.minCol && col <= m.maxCol && row >= m.minRow && row <= m.maxRow);
 }
-

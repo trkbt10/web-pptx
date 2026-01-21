@@ -868,7 +868,7 @@ export function applyColumnRangeOverride(
 
   const sorted = [...columns].sort((a, b) => toColNumber(a.min) - toColNumber(b.min));
   const next: XlsxColumnDef[] = [];
-  let cursor = min;
+  const cursorState = { cursor: min };
 
   for (const def of sorted) {
     const defMin = toColNumber(def.min);
@@ -880,9 +880,9 @@ export function applyColumnRangeOverride(
     }
 
     if (defMin > max) {
-      if (cursor <= max) {
-        next.push({ min: colIdx(cursor), max: colIdx(max), ...override });
-        cursor = max + 1;
+      if (cursorState.cursor <= max) {
+        next.push({ min: colIdx(cursorState.cursor), max: colIdx(max), ...override });
+        cursorState.cursor = max + 1;
       }
       next.push(def);
       continue;
@@ -892,26 +892,26 @@ export function applyColumnRangeOverride(
       next.push({ ...def, max: colIdx(min - 1) });
     }
 
-    if (cursor < defMin) {
+    if (cursorState.cursor < defMin) {
       const gapMax = Math.min(defMin - 1, max);
-      if (cursor <= gapMax) {
-        next.push({ min: colIdx(cursor), max: colIdx(gapMax), ...override });
-        cursor = gapMax + 1;
+      if (cursorState.cursor <= gapMax) {
+        next.push({ min: colIdx(cursorState.cursor), max: colIdx(gapMax), ...override });
+        cursorState.cursor = gapMax + 1;
       }
     }
 
     const overlapMin = Math.max(defMin, min);
     const overlapMax = Math.min(defMax, max);
     next.push({ ...def, ...override, min: colIdx(overlapMin), max: colIdx(overlapMax) });
-    cursor = Math.max(cursor, overlapMax + 1);
+    cursorState.cursor = Math.max(cursorState.cursor, overlapMax + 1);
 
     if (defMax > max) {
       next.push({ ...def, min: colIdx(max + 1) });
     }
   }
 
-  if (cursor <= max) {
-    next.push({ min: colIdx(cursor), max: colIdx(max), ...override });
+  if (cursorState.cursor <= max) {
+    next.push({ min: colIdx(cursorState.cursor), max: colIdx(max), ...override });
   }
 
   const normalized = [...normalizeColumnDefs(next.sort((a, b) => toColNumber(a.min) - toColNumber(b.min)))];

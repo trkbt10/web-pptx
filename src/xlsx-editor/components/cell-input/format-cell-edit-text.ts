@@ -6,6 +6,12 @@ import type { CellAddress } from "../../../xlsx/domain/cell/address";
 import type { XlsxWorksheet } from "../../../xlsx/domain/workbook";
 import { getCell } from "../../cell/query";
 
+/**
+ * Build the initial edit text for a cell editor input.
+ *
+ * - Formulas are returned with a leading "=" to match spreadsheet UX.
+ * - Non-formula values are converted to a plain string representation.
+ */
 export function formatCellEditText(sheet: XlsxWorksheet, address: CellAddress): string {
   const cell = getCell(sheet, address);
   if (!cell) {

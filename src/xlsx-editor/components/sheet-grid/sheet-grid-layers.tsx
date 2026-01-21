@@ -1,3 +1,12 @@
+/**
+ * @file Sheet grid layer composition
+ *
+ * Wires VirtualScroll viewport state (scroll offsets + visible ranges) into the grid layers:
+ * - headers
+ * - cell viewport overlays (selection, gridlines, borders, editor)
+ * - cell content layer
+ */
+
 import { useCallback, useMemo, type CSSProperties } from "react";
 import { clampRange, useVirtualScrollContext } from "../../../office-editor-components";
 import type { XlsxWorksheet } from "../../../xlsx/domain/workbook";
@@ -9,6 +18,7 @@ import { getRangeBounds } from "./selection-geometry";
 import { XlsxSheetGridHeaderLayer } from "./header-layer";
 import { XlsxSheetGridCellViewport } from "./cell-viewport";
 import { XlsxSheetGridCellsLayer } from "./cells-layer";
+import type { SheetLayout } from "../../selectors/sheet-layout";
 
 const layerRootStyle: CSSProperties = {
   position: "absolute",
@@ -30,10 +40,13 @@ export type XlsxSheetGridLayersProps = {
     readonly overscanRows: number;
     readonly overscanCols: number;
   };
-  readonly layout: ReturnType<typeof import("../../selectors/sheet-layout").createSheetLayout>;
+  readonly layout: SheetLayout;
   readonly formulaEvaluator: FormulaEvaluator;
 };
 
+/**
+ * Render the sheet grid as a set of layered components inside the VirtualScroll root.
+ */
 export function XlsxSheetGridLayers({
   sheetIndex,
   sheet,

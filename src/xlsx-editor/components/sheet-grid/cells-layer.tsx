@@ -1,3 +1,9 @@
+/**
+ * @file Sheet grid cells layer
+ *
+ * Renders visible cell contents for the current viewport range and wires pointer-based selection.
+ */
+
 import { useCallback, useEffect, useMemo, useRef, type CSSProperties, type ReactNode } from "react";
 import type { CellAddress } from "../../../xlsx/domain/cell/address";
 import type { Cell } from "../../../xlsx/domain/cell/types";
@@ -72,6 +78,9 @@ function getCellDisplayText(
   return formatCellValueForDisplay(cell.value, formatCode);
 }
 
+/**
+ * Renders the visible cell grid region as positioned divs.
+ */
 export function XlsxSheetGridCellsLayer({
   sheetIndex,
   sheet,

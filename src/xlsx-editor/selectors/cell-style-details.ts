@@ -23,6 +23,12 @@ export type ResolvedCellStyleDetails = {
   readonly formatCode: string;
 };
 
+/**
+ * Resolve the effective style details for a cell location.
+ *
+ * Expands the referenced style ids in the resolved xf into concrete font/fill/border objects so
+ * UI components can render and edit selection formatting without manual indirection.
+ */
 export function resolveCellStyleDetails(params: {
   readonly styles: XlsxStyleSheet;
   readonly sheet: XlsxWorksheet;

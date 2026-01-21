@@ -1,3 +1,9 @@
+/**
+ * @file Number section (format panel)
+ *
+ * UI controls for editing number format (built-in numFmtId selection + custom format code helpers).
+ */
+
 import { Accordion, Button, FieldGroup, FieldRow, Input, Select, Toggle } from "../../../../office-editor-components";
 import { BUILTIN_FORMAT_OPTIONS } from "../options";
 
@@ -22,6 +28,9 @@ export type NumberSectionProps = {
   readonly onBuiltinFormatChange: (numFmtId: number) => void;
 };
 
+/**
+ * Format panel section for number formats.
+ */
 export function NumberSection(props: NumberSectionProps) {
   return (
     <Accordion title="Number">

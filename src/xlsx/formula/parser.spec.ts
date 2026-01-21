@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for the formula parser (expression → AST).
+ */
+
 import { parseFormula } from "./parser";
 import { colIdx, rowIdx } from "../domain/types";
 

@@ -49,19 +49,10 @@ function countDecimals(section: string): number {
   if (dot === -1) {
     return 0;
   }
-  let n = 0;
-  for (let i = dot + 1; i < section.length; i += 1) {
-    const ch = section[i]!;
-    if (ch === "0") {
-      n += 1;
-      continue;
-    }
-    if (ch === "#") {
-      continue;
-    }
-    break;
-  }
-  return n;
+  const tail = section.slice(dot + 1);
+  const match = /^[0#]+/u.exec(tail);
+  const digits = match?.[0] ?? "";
+  return [...digits].filter((ch) => ch === "0").length;
 }
 
 function wantsGrouping(section: string): boolean {
@@ -125,7 +116,7 @@ function formatDateByCode(serial: number, section: string): string {
   const raw = removeNonTimeBracketCodes(section);
 
   // Very small formatter: supports tokens used in built-in formats and common customs.
-  let out = "";
+  const parts: string[] = [];
   const text = raw;
 
   const isAmPm = /AM\/PM/iu.test(text);
@@ -139,81 +130,81 @@ function formatDateByCode(serial: number, section: string): string {
     const ch = text[i]!;
     if (ch === '"') {
       const end = text.indexOf('"', i + 1);
-      out += end === -1 ? "" : text.slice(i + 1, end);
+      parts.push(end === -1 ? "" : text.slice(i + 1, end));
       i = end === -1 ? text.length : end + 1;
       continue;
     }
     if (ch === "\\") {
-      out += text[i + 1] ?? "";
+      parts.push(text[i + 1] ?? "");
       i += 2;
       continue;
     }
 
     const rest = text.slice(i);
     if (/^yyyy/iu.test(rest)) {
-      out += String(y).padStart(4, "0");
+      parts.push(String(y).padStart(4, "0"));
       i += 4;
       continue;
     }
     if (/^yy/iu.test(rest)) {
-      out += pad2(y % 100);
+      parts.push(pad2(y % 100));
       i += 2;
       continue;
     }
     if (/^dd/iu.test(rest)) {
-      out += pad2(d);
+      parts.push(pad2(d));
       i += 2;
       continue;
     }
     if (/^d/iu.test(rest)) {
-      out += String(d);
+      parts.push(String(d));
       i += 1;
       continue;
     }
     if (/^hh/iu.test(rest)) {
-      out += pad2(isAmPm ? hour12 : hh);
+      parts.push(pad2(isAmPm ? hour12 : hh));
       i += 2;
       continue;
     }
     if (/^h/iu.test(rest)) {
-      out += String(isAmPm ? hour12 : hh);
+      parts.push(String(isAmPm ? hour12 : hh));
       i += 1;
       continue;
     }
     if (/^ss/iu.test(rest)) {
-      out += pad2(ss);
+      parts.push(pad2(ss));
       i += 2;
       continue;
     }
     if (/^s/iu.test(rest)) {
-      out += String(ss);
+      parts.push(String(ss));
       i += 1;
       continue;
     }
     if (/^AM\/PM/iu.test(rest)) {
-      out += amPmText;
+      parts.push(amPmText);
       i += "AM/PM".length;
       continue;
     }
 
     if (/^mm/iu.test(rest)) {
       const minutes = looksLikeTimeMinutesContext(text, i);
-      out += minutes ? pad2(mm) : pad2(m);
+      parts.push(minutes ? pad2(mm) : pad2(m));
       i += 2;
       continue;
     }
     if (/^m/iu.test(rest)) {
       const minutes = looksLikeTimeMinutesContext(text, i);
-      out += minutes ? String(mm) : String(m);
+      parts.push(minutes ? String(mm) : String(m));
       i += 1;
       continue;
     }
 
-    out += ch;
+    parts.push(ch);
     i += 1;
   }
 
-  return out;
+  return parts.join("");
 }
 
 function formatNumberByCode(value: number, formatCode: string): string {
@@ -256,6 +247,9 @@ function formatNumberByCode(value: number, formatCode: string): string {
   return percent ? `${formatted}%` : formatted;
 }
 
+/**
+ * Resolve the effective number format code for a cell.
+ */
 export function resolveCellFormatCode(params: {
   readonly styles: XlsxStyleSheet;
   readonly sheet: XlsxWorksheet;
@@ -267,6 +261,9 @@ export function resolveCellFormatCode(params: {
   return resolveFormatCode(xf.numFmtId as number, styles.numberFormats);
 }
 
+/**
+ * Format a raw cell value for grid display given a resolved format code.
+ */
 export function formatCellValueForDisplay(value: CellValue, formatCode: string): string {
   if (value.type === "empty") {
     return "";
@@ -287,6 +284,9 @@ export function formatCellValueForDisplay(value: CellValue, formatCode: string):
   return formatNumberByCode(value.value, formatCode);
 }
 
+/**
+ * Format a formula evaluation result for grid display given a resolved format code.
+ */
 export function formatFormulaScalarForDisplay(value: FormulaScalar, formatCode: string): string {
   if (value === null) {
     return "";

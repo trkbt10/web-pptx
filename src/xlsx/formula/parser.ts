@@ -1,3 +1,12 @@
+/**
+ * @file Formula Parser
+ *
+ * Tokenizes and parses SpreadsheetML formula text into an AST consumed by the formula evaluator.
+ * The input is expected to be the expression part (typically without the leading "="),
+ * and this parser supports the subset used by this project:
+ * literals, cell references/ranges, array literals, function calls, unary/binary ops, and comparisons.
+ */
+
 import { parseRange } from "../domain/cell/address";
 import type { CellAddress, CellRange } from "../domain/cell/address";
 import type { ErrorValue } from "../domain/cell/types";
@@ -114,17 +123,16 @@ function readWhile(
   start: number,
   condition: (char: string) => boolean,
 ): { readonly value: string; readonly next: number } {
-  let index = start;
-  let result = "";
+  const cursor = { index: start, result: "" };
 
-  while (index < input.length && condition(input[index] ?? "")) {
-    result += input[index];
-    index += 1;
+  while (cursor.index < input.length && condition(input[cursor.index] ?? "")) {
+    cursor.result += input[cursor.index];
+    cursor.index += 1;
   }
 
   return {
-    value: result,
-    next: index,
+    value: cursor.result,
+    next: cursor.index,
   };
 }
 
@@ -137,21 +145,20 @@ function readNumberToken(input: string, start: number): { readonly token: Number
 }
 
 function readStringToken(input: string, start: number): { readonly token: StringToken; readonly next: number } {
-  let index = start + 1;
-  let result = "";
+  const cursor = { index: start + 1, value: "" };
 
-  while (index < input.length) {
-    const char = input[index] ?? "";
+  while (cursor.index < input.length) {
+    const char = input[cursor.index] ?? "";
     if (char === '"') {
-      if (input[index + 1] === '"') {
-        result += '"';
-        index += 2;
+      if (input[cursor.index + 1] === '"') {
+        cursor.value += '"';
+        cursor.index += 2;
         continue;
       }
-      return { token: { type: "string", value: result }, next: index + 1 };
+      return { token: { type: "string", value: cursor.value }, next: cursor.index + 1 };
     }
-    result += char;
-    index += 1;
+    cursor.value += char;
+    cursor.index += 1;
   }
 
   throw new Error("Unterminated string literal");
@@ -174,58 +181,56 @@ function readErrorToken(input: string, start: number): { readonly token: ErrorTo
 }
 
 function readCellLabel(input: string, start: number): { readonly label: string; readonly next: number } {
-  let index = start;
-  let result = "";
+  const cursor = { index: start, label: "" };
 
-  const maybeDollar1 = input[index] ?? "";
+  const maybeDollar1 = input[cursor.index] ?? "";
   if (maybeDollar1 === "$") {
-    result += "$";
-    index += 1;
+    cursor.label += "$";
+    cursor.index += 1;
   }
 
-  const { value: columnPart, next: afterColumn } = readWhile(input, index, (char) => isLetter(char));
+  const { value: columnPart, next: afterColumn } = readWhile(input, cursor.index, (char) => isLetter(char));
   if (columnPart.length === 0) {
     throw new Error("Missing column in cell reference");
   }
-  result += columnPart.toUpperCase();
-  index = afterColumn;
+  cursor.label += columnPart.toUpperCase();
+  cursor.index = afterColumn;
 
-  const maybeDollar2 = input[index] ?? "";
+  const maybeDollar2 = input[cursor.index] ?? "";
   if (maybeDollar2 === "$") {
-    result += "$";
-    index += 1;
+    cursor.label += "$";
+    cursor.index += 1;
   }
 
-  const { value: rowPart, next } = readWhile(input, index, (char) => isDigit(char));
+  const { value: rowPart, next } = readWhile(input, cursor.index, (char) => isDigit(char));
   if (rowPart.length === 0) {
     throw new Error("Missing row in cell reference");
   }
-  result += rowPart;
-  return { label: result, next };
+  cursor.label += rowPart;
+  return { label: cursor.label, next };
 }
 
 function readQuotedSheetReference(input: string, start: number): { readonly reference: string; readonly next: number } {
-  let index = start + 1;
-  let sheetName = "";
+  const cursor = { index: start + 1, sheetName: "" };
 
-  while (index < input.length) {
-    const char = input[index] ?? "";
+  while (cursor.index < input.length) {
+    const char = input[cursor.index] ?? "";
     if (char === "'") {
-      if (input[index + 1] === "'") {
-        sheetName += "'";
-        index += 2;
+      if (input[cursor.index + 1] === "'") {
+        cursor.sheetName += "'";
+        cursor.index += 2;
         continue;
       }
-      index += 1;
-      if (input[index] !== "!") {
+      cursor.index += 1;
+      if (input[cursor.index] !== "!") {
         throw new Error("Quoted sheet reference must be followed by '!'");
       }
-      index += 1;
-      const { label, next } = readCellLabel(input, index);
-      return { reference: `'${sheetName}'!${label}`, next };
+      cursor.index += 1;
+      const { label, next } = readCellLabel(input, cursor.index);
+      return { reference: `'${cursor.sheetName}'!${label}`, next };
     }
-    sheetName += char;
-    index += 1;
+    cursor.sheetName += char;
+    cursor.index += 1;
   }
 
   throw new Error("Unterminated quoted sheet reference");
@@ -255,103 +260,103 @@ function readIdentifierOrReferenceToken(input: string, start: number): { readonl
 
 function tokenize(formula: string): readonly Token[] {
   const tokens: Token[] = [];
-  let index = 0;
+  const cursor = { index: 0 };
 
-  while (index < formula.length) {
-    const char = formula[index] ?? "";
+  while (cursor.index < formula.length) {
+    const char = formula[cursor.index] ?? "";
     if (isWhitespace(char)) {
-      index += 1;
+      cursor.index += 1;
       continue;
     }
 
     if (char === "#") {
-      const { token, next } = readErrorToken(formula, index);
+      const { token, next } = readErrorToken(formula, cursor.index);
       tokens.push(token);
-      index = next;
+      cursor.index = next;
       continue;
     }
 
     if (isDigit(char)) {
-      const { token, next } = readNumberToken(formula, index);
+      const { token, next } = readNumberToken(formula, cursor.index);
       tokens.push(token);
-      index = next;
+      cursor.index = next;
       continue;
     }
 
     if (char === '"') {
-      const { token, next } = readStringToken(formula, index);
+      const { token, next } = readStringToken(formula, cursor.index);
       tokens.push(token);
-      index = next;
+      cursor.index = next;
       continue;
     }
 
     if (char === "'") {
-      const { reference, next } = readQuotedSheetReference(formula, index);
+      const { reference, next } = readQuotedSheetReference(formula, cursor.index);
       tokens.push({ type: "reference", value: reference });
-      index = next;
+      cursor.index = next;
       continue;
     }
 
     if (char === "$") {
-      const { label, next } = readCellLabel(formula, index);
+      const { label, next } = readCellLabel(formula, cursor.index);
       tokens.push({ type: "reference", value: label });
-      index = next;
+      cursor.index = next;
       continue;
     }
 
     if (isLetter(char)) {
-      const { token, next } = readIdentifierOrReferenceToken(formula, index);
+      const { token, next } = readIdentifierOrReferenceToken(formula, cursor.index);
       tokens.push(token);
-      index = next;
+      cursor.index = next;
       continue;
     }
 
     if (char === "(" || char === ")") {
       tokens.push({ type: "paren", value: char });
-      index += 1;
+      cursor.index += 1;
       continue;
     }
     if (char === "{" || char === "}") {
       tokens.push({ type: "bracket", value: char });
-      index += 1;
+      cursor.index += 1;
       continue;
     }
     if (char === ",") {
       tokens.push({ type: "comma" });
-      index += 1;
+      cursor.index += 1;
       continue;
     }
     if (char === ";") {
       tokens.push({ type: "semicolon" });
-      index += 1;
+      cursor.index += 1;
       continue;
     }
     if (char === ":") {
       tokens.push({ type: "colon" });
-      index += 1;
+      cursor.index += 1;
       continue;
     }
 
     if (char === "+" || char === "-" || char === "*" || char === "/" || char === "^") {
       tokens.push({ type: "operator", value: char });
-      index += 1;
+      cursor.index += 1;
       continue;
     }
 
     if (char === "<" || char === ">" || char === "=") {
-      const nextChar = formula[index + 1] ?? "";
+      const nextChar = formula[cursor.index + 1] ?? "";
       if (char === "<" && nextChar === ">") {
         tokens.push({ type: "comparator", value: "<>" });
-        index += 2;
+        cursor.index += 2;
         continue;
       }
       if ((char === "<" || char === ">") && nextChar === "=") {
         tokens.push({ type: "comparator", value: (char + "=") as ComparatorOperator });
-        index += 2;
+        cursor.index += 2;
         continue;
       }
       tokens.push({ type: "comparator", value: char as ComparatorOperator });
-      index += 1;
+      cursor.index += 1;
       continue;
     }
 
@@ -425,7 +430,7 @@ function parsePrimary(state: ParserState): FormulaAstNode {
   if (token.type === "bracket" && token.value === "{") {
     consume(state);
     const rows: FormulaAstNode[][] = [];
-    let currentRow: FormulaAstNode[] = [];
+    const rowState: { currentRow: FormulaAstNode[] } = { currentRow: [] };
 
     const closingToken = peek(state);
     if (closingToken.type === "bracket" && closingToken.value === "}") {
@@ -434,7 +439,7 @@ function parsePrimary(state: ParserState): FormulaAstNode {
     }
 
     while (true) {
-      currentRow.push(parseExpression(state));
+      rowState.currentRow.push(parseExpression(state));
       const separator = peek(state);
 
       if (separator.type === "comma") {
@@ -443,13 +448,13 @@ function parsePrimary(state: ParserState): FormulaAstNode {
       }
       if (separator.type === "semicolon") {
         consume(state);
-        rows.push(currentRow);
-        currentRow = [];
+        rows.push(rowState.currentRow);
+        rowState.currentRow = [];
         continue;
       }
       if (separator.type === "bracket" && separator.value === "}") {
         consume(state);
-        rows.push(currentRow);
+        rows.push(rowState.currentRow);
         return { type: "Array", elements: rows };
       }
 
@@ -510,61 +515,74 @@ function parseUnary(state: ParserState): FormulaAstNode {
 }
 
 function parsePower(state: ParserState): FormulaAstNode {
-  let node = parseUnary(state);
-  while (true) {
-    const token = peek(state);
-    if (token.type === "operator" && token.value === "^") {
-      consume(state);
-      node = { type: "Binary", operator: "^", left: node, right: parseUnary(state) };
-      continue;
-    }
-    return node;
+  const node = parseUnary(state);
+  return parsePowerTail(state, node);
+}
+
+function parsePowerTail(state: ParserState, left: FormulaAstNode): FormulaAstNode {
+  const token = peek(state);
+  if (token.type === "operator" && token.value === "^") {
+    consume(state);
+    return parsePowerTail(state, { type: "Binary", operator: "^", left, right: parseUnary(state) });
   }
+  return left;
 }
 
 function parseMultiplicative(state: ParserState): FormulaAstNode {
-  let node = parsePower(state);
-  while (true) {
-    const token = peek(state);
-    if (token.type === "operator" && (token.value === "*" || token.value === "/")) {
-      consume(state);
-      node = { type: "Binary", operator: token.value, left: node, right: parsePower(state) };
-      continue;
-    }
-    return node;
+  const node = parsePower(state);
+  return parseMultiplicativeTail(state, node);
+}
+
+function parseMultiplicativeTail(state: ParserState, left: FormulaAstNode): FormulaAstNode {
+  const token = peek(state);
+  if (token.type === "operator" && (token.value === "*" || token.value === "/")) {
+    consume(state);
+    return parseMultiplicativeTail(state, { type: "Binary", operator: token.value, left, right: parsePower(state) });
   }
+  return left;
 }
 
 function parseAdditive(state: ParserState): FormulaAstNode {
-  let node = parseMultiplicative(state);
-  while (true) {
-    const token = peek(state);
-    if (token.type === "operator" && (token.value === "+" || token.value === "-")) {
-      consume(state);
-      node = { type: "Binary", operator: token.value, left: node, right: parseMultiplicative(state) };
-      continue;
-    }
-    return node;
+  const node = parseMultiplicative(state);
+  return parseAdditiveTail(state, node);
+}
+
+function parseAdditiveTail(state: ParserState, left: FormulaAstNode): FormulaAstNode {
+  const token = peek(state);
+  if (token.type === "operator" && (token.value === "+" || token.value === "-")) {
+    consume(state);
+    return parseAdditiveTail(state, { type: "Binary", operator: token.value, left, right: parseMultiplicative(state) });
   }
+  return left;
 }
 
 function parseComparison(state: ParserState): FormulaAstNode {
-  let node = parseAdditive(state);
-  while (true) {
-    const token = peek(state);
-    if (token.type === "comparator") {
-      consume(state);
-      node = { type: "Compare", operator: token.value, left: node, right: parseAdditive(state) };
-      continue;
-    }
-    return node;
+  const node = parseAdditive(state);
+  return parseComparisonTail(state, node);
+}
+
+function parseComparisonTail(state: ParserState, left: FormulaAstNode): FormulaAstNode {
+  const token = peek(state);
+  if (token.type === "comparator") {
+    consume(state);
+    return parseComparisonTail(state, { type: "Compare", operator: token.value, left, right: parseAdditive(state) });
   }
+  return left;
 }
 
 function parseExpression(state: ParserState): FormulaAstNode {
   return parseComparison(state);
 }
 
+/**
+ * Parse a formula expression into an AST.
+ *
+ * This is used by the evaluator and tooling. The caller is responsible for normalizing
+ * the raw cell formula text (e.g., stripping a leading "=") before invoking this parser.
+ *
+ * @param formula - Formula expression text
+ * @returns Root AST node
+ */
 export function parseFormula(formula: string): FormulaAstNode {
   const tokens = tokenize(formula);
   const state: ParserState = { tokens, index: 0 };

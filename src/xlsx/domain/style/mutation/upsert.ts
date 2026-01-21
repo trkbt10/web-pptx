@@ -1,3 +1,10 @@
+/**
+ * @file Style collection upsert helpers
+ *
+ * Utilities for inserting style components into `XlsxStyleSheet` collections while preserving
+ * de-duplication semantics (return existing IDs when an identical entry already exists).
+ */
+
 import type { XlsxBorder } from "../border";
 import type { XlsxFill } from "../fill";
 import type { XlsxFont } from "../font";
@@ -12,6 +19,9 @@ export type UpsertBorderResult = { readonly styles: XlsxStyleSheet; readonly bor
 export type UpsertNumberFormatResult = { readonly styles: XlsxStyleSheet; readonly numFmtId: NumFmtId };
 export type UpsertCellXfResult = { readonly styles: XlsxStyleSheet; readonly styleId: StyleId };
 
+/**
+ * Insert a font into `styles.fonts` if it doesn't already exist, and return its `fontId`.
+ */
 export function upsertFont(styles: XlsxStyleSheet, font: XlsxFont): UpsertFontResult {
   const existingIndex = styles.fonts.findIndex((candidate) => isEqualFont(candidate, font));
   if (existingIndex >= 0) {
@@ -20,6 +30,9 @@ export function upsertFont(styles: XlsxStyleSheet, font: XlsxFont): UpsertFontRe
   return { styles: { ...styles, fonts: [...styles.fonts, font] }, fontId: fontId(styles.fonts.length) };
 }
 
+/**
+ * Insert a fill into `styles.fills` if it doesn't already exist, and return its `fillId`.
+ */
 export function upsertFill(styles: XlsxStyleSheet, fill: XlsxFill): UpsertFillResult {
   const existingIndex = styles.fills.findIndex((candidate) => isEqualFill(candidate, fill));
   if (existingIndex >= 0) {
@@ -28,6 +41,9 @@ export function upsertFill(styles: XlsxStyleSheet, fill: XlsxFill): UpsertFillRe
   return { styles: { ...styles, fills: [...styles.fills, fill] }, fillId: fillId(styles.fills.length) };
 }
 
+/**
+ * Insert a border into `styles.borders` if it doesn't already exist, and return its `borderId`.
+ */
 export function upsertBorder(styles: XlsxStyleSheet, border: XlsxBorder): UpsertBorderResult {
   const existingIndex = styles.borders.findIndex((candidate) => isEqualBorder(candidate, border));
   if (existingIndex >= 0) {
@@ -41,6 +57,9 @@ function nextCustomNumFmtId(numberFormats: readonly XlsxNumberFormat[]): number 
   return Math.max(164, max + 1);
 }
 
+/**
+ * Ensure a custom number format exists for `formatCode`, assigning a new `numFmtId` if needed.
+ */
 export function upsertCustomNumberFormat(styles: XlsxStyleSheet, formatCode: string): UpsertNumberFormatResult {
   const existing = styles.numberFormats.find((candidate) => candidate.formatCode === formatCode);
   if (existing) {
@@ -51,11 +70,17 @@ export function upsertCustomNumberFormat(styles: XlsxStyleSheet, formatCode: str
   return { styles: { ...styles, numberFormats: [...styles.numberFormats, entry] }, numFmtId: entry.numFmtId };
 }
 
+/**
+ * Reference a built-in number format by ID without modifying the styles collection.
+ */
 export function useBuiltinNumberFormat(styles: XlsxStyleSheet, builtinId: number): UpsertNumberFormatResult {
   void styles;
   return { styles, numFmtId: numFmtId(builtinId) };
 }
 
+/**
+ * Insert a cell format (xf) into `styles.cellXfs` if it doesn't already exist, and return its `styleId`.
+ */
 export function upsertCellXf(styles: XlsxStyleSheet, xf: XlsxCellXf): UpsertCellXfResult {
   const existingIndex = styles.cellXfs.findIndex((candidate) => isEqualCellXf(candidate, xf));
   if (existingIndex >= 0) {
@@ -63,4 +88,3 @@ export function upsertCellXf(styles: XlsxStyleSheet, xf: XlsxCellXf): UpsertCell
   }
   return { styles: { ...styles, cellXfs: [...styles.cellXfs, xf] }, styleId: styleId(styles.cellXfs.length) };
 }
-

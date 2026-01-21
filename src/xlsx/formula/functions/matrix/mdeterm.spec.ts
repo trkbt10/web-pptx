@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for MDETERM matrix function.
+ */
+
 import { formulaFunctionHelpers, type FormulaFunctionDefinition } from "../../functionRegistry";
 import type { EvalResult } from "../helpers";
 import { invokeFormulaFunction, makeEvalArgs } from "../testHelpers";
@@ -26,4 +30,3 @@ describe("MDETERM", () => {
     expect(result).toBeCloseTo(1, 10);
   });
 });
-

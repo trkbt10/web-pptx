@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for selection rectangle geometry helpers.
+ */
+
 import { colIdx, rowIdx } from "../../../xlsx/domain/types";
 import type { XlsxWorksheet } from "../../../xlsx/domain/workbook";
 import { createSheetLayout } from "../../selectors/sheet-layout";
@@ -51,4 +55,3 @@ describe("xlsx-editor/components/sheet-grid/selection-geometry", () => {
     });
   });
 });
-

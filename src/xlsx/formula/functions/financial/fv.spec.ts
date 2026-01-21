@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for FV (future value) financial function.
+ */
+
 import { formulaFunctionHelpers, type FormulaFunctionDefinition } from "../../functionRegistry";
 import type { EvalResult } from "../helpers";
 import { invokeFormulaFunction, makeEvalArgs } from "../testHelpers";
@@ -24,4 +28,3 @@ describe("FV", () => {
     expect(futureValue).toBeCloseTo(expected, 6);
   });
 });
-

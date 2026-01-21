@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for the formula evaluator (AST execution + workbook lookup).
+ */
+
 import { colIdx, rowIdx } from "../domain/types";
 import type { Cell, CellValue } from "../domain/cell/types";
 import type { XlsxRow, XlsxWorksheet, XlsxWorkbook } from "../domain/workbook";

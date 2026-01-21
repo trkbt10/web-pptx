@@ -74,18 +74,18 @@ export const calculateInterestPayment = (
     return 0;
   }
   validateInterestRate(rate, "Interest rate");
-  let balance = presentValue;
+  const state = { balance: presentValue };
   for (let period = 1; period <= targetPeriod; period += 1) {
     if (type === 1) {
-      balance += payment;
+      state.balance += payment;
     }
-    const interestComponent = balance * rate;
+    const interestComponent = state.balance * rate;
     if (period === targetPeriod) {
       return -interestComponent;
     }
-    balance += interestComponent;
+    state.balance += interestComponent;
     if (type === 0) {
-      balance += payment;
+      state.balance += payment;
     }
   }
   return 0;

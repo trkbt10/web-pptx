@@ -1,3 +1,10 @@
+/**
+ * @file Spreadsheet autofill row mutation helpers
+ *
+ * Utilities for building/merging sparse `Cell` updates into `XlsxRow` while preserving existing cells
+ * outside the updated bounds. Used by the fill-handle (autofill) implementation.
+ */
+
 import type { CellAddress } from "../../../xlsx/domain/cell/address";
 import type { Formula } from "../../../xlsx/domain/cell/formula";
 import type { Cell, CellValue } from "../../../xlsx/domain/cell/types";
@@ -34,6 +41,12 @@ function buildPatchedCell(params: {
   return baseCell;
 }
 
+/**
+ * Build a sparse `Cell` update when any of value/formula/style needs to be present.
+ *
+ * When the patch would be empty (no formula, empty value, no style), this returns `undefined`
+ * so the caller can omit creating a `<c>` entry in the worksheet.
+ */
 export function buildCellIfNeeded(params: {
   readonly address: CellAddress;
   readonly base: PatternCell;
@@ -54,6 +67,11 @@ function filterCellsOutsideBounds(cells: readonly Cell[], colBounds: { readonly 
   });
 }
 
+/**
+ * Merge `updates` into an existing row while clearing any existing cells within `colBounds`.
+ *
+ * Returns `undefined` when the resulting row has no cells and the row did not previously exist.
+ */
 export function upsertCellsIntoRow(
   row: XlsxRow | undefined,
   updates: readonly Cell[],
@@ -84,4 +102,3 @@ export function upsertCellsIntoRow(
   }
   return { ...row, cells: nextCells };
 }
-

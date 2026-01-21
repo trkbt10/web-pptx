@@ -141,7 +141,9 @@ export function parseCellXf(xfElement: XmlElement): XlsxCellXf {
  * @see ECMA-376 Part 4, Section 18.8.9 (cellStyleXfs)
  */
 export function parseCellXfs(cellXfsElement: XmlElement | undefined): readonly XlsxCellXf[] {
-  if (!cellXfsElement) return [];
+  if (!cellXfsElement) {
+    return [];
+  }
   return getChildren(cellXfsElement, "xf").map(parseCellXf);
 }
 
@@ -182,7 +184,9 @@ export function parseCellStyle(cellStyleElement: XmlElement): XlsxCellStyle {
  * @see ECMA-376 Part 4, Section 18.8.8 (cellStyles)
  */
 export function parseCellStyles(cellStylesElement: XmlElement | undefined): readonly XlsxCellStyle[] {
-  if (!cellStylesElement) return [];
+  if (!cellStylesElement) {
+    return [];
+  }
   return getChildren(cellStylesElement, "cellStyle").map(parseCellStyle);
 }
 

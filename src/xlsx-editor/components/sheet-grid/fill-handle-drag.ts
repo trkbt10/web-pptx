@@ -1,3 +1,10 @@
+/**
+ * @file Fill handle drag controller
+ *
+ * Pointer-based drag handler for the selection fill handle (autofill). This layer is UI-focused:
+ * it converts pointer movement into target ranges and dispatches reducer actions.
+ */
+
 import type { CellAddress, CellRange } from "../../../xlsx/domain/cell/address";
 import { colIdx as colIdxFn, rowIdx as rowIdxFn } from "../../../xlsx/domain/types";
 import type { XlsxEditorAction } from "../../context/workbook/editor/types";
@@ -54,6 +61,13 @@ function computeFillTargetRange(baseRange: CellRange, target: CellAddress): Cell
   };
 }
 
+/**
+ * Start a fill-handle drag sequence.
+ *
+ * - Captures the pointer to keep receiving events while dragging
+ * - Dispatches START → PREVIEW (on move) → COMMIT (on up)
+ * - On pointercancel, ends drag and restores selection to the original base range
+ */
 export function startFillHandlePointerDrag(params: {
   readonly pointerId: number;
   readonly captureTarget: HTMLElement;

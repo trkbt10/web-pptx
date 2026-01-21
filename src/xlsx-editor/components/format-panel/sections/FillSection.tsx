@@ -1,3 +1,9 @@
+/**
+ * @file Fill section (format panel)
+ *
+ * UI controls for editing the selection fill (background) color.
+ */
+
 import { Accordion, Button, FieldGroup, FieldRow, Input } from "../../../../office-editor-components";
 
 export type FillSectionProps = {
@@ -8,6 +14,9 @@ export type FillSectionProps = {
   readonly onClearFill: () => void;
 };
 
+/**
+ * Format panel section for applying a solid fill color to the selection.
+ */
 export function FillSection(props: FillSectionProps) {
   return (
     <Accordion title="Fill" defaultExpanded>
@@ -31,4 +40,3 @@ export function FillSection(props: FillSectionProps) {
     </Accordion>
   );
 }
-

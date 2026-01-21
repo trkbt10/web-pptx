@@ -1,7 +1,16 @@
+/**
+ * @file Autofill range helpers
+ *
+ * Normalization and direction detection for fill-handle operations.
+ */
+
 import type { CellRange } from "../../../xlsx/domain/cell/address";
 import { colIdx, rowIdx } from "../../../xlsx/domain/types";
 import type { FillDirection, RangeBounds } from "./types";
 
+/**
+ * Convert a `CellRange` into numeric bounds (1-based rows/cols) with min/max normalization.
+ */
 export function getRangeBounds(range: CellRange): RangeBounds {
   const startRow = range.start.row as number;
   const endRow = range.end.row as number;
@@ -16,6 +25,9 @@ export function getRangeBounds(range: CellRange): RangeBounds {
   };
 }
 
+/**
+ * Normalize a range so `start` is the top-left and `end` is the bottom-right.
+ */
 export function normalizeRange(range: CellRange): CellRange {
   const bounds = getRangeBounds(range);
   return {
@@ -24,6 +36,11 @@ export function normalizeRange(range: CellRange): CellRange {
   };
 }
 
+/**
+ * Determine the fill direction implied by extending `base` to reach `target`.
+ *
+ * This mirrors typical spreadsheet behavior: if both row/col expand, the dominant delta decides.
+ */
 export function computeDirection(base: RangeBounds, target: RangeBounds): FillDirection {
   const sameCols = base.minCol === target.minCol && base.maxCol === target.maxCol;
   const sameRows = base.minRow === target.minRow && base.maxRow === target.maxRow;
@@ -59,6 +76,9 @@ export function computeDirection(base: RangeBounds, target: RangeBounds): FillDi
   return "left";
 }
 
+/**
+ * Get how many rows need to be filled based on direction and bounds.
+ */
 export function getFillRowCount(direction: FillDirection, baseBounds: RangeBounds, targetBounds: RangeBounds): number {
   if (direction === "down") {
     return targetBounds.maxRow - baseBounds.maxRow;
@@ -69,6 +89,9 @@ export function getFillRowCount(direction: FillDirection, baseBounds: RangeBound
   return 0;
 }
 
+/**
+ * Get how many columns need to be filled based on direction and bounds.
+ */
 export function getFillColCount(direction: FillDirection, baseBounds: RangeBounds, targetBounds: RangeBounds): number {
   if (direction === "right") {
     return targetBounds.maxCol - baseBounds.maxCol;
@@ -78,4 +101,3 @@ export function getFillColCount(direction: FillDirection, baseBounds: RangeBound
   }
   return 0;
 }
-

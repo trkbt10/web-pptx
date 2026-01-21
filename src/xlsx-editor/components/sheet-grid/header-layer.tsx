@@ -1,3 +1,12 @@
+/**
+ * @file Sheet grid header layer
+ *
+ * Renders row/column headers (A,B,C… / 1,2,3…) and handles header-driven interactions such as:
+ * - row/column selection
+ * - resizing row heights / column widths
+ * - header context menus (insert/delete/hide/unhide)
+ */
+
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { ContextMenu, type MenuEntry, colorTokens } from "../../../office-editor-components";
 import type { CellAddress } from "../../../xlsx/domain/cell/address";
@@ -6,6 +15,7 @@ import { colIdx, rowIdx } from "../../../xlsx/domain/types";
 import { indexToColumnLetter } from "../../../xlsx/domain/cell/address";
 import type { XlsxEditorAction, XlsxDragState } from "../../context/workbook/editor/types";
 import {
+  type SheetLayout,
   columnWidthCharToPixels,
   pixelsToColumnWidthChar,
   pixelsToPoints,
@@ -25,7 +35,7 @@ type ResizeDragRef =
 
 export type XlsxSheetGridHeaderLayerProps = {
   readonly sheet: XlsxWorksheet;
-  readonly layout: ReturnType<typeof import("../../selectors/sheet-layout").createSheetLayout>;
+  readonly layout: SheetLayout;
   readonly metrics: {
     readonly rowCount: number;
     readonly colCount: number;
@@ -63,6 +73,9 @@ const headerCellSelectedStyle: CSSProperties = {
   backgroundColor: `color-mix(in srgb, var(--accent, ${colorTokens.accent.primary}) 18%, var(--bg-tertiary, ${colorTokens.background.tertiary}))`,
 };
 
+/**
+ * Header overlay for the sheet grid (row/column headers and resize handles).
+ */
 export function XlsxSheetGridHeaderLayer({
   sheet,
   layout,

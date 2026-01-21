@@ -1,7 +1,18 @@
+/**
+ * @file Autofill pattern extraction
+ *
+ * Reads the worksheet's sparse data structures into lookup maps that are optimized for autofill:
+ * - Column/row style inheritance
+ * - Fast access to base-range cells by (row, col)
+ */
+
 import type { Cell } from "../../../xlsx/domain/cell/types";
 import type { XlsxWorksheet } from "../../../xlsx/domain/workbook";
 import type { RangeBounds } from "./types";
 
+/**
+ * Resolve the column-level `styleId` for a 1-based column number, if any column definition covers it.
+ */
 export function getColumnStyleId(sheet: XlsxWorksheet, colNumber: number): number | undefined {
   for (const def of sheet.columns ?? []) {
     if ((def.min as number) <= colNumber && colNumber <= (def.max as number)) {
@@ -11,6 +22,9 @@ export function getColumnStyleId(sheet: XlsxWorksheet, colNumber: number): numbe
   return undefined;
 }
 
+/**
+ * Build a map of rowNumber→styleId so base-range lookups can compute effective style quickly.
+ */
 export function buildRowStyleIdMap(sheet: XlsxWorksheet): ReadonlyMap<number, number | undefined> {
   const map = new Map<number, number | undefined>();
   for (const row of sheet.rows) {
@@ -19,6 +33,9 @@ export function buildRowStyleIdMap(sheet: XlsxWorksheet): ReadonlyMap<number, nu
   return map;
 }
 
+/**
+ * Build a sparse lookup of cells within `bounds` indexed by rowNumber→colNumber→Cell.
+ */
 export function buildCellLookup(sheet: XlsxWorksheet, bounds: RangeBounds): ReadonlyMap<number, ReadonlyMap<number, Cell>> {
   const rowMap = new Map<number, Map<number, Cell>>();
   for (const row of sheet.rows) {
@@ -38,4 +55,3 @@ export function buildCellLookup(sheet: XlsxWorksheet, bounds: RangeBounds): Read
   }
   return rowMap;
 }
-

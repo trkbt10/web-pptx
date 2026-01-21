@@ -58,12 +58,20 @@ function pickEdge(
   b: CellBorderEdgeDecoration | undefined,
   preferBOnTie: boolean,
 ): CellBorderEdgeDecoration | undefined {
-  if (!a) return b;
-  if (!b) return a;
+  if (!a) {
+    return b;
+  }
+  if (!b) {
+    return a;
+  }
   const sa = edgeScore(a);
   const sb = edgeScore(b);
-  if (sa > sb) return a;
-  if (sb > sa) return b;
+  if (sa > sb) {
+    return a;
+  }
+  if (sb > sa) {
+    return b;
+  }
   return preferBOnTie ? b : a;
 }
 
@@ -109,6 +117,12 @@ function emitLine(
   });
 }
 
+/**
+ * Build SVG line primitives representing SpreadsheetML borders for the current viewport.
+ *
+ * This computes border lines on the boundaries between cells, resolves conflicts between adjacent
+ * edges, and suppresses internal boundaries inside merged ranges (Excel-like).
+ */
 export function buildBorderOverlayLines(params: {
   readonly sheet: XlsxWorksheet;
   readonly styles: XlsxStyleSheet;
@@ -182,9 +196,11 @@ export function buildBorderOverlayLines(params: {
   // Vertical boundaries (between columns)
   for (let boundaryCol0 = colRange.start; boundaryCol0 <= colRange.end + 1; boundaryCol0 += 1) {
     const x = layout.cols.getBoundaryOffsetPx(boundaryCol0) - scrollLeft;
-    let active:
-      | { readonly startY: number; endY: number; readonly edge: CellBorderEdgeDecoration }
-      | undefined;
+    const activeState = {
+      active: undefined as
+        | { readonly startY: number; endY: number; readonly edge: CellBorderEdgeDecoration }
+        | undefined,
+    };
 
     for (let row0 = rowRange.start; row0 <= rowRange.end; row0 += 1) {
       const y1 = layout.rows.getBoundaryOffsetPx(row0) - scrollTop;
@@ -199,34 +215,36 @@ export function buildBorderOverlayLines(params: {
       const chosen = isInternalMergeBoundary ? undefined : pickEdge(leftCell?.right, rightCell?.left, true);
 
       if (!chosen) {
-        if (active) {
-          emitLine(lines, `vb-${boundaryCol0}-${row0}-seg`, active.edge, x, active.startY, x, active.endY);
-          active = undefined;
+        if (activeState.active) {
+          emitLine(lines, `vb-${boundaryCol0}-${row0}-seg`, activeState.active.edge, x, activeState.active.startY, x, activeState.active.endY);
+          activeState.active = undefined;
         }
         continue;
       }
 
-      if (active && sameEdge(active.edge, chosen) && Math.abs(active.endY - y1) < 0.001) {
-        active.endY = y2;
+      if (activeState.active && sameEdge(activeState.active.edge, chosen) && Math.abs(activeState.active.endY - y1) < 0.001) {
+        activeState.active.endY = y2;
       } else {
-        if (active) {
-          emitLine(lines, `vb-${boundaryCol0}-${row0}-seg`, active.edge, x, active.startY, x, active.endY);
+        if (activeState.active) {
+          emitLine(lines, `vb-${boundaryCol0}-${row0}-seg`, activeState.active.edge, x, activeState.active.startY, x, activeState.active.endY);
         }
-        active = { edge: chosen, startY: y1, endY: y2 };
+        activeState.active = { edge: chosen, startY: y1, endY: y2 };
       }
     }
 
-    if (active) {
-      emitLine(lines, `vb-${boundaryCol0}-end`, active.edge, x, active.startY, x, active.endY);
+    if (activeState.active) {
+      emitLine(lines, `vb-${boundaryCol0}-end`, activeState.active.edge, x, activeState.active.startY, x, activeState.active.endY);
     }
   }
 
   // Horizontal boundaries (between rows)
   for (let boundaryRow0 = rowRange.start; boundaryRow0 <= rowRange.end + 1; boundaryRow0 += 1) {
     const y = layout.rows.getBoundaryOffsetPx(boundaryRow0) - scrollTop;
-    let active:
-      | { readonly startX: number; endX: number; readonly edge: CellBorderEdgeDecoration }
-      | undefined;
+    const activeState = {
+      active: undefined as
+        | { readonly startX: number; endX: number; readonly edge: CellBorderEdgeDecoration }
+        | undefined,
+    };
 
     for (let col0 = colRange.start; col0 <= colRange.end; col0 += 1) {
       const x1 = layout.cols.getBoundaryOffsetPx(col0) - scrollLeft;
@@ -241,25 +259,25 @@ export function buildBorderOverlayLines(params: {
       const chosen = isInternalMergeBoundary ? undefined : pickEdge(topCell?.bottom, bottomCell?.top, true);
 
       if (!chosen) {
-        if (active) {
-          emitLine(lines, `hb-${boundaryRow0}-${col0}-seg`, active.edge, active.startX, y, active.endX, y);
-          active = undefined;
+        if (activeState.active) {
+          emitLine(lines, `hb-${boundaryRow0}-${col0}-seg`, activeState.active.edge, activeState.active.startX, y, activeState.active.endX, y);
+          activeState.active = undefined;
         }
         continue;
       }
 
-      if (active && sameEdge(active.edge, chosen) && Math.abs(active.endX - x1) < 0.001) {
-        active.endX = x2;
+      if (activeState.active && sameEdge(activeState.active.edge, chosen) && Math.abs(activeState.active.endX - x1) < 0.001) {
+        activeState.active.endX = x2;
       } else {
-        if (active) {
-          emitLine(lines, `hb-${boundaryRow0}-${col0}-seg`, active.edge, active.startX, y, active.endX, y);
+        if (activeState.active) {
+          emitLine(lines, `hb-${boundaryRow0}-${col0}-seg`, activeState.active.edge, activeState.active.startX, y, activeState.active.endX, y);
         }
-        active = { edge: chosen, startX: x1, endX: x2 };
+        activeState.active = { edge: chosen, startX: x1, endX: x2 };
       }
     }
 
-    if (active) {
-      emitLine(lines, `hb-${boundaryRow0}-end`, active.edge, active.startX, y, active.endX, y);
+    if (activeState.active) {
+      emitLine(lines, `hb-${boundaryRow0}-end`, activeState.active.edge, activeState.active.startX, y, activeState.active.endX, y);
     }
   }
 

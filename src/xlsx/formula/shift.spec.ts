@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for shifting formula references (copy/paste behavior).
+ */
+
 import { shiftFormulaReferences } from "./shift";
 
 describe("xlsx/formula/shift", () => {

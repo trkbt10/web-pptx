@@ -1,3 +1,10 @@
+/**
+ * @file Gridline geometry for the sheet grid
+ *
+ * Produces SVG line segments for spreadsheet gridlines in the current viewport, and suppresses
+ * internal gridlines inside merged ranges to match typical spreadsheet behavior.
+ */
+
 import { colIdx, rowIdx } from "../../../xlsx/domain/types";
 import { createSheetLayout } from "../../selectors/sheet-layout";
 import { findMergeForCell, type NormalizedMergeRange } from "../../sheet/merge-range";
@@ -45,6 +52,11 @@ function getMergeKeyForCell(
   return merge?.key;
 }
 
+/**
+ * Compute the gridline segments visible in the current viewport.
+ *
+ * The output is split into vertical and horizontal segments, already merged where contiguous.
+ */
 export function getVisibleGridLineSegments(params: {
   readonly rowRange: { readonly start: number; readonly end: number };
   readonly colRange: { readonly start: number; readonly end: number };
@@ -71,7 +83,7 @@ export function getVisibleGridLineSegments(params: {
       continue;
     }
 
-    let active: SegmentAccumulator = null;
+    const state = { active: null as SegmentAccumulator };
     for (let row0 = rowRange.start; row0 <= rowRange.end; row0 += 1) {
       const y1 = layout.rows.getBoundaryOffsetPx(row0) - scrollTop;
       const y2 = layout.rows.getBoundaryOffsetPx(row0 + 1) - scrollTop;
@@ -80,30 +92,30 @@ export function getVisibleGridLineSegments(params: {
       }
 
       const leftKey = boundaryCol0 > 0 ? getMergeKey(boundaryCol0 - 1, row0) : undefined;
-      const rightKey = boundaryCol0 < colCount ? getMergeKey(boundaryCol0, row0) : undefined;
-      const isInternalMergeBoundary = Boolean(leftKey && leftKey === rightKey);
-      if (isInternalMergeBoundary) {
-        if (active) {
-          vertical.push({ key: `v-${boundaryCol0}-${row0}-seg`, x1: x, y1: active.start, x2: x, y2: active.end });
-          active = null;
-        }
-        continue;
-      }
+	      const rightKey = boundaryCol0 < colCount ? getMergeKey(boundaryCol0, row0) : undefined;
+	      const isInternalMergeBoundary = Boolean(leftKey && leftKey === rightKey);
+	      if (isInternalMergeBoundary) {
+	        if (state.active) {
+	          vertical.push({ key: `v-${boundaryCol0}-${row0}-seg`, x1: x, y1: state.active.start, x2: x, y2: state.active.end });
+	          state.active = null;
+	        }
+	        continue;
+	      }
 
-      const merged = mergeIfContiguous(active, y1, y2);
-      if (merged) {
-        active = merged;
-        continue;
-      }
-      if (active) {
-        vertical.push({ key: `v-${boundaryCol0}-${row0}-seg`, x1: x, y1: active.start, x2: x, y2: active.end });
-      }
-      active = { start: y1, end: y2 };
-    }
-    if (active) {
-      vertical.push({ key: `v-${boundaryCol0}-end`, x1: x, y1: active.start, x2: x, y2: active.end });
-    }
-  }
+	      const merged = mergeIfContiguous(state.active, y1, y2);
+	      if (merged) {
+	        state.active = merged;
+	        continue;
+	      }
+	      if (state.active) {
+	        vertical.push({ key: `v-${boundaryCol0}-${row0}-seg`, x1: x, y1: state.active.start, x2: x, y2: state.active.end });
+	      }
+	      state.active = { start: y1, end: y2 };
+	    }
+	    if (state.active) {
+	      vertical.push({ key: `v-${boundaryCol0}-end`, x1: x, y1: state.active.start, x2: x, y2: state.active.end });
+	    }
+	  }
 
   for (let boundaryRow0 = rowRange.start; boundaryRow0 <= rowRange.end + 1; boundaryRow0 += 1) {
     const y = layout.rows.getBoundaryOffsetPx(boundaryRow0) - scrollTop;
@@ -111,7 +123,7 @@ export function getVisibleGridLineSegments(params: {
       continue;
     }
 
-    let active: SegmentAccumulator = null;
+    const state = { active: null as SegmentAccumulator };
     for (let col0 = colRange.start; col0 <= colRange.end; col0 += 1) {
       const x1 = layout.cols.getBoundaryOffsetPx(col0) - scrollLeft;
       const x2 = layout.cols.getBoundaryOffsetPx(col0 + 1) - scrollLeft;
@@ -120,30 +132,30 @@ export function getVisibleGridLineSegments(params: {
       }
 
       const topKey = boundaryRow0 > 0 ? getMergeKey(col0, boundaryRow0 - 1) : undefined;
-      const bottomKey = boundaryRow0 < rowCount ? getMergeKey(col0, boundaryRow0) : undefined;
-      const isInternalMergeBoundary = Boolean(topKey && topKey === bottomKey);
-      if (isInternalMergeBoundary) {
-        if (active) {
-          horizontal.push({ key: `h-${boundaryRow0}-${col0}-seg`, x1: active.start, y1: y, x2: active.end, y2: y });
-          active = null;
-        }
-        continue;
-      }
+	      const bottomKey = boundaryRow0 < rowCount ? getMergeKey(col0, boundaryRow0) : undefined;
+	      const isInternalMergeBoundary = Boolean(topKey && topKey === bottomKey);
+	      if (isInternalMergeBoundary) {
+	        if (state.active) {
+	          horizontal.push({ key: `h-${boundaryRow0}-${col0}-seg`, x1: state.active.start, y1: y, x2: state.active.end, y2: y });
+	          state.active = null;
+	        }
+	        continue;
+	      }
 
-      const merged = mergeIfContiguous(active, x1, x2);
-      if (merged) {
-        active = merged;
-        continue;
-      }
-      if (active) {
-        horizontal.push({ key: `h-${boundaryRow0}-${col0}-seg`, x1: active.start, y1: y, x2: active.end, y2: y });
-      }
-      active = { start: x1, end: x2 };
-    }
-    if (active) {
-      horizontal.push({ key: `h-${boundaryRow0}-end`, x1: active.start, y1: y, x2: active.end, y2: y });
-    }
-  }
+	      const merged = mergeIfContiguous(state.active, x1, x2);
+	      if (merged) {
+	        state.active = merged;
+	        continue;
+	      }
+	      if (state.active) {
+	        horizontal.push({ key: `h-${boundaryRow0}-${col0}-seg`, x1: state.active.start, y1: y, x2: state.active.end, y2: y });
+	      }
+	      state.active = { start: x1, end: x2 };
+	    }
+	    if (state.active) {
+	      horizontal.push({ key: `h-${boundaryRow0}-end`, x1: state.active.start, y1: y, x2: state.active.end, y2: y });
+	    }
+	  }
 
   return { vertical, horizontal };
 }

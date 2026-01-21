@@ -1,3 +1,9 @@
+/**
+ * @file Format panel select options
+ *
+ * Shared option lists for SpreadsheetML formatting controls (alignment, borders, number formats).
+ */
+
 import type { SelectOption } from "../../../office-editor-components";
 
 export const HORIZONTAL_OPTIONS: readonly SelectOption<string>[] = [
@@ -48,4 +54,3 @@ export const BUILTIN_FORMAT_OPTIONS: readonly SelectOption<string>[] = [
   { value: "11", label: "0.00E+00" },
   { value: "49", label: "Text" },
 ];
-

@@ -1,3 +1,9 @@
+/**
+ * @file Formula formatting
+ *
+ * Formats a parsed formula AST back into a string while preserving precedence and parentheses.
+ */
+
 import type { CellAddress, CellRange } from "../domain/cell/address";
 import { formatCellRef } from "../domain/cell/address";
 import type { FormulaAstNode } from "./ast";
@@ -113,6 +119,13 @@ function needsParens(params: {
 function formatNode(node: FormulaAstNode, parentPrec: Prec, position: "left" | "right", parentOperator?: string): string {
   const selfPrec = precedence(node);
 
+  const wrapIfNeeded = (text: string, child: FormulaAstNode, childPosition: "left" | "right", operator?: string): string => {
+    if (needsParens({ child, parentPrec: selfPrec, position: childPosition, parentOperator: operator })) {
+      return `(${text})`;
+    }
+    return text;
+  };
+
   const body = (() => {
     switch (node.type) {
       case "Literal":
@@ -133,36 +146,21 @@ function formatNode(node: FormulaAstNode, parentPrec: Prec, position: "left" | "
       }
       case "Unary": {
         const arg = formatNode(node.argument, selfPrec, "right", node.operator);
-        let wrapped = arg;
-        if (needsParens({ child: node.argument, parentPrec: selfPrec, position: "right", parentOperator: node.operator })) {
-          wrapped = `(${arg})`;
-        }
+        const wrapped = wrapIfNeeded(arg, node.argument, "right", node.operator);
         return `${node.operator}${wrapped}`;
       }
       case "Binary": {
         const left = formatNode(node.left, selfPrec, "left", node.operator);
         const right = formatNode(node.right, selfPrec, "right", node.operator);
-        let leftWrapped = left;
-        if (needsParens({ child: node.left, parentPrec: selfPrec, position: "left", parentOperator: node.operator })) {
-          leftWrapped = `(${left})`;
-        }
-        let rightWrapped = right;
-        if (needsParens({ child: node.right, parentPrec: selfPrec, position: "right", parentOperator: node.operator })) {
-          rightWrapped = `(${right})`;
-        }
+        const leftWrapped = wrapIfNeeded(left, node.left, "left", node.operator);
+        const rightWrapped = wrapIfNeeded(right, node.right, "right", node.operator);
         return `${leftWrapped}${node.operator}${rightWrapped}`;
       }
       case "Compare": {
         const left = formatNode(node.left, selfPrec, "left", node.operator);
         const right = formatNode(node.right, selfPrec, "right", node.operator);
-        let leftWrapped = left;
-        if (needsParens({ child: node.left, parentPrec: selfPrec, position: "left", parentOperator: node.operator })) {
-          leftWrapped = `(${left})`;
-        }
-        let rightWrapped = right;
-        if (needsParens({ child: node.right, parentPrec: selfPrec, position: "right", parentOperator: node.operator })) {
-          rightWrapped = `(${right})`;
-        }
+        const leftWrapped = wrapIfNeeded(left, node.left, "left", node.operator);
+        const rightWrapped = wrapIfNeeded(right, node.right, "right", node.operator);
         return `${leftWrapped}${node.operator}${rightWrapped}`;
       }
     }
@@ -174,6 +172,9 @@ function formatNode(node: FormulaAstNode, parentPrec: Prec, position: "left" | "
   return body;
 }
 
+/**
+ * Format a formula AST into a string.
+ */
 export function formatFormula(ast: FormulaAstNode): string {
   return formatNode(ast, 0, "left");
 }

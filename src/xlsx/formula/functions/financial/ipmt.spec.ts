@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for IPMT (interest payment) financial function.
+ */
+
 import { formulaFunctionHelpers, type FormulaFunctionDefinition } from "../../functionRegistry";
 import type { EvalResult } from "../helpers";
 import { invokeFormulaFunction, makeEvalArgs } from "../testHelpers";
@@ -24,4 +28,3 @@ describe("IPMT", () => {
     expect(interest).toBeCloseTo(-41.666666666666664, 6);
   });
 });
-

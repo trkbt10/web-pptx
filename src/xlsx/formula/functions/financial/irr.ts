@@ -6,15 +6,14 @@ import type { FormulaFunctionEagerDefinition } from "../../functionRegistry";
 import { FINANCE_EPSILON, FINANCE_MAX_ITERATIONS } from "../helpers";
 
 const hasOpposingSigns = (values: number[]): boolean => {
-  let hasPositive = false;
-  let hasNegative = false;
+  const state = { hasPositive: false, hasNegative: false };
   for (const value of values) {
     if (value > 0) {
-      hasPositive = true;
+      state.hasPositive = true;
     } else if (value < 0) {
-      hasNegative = true;
+      state.hasNegative = true;
     }
-    if (hasPositive && hasNegative) {
+    if (state.hasPositive && state.hasNegative) {
       return true;
     }
   }
@@ -82,33 +81,31 @@ export const irrFunction: FormulaFunctionEagerDefinition = {
     }
 
     const guess = args.length === 2 ? helpers.requireNumber(args[1], "IRR guess") : 0.1;
-    let rate = guess <= -0.999999 ? -0.999999 : guess;
+    const clampRate = (value: number): number => (value <= -0.9999999999 ? -0.9999999999 : value);
+    const rateState = { rate: guess <= -0.999999 ? -0.999999 : guess };
     const delta = 1e-6;
 
     for (let iteration = 0; iteration < FINANCE_MAX_ITERATIONS; iteration += 1) {
-      const npv = evaluateDiscountedSeries(helpers, rate, values);
+      const npv = evaluateDiscountedSeries(helpers, rateState.rate, values);
       if (Math.abs(npv) <= FINANCE_EPSILON) {
-        return rate;
+        return rateState.rate;
       }
 
-      const forward = evaluateDiscountedSeries(helpers, rate + delta, values);
-      const backward = evaluateDiscountedSeries(helpers, rate - delta, values);
+      const forward = evaluateDiscountedSeries(helpers, rateState.rate + delta, values);
+      const backward = evaluateDiscountedSeries(helpers, rateState.rate - delta, values);
       const derivative = (forward - backward) / (2 * delta);
 
       if (!Number.isFinite(derivative) || Math.abs(derivative) <= FINANCE_EPSILON) {
         break;
       }
 
-      let nextRate = rate - npv / derivative;
-      if (nextRate <= -0.9999999999) {
-        nextRate = -0.9999999999;
-      }
+      const nextRate = clampRate(rateState.rate - npv / derivative);
 
-      if (Math.abs(nextRate - rate) <= FINANCE_EPSILON) {
+      if (Math.abs(nextRate - rateState.rate) <= FINANCE_EPSILON) {
         return nextRate;
       }
 
-      rate = nextRate;
+      rateState.rate = nextRate;
     }
 
     throw new Error("IRR did not converge");

@@ -1,3 +1,9 @@
+/**
+ * @file Sheet grid viewport (overlay layer)
+ *
+ * Renders selection overlays, gridlines/borders, and the inline cell editor within the visible viewport.
+ */
+
 import { useCallback, useEffect, useMemo, useRef, type CSSProperties } from "react";
 import type { CellAddress } from "../../../xlsx/domain/cell/address";
 import type { XlsxStyleSheet } from "../../../xlsx/domain/style/types";
@@ -84,6 +90,12 @@ export type XlsxSheetGridCellViewportProps = {
   readonly children: React.ReactNode;
 };
 
+/**
+ * Viewport overlay for the sheet grid.
+ *
+ * This component does not render cell contents; it overlays selection rectangles, gridlines/borders,
+ * merge outlines, and the inline editor above the cells layer.
+ */
 export function XlsxSheetGridCellViewport({
   sheet,
   workbookStyles,

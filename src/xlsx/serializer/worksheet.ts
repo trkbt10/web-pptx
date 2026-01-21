@@ -50,43 +50,39 @@ function calculateDimension(rows: readonly XlsxRow[]): string {
     return "A1";
   }
 
-  let minCol = Infinity;
-  let maxCol = 0;
-  let minRow = Infinity;
-  let maxRow = 0;
-  let hasAnyCells = false;
+  const bounds = { minCol: Infinity, maxCol: 0, minRow: Infinity, maxRow: 0, hasAnyCells: false };
 
   for (const row of rows) {
     if (row.cells.length === 0) {
       continue;
     }
 
-    hasAnyCells = true;
+    bounds.hasAnyCells = true;
     const rowNum = row.rowNumber as number;
-    minRow = Math.min(minRow, rowNum);
-    maxRow = Math.max(maxRow, rowNum);
+    bounds.minRow = Math.min(bounds.minRow, rowNum);
+    bounds.maxRow = Math.max(bounds.maxRow, rowNum);
 
     for (const cell of row.cells) {
       const col = cell.address.col as number;
-      minCol = Math.min(minCol, col);
-      maxCol = Math.max(maxCol, col);
+      bounds.minCol = Math.min(bounds.minCol, col);
+      bounds.maxCol = Math.max(bounds.maxCol, col);
     }
   }
 
-  if (!hasAnyCells) {
+  if (!bounds.hasAnyCells) {
     return "A1";
   }
 
   const startRange: CellRange = {
     start: {
-      col: colIdx(minCol),
-      row: rowIdx(minRow),
+      col: colIdx(bounds.minCol),
+      row: rowIdx(bounds.minRow),
       colAbsolute: false,
       rowAbsolute: false,
     },
     end: {
-      col: colIdx(maxCol),
-      row: rowIdx(maxRow),
+      col: colIdx(bounds.maxCol),
+      row: rowIdx(bounds.maxRow),
       colAbsolute: false,
       rowAbsolute: false,
     },

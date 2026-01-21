@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for MMULT matrix function.
+ */
+
 import { formulaFunctionHelpers, type FormulaFunctionDefinition } from "../../functionRegistry";
 import type { EvalResult } from "../helpers";
 import { invokeFormulaFunction, makeEvalArgs } from "../testHelpers";
@@ -29,4 +33,3 @@ describe("MMULT", () => {
     expect(() => evaluate(mmultFunction, [[1, 2]], [[3, 4]])).toThrowError(/columns/i);
   });
 });
-

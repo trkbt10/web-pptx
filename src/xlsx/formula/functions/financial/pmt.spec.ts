@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for PMT (payment) financial function.
+ */
+
 import { formulaFunctionHelpers, type FormulaFunctionDefinition } from "../../functionRegistry";
 import type { EvalResult } from "../helpers";
 import { invokeFormulaFunction, makeEvalArgs } from "../testHelpers";
@@ -24,4 +28,3 @@ describe("PMT", () => {
     expect(payment).toBeCloseTo(-188.7123364401099, 6);
   });
 });
-

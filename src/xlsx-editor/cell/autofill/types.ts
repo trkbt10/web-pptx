@@ -1,3 +1,9 @@
+/**
+ * @file Autofill internal types
+ *
+ * Shared types/constants for the XLSX editor fill-handle implementation.
+ */
+
 import type { CellAddress } from "../../../xlsx/domain/cell/address";
 import type { Formula } from "../../../xlsx/domain/cell/formula";
 import type { CellValue } from "../../../xlsx/domain/cell/types";
@@ -24,4 +30,3 @@ export type PatternSeries =
   | { readonly type: "repeat" };
 
 export const EMPTY_VALUE: CellValue = { type: "empty" };
-

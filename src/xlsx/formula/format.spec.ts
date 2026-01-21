@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for formula formatting (AST → normalized text).
+ */
+
 import { formatFormula } from "./format";
 import { parseFormula } from "./parser";
 

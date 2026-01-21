@@ -1,3 +1,14 @@
+/**
+ * @file Spreadsheet fill handle implementation (autofill)
+ *
+ * Applies an Excel-like autofill from a base range to a target range:
+ * - Numeric/date series when the entire base segment is a compatible series
+ * - Otherwise repeats the base pattern (including formulas, with relative refs shifted)
+ * - Copies the effective style (cell/row/col) from the base pattern
+ *
+ * The mutation is intentionally sparse: it creates cells only when value/formula/style need to exist.
+ */
+
 import type { CellAddress, CellRange } from "../../../xlsx/domain/cell/address";
 import type { Formula } from "../../../xlsx/domain/cell/formula";
 import type { Cell } from "../../../xlsx/domain/cell/types";
@@ -11,6 +22,11 @@ import { computeDateFillValue, computeNumericFillValue, computeNumericSeries, ge
 import type { PatternCell, PatternSeries } from "./types";
 import { EMPTY_VALUE } from "./types";
 
+/**
+ * Apply autofill edits to a worksheet, extending `baseRange` to match `targetRange`.
+ *
+ * This is called by the XLSX editor reducer when the user commits a fill-handle drag.
+ */
 export function applyAutofillToWorksheet(params: {
   readonly worksheet: XlsxWorksheet;
   readonly baseRange: CellRange;
@@ -223,12 +239,13 @@ export function applyAutofillToWorksheet(params: {
     updatesByRow.set(rowNumber, rowUpdates);
   }
 
-  let clearBounds: { readonly minCol: number; readonly maxCol: number };
-  if (direction === "right") {
-    clearBounds = { minCol: baseBounds.maxCol + 1, maxCol: targetBounds.maxCol };
-  } else {
-    clearBounds = { minCol: targetBounds.minCol, maxCol: baseBounds.minCol - 1 };
-  }
+  const getClearBounds = (): { readonly minCol: number; readonly maxCol: number } => {
+    if (direction === "right") {
+      return { minCol: baseBounds.maxCol + 1, maxCol: targetBounds.maxCol };
+    }
+    return { minCol: targetBounds.minCol, maxCol: baseBounds.minCol - 1 };
+  };
+  const clearBounds = getClearBounds();
 
   const nextRows: XlsxRow[] = [];
   const seenUpdatedRows = new Set<number>();

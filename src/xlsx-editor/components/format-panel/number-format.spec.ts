@@ -1,3 +1,7 @@
+/**
+ * @file Unit tests for number format code helpers used by the xlsx format panel.
+ */
+
 import { buildDecimalFormat, buildScientificFormat } from "./number-format";
 
 describe("xlsx-editor/components/format-panel/number-format", () => {
@@ -17,4 +21,3 @@ describe("xlsx-editor/components/format-panel/number-format", () => {
     });
   });
 });
-

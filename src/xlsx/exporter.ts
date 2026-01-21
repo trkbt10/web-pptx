@@ -164,14 +164,14 @@ export function generateContentTypes(workbook: XlsxWorkbook): XmlElement {
   );
 
   // Override for each worksheet
-  for (let i = 0; i < workbook.sheets.length; i++) {
+  workbook.sheets.forEach((_, index) => {
     children.push(
       createElement("Override", {
-        PartName: `/xl/worksheets/sheet${i + 1}.xml`,
+        PartName: `/xl/worksheets/sheet${index + 1}.xml`,
         ContentType: CONTENT_TYPES.worksheet,
       }),
     );
-  }
+  });
 
   // Override for styles
   children.push(
@@ -233,29 +233,32 @@ export function generateRootRels(): XmlElement {
  */
 export function generateWorkbookRels(workbook: XlsxWorkbook): XmlElement {
   const relationships: XlsxRelationship[] = [];
-  let rIdCounter = 1;
+  const state = { rIdCounter: 1 };
+  const nextRelationshipId = (): string => {
+    const id = `rId${state.rIdCounter}`;
+    state.rIdCounter += 1;
+    return id;
+  };
 
   // Relationships for each worksheet
   for (let i = 0; i < workbook.sheets.length; i++) {
     relationships.push({
-      id: `rId${rIdCounter}`,
+      id: nextRelationshipId(),
       type: RELATIONSHIP_TYPES.worksheet,
       target: `worksheets/sheet${i + 1}.xml`,
     });
-    rIdCounter++;
   }
 
   // Relationship for styles
   relationships.push({
-    id: `rId${rIdCounter}`,
+    id: nextRelationshipId(),
     type: RELATIONSHIP_TYPES.styles,
     target: "styles.xml",
   });
-  rIdCounter++;
 
   // Relationship for sharedStrings
   relationships.push({
-    id: `rId${rIdCounter}`,
+    id: nextRelationshipId(),
     type: RELATIONSHIP_TYPES.sharedStrings,
     target: "sharedStrings.xml",
   });
