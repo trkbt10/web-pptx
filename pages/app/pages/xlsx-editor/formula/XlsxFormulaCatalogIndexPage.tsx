@@ -11,6 +11,9 @@ const boxStyle: CSSProperties = {
   background: "var(--bg-primary)",
 };
 
+/**
+ * Index page for the formula catalog (instructions / entry text).
+ */
 export function XlsxFormulaCatalogIndexPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -23,4 +26,3 @@ export function XlsxFormulaCatalogIndexPage() {
     </div>
   );
 }
-

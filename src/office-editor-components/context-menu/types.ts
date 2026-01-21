@@ -29,15 +29,23 @@ export type MenuSeparator = {
 
 export type MenuEntry = MenuItem | MenuSubmenu | MenuSeparator;
 
+/**
+ * Type guard for a separator entry.
+ */
 export function isSeparator(entry: MenuEntry): entry is MenuSeparator {
   return entry.type === "separator";
 }
 
+/**
+ * Type guard for a submenu entry.
+ */
 export function isSubmenu(entry: MenuEntry): entry is MenuSubmenu {
   return entry.type === "submenu";
 }
 
+/**
+ * Type guard for a regular menu item entry.
+ */
 export function isMenuItem(entry: MenuEntry): entry is MenuItem {
   return !isSeparator(entry) && !isSubmenu(entry);
 }
-

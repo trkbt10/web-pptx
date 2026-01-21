@@ -40,6 +40,9 @@ function isWheelEvent(event: Event): event is globalThis.WheelEvent {
   return event instanceof globalThis.WheelEvent;
 }
 
+/**
+ * Hook that manages scroll position and viewport size for custom virtual scrollers.
+ */
 export function useVirtualScroll({
   contentWidth,
   contentHeight,
@@ -175,4 +178,3 @@ export function useVirtualScroll({
     handleKeyDown,
   };
 }
-

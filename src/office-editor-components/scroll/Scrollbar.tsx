@@ -166,6 +166,9 @@ function ScrollbarInner({
   );
 }
 
+/**
+ * Render a scrollbar when content size exceeds viewport size.
+ */
 export function Scrollbar({
   orientation,
   size,

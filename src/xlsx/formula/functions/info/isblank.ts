@@ -39,7 +39,10 @@ export const isBlankFunction: FormulaFunctionLazyDefinition = {
       const value = context.evaluate(nodes[0]);
       const scalar = extractSingleValue(value, context.helpers, "ISBLANK argument");
       return scalar === null;
-    } catch {
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        throw error;
+      }
       return false;
     }
   },

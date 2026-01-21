@@ -60,11 +60,7 @@ export const vlookupFunction: FormulaFunctionEagerDefinition = {
       if (args.length !== 4) {
         return true;
       }
-      const rangeLookup = helpers.coerceScalar(args[3], "VLOOKUP range lookup");
-      if (typeof rangeLookup !== "boolean") {
-        throw new Error("VLOOKUP range lookup flag must be boolean");
-      }
-      return rangeLookup;
+      return helpers.coerceLogical(args[3], "VLOOKUP range lookup");
     };
     const approximateMatch = resolveApproximateMatch();
 

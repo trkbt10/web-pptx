@@ -1,3 +1,7 @@
+/**
+ * @file XLSX editor roundtrip regression test (POI fixture)
+ */
+
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { parseXlsxWorkbook } from "../../src/xlsx/parser";
@@ -23,14 +27,14 @@ describe("xlsx-editor roundtrip (fixtures)", () => {
     const fixturePath = path.join(
       process.cwd(),
       "fixtures/poi-test-data/test-data/spreadsheet/1_NoIden.xlsx",
-    );
+	  );
     const bytes = await readFile(fixturePath);
 
     const workbook = await parseWorkbookFromBytes(bytes);
-    let state = createInitialState(workbook);
+    const initialState = createInitialState(workbook);
 
     const address = createAddress(1, 1);
-    state = xlsxEditorReducer(state, {
+    const state = xlsxEditorReducer(initialState, {
       type: "UPDATE_CELL",
       address,
       value: { type: "string", value: "XLSX-EDITOR-ROUNDTRIP" },

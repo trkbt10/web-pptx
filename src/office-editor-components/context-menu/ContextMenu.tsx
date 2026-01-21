@@ -80,6 +80,9 @@ function getAdjustedPosition(
   };
 }
 
+/**
+ * Render a floating context menu at the given coordinates.
+ */
 export function ContextMenu({ x, y, items, onAction, onClose }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -131,4 +134,3 @@ export function ContextMenu({ x, y, items, onAction, onClose }: ContextMenuProps
     document.body,
   );
 }
-

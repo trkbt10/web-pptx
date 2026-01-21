@@ -63,6 +63,9 @@ function NavItem({ to, label }: { readonly to: string; readonly label: string })
   );
 }
 
+/**
+ * XLSX editor section layout with a shared header and an `Outlet` for subpages.
+ */
 export function XlsxEditorLayout({ onBack }: XlsxEditorLayoutProps) {
   return (
     <div style={pageStyle}>

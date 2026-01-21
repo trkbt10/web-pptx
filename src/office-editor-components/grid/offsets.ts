@@ -4,6 +4,9 @@
  * Shared helpers for virtualized 2D grids (rows/cols with sizes and offsets).
  */
 
+/**
+ * Clamp a (start, end) range to an inclusive [min, max] bounds.
+ */
 export function clampRange(
   start: number,
   end: number,
@@ -41,17 +44,16 @@ export function findIndexAtOffset(offsets: readonly number[], offsetPx: number):
   const last = offsets[offsets.length - 1]!;
   const clamped = Math.max(0, Math.min(last, offsetPx));
 
-  let lo = 0;
-  let hi = offsets.length - 1;
-  while (lo + 1 < hi) {
+  const findBucket = (lo: number, hi: number): number => {
+    if (lo + 1 >= hi) {
+      return lo;
+    }
     const mid = Math.floor((lo + hi) / 2);
     if (offsets[mid]! <= clamped) {
-      lo = mid;
-    } else {
-      hi = mid;
+      return findBucket(mid, hi);
     }
-  }
+    return findBucket(lo, mid);
+  };
 
-  return Math.min(offsets.length - 2, lo);
+  return Math.min(offsets.length - 2, findBucket(0, offsets.length - 1));
 }
-

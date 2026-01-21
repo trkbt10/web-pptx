@@ -102,15 +102,15 @@ export function updateCellById(
   const currentCell = cellIndex === -1 ? undefined : row.cells[cellIndex];
   const updatedCell = normalizeUpdaterResult(address, updater(currentCell));
 
-  const updatedCells = (() => {
-    if (cellIndex === -1) {
-      return insertCellSorted(row.cells, updatedCell);
+  const updateCellsInRow = (rowCells: readonly Cell[], idx: number, cell: Cell): readonly Cell[] => {
+    if (idx === -1) {
+      return insertCellSorted(rowCells, cell);
     }
-
-    const cells = [...row.cells];
-    cells[cellIndex] = updatedCell;
-    return cells;
-  })();
+    const next = [...rowCells];
+    next[idx] = cell;
+    return next;
+  };
+  const updatedCells = updateCellsInRow(row.cells, cellIndex, updatedCell);
 
   const updatedRow: XlsxRow = { ...row, cells: updatedCells };
   const updatedRows = [...worksheet.rows];

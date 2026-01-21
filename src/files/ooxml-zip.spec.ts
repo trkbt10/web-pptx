@@ -1,3 +1,7 @@
+/**
+ * @file OOXML zip access helper tests
+ */
+
 import JSZip from "jszip";
 import { createGetZipTextFileContentFromBytes } from "./ooxml-zip";
 
@@ -12,4 +16,3 @@ describe("files/ooxml-zip", () => {
     await expect(getFileContent("missing.xml")).resolves.toBeUndefined();
   });
 });
-

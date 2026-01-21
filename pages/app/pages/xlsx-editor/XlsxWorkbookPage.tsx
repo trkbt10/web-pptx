@@ -482,6 +482,9 @@ function createPatternWorkbook(): XlsxWorkbook {
   };
 }
 
+/**
+ * Workbook editor test page for manual verification (loading/saving + style patterns).
+ */
 export function XlsxWorkbookPage() {
   const [sourceName, setSourceName] = useState<string>("test-workbook.xlsx");
   const [workbookRevision, setWorkbookRevision] = useState(0);

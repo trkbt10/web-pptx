@@ -38,8 +38,12 @@ const ACCEPTED_EXTENSIONS = ".pptx,.pdf";
 
 function detectFileType(file: File): FileType | null {
   const name = file.name.toLowerCase();
-  if (name.endsWith(".pptx")) return "pptx";
-  if (name.endsWith(".pdf")) return "pdf";
+  if (name.endsWith(".pptx")) {
+    return "pptx";
+  }
+  if (name.endsWith(".pdf")) {
+    return "pdf";
+  }
   return null;
 }
 

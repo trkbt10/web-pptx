@@ -24,6 +24,9 @@ const cardStyle: CSSProperties = {
   gap: 12,
 };
 
+/**
+ * XLSX editor entry page that links to the workbook editor and formula catalog.
+ */
 export function XlsxEditorIndexPage() {
   const navigate = useNavigate();
 

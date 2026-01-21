@@ -1,3 +1,7 @@
+/**
+ * @file Grid offsets utility tests
+ */
+
 import { computePrefixSums, findIndexAtOffset } from "./offsets";
 
 describe("office-editor-components/grid/offsets", () => {
@@ -18,4 +22,3 @@ describe("office-editor-components/grid/offsets", () => {
     expect(findIndexAtOffset(offsets, 999)).toBe(2);
   });
 });
-

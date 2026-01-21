@@ -9,6 +9,7 @@
 import type { CellAddress } from "../domain/cell/address";
 import { parseRange } from "../domain/cell/address";
 import type { CellValue, ErrorValue } from "../domain/cell/types";
+import { EXCEL_MAX_COLS, EXCEL_MAX_ROWS } from "../domain/constants";
 import type { XlsxWorkbook } from "../domain/workbook";
 import { colIdx, rowIdx } from "../domain/types";
 import type { FormulaAstNode } from "./ast";
@@ -27,6 +28,8 @@ type FormulaCellData = {
 type SheetMatrix = {
   readonly sheetName: string;
   readonly rows: ReadonlyMap<number, ReadonlyMap<number, FormulaCellData>>;
+  readonly maxRow: number;
+  readonly maxCol: number;
 };
 
 type WorkbookMatrix = {
@@ -79,17 +82,26 @@ function buildWorkbookMatrix(workbook: XlsxWorkbook): WorkbookMatrix {
   const sheets = workbook.sheets.map((sheet, idx): SheetMatrix => {
     sheetIndexByName.set(sheet.name.trim().toUpperCase(), idx);
 
+    const dimensionEndRow = sheet.dimension?.end.row as number | undefined;
+    const dimensionEndCol = sheet.dimension?.end.col as number | undefined;
+    const bounds = {
+      maxRow: Math.max(1, dimensionEndRow ?? 1),
+      maxCol: Math.max(1, dimensionEndCol ?? 1),
+    };
+
     const rows = new Map<number, Map<number, FormulaCellData>>();
     for (const row of sheet.rows) {
       const rowNumber = row.rowNumber as number;
+      bounds.maxRow = Math.max(bounds.maxRow, rowNumber);
       const rowMap = rows.get(rowNumber) ?? new Map<number, FormulaCellData>();
       for (const cell of row.cells) {
+        bounds.maxCol = Math.max(bounds.maxCol, cell.address.col as number);
         rowMap.set(cell.address.col as number, { value: cell.value, formula: cell.formula?.expression });
       }
       rows.set(rowNumber, rowMap);
     }
 
-    return { sheetName: sheet.name, rows };
+    return { sheetName: sheet.name, rows, maxRow: bounds.maxRow, maxCol: bounds.maxCol };
   });
 
   return { sheets, sheetIndexByName };
@@ -307,7 +319,10 @@ export function createFormulaEvaluator(workbook: XlsxWorkbook): FormulaEvaluator
       const parsed = parseFormula(formula);
       astCache.set(cacheKey, parsed);
       return parsed;
-    } catch {
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        throw error;
+      }
       astCache.set(cacheKey, null);
       return null;
     }
@@ -405,9 +420,16 @@ export function createFormulaEvaluator(workbook: XlsxWorkbook): FormulaEvaluator
     range: { readonly start: CellAddress; readonly end: CellAddress },
   ): FormulaEvaluationResult[][] => {
     const minRow = Math.min(range.start.row as number, range.end.row as number);
-    const maxRow = Math.max(range.start.row as number, range.end.row as number);
+    const requestedMaxRow = Math.max(range.start.row as number, range.end.row as number);
     const minCol = Math.min(range.start.col as number, range.end.col as number);
-    const maxCol = Math.max(range.start.col as number, range.end.col as number);
+    const requestedMaxCol = Math.max(range.start.col as number, range.end.col as number);
+
+    const sheet = matrix.sheets[sheetIndex];
+    const sheetMaxRow = sheet?.maxRow ?? EXCEL_MAX_ROWS;
+    const sheetMaxCol = sheet?.maxCol ?? EXCEL_MAX_COLS;
+
+    const maxRow = requestedMaxRow === EXCEL_MAX_ROWS ? sheetMaxRow : requestedMaxRow;
+    const maxCol = requestedMaxCol === EXCEL_MAX_COLS ? sheetMaxCol : requestedMaxCol;
 
     const rows: FormulaEvaluationResult[][] = [];
     for (let r = minRow; r <= maxRow; r += 1) {

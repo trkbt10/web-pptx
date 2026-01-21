@@ -7,9 +7,11 @@
  * literals, cell references/ranges, array literals, function calls, unary/binary ops, and comparisons.
  */
 
-import { parseRange } from "../domain/cell/address";
+import { columnLetterToIndex, parseCellRef } from "../domain/cell/address";
 import type { CellAddress, CellRange } from "../domain/cell/address";
 import type { ErrorValue } from "../domain/cell/types";
+import { EXCEL_MAX_COLS, EXCEL_MAX_ROWS } from "../domain/constants";
+import { colIdx, rowIdx } from "../domain/types";
 import type { ComparatorOperator, FormulaAstNode } from "./ast";
 import type { FormulaError } from "./types";
 
@@ -90,6 +92,8 @@ type Token =
   | EndToken;
 
 const NUMBER_PATTERN = /^[0-9]+(\.[0-9]+)?$/u;
+const COLUMN_REF_PATTERN = /^(\$)?([A-Za-z]+)$/u;
+const ROW_REF_PATTERN = /^(\$)?(\d+)$/u;
 
 function isDigit(character: string): boolean {
   return /[0-9]/u.test(character);
@@ -101,6 +105,16 @@ function isLetter(character: string): boolean {
 
 function isWhitespace(character: string): boolean {
   return /\s/u.test(character);
+}
+
+function normalizeSheetNameToken(sheetRaw: string | undefined): string | undefined {
+  if (!sheetRaw) {
+    return undefined;
+  }
+  if (sheetRaw.startsWith("'") && sheetRaw.endsWith("'")) {
+    return sheetRaw.slice(1, -1).replace(/''/gu, "'");
+  }
+  return sheetRaw;
 }
 
 function parseErrorValue(text: string): ErrorValue | undefined {
@@ -180,6 +194,38 @@ function readErrorToken(input: string, start: number): { readonly token: ErrorTo
   return { token: { type: "error", value: parsed }, next };
 }
 
+function readColumnReferenceLabel(input: string, start: number): { readonly label: string; readonly next: number } {
+  const cursor = { index: start, label: "" };
+  const maybeDollar = input[cursor.index] ?? "";
+  if (maybeDollar === "$") {
+    cursor.label += "$";
+    cursor.index += 1;
+  }
+  const { value: letters, next } = readWhile(input, cursor.index, (char) => isLetter(char));
+  if (letters.length === 0) {
+    throw new Error("Missing column in column reference");
+  }
+  cursor.label += letters.toUpperCase();
+  cursor.index = next;
+  return { label: cursor.label, next: cursor.index };
+}
+
+function readRowReferenceLabel(input: string, start: number): { readonly label: string; readonly next: number } {
+  const cursor = { index: start, label: "" };
+  const maybeDollar = input[cursor.index] ?? "";
+  if (maybeDollar === "$") {
+    cursor.label += "$";
+    cursor.index += 1;
+  }
+  const { value: digits, next } = readWhile(input, cursor.index, (char) => isDigit(char));
+  if (digits.length === 0) {
+    throw new Error("Missing row in row reference");
+  }
+  cursor.label += digits;
+  cursor.index = next;
+  return { label: cursor.label, next: cursor.index };
+}
+
 function readCellLabel(input: string, start: number): { readonly label: string; readonly next: number } {
   const cursor = { index: start, label: "" };
 
@@ -210,6 +256,42 @@ function readCellLabel(input: string, start: number): { readonly label: string; 
   return { label: cursor.label, next };
 }
 
+function readReferenceLabel(input: string, start: number): { readonly label: string; readonly next: number } {
+  const first = input[start] ?? "";
+  if (first === "$") {
+    const next = input[start + 1] ?? "";
+    if (isDigit(next)) {
+      return readRowReferenceLabel(input, start);
+    }
+    try {
+      return readCellLabel(input, start);
+    } catch (error) {
+      if (error instanceof Error && error.message === "Missing row in cell reference") {
+        return readColumnReferenceLabel(input, start);
+      }
+      throw error;
+    }
+  }
+  if (isLetter(first)) {
+    try {
+      return readCellLabel(input, start);
+    } catch (error) {
+      if (error instanceof Error && error.message === "Missing row in cell reference") {
+        return readColumnReferenceLabel(input, start);
+      }
+      throw error;
+    }
+  }
+  if (isDigit(first)) {
+    return readRowReferenceLabel(input, start);
+  }
+  throw new Error(`Unexpected reference label start "${first}"`);
+}
+
+function escapeSheetNameForFormula(sheetName: string): string {
+  return sheetName.replace(/'/gu, "''");
+}
+
 function readQuotedSheetReference(input: string, start: number): { readonly reference: string; readonly next: number } {
   const cursor = { index: start + 1, sheetName: "" };
 
@@ -226,8 +308,8 @@ function readQuotedSheetReference(input: string, start: number): { readonly refe
         throw new Error("Quoted sheet reference must be followed by '!'");
       }
       cursor.index += 1;
-      const { label, next } = readCellLabel(input, cursor.index);
-      return { reference: `'${cursor.sheetName}'!${label}`, next };
+      const { label, next } = readReferenceLabel(input, cursor.index);
+      return { reference: `'${escapeSheetNameForFormula(cursor.sheetName)}'!${label}`, next };
     }
     cursor.sheetName += char;
     cursor.index += 1;
@@ -236,22 +318,51 @@ function readQuotedSheetReference(input: string, start: number): { readonly refe
   throw new Error("Unterminated quoted sheet reference");
 }
 
+function tryReadSheetSpanReferenceToken(input: string, start: number): { readonly token: ReferenceToken; readonly next: number } | undefined {
+  const first = input[start] ?? "";
+  if (!isLetter(first)) {
+    return undefined;
+  }
+
+  const { value: sheetStart, next: afterStart } = readWhile(input, start, (char) => isLetter(char) || isDigit(char) || char === "_");
+  if (sheetStart.length === 0 || (input[afterStart] ?? "") !== ":") {
+    return undefined;
+  }
+
+  const sheetEndStart = afterStart + 1;
+  const { value: sheetEnd, next: afterEnd } = readWhile(input, sheetEndStart, (char) => isLetter(char) || isDigit(char) || char === "_");
+  if (sheetEnd.length === 0 || (input[afterEnd] ?? "") !== "!") {
+    return undefined;
+  }
+
+  const refStart = afterEnd + 1;
+  const { label, next } = readReferenceLabel(input, refStart);
+  return {
+    token: { type: "reference", value: `${sheetStart}:${sheetEnd}!${label}` },
+    next,
+  };
+}
+
 function readIdentifierOrReferenceToken(input: string, start: number): { readonly token: IdentifierToken | ReferenceToken; readonly next: number } {
   const { value: head, next } = readWhile(input, start, (char) => isLetter(char) || isDigit(char) || char === "_");
   const upcoming = input[next] ?? "";
 
   if (upcoming === "!") {
     const sheetName = head;
-    const { label, next: afterLabel } = readCellLabel(input, next + 1);
+    const { label, next: afterLabel } = readReferenceLabel(input, next + 1);
     return { token: { type: "reference", value: `${sheetName}!${label}` }, next: afterLabel };
   }
 
   if (upcoming === "$") {
-    const { label, next: afterLabel } = readCellLabel(input, start);
+    const { label, next: afterLabel } = readReferenceLabel(input, start);
     return { token: { type: "reference", value: label }, next: afterLabel };
   }
 
   if (/^[A-Za-z]+\d+$/u.test(head) && upcoming !== "(") {
+    return { token: { type: "reference", value: head.toUpperCase() }, next };
+  }
+
+  if (/^[A-Za-z]+$/u.test(head) && upcoming === ":") {
     return { token: { type: "reference", value: head.toUpperCase() }, next };
   }
 
@@ -277,9 +388,15 @@ function tokenize(formula: string): readonly Token[] {
     }
 
     if (isDigit(char)) {
-      const { token, next } = readNumberToken(formula, cursor.index);
+      const { value: digits, next } = readWhile(formula, cursor.index, (c) => isDigit(c));
+      if ((formula[next] ?? "") === ":") {
+        tokens.push({ type: "reference", value: digits });
+        cursor.index = next;
+        continue;
+      }
+      const { token, next: afterNumber } = readNumberToken(formula, cursor.index);
       tokens.push(token);
-      cursor.index = next;
+      cursor.index = afterNumber;
       continue;
     }
 
@@ -298,13 +415,19 @@ function tokenize(formula: string): readonly Token[] {
     }
 
     if (char === "$") {
-      const { label, next } = readCellLabel(formula, cursor.index);
+      const { label, next } = readReferenceLabel(formula, cursor.index);
       tokens.push({ type: "reference", value: label });
       cursor.index = next;
       continue;
     }
 
     if (isLetter(char)) {
+      const sheetSpan = tryReadSheetSpanReferenceToken(formula, cursor.index);
+      if (sheetSpan) {
+        tokens.push(sheetSpan.token);
+        cursor.index = sheetSpan.next;
+        continue;
+      }
       const { token, next } = readIdentifierOrReferenceToken(formula, cursor.index);
       tokens.push(token);
       cursor.index = next;
@@ -408,23 +531,84 @@ function parsePrimary(state: ParserState): FormulaAstNode {
   }
   if (token.type === "reference") {
     consume(state);
-    const parsed = parseRange(token.value);
+
+    const parseReferenceToken = (value: string): {
+      readonly kind: "cell" | "column" | "row";
+      readonly sheetName?: string;
+      readonly start: CellAddress;
+      readonly end: CellAddress;
+    } => {
+      const bang = value.lastIndexOf("!");
+      const sheetRaw = bang === -1 ? undefined : value.slice(0, bang);
+      const ref = bang === -1 ? value : value.slice(bang + 1);
+      const sheetName = normalizeSheetNameToken(sheetRaw);
+
+      try {
+        const address = parseCellRef(ref);
+        return { kind: "cell", start: address, end: address, ...(sheetName ? { sheetName } : {}) };
+      } catch (error) {
+        if (!(error instanceof Error)) {
+          throw error;
+        }
+        // fall through to other reference patterns
+      }
+
+      const colMatch = ref.match(COLUMN_REF_PATTERN);
+      if (colMatch) {
+        const [, dollar, letters] = colMatch;
+        const col = columnLetterToIndex(letters);
+        const colAbsolute = dollar === "$";
+        return {
+          kind: "column",
+          ...(sheetName ? { sheetName } : {}),
+          start: { col, row: rowIdx(1), colAbsolute, rowAbsolute: true },
+          end: { col, row: rowIdx(EXCEL_MAX_ROWS), colAbsolute, rowAbsolute: true },
+        };
+      }
+
+      const rowMatch = ref.match(ROW_REF_PATTERN);
+      if (rowMatch) {
+        const [, dollar, digits] = rowMatch;
+        const rowNumber = Number.parseInt(digits, 10);
+        const rowAbsolute = dollar === "$";
+        return {
+          kind: "row",
+          ...(sheetName ? { sheetName } : {}),
+          start: { col: colIdx(1), row: rowIdx(rowNumber), colAbsolute: true, rowAbsolute },
+          end: { col: colIdx(EXCEL_MAX_COLS), row: rowIdx(rowNumber), colAbsolute: true, rowAbsolute },
+        };
+      }
+
+      throw new Error(`Unsupported reference token "${value}"`);
+    };
+
+    const left = parseReferenceToken(token.value);
+
     if (peek(state).type === "colon") {
       consume(state);
       const endToken = expectToken(state, "reference");
-      const end = parseRange(endToken.value);
-      if ((parsed.sheetName ?? "") !== (end.sheetName ?? "")) {
+      const right = parseReferenceToken(endToken.value);
+
+      if (left.kind !== right.kind) {
+        throw new Error("Mixed row/column/cell reference kinds are not supported");
+      }
+      if (left.sheetName && right.sheetName && left.sheetName !== right.sheetName) {
         throw new Error("Cross-sheet ranges are not supported");
       }
+
+      const sheetName = left.sheetName ?? right.sheetName;
       const range: CellRange = {
-        start: parsed.start,
-        end: end.start,
-        ...(parsed.sheetName ? { sheetName: parsed.sheetName } : {}),
+        start: left.start,
+        end: right.end,
+        ...(sheetName ? { sheetName } : {}),
       };
       return { type: "Range", range };
     }
-    const addr: CellAddress = parsed.start;
-    return { type: "Reference", reference: addr, sheetName: parsed.sheetName };
+
+    if (left.kind !== "cell") {
+      throw new Error("Expected a cell reference");
+    }
+    return { type: "Reference", reference: left.start, ...(left.sheetName ? { sheetName: left.sheetName } : {}) };
   }
 
   if (token.type === "bracket" && token.value === "{") {

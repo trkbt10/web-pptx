@@ -34,6 +34,9 @@ const contentStyle: CSSProperties = {
   willChange: "transform",
 };
 
+/**
+ * Virtual scroll container with custom scrollbars and key handling.
+ */
 export function VirtualScroll({
   contentWidth,
   contentHeight,

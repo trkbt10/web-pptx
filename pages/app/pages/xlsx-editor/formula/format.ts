@@ -1,6 +1,15 @@
+/**
+ * @file Formula preview formatting helpers
+ *
+ * Small UI-only utilities for the xlsx formula catalog pages.
+ */
+
 import type { FormulaScalar } from "@lib/xlsx/formula/types";
 import { isFormulaError } from "@lib/xlsx/formula/types";
 
+/**
+ * Format a formula evaluator result into a human-readable string for UI display.
+ */
 export function formatValue(value: unknown): string {
   if (value === null) {
     return "null";
@@ -26,11 +35,17 @@ export function formatValue(value: unknown): string {
   return String(value);
 }
 
+/**
+ * Check if a string can be parsed as a finite number.
+ */
 export function isNumericString(value: string): boolean {
   const n = Number(value);
   return Number.isFinite(n);
 }
 
+/**
+ * Deep equality check for primitives/arrays/plain objects for sample comparison.
+ */
 export function deepEqual(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) {
     return true;
@@ -64,4 +79,3 @@ export function deepEqual(a: unknown, b: unknown): boolean {
   }
   return false;
 }
-

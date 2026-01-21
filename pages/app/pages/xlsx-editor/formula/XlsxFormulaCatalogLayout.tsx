@@ -80,6 +80,9 @@ function matchesQuery(fn: FormulaFunctionDefinition, query: string): boolean {
   return name.includes(q) || category.includes(q) || en.includes(q) || ja.includes(q);
 }
 
+/**
+ * Formula catalog page with a searchable sidebar (categories/functions) and an `Outlet`.
+ */
 export function XlsxFormulaCatalogLayout() {
   const location = useLocation();
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() => new Set());
@@ -188,4 +191,3 @@ export function XlsxFormulaCatalogLayout() {
     </div>
   );
 }
-

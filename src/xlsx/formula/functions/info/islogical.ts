@@ -47,7 +47,10 @@ export const isLogicalFunction: FormulaFunctionLazyDefinition = {
       const value = context.evaluate(nodes[0]);
       const scalar = extractSingleValue(value, context.helpers, "ISLOGICAL argument");
       return typeof scalar === "boolean";
-    } catch {
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        throw error;
+      }
       return false;
     }
   },

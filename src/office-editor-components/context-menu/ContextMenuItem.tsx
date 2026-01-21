@@ -38,6 +38,9 @@ const dangerStyle: CSSProperties = {
   color: `var(--danger, ${colorTokens.accent.danger})`,
 };
 
+/**
+ * Render a clickable menu item (handles disabled + hover styling).
+ */
 export function ContextMenuItem({ item, onClick }: ContextMenuItemProps) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -92,4 +95,3 @@ export function ContextMenuItem({ item, onClick }: ContextMenuItemProps) {
     </div>
   );
 }
-

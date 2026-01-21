@@ -12,7 +12,9 @@ const separatorStyle: CSSProperties = {
   opacity: 0.5,
 };
 
+/**
+ * Render a horizontal separator line between context menu entries.
+ */
 export function ContextMenuSeparator() {
   return <div style={separatorStyle} />;
 }
-

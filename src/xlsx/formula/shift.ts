@@ -95,6 +95,17 @@ function shiftAst(node: FormulaAstNode, deltaCols: number, deltaRows: number): F
   }
 }
 
+function tryParseFormulaAst(formula: string): FormulaAstNode | undefined {
+  try {
+    return parseFormula(formula);
+  } catch (error) {
+    if (!(error instanceof Error)) {
+      throw error;
+    }
+    return undefined;
+  }
+}
+
 /**
  * Shift relative references inside a formula string by the given deltas.
  *
@@ -105,13 +116,7 @@ export function shiftFormulaReferences(formula: string, deltaCols: number, delta
     return formula;
   }
 
-  const parsed = (() => {
-    try {
-      return parseFormula(formula);
-    } catch {
-      return undefined;
-    }
-  })();
+  const parsed = tryParseFormulaAst(formula);
   if (!parsed) {
     return formula;
   }

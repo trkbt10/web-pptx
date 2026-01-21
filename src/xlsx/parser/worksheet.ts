@@ -23,6 +23,7 @@ import type { Cell } from "../domain/cell/types";
 import { rowIdx, colIdx, styleId } from "../domain/types";
 import type { XlsxParseContext } from "./context";
 import { parseCell } from "./cell";
+import { expandSharedFormulas } from "./shared-formulas";
 import { parseBooleanAttr, parseFloatAttr, parseIntAttr } from "./primitive";
 import type { XmlElement } from "../../xml";
 import { getAttr, getChild, getChildren } from "../../xml";
@@ -287,6 +288,8 @@ export function parseWorksheet(
 
   const sheetViewEl = getFirstSheetView(sheetViewsEl);
 
+  const rows = expandSharedFormulas(parseOptionalSheetData(sheetDataEl, context));
+
   return {
     name: sheetInfo.name,
     sheetId: sheetInfo.sheetId,
@@ -294,7 +297,7 @@ export function parseWorksheet(
     dimension: parseDimension(dimensionEl),
     sheetView: parseOptionalSheetView(sheetViewEl),
     columns: parseCols(colsEl),
-    rows: parseOptionalSheetData(sheetDataEl, context),
+    rows,
     mergeCells: parseMergeCells(mergeCellsEl),
     xmlPath: sheetInfo.xmlPath,
   };

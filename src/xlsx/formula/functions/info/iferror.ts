@@ -44,7 +44,10 @@ export const ifErrorFunction: FormulaFunctionLazyDefinition = {
     }
     try {
       return context.evaluate(nodes[0]);
-    } catch {
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        throw error;
+      }
       if (nodes.length === 1) {
         return null;
       }

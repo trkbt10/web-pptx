@@ -126,7 +126,7 @@ function formatNode(node: FormulaAstNode, parentPrec: Prec, position: "left" | "
     return text;
   };
 
-  const body = (() => {
+  const formatNodeBody = (): string => {
     switch (node.type) {
       case "Literal":
         return formatScalar(node.value);
@@ -164,7 +164,8 @@ function formatNode(node: FormulaAstNode, parentPrec: Prec, position: "left" | "
         return `${leftWrapped}${node.operator}${rightWrapped}`;
       }
     }
-  })();
+  };
+  const body = formatNodeBody();
 
   if (needsParens({ child: node, parentPrec, position, parentOperator })) {
     return `(${body})`;

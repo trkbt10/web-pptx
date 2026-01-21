@@ -120,10 +120,8 @@ function formatDateByCode(serial: number, section: string): string {
   const text = raw;
 
   const isAmPm = /AM\/PM/iu.test(text);
-  const hour12 = (() => {
-    const h = hh % 12;
-    return h === 0 ? 12 : h;
-  })();
+  const hour12Base = hh % 12;
+  const hour12 = hour12Base === 0 ? 12 : hour12Base;
   const amPmText = hh < 12 ? "AM" : "PM";
 
   for (let i = 0; i < text.length; ) {

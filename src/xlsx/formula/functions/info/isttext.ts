@@ -47,7 +47,10 @@ export const isTextFunction: FormulaFunctionLazyDefinition = {
       const value = context.evaluate(nodes[0]);
       const scalar = extractSingleValue(value, context.helpers, "ISTEXT argument");
       return typeof scalar === "string";
-    } catch {
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        throw error;
+      }
       return false;
     }
   },

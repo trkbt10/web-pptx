@@ -58,6 +58,9 @@ const chevronStyle: CSSProperties = {
   color: `var(--text-tertiary, ${colorTokens.text.tertiary})`,
 };
 
+/**
+ * Render a submenu entry that expands on hover.
+ */
 export function ContextMenuSubmenu({ item, onAction }: ContextMenuSubmenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isHovered, setIsHovered] = useState(false);

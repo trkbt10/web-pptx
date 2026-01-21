@@ -41,6 +41,29 @@ function normalizeSampleOutput(output: FormulaFunctionSample["output"]): unknown
   return output;
 }
 
+function computeIsSampleMatch(params: {
+  readonly actual: unknown;
+  readonly expected: unknown;
+  readonly actualFormatted: string;
+  readonly expectedFormatted: string;
+}): boolean {
+  const { actual, expected, actualFormatted, expectedFormatted } = params;
+  if (deepEqual(actual, expected)) {
+    return true;
+  }
+  if (!isNumericString(actualFormatted) || !isNumericString(expectedFormatted)) {
+    return false;
+  }
+
+  const actualNum = Number(actualFormatted);
+  const expectedNum = Number(expectedFormatted);
+  const tolerance = Math.abs(expectedNum) * 0.0001;
+  return Math.abs(actualNum - expectedNum) <= Math.max(tolerance, 1e-9);
+}
+
+/**
+ * Formula function detail page that renders description/examples and live-evaluated samples.
+ */
 export function XlsxFormulaFunctionPage() {
   const { category, functionName } = useParams<{ category: string; functionName: string }>();
 
@@ -115,13 +138,7 @@ export function XlsxFormulaFunctionPage() {
             const actualFormatted = formatValue(actual);
             const expectedFormatted = formatValue(expected);
 
-            let isMatch = deepEqual(actual, expected);
-            if (!isMatch && isNumericString(actualFormatted) && isNumericString(expectedFormatted)) {
-              const actualNum = Number(actualFormatted);
-              const expectedNum = Number(expectedFormatted);
-              const tolerance = Math.abs(expectedNum) * 0.0001;
-              isMatch = Math.abs(actualNum - expectedNum) <= Math.max(tolerance, 1e-9);
-            }
+            const isMatch = computeIsSampleMatch({ actual, expected, actualFormatted, expectedFormatted });
 
             return (
               <div key={index} style={{ border: "1px solid var(--border-subtle)", borderRadius: 12, padding: 12 }}>

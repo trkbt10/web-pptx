@@ -37,20 +37,21 @@ function dasharrayForBorderStyle(style: "solid" | "dashed" | "dotted" | "double"
   }
 }
 
+function borderStyleScore(style: "solid" | "dashed" | "dotted" | "double"): number {
+  switch (style) {
+    case "double":
+      return 4;
+    case "solid":
+      return 3;
+    case "dashed":
+      return 2;
+    case "dotted":
+      return 1;
+  }
+}
+
 function edgeScore(edge: CellBorderEdgeDecoration): number {
-  const styleScore = (() => {
-    switch (edge.style) {
-      case "double":
-        return 4;
-      case "solid":
-        return 3;
-      case "dashed":
-        return 2;
-      case "dotted":
-        return 1;
-    }
-  })();
-  return edge.width * 10 + styleScore;
+  return edge.width * 10 + borderStyleScore(edge.style);
 }
 
 function pickEdge(

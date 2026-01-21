@@ -9,6 +9,9 @@ export type VirtualScrollContextValue = UseVirtualScrollReturn;
 
 const VirtualScrollContext = createContext<VirtualScrollContextValue | null>(null);
 
+/**
+ * Provider for sharing virtual scroll state with descendants.
+ */
 export function VirtualScrollProvider({
   value,
   children,
@@ -23,6 +26,9 @@ export function VirtualScrollProvider({
   );
 }
 
+/**
+ * Read the current virtual scroll state from context.
+ */
 export function useVirtualScrollContext(): VirtualScrollContextValue {
   const value = useContext(VirtualScrollContext);
   if (!value) {
@@ -30,4 +36,3 @@ export function useVirtualScrollContext(): VirtualScrollContextValue {
   }
   return value;
 }
-

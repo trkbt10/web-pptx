@@ -1,10 +1,22 @@
+/**
+ * @file Formula sample workbook builder
+ *
+ * Provides an in-memory workbook used by the formula catalog pages.
+ */
+
 import type { CellAddress } from "@lib/xlsx/domain/cell/address";
 import { colIdx, rowIdx } from "@lib/xlsx/domain/types";
 import type { XlsxWorkbook } from "@lib/xlsx/domain/workbook";
 import { createDefaultStyleSheet } from "@lib/xlsx/domain/style/types";
 
+/**
+ * Default evaluation origin (A1) used by the formula catalog page.
+ */
 export const DEFAULT_ORIGIN: CellAddress = { col: colIdx(1), row: rowIdx(1), colAbsolute: false, rowAbsolute: false };
 
+/**
+ * Create a small workbook with deterministic values used for function sample evaluation.
+ */
 export function createFormulaSampleWorkbook(): XlsxWorkbook {
   const styles = createDefaultStyleSheet();
 
@@ -68,4 +80,3 @@ export function createFormulaSampleWorkbook(): XlsxWorkbook {
     sharedStrings: [],
   };
 }
-

@@ -47,7 +47,10 @@ export const isNumberFunction: FormulaFunctionLazyDefinition = {
       const value = context.evaluate(nodes[0]);
       const scalar = extractSingleValue(value, context.helpers, "ISNUMBER argument");
       return typeof scalar === "number" && Number.isFinite(scalar);
-    } catch {
+    } catch (error) {
+      if (!(error instanceof Error)) {
+        throw error;
+      }
       return false;
     }
   },
