@@ -23,6 +23,9 @@ import { createBlankPptxPresentationFile } from "./pptx-template";
 import type { PdfEmbeddedFont } from "../domain";
 import { generateFontFaceStyle } from "../domain/font/font-css-generator";
 import type { EmbeddedFontData } from "../../pptx/app/presentation-document";
+import type { PdfGroupingStrategyOptions } from "../converter/grouping-strategy";
+
+const DEFAULT_GROUPING: PdfGroupingStrategyOptions = { preset: "text" } as const;
 
 export type PdfImportOptions = {
   /** インポートするページ番号（1始まり）。省略時は全ページ */
@@ -38,6 +41,8 @@ export type PdfImportOptions = {
   readonly setWhiteBackground?: boolean;
   /** ページ番号を追加するか */
   readonly addPageNumbers?: boolean;
+  /** PDF → PPTX 変換時のグルーピング戦略 */
+  readonly grouping?: PdfGroupingStrategyOptions;
   /** 進捗通知 */
   readonly onProgress?: (progress: PdfImportProgress) => void;
 };
@@ -237,6 +242,7 @@ function buildSlideFromPageOrThrow(page: PdfPage, slideSize: SlideSize, options:
       fit: options.fit ?? "contain",
       setBackground: options.setWhiteBackground ?? true,
       backgroundColor: { r: 255, g: 255, b: 255 },
+      grouping: options.grouping ?? DEFAULT_GROUPING,
     });
   } catch (error) {
     throw wrapError(error, "CONVERSION_ERROR");

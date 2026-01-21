@@ -24,7 +24,7 @@ import { convertGroupedTextToShape } from "./text-to-shapes";
 import { convertImageToShape } from "./image-to-shapes";
 import { computePathBBox } from "../parser/path/path-builder";
 import type { BlockingZone, GroupingContext, TextGroupingFn } from "./text-grouping/types";
-import { createSpatialGrouping, spatialGrouping } from "./text-grouping/spatial-grouping";
+import { createSpatialGrouping } from "./text-grouping/spatial-grouping";
 import type { TableDecorationAnalysis } from "./table-to-shapes";
 import { analyzeTableDecorationFromPaths, convertInferredTableToShape } from "./table-to-shapes";
 import type { GroupedText } from "./text-grouping/types";
@@ -32,6 +32,8 @@ import type { InferredTable } from "./table-inference";
 import { inferTableFromGroupedText } from "./table-inference";
 import { detectTableRegionsFromPaths } from "./table-detection";
 import type { TableRegion } from "./table-detection";
+import type { PdfGroupingStrategyOptions } from "./grouping-strategy";
+import { resolvePdfGroupingStrategy } from "./grouping-strategy";
 
 export type ConversionOptions = {
   /** ターゲットスライド幅 */
@@ -47,6 +49,16 @@ export type ConversionOptions = {
    * Default: spatialGrouping (groups adjacent texts into single TextBoxes)
    */
   readonly textGroupingFn?: TextGroupingFn;
+
+  /**
+   * Strategy-like configuration for grouping stages.
+   *
+   * Use this to:
+   * - disable grouping entirely (`preset: "none"`)
+   * - apply only text grouping (`preset: "text"`)
+   * - enable text grouping + table conversion (`preset: "full"`; default behavior)
+   */
+  readonly grouping?: PdfGroupingStrategyOptions;
 };
 
 /**
@@ -92,6 +104,11 @@ export function convertPageToShapes(page: PdfPage, options: ConversionOptions): 
   if (!Number.isFinite(minPathComplexity) || minPathComplexity < 0) {
     throw new Error(`Invalid minPathComplexity: ${minPathComplexity}`);
   }
+
+  const groupingStrategy = resolvePdfGroupingStrategy({
+    grouping: options.grouping,
+    textGroupingFn: options.textGroupingFn,
+  });
 
   // Create blocking zones from paths and images to prevent text grouping across shapes
   const blockingZones: BlockingZone[] = [];
@@ -187,6 +204,27 @@ export function convertPageToShapes(page: PdfPage, options: ConversionOptions): 
     blockingZones: blockingZones.length > 0 ? blockingZones : undefined,
     pageWidth: page.width,
     pageHeight: page.height,
+  };
+
+  const emitGroupedTextsWithoutTables = (groups: readonly GroupedText[]): Shape[] => {
+    // Emit paths first (background lines/fills).
+    for (const path of paths) {
+      if (path.operations.length < minPathComplexity) {continue;}
+      const shape = convertPath(path, context, generateId());
+      if (shape) {shapes.push(shape);}
+    }
+
+    for (const g of groups) {
+      const shapeId = generateId();
+      shapes.push(convertGroupedTextToShape(g, context, shapeId));
+    }
+
+    for (const image of images) {
+      const shape = convertImageToShape(image, context, generateId());
+      if (shape) {shapes.push(shape);}
+    }
+
+    return shapes;
   };
 
   const buildBaselineGroupedText = (runs: readonly PdfText[]): GroupedText | null => {
@@ -288,127 +326,136 @@ export function convertPageToShapes(page: PdfPage, options: ConversionOptions): 
     return kept.sort((a, b) => (b.y1 - a.y1) || (a.x0 - b.x0));
   };
 
-  const tableRegions = detectTableRegionsFromPaths(paths, { width: page.width, height: page.height });
-  const filteredTableRegions = filterNestedTableRegions(tableRegions);
-  if (filteredTableRegions.length > 0) {
-    type Planned =
-      | { readonly kind: "text"; readonly group: GroupedText }
-      | { readonly kind: "table"; readonly inferred: InferredTable; readonly decoration: TableDecorationAnalysis; readonly group: GroupedText };
+  if (groupingStrategy.detectTableRegions) {
+    const tableRegions = detectTableRegionsFromPaths(paths, { width: page.width, height: page.height });
+    const filteredTableRegions = filterNestedTableRegions(tableRegions);
+    if (filteredTableRegions.length > 0) {
+      type Planned =
+        | { readonly kind: "text"; readonly group: GroupedText }
+        | { readonly kind: "table"; readonly inferred: InferredTable; readonly decoration: TableDecorationAnalysis; readonly group: GroupedText };
 
-    const planned: Planned[] = [];
-    const consumedTextIndices = new Set<number>();
-    const consumedPathIndices = new Set<number>();
+      const planned: Planned[] = [];
+      const consumedTextIndices = new Set<number>();
+      const consumedPathIndices = new Set<number>();
 
-    const regionPad = Math.max(2, Math.min(page.width, page.height) * 0.004);
+      const regionPad = Math.max(2, Math.min(page.width, page.height) * 0.004);
 
-    const collectUsedTexts = (inferred: InferredTable): Set<PdfText> => {
-      const used = new Set<PdfText>();
-      for (const row of inferred.rows) {
-        for (const cell of row.cells) {
-          for (const line of cell.runsByLine) {
-            for (const run of line) {
-              used.add(run);
+      const collectUsedTexts = (inferred: InferredTable): Set<PdfText> => {
+        const used = new Set<PdfText>();
+        for (const row of inferred.rows) {
+          for (const cell of row.cells) {
+            for (const line of cell.runsByLine) {
+              for (const run of line) {
+                used.add(run);
+              }
             }
           }
         }
-      }
-      return used;
-    };
-
-    for (const r of filteredTableRegions) {
-      const regionTextsWithIndex = texts
-        .map((t, idx) => ({ t, idx }))
-        .filter(({ t }) => {
-          const x0 = t.x;
-          const x1 = t.x + t.width;
-          const y0 = t.y;
-          const y1 = t.y + t.height;
-          return x1 > r.x0 - regionPad && x0 < r.x1 + regionPad && y1 > r.y0 - regionPad && y0 < r.y1 + regionPad;
-        });
-
-      const regionGroup0 = buildBaselineGroupedText(regionTextsWithIndex.map(({ t }) => t));
-      const regionGroup = regionGroup0 && {
-        ...regionGroup0,
-        bounds: { x: r.x0, y: r.y0, width: r.x1 - r.x0, height: r.y1 - r.y0 },
+        return used;
       };
-      if (!regionGroup) {continue;}
 
-      const inferred = (() => {
-        const tryStrict = (cols: number): InferredTable | null =>
-          inferTableFromGroupedText(regionGroup, { paths, minRows: 2, minCols: cols, maxCols: cols });
+      for (const r of filteredTableRegions) {
+        const regionTextsWithIndex = texts
+          .map((t, idx) => ({ t, idx }))
+          .filter(({ t }) => {
+            const x0 = t.x;
+            const x1 = t.x + t.width;
+            const y0 = t.y;
+            const y1 = t.y + t.height;
+            return x1 > r.x0 - regionPad && x0 < r.x1 + regionPad && y1 > r.y0 - regionPad && y0 < r.y1 + regionPad;
+          });
 
-        const hint = r.colCountHint;
-        if (hint && hint >= 2) {
-          // Heuristic: table region detection can over-count columns when vertical rules
-          // are drawn as double lines. Try +/-1 before giving up.
-          const attempts = [hint, hint - 1, hint + 1].filter((n) => n >= 2);
-          for (const cols of attempts) {
-            const strict = tryStrict(cols);
-            if (strict) {return strict;}
+        const regionGroup0 = buildBaselineGroupedText(regionTextsWithIndex.map(({ t }) => t));
+        const regionGroup = regionGroup0 && {
+          ...regionGroup0,
+          bounds: { x: r.x0, y: r.y0, width: r.x1 - r.x0, height: r.y1 - r.y0 },
+        };
+        if (!regionGroup) {continue;}
+
+        const inferred = (() => {
+          const tryStrict = (cols: number): InferredTable | null =>
+            inferTableFromGroupedText(regionGroup, { paths, minRows: 2, minCols: cols, maxCols: cols });
+
+          const hint = r.colCountHint;
+          if (hint && hint >= 2) {
+            // Heuristic: table region detection can over-count columns when vertical rules
+            // are drawn as double lines. Try +/-1 before giving up.
+            const attempts = [hint, hint - 1, hint + 1].filter((n) => n >= 2);
+            for (const cols of attempts) {
+              const strict = tryStrict(cols);
+              if (strict) {return strict;}
+            }
+          }
+
+          return inferTableFromGroupedText(regionGroup, { paths, minRows: 2, minCols: 2 });
+        })();
+        if (!inferred) {continue;}
+
+        const decoration = analyzeTableDecorationFromPaths(inferred, paths, context);
+        if (!decoration) {continue;}
+
+        for (const pi of decoration.consumedPathIndices) {consumedPathIndices.add(pi);}
+        // Only consume texts that are actually represented in the inferred table.
+        // Region detection can include captions/labels and other nearby texts; consuming them
+        // would drop content if table inference doesn't place them into cells.
+        const usedTexts = collectUsedTexts(inferred);
+        for (const { t, idx } of regionTextsWithIndex) {
+          if (usedTexts.has(t)) {
+            consumedTextIndices.add(idx);
           }
         }
 
-        return inferTableFromGroupedText(regionGroup, { paths, minRows: 2, minCols: 2 });
-      })();
-      if (!inferred) {continue;}
+        planned.push({ kind: "table", inferred, decoration, group: regionGroup });
+      }
 
-      const decoration = analyzeTableDecorationFromPaths(inferred, paths, context);
-      if (!decoration) {continue;}
+      if (planned.length > 0) {
+        const remainingTexts = texts.filter((_, idx) => !consumedTextIndices.has(idx));
+        const groupTexts =
+          options.textGroupingFn || options.grouping?.text
+            ? groupingStrategy.textGroupingFn
+            : createSpatialGrouping({ enableColumnSeparation: false, enablePageColumnDetection: false });
+        const groups = groupTexts(remainingTexts, groupingContext);
 
-      for (const pi of decoration.consumedPathIndices) {consumedPathIndices.add(pi);}
-      // Only consume texts that are actually represented in the inferred table.
-      // Region detection can include captions/labels and other nearby texts; consuming them
-      // would drop content if table inference doesn't place them into cells.
-      const usedTexts = collectUsedTexts(inferred);
-      for (const { t, idx } of regionTextsWithIndex) {
-        if (usedTexts.has(t)) {
-          consumedTextIndices.add(idx);
+        for (const g of groups) {
+          planned.push({ kind: "text", group: g });
         }
-      }
 
-      planned.push({ kind: "table", inferred, decoration, group: regionGroup });
-    }
-
-    if (planned.length > 0) {
-      const remainingTexts = texts.filter((_, idx) => !consumedTextIndices.has(idx));
-      const groupTexts = options.textGroupingFn ?? createSpatialGrouping({ enableColumnSeparation: false, enablePageColumnDetection: false });
-      const groups = groupTexts(remainingTexts, groupingContext);
-
-      for (const g of groups) {
-        planned.push({ kind: "text", group: g });
-      }
-
-      // Emit paths first (background lines/fills), excluding any that are mapped to table borders/fills.
-      for (let pi = 0; pi < paths.length; pi++) {
-        if (consumedPathIndices.has(pi)) {continue;}
-        const path = paths[pi]!;
-        if (path.operations.length < minPathComplexity) {continue;}
-        const shape = convertPath(path, context, generateId());
-        if (shape) {shapes.push(shape);}
-      }
-
-      // Emit grouped texts / tables
-      for (const p of planned) {
-        const shapeId = generateId();
-        if (p.kind === "text") {
-          shapes.push(convertGroupedTextToShape(p.group, context, shapeId));
-          continue;
+        // Emit paths first (background lines/fills), excluding any that are mapped to table borders/fills.
+        for (let pi = 0; pi < paths.length; pi++) {
+          if (consumedPathIndices.has(pi)) {continue;}
+          const path = paths[pi]!;
+          if (path.operations.length < minPathComplexity) {continue;}
+          const shape = convertPath(path, context, generateId());
+          if (shape) {shapes.push(shape);}
         }
-        shapes.push(convertInferredTableToShape(p.inferred, p.decoration, context, shapeId));
-      }
 
-      for (const image of images) {
-        const shape = convertImageToShape(image, context, generateId());
-        if (shape) {shapes.push(shape);}
-      }
+        // Emit grouped texts / tables
+        for (const p of planned) {
+          const shapeId = generateId();
+          if (p.kind === "text") {
+            shapes.push(convertGroupedTextToShape(p.group, context, shapeId));
+            continue;
+          }
+          shapes.push(convertInferredTableToShape(p.inferred, p.decoration, context, shapeId));
+        }
 
-      return shapes;
+        for (const image of images) {
+          const shape = convertImageToShape(image, context, generateId());
+          if (shape) {shapes.push(shape);}
+        }
+
+        return shapes;
+      }
     }
   }
 
   // Apply text grouping function (default: spatial grouping for better PPTX editability)
-  const groupTexts = options.textGroupingFn ?? spatialGrouping;
+  const groupTexts = groupingStrategy.textGroupingFn;
   const groups = groupTexts(texts, groupingContext);
+
+  if (!groupingStrategy.inferTablesFromTextGroups) {
+    return emitGroupedTextsWithoutTables(groups);
+  }
 
   const cellText = (cell: { readonly runsByLine: readonly (readonly PdfText[])[] } | undefined): string => {
     if (!cell) {return "";}

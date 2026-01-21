@@ -68,6 +68,45 @@ async function createPdfBytesWithContent(): Promise<Uint8Array> {
   });
 }
 
+async function createPdfBytesWithTableLikeText(): Promise<Uint8Array> {
+  const fontSize = 12;
+  const left = 20;
+  const colGap = 90;
+  const top = 170;
+  const rowGap = 14;
+
+  const lines: string[] = [
+    "0 0 0 rg",
+  ];
+
+  for (let row = 0; row < 6; row++) {
+    for (let col = 0; col < 3; col++) {
+      const x = left + col * colGap;
+      const y = top - row * rowGap;
+      const text = `R${row}C${col}`;
+      lines.push(
+        "BT",
+        `/F1 ${fontSize} Tf`,
+        `1 0 0 1 ${x} ${y} Tm`,
+        `(${text}) Tj`,
+        "ET",
+      );
+    }
+  }
+
+  return buildSimplePdfBytes({
+    pages: [
+      {
+        width: 400,
+        height: 240,
+        content: lines.join("\n"),
+        includeHelvetica: true,
+      },
+    ],
+    info: { title: "table-like.pdf" },
+  });
+}
+
 describe("pdf-importer", () => {
   it("imports from ArrayBuffer successfully", async () => {
     const bytes = await createPdfBytes([{ width: 200, height: 200 }] as const);
@@ -152,6 +191,40 @@ describe("pdf-importer", () => {
       textCount: 1,
       imageCount: 0,
     });
+  });
+
+  it("defaults to text-only grouping (no table conversion)", async () => {
+    const bytes = await createPdfBytesWithTableLikeText();
+
+    const result = await importPdf(bytes, {
+      slideSize: { width: px(400), height: px(240) },
+    });
+
+    const shapes = result.document.slides[0]?.slide.shapes ?? [];
+    expect(shapes.some((s) => s.type === "graphicFrame")).toBe(false);
+  });
+
+  it("can enable full grouping (table conversion) explicitly", async () => {
+    const bytes = await createPdfBytesWithTableLikeText();
+
+    const result = await importPdf(bytes, {
+      slideSize: { width: px(400), height: px(240) },
+      grouping: {
+        preset: "full",
+        text: {
+          type: "spatial",
+          options: {
+            enableColumnSeparation: false,
+            enablePageColumnDetection: false,
+            // Keep rows intact (avoid splitting per cell); table inference will segment cells.
+            horizontalGapRatio: 1_000,
+          },
+        },
+      },
+    });
+
+    const shapes = result.document.slides[0]?.slide.shapes ?? [];
+    expect(shapes.some((s) => s.type === "graphicFrame")).toBe(true);
   });
 
   it("wraps parse errors as PdfImportError", async () => {

@@ -6,7 +6,7 @@ import type { PdfImage, PdfPage, PdfPath, PdfText } from "../domain";
 import { createDefaultGraphicsState } from "../domain";
 import { px } from "../../ooxml/domain/units";
 import { convertDocumentToSlides, convertPageToShapes } from "./pdf-to-shapes";
-import { spatialGrouping } from "./text-grouping/spatial-grouping";
+import { createSpatialGrouping, spatialGrouping } from "./text-grouping/spatial-grouping";
 
 const graphicsState = {
   ...createDefaultGraphicsState(),
@@ -222,6 +222,95 @@ describe("convertPageToShapes", () => {
     // With spatialGrouping, both texts should be grouped into one TextBox
     expect(shapes).toHaveLength(1);
     expect(shapes[0]?.type).toBe("sp");
+  });
+
+  it("supports stepwise grouping presets (none/text/full)", () => {
+    const t1: PdfText = {
+      type: "text",
+      text: "Hello",
+      x: 0,
+      y: 10,
+      width: 10,
+      height: 5,
+      fontName: "ArialMT",
+      fontSize: 12,
+      graphicsState,
+    };
+
+    const t2: PdfText = {
+      type: "text",
+      text: "World",
+      x: 20,
+      y: 11,
+      width: 10,
+      height: 5,
+      fontName: "ArialMT",
+      fontSize: 12,
+      graphicsState,
+    };
+
+    const page: PdfPage = {
+      pageNumber: 1,
+      width: 100,
+      height: 100,
+      elements: [t1, t2] as const,
+    };
+
+    expect(convertPageToShapes(page, { ...options, grouping: { preset: "none" } })).toHaveLength(2);
+    expect(convertPageToShapes(page, { ...options, grouping: { preset: "text" } })).toHaveLength(1);
+    expect(convertPageToShapes(page, { ...options, grouping: { preset: "full" } })).toHaveLength(1);
+  });
+
+  it("can disable table conversion while keeping text grouping", () => {
+    const makeText = (text: string, x: number, y: number): PdfText => ({
+      type: "text",
+      text,
+      x,
+      y,
+      width: 20,
+      height: 10,
+      fontName: "ArialMT",
+      fontSize: 10,
+      graphicsState,
+    });
+
+    const xs = [0, 70, 140] as const;
+    const ys = [100, 88, 76, 64, 52, 40] as const;
+    const tableTexts: PdfText[] = [];
+    for (let r = 0; r < ys.length; r++) {
+      for (let c = 0; c < xs.length; c++) {
+        tableTexts.push(makeText(`R${r}C${c}`, xs[c]!, ys[r]!));
+      }
+    }
+
+    const page: PdfPage = {
+      pageNumber: 1,
+      width: 200,
+      height: 200,
+      elements: tableTexts,
+    };
+
+    const stableSpatialGrouping = createSpatialGrouping({
+      enableColumnSeparation: false,
+      enablePageColumnDetection: false,
+      // Avoid splitting a single table row into separate "line fragments" per cell.
+      // Table inference expects each row to keep multiple cell runs on the same paragraph.
+      horizontalGapRatio: 1_000,
+    });
+
+    const withTables = convertPageToShapes(page, {
+      ...options,
+      textGroupingFn: stableSpatialGrouping,
+      grouping: { preset: "full" },
+    });
+    expect(withTables.some((s) => s.type === "graphicFrame")).toBe(true);
+
+    const withoutTables = convertPageToShapes(page, {
+      ...options,
+      textGroupingFn: stableSpatialGrouping,
+      grouping: { preset: "full", tables: { enabled: false } },
+    });
+    expect(withoutTables.some((s) => s.type === "graphicFrame")).toBe(false);
   });
 
   it("throws for invalid minPathComplexity", () => {
