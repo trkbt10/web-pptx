@@ -108,9 +108,21 @@ function applyOverflowClip(
   if (horzOverflow !== "clip" && vertOverflow !== "clip") {
     return textSvg;
   }
+
+  // Clip should respect direction independently:
+  // - horzOverflow="clip" clips width, otherwise allow horizontal overflow.
+  // - vertOverflow="clip" clips height, otherwise allow vertical overflow.
+  // Using a single tight rect for both directions incorrectly clips even when only one
+  // axis requests clipping.
+  const huge = 1_000_000;
+  const x = horzOverflow === "clip" ? 0 : -huge;
+  const y = vertOverflow === "clip" ? 0 : -huge;
+  const width = horzOverflow === "clip" ? boxWidth : boxWidth + huge * 2;
+  const height = vertOverflow === "clip" ? boxHeight : boxHeight + huge * 2;
+
   const clipId = defsCollector.getNextId("text-clip");
   defsCollector.addDef(
-    `<clipPath id="${clipId}"><rect x="0" y="0" width="${boxWidth}" height="${boxHeight}"/></clipPath>`,
+    `<clipPath id="${clipId}" clipPathUnits="userSpaceOnUse"><rect x="${x}" y="${y}" width="${width}" height="${height}"/></clipPath>`,
   );
   return `<g clip-path="url(#${clipId})">${textSvg}</g>`;
 }

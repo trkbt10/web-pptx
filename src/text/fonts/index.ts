@@ -136,10 +136,12 @@ const FONT_CATEGORY_MAP: Record<string, FontCategory> = {
 
   // CJK fonts
   "ms gothic": "cjk",
+  "ms-pgothic": "cjk",
   "ms mincho": "cjk",
   "yu gothic": "cjk",
   "yu mincho": "cjk",
   meiryo: "cjk",
+  hgmarugothicmpro: "cjk",
   "hiragino kaku gothic": "cjk",
   "hiragino mincho": "cjk",
   "noto sans cjk": "cjk",
@@ -161,7 +163,8 @@ const FONT_CATEGORY_MAP: Record<string, FontCategory> = {
  * Normalize font family name for lookup
  */
 function normalizeFontName(fontFamily: string): string {
-  return fontFamily.toLowerCase().replace(/["']/g, "").trim();
+  const primary = fontFamily.split(",")[0]?.trim() ?? fontFamily;
+  return primary.toLowerCase().replace(/["']/g, "").trim();
 }
 
 /**

@@ -12,6 +12,7 @@ import type { Slide } from "../../../../domain/slide/types";
 import type { SpShape } from "../../../../domain/shape";
 import { convertTextToShape } from "../../../../../pdf/converter/text-to-shapes";
 import { createDefaultGraphicsState } from "../../../../../pdf/domain";
+import { createFitContext } from "../../../../../pdf/converter/transform-converter";
 
 // Mock getComputedTextLength for JSDOM (not supported natively)
 beforeAll(() => {
@@ -205,12 +206,7 @@ describe("PDF to SVG font rendering", () => {
       cidOrdering: "Japan1" as const,
     };
 
-    const context = {
-      pdfWidth: 100,
-      pdfHeight: 100,
-      slideWidth: px(200),
-      slideHeight: px(200),
-    };
+    const context = createFitContext(100, 100, px(200), px(200), "contain");
 
     // PDF → SpShape
     const shape = convertTextToShape(pdfText, context, "1");
@@ -263,12 +259,7 @@ describe("PDF to SVG font rendering", () => {
       cidOrdering: "GB1" as const,
     };
 
-    const context = {
-      pdfWidth: 100,
-      pdfHeight: 100,
-      slideWidth: px(200),
-      slideHeight: px(200),
-    };
+    const context = createFitContext(100, 100, px(200), px(200), "contain");
 
     const shape = convertTextToShape(pdfText, context, "1");
     const slide: Slide = { shapes: [shape] };

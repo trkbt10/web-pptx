@@ -116,6 +116,10 @@ const ASCENDER_RATIOS: Record<string, number> = {
   "segoe ui": 0.75,
   consolas: 0.8,
   "courier new": 0.8,
+  // Japanese fonts frequently used in embedded-PDF conversions.
+  // These ratios were measured from embedded font metrics (ascender/unitsPerEm).
+  "ms-pgothic": 0.8594,
+  hgmarugothicmpro: 0.8594,
 };
 
 /**
@@ -130,7 +134,8 @@ export function getAscenderRatio(fontFamily: string | undefined): number {
     return 0.8; // Default
   }
 
-  const normalized = fontFamily.toLowerCase().replace(/["']/g, "").trim();
+  const primary = fontFamily.split(",")[0]?.trim() ?? fontFamily;
+  const normalized = primary.toLowerCase().replace(/["']/g, "").trim();
 
   // Check font-specific metrics first
   const metrics = getFontMetrics(fontFamily);

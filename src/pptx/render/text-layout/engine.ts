@@ -143,6 +143,7 @@ function layoutParagraph(
   para: LayoutParagraphInput,
   contentWidth: Pixels,
   startY: number,
+  wrapMode: TextBoxConfig["wrapMode"],
   renderOptions: RenderOptions = DEFAULT_RENDER_OPTIONS,
   measureParagraphFn: (paragraph: LayoutParagraphInput) => {
     readonly spans: readonly MeasuredSpan[];
@@ -166,9 +167,6 @@ function layoutParagraph(
 
   // Measured spans
   const measuredSpans = measuredParagraph.spans;
-
-  // Determine wrap mode
-  const wrapMode = measuredSpans.length === 0 ? "none" : "wrap";
 
   // Break into lines
   const { lines: spanLines, lineHeights } = breakIntoLines(measuredSpans, firstLineWidth, nextLineWidth, wrapMode);
@@ -523,6 +521,7 @@ export function layoutTextBody(input: LayoutInput): LayoutResult {
       para,
       contentWidth,
       layoutState.currentY,
+      textBox.wrapMode,
       effectiveRenderOptions,
       measureParagraphFn,
     );
