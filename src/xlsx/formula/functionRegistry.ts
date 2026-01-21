@@ -33,6 +33,7 @@ import { monthFunction } from "./functions/datetime/month";
 import { yearFunction } from "./functions/datetime/year";
 import { weekDayFunction } from "./functions/datetime/weekday";
 import { weekNumFunction } from "./functions/datetime/weeknum";
+import { workdayFunction } from "./functions/datetime/workday";
 import { pmtFunction } from "./functions/financial/pmt";
 import { ipmtFunction } from "./functions/financial/ipmt";
 import { ppmtFunction } from "./functions/financial/ppmt";
@@ -239,6 +240,7 @@ const builtInFunctions: FormulaFunctionDefinition[] = [
   yearFunction,
   weekDayFunction,
   weekNumFunction,
+  workdayFunction,
   pmtFunction,
   ipmtFunction,
   ppmtFunction,

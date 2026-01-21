@@ -347,6 +347,24 @@ function readIdentifierOrReferenceToken(input: string, start: number): { readonl
   const { value: head, next } = readWhile(input, start, (char) => isLetter(char) || isDigit(char) || char === "_");
   const upcoming = input[next] ?? "";
 
+  if (upcoming === "[") {
+    const cursor = { index: next, depth: 0, value: "" };
+    while (cursor.index < input.length) {
+      const c = input[cursor.index] ?? "";
+      cursor.value += c;
+      if (c === "[") {
+        cursor.depth += 1;
+      } else if (c === "]") {
+        cursor.depth -= 1;
+        if (cursor.depth === 0) {
+          return { token: { type: "reference", value: `${head}${cursor.value}` }, next: cursor.index + 1 };
+        }
+      }
+      cursor.index += 1;
+    }
+    throw new Error("Unterminated structured reference");
+  }
+
   if (upcoming === "!") {
     const sheetName = head;
     const { label, next: afterLabel } = readReferenceLabel(input, next + 1);
@@ -532,6 +550,42 @@ function parsePrimary(state: ParserState): FormulaAstNode {
   if (token.type === "reference") {
     consume(state);
 
+    if (token.value.includes("[") === true) {
+      const bracket = token.value.indexOf("[");
+      const tableName = token.value.slice(0, bracket);
+      const remainder = token.value.slice(bracket);
+      if (!remainder.startsWith("[") || !remainder.endsWith("]")) {
+        throw new Error(`Unsupported structured reference token "${token.value}"`);
+      }
+      const inner = remainder.slice(1, -1);
+
+      const parseBracketedName = (text: string, start: number): { readonly name: string; readonly next: number } => {
+        if ((text[start] ?? "") !== "[") {
+          throw new Error("Expected '[' in structured reference");
+        }
+        const end = text.indexOf("]", start + 1);
+        if (end === -1) {
+          throw new Error("Unterminated column name in structured reference");
+        }
+        const name = text.slice(start + 1, end);
+        return { name, next: end + 1 };
+      };
+
+      const first = parseBracketedName(inner, 0);
+      const afterFirst = inner[first.next] ?? "";
+      if (afterFirst === "") {
+        return { type: "StructuredTableReference", tableName, startColumnName: first.name, endColumnName: first.name };
+      }
+      if (afterFirst !== ":") {
+        throw new Error(`Unsupported structured reference token "${token.value}"`);
+      }
+      const second = parseBracketedName(inner, first.next + 1);
+      if (inner[second.next] !== undefined) {
+        throw new Error(`Unsupported structured reference token "${token.value}"`);
+      }
+      return { type: "StructuredTableReference", tableName, startColumnName: first.name, endColumnName: second.name };
+    }
+
     const parseReferenceToken = (value: string): {
       readonly kind: "cell" | "column" | "row";
       readonly sheetName?: string;
@@ -608,6 +662,12 @@ function parsePrimary(state: ParserState): FormulaAstNode {
     if (left.kind !== "cell") {
       throw new Error("Expected a cell reference");
     }
+    if (left.sheetName?.includes(":") === true) {
+      return {
+        type: "Range",
+        range: { start: left.start, end: left.end, sheetName: left.sheetName },
+      };
+    }
     return { type: "Reference", reference: left.start, ...(left.sheetName ? { sheetName: left.sheetName } : {}) };
   }
 
@@ -649,12 +709,6 @@ function parsePrimary(state: ParserState): FormulaAstNode {
   if (token.type === "identifier") {
     consume(state);
     const upper = token.value.toUpperCase();
-    if (upper === "TRUE" || upper === "FALSE") {
-      return { type: "Literal", value: upper === "TRUE" };
-    }
-    if (upper === "NULL" || upper === "NIL") {
-      return { type: "Literal", value: null };
-    }
     if (peek(state).type === "paren" && (peek(state) as ParenthesisToken).value === "(") {
       consume(state);
       const args: FormulaAstNode[] = [];
@@ -672,7 +726,13 @@ function parsePrimary(state: ParserState): FormulaAstNode {
       expectToken(state, "paren"); // ")"
       return { type: "Function", name: upper, args };
     }
-    return { type: "Literal", value: token.value };
+    if (upper === "TRUE" || upper === "FALSE") {
+      return { type: "Literal", value: upper === "TRUE" };
+    }
+    if (upper === "NULL" || upper === "NIL") {
+      return { type: "Literal", value: null };
+    }
+    return { type: "Name", name: token.value };
   }
 
   if (token.type === "paren" && token.value === "(") {

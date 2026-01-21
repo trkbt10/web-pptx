@@ -18,11 +18,12 @@ import type {
   XlsxSelection,
 } from "../domain/workbook";
 import type { CellRange } from "../domain/cell/address";
-import { parseRange } from "../domain/cell/address";
+import { parseCellRef, parseRange } from "../domain/cell/address";
 import type { Cell } from "../domain/cell/types";
 import { rowIdx, colIdx, styleId } from "../domain/types";
 import type { XlsxParseContext } from "./context";
-import { parseCell } from "./cell";
+import type { XlsxParseOptions } from "./options";
+import { parseCellWithAddress } from "./cell";
 import { expandSharedFormulas } from "./shared-formulas";
 import { parseBooleanAttr, parseFloatAttr, parseIntAttr } from "./primitive";
 import type { XmlElement } from "../../xml";
@@ -78,6 +79,7 @@ export function parseCols(
  *
  * @param rowElement - The <row> element
  * @param context - The parse context containing shared strings
+ * @param options - Parser options
  * @returns Parsed row with cells
  *
  * @see ECMA-376 Part 4, Section 18.3.1.73 (row)
@@ -85,11 +87,37 @@ export function parseCols(
 export function parseRow(
   rowElement: XmlElement,
   context: XlsxParseContext,
+  options: XlsxParseOptions | undefined,
+  fallbackRowNumber?: number,
 ): XlsxRow {
-  const r = parseIntAttr(getAttr(rowElement, "r")) ?? 1;
-  const cells: Cell[] = getChildren(rowElement, "c").map((c) =>
-    parseCell(c, context),
-  );
+  const rowNumberAttr = parseIntAttr(getAttr(rowElement, "r"));
+  const cellElements = getChildren(rowElement, "c");
+  const firstCell = cellElements[0];
+  const firstCellRef = firstCell ? getAttr(firstCell, "r") : undefined;
+  const rowNumberFromCellRef = firstCellRef ? (parseCellRef(firstCellRef).row as number) : undefined;
+  const r = rowNumberAttr ?? rowNumberFromCellRef ?? fallbackRowNumber ?? 1;
+  const allowMissingCellRef = options?.compatibility?.allowMissingCellRef === true;
+  const cells: Cell[] = [];
+  for (let nextCol = 1, idx = 0; idx < cellElements.length; idx += 1) {
+    const cellElement = cellElements[idx];
+    if (!cellElement) {
+      continue;
+    }
+    const explicitRef = getAttr(cellElement, "r");
+    if (explicitRef) {
+      const address = parseCellRef(explicitRef);
+      cells.push(parseCellWithAddress(cellElement, context, address));
+      nextCol = (address.col as number) + 1;
+      continue;
+    }
+
+    if (!allowMissingCellRef) {
+      throw new Error("Cell element missing 'r' attribute");
+    }
+    const address = { col: colIdx(nextCol), row: rowIdx(r), colAbsolute: false, rowAbsolute: false };
+    cells.push(parseCellWithAddress(cellElement, context, address));
+    nextCol += 1;
+  }
   const styleAttr = parseIntAttr(getAttr(rowElement, "s"));
 
   return {
@@ -107,6 +135,7 @@ export function parseRow(
  *
  * @param sheetDataElement - The <sheetData> element
  * @param context - The parse context containing shared strings
+ * @param options - Parser options
  * @returns Array of parsed rows
  *
  * @see ECMA-376 Part 4, Section 18.3.1.80 (sheetData)
@@ -114,8 +143,22 @@ export function parseRow(
 export function parseSheetData(
   sheetDataElement: XmlElement,
   context: XlsxParseContext,
+  options: XlsxParseOptions | undefined,
 ): readonly XlsxRow[] {
-  return getChildren(sheetDataElement, "row").map((r) => parseRow(r, context));
+  const rowElements = getChildren(sheetDataElement, "row");
+  const rows: XlsxRow[] = [];
+  for (let idx = 0, nextRowNumber = 1; idx < rowElements.length; idx += 1) {
+    const rowElement = rowElements[idx];
+    if (!rowElement) {
+      continue;
+    }
+    const explicitRowNumber = parseIntAttr(getAttr(rowElement, "r"));
+    const fallbackRowNumber = explicitRowNumber ?? nextRowNumber;
+    const row = parseRow(rowElement, context, options, fallbackRowNumber);
+    rows.push(row);
+    nextRowNumber = (row.rowNumber as number) + 1;
+  }
+  return rows;
 }
 
 // =============================================================================
@@ -249,11 +292,12 @@ function parseOptionalSheetView(sheetViewEl: XmlElement | undefined): XlsxSheetV
 function parseOptionalSheetData(
   sheetDataEl: XmlElement | undefined,
   context: XlsxParseContext,
+  options: XlsxParseOptions | undefined,
 ): readonly XlsxRow[] {
   if (!sheetDataEl) {
     return [];
   }
-  return parseSheetData(sheetDataEl, context);
+  return parseSheetData(sheetDataEl, context, options);
 }
 
 // =============================================================================
@@ -265,6 +309,7 @@ function parseOptionalSheetData(
  *
  * @param worksheetElement - The root <worksheet> element
  * @param context - The parse context containing shared strings and styles
+ * @param options - Parser options
  * @param sheetInfo - Sheet metadata from workbook.xml
  * @returns Parsed worksheet
  *
@@ -273,6 +318,7 @@ function parseOptionalSheetData(
 export function parseWorksheet(
   worksheetElement: XmlElement,
   context: XlsxParseContext,
+  options: XlsxParseOptions | undefined,
   sheetInfo: {
     name: string;
     sheetId: number;
@@ -288,7 +334,7 @@ export function parseWorksheet(
 
   const sheetViewEl = getFirstSheetView(sheetViewsEl);
 
-  const rows = expandSharedFormulas(parseOptionalSheetData(sheetDataEl, context));
+  const rows = expandSharedFormulas(parseOptionalSheetData(sheetDataEl, context, options));
 
   return {
     name: sheetInfo.name,

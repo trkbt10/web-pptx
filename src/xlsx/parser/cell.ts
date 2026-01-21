@@ -12,6 +12,7 @@
 
 import type { Cell, CellValue, ErrorValue } from "../domain/cell/types";
 import { parseCellRef, parseRange } from "../domain/cell/address";
+import type { CellAddress } from "../domain/cell/address";
 import type { Formula, FormulaType } from "../domain/cell/formula";
 import { styleId } from "../domain/types";
 import type { XlsxParseContext } from "./context";
@@ -118,6 +119,37 @@ export function parseCellValue(
 // =============================================================================
 
 /**
+ * Parse a cell element into a Cell object using a pre-resolved address.
+ *
+ * @param cellElement - The <c> cell element
+ * @param context - The parse context containing shared strings
+ * @param address - The resolved cell address
+ * @returns The parsed Cell
+ *
+ * @see ECMA-376 Part 4, Section 18.3.1.4 (c - Cell)
+ */
+export function parseCellWithAddress(
+  cellElement: XmlElement,
+  context: XlsxParseContext,
+  address: CellAddress,
+): Cell {
+  const s = getAttr(cellElement, "s");
+  const t = getAttr(cellElement, "t");
+
+  const value = parseCellValue(cellElement, t, context);
+
+  const f = getChild(cellElement, "f");
+  const formula = f ? parseFormula(f) : undefined;
+
+  return {
+    address,
+    value,
+    formula,
+    styleId: s ? styleId(parseInt(s, 10)) : undefined,
+  };
+}
+
+/**
  * Parse a cell element into a Cell object.
  *
  * @param cellElement - The <c> cell element
@@ -135,20 +167,5 @@ export function parseCell(
   if (!r) {
     throw new Error("Cell element missing 'r' attribute");
   }
-
-  const address = parseCellRef(r);
-  const s = getAttr(cellElement, "s");
-  const t = getAttr(cellElement, "t");
-
-  const value = parseCellValue(cellElement, t, context);
-
-  const f = getChild(cellElement, "f");
-  const formula = f ? parseFormula(f) : undefined;
-
-  return {
-    address,
-    value,
-    formula,
-    styleId: s ? styleId(parseInt(s, 10)) : undefined,
-  };
+  return parseCellWithAddress(cellElement, context, parseCellRef(r));
 }

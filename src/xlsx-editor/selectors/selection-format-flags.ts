@@ -6,7 +6,6 @@
  */
 
 import type { CellRange } from "../../xlsx/domain/cell/address";
-import type { StyleId } from "../../xlsx/domain/types";
 import type { XlsxStyleSheet } from "../../xlsx/domain/style/types";
 import type { XlsxWorksheet } from "../../xlsx/domain/workbook";
 import { resolveMergedCellXfFromStyleId } from "./cell-xf";
@@ -55,17 +54,60 @@ function getRangeBounds(range: CellRange): { readonly minRow: number; readonly m
   };
 }
 
-function getColumnStyleId(sheet: XlsxWorksheet, colNumber: number): StyleId | undefined {
-  for (const def of sheet.columns ?? []) {
-    if ((def.min as number) <= colNumber && colNumber <= (def.max as number)) {
-      return def.styleId;
-    }
+type Interval = { readonly start: number; readonly end: number };
+
+function isFullyCoveredByIntervals(minValue: number, maxValue: number, intervals: readonly Interval[]): boolean {
+  if (intervals.length === 0) {
+    return false;
   }
-  return undefined;
+  const sorted = [...intervals].sort((a, b) => a.start - b.start);
+  const first = sorted[0];
+  if (!first) {
+    return false;
+  }
+  if (first.start > minValue) {
+    return false;
+  }
+
+  const state = sorted.slice(1).reduce(
+    (acc, interval) => {
+      if (!acc.ok) {
+        return acc;
+      }
+      if (interval.start > acc.end + 1) {
+        return { ok: false, end: acc.end };
+      }
+      const end = Math.max(acc.end, interval.end);
+      return { ok: true, end };
+    },
+    { ok: true, end: first.end },
+  );
+
+  return state.ok && state.end >= maxValue;
 }
 
-function styleIdToNumber(id: StyleId | undefined): number | undefined {
-  return id as number | undefined;
+function collectColumnBaselineStyleIds(sheet: XlsxWorksheet, minCol: number, maxCol: number): ReadonlySet<number | undefined> {
+  const styleIds = new Set<number>();
+  const styledIntervals: Interval[] = [];
+
+  for (const def of sheet.columns ?? []) {
+    const defMin = def.min as number;
+    const defMax = def.max as number;
+    if (defMax < minCol || defMin > maxCol) {
+      continue;
+    }
+    if (def.styleId === undefined) {
+      continue;
+    }
+    styleIds.add(def.styleId as number);
+    styledIntervals.push({ start: Math.max(defMin, minCol), end: Math.min(defMax, maxCol) });
+  }
+
+  const result = new Set<number | undefined>(styleIds);
+  if (!isFullyCoveredByIntervals(minCol, maxCol, styledIntervals)) {
+    result.add(undefined);
+  }
+  return result;
 }
 
 /**
@@ -170,13 +212,6 @@ export function resolveSelectionFormatFlags(params: {
     incorporateStyleFlags(getStyleFlags(styleIdValue));
   };
 
-  // Collect column baseline style IDs (used only for rows that do not have row-level style).
-  const columnBaselineStyleIds = new Set<number | undefined>();
-  const columnNumbers = Array.from({ length: bounds.maxCol - bounds.minCol + 1 }, (_, i) => bounds.minCol + i);
-  for (const colNumber of columnNumbers) {
-    columnBaselineStyleIds.add(styleIdToNumber(getColumnStyleId(params.sheet, colNumber)));
-  }
-
   const rowStyleIds = new Set<number>();
   const rowsWithRowStyle = new Set<number>();
   const cellOverrideStyleIds = new Set<number>();
@@ -204,13 +239,13 @@ export function resolveSelectionFormatFlags(params: {
   }
 
   // If any row within the selection lacks row-level style, the effective style can depend on column styles.
-  const rowNumbers = Array.from({ length: bounds.maxRow - bounds.minRow + 1 }, (_, i) => bounds.minRow + i);
-  const includesRowsWithoutRowStyle = rowNumbers.some((rowNumber) => !rowsWithRowStyle.has(rowNumber));
+  const includesRowsWithoutRowStyle = rowsWithRowStyle.size < rowCount;
 
   for (const styleIdValue of rowStyleIds) {
     incorporateStyleId(styleIdValue);
   }
   if (includesRowsWithoutRowStyle) {
+    const columnBaselineStyleIds = collectColumnBaselineStyleIds(params.sheet, bounds.minCol, bounds.maxCol);
     for (const styleIdValue of columnBaselineStyleIds) {
       incorporateStyleId(styleIdValue);
     }

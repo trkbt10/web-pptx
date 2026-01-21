@@ -9,7 +9,7 @@
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { parseXlsxWorkbook } from "../../src/xlsx/parser";
+import { parseXlsxWorkbook, type XlsxParseOptions } from "../../src/xlsx/parser";
 import { createFormulaEvaluator } from "../../src/xlsx/formula/evaluator";
 import { colIdx, rowIdx } from "../../src/xlsx/domain/types";
 import type { CellAddress } from "../../src/xlsx/domain/cell/address";
@@ -34,6 +34,12 @@ async function parseWorkbookFromFixture(name: string) {
   const bytes = await readFile(fixturePath(name));
   const getFileContent = await createGetZipTextFileContentFromBytes(bytes);
   return parseXlsxWorkbook(getFileContent);
+}
+
+async function parseWorkbookFromFixtureWithOptions(name: string, options: XlsxParseOptions) {
+  const bytes = await readFile(fixturePath(name));
+  const getFileContent = await createGetZipTextFileContentFromBytes(bytes);
+  return parseXlsxWorkbook(getFileContent, options);
 }
 
 function toExpectedScalar(value: CellValue): ReturnType<ReturnType<typeof createFormulaEvaluator>["evaluateCell"]> {
@@ -240,5 +246,480 @@ describe("POI spreadsheet fixtures (parsing + formulas + style)", () => {
 
     expect(b5Cell.formula.expression).toBe("VLOOKUP(A5,$D:$E,2,0)");
     expect(evaluator.evaluateCell(0, b5)).toEqual(toExpectedScalar(b5Cell.value));
+  });
+
+  it("Booleans.xlsx: evaluates TRUE/FALSE and matches cached boolean values", async () => {
+    const workbook = await parseWorkbookFromFixture("Booleans.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const a1 = createAddress(1, 1); // TRUE()
+    const a4 = createAddress(1, 4); // FALSE()
+
+    const a1Cell = getCell(sheet, a1);
+    const a4Cell = getCell(sheet, a4);
+    if (!a1Cell?.formula || !a4Cell?.formula) {
+      throw new Error("A1/A4 must be formula cells");
+    }
+
+    expect(a1Cell.formula.expression).toBe("TRUE()");
+    expect(evaluator.evaluateCell(0, a1)).toBe(true);
+    expect(evaluator.evaluateCell(0, a1)).toEqual(toExpectedScalar(a1Cell.value));
+
+    expect(a4Cell.formula.expression).toBe("FALSE()");
+    expect(evaluator.evaluateCell(0, a4)).toBe(false);
+    expect(evaluator.evaluateCell(0, a4)).toEqual(toExpectedScalar(a4Cell.value));
+  });
+
+  it("56822-Countifs.xlsx: evaluates COUNTIFS and matches cached value", async () => {
+    const workbook = await parseWorkbookFromFixture("56822-Countifs.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const d1 = createAddress(4, 1); // D1
+    const d1Cell = getCell(sheet, d1);
+    if (!d1Cell?.formula) {
+      throw new Error("D1 must be a formula cell");
+    }
+
+    expect(d1Cell.formula.expression).toBe('COUNTIFS(A3:A8,"a",B3:B8,1)');
+    expect(evaluator.evaluateCell(0, d1)).toBe(2);
+    expect(evaluator.evaluateCell(0, d1)).toEqual(toExpectedScalar(d1Cell.value));
+  });
+
+  it("55906-MultiSheetRefs.xlsx: evaluates 3D references (Sheet1:Sheet3) and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("55906-MultiSheetRefs.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+
+    const cases: ReadonlyArray<{ readonly address: CellAddress; readonly expectedFormula: string }> = [
+      { address: createAddress(1, 3), expectedFormula: "SUM(Sheet1:Sheet3!A1)" }, // A3
+      { address: createAddress(2, 3), expectedFormula: "AVERAGE(Sheet1:Sheet3!A1)" }, // B3
+      { address: createAddress(3, 3), expectedFormula: "COUNTA(Sheet1:Sheet3!C1)" }, // C3
+      { address: createAddress(4, 3), expectedFormula: "COUNTA(Sheet1:Sheet3!D1)" }, // D3
+      { address: createAddress(5, 3), expectedFormula: "COUNTA(Sheet1:Sheet3!E1)" }, // E3
+      { address: createAddress(8, 3), expectedFormula: "SUM(Sheet1:Sheet3!A1:B2)" }, // H3
+      { address: createAddress(9, 3), expectedFormula: "AVERAGE(Sheet1:Sheet3!A1:B2)" }, // I3
+      { address: createAddress(2, 4), expectedFormula: "MIN(Sheet1:Sheet3!A$1)" }, // B4
+    ];
+
+    for (const { address, expectedFormula } of cases) {
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected formula cell to exist");
+      }
+      expect(cell.formula.expression).toBe(expectedFormula);
+      expect(evaluator.evaluateCell(0, address)).toEqual(toExpectedScalar(cell.value));
+    }
+  });
+
+  it("46535.xlsx: evaluates defined names (named ranges) used in formulas and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("46535.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+
+    const cases: ReadonlyArray<{ readonly address: CellAddress; readonly expectedFormula: string; readonly expectedValue: string }> = [
+      {
+        address: createAddress(3, 1), // C1
+        expectedFormula: 'IF(ISERROR(VLOOKUP(A1,AirportCode,2,FALSE)),"",VLOOKUP(B1,AirportCode,2,FALSE))',
+        expectedValue: "Hong Kong International",
+      },
+      {
+        address: createAddress(5, 1), // E1
+        expectedFormula: 'IF(ISERROR(VLOOKUP(B1,AirportCode,2,FALSE)),"",VLOOKUP(A1,AirportCode,2,FALSE))',
+        expectedValue: "Abadan",
+      },
+    ];
+
+    for (const { address, expectedFormula, expectedValue } of cases) {
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected formula cell to exist");
+      }
+      expect(cell.formula.expression).toBe(expectedFormula);
+      expect(evaluator.evaluateCell(0, address)).toBe(expectedValue);
+      expect(evaluator.evaluateCell(0, address)).toEqual(toExpectedScalar(cell.value));
+    }
+  });
+
+  it("50755_workday_formula_example.xlsx: evaluates WORKDAY and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("50755_workday_formula_example.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+
+    const cases: ReadonlyArray<{ readonly address: CellAddress; readonly expectedFormula: string }> = [
+      { address: createAddress(2, 2), expectedFormula: "WORKDAY(A2,5)" }, // B2
+      { address: createAddress(2, 3), expectedFormula: "WORKDAY(A3,5)" }, // B3
+      { address: createAddress(2, 4), expectedFormula: "WORKDAY(A4,5)" }, // B4
+    ];
+
+    for (const { address, expectedFormula } of cases) {
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected formula cell to exist");
+      }
+      expect(cell.formula.expression).toBe(expectedFormula);
+      expect(evaluator.evaluateCell(0, address)).toEqual(toExpectedScalar(cell.value));
+    }
+  });
+
+  it("evaluate_formula_with_structured_table_references.xlsx: evaluates structured table references and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("evaluate_formula_with_structured_table_references.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const c3 = createAddress(3, 3); // C3
+    const cell = getCell(sheet, c3);
+    if (!cell?.formula) {
+      throw new Error("C3 must be a formula cell");
+    }
+
+    expect(cell.formula.expression).toBe("SUM(Table1[[A]:[B]])");
+    expect(evaluator.evaluateCell(0, c3)).toBe(10);
+    expect(evaluator.evaluateCell(0, c3)).toEqual(toExpectedScalar(cell.value));
+  });
+
+  it("MatrixFormulaEvalTestData.xlsx: evaluates array/matrix formulas and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("MatrixFormulaEvalTestData.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+
+    const cases: ReadonlyArray<{ readonly address: CellAddress; readonly expectedFormula: string }> = [
+      { address: createAddress(8, 2), expectedFormula: "B2:D4 + E2:G4" }, // H2 (array)
+      { address: createAddress(8, 6), expectedFormula: "TRANSPOSE(B6:D8)" }, // H6 (array)
+      { address: createAddress(8, 10), expectedFormula: "MDETERM(B10:D12)" }, // H10 (scalar)
+      { address: createAddress(8, 14), expectedFormula: "MINVERSE(B14:D16)" }, // H14 (array)
+      { address: createAddress(8, 18), expectedFormula: "MMULT(B18:D20,E18:G20)" }, // H18 (array)
+    ];
+
+    for (const { address, expectedFormula } of cases) {
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected formula cell to exist");
+      }
+      expect(cell.formula.expression).toBe(expectedFormula);
+
+      const expected = toExpectedScalar(cell.value);
+      const actual = evaluator.evaluateCell(0, address);
+
+      if (typeof expected === "number") {
+        if (typeof actual !== "number") {
+          throw new Error("Expected numeric evaluation result");
+        }
+        expect(actual).toBeCloseTo(expected, 10);
+      } else {
+        expect(actual).toEqual(expected);
+      }
+    }
+  });
+
+  it("FormulaEvalTestData_Copy.xlsx: evaluates selected functions and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("FormulaEvalTestData_Copy.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+
+    const cases: ReadonlyArray<{ readonly address: CellAddress; readonly expectedFormula: string }> = [
+      { address: createAddress(4, 96), expectedFormula: "ABS(B7)" }, // D96
+      { address: createAddress(4, 104), expectedFormula: "ACOS(0)" }, // D104
+      { address: createAddress(4, 136), expectedFormula: "AND(B7:B9,C9,D7,E7)" }, // D136
+      { address: createAddress(4, 156), expectedFormula: "ASIN(B7)" }, // D156
+    ];
+
+    for (const { address, expectedFormula } of cases) {
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected formula cell to exist");
+      }
+      expect(cell.formula.expression).toBe(expectedFormula);
+
+      const expected = toExpectedScalar(cell.value);
+      const actual = evaluator.evaluateCell(0, address);
+
+      if (typeof expected === "number") {
+        if (typeof actual !== "number") {
+          throw new Error("Expected numeric evaluation result");
+        }
+        expect(actual).toBeCloseTo(expected, 10);
+      } else {
+        expect(actual).toEqual(expected);
+      }
+    }
+  });
+
+  it("54288.xlsx: parses rows with missing cell references (r attribute) using positional fallback", async () => {
+    const workbook = await parseWorkbookFromFixtureWithOptions("54288.xlsx", {
+      compatibility: { allowMissingCellRef: true },
+    });
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const c3 = createAddress(3, 3);
+    const d3 = createAddress(4, 3);
+    const i3 = createAddress(9, 3);
+
+    const c3Cell = getCell(sheet, c3);
+    if (!c3Cell || c3Cell.value.type !== "number") {
+      throw new Error("C3 must be a number cell");
+    }
+    expect(c3Cell.value.value).toBe(41229);
+
+    const d3Cell = getCell(sheet, d3);
+    if (!d3Cell) {
+      throw new Error("D3 must exist (positional fallback)");
+    }
+    expect(d3Cell.value.type).toBe("empty");
+
+    const i3Cell = getCell(sheet, i3);
+    if (!i3Cell) {
+      throw new Error("I3 must exist (positional fallback after sequential cells)");
+    }
+  });
+
+  it("59746_NoRowNums.xlsx: parses namespace-prefixed worksheet XML with missing row/cell refs (compat)", async () => {
+    const workbook = await parseWorkbookFromFixtureWithOptions("59746_NoRowNums.xlsx", {
+      compatibility: { allowMissingCellRef: true },
+    });
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const firstRow = sheet.rows[0];
+    const secondRow = sheet.rows[1];
+    if (!firstRow || !secondRow) {
+      throw new Error("sheet must have at least 2 rows");
+    }
+    expect(firstRow.rowNumber).toBe(1);
+    expect(secondRow.rowNumber).toBe(2);
+
+    const a1 = createAddress(1, 1);
+    const b1 = createAddress(2, 1);
+    const a2 = createAddress(1, 2);
+    const b2 = createAddress(2, 2);
+
+    const a1Cell = getCell(sheet, a1);
+    const b1Cell = getCell(sheet, b1);
+    const a2Cell = getCell(sheet, a2);
+    const b2Cell = getCell(sheet, b2);
+    if (!a1Cell || !b1Cell || !a2Cell || !b2Cell) {
+      throw new Error("A1/B1/A2/B2 must exist");
+    }
+
+    expect(a1Cell.value).toEqual({ type: "string", value: "Checked" });
+    expect(b1Cell.value).toEqual({ type: "string", value: "Ion" });
+    expect(a2Cell.value).toEqual({ type: "boolean", value: true });
+    expect(b2Cell.value).toEqual({ type: "string", value: "[M+Na]+1" });
+  });
+
+  it("54084 - Greek - beyond BMP.xlsx: parses shared strings with non-BMP code points", async () => {
+    const workbook = await parseWorkbookFromFixture("54084 - Greek - beyond BMP.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const a1 = createAddress(1, 1);
+    const cell = getCell(sheet, a1);
+    if (!cell || cell.value.type !== "string") {
+      throw new Error("A1 must be a string cell");
+    }
+
+    expect(cell.value.value.includes("𝝊")).toBe(true);
+    expect([...cell.value.value].length).toBeGreaterThan(1);
+  });
+
+  it("50867_with_table.xlsx: parses table definitions for structured references", async () => {
+    const workbook = await parseWorkbookFromFixture("50867_with_table.xlsx");
+    const table = workbook.tables?.[0];
+    if (!table) {
+      throw new Error("Expected at least one table");
+    }
+
+    expect(table.name).toBe("Tabella1");
+    expect(table.displayName).toBe("Tabella1");
+    expect(table.sheetIndex).toBe(0);
+    expect(table.columns.map((c) => c.name)).toEqual(["a", "b", "c"]);
+    expect(table.ref.start.col).toBe(1);
+    expect(table.ref.start.row).toBe(1);
+    expect(table.ref.end.col).toBe(3);
+    expect(table.ref.end.row).toBe(3);
+  });
+
+  it("poc-shared-strings.xlsx: parses very large shared strings without data loss", async () => {
+    const workbook = await parseWorkbookFromFixture("poc-shared-strings.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const a1 = createAddress(1, 1);
+    const cell = getCell(sheet, a1);
+    if (!cell || cell.value.type !== "string") {
+      throw new Error("A1 must be a string cell");
+    }
+
+    expect(workbook.sharedStrings.length).toBeGreaterThan(0);
+    expect(cell.value.value.length).toBeGreaterThan(1_000_000);
+  });
+
+  it("noSharedStringTable.xlsx: parses workbook without sharedStrings.xml", async () => {
+    const workbook = await parseWorkbookFromFixture("noSharedStringTable.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    expect(workbook.sharedStrings.length).toBe(0);
+
+    const a1 = createAddress(1, 1);
+    const b1 = createAddress(2, 1);
+    const a1Cell = getCell(sheet, a1);
+    const b1Cell = getCell(sheet, b1);
+    if (!a1Cell || !b1Cell) {
+      throw new Error("A1/B1 must exist");
+    }
+    expect(a1Cell.value).toEqual({ type: "number", value: 38819 });
+    expect(b1Cell.value).toEqual({ type: "number", value: 123 });
+  });
+
+  it("FillWithoutColor.xlsx: resolves fills even when some color components are omitted", async () => {
+    const workbook = await parseWorkbookFromFixture("FillWithoutColor.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const i3 = createAddress(9, 3); // I3
+    const css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address: i3, cell: getCell(sheet, i3) });
+    expect(css.backgroundColor).toBe("#CCFFFF");
+  });
+
+  it("1_NoIden.xlsx: parses cols widths and merged cells", async () => {
+    const workbook = await parseWorkbookFromFixture("1_NoIden.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    if (!sheet.columns) {
+      throw new Error("sheet.columns is required");
+    }
+    if (!sheet.mergeCells) {
+      throw new Error("sheet.mergeCells is required");
+    }
+
+    expect(sheet.columns.length).toBe(3);
+    expect(sheet.columns[0]).toEqual({
+      min: colIdx(2),
+      max: colIdx(2),
+      width: 16,
+      hidden: undefined,
+      bestFit: true,
+      styleId: undefined,
+    });
+    expect(sheet.columns[1]?.width).toBeCloseTo(49.83203125, 10);
+    expect(sheet.columns[2]?.width).toBeCloseTo(13.1640625, 10);
+
+    expect(sheet.mergeCells.length).toBe(2);
+    expect(sheet.mergeCells[0]).toEqual({
+      start: createAddress(3, 7),
+      end: createAddress(4, 7),
+    });
+    expect(sheet.mergeCells[1]).toEqual({
+      start: createAddress(2, 2),
+      end: createAddress(3, 2),
+    });
+
+    const b2 = createAddress(2, 2);
+    const b2Cell = getCell(sheet, b2);
+    if (!b2Cell || b2Cell.value.type !== "string") {
+      throw new Error("B2 must be a string cell");
+    }
+    expect(b2Cell.value.value).toBe("가나다");
+  });
+
+  it("47737.xlsx: parses frozen panes and selection in sheetView", async () => {
+    const workbook = await parseWorkbookFromFixture("47737.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+    if (!sheet.sheetView?.pane) {
+      throw new Error("sheetView.pane is required");
+    }
+    if (!sheet.sheetView.selection) {
+      throw new Error("sheetView.selection is required");
+    }
+
+    expect(sheet.sheetView.pane).toEqual({
+      xSplit: undefined,
+      ySplit: 5,
+      topLeftCell: "A6",
+      activePane: "bottomLeft",
+      state: "frozen",
+    });
+    expect(sheet.sheetView.selection).toEqual({
+      pane: "bottomLeft",
+      activeCell: "B20",
+      sqref: "B20",
+    });
+  });
+
+  it("47813.xlsx: parses frozen panes and selection in sheetView", async () => {
+    const workbook = await parseWorkbookFromFixture("47813.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+    if (!sheet.sheetView?.pane) {
+      throw new Error("sheetView.pane is required");
+    }
+    if (!sheet.sheetView.selection) {
+      throw new Error("sheetView.selection is required");
+    }
+
+    expect(sheet.sheetView.pane).toEqual({
+      xSplit: undefined,
+      ySplit: 1,
+      topLeftCell: "A2",
+      activePane: "bottomLeft",
+      state: "frozen",
+    });
+    expect(sheet.sheetView.selection).toEqual({
+      pane: "bottomLeft",
+      activeCell: "A2",
+      sqref: "A2",
+    });
   });
 });

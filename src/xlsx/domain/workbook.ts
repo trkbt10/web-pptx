@@ -12,6 +12,7 @@
 import type { CellRange } from "./cell/address";
 import type { Cell } from "./cell/types";
 import type { XlsxStyleSheet } from "./style/types";
+import type { XlsxTable } from "./table/types";
 import type { RowIndex, ColIndex, StyleId } from "./types";
 
 // =============================================================================
@@ -208,6 +209,8 @@ export type XlsxWorkbook = {
   readonly sharedStrings: readonly string[];
   /** Named ranges and formulas */
   readonly definedNames?: readonly XlsxDefinedName[];
+  /** Workbook tables (ListObjects) */
+  readonly tables?: readonly XlsxTable[];
   /** Calculation settings */
   readonly calcProperties?: XlsxCalcProperties;
 };

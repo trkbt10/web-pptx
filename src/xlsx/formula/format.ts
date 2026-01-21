@@ -91,6 +91,8 @@ function precedence(node: FormulaAstNode): Prec {
     case "Literal":
     case "Reference":
     case "Range":
+    case "Name":
+    case "StructuredTableReference":
     case "Function":
     case "Array":
       return 5;
@@ -134,6 +136,14 @@ function formatNode(node: FormulaAstNode, parentPrec: Prec, position: "left" | "
         return formatReferenceWithSheet(node.sheetName, node.reference);
       case "Range":
         return formatRangeWithSheet(node.range);
+      case "Name":
+        return node.name;
+      case "StructuredTableReference": {
+        const left = `[${node.startColumnName}]`;
+        const right = `[${node.endColumnName}]`;
+        const inner = node.startColumnName === node.endColumnName ? left : `${left}:${right}`;
+        return `${node.tableName}[${inner}]`;
+      }
       case "Function":
         return `${node.name}(${node.args.map((arg) => formatNode(arg, 0, "left")).join(",")})`;
       case "Array": {

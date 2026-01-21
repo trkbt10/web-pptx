@@ -36,6 +36,15 @@ describe("parseFormula", () => {
     });
   });
 
+  it("parses structured table references", () => {
+    expect(parseFormula("Table1[[A]:[B]]")).toEqual({
+      type: "StructuredTableReference",
+      tableName: "Table1",
+      startColumnName: "A",
+      endColumnName: "B",
+    });
+  });
+
   it("parses operator precedence", () => {
     expect(parseFormula("1+2*3")).toEqual({
       type: "Binary",

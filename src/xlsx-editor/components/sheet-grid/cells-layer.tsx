@@ -19,6 +19,7 @@ import { spacingTokens, colorTokens } from "../../../office-editor-components";
 import type { XlsxEditorAction } from "../../context/workbook/editor/types";
 import { createSheetLayout } from "../../selectors/sheet-layout";
 import { startRangeSelectPointerDrag } from "./range-select-drag";
+import { XlsxCellCanvasText, type XlsxCellCanvasTextProps } from "./cell-text";
 
 export type XlsxSheetGridCellsLayerProps = {
   readonly sheetIndex: number;
@@ -46,10 +47,29 @@ const cellBaseStyle: CSSProperties = {
   padding: `0 ${spacingTokens.xs}`,
   overflow: "hidden",
   whiteSpace: "nowrap",
-  textOverflow: "ellipsis",
+  textOverflow: "clip",
   fontSize: 12,
   color: `var(--text-primary, ${colorTokens.text.primary})`,
 };
+
+const CANVAS_TEXT_THRESHOLD_CHARS = 20_000;
+
+function shouldRenderTextWithCanvas(text: string): boolean {
+  return text.length >= CANVAS_TEXT_THRESHOLD_CHARS;
+}
+
+function renderCellText(params: {
+  readonly text: string;
+  readonly widthPx: number;
+  readonly heightPx: number;
+  readonly style: XlsxCellCanvasTextProps["style"];
+}): ReactNode {
+  const { text, widthPx, heightPx, style } = params;
+  if (shouldRenderTextWithCanvas(text)) {
+    return <XlsxCellCanvasText text={text} widthPx={widthPx} heightPx={heightPx} style={style} />;
+  }
+  return text;
+}
 
 function createAddress(col: number, row: number): CellAddress {
   return {
@@ -181,22 +201,22 @@ export function XlsxSheetGridCellsLayer({
                 top: topPx,
                 width,
                 height: mergedHeight,
-            }}
-            onPointerDown={(e) => {
-              if (e.button !== 0) {
-                return;
-              }
-              e.preventDefault();
-              focusGridRoot(e.target);
-              if (e.metaKey || e.ctrlKey) {
-                dispatch({ type: "ADD_RANGE_TO_SELECTION", range: merge.range });
-                return;
-              }
-              if (e.shiftKey) {
-                dispatch({ type: "SELECT_CELL", address: originAddress, extend: true });
-                return;
-              }
-              startRangeSelectFromPointerDown(e, originAddress);
+              }}
+              onPointerDown={(e) => {
+                if (e.button !== 0) {
+                  return;
+                }
+                e.preventDefault();
+                focusGridRoot(e.target);
+                if (e.metaKey || e.ctrlKey) {
+                  dispatch({ type: "ADD_RANGE_TO_SELECTION", range: merge.range });
+                  return;
+                }
+                if (e.shiftKey) {
+                  dispatch({ type: "SELECT_CELL", address: originAddress, extend: true });
+                  return;
+                }
+                startRangeSelectFromPointerDown(e, originAddress);
               }}
               onDoubleClick={(e) => {
                 e.preventDefault();
@@ -205,7 +225,7 @@ export function XlsxSheetGridCellsLayer({
                 dispatch({ type: "ENTER_CELL_EDIT", address: originAddress });
               }}
             >
-              {text}
+              {renderCellText({ text, widthPx: width, heightPx: mergedHeight, style: cellRenderStyle })}
             </div>,
           );
           continue;
@@ -254,7 +274,7 @@ export function XlsxSheetGridCellsLayer({
               dispatch({ type: "ENTER_CELL_EDIT", address });
             }}
           >
-            {text}
+            {renderCellText({ text, widthPx: width, heightPx: height, style: cellRenderStyle })}
           </div>,
         );
       }

@@ -18,14 +18,18 @@
 
 import type { XlsxWorkbook, XlsxDefinedName, XlsxWorksheet } from "../domain/workbook";
 import { createDefaultStyleSheet } from "../domain/style/types";
+import type { XlsxTable } from "../domain/table/types";
 import type { XlsxSheetInfo, XlsxWorkbookInfo } from "./context";
 import { createParseContext } from "./context";
+import type { XlsxParseOptions } from "./options";
 import { parseSharedStrings } from "./shared-strings";
 import { parseStyleSheet } from "./styles/index";
+import { parseTable } from "./table";
 import { parseWorksheet } from "./worksheet";
 import { parseBooleanAttr, parseIntAttr } from "./primitive";
 import type { XmlElement, XmlDocument } from "../../xml";
 import { parseXml, getAttr, getChild, getChildren, getTextContent, isXmlElement } from "../../xml";
+import path from "node:path";
 
 // =============================================================================
 // Helper Functions
@@ -205,11 +209,12 @@ export function resolveSheetPath(rId: string, relationships: ReadonlyMap<string,
   if (!target) {
     throw new Error(`Relationship ${rId} not found`);
   }
+  const normalizedTarget = target.startsWith("/") ? target.slice(1) : target;
   // xl/worksheets/sheet1.xml or worksheets/sheet1.xml
-  if (target.startsWith("xl/")) {
-    return target;
+  if (normalizedTarget.startsWith("xl/")) {
+    return normalizedTarget;
   }
-  return `xl/${target}`;
+  return `xl/${normalizedTarget}`;
 }
 
 // =============================================================================
@@ -246,6 +251,33 @@ function parseStylesOrDefault(xml: string | undefined) {
   return parseStyleSheet(getDocumentRoot(parseXml(xml)));
 }
 
+function resolveRelationshipsPathForPart(partPath: string): string {
+  const dir = path.posix.dirname(partPath);
+  const base = path.posix.basename(partPath);
+  return path.posix.join(dir, "_rels", `${base}.rels`);
+}
+
+function resolveTargetPath(partPath: string, target: string): string {
+  const baseDir = path.posix.dirname(partPath);
+  const resolved = path.posix.normalize(path.posix.join(baseDir, target));
+  return resolved.startsWith("/") ? resolved.slice(1) : resolved;
+}
+
+function collectTableRelationshipIds(worksheetRoot: XmlElement): readonly string[] {
+  const tablePartsEl = getChild(worksheetRoot, "tableParts");
+  if (!tablePartsEl) {
+    return [];
+  }
+  const ids: string[] = [];
+  for (const tablePartEl of getChildren(tablePartsEl, "tablePart")) {
+    const relId = getAttr(tablePartEl, "r:id") ?? getAttr(tablePartEl, "rId");
+    if (relId) {
+      ids.push(relId);
+    }
+  }
+  return ids;
+}
+
 // =============================================================================
 // Main Workbook Parser
 // =============================================================================
@@ -258,6 +290,7 @@ function parseStylesOrDefault(xml: string | undefined) {
  * a complete XlsxWorkbook object.
  *
  * @param getFileContent - Function to retrieve file content by path within the XLSX package
+ * @param options - Parser options (non-standard behaviors must be enabled explicitly)
  * @returns Parsed workbook with all sheets, styles, shared strings, and defined names
  * @throws Error if workbook.xml is not found
  *
@@ -277,6 +310,7 @@ function parseStylesOrDefault(xml: string | undefined) {
  */
 export async function parseXlsxWorkbook(
   getFileContent: (path: string) => Promise<string | undefined>,
+  options?: XlsxParseOptions,
 ): Promise<XlsxWorkbook> {
   // 1. Parse relationships
   const relsXml = await getFileContent("xl/_rels/workbook.xml.rels");
@@ -302,16 +336,41 @@ export async function parseXlsxWorkbook(
 
   // 6. Parse each worksheet
   const sheets: XlsxWorksheet[] = [];
+  const tables: XlsxTable[] = [];
   for (const sheetInfo of workbookInfo.sheets) {
     const xmlPath = resolveSheetPath(sheetInfo.rId, relationships);
     const sheetXml = await getFileContent(xmlPath);
     if (sheetXml) {
+      const sheetDoc = parseXml(sheetXml);
+      const sheetRoot = getDocumentRoot(sheetDoc);
+      const tableRelIds = collectTableRelationshipIds(sheetRoot);
+
       const worksheet = parseWorksheet(
-        getDocumentRoot(parseXml(sheetXml)),
+        sheetRoot,
         context,
+        options,
         { ...sheetInfo, xmlPath },
       );
       sheets.push(worksheet);
+
+      if (tableRelIds.length > 0) {
+        const relsPath = resolveRelationshipsPathForPart(xmlPath);
+        const relsXml = await getFileContent(relsPath);
+        const rels = parseRelsOrEmpty(relsXml);
+        for (const relId of tableRelIds) {
+          const target = rels.get(relId);
+          if (!target) {
+            throw new Error(`Missing relationship target for table rId "${relId}"`);
+          }
+          const tablePath = resolveTargetPath(xmlPath, target);
+          const tableXml = await getFileContent(tablePath);
+          if (!tableXml) {
+            throw new Error(`Table part not found: ${tablePath}`);
+          }
+          const tableRoot = getDocumentRoot(parseXml(tableXml));
+          tables.push(parseTable(tableRoot, sheets.length - 1));
+        }
+      }
     }
   }
 
@@ -320,6 +379,7 @@ export async function parseXlsxWorkbook(
     styles: styleSheet,
     sharedStrings,
     definedNames: workbookInfo.definedNames,
+    tables: tables.length > 0 ? tables : undefined,
   };
 }
 
@@ -330,6 +390,7 @@ export async function parseXlsxWorkbook(
 // Re-export context types and functions for external use
 export type { XlsxParseContext, XlsxSheetInfo, XlsxWorkbookInfo } from "./context";
 export { createParseContext, createDefaultParseContext } from "./context";
+export type { XlsxParseOptions } from "./options";
 
 // Re-export component parsers for granular usage
 export { parseSharedStrings, parseSharedStringsRich } from "./shared-strings";

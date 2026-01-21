@@ -56,7 +56,8 @@ export const transposeFunction: FormulaFunctionEagerDefinition = {
     }
     return Array.from({ length: columnCount }, (_, columnIndex) => {
       return Array.from({ length: rowCount }, (_, rowIndex) => {
-        return table[rowIndex]?.[columnIndex] ?? null;
+        const value = table[rowIndex]?.[columnIndex] ?? null;
+        return value === null || value === "" ? 0 : value;
       });
     });
   },

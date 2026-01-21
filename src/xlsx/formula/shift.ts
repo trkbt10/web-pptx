@@ -72,6 +72,10 @@ function shiftAst(node: FormulaAstNode, deltaCols: number, deltaRows: number): F
       }
       return { type: "Range", range: shifted };
     }
+    case "Name":
+      return node;
+    case "StructuredTableReference":
+      return node;
     case "Unary":
       return { type: "Unary", operator: node.operator, argument: shiftAst(node.argument, deltaCols, deltaRows) };
     case "Binary":

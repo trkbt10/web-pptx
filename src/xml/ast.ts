@@ -111,8 +111,9 @@ export function isXmlText(node: unknown): node is XmlText {
  * Returns undefined if not found.
  */
 export function getChild(parent: XmlElement, name: string): XmlElement | undefined {
+  const match = createElementNameMatcher(name);
   for (const child of parent.children) {
-    if (isXmlElement(child) && child.name === name) {
+    if (isXmlElement(child) && match(child.name)) {
       return child;
     }
   }
@@ -124,13 +125,21 @@ export function getChild(parent: XmlElement, name: string): XmlElement | undefin
  * Returns empty array if none found.
  */
 export function getChildren(parent: XmlElement, name: string): readonly XmlElement[] {
+  const match = createElementNameMatcher(name);
   const result: XmlElement[] = [];
   for (const child of parent.children) {
-    if (isXmlElement(child) && child.name === name) {
+    if (isXmlElement(child) && match(child.name)) {
       result.push(child);
     }
   }
   return result;
+}
+
+function createElementNameMatcher(name: string): (childName: string) => boolean {
+  if (name.includes(":")) {
+    return (childName) => childName === name;
+  }
+  return (childName) => childName === name || childName.endsWith(`:${name}`);
 }
 
 /**

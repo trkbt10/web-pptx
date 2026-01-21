@@ -24,6 +24,18 @@ export type RangeNode = {
   readonly range: CellRange;
 };
 
+export type NameNode = {
+  readonly type: "Name";
+  readonly name: string;
+};
+
+export type StructuredTableReferenceNode = {
+  readonly type: "StructuredTableReference";
+  readonly tableName: string;
+  readonly startColumnName: string;
+  readonly endColumnName: string;
+};
+
 export type UnaryOperator = "+" | "-";
 export type UnaryNode = {
   readonly type: "Unary";
@@ -62,6 +74,8 @@ export type FormulaAstNode =
   | LiteralNode
   | ReferenceNode
   | RangeNode
+  | NameNode
+  | StructuredTableReferenceNode
   | UnaryNode
   | BinaryNode
   | CompareNode
