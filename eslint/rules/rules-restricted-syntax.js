@@ -53,6 +53,24 @@ export default {
         "CallExpression[callee.object.name='mock'][callee.property.name=/^(module|object|replace|restore|reset)$/]",
       message: "Mock APIs (bun:test mock.*) are prohibited. Prefer DI or simple fakes instead.",
     },
+    {
+      selector: "CatchClause:not([param])",
+      message:
+        "Catch clause must have an error parameter and handle the error properly.",
+    },
+    {
+      selector: "CatchClause > BlockStatement > ExpressionStatement > UnaryExpression[operator='void']",
+      message:
+        "Using 'void' to suppress error handling is prohibited. Handle the error properly or re-throw it.",
+    },
+    {
+      selector: "CallExpression[callee.type='FunctionExpression']",
+      message: "IIFE (Immediately Invoked Function Expression) is prohibited. Extract to a named function instead.",
+    },
+    {
+      selector: "CallExpression[callee.type='ArrowFunctionExpression']",
+      message: "IIFE (Immediately Invoked Function Expression) is prohibited. Extract to a named function instead.",
+    },
   ],
 
   "@typescript-eslint/consistent-type-definitions": ["error", "type"],
