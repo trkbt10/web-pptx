@@ -31,7 +31,7 @@ import type { NumFmtId, FontId, FillId, BorderId } from "../types";
  */
 export type XlsxAlignment = {
   /** Horizontal text alignment */
-  readonly horizontal?: "left" | "center" | "right" | "fill" | "justify" | "centerContinuous" | "distributed";
+  readonly horizontal?: "general" | "left" | "center" | "right" | "fill" | "justify" | "centerContinuous" | "distributed";
 
   /** Vertical text alignment */
   readonly vertical?: "top" | "center" | "bottom" | "justify" | "distributed";

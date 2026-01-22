@@ -2069,6 +2069,15 @@ describe("POI spreadsheet fixtures (parsing + formulas + style)", () => {
     });
     expect(css.whiteSpace).toBe("nowrap");
     expect(css.overflow).toBe("hidden");
+
+    // The fixture's shrink-to-fit style uses horizontal="general"; numbers should align to the right.
+    const numberCss = resolveCellRenderStyle({
+      styles: workbook.styles,
+      sheet,
+      address,
+      cell: { address, value: { type: "number", value: 123 }, styleId: styleId(xfIndex) },
+    });
+    expect(numberCss.justifyContent).toBe("flex-end");
   });
 
   it("picture.xlsx: parses alignment.textRotation and resolves CSS rotate transform", async () => {

@@ -57,6 +57,14 @@ function createDemoStyles(): XlsxStyleSheet {
         fontId: fontId(0),
         fillId: fillId(0),
         borderId: borderId(0),
+        alignment: { horizontal: "general" },
+        applyAlignment: true,
+      },
+      {
+        numFmtId: numFmtId(0),
+        fontId: fontId(0),
+        fillId: fillId(0),
+        borderId: borderId(0),
         alignment: { shrinkToFit: true, textRotation: 0 },
         applyAlignment: true,
       },
@@ -117,6 +125,28 @@ describe("resolveCellRenderStyle", () => {
     expect(alignmentStyle.justifyContent).toBe("flex-start");
   });
 
+  it("aligns numeric cells to the right when horizontal is general", () => {
+    const styles = createDemoStyles();
+    const sheet = createSheet();
+    const address = createAddress(1, 1);
+
+    const numberCell = resolveCellRenderStyle({
+      styles,
+      sheet,
+      address,
+      cell: { address, value: { type: "number", value: 123 }, styleId: styleId(5) },
+    });
+    expect(numberCell.justifyContent).toBe("flex-end");
+
+    const stringCell = resolveCellRenderStyle({
+      styles,
+      sheet,
+      address,
+      cell: { address, value: { type: "string", value: "abc" }, styleId: styleId(5) },
+    });
+    expect(stringCell.justifyContent).toBe("flex-start");
+  });
+
   it("uses row styleId when the cell has no styleId", () => {
     const styles = createDemoStyles();
     const address = createAddress(1, 1);
@@ -159,7 +189,7 @@ describe("resolveCellRenderStyle", () => {
       styles,
       sheet,
       address,
-      cell: { address, value: { type: "empty" }, styleId: styleId(5) },
+      cell: { address, value: { type: "empty" }, styleId: styleId(6) },
     });
     expect(shrinkStyle.whiteSpace).toBe("nowrap");
     expect(shrinkStyle.overflow).toBe("hidden");
@@ -168,7 +198,7 @@ describe("resolveCellRenderStyle", () => {
       styles,
       sheet,
       address,
-      cell: { address, value: { type: "empty" }, styleId: styleId(6) },
+      cell: { address, value: { type: "empty" }, styleId: styleId(7) },
     });
     expect(rotateStyle.transform).toBe("rotate(-90deg)");
     expect(rotateStyle.transformOrigin).toBe("center");

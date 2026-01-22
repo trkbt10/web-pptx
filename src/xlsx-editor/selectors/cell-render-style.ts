@@ -18,7 +18,7 @@ function pointsToCssPx(points: number): string {
   return `${(points * 96) / 72}px`;
 }
 
-function applyAlignment(style: CSSProperties, alignment: XlsxAlignment | undefined): void {
+function applyAlignment(style: CSSProperties, alignment: XlsxAlignment | undefined, cell: Cell | undefined): void {
   if (!alignment) {
     return;
   }
@@ -45,7 +45,13 @@ function applyAlignment(style: CSSProperties, alignment: XlsxAlignment | undefin
     }
   }
 
-  if (alignment.horizontal === "left") {
+  if (alignment.horizontal === "general" || alignment.horizontal === undefined) {
+    if (cell?.value.type === "number" || cell?.value.type === "date") {
+      style.justifyContent = "flex-end";
+    } else {
+      style.justifyContent = "flex-start";
+    }
+  } else if (alignment.horizontal === "left") {
     style.justifyContent = "flex-start";
   } else if (alignment.horizontal === "center" || alignment.horizontal === "centerContinuous") {
     style.justifyContent = "center";
@@ -199,7 +205,7 @@ export function resolveCellRenderStyle(params: {
     css.backgroundColor = conditionalBg;
   }
 
-  applyAlignment(css, resolvedXf.alignment);
+  applyAlignment(css, resolvedXf.alignment, cell);
 
   return css;
 }
