@@ -45,6 +45,41 @@ describe("parseFormula", () => {
     });
   });
 
+  it("parses structured table references with special items (e.g. #All)", () => {
+    expect(parseFormula("Table1[#All]")).toEqual({
+      type: "StructuredTableReference",
+      tableName: "Table1",
+      startColumnName: "#All",
+      endColumnName: "#All",
+    });
+  });
+
+  it("parses concatenation operator (&) with correct precedence", () => {
+    expect(parseFormula('A1&"|"&B2')).toEqual({
+      type: "Binary",
+      operator: "&",
+      left: {
+        type: "Binary",
+        operator: "&",
+        left: { type: "Reference", reference: { col: colIdx(1), row: rowIdx(1), colAbsolute: false, rowAbsolute: false } },
+        right: { type: "Literal", value: "|" },
+      },
+      right: { type: "Reference", reference: { col: colIdx(2), row: rowIdx(2), colAbsolute: false, rowAbsolute: false } },
+    });
+
+    expect(parseFormula("1&2+3")).toEqual({
+      type: "Binary",
+      operator: "&",
+      left: { type: "Literal", value: 1 },
+      right: {
+        type: "Binary",
+        operator: "+",
+        left: { type: "Literal", value: 2 },
+        right: { type: "Literal", value: 3 },
+      },
+    });
+  });
+
   it("parses operator precedence", () => {
     expect(parseFormula("1+2*3")).toEqual({
       type: "Binary",
@@ -66,6 +101,30 @@ describe("parseFormula", () => {
       args: [
         { type: "Reference", reference: { col: colIdx(1), row: rowIdx(1), colAbsolute: false, rowAbsolute: false } },
         { type: "Literal", value: 2 },
+      ],
+    });
+  });
+
+  it("parses future-function namespaces (e.g. _xlfn.XLOOKUP)", () => {
+    expect(parseFormula("_xlfn.XLOOKUP(A1,B1:B2,C1:C2)")).toEqual({
+      type: "Function",
+      name: "_XLFN.XLOOKUP",
+      args: [
+        { type: "Reference", reference: { col: colIdx(1), row: rowIdx(1), colAbsolute: false, rowAbsolute: false } },
+        {
+          type: "Range",
+          range: {
+            start: { col: colIdx(2), row: rowIdx(1), colAbsolute: false, rowAbsolute: false },
+            end: { col: colIdx(2), row: rowIdx(2), colAbsolute: false, rowAbsolute: false },
+          },
+        },
+        {
+          type: "Range",
+          range: {
+            start: { col: colIdx(3), row: rowIdx(1), colAbsolute: false, rowAbsolute: false },
+            end: { col: colIdx(3), row: rowIdx(2), colAbsolute: false, rowAbsolute: false },
+          },
+        },
       ],
     });
   });

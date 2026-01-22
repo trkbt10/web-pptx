@@ -22,6 +22,7 @@ import type { XlsxHyperlink } from "../domain/hyperlink";
 import type { CellRange } from "../domain/cell/address";
 import { parseCellRef, parseRange } from "../domain/cell/address";
 import type { Cell } from "../domain/cell/types";
+import type { XlsxColor } from "../domain/style/font";
 import { rowIdx, colIdx, styleId } from "../domain/types";
 import type { XlsxParseContext } from "./context";
 import type { XlsxParseOptions } from "./options";
@@ -372,6 +373,41 @@ function parseOptionalSheetData(
   return parseSheetData(sheetDataEl, context, options);
 }
 
+function parseColorElement(colorElement: XmlElement | undefined): XlsxColor | undefined {
+  if (!colorElement) {
+    return undefined;
+  }
+
+  const rgb = getAttr(colorElement, "rgb");
+  if (rgb) {
+    return { type: "rgb", value: rgb };
+  }
+
+  const theme = getAttr(colorElement, "theme");
+  if (theme !== undefined) {
+    return {
+      type: "theme",
+      theme: parseIntAttr(theme) ?? 0,
+      tint: parseFloatAttr(getAttr(colorElement, "tint")),
+    };
+  }
+
+  const indexed = getAttr(colorElement, "indexed");
+  if (indexed !== undefined) {
+    return { type: "indexed", index: parseIntAttr(indexed) ?? 0 };
+  }
+
+  const auto = getAttr(colorElement, "auto");
+  if (auto !== undefined) {
+    const parsed = parseBooleanAttr(auto);
+    if (parsed !== false) {
+      return { type: "auto" };
+    }
+  }
+
+  return undefined;
+}
+
 // =============================================================================
 // Worksheet Parsing
 // =============================================================================
@@ -398,6 +434,8 @@ export function parseWorksheet(
     xmlPath: string;
   },
 ): XlsxWorksheet {
+  const sheetPrEl = getChild(worksheetElement, "sheetPr");
+  const tabColor = parseColorElement(sheetPrEl ? getChild(sheetPrEl, "tabColor") : undefined);
   const dimensionEl = getChild(worksheetElement, "dimension");
   const sheetViewsEl = getChild(worksheetElement, "sheetViews");
   const colsEl = getChild(worksheetElement, "cols");
@@ -417,6 +455,7 @@ export function parseWorksheet(
     state: sheetInfo.state,
     dimension: parseDimension(dimensionEl),
     sheetView: parseOptionalSheetView(sheetViewEl),
+    tabColor,
     columns: parseCols(colsEl),
     rows,
     mergeCells: parseMergeCells(mergeCellsEl),

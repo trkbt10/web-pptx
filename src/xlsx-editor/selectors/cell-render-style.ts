@@ -44,15 +44,15 @@ function applyAlignment(style: CSSProperties, alignment: XlsxAlignment | undefin
   }
 }
 
-function resolveFillBackgroundColor(fill: XlsxFill | undefined): string | undefined {
+function resolveFillBackgroundColor(fill: XlsxFill | undefined, styles: XlsxStyleSheet): string | undefined {
   if (!fill || fill.type !== "pattern") {
     return undefined;
   }
-  const fg = xlsxColorToCss(fill.pattern.fgColor as XlsxColorLike | undefined);
+  const fg = xlsxColorToCss(fill.pattern.fgColor as XlsxColorLike | undefined, { indexedColors: styles.indexedColors });
   if (fg) {
     return fg;
   }
-  return xlsxColorToCss(fill.pattern.bgColor as XlsxColorLike | undefined);
+  return xlsxColorToCss(fill.pattern.bgColor as XlsxColorLike | undefined, { indexedColors: styles.indexedColors });
 }
 
 type CssBorderStyle = "solid" | "dashed" | "dotted" | "double";
@@ -140,7 +140,7 @@ export function resolveCellRenderStyle(params: {
     css.fontStyle = "normal";
   }
   if (effectiveColor) {
-    const color = xlsxColorToCss(effectiveColor as XlsxColorLike);
+    const color = xlsxColorToCss(effectiveColor as XlsxColorLike, { indexedColors: styles.indexedColors });
     if (color) {
       css.color = color;
     }
@@ -159,13 +159,13 @@ export function resolveCellRenderStyle(params: {
 
   const fill = styles.fills[resolvedXf.fillId as number];
   if (fill?.type === "pattern" && fill.pattern.patternType === "solid") {
-    const bg = resolveFillBackgroundColor(fill);
+    const bg = resolveFillBackgroundColor(fill, styles);
     if (bg) {
       css.backgroundColor = bg;
     }
   }
 
-  const conditionalBg = resolveFillBackgroundColor(params.conditionalFormat?.fill);
+  const conditionalBg = resolveFillBackgroundColor(params.conditionalFormat?.fill, styles);
   if (conditionalBg) {
     css.backgroundColor = conditionalBg;
   }
@@ -221,10 +221,26 @@ export function resolveCellBorderDecoration(params: {
     return { bottom: decorated };
   };
 
-  const leftDecoration = toEdgeDecoration("left", left, xlsxColorToCss(border.left?.color as XlsxColorLike | undefined));
-  const rightDecoration = toEdgeDecoration("right", right, xlsxColorToCss(border.right?.color as XlsxColorLike | undefined));
-  const topDecoration = toEdgeDecoration("top", top, xlsxColorToCss(border.top?.color as XlsxColorLike | undefined));
-  const bottomDecoration = toEdgeDecoration("bottom", bottom, xlsxColorToCss(border.bottom?.color as XlsxColorLike | undefined));
+  const leftDecoration = toEdgeDecoration(
+    "left",
+    left,
+    xlsxColorToCss(border.left?.color as XlsxColorLike | undefined, { indexedColors: styles.indexedColors }),
+  );
+  const rightDecoration = toEdgeDecoration(
+    "right",
+    right,
+    xlsxColorToCss(border.right?.color as XlsxColorLike | undefined, { indexedColors: styles.indexedColors }),
+  );
+  const topDecoration = toEdgeDecoration(
+    "top",
+    top,
+    xlsxColorToCss(border.top?.color as XlsxColorLike | undefined, { indexedColors: styles.indexedColors }),
+  );
+  const bottomDecoration = toEdgeDecoration(
+    "bottom",
+    bottom,
+    xlsxColorToCss(border.bottom?.color as XlsxColorLike | undefined, { indexedColors: styles.indexedColors }),
+  );
 
   const result: CellBorderDecoration = {
     ...leftDecoration,

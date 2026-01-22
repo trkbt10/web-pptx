@@ -43,7 +43,7 @@ export type UnaryNode = {
   readonly argument: FormulaAstNode;
 };
 
-export type BinaryOperator = "+" | "-" | "*" | "/" | "^";
+export type BinaryOperator = "+" | "-" | "*" | "/" | "^" | "&";
 export type BinaryNode = {
   readonly type: "Binary";
   readonly operator: BinaryOperator;

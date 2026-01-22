@@ -178,6 +178,18 @@ export type XlsxStyleSheet = {
   /** Border definitions */
   readonly borders: readonly XlsxBorder[];
 
+  /**
+   * Optional legacy indexed color palette overrides.
+   *
+   * When present, this corresponds to `styles.xml`:
+   * `styleSheet/colors/indexedColors/rgbColor/@rgb` (typically 64 entries).
+   *
+   * @see ECMA-376 Part 4, Section 18.8.3 (CT_Color)
+   * @see ECMA-376 Part 4, Section 18.8.11 (colors)
+   * @see ECMA-376 Part 4, Section 18.8.21 (indexedColors)
+   */
+  readonly indexedColors?: readonly string[];
+
   /** Custom number format definitions (built-in formats are implicit) */
   readonly numberFormats: readonly XlsxNumberFormat[];
 

@@ -68,7 +68,7 @@ function formatScalar(value: FormulaScalar): string {
   return "0";
 }
 
-type Prec = 0 | 1 | 2 | 3 | 4 | 5;
+type Prec = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 function precedence(node: FormulaAstNode): Prec {
   switch (node.type) {
@@ -76,18 +76,20 @@ function precedence(node: FormulaAstNode): Prec {
       return 0;
     case "Binary":
       switch (node.operator) {
+        case "&":
+          return 1;
         case "+":
         case "-":
-          return 1;
+          return 2;
         case "*":
         case "/":
-          return 2;
-        case "^":
           return 3;
+        case "^":
+          return 4;
       }
-      return 1;
+      return 2;
     case "Unary":
-      return 4;
+      return 5;
     case "Literal":
     case "Reference":
     case "Range":
@@ -95,7 +97,7 @@ function precedence(node: FormulaAstNode): Prec {
     case "StructuredTableReference":
     case "Function":
     case "Array":
-      return 5;
+      return 6;
   }
 }
 

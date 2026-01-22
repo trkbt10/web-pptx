@@ -196,6 +196,31 @@ export function parseCellStyles(cellStylesElement: XmlElement | undefined): read
 // =============================================================================
 
 /**
+ * Parse `styles.xml` indexed palette overrides.
+ *
+ * Extracts `styleSheet/colors/indexedColors/rgbColor/@rgb` when present.
+ *
+ * @param styleSheetElement - Root `<styleSheet>` element
+ * @returns Palette entries (may be empty)
+ *
+ * @see ECMA-376 Part 4, Section 18.8.11 (colors)
+ * @see ECMA-376 Part 4, Section 18.8.21 (indexedColors)
+ */
+function parseIndexedColors(styleSheetElement: XmlElement): readonly string[] {
+  const colorsEl = getChild(styleSheetElement, "colors");
+  if (!colorsEl) {
+    return [];
+  }
+  const indexedColorsEl = getChild(colorsEl, "indexedColors");
+  if (!indexedColorsEl) {
+    return [];
+  }
+  return getChildren(indexedColorsEl, "rgbColor")
+    .map((el) => getAttr(el, "rgb"))
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
+}
+
+/**
  * Parse the complete stylesheet from a styleSheet element.
  *
  * This is the main entry point for parsing xl/styles.xml.
@@ -222,6 +247,7 @@ export function parseStyleSheet(styleSheetElement: XmlElement): XlsxStyleSheet {
   const cellXfsEl = getChild(styleSheetElement, "cellXfs");
   const cellStylesEl = getChild(styleSheetElement, "cellStyles");
   const dxfsEl = getChild(styleSheetElement, "dxfs");
+  const indexedColors = parseIndexedColors(styleSheetElement);
   const dxfs = parseDxfs(dxfsEl);
 
   return {
@@ -232,6 +258,7 @@ export function parseStyleSheet(styleSheetElement: XmlElement): XlsxStyleSheet {
     cellStyleXfs: parseCellXfs(cellStyleXfsEl),
     cellXfs: parseCellXfs(cellXfsEl),
     cellStyles: parseCellStyles(cellStylesEl),
+    ...(indexedColors.length > 0 ? { indexedColors } : {}),
     ...(dxfs.length > 0 ? { dxfs } : {}),
   };
 }

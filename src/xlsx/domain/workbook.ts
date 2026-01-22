@@ -18,6 +18,7 @@ import type { XlsxConditionalFormatting } from "./conditional-formatting";
 import type { XlsxComment } from "./comment";
 import type { XlsxHyperlink } from "./hyperlink";
 import type { XlsxDateSystem } from "./date-system";
+import type { XlsxColor } from "./style/font";
 
 // =============================================================================
 // Column Definition
@@ -149,6 +150,13 @@ export type XlsxWorksheet = {
   readonly dimension?: CellRange;
   /** Sheet view configuration */
   readonly sheetView?: XlsxSheetView;
+  /**
+   * Sheet tab color (from `worksheet/sheetPr/tabColor`).
+   *
+   * @see ECMA-376 Part 4, Section 18.3.1.84 (sheetPr)
+   * @see ECMA-376 Part 4, Section 18.3.1.92 (tabColor)
+   */
+  readonly tabColor?: XlsxColor;
   /** Column definitions */
   readonly columns?: readonly XlsxColumnDef[];
   /** Rows with cell data */

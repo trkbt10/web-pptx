@@ -51,6 +51,7 @@ import { isNumberFunction } from "./functions/info/isnumber";
 import { isTextFunction } from "./functions/info/isttext";
 import { isLogicalFunction } from "./functions/info/islogical";
 import { isErrFunction } from "./functions/info/iserr";
+import { isNaFunction } from "./functions/info/isna";
 import { isErrorFunction } from "./functions/info/iserror";
 import { ifErrorFunction } from "./functions/info/iferror";
 import { ifNaFunction } from "./functions/info/ifna";
@@ -96,6 +97,7 @@ import { ifFunction } from "./functions/logical/if";
 import { ifsFunction } from "./functions/logical/ifs";
 import { switchFunction } from "./functions/logical/switch";
 import { concatFunction } from "./functions/text/concat";
+import { concatenateFunction } from "./functions/text/concatenate";
 import { textJoinFunction } from "./functions/text/textjoin";
 import { leftFunction } from "./functions/text/left";
 import { rightFunction } from "./functions/text/right";
@@ -262,6 +264,7 @@ const builtInFunctions: FormulaFunctionDefinition[] = [
   isTextFunction,
   isLogicalFunction,
   isErrFunction,
+  isNaFunction,
   isErrorFunction,
   ifErrorFunction,
   ifNaFunction,
@@ -312,6 +315,7 @@ const builtInFunctions: FormulaFunctionDefinition[] = [
   ifsFunction,
   switchFunction,
   concatFunction,
+  concatenateFunction,
   textJoinFunction,
   leftFunction,
   rightFunction,

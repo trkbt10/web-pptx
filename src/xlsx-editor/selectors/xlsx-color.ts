@@ -11,6 +11,15 @@ export type XlsxColorLike =
   | { readonly type: "indexed"; readonly index: number }
   | { readonly type: "auto" };
 
+export type XlsxColorToCssOptions = {
+  /**
+   * Indexed palette override from `styles.xml` (`colors/indexedColors`).
+   *
+   * Values are stored as 8-hex strings (commonly `00RRGGBB` in POI fixtures).
+   */
+  readonly indexedColors?: readonly string[];
+};
+
 function clampByte(n: number): number {
   if (!Number.isFinite(n)) {
     return 0;
@@ -54,6 +63,28 @@ function rgbaToCss(rgba: { readonly r: number; readonly g: number; readonly b: n
   }
   const alpha = Math.max(0, Math.min(1, a / 255));
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function normalizePaletteEntry(value: string): string | undefined {
+  const raw = value.trim();
+  const hex = raw.startsWith("#") ? raw.slice(1) : raw;
+  if (!/^[0-9a-fA-F]{8}$/u.test(hex)) {
+    return undefined;
+  }
+  return hex.toUpperCase();
+}
+
+function paletteEntryToCss(value: string): string | undefined {
+  const hex = normalizePaletteEntry(value);
+  if (!hex) {
+    return undefined;
+  }
+  const alpha = hex.slice(0, 2);
+  if (alpha === "00") {
+    return `#${hex.slice(2, 8)}`;
+  }
+  const rgba = argbToRgba(hex);
+  return rgba ? rgbaToCss(rgba) : undefined;
 }
 
 function applyTint(channel: number, tint: number): number {
@@ -188,7 +219,7 @@ function themeToRgb(theme: number): { readonly r: number; readonly g: number; re
  *
  * Supports rgb/indexed/theme colors and applies theme tint when present.
  */
-export function xlsxColorToCss(color: XlsxColorLike | undefined): string | undefined {
+export function xlsxColorToCss(color: XlsxColorLike | undefined, options?: XlsxColorToCssOptions): string | undefined {
   if (!color) {
     return undefined;
   }
@@ -200,6 +231,14 @@ export function xlsxColorToCss(color: XlsxColorLike | undefined): string | undef
     return rgba ? rgbaToCss(rgba) : undefined;
   }
   if (color.type === "indexed") {
+    const palette = options?.indexedColors;
+    const paletteEntry = palette?.[color.index];
+    if (paletteEntry) {
+      const resolved = paletteEntryToCss(paletteEntry);
+      if (resolved) {
+        return resolved;
+      }
+    }
     const rgb = indexedToRgb(color.index);
     return rgb ? rgbToHex6(rgb.r, rgb.g, rgb.b) : undefined;
   }

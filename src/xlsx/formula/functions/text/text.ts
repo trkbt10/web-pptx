@@ -2,7 +2,7 @@
  * @file TEXT function implementation (Excel compatibility).
  */
 
-import { formatNumberByCode } from "../../../domain/style/format-value";
+import { formatNumberByCode, formatTextByCode } from "../../../domain/style/format-value";
 import type { FormulaFunctionLazyDefinition } from "../../functionRegistry";
 
 export const textFunction: FormulaFunctionLazyDefinition = {
@@ -27,8 +27,11 @@ export const textFunction: FormulaFunctionLazyDefinition = {
     if (nodes.length !== 2) {
       throw new Error("TEXT expects two arguments");
     }
-    const value = context.helpers.requireNumber(context.evaluate(nodes[0]!), "TEXT value");
+    const valueResult = context.helpers.coerceScalar(context.evaluate(nodes[0]!), "TEXT value");
     const formatText = context.helpers.coerceText(context.evaluate(nodes[1]!), "TEXT format_text");
-    return formatNumberByCode(value, formatText, { dateSystem: context.dateSystem });
+    if (typeof valueResult === "number") {
+      return formatNumberByCode(valueResult, formatText, { dateSystem: context.dateSystem });
+    }
+    return formatTextByCode(context.helpers.valueToText(valueResult), formatText);
   },
 };

@@ -16,6 +16,14 @@ function numberCell(col: number, row: number, value: number): Cell {
   };
 }
 
+function stringCell(col: number, row: number, value: string): Cell {
+  const cellValue: CellValue = { type: "string", value };
+  return {
+    address: { col: colIdx(col), row: rowIdx(row), colAbsolute: false, rowAbsolute: false },
+    value: cellValue,
+  };
+}
+
 function formulaCell(col: number, row: number, formula: string): Cell {
   return {
     address: { col: colIdx(col), row: rowIdx(row), colAbsolute: false, rowAbsolute: false },
@@ -96,6 +104,17 @@ describe("createFormulaEvaluator", () => {
 
     const evaluator = createFormulaEvaluator(makeWorkbook([sheet]));
     expect(evaluator.evaluateCell(0, { col: colIdx(2), row: rowIdx(1), colAbsolute: false, rowAbsolute: false })).toBe(10);
+  });
+
+  it("evaluates concatenation operator (&)", () => {
+    const sheet = makeWorksheet("Sheet1", 1, [
+      stringCell(1, 1, "A"), // A1
+      numberCell(1, 2, 3), // A2
+      formulaCell(2, 1, 'A1&"|"&A2'), // B1
+    ]);
+
+    const evaluator = createFormulaEvaluator(makeWorkbook([sheet]));
+    expect(evaluator.evaluateCell(0, { col: colIdx(2), row: rowIdx(1), colAbsolute: false, rowAbsolute: false })).toBe("A|3");
   });
 
   it("evaluates array literals", () => {

@@ -31,7 +31,7 @@ import { parseWorksheet } from "./worksheet";
 import { parseBooleanAttr, parseIntAttr } from "./primitive";
 import type { XmlElement, XmlDocument } from "../../xml";
 import { parseXml, getAttr, getChild, getChildren, getTextContent, isXmlElement } from "../../xml";
-import path from "node:path";
+import { basenamePosixPath, dirnamePosixPath, joinPosixPath, normalizePosixPath } from "../../files/ooxml-path";
 
 // =============================================================================
 // Helper Functions
@@ -276,14 +276,14 @@ function parseStylesOrDefault(xml: string | undefined) {
 }
 
 function resolveRelationshipsPathForPart(partPath: string): string {
-  const dir = path.posix.dirname(partPath);
-  const base = path.posix.basename(partPath);
-  return path.posix.join(dir, "_rels", `${base}.rels`);
+  const dir = dirnamePosixPath(partPath);
+  const base = basenamePosixPath(partPath);
+  return joinPosixPath(dir, "_rels", `${base}.rels`);
 }
 
 function resolveTargetPath(partPath: string, target: string): string {
-  const baseDir = path.posix.dirname(partPath);
-  const resolved = path.posix.normalize(path.posix.join(baseDir, target));
+  const baseDir = dirnamePosixPath(partPath);
+  const resolved = normalizePosixPath(joinPosixPath(baseDir, target));
   return resolved.startsWith("/") ? resolved.slice(1) : resolved;
 }
 

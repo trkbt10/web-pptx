@@ -15,6 +15,15 @@ describe("xlsx-editor/selectors/xlsx-color", () => {
     expect(xlsxColorToCss({ type: "indexed", index: 63 })).toBe("#333333");
   });
 
+  it("converts indexed colors using palette overrides (styles.xml indexedColors)", () => {
+    const indexedColors = Array.from({ length: 64 }, () => "00000000");
+    indexedColors[61] = "00E8E8E8";
+    indexedColors[18] = "00094A74";
+
+    expect(xlsxColorToCss({ type: "indexed", index: 61 }, { indexedColors })).toBe("#E8E8E8");
+    expect(xlsxColorToCss({ type: "indexed", index: 18 }, { indexedColors })).toBe("#094A74");
+  });
+
   it("converts theme colors with tint", () => {
     // accent1: #4F81BD
     expect(xlsxColorToCss({ type: "theme", theme: 4 })).toBe("#4F81BD");

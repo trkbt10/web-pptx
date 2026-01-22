@@ -17,7 +17,7 @@ import type { FormulaError } from "./types";
 
 type OperatorToken = {
   readonly type: "operator";
-  readonly value: "+" | "-" | "*" | "/" | "^";
+  readonly value: "+" | "-" | "*" | "/" | "^" | "&";
 };
 
 type ComparatorToken = {
@@ -101,6 +101,18 @@ function isDigit(character: string): boolean {
 
 function isLetter(character: string): boolean {
   return /[A-Za-z]/u.test(character);
+}
+
+function isIdentifierStart(character: string): boolean {
+  return isLetter(character) || character === "_";
+}
+
+function isIdentifierBodyStandard(character: string): boolean {
+  return isLetter(character) || isDigit(character) || character === "_";
+}
+
+function isIdentifierBodyNamespaced(character: string): boolean {
+  return isIdentifierBodyStandard(character) || character === ".";
 }
 
 function isWhitespace(character: string): boolean {
@@ -344,7 +356,12 @@ function tryReadSheetSpanReferenceToken(input: string, start: number): { readonl
 }
 
 function readIdentifierOrReferenceToken(input: string, start: number): { readonly token: IdentifierToken | ReferenceToken; readonly next: number } {
-  const { value: head, next } = readWhile(input, start, (char) => isLetter(char) || isDigit(char) || char === "_");
+  const allowNamespaceSeparator = (input[start] ?? "") === "_";
+  const { value: head, next } = readWhile(
+    input,
+    start,
+    (char) => (allowNamespaceSeparator ? isIdentifierBodyNamespaced(char) : isIdentifierBodyStandard(char)),
+  );
   const upcoming = input[next] ?? "";
 
   if (upcoming === "[") {
@@ -439,12 +456,14 @@ function tokenize(formula: string): readonly Token[] {
       continue;
     }
 
-    if (isLetter(char)) {
-      const sheetSpan = tryReadSheetSpanReferenceToken(formula, cursor.index);
-      if (sheetSpan) {
-        tokens.push(sheetSpan.token);
-        cursor.index = sheetSpan.next;
-        continue;
+    if (isIdentifierStart(char)) {
+      if (isLetter(char)) {
+        const sheetSpan = tryReadSheetSpanReferenceToken(formula, cursor.index);
+        if (sheetSpan) {
+          tokens.push(sheetSpan.token);
+          cursor.index = sheetSpan.next;
+          continue;
+        }
       }
       const { token, next } = readIdentifierOrReferenceToken(formula, cursor.index);
       tokens.push(token);
@@ -478,7 +497,7 @@ function tokenize(formula: string): readonly Token[] {
       continue;
     }
 
-    if (char === "+" || char === "-" || char === "*" || char === "/" || char === "^") {
+    if (char === "+" || char === "-" || char === "*" || char === "/" || char === "^" || char === "&") {
       tokens.push({ type: "operator", value: char });
       cursor.index += 1;
       continue;
@@ -558,6 +577,10 @@ function parsePrimary(state: ParserState): FormulaAstNode {
         throw new Error(`Unsupported structured reference token "${token.value}"`);
       }
       const inner = remainder.slice(1, -1);
+
+      if (inner.startsWith("#")) {
+        return { type: "StructuredTableReference", tableName, startColumnName: inner, endColumnName: inner };
+      }
 
       const parseBracketedName = (text: string, start: number): { readonly name: string; readonly next: number } => {
         if ((text[start] ?? "") !== "[") {
@@ -800,8 +823,22 @@ function parseAdditiveTail(state: ParserState, left: FormulaAstNode): FormulaAst
   return left;
 }
 
-function parseComparison(state: ParserState): FormulaAstNode {
+function parseConcatenation(state: ParserState): FormulaAstNode {
   const node = parseAdditive(state);
+  return parseConcatenationTail(state, node);
+}
+
+function parseConcatenationTail(state: ParserState, left: FormulaAstNode): FormulaAstNode {
+  const token = peek(state);
+  if (token.type === "operator" && token.value === "&") {
+    consume(state);
+    return parseConcatenationTail(state, { type: "Binary", operator: "&", left, right: parseAdditive(state) });
+  }
+  return left;
+}
+
+function parseComparison(state: ParserState): FormulaAstNode {
+  const node = parseConcatenation(state);
   return parseComparisonTail(state, node);
 }
 
@@ -809,7 +846,7 @@ function parseComparisonTail(state: ParserState, left: FormulaAstNode): FormulaA
   const token = peek(state);
   if (token.type === "comparator") {
     consume(state);
-    return parseComparisonTail(state, { type: "Compare", operator: token.value, left, right: parseAdditive(state) });
+    return parseComparisonTail(state, { type: "Compare", operator: token.value, left, right: parseConcatenation(state) });
   }
   return left;
 }

@@ -19,6 +19,7 @@ import { resolveCellRenderStyle } from "../../src/xlsx-editor/selectors/cell-ren
 import { resolveCellStyleDetails } from "../../src/xlsx-editor/selectors/cell-style-details";
 import { formatCellValueForDisplay, resolveCellFormatCode } from "../../src/xlsx-editor/selectors/cell-display-text";
 import { resolveCellConditionalDifferentialFormat } from "../../src/xlsx-editor/selectors/conditional-formatting";
+import { xlsxColorToCss } from "../../src/xlsx-editor/selectors/xlsx-color";
 import { createSheetLayout } from "../../src/xlsx-editor/selectors/sheet-layout";
 import { buildBorderOverlayLines } from "../../src/xlsx-editor/selectors/border-overlay";
 import { createGetZipTextFileContentFromBytes } from "../../src/files/ooxml-zip";
@@ -737,6 +738,367 @@ describe("POI spreadsheet fixtures (parsing + formulas + style)", () => {
     }
   });
 
+  it("DateFormatNumberTests.xlsx: rounds fractional seconds per format and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("DateFormatNumberTests.xlsx");
+    expect(workbook.dateSystem).toBe("1904");
+
+    const sheetIndex = workbook.sheets.findIndex((candidate) => candidate.name === "Tests");
+    const sheet = workbook.sheets[sheetIndex];
+    if (!sheet || sheetIndex === -1) {
+      throw new Error('sheet "Tests" is required');
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const cases: ReadonlyArray<{ readonly row: number; readonly expected: string }> = [
+      { row: 2, expected: "1904-01-02 00:00:00.000" },
+      { row: 4, expected: "1904-01-02 00:04:37.638" },
+      { row: 5, expected: "1904-01-02 00:04:37.64" },
+      { row: 6, expected: "1904-01-02 00:04:37.6" },
+      { row: 7, expected: "1904-01-02 00:04:38" },
+      { row: 8, expected: "1904-01-02 00:00:00.414" },
+      { row: 9, expected: "1904-01-02 00:00:00.41" },
+      { row: 10, expected: "1904-01-02 00:00:00.4" },
+      { row: 11, expected: "1904-01-02 00:00:00" },
+    ];
+
+    for (const { row, expected } of cases) {
+      const address = createAddress(1, row); // A{row}
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected A{row} to be a formula cell");
+      }
+      expect(cell.value.type).toBe("string");
+      expect(evaluator.evaluateCell(sheetIndex, address)).toBe(expected);
+      expect(evaluator.evaluateCell(sheetIndex, address)).toEqual(toExpectedScalar(cell.value));
+    }
+  });
+
+  it("ElapsedFormatTests.xlsx: evaluates TEXT() with elapsed tokens ([h]/[m]/[s]) and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("ElapsedFormatTests.xlsx");
+
+    const sheetIndex = workbook.sheets.findIndex((candidate) => candidate.name === "Tests");
+    const sheet = workbook.sheets[sheetIndex];
+    if (!sheet || sheetIndex === -1) {
+      throw new Error('sheet "Tests" is required');
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const cases: ReadonlyArray<{ readonly row: number; readonly expected: string }> = [
+      { row: 2, expected: "75:23:53.376" },
+      { row: 3, expected: "4523:53.376" },
+      { row: 4, expected: "271433.376" },
+      { row: 5, expected: "75:23:53.4" },
+      { row: 6, expected: "4523:53.4" },
+      { row: 8, expected: "53:23 @ hour 75" },
+      { row: 9, expected: "53 secs and 4523 mins" },
+      { row: 10, expected: "It was 75 [yes, 75] hours and 23:53" },
+      { row: 11, expected: "271433 [yes, 271433] seconds" },
+      { row: 12, expected: "2:3:4.000" },
+    ];
+
+    for (const { row, expected } of cases) {
+      const address = createAddress(1, row); // A{row}
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected A{row} to be a formula cell");
+      }
+      expect(cell.value.type).toBe("string");
+      expect(evaluator.evaluateCell(sheetIndex, address)).toBe(expected);
+      expect(evaluator.evaluateCell(sheetIndex, address)).toEqual(toExpectedScalar(cell.value));
+    }
+  });
+
+  it("FormatChoiceTests.xlsx: evaluates TEXT() with conditional format codes ([<10]/[>10]) and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("FormatChoiceTests.xlsx");
+
+    const sheetIndex = workbook.sheets.findIndex((candidate) => candidate.name === "Tests");
+    const sheet = workbook.sheets[sheetIndex];
+    if (!sheet || sheetIndex === -1) {
+      throw new Error('sheet "Tests" is required');
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const cases: ReadonlyArray<{ readonly row: number; readonly expected: string; readonly expression: string }> = [
+      { row: 2, expected: "2 Wow", expression: "TEXT(C2,B2)" },
+      { row: 3, expected: "10", expression: "TEXT(C3,B3)" },
+      { row: 5, expected: "10", expression: "TEXT(C5,B5)" },
+      { row: 6, expected: "11 Big", expression: "TEXT(C6,B6)" },
+    ];
+
+    for (const { row, expected, expression } of cases) {
+      const address = createAddress(1, row); // A{row}
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected A{row} to be a formula cell");
+      }
+      expect(cell.value.type).toBe("string");
+      expect(cell.formula.expression.replace(/\s+/gu, "")).toBe(expression);
+      expect(evaluator.evaluateCell(sheetIndex, address)).toBe(expected);
+      expect(evaluator.evaluateCell(sheetIndex, address)).toEqual(toExpectedScalar(cell.value));
+    }
+  });
+
+  it("FormatConditionTests.xlsx: evaluates TEXT() with conditional format codes (multiple conditions/sections) and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("FormatConditionTests.xlsx");
+
+    const sheetIndex = workbook.sheets.findIndex((candidate) => candidate.name === "Tests");
+    const sheet = workbook.sheets[sheetIndex];
+    if (!sheet || sheetIndex === -1) {
+      throw new Error('sheet "Tests" is required');
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const cases: ReadonlyArray<CellAddress> = [
+      createAddress(1, 2), // A2
+      createAddress(1, 3), // A3
+      createAddress(1, 5), // A5
+      createAddress(1, 6), // A6
+      createAddress(1, 24), // A24 (negative + conditional)
+      createAddress(1, 29), // A29 (negative boundary)
+      createAddress(1, 35), // A35 (negative + suffix)
+    ];
+
+    for (const address of cases) {
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected formula cell to exist");
+      }
+      expect(cell.formula.expression.toUpperCase()).toContain("TEXT(");
+      expect(cell.value.type).toBe("string");
+      expect(evaluator.evaluateCell(sheetIndex, address)).toEqual(toExpectedScalar(cell.value));
+    }
+  });
+
+  it("TextFormatTests.xlsx: evaluates CONCATENATE + TEXT() text sections (\";;;\" prefix) and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("TextFormatTests.xlsx");
+
+    const sheetIndex = workbook.sheets.findIndex((candidate) => candidate.name === "Tests");
+    const sheet = workbook.sheets[sheetIndex];
+    if (!sheet || sheetIndex === -1) {
+      throw new Error('sheet "Tests" is required');
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const cases: ReadonlyArray<CellAddress> = [
+      createAddress(1, 2), // A2
+      createAddress(1, 6), // A6
+      createAddress(1, 10), // A10
+      createAddress(1, 12), // A12 (TRUE)
+      createAddress(1, 16), // A16
+      createAddress(1, 25), // A25 (FALSE)
+    ];
+
+    for (const address of cases) {
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected formula cell to exist");
+      }
+      expect(cell.formula.expression.toUpperCase()).toContain("TEXT(");
+      expect(cell.formula.expression.toUpperCase()).toContain("CONCATENATE(");
+      expect(cell.value.type).toBe("string");
+      expect(evaluator.evaluateCell(sheetIndex, address)).toEqual(toExpectedScalar(cell.value));
+    }
+  });
+
+  it("GeneralFormatTests.xlsx: evaluates TEXT() with General format and matches cached values (scientific thresholds)", async () => {
+    const workbook = await parseWorkbookFromFixture("GeneralFormatTests.xlsx");
+
+    const sheetIndex = workbook.sheets.findIndex((candidate) => candidate.name === "Tests");
+    const sheet = workbook.sheets[sheetIndex];
+    if (!sheet || sheetIndex === -1) {
+      throw new Error('sheet "Tests" is required');
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const cases: ReadonlyArray<{ readonly row: number; readonly expected: string }> = [
+      { row: 2, expected: "1" },
+      { row: 11, expected: "1.23456789" },
+      { row: 17, expected: "10000000000" },
+      { row: 18, expected: "1E+11" },
+      { row: 27, expected: "0.000000001" },
+      { row: 28, expected: "1E-10" },
+      { row: 52, expected: "-1E+11" },
+      { row: 61, expected: "-0.000000001" },
+      { row: 62, expected: "-1E-10" },
+      { row: 70, expected: "hello" },
+      { row: 72, expected: "TRUE" },
+      { row: 73, expected: "FALSE" },
+    ];
+
+    for (const { row, expected } of cases) {
+      const address = createAddress(1, row); // A{row}
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected A{row} to be a formula cell");
+      }
+      expect(cell.value.type).toBe("string");
+      expect(evaluator.evaluateCell(sheetIndex, address)).toBe(expected);
+      expect(evaluator.evaluateCell(sheetIndex, address)).toEqual(toExpectedScalar(cell.value));
+    }
+  });
+
+  it("NumberFormatApproxTests.xlsx: evaluates TEXT() scientific notation variants (e+/e-) and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("NumberFormatApproxTests.xlsx");
+
+    const sheetIndex = workbook.sheets.findIndex((candidate) => candidate.name === "Tests");
+    const sheet = workbook.sheets[sheetIndex];
+    if (!sheet || sheetIndex === -1) {
+      throw new Error('sheet "Tests" is required');
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const cases: ReadonlyArray<{ readonly row: number; readonly expected: string }> = [
+      { row: 2, expected: "|1e5|" },
+      { row: 4, expected: "|1%e5|" },
+      { row: 6, expected: "|1|e|5|" },
+      { row: 8, expected: "|12.3457|e|4|" },
+      { row: 10, expected: "|123,456.789|e|0|" },
+      { row: 13, expected: "|0012.3457|e|4|" },
+      { row: 18, expected: "|  12.3457|e|4|" },
+      { row: 21, expected: "|1e+5|" },
+      { row: 40, expected: "|1.2|E|5|" },
+      { row: 42, expected: "|1e-5|" },
+      { row: 48, expected: "|1234.5679|e|-8|" },
+      { row: 54, expected: "|0000123.4568|e|-7|" },
+      { row: 61, expected: "|1e-5|" },
+      { row: 67, expected: "|1.2346|e|-4|" },
+    ];
+
+    for (const { row, expected } of cases) {
+      const address = createAddress(1, row); // A{row}
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected A{row} to be a formula cell");
+      }
+      expect(cell.value.type).toBe("string");
+      expect(evaluator.evaluateCell(sheetIndex, address)).toBe(expected);
+      expect(evaluator.evaluateCell(sheetIndex, address)).toEqual(toExpectedScalar(cell.value));
+    }
+  });
+
+  it("FormatKM.xlsx: formats display text via conditional numFmt sections (#, K/M scaling) and matches expected strings", async () => {
+    const workbook = await parseWorkbookFromFixture("FormatKM.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const cases: ReadonlyArray<{ readonly row: number }> = [
+      { row: 2 },
+      { row: 5 },
+      { row: 6 },
+      { row: 8 },
+      { row: 9 },
+      { row: 11 },
+      { row: 12 },
+    ];
+
+    for (const { row } of cases) {
+      const bAddress = createAddress(2, row);
+      const cAddress = createAddress(3, row);
+      const dAddress = createAddress(4, row);
+      const eAddress = createAddress(5, row);
+
+      const bCell = getCell(sheet, bAddress);
+      const cCell = getCell(sheet, cAddress);
+      const dCell = getCell(sheet, dAddress);
+      const eCell = getCell(sheet, eAddress);
+      if (!bCell || !cCell || !dCell || !eCell) {
+        throw new Error("Expected B/C/D/E cells to exist");
+      }
+      if (cCell.value.type !== "string" || eCell.value.type !== "string") {
+        throw new Error("Expected C/E to be string cells");
+      }
+
+      const bFormatCode = resolveCellFormatCode({ styles: workbook.styles, sheet, address: bAddress, cell: bCell });
+      const dFormatCode = resolveCellFormatCode({ styles: workbook.styles, sheet, address: dAddress, cell: dCell });
+
+      expect(formatCellValueForDisplay(bCell.value, bFormatCode)).toBe(cCell.value.value);
+      expect(formatCellValueForDisplay(dCell.value, dFormatCode)).toBe(eCell.value.value);
+    }
+  });
+
+  it("Formatting.xlsx: resolves numFmt codes and formats date/number display text", async () => {
+    const workbook = await parseWorkbookFromFixture("Formatting.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const dateSystem = workbook.dateSystem;
+    const cases: ReadonlyArray<{ readonly address: CellAddress; readonly formatCode: string; readonly expected: string }> = [
+      { address: createAddress(2, 2), formatCode: "mm-dd-yy", expected: "11-24-06" }, // B2
+      { address: createAddress(2, 3), formatCode: "yyyy/mm/dd", expected: "2006/11/24" }, // B3
+      { address: createAddress(2, 4), formatCode: "yyyy\\-mm\\-dd", expected: "2006-11-24" }, // B4
+      { address: createAddress(2, 6), formatCode: "d/m/yy;@", expected: "24/11/06" }, // B6
+      { address: createAddress(2, 7), formatCode: "dd\\-mm\\-yy", expected: "24-11-06" }, // B7
+      { address: createAddress(2, 11), formatCode: "0.000", expected: "10.520" }, // B11
+      { address: createAddress(2, 12), formatCode: "0.0", expected: "10.5" }, // B12
+      { address: createAddress(2, 13), formatCode: "\"£\"#,##0.00", expected: "£10.52" }, // B13
+    ];
+
+    for (const { address, formatCode, expected } of cases) {
+      const cell = getCell(sheet, address);
+      if (!cell) {
+        throw new Error("Expected cell to exist");
+      }
+      const resolved = resolveCellFormatCode({ styles: workbook.styles, sheet, address, cell });
+      expect(resolved).toBe(formatCode);
+      expect(formatCellValueForDisplay(cell.value, resolved, { dateSystem })).toBe(expected);
+    }
+  });
+
+  it("StructuredRefs-lots-with-lookups.xlsx: evaluates structured references (#All) + concatenation (&) and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("StructuredRefs-lots-with-lookups.xlsx");
+    const sheetIndex = workbook.sheets.findIndex((candidate) => candidate.name === "Profile");
+    const sheet = workbook.sheets[sheetIndex];
+    if (!sheet || sheetIndex === -1) {
+      throw new Error('sheet "Profile" is required');
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const cases: ReadonlyArray<CellAddress> = [
+      createAddress(3, 8), // C8
+      createAddress(16, 8), // P8
+      createAddress(3, 14), // C14
+    ];
+
+    for (const address of cases) {
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected formula cell to exist");
+      }
+      expect(cell.formula.expression).toContain("[#All]");
+      expect(cell.formula.expression).toContain("&");
+      expect(evaluator.evaluateCell(sheetIndex, address)).toEqual(toExpectedScalar(cell.value));
+    }
+  });
+
+  it("xlookup.xlsx: evaluates _xlfn.XLOOKUP (exact/approx + binary search modes) and matches cached values", async () => {
+    const workbook = await parseWorkbookFromFixture("xlookup.xlsx");
+    const evaluator = createFormulaEvaluator(workbook);
+
+    const cases: ReadonlyArray<{ readonly sheetIndex: number; readonly address: CellAddress }> = [
+      { sheetIndex: 0, address: createAddress(3, 2) }, // Sheet1!C2
+      { sheetIndex: 1, address: createAddress(6, 2) }, // Sheet2!F2
+      { sheetIndex: 1, address: createAddress(6, 12) }, // Sheet2!F12
+      { sheetIndex: 2, address: createAddress(6, 4) }, // Sheet3!F4 (XMATCH in same fixture)
+    ];
+
+    for (const { sheetIndex, address } of cases) {
+      const sheet = workbook.sheets[sheetIndex];
+      if (!sheet) {
+        throw new Error(`sheet[${sheetIndex}] is required`);
+      }
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected formula cell to exist");
+      }
+      expect(cell.formula.expression.toUpperCase()).toContain("_XLFN.");
+      expect(evaluator.evaluateCell(sheetIndex, address)).toEqual(toExpectedScalar(cell.value));
+    }
+  });
+
   it("VLookupFullColumn.xlsx: evaluates VLOOKUP over full-column ranges and matches cached values", async () => {
     const workbook = await parseWorkbookFromFixture("VLookupFullColumn.xlsx");
     const sheet = workbook.sheets[0];
@@ -1088,6 +1450,193 @@ describe("POI spreadsheet fixtures (parsing + formulas + style)", () => {
     expect(table.ref.start.row).toBe(1);
     expect(table.ref.end.col).toBe(3);
     expect(table.ref.end.row).toBe(3);
+  });
+
+  it("ExcelTables.xlsx: parses tables and evaluates calculated formulas inside the table range", async () => {
+    const workbook = await parseWorkbookFromFixture("ExcelTables.xlsx");
+    const sheetIndex = 0;
+    const sheet = workbook.sheets[sheetIndex];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const table = workbook.tables?.find((candidate) => candidate.name === "TableName");
+    if (!table) {
+      throw new Error('Expected table "TableName" to exist');
+    }
+
+    expect(table.sheetIndex).toBe(sheetIndex);
+    expect(table.ref.start.col).toBe(7); // G
+    expect(table.ref.start.row).toBe(1);
+    expect(table.ref.end.col).toBe(9); // I
+    expect(table.ref.end.row).toBe(4);
+    expect(table.columns.map((c) => c.name)).toEqual(["Name", "Age", "AgeGroup"]);
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const cases: ReadonlyArray<{ readonly address: CellAddress; readonly expectedExpression: string }> = [
+      { address: createAddress(3, 2), expectedExpression: "INT(B2/10)" }, // C2
+      { address: createAddress(3, 3), expectedExpression: "INT(B3/10)" }, // C3
+      { address: createAddress(3, 4), expectedExpression: "INT(B4/10)" }, // C4
+      { address: createAddress(9, 2), expectedExpression: "INT(H2/10)" }, // I2
+      { address: createAddress(9, 3), expectedExpression: "INT(H3/10)" }, // I3
+      { address: createAddress(9, 4), expectedExpression: "INT(H4/10)" }, // I4
+    ];
+
+    for (const { address, expectedExpression } of cases) {
+      const cell = getCell(sheet, address);
+      if (!cell?.formula) {
+        throw new Error("Expected formula cell to exist");
+      }
+      expect(cell.formula.expression).toBe(expectedExpression);
+      expect(evaluator.evaluateCell(sheetIndex, address)).toEqual(toExpectedScalar(cell.value));
+    }
+  });
+
+  it("TablesWithDifferentHeaders.xlsx: parses multiple tables with numeric header names", async () => {
+    const workbook = await parseWorkbookFromFixture("TablesWithDifferentHeaders.xlsx");
+    const tables = workbook.tables;
+    if (!tables) {
+      throw new Error("workbook.tables is required");
+    }
+
+    const table1 = tables.find((table) => table.name === "Table1");
+    const table2 = tables.find((table) => table.name === "Table2");
+    const table3 = tables.find((table) => table.name === "Table3");
+    if (!table1 || !table2 || !table3) {
+      throw new Error("Expected Table1/Table2/Table3 to exist");
+    }
+
+    expect(table1.sheetIndex).toBe(0);
+    expect(table1.columns.map((c) => c.name)).toEqual(["12", "34"]);
+    expect(table1.ref.start.col).toBe(1);
+    expect(table1.ref.start.row).toBe(1);
+    expect(table1.ref.end.col).toBe(2);
+    expect(table1.ref.end.row).toBe(2);
+
+    expect(table2.sheetIndex).toBe(1);
+    expect(table2.columns.map((c) => c.name)).toEqual(["12.34", "34.56"]);
+    expect(table2.ref.start.col).toBe(1);
+    expect(table2.ref.start.row).toBe(1);
+    expect(table2.ref.end.col).toBe(2);
+    expect(table2.ref.end.row).toBe(2);
+
+    expect(table3.sheetIndex).toBe(2);
+    expect(table3.columns.map((c) => c.name)).toEqual(["Column1", "Column2"]);
+    expect(table3.ref.start.col).toBe(1);
+    expect(table3.ref.start.row).toBe(1);
+    expect(table3.ref.end.col).toBe(2);
+    expect(table3.ref.end.row).toBe(3);
+  });
+
+  it("SheetTabColors.xlsx: parses worksheet tabColor (indexed + rgb)", async () => {
+    const workbook = await parseWorkbookFromFixture("SheetTabColors.xlsx");
+
+    const sheetDefault = workbook.sheets[0];
+    const sheetIndexed = workbook.sheets[1];
+    const sheetRgb = workbook.sheets[2];
+
+    if (!sheetDefault || !sheetIndexed || !sheetRgb) {
+      throw new Error("Expected 3 sheets to exist");
+    }
+
+    expect(sheetDefault.name).toBe("default");
+    expect(sheetDefault.tabColor).toBeUndefined();
+
+    expect(sheetIndexed.name).toBe("indexedRed");
+    expect(sheetIndexed.tabColor).toEqual({ type: "indexed", index: 10 });
+    expect(xlsxColorToCss(sheetIndexed.tabColor)).toBe("#FF0000");
+
+    expect(sheetRgb.name).toBe("customOrange");
+    expect(sheetRgb.tabColor).toEqual({ type: "rgb", value: "FF7F2700" });
+    expect(xlsxColorToCss(sheetRgb.tabColor)).toBe("#7F2700");
+  });
+
+  it("customIndexedColors.xlsx: resolves indexed colors using the workbook palette overrides", async () => {
+    const workbook = await parseWorkbookFromFixture("customIndexedColors.xlsx");
+    const sheet = workbook.sheets.find((candidate) => candidate.xmlPath.endsWith("sheet2.xml"));
+    if (!sheet) {
+      throw new Error("sheet2.xml is required");
+    }
+
+    const address = createAddress(1, 1); // A1 (styled cell with indexed fill/font)
+    const cell = getCell(sheet, address);
+    const css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address, cell });
+
+    // styles.xml defines a custom indexedColors palette; indexed=61 should resolve to 00E8E8E8 => #E8E8E8.
+    expect(css.backgroundColor).toBe("#E8E8E8");
+    // font indexed=18 should resolve to 00094A74 => #094A74.
+    expect(css.color).toBe("#094A74");
+  });
+
+  it("Themes.xlsx: resolves theme font colors (0..11) via styles.xml + theme indices", async () => {
+    const workbook = await parseWorkbookFromFixture("Themes.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const cases: ReadonlyArray<{ readonly row: number; readonly expected: string }> = [
+      { row: 1, expected: "#000000" }, // theme 0 (dk1)
+      { row: 2, expected: "#FFFFFF" }, // theme 1 (lt1)
+      { row: 3, expected: "#1F497D" }, // theme 2 (dk2)
+      { row: 4, expected: "#EEECE1" }, // theme 3 (lt2)
+      { row: 5, expected: "#4F81BD" }, // theme 4 (accent1)
+      { row: 6, expected: "#C0504D" }, // theme 5 (accent2)
+      { row: 7, expected: "#9BBB59" }, // theme 6 (accent3)
+      { row: 8, expected: "#8064A2" }, // theme 7 (accent4)
+      { row: 9, expected: "#4BACC6" }, // theme 8 (accent5)
+      { row: 10, expected: "#F79646" }, // theme 9 (accent6)
+      { row: 11, expected: "#0000FF" }, // theme 10 (hlink)
+      { row: 12, expected: "#800080" }, // theme 11 (folHlink)
+    ];
+
+    for (const { row, expected } of cases) {
+      const address = createAddress(1, row);
+      const css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address, cell: getCell(sheet, address) });
+      expect(css.color).toBe(expected);
+    }
+  });
+
+  it("Themes2.xlsx: applies conditional formatting dxfs with theme bgColor + rgb fontColor", async () => {
+    const workbook = await parseWorkbookFromFixture("Themes2.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const cases: ReadonlyArray<{
+      readonly address: CellAddress;
+      readonly expectedBackground: string;
+      readonly expectedColor: string;
+    }> = [
+      { address: createAddress(7, 2), expectedBackground: "#000000", expectedColor: "#00B0F0" }, // G2=1 -> dxfId 2 -> bg theme 0
+      { address: createAddress(7, 3), expectedBackground: "#FFFFFF", expectedColor: "#00B0F0" }, // G3=2 -> dxfId 1 -> bg theme 1
+      { address: createAddress(7, 4), expectedBackground: "#1F497D", expectedColor: "#00B0F0" }, // G4=3 -> dxfId 0 -> bg theme 2
+    ];
+
+    for (const { address, expectedBackground, expectedColor } of cases) {
+      const cell = getCell(sheet, address);
+      if (!cell) {
+        throw new Error("Expected cell to exist");
+      }
+
+      const conditionalFormat = resolveCellConditionalDifferentialFormat({
+        sheet,
+        styles: workbook.styles,
+        sheetIndex: 0,
+        address,
+        cell,
+        formulaEvaluator: evaluator,
+      });
+      if (!conditionalFormat) {
+        throw new Error("Expected conditional formatting to apply");
+      }
+
+      const css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address, cell, conditionalFormat });
+      expect(css.backgroundColor).toBe(expectedBackground);
+      expect(css.color).toBe(expectedColor);
+    }
   });
 
   it("poc-shared-strings.xlsx: parses very large shared strings without data loss", async () => {

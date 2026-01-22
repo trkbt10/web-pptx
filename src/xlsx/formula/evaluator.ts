@@ -18,6 +18,7 @@ import { parseFormula } from "./parser";
 import type { FormulaEvaluationResult, FormulaScalar } from "./types";
 import { isFormulaError } from "./types";
 import { formulaFunctionHelpers, getFormulaFunction } from "./functionRegistry";
+import { getXlfnFormulaFunction } from "./functions/xlfn/registry";
 import { isArrayResult, type EvalResult } from "./functions/helpers";
 import { createFormulaError, getErrorCodeFromError } from "./functions/helpers/errors";
 
@@ -184,6 +185,29 @@ function buildTablesByName(tables: XlsxWorkbook["tables"]): ReadonlyMap<string, 
     map.set(table.name.trim().toUpperCase(), table);
   }
   return map;
+}
+
+function resolveTableItemRowRange(params: {
+  readonly item: string;
+  readonly fullStartRow: number;
+  readonly fullEndRow: number;
+  readonly headerRowCount: number;
+  readonly totalsRowCount: number;
+  readonly dataStartRow: number;
+  readonly dataEndRow: number;
+}): { readonly startRow: number; readonly endRow: number } | null {
+  switch (params.item) {
+    case "#ALL":
+      return { startRow: params.fullStartRow, endRow: params.fullEndRow };
+    case "#DATA":
+      return { startRow: params.dataStartRow, endRow: params.dataEndRow };
+    case "#HEADERS":
+      return { startRow: params.fullStartRow, endRow: params.fullStartRow + params.headerRowCount - 1 };
+    case "#TOTALS":
+      return { startRow: params.fullEndRow - params.totalsRowCount + 1, endRow: params.fullEndRow };
+    default:
+      return null;
+  }
 }
 
 function pickFirstInternalDefinedNameFormula(candidates: readonly string[] | undefined): string | undefined {
@@ -442,6 +466,11 @@ function evaluateNode(node: FormulaAstNode, scope: EvalScope): EvalResult {
     case "Binary": {
       const left = evaluateNode(node.left, scope);
       const right = evaluateNode(node.right, scope);
+      if (node.operator === "&") {
+        const leftScalar = formulaFunctionHelpers.coerceScalar(left, "binary & left");
+        const rightScalar = formulaFunctionHelpers.coerceScalar(right, "binary & right");
+        return `${formulaFunctionHelpers.valueToText(leftScalar)}${formulaFunctionHelpers.valueToText(rightScalar)}`;
+      }
       return evaluateBinaryArithmetic(left, right, node.operator);
     }
     case "Compare": {
@@ -450,7 +479,7 @@ function evaluateNode(node: FormulaAstNode, scope: EvalScope): EvalResult {
       return compareScalars(left, right, node.operator);
     }
     case "Function": {
-      const definition = getFormulaFunction(node.name);
+      const definition = getXlfnFormulaFunction(node.name) ?? getFormulaFunction(node.name);
       if (!definition) {
         throw new Error(`Unknown function "${node.name}"`);
       }
@@ -631,6 +660,38 @@ export function createFormulaEvaluator(workbook: XlsxWorkbook): FormulaEvaluator
 
     const startName = node.startColumnName.trim().toUpperCase();
     const endName = node.endColumnName.trim().toUpperCase();
+    const headerRowCount = Math.max(0, table.headerRowCount);
+    const totalsRowCount = Math.max(0, table.totalsRowCount);
+    const fullStartRow = table.ref.start.row as number;
+    const fullEndRow = table.ref.end.row as number;
+    const dataStartRow = fullStartRow + headerRowCount;
+    const dataEndRow = fullEndRow - totalsRowCount;
+
+    if (startName.startsWith("#") && endName.startsWith("#")) {
+      const item = startName;
+      const range = resolveTableItemRowRange({
+        item,
+        fullStartRow,
+        fullEndRow,
+        headerRowCount,
+        totalsRowCount,
+        dataStartRow,
+        dataEndRow,
+      });
+      if (!range) {
+        throw createFormulaError("#REF!");
+      }
+      if (range.endRow < range.startRow) {
+        throw createFormulaError("#REF!");
+      }
+      const startCol = table.ref.start.col as number;
+      const endCol = (table.ref.start.col as number) + Math.max(0, table.columns.length - 1);
+      return scope.resolveRange(table.sheetIndex, {
+        start: { col: colIdx(startCol), row: rowIdx(range.startRow), colAbsolute: false, rowAbsolute: false },
+        end: { col: colIdx(endCol), row: rowIdx(range.endRow), colAbsolute: false, rowAbsolute: false },
+      });
+    }
+
     const startIndex = table.columns.findIndex((col) => col.name.trim().toUpperCase() === startName);
     const endIndex = table.columns.findIndex((col) => col.name.trim().toUpperCase() === endName);
     if (startIndex === -1 || endIndex === -1) {
@@ -639,10 +700,8 @@ export function createFormulaEvaluator(workbook: XlsxWorkbook): FormulaEvaluator
     const minColIndex = Math.min(startIndex, endIndex);
     const maxColIndex = Math.max(startIndex, endIndex);
 
-    const headerRowCount = Math.max(0, table.headerRowCount);
-    const totalsRowCount = Math.max(0, table.totalsRowCount);
-    const startRow = (table.ref.start.row as number) + headerRowCount;
-    const endRow = (table.ref.end.row as number) - totalsRowCount;
+    const startRow = dataStartRow;
+    const endRow = dataEndRow;
     if (endRow < startRow) {
       throw createFormulaError("#REF!");
     }
