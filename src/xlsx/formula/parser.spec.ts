@@ -45,12 +45,38 @@ describe("parseFormula", () => {
     });
   });
 
+  it("parses single-column structured table references (Table1[Column])", () => {
+    expect(parseFormula("Table1[value]")).toEqual({
+      type: "StructuredTableReference",
+      tableName: "Table1",
+      startColumnName: "value",
+      endColumnName: "value",
+    });
+  });
+
   it("parses structured table references with special items (e.g. #All)", () => {
     expect(parseFormula("Table1[#All]")).toEqual({
       type: "StructuredTableReference",
       tableName: "Table1",
-      startColumnName: "#All",
-      endColumnName: "#All",
+      item: "#All",
+    });
+  });
+
+  it("parses structured table references with special items + columns (e.g. #This Row/#Totals)", () => {
+    expect(parseFormula("Tabelle1[[#This Row],[Field 2]:[Field 3]]")).toEqual({
+      type: "StructuredTableReference",
+      tableName: "Tabelle1",
+      item: "#This Row",
+      startColumnName: "Field 2",
+      endColumnName: "Field 3",
+    });
+
+    expect(parseFormula("Tabelle1[[#Totals],[Field 4 ]]")).toEqual({
+      type: "StructuredTableReference",
+      tableName: "Tabelle1",
+      item: "#Totals",
+      startColumnName: "Field 4 ",
+      endColumnName: "Field 4 ",
     });
   });
 

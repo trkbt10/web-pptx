@@ -8,10 +8,10 @@
  */
 
 import { parseRange } from "../domain/cell/address";
-import type { XlsxTable, XlsxTableColumn } from "../domain/table/types";
+import type { XlsxTable, XlsxTableColumn, XlsxTableStyleInfo } from "../domain/table/types";
 import { parseBooleanAttr, parseIntAttr } from "./primitive";
 import type { XmlElement } from "../../xml";
-import { getAttr, getChildren } from "../../xml";
+import { getAttr, getChild, getChildren } from "../../xml";
 
 function requireAttr(element: XmlElement, name: string): string {
   const value = getAttr(element, name);
@@ -36,6 +36,24 @@ function parseTableColumns(tableElement: XmlElement): readonly XlsxTableColumn[]
   });
 }
 
+function parseTableStyleInfo(tableElement: XmlElement): XlsxTableStyleInfo | undefined {
+  const styleInfoEl = getChild(tableElement, "tableStyleInfo");
+  if (!styleInfoEl) {
+    return undefined;
+  }
+  const name = getAttr(styleInfoEl, "name");
+  if (!name) {
+    return undefined;
+  }
+  return {
+    name,
+    showFirstColumn: parseBooleanAttr(getAttr(styleInfoEl, "showFirstColumn")),
+    showLastColumn: parseBooleanAttr(getAttr(styleInfoEl, "showLastColumn")),
+    showRowStripes: parseBooleanAttr(getAttr(styleInfoEl, "showRowStripes")),
+    showColumnStripes: parseBooleanAttr(getAttr(styleInfoEl, "showColumnStripes")),
+  };
+}
+
 /**
  * Parse a SpreadsheetML table definition.
  *
@@ -54,6 +72,7 @@ export function parseTable(tableElement: XmlElement, sheetIndex: number): XlsxTa
   const totalsRowCount = totalsRowCountAttr ?? (totalsRowShown ? 1 : 0);
 
   const columns = parseTableColumns(tableElement);
+  const styleInfo = parseTableStyleInfo(tableElement);
 
   return {
     id,
@@ -64,6 +83,6 @@ export function parseTable(tableElement: XmlElement, sheetIndex: number): XlsxTa
     totalsRowCount,
     sheetIndex,
     columns,
+    styleInfo,
   };
 }
-

@@ -15,6 +15,7 @@ import type { XlsxFill } from "./fill";
 import type { XlsxBorder } from "./border";
 import type { XlsxNumberFormat } from "./number-format";
 import type { XlsxDifferentialFormat } from "./dxf";
+import type { XlsxTableStyle } from "./table-style";
 import type { NumFmtId, FontId, FillId, BorderId } from "../types";
 
 // =============================================================================
@@ -204,6 +205,18 @@ export type XlsxStyleSheet = {
 
   /** Differential formats used by conditional formatting rules */
   readonly dxfs?: readonly XlsxDifferentialFormat[];
+
+  /**
+   * Table style definitions (`styles.xml` `<tableStyles>`).
+   *
+   * These map table style elements to DXF indices (`dxfId`) and are referenced by tables via
+   * `tableStyleInfo/@name`.
+   */
+  readonly tableStyles?: readonly XlsxTableStyle[];
+  /** Default table style name (`tableStyles/@defaultTableStyle`). */
+  readonly defaultTableStyle?: string;
+  /** Default pivot style name (`tableStyles/@defaultPivotStyle`). */
+  readonly defaultPivotStyle?: string;
 };
 
 // =============================================================================

@@ -32,8 +32,17 @@ export type NameNode = {
 export type StructuredTableReferenceNode = {
   readonly type: "StructuredTableReference";
   readonly tableName: string;
-  readonly startColumnName: string;
-  readonly endColumnName: string;
+  /**
+   * Special item selector (e.g. `#All`, `#Headers`, `#Data`, `#Totals`, `#This Row`).
+   *
+   * When present with no column names, the reference targets the whole table section.
+   * When present with column names, the reference targets the intersection of the section and column(s).
+   */
+  readonly item?: string;
+  /** Start column name for column/range selection (e.g. `Field 2`). */
+  readonly startColumnName?: string;
+  /** End column name for column/range selection (e.g. `Field 3`). */
+  readonly endColumnName?: string;
 };
 
 export type UnaryOperator = "+" | "-";

@@ -17,6 +17,24 @@ export type XlsxTableColumn = {
   readonly name: string;
 };
 
+/**
+ * Table style info (`tableStyleInfo`) applied to this table.
+ *
+ * @see ECMA-376 Part 4, Section 18.5.1.10 (tableStyleInfo)
+ */
+export type XlsxTableStyleInfo = {
+  /** Style name (built-in or custom tableStyle) */
+  readonly name: string;
+  /** Emphasize the first column */
+  readonly showFirstColumn?: boolean;
+  /** Emphasize the last column */
+  readonly showLastColumn?: boolean;
+  /** Show banded rows */
+  readonly showRowStripes?: boolean;
+  /** Show banded columns */
+  readonly showColumnStripes?: boolean;
+};
+
 export type XlsxTable = {
   /** Table identifier (table/@id) */
   readonly id: number;
@@ -34,5 +52,6 @@ export type XlsxTable = {
   readonly sheetIndex: number;
   /** Table columns in order */
   readonly columns: readonly XlsxTableColumn[];
+  /** Table style configuration (optional) */
+  readonly styleInfo?: XlsxTableStyleInfo;
 };
-

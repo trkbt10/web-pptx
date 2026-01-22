@@ -141,10 +141,34 @@ function formatNode(node: FormulaAstNode, parentPrec: Prec, position: "left" | "
       case "Name":
         return node.name;
       case "StructuredTableReference": {
-        const left = `[${node.startColumnName}]`;
-        const right = `[${node.endColumnName}]`;
-        const inner = node.startColumnName === node.endColumnName ? left : `${left}:${right}`;
-        return `${node.tableName}[${inner}]`;
+        const item = node.item;
+        const start = node.startColumnName;
+        const end = node.endColumnName;
+
+        if (item && !start && !end) {
+          return `${node.tableName}[${item}]`;
+        }
+
+        if (item && start && end) {
+          const itemToken = `[${item}]`;
+          const left = `[${start}]`;
+          const right = `[${end}]`;
+          const colToken = start === end ? left : `${left}:${right}`;
+          return `${node.tableName}[${itemToken},${colToken}]`;
+        }
+
+        if (!start || !end) {
+          return `${node.tableName}[#REF!]`;
+        }
+
+        if (start === end) {
+          // Canonical single-column structured reference: `Table1[Column]`
+          return `${node.tableName}[${start}]`;
+        }
+
+        const left = `[${start}]`;
+        const right = `[${end}]`;
+        return `${node.tableName}[${left}:${right}]`;
       }
       case "Function":
         return `${node.name}(${node.args.map((arg) => formatNode(arg, 0, "left")).join(",")})`;

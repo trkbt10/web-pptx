@@ -19,6 +19,7 @@ import type { XlsxComment } from "./comment";
 import type { XlsxHyperlink } from "./hyperlink";
 import type { XlsxDateSystem } from "./date-system";
 import type { XlsxColor } from "./style/font";
+import type { XlsxDataValidation } from "./data-validation";
 
 // =============================================================================
 // Column Definition
@@ -165,6 +166,8 @@ export type XlsxWorksheet = {
   readonly mergeCells?: readonly CellRange[];
   /** Conditional formatting rules for this sheet */
   readonly conditionalFormattings?: readonly XlsxConditionalFormatting[];
+  /** Data validation rules for this sheet */
+  readonly dataValidations?: readonly XlsxDataValidation[];
   /** Cell comments (legacy comments) */
   readonly comments?: readonly XlsxComment[];
   /** Hyperlinks declared for this sheet */

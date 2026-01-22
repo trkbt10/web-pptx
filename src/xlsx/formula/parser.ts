@@ -579,6 +579,12 @@ function parsePrimary(state: ParserState): FormulaAstNode {
       const inner = remainder.slice(1, -1);
 
       if (inner.startsWith("#")) {
+        return { type: "StructuredTableReference", tableName, item: inner };
+      }
+
+      if (!inner.startsWith("[")) {
+        // Excel single-column structured reference: `Table1[Column]`
+        // Multi-column ranges use the double-bracket form: `Table1[[A]:[B]]`.
         return { type: "StructuredTableReference", tableName, startColumnName: inner, endColumnName: inner };
       }
 
@@ -597,16 +603,36 @@ function parsePrimary(state: ParserState): FormulaAstNode {
       const first = parseBracketedName(inner, 0);
       const afterFirst = inner[first.next] ?? "";
       if (afterFirst === "") {
+        if (first.name.trim().startsWith("#")) {
+          return { type: "StructuredTableReference", tableName, item: first.name };
+        }
         return { type: "StructuredTableReference", tableName, startColumnName: first.name, endColumnName: first.name };
       }
-      if (afterFirst !== ":") {
-        throw new Error(`Unsupported structured reference token "${token.value}"`);
+      if (afterFirst === ":") {
+        const second = parseBracketedName(inner, first.next + 1);
+        if (inner[second.next] !== undefined) {
+          throw new Error(`Unsupported structured reference token "${token.value}"`);
+        }
+        return { type: "StructuredTableReference", tableName, startColumnName: first.name, endColumnName: second.name };
       }
-      const second = parseBracketedName(inner, first.next + 1);
-      if (inner[second.next] !== undefined) {
-        throw new Error(`Unsupported structured reference token "${token.value}"`);
+      if (afterFirst === ",") {
+        const item = first.name;
+        const second = parseBracketedName(inner, first.next + 1);
+        const afterSecond = inner[second.next] ?? "";
+        if (afterSecond === "") {
+          return { type: "StructuredTableReference", tableName, item, startColumnName: second.name, endColumnName: second.name };
+        }
+        if (afterSecond !== ":") {
+          throw new Error(`Unsupported structured reference token "${token.value}"`);
+        }
+        const third = parseBracketedName(inner, second.next + 1);
+        if (inner[third.next] !== undefined) {
+          throw new Error(`Unsupported structured reference token "${token.value}"`);
+        }
+        return { type: "StructuredTableReference", tableName, item, startColumnName: second.name, endColumnName: third.name };
       }
-      return { type: "StructuredTableReference", tableName, startColumnName: first.name, endColumnName: second.name };
+
+      throw new Error(`Unsupported structured reference token "${token.value}"`);
     }
 
     const parseReferenceToken = (value: string): {

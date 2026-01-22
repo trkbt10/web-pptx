@@ -52,7 +52,11 @@ export const subtotalFunction: FormulaFunctionEagerDefinition = {
     const functionNumberValue = helpers.requireNumber(functionNumberArg, "SUBTOTAL function number");
     const functionNumber = helpers.requireInteger(functionNumberValue, "SUBTOTAL function number must be an integer");
 
-    if (!isSupportedAggregationFunction(functionNumber)) {
+    // Excel supports function numbers 1-11 and 101-111 (ignore hidden rows).
+    // We currently treat 101-111 as their base equivalents (subtract 100).
+    const normalizedFunctionNumber = functionNumber >= 101 && functionNumber <= 111 ? functionNumber - 100 : functionNumber;
+
+    if (!isSupportedAggregationFunction(normalizedFunctionNumber)) {
       throw new Error("SUBTOTAL function number is not supported");
     }
 
@@ -60,6 +64,6 @@ export const subtotalFunction: FormulaFunctionEagerDefinition = {
 
     const collected = collectValues(rangeValues);
     // NOTE: SUBTOTAL ignores error cells by design (ODF 1.3 §6.10.15), so we always enable error filtering here.
-    return aggregateValues(functionNumber, collected, { ignoreErrors: true });
+    return aggregateValues(normalizedFunctionNumber, collected, { ignoreErrors: true });
   },
 };

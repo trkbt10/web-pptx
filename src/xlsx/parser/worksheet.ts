@@ -23,6 +23,7 @@ import type { CellRange } from "../domain/cell/address";
 import { parseCellRef, parseRange } from "../domain/cell/address";
 import type { Cell } from "../domain/cell/types";
 import type { XlsxColor } from "../domain/style/font";
+import type { XlsxDataValidation } from "../domain/data-validation";
 import { rowIdx, colIdx, styleId } from "../domain/types";
 import type { XlsxParseContext } from "./context";
 import type { XlsxParseOptions } from "./options";
@@ -225,6 +226,54 @@ function parseConditionalFormatting(element: XmlElement): XlsxConditionalFormatt
  */
 export function parseConditionalFormattings(worksheetElement: XmlElement): readonly XlsxConditionalFormatting[] {
   return getChildren(worksheetElement, "conditionalFormatting").map(parseConditionalFormatting);
+}
+
+// =============================================================================
+// Data Validations Parsing
+// =============================================================================
+
+function parseDataValidation(dataValidationElement: XmlElement): XlsxDataValidation {
+  const sqref = getAttr(dataValidationElement, "sqref") ?? "";
+  const ranges = sqref.length > 0 ? parseSqrefRanges(sqref) : [];
+
+  const formula1El = getChild(dataValidationElement, "formula1");
+  const formula2El = getChild(dataValidationElement, "formula2");
+  const formula1 = formula1El ? getTextContent(formula1El) : undefined;
+  const formula2 = formula2El ? getTextContent(formula2El) : undefined;
+
+  return {
+    type: (getAttr(dataValidationElement, "type") ?? undefined) as XlsxDataValidation["type"],
+    operator: (getAttr(dataValidationElement, "operator") ?? undefined) as XlsxDataValidation["operator"],
+    allowBlank: parseBooleanAttr(getAttr(dataValidationElement, "allowBlank")),
+    showInputMessage: parseBooleanAttr(getAttr(dataValidationElement, "showInputMessage")),
+    showErrorMessage: parseBooleanAttr(getAttr(dataValidationElement, "showErrorMessage")),
+    showDropDown: parseBooleanAttr(getAttr(dataValidationElement, "showDropDown")),
+    errorStyle: (getAttr(dataValidationElement, "errorStyle") ?? undefined) as XlsxDataValidation["errorStyle"],
+    promptTitle: getAttr(dataValidationElement, "promptTitle") ?? undefined,
+    prompt: getAttr(dataValidationElement, "prompt") ?? undefined,
+    errorTitle: getAttr(dataValidationElement, "errorTitle") ?? undefined,
+    error: getAttr(dataValidationElement, "error") ?? undefined,
+    sqref,
+    ranges,
+    formula1: formula1 && formula1.length > 0 ? formula1 : undefined,
+    formula2: formula2 && formula2.length > 0 ? formula2 : undefined,
+  };
+}
+
+/**
+ * Parse all data validations declared in a worksheet.
+ *
+ * @param worksheetElement - Worksheet root element (`<worksheet>`)
+ * @returns Data validations (may be empty)
+ *
+ * @see ECMA-376 Part 4, Section 18.3.1.32 (dataValidations)
+ */
+export function parseDataValidations(worksheetElement: XmlElement): readonly XlsxDataValidation[] {
+  const dataValidationsEl = getChild(worksheetElement, "dataValidations");
+  if (!dataValidationsEl) {
+    return [];
+  }
+  return getChildren(dataValidationsEl, "dataValidation").map(parseDataValidation);
 }
 
 // =============================================================================
@@ -446,6 +495,7 @@ export function parseWorksheet(
 
   const rows = expandSharedFormulas(parseOptionalSheetData(sheetDataEl, context, options));
   const conditionalFormattings = parseConditionalFormattings(worksheetElement);
+  const dataValidations = parseDataValidations(worksheetElement);
   const hyperlinks = parseHyperlinks(worksheetElement);
 
   return {
@@ -460,6 +510,7 @@ export function parseWorksheet(
     rows,
     mergeCells: parseMergeCells(mergeCellsEl),
     conditionalFormattings: conditionalFormattings.length > 0 ? conditionalFormattings : undefined,
+    dataValidations: dataValidations.length > 0 ? dataValidations : undefined,
     hyperlinks: hyperlinks.length > 0 ? hyperlinks : undefined,
     xmlPath: sheetInfo.xmlPath,
   };

@@ -195,6 +195,7 @@ function resolveTableItemRowRange(params: {
   readonly totalsRowCount: number;
   readonly dataStartRow: number;
   readonly dataEndRow: number;
+  readonly originRow?: number;
 }): { readonly startRow: number; readonly endRow: number } | null {
   switch (params.item) {
     case "#ALL":
@@ -205,9 +206,45 @@ function resolveTableItemRowRange(params: {
       return { startRow: params.fullStartRow, endRow: params.fullStartRow + params.headerRowCount - 1 };
     case "#TOTALS":
       return { startRow: params.fullEndRow - params.totalsRowCount + 1, endRow: params.fullEndRow };
+    case "#THIS ROW": {
+      const originRow = params.originRow;
+      if (!originRow) {
+        return null;
+      }
+      if (originRow < params.dataStartRow || originRow > params.dataEndRow) {
+        return null;
+      }
+      return { startRow: originRow, endRow: originRow };
+    }
     default:
       return null;
   }
+}
+
+function resolveStructuredTableReferenceRowRange(params: {
+  readonly item?: string;
+  readonly fullStartRow: number;
+  readonly fullEndRow: number;
+  readonly headerRowCount: number;
+  readonly totalsRowCount: number;
+  readonly dataStartRow: number;
+  readonly dataEndRow: number;
+  readonly originRow: number;
+}): { readonly startRow: number; readonly endRow: number } | null {
+  if (!params.item) {
+    return { startRow: params.dataStartRow, endRow: params.dataEndRow };
+  }
+
+  return resolveTableItemRowRange({
+    item: params.item,
+    fullStartRow: params.fullStartRow,
+    fullEndRow: params.fullEndRow,
+    headerRowCount: params.headerRowCount,
+    totalsRowCount: params.totalsRowCount,
+    dataStartRow: params.dataStartRow,
+    dataEndRow: params.dataEndRow,
+    originRow: params.originRow,
+  });
 }
 
 function pickFirstInternalDefinedNameFormula(candidates: readonly string[] | undefined): string | undefined {
@@ -658,8 +695,6 @@ export function createFormulaEvaluator(workbook: XlsxWorkbook): FormulaEvaluator
       throw createFormulaError("#NAME?");
     }
 
-    const startName = node.startColumnName.trim().toUpperCase();
-    const endName = node.endColumnName.trim().toUpperCase();
     const headerRowCount = Math.max(0, table.headerRowCount);
     const totalsRowCount = Math.max(0, table.totalsRowCount);
     const fullStartRow = table.ref.start.row as number;
@@ -667,28 +702,31 @@ export function createFormulaEvaluator(workbook: XlsxWorkbook): FormulaEvaluator
     const dataStartRow = fullStartRow + headerRowCount;
     const dataEndRow = fullEndRow - totalsRowCount;
 
-    if (startName.startsWith("#") && endName.startsWith("#")) {
-      const item = startName;
-      const range = resolveTableItemRowRange({
-        item,
-        fullStartRow,
-        fullEndRow,
-        headerRowCount,
-        totalsRowCount,
-        dataStartRow,
-        dataEndRow,
-      });
-      if (!range) {
-        throw createFormulaError("#REF!");
-      }
-      if (range.endRow < range.startRow) {
-        throw createFormulaError("#REF!");
-      }
+    const item = node.item?.trim().toUpperCase();
+    const startName = node.startColumnName?.trim().toUpperCase();
+    const endName = node.endColumnName?.trim().toUpperCase();
+
+    const rowRange = resolveStructuredTableReferenceRowRange({
+      item,
+      fullStartRow,
+      fullEndRow,
+      headerRowCount,
+      totalsRowCount,
+      dataStartRow,
+      dataEndRow,
+      originRow: scope.origin.address.row as number,
+    });
+
+    if (!rowRange || rowRange.endRow < rowRange.startRow) {
+      throw createFormulaError("#REF!");
+    }
+
+    if (!startName || !endName) {
       const startCol = table.ref.start.col as number;
       const endCol = (table.ref.start.col as number) + Math.max(0, table.columns.length - 1);
       return scope.resolveRange(table.sheetIndex, {
-        start: { col: colIdx(startCol), row: rowIdx(range.startRow), colAbsolute: false, rowAbsolute: false },
-        end: { col: colIdx(endCol), row: rowIdx(range.endRow), colAbsolute: false, rowAbsolute: false },
+        start: { col: colIdx(startCol), row: rowIdx(rowRange.startRow), colAbsolute: false, rowAbsolute: false },
+        end: { col: colIdx(endCol), row: rowIdx(rowRange.endRow), colAbsolute: false, rowAbsolute: false },
       });
     }
 
@@ -700,18 +738,12 @@ export function createFormulaEvaluator(workbook: XlsxWorkbook): FormulaEvaluator
     const minColIndex = Math.min(startIndex, endIndex);
     const maxColIndex = Math.max(startIndex, endIndex);
 
-    const startRow = dataStartRow;
-    const endRow = dataEndRow;
-    if (endRow < startRow) {
-      throw createFormulaError("#REF!");
-    }
-
     const startCol = (table.ref.start.col as number) + minColIndex;
     const endCol = (table.ref.start.col as number) + maxColIndex;
 
     return scope.resolveRange(table.sheetIndex, {
-      start: { col: colIdx(startCol), row: rowIdx(startRow), colAbsolute: false, rowAbsolute: false },
-      end: { col: colIdx(endCol), row: rowIdx(endRow), colAbsolute: false, rowAbsolute: false },
+      start: { col: colIdx(startCol), row: rowIdx(rowRange.startRow), colAbsolute: false, rowAbsolute: false },
+      end: { col: colIdx(endCol), row: rowIdx(rowRange.endRow), colAbsolute: false, rowAbsolute: false },
     });
   };
 

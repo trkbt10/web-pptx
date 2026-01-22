@@ -20,6 +20,7 @@ import { resolveCellStyleDetails } from "../../src/xlsx-editor/selectors/cell-st
 import { formatCellValueForDisplay, resolveCellFormatCode } from "../../src/xlsx-editor/selectors/cell-display-text";
 import { resolveCellConditionalDifferentialFormat } from "../../src/xlsx-editor/selectors/conditional-formatting";
 import { xlsxColorToCss } from "../../src/xlsx-editor/selectors/xlsx-color";
+import { resolveCellTableStyleDifferentialFormat } from "../../src/xlsx-editor/selectors/table-style";
 import { createSheetLayout } from "../../src/xlsx-editor/selectors/sheet-layout";
 import { buildBorderOverlayLines } from "../../src/xlsx-editor/selectors/border-overlay";
 import { createGetZipTextFileContentFromBytes } from "../../src/files/ooxml-zip";
@@ -561,6 +562,90 @@ describe("POI spreadsheet fixtures (parsing + formulas + style)", () => {
 
     const css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address: b1, cell: b1Cell, conditionalFormat });
     expect(css.backgroundColor).toBe("#FFEB9C");
+  });
+
+  it("ConditionalFormattingSamples.xlsx: applies containsText/cellIs rules and resolves dxf fill + font colors", async () => {
+    const workbook = await parseWorkbookFromFixture("ConditionalFormattingSamples.xlsx");
+    const sheetIndex = 1;
+    const sheet = workbook.sheets[sheetIndex];
+    if (!sheet) {
+      throw new Error(`sheet[${sheetIndex}] (Products1) is required`);
+    }
+
+    const evaluator = createFormulaEvaluator(workbook);
+
+    const b9 = createAddress(2, 9); // "Grain" (containsText rule)
+    const b9Cell = getCell(sheet, b9);
+    if (!b9Cell) {
+      throw new Error("B9 must exist");
+    }
+
+    const b9Format = resolveCellConditionalDifferentialFormat({
+      sheet,
+      styles: workbook.styles,
+      sheetIndex,
+      address: b9,
+      cell: b9Cell,
+      formulaEvaluator: evaluator,
+    });
+    if (!b9Format) {
+      throw new Error("Expected conditional formatting to apply for B9");
+    }
+    const b9Css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address: b9, cell: b9Cell, conditionalFormat: b9Format });
+    expect(b9Css.backgroundColor).toBe("#FFEB9C");
+    expect(b9Css.color).toBe("#9C6500");
+
+    const b3 = createAddress(2, 3); // "Dairy" (no match)
+    const b3Cell = getCell(sheet, b3);
+    if (!b3Cell) {
+      throw new Error("B3 must exist");
+    }
+    expect(
+      resolveCellConditionalDifferentialFormat({
+        sheet,
+        styles: workbook.styles,
+        sheetIndex,
+        address: b3,
+        cell: b3Cell,
+        formulaEvaluator: evaluator,
+      }),
+    ).toBeUndefined();
+
+    const d7 = createAddress(4, 7); // 192.1 (<500 rule)
+    const d7Cell = getCell(sheet, d7);
+    if (!d7Cell) {
+      throw new Error("D7 must exist");
+    }
+
+    const d7Format = resolveCellConditionalDifferentialFormat({
+      sheet,
+      styles: workbook.styles,
+      sheetIndex,
+      address: d7,
+      cell: d7Cell,
+      formulaEvaluator: evaluator,
+    });
+    if (!d7Format) {
+      throw new Error("Expected conditional formatting to apply for D7");
+    }
+    const d7Css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address: d7, cell: d7Cell, conditionalFormat: d7Format });
+    expect(d7Css.backgroundColor).toBe("#00B0F0");
+
+    const d3 = createAddress(4, 3); // 1148 (no match)
+    const d3Cell = getCell(sheet, d3);
+    if (!d3Cell) {
+      throw new Error("D3 must exist");
+    }
+    expect(
+      resolveCellConditionalDifferentialFormat({
+        sheet,
+        styles: workbook.styles,
+        sheetIndex,
+        address: d3,
+        cell: d3Cell,
+        formulaEvaluator: evaluator,
+      }),
+    ).toBeUndefined();
   });
 
   it("NewStyleConditionalFormattings.xlsx: applies expression dxfs even when sheet contains iconSet/dataBar rules", async () => {
@@ -1452,6 +1537,112 @@ describe("POI spreadsheet fixtures (parsing + formulas + style)", () => {
     expect(table.ref.end.row).toBe(3);
   });
 
+  it("WithTable.xlsx: parses tableStyleInfo even when styles.xml has no tableStyles/dxfs", async () => {
+    const workbook = await parseWorkbookFromFixture("WithTable.xlsx");
+    const tables = workbook.tables;
+    if (!tables) {
+      throw new Error("workbook.tables is required");
+    }
+
+    const table = tables.find((candidate) => candidate.name === "Tabella1");
+    if (!table) {
+      throw new Error('Expected table "Tabella1" to exist');
+    }
+
+    expect(table.sheetIndex).toBe(0);
+    expect(table.ref.start).toEqual(createAddress(1, 1)); // A1
+    expect(table.ref.end).toEqual(createAddress(2, 2)); // B2
+    expect(table.headerRowCount).toBe(1);
+    expect(table.totalsRowCount).toBe(0);
+    expect(table.columns.map((c) => c.name)).toEqual(["a", "b"]);
+    expect(table.styleInfo).toEqual({
+      name: "TableStyleMedium9",
+      showFirstColumn: false,
+      showLastColumn: false,
+      showRowStripes: true,
+      showColumnStripes: false,
+    });
+
+    // In this fixture, tableStyleInfo references a built-in name but styles.xml doesn't include
+    // explicit tableStyles/dxfs mappings, so table-style DXF resolution must be a no-op.
+    expect(workbook.styles.tableStyles).toBeUndefined();
+    expect(workbook.styles.dxfs).toBeUndefined();
+
+    const sheetIndex = 0;
+    const sheet = workbook.sheets[sheetIndex];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+    const address = createAddress(1, 1);
+    expect(
+      resolveCellTableStyleDifferentialFormat({
+        sheetIndex,
+        tables,
+        styles: workbook.styles,
+        address,
+      }),
+    ).toBeUndefined();
+  });
+
+  it("table-sample.xlsx: parses table totals row and evaluates structured references (#This Row/#Totals)", async () => {
+    const workbook = await parseWorkbookFromFixture("table-sample.xlsx");
+    const sheetIndex = 0;
+    const sheet = workbook.sheets[sheetIndex];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const tables = workbook.tables;
+    if (!tables) {
+      throw new Error("workbook.tables is required");
+    }
+    const table = tables.find((candidate) => candidate.name === "Tabelle1");
+    if (!table) {
+      throw new Error('Expected table "Tabelle1" to exist');
+    }
+
+    expect(table.ref.start).toEqual(createAddress(3, 4)); // C4
+    expect(table.ref.end).toEqual(createAddress(7, 9)); // G9
+    expect(table.headerRowCount).toBe(1);
+    expect(table.totalsRowCount).toBe(1);
+    expect(table.styleInfo?.name).toBe("TableStyleMedium2");
+    expect(table.columns.map((c) => c.name)).toEqual(["Field 1", "Field 2", "Field 3", "Field 4 ", "Field 5"]);
+
+    const evaluator = createFormulaEvaluator(workbook);
+
+    const f5 = createAddress(6, 5); // F5: SUM(Tabelle1[[#This Row],...])
+    const f5Cell = getCell(sheet, f5);
+    if (!f5Cell?.formula) {
+      throw new Error("F5 must be a formula cell");
+    }
+    expect(f5Cell.formula.expression).toBe("SUM(Tabelle1[[#This Row],[Field 2]:[Field 3]])");
+    expect(evaluator.evaluateCell(sheetIndex, f5)).toEqual(toExpectedScalar(f5Cell.value));
+
+    const g5 = createAddress(7, 5); // G5: ... / Tabelle1[[#Totals],[Field 4 ]]
+    const g5Cell = getCell(sheet, g5);
+    if (!g5Cell?.formula) {
+      throw new Error("G5 must be a formula cell");
+    }
+    expect(g5Cell.formula.expression).toBe("Tabelle1[[#This Row],[Field 4 ]]/Tabelle1[[#Totals],[Field 4 ]]");
+    expect(evaluator.evaluateCell(sheetIndex, g5)).toEqual(toExpectedScalar(g5Cell.value));
+
+    const d9 = createAddress(4, 9); // D9: SUBTOTAL(101, Tabelle1[Field 2])
+    const d9Cell = getCell(sheet, d9);
+    if (!d9Cell?.formula) {
+      throw new Error("D9 must be a formula cell");
+    }
+    expect(d9Cell.formula.expression).toBe("SUBTOTAL(101,Tabelle1[Field 2])");
+    expect(evaluator.evaluateCell(sheetIndex, d9)).toEqual(toExpectedScalar(d9Cell.value));
+
+    const f9 = createAddress(6, 9); // F9: SUBTOTAL(109, Tabelle1[[Field 4 ]]) (column name contains trailing space)
+    const f9Cell = getCell(sheet, f9);
+    if (!f9Cell?.formula) {
+      throw new Error("F9 must be a formula cell");
+    }
+    expect(f9Cell.formula.expression).toBe("SUBTOTAL(109,Tabelle1[[Field 4 ]])");
+    expect(evaluator.evaluateCell(sheetIndex, f9)).toEqual(toExpectedScalar(f9Cell.value));
+  });
+
   it("ExcelTables.xlsx: parses tables and evaluates calculated formulas inside the table range", async () => {
     const workbook = await parseWorkbookFromFixture("ExcelTables.xlsx");
     const sheetIndex = 0;
@@ -1639,6 +1830,99 @@ describe("POI spreadsheet fixtures (parsing + formulas + style)", () => {
     }
   });
 
+  it("dataValidationTableRange.xlsx: parses dataValidations referencing defined names (table ranges)", async () => {
+    const workbook = await parseWorkbookFromFixture("dataValidationTableRange.xlsx");
+    const sheetIndex = workbook.sheets.findIndex((candidate) => candidate.name === "County Ranking");
+    const sheet = workbook.sheets[sheetIndex];
+    if (!sheet || sheetIndex === -1) {
+      throw new Error('sheet "County Ranking" is required');
+    }
+
+    const validations = sheet.dataValidations;
+    if (!validations) {
+      throw new Error("Expected dataValidations to exist");
+    }
+
+    const bySqref = new Map(validations.map((dv) => [dv.sqref, dv]));
+    const cases: ReadonlyArray<{ readonly sqref: string; readonly formula1: string }> = [
+      { sqref: "B5", formula1: "states" },
+      { sqref: "E5", formula1: "years" },
+      { sqref: "C5", formula1: "Measures" },
+      { sqref: "G5", formula1: "highlight" },
+      { sqref: "G9", formula1: "highlight_list" },
+    ];
+
+    for (const { sqref, formula1 } of cases) {
+      const dv = bySqref.get(sqref);
+      if (!dv) {
+        throw new Error(`Expected dataValidation for sqref ${sqref}`);
+      }
+      expect(dv.type).toBe("list");
+      expect(dv.allowBlank).toBe(true);
+      expect(dv.showInputMessage).toBe(true);
+      expect(dv.showErrorMessage).toBe(true);
+      expect(dv.formula1).toBe(formula1);
+      expect(dv.ranges.length).toBe(1);
+    }
+  });
+
+  it("tableStyle.xlsx: parses tableStyleInfo + tableStyles and applies table-style DXFs", async () => {
+    const workbook = await parseWorkbookFromFixture("tableStyle.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const table = workbook.tables?.find((candidate) => candidate.name === "Table1");
+    if (!table) {
+      throw new Error('Expected table "Table1" to exist');
+    }
+    if (!table.styleInfo) {
+      throw new Error("Expected table.styleInfo to exist");
+    }
+
+    expect(table.styleInfo.name).toBe("TestTableStyle");
+    expect(table.styleInfo.showFirstColumn).toBe(true);
+    expect(table.styleInfo.showLastColumn).toBe(true);
+    expect(table.styleInfo.showRowStripes).toBe(true);
+    expect(table.styleInfo.showColumnStripes).toBe(true);
+
+    const tableStyles = workbook.styles.tableStyles;
+    if (!tableStyles) {
+      throw new Error("Expected styles.tableStyles to exist");
+    }
+    expect(tableStyles.some((style) => style.name === "TestTableStyle")).toBe(true);
+
+    const tableStyleFormat = resolveCellTableStyleDifferentialFormat({
+      sheetIndex: 0,
+      tables: workbook.tables,
+      styles: workbook.styles,
+      address: createAddress(2, 2), // B2 (first header cell)
+    });
+    if (!tableStyleFormat) {
+      throw new Error("Expected table style format to resolve for B2");
+    }
+
+    const b2 = createAddress(2, 2);
+    const css = resolveCellRenderStyle({
+      styles: workbook.styles,
+      sheet,
+      address: b2,
+      cell: getCell(sheet, b2),
+      tableStyleFormat,
+    });
+    expect(css.color).toBe("#FF0000");
+
+    const evaluator = createFormulaEvaluator(workbook);
+    const e7 = createAddress(5, 7); // E7 = SUBTOTAL(109,Table1[value])
+    const e7Cell = getCell(sheet, e7);
+    if (!e7Cell?.formula) {
+      throw new Error("E7 must be a formula cell");
+    }
+    expect(e7Cell.formula.expression).toBe("SUBTOTAL(109,Table1[value])");
+    expect(evaluator.evaluateCell(0, e7)).toEqual(toExpectedScalar(e7Cell.value));
+  });
+
   it("poc-shared-strings.xlsx: parses very large shared strings without data loss", async () => {
     const workbook = await parseWorkbookFromFixture("poc-shared-strings.xlsx");
     const sheet = workbook.sheets[0];
@@ -1688,6 +1972,71 @@ describe("POI spreadsheet fixtures (parsing + formulas + style)", () => {
     expect(css.backgroundColor).toBe("#CCFFFF");
   });
 
+  it("styles.xlsx: resolves basic font/decoration/alignment/fill styles", async () => {
+    const workbook = await parseWorkbookFromFixture("styles.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const a1 = createAddress(1, 1); // bold Arial
+    const a1Cell = getCell(sheet, a1);
+    if (!a1Cell) {
+      throw new Error("A1 must exist");
+    }
+    const a1Css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address: a1, cell: a1Cell });
+    expect(a1Css.fontFamily).toBe("Arial");
+    expect(a1Css.fontWeight).toBe(700);
+    expect(a1Css.color).toBe("#000000");
+    const a1FontSize = a1Css.fontSize;
+    if (typeof a1FontSize !== "string") {
+      throw new Error("A1 fontSize must be a string");
+    }
+    expect(a1FontSize.endsWith("px")).toBe(true);
+    expect(Number.parseFloat(a1FontSize)).toBeCloseTo(14.666666666666666, 8);
+
+    const a2 = createAddress(1, 2); // italic Arial
+    const a2Cell = getCell(sheet, a2);
+    if (!a2Cell) {
+      throw new Error("A2 must exist");
+    }
+    const a2Css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address: a2, cell: a2Cell });
+    expect(a2Css.fontFamily).toBe("Arial");
+    expect(a2Css.fontStyle).toBe("italic");
+
+    const a3 = createAddress(1, 3); // underline Arial
+    const a3Cell = getCell(sheet, a3);
+    if (!a3Cell) {
+      throw new Error("A3 must exist");
+    }
+    const a3Css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address: a3, cell: a3Cell });
+    expect(a3Css.textDecorationLine).toBe("underline");
+
+    const a4 = createAddress(1, 4); // horizontal center
+    const a4Cell = getCell(sheet, a4);
+    if (!a4Cell) {
+      throw new Error("A4 must exist");
+    }
+    const a4Css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address: a4, cell: a4Cell });
+    expect(a4Css.justifyContent).toBe("center");
+
+    const a5 = createAddress(1, 5); // horizontal right
+    const a5Cell = getCell(sheet, a5);
+    if (!a5Cell) {
+      throw new Error("A5 must exist");
+    }
+    const a5Css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address: a5, cell: a5Cell });
+    expect(a5Css.justifyContent).toBe("flex-end");
+
+    const a11 = createAddress(1, 11); // theme fill
+    const a11Cell = getCell(sheet, a11);
+    if (!a11Cell) {
+      throw new Error("A11 must exist");
+    }
+    const a11Css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address: a11, cell: a11Cell });
+    expect(a11Css.backgroundColor).toBe("#F5F4ED");
+  });
+
   it("1_NoIden.xlsx: parses cols widths and merged cells", async () => {
     const workbook = await parseWorkbookFromFixture("1_NoIden.xlsx");
     const sheet = workbook.sheets[0];
@@ -1730,6 +2079,54 @@ describe("POI spreadsheet fixtures (parsing + formulas + style)", () => {
       throw new Error("B2 must be a string cell");
     }
     expect(b2Cell.value.value).toBe("가나다");
+  });
+
+  it("WidthsAndHeights.xlsx: respects row height/hidden + column width/hidden in sheet layout", async () => {
+    const workbook = await parseWorkbookFromFixture("WidthsAndHeights.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+    if (!sheet.columns) {
+      throw new Error("sheet.columns is required");
+    }
+    if (!sheet.rows) {
+      throw new Error("sheet.rows is required");
+    }
+
+    const row1 = sheet.rows.find((r) => r.rowNumber === rowIdx(1));
+    const row3 = sheet.rows.find((r) => r.rowNumber === rowIdx(3));
+    if (!row1 || !row3) {
+      throw new Error("row 1 and row 3 are required");
+    }
+    expect(row1.height).toBe(37.5);
+    expect(row1.customHeight).toBe(true);
+    expect(row3.height).toBe(0.75);
+    expect(row3.customHeight).toBe(true);
+    expect(row3.hidden).toBe(true);
+
+    const colA = sheet.columns.find((c) => c.min === colIdx(1) && c.max === colIdx(1));
+    const colC = sheet.columns.find((c) => c.min === colIdx(3) && c.max === colIdx(3));
+    if (!colA || !colC) {
+      throw new Error("Expected column definitions for A and C");
+    }
+    expect(colA.width).toBe(20);
+    expect(colC.hidden).toBe(true);
+
+    const layout = createSheetLayout(sheet, {
+      rowCount: 10,
+      colCount: 5,
+      defaultRowHeightPx: 20,
+      defaultColWidthPx: 72,
+    });
+
+    expect(layout.rows.getSizePx(0)).toBe(50); // row 1: 37.5pt -> 50px
+    expect(layout.rows.getSizePx(1)).toBe(20); // row 2: default
+    expect(layout.rows.getSizePx(2)).toBe(0); // row 3: hidden
+
+    expect(layout.cols.getSizePx(0)).toBe(145); // col A width=20 chars -> 145px (approx)
+    expect(layout.cols.getSizePx(1)).toBe(72); // col B: default
+    expect(layout.cols.getSizePx(2)).toBe(0); // col C: hidden
   });
 
   it("47737.xlsx: parses frozen panes and selection in sheetView", async () => {

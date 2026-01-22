@@ -108,20 +108,22 @@ export function resolveCellRenderStyle(params: {
   readonly address: CellAddress;
   readonly cell: Cell | undefined;
   readonly conditionalFormat?: XlsxDifferentialFormat;
+  readonly tableStyleFormat?: XlsxDifferentialFormat;
 }): CSSProperties {
   const { styles, sheet, address, cell } = params;
   const { xf: resolvedXf } = resolveCellXf({ styles, sheet, address, cell });
   const css: CSSProperties = {};
 
   const font = styles.fonts[resolvedXf.fontId as number];
+  const tableFont = params.tableStyleFormat?.font;
   const dxfFont = params.conditionalFormat?.font;
-  const effectiveFontName = dxfFont?.name ?? font?.name;
-  const effectiveFontSize = dxfFont?.size ?? font?.size;
-  const effectiveBold = dxfFont?.bold ?? font?.bold;
-  const effectiveItalic = dxfFont?.italic ?? font?.italic;
-  const effectiveUnderline = dxfFont?.underline ?? font?.underline;
-  const effectiveStrike = dxfFont?.strikethrough ?? font?.strikethrough;
-  const effectiveColor = dxfFont?.color ?? font?.color;
+  const effectiveFontName = dxfFont?.name ?? tableFont?.name ?? font?.name;
+  const effectiveFontSize = dxfFont?.size ?? tableFont?.size ?? font?.size;
+  const effectiveBold = dxfFont?.bold ?? tableFont?.bold ?? font?.bold;
+  const effectiveItalic = dxfFont?.italic ?? tableFont?.italic ?? font?.italic;
+  const effectiveUnderline = dxfFont?.underline ?? tableFont?.underline ?? font?.underline;
+  const effectiveStrike = dxfFont?.strikethrough ?? tableFont?.strikethrough ?? font?.strikethrough;
+  const effectiveColor = dxfFont?.color ?? tableFont?.color ?? font?.color;
 
   if (effectiveFontName) {
     css.fontFamily = effectiveFontName;
@@ -163,6 +165,11 @@ export function resolveCellRenderStyle(params: {
     if (bg) {
       css.backgroundColor = bg;
     }
+  }
+
+  const tableBg = resolveFillBackgroundColor(params.tableStyleFormat?.fill, styles);
+  if (tableBg) {
+    css.backgroundColor = tableBg;
   }
 
   const conditionalBg = resolveFillBackgroundColor(params.conditionalFormat?.fill, styles);
