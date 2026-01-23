@@ -176,8 +176,37 @@ function wantsGrouping(integerPattern: string): boolean {
   return integerPattern.includes(",");
 }
 
-function isPercent(section: string): boolean {
-  return removeLiteralsForPattern(section).includes("%");
+function countPercentSigns(section: string): number {
+  const state = { inQuoted: false, count: 0 };
+  for (let i = 0; i < section.length; i += 1) {
+    const ch = section[i]!;
+    if (ch === "\\" && i + 1 < section.length) {
+      i += 1;
+      continue;
+    }
+    if (ch === "\"") {
+      if (state.inQuoted && section[i + 1] === "\"") {
+        i += 1;
+        continue;
+      }
+      state.inQuoted = !state.inQuoted;
+      continue;
+    }
+    if (state.inQuoted) {
+      continue;
+    }
+    if (ch === "[") {
+      const end = section.indexOf("]", i + 1);
+      if (end !== -1) {
+        i = end;
+        continue;
+      }
+    }
+    if (ch === "%") {
+      state.count += 1;
+    }
+  }
+  return state.count;
 }
 
 function isScientific(section: string): boolean {
@@ -1178,12 +1207,12 @@ export function formatNumberByCode(value: number, formatCode: string, options?: 
     return formatDateByCode(value, section, options?.dateSystem ?? "1900");
   }
 
-  const percent = isPercent(section);
+  const percentCount = countPercentSigns(section);
   const cleanedTrimmed = cleaned.replace(/\s+$/u, "");
   const scaleCommas = countTrailingCommas(cleanedTrimmed);
   const cleanedNoScale = stripTrailingCommas(cleanedTrimmed);
   const { integer: integerPattern, fraction: fractionPattern } = splitIntegerAndFractionPatterns(cleanedNoScale);
-  const scaled = (percent ? value * 100 : value) / 1000 ** scaleCommas;
+  const scaled = (value * 100 ** percentCount) / 1000 ** scaleCommas;
 
   if (isScientific(section)) {
     const expDigitsMatch = /E\+0+/iu.exec(cleanedNoScale);
@@ -1219,6 +1248,5 @@ export function formatNumberByCode(value: number, formatCode: string, options?: 
   const suffixWithoutScale = suffix.replace(/^,+/u, "");
   const negativePrefix = isNegative && !hasNegativeSection ? "-" : "";
 
-  const percentSuffix = percent ? "%" : "";
-  return `${negativePrefix}${prefix}${formattedCore}${suffixWithoutScale}${percentSuffix}`;
+  return `${negativePrefix}${prefix}${formattedCore}${suffixWithoutScale}`;
 }

@@ -76,6 +76,38 @@ function createDemoStyles(): XlsxStyleSheet {
         alignment: { textRotation: 90 },
         applyAlignment: true,
       },
+      {
+        numFmtId: numFmtId(0),
+        fontId: fontId(0),
+        fillId: fillId(0),
+        borderId: borderId(0),
+        alignment: { textRotation: 31 },
+        applyAlignment: true,
+      },
+      {
+        numFmtId: numFmtId(0),
+        fontId: fontId(0),
+        fillId: fillId(0),
+        borderId: borderId(0),
+        alignment: { textRotation: 255 },
+        applyAlignment: true,
+      },
+      {
+        numFmtId: numFmtId(0),
+        fontId: fontId(0),
+        fillId: fillId(0),
+        borderId: borderId(0),
+        alignment: { horizontal: "left", indent: 2 },
+        applyAlignment: true,
+      },
+      {
+        numFmtId: numFmtId(0),
+        fontId: fontId(0),
+        fillId: fillId(0),
+        borderId: borderId(0),
+        alignment: { readingOrder: 2 },
+        applyAlignment: true,
+      },
     ],
   };
 }
@@ -202,6 +234,52 @@ describe("resolveCellRenderStyle", () => {
     });
     expect(rotateStyle.transform).toBe("rotate(-90deg)");
     expect(rotateStyle.transformOrigin).toBe("center");
+  });
+
+  it("supports additional textRotation variants (31 and 255)", () => {
+    const styles = createDemoStyles();
+    const sheet = createSheet();
+    const address = createAddress(1, 1);
+
+    const rotate31 = resolveCellRenderStyle({
+      styles,
+      sheet,
+      address,
+      cell: { address, value: { type: "empty" }, styleId: styleId(8) },
+    });
+    expect(rotate31.transform).toBe("rotate(-31deg)");
+    expect(rotate31.transformOrigin).toBe("center");
+
+    const verticalText = resolveCellRenderStyle({
+      styles,
+      sheet,
+      address,
+      cell: { address, value: { type: "empty" }, styleId: styleId(9) },
+    });
+    expect(verticalText.writingMode).toBe("vertical-rl");
+    expect(verticalText.textOrientation).toBe("upright");
+  });
+
+  it("exposes indent and readingOrder as CSS", () => {
+    const styles = createDemoStyles();
+    const sheet = createSheet();
+    const address = createAddress(1, 1);
+
+    const indented = resolveCellRenderStyle({
+      styles,
+      sheet,
+      address,
+      cell: { address, value: { type: "empty" }, styleId: styleId(10) },
+    });
+    expect(indented["--xlsx-cell-indent-start"]).toBe("4ch");
+
+    const rtl = resolveCellRenderStyle({
+      styles,
+      sheet,
+      address,
+      cell: { address, value: { type: "empty" }, styleId: styleId(11) },
+    });
+    expect(rtl.direction).toBe("rtl");
   });
 });
 

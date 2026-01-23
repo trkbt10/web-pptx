@@ -6,11 +6,12 @@
  */
 
 import type { CellRange } from "../../xlsx/domain/cell/address";
-import type { XlsxStyleSheet } from "../../xlsx/domain/style/types";
+import type { XlsxAlignment, XlsxStyleSheet } from "../../xlsx/domain/style/types";
 import type { XlsxWorksheet } from "../../xlsx/domain/workbook";
 import { resolveMergedCellXfFromStyleId } from "./cell-xf";
 
 export type MixedBoolean = { readonly mixed: false; readonly value: boolean } | { readonly mixed: true };
+export type MixedValue<T> = { readonly mixed: false; readonly value: T } | { readonly mixed: true };
 
 export type SelectionFormatFlags = {
   readonly bold: MixedBoolean;
@@ -18,6 +19,7 @@ export type SelectionFormatFlags = {
   readonly underline: MixedBoolean;
   readonly strikethrough: MixedBoolean;
   readonly wrapText: MixedBoolean;
+  readonly horizontal: MixedValue<XlsxAlignment["horizontal"]>;
   readonly tooLarge: boolean;
 };
 
@@ -27,13 +29,25 @@ type StyleFlags = {
   readonly underline: boolean;
   readonly strikethrough: boolean;
   readonly wrapText: boolean;
+  readonly horizontal: XlsxAlignment["horizontal"];
 };
 
 function toMixedBoolean(value: boolean): MixedBoolean {
   return { mixed: false, value };
 }
 
+function toMixedValue<T>(value: T): MixedValue<T> {
+  return { mixed: false, value };
+}
+
 function mixBoolean(current: MixedBoolean, next: boolean): MixedBoolean {
+  if (current.mixed) {
+    return current;
+  }
+  return current.value === next ? current : { mixed: true };
+}
+
+function mixValue<T>(current: MixedValue<T>, next: T): MixedValue<T> {
   if (current.mixed) {
     return current;
   }
@@ -140,6 +154,7 @@ export function resolveSelectionFormatFlags(params: {
       underline: { mixed: true },
       strikethrough: { mixed: true },
       wrapText: { mixed: true },
+      horizontal: { mixed: true },
       tooLarge: true,
     };
   }
@@ -151,6 +166,7 @@ export function resolveSelectionFormatFlags(params: {
     underline: toMixedBoolean(false),
     strikethrough: toMixedBoolean(false),
     wrapText: toMixedBoolean(false),
+    horizontal: toMixedValue<XlsxAlignment["horizontal"]>("general"),
   };
 
   const styleFlagsCache = new Map<number, StyleFlags>();
@@ -169,6 +185,7 @@ export function resolveSelectionFormatFlags(params: {
         underline: font.underline !== undefined && font.underline !== "none",
         strikethrough: font.strikethrough === true,
         wrapText: xf.alignment?.wrapText === true,
+        horizontal: xf.alignment?.horizontal ?? "general",
       };
       return undefinedStyleFlags.value;
     }
@@ -185,6 +202,7 @@ export function resolveSelectionFormatFlags(params: {
       underline: font.underline !== undefined && font.underline !== "none",
       strikethrough: font.strikethrough === true,
       wrapText: xf.alignment?.wrapText === true,
+      horizontal: xf.alignment?.horizontal ?? "general",
     };
     styleFlagsCache.set(styleIdValue, computed);
     return computed;
@@ -198,6 +216,7 @@ export function resolveSelectionFormatFlags(params: {
       accumulator.underline = toMixedBoolean(flags.underline);
       accumulator.strikethrough = toMixedBoolean(flags.strikethrough);
       accumulator.wrapText = toMixedBoolean(flags.wrapText);
+      accumulator.horizontal = toMixedValue(flags.horizontal);
       return;
     }
 
@@ -206,15 +225,19 @@ export function resolveSelectionFormatFlags(params: {
     accumulator.underline = mixBoolean(accumulator.underline, flags.underline);
     accumulator.strikethrough = mixBoolean(accumulator.strikethrough, flags.strikethrough);
     accumulator.wrapText = mixBoolean(accumulator.wrapText, flags.wrapText);
+    accumulator.horizontal = mixValue(accumulator.horizontal, flags.horizontal);
   };
 
   const incorporateStyleId = (styleIdValue: number | undefined): void => {
     incorporateStyleFlags(getStyleFlags(styleIdValue));
   };
 
-  const rowStyleIds = new Set<number>();
-  const rowsWithRowStyle = new Set<number>();
-  const cellOverrideStyleIds = new Set<number>();
+  const scan = {
+    rowStyleIds: new Set<number>(),
+    rowsWithRowStyle: new Set<number>(),
+    cellOverrideStyleIds: new Set<number>(),
+    cellOverrideCount: 0,
+  };
 
   for (const row of params.sheet.rows) {
     const rowNumber = row.rowNumber as number;
@@ -223,8 +246,8 @@ export function resolveSelectionFormatFlags(params: {
     }
     const rowStyleIdValue = row.styleId as number | undefined;
     if (rowStyleIdValue !== undefined) {
-      rowStyleIds.add(rowStyleIdValue);
-      rowsWithRowStyle.add(rowNumber);
+      scan.rowStyleIds.add(rowStyleIdValue);
+      scan.rowsWithRowStyle.add(rowNumber);
     }
     for (const cell of row.cells) {
       const colNumber = cell.address.col as number;
@@ -233,25 +256,38 @@ export function resolveSelectionFormatFlags(params: {
       }
       const cellStyleIdValue = cell.styleId as number | undefined;
       if (cellStyleIdValue !== undefined) {
-        cellOverrideStyleIds.add(cellStyleIdValue);
+        scan.cellOverrideStyleIds.add(cellStyleIdValue);
+        scan.cellOverrideCount += 1;
       }
     }
   }
 
-  // If any row within the selection lacks row-level style, the effective style can depend on column styles.
-  const includesRowsWithoutRowStyle = rowsWithRowStyle.size < rowCount;
+  const { rowStyleIds, rowsWithRowStyle, cellOverrideStyleIds, cellOverrideCount } = scan;
 
-  for (const styleIdValue of rowStyleIds) {
-    incorporateStyleId(styleIdValue);
-  }
-  if (includesRowsWithoutRowStyle) {
-    const columnBaselineStyleIds = collectColumnBaselineStyleIds(params.sheet, bounds.minCol, bounds.maxCol);
-    for (const styleIdValue of columnBaselineStyleIds) {
+  // If every cell in the selection has an explicit cell-level styleId, row/column baselines do not affect
+  // the effective formatting for this selection.
+  const fullyCoveredByCellOverrides = cellOverrideCount === cellCount;
+
+  // If any row within the selection lacks row-level style, the effective style can depend on column styles.
+  const includesRowsWithoutRowStyle = !fullyCoveredByCellOverrides && rowsWithRowStyle.size < rowCount;
+
+  if (fullyCoveredByCellOverrides) {
+    for (const styleIdValue of cellOverrideStyleIds) {
       incorporateStyleId(styleIdValue);
     }
-  }
-  for (const styleIdValue of cellOverrideStyleIds) {
-    incorporateStyleId(styleIdValue);
+  } else {
+    for (const styleIdValue of rowStyleIds) {
+      incorporateStyleId(styleIdValue);
+    }
+    if (includesRowsWithoutRowStyle) {
+      const columnBaselineStyleIds = collectColumnBaselineStyleIds(params.sheet, bounds.minCol, bounds.maxCol);
+      for (const styleIdValue of columnBaselineStyleIds) {
+        incorporateStyleId(styleIdValue);
+      }
+    }
+    for (const styleIdValue of cellOverrideStyleIds) {
+      incorporateStyleId(styleIdValue);
+    }
   }
 
   return {
@@ -260,6 +296,7 @@ export function resolveSelectionFormatFlags(params: {
     underline: accumulator.underline,
     strikethrough: accumulator.strikethrough,
     wrapText: accumulator.wrapText,
+    horizontal: accumulator.horizontal,
     tooLarge: false,
   };
 }

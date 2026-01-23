@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
-import { Button, Input, ToggleButton, spacingTokens } from "../../../office-editor-components";
+import { AlignCenterIcon, AlignLeftIcon, AlignRightIcon, Button, Input, ToggleButton, spacingTokens } from "../../../office-editor-components";
 import { indexToColumnLetter, type CellAddress, type CellRange } from "../../../xlsx/domain/cell/address";
 import { colIdx, rowIdx, styleId } from "../../../xlsx/domain/types";
 import { parseCellUserInput } from "../cell-input/parse-cell-user-input";
@@ -15,6 +15,7 @@ import { getCell } from "../../cell/query";
 import { resolveCellStyleDetails } from "../../selectors/cell-style-details";
 import { resolveSelectionFormatFlags } from "../../selectors/selection-format-flags";
 import type { XlsxFont } from "../../../xlsx/domain/style/font";
+import type { XlsxAlignment } from "../../../xlsx/domain/style/types";
 
 export type XlsxWorkbookToolbarProps = {
   readonly sheetIndex: number;
@@ -69,6 +70,19 @@ function toggleFontFlag(font: XlsxFont, flag: "bold" | "italic", pressed: boolea
 
 function setUnderline(font: XlsxFont, pressed: boolean): XlsxFont {
   return { ...font, underline: pressed ? "single" : undefined };
+}
+
+function setHorizontalAlignment(baseAlignment: XlsxAlignment | undefined, horizontal: XlsxAlignment["horizontal"]): XlsxAlignment {
+  return { ...(baseAlignment ?? {}), horizontal };
+}
+
+function clearHorizontalAlignment(baseAlignment: XlsxAlignment | undefined): XlsxAlignment | null {
+  if (!baseAlignment) {
+    return null;
+  }
+  const { horizontal: removed, ...rest } = baseAlignment;
+  void removed;
+  return Object.keys(rest).length === 0 ? null : rest;
 }
 
 /**
@@ -133,6 +147,7 @@ export function XlsxWorkbookToolbar({ sheetIndex, isFormatPanelOpen, onToggleFor
   }, [activeCell, sheet, workbook.styles]);
 
   const font = styleDetails?.font;
+  const baseAlignment = styleDetails?.xf.alignment;
   const toolbarCanFormat = Boolean(targetRange && font && !disableInputs);
   const selectionFormatFlags = useMemo(() => {
     if (!targetRange) {
@@ -140,6 +155,13 @@ export function XlsxWorkbookToolbar({ sheetIndex, isFormatPanelOpen, onToggleFor
     }
     return resolveSelectionFormatFlags({ sheet, styles: workbook.styles, range: targetRange });
   }, [sheet, targetRange, workbook.styles]);
+
+  const selectedHorizontalAlignment = selectionFormatFlags?.horizontal;
+  const horizontalMixed = selectedHorizontalAlignment?.mixed ?? false;
+  const horizontalValue = selectedHorizontalAlignment && !selectedHorizontalAlignment.mixed ? selectedHorizontalAlignment.value : undefined;
+  const alignLeftPressed = !horizontalMixed && horizontalValue === "left";
+  const alignCenterPressed = !horizontalMixed && horizontalValue === "center";
+  const alignRightPressed = !horizontalMixed && horizontalValue === "right";
 
   return (
     <div style={barStyle}>
@@ -198,6 +220,90 @@ export function XlsxWorkbookToolbar({ sheetIndex, isFormatPanelOpen, onToggleFor
           dispatch({ type: "SET_SELECTION_FORMAT", range: targetRange, format: { font: setUnderline(font, pressed) } });
         }}
       />
+
+      <ToggleButton
+        label="Align left"
+        ariaLabel="Align left"
+        pressed={alignLeftPressed}
+        mixed={horizontalMixed}
+        disabled={!targetRange || disableInputs}
+        onChange={(pressed) => {
+          if (!targetRange) {
+            return;
+          }
+          if (pressed) {
+            dispatch({
+              type: "SET_SELECTION_FORMAT",
+              range: targetRange,
+              format: { alignment: setHorizontalAlignment(baseAlignment, "left") },
+            });
+            return;
+          }
+          dispatch({
+            type: "SET_SELECTION_FORMAT",
+            range: targetRange,
+            format: { alignment: clearHorizontalAlignment(baseAlignment) },
+          });
+        }}
+      >
+        <AlignLeftIcon size={14} />
+      </ToggleButton>
+
+      <ToggleButton
+        label="Align center"
+        ariaLabel="Align center"
+        pressed={alignCenterPressed}
+        mixed={horizontalMixed}
+        disabled={!targetRange || disableInputs}
+        onChange={(pressed) => {
+          if (!targetRange) {
+            return;
+          }
+          if (pressed) {
+            dispatch({
+              type: "SET_SELECTION_FORMAT",
+              range: targetRange,
+              format: { alignment: setHorizontalAlignment(baseAlignment, "center") },
+            });
+            return;
+          }
+          dispatch({
+            type: "SET_SELECTION_FORMAT",
+            range: targetRange,
+            format: { alignment: clearHorizontalAlignment(baseAlignment) },
+          });
+        }}
+      >
+        <AlignCenterIcon size={14} />
+      </ToggleButton>
+
+      <ToggleButton
+        label="Align right"
+        ariaLabel="Align right"
+        pressed={alignRightPressed}
+        mixed={horizontalMixed}
+        disabled={!targetRange || disableInputs}
+        onChange={(pressed) => {
+          if (!targetRange) {
+            return;
+          }
+          if (pressed) {
+            dispatch({
+              type: "SET_SELECTION_FORMAT",
+              range: targetRange,
+              format: { alignment: setHorizontalAlignment(baseAlignment, "right") },
+            });
+            return;
+          }
+          dispatch({
+            type: "SET_SELECTION_FORMAT",
+            range: targetRange,
+            format: { alignment: clearHorizontalAlignment(baseAlignment) },
+          });
+        }}
+      >
+        <AlignRightIcon size={14} />
+      </ToggleButton>
 
       <Input
         value={activeCellText}

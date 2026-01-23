@@ -13,6 +13,7 @@ import { parseXlsxWorkbook, type XlsxParseOptions } from "../../src/xlsx/parser"
 import { createFormulaEvaluator } from "../../src/xlsx/formula/evaluator";
 import { colIdx, rowIdx, styleId } from "../../src/xlsx/domain/types";
 import type { CellAddress } from "../../src/xlsx/domain/cell/address";
+import type { Cell } from "../../src/xlsx/domain/cell/types";
 import type { CellValue } from "../../src/xlsx/domain/cell/types";
 import { getCell } from "../../src/xlsx-editor/cell/query";
 import { resolveCellBorderDecoration, resolveCellRenderStyle } from "../../src/xlsx-editor/selectors/cell-render-style";
@@ -2048,6 +2049,82 @@ describe("POI spreadsheet fixtures (parsing + formulas + style)", () => {
     expect(css.backgroundColor).toBe("#CCFFFF");
   });
 
+  it("FillWithoutColor.xlsx: parses alignment.indent and exposes indent CSS variables", async () => {
+    const workbook = await parseWorkbookFromFixture("FillWithoutColor.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const xfIndex = workbook.styles.cellXfs.findIndex(
+      (xf) => xf.alignment?.indent === 1 && (xf.alignment.horizontal === "left" || xf.alignment.horizontal === undefined),
+    );
+    if (xfIndex === -1) {
+      throw new Error("Expected at least one cellXf with indent=1");
+    }
+
+    const address = createAddress(1, 1);
+    const css = resolveCellRenderStyle({
+      styles: workbook.styles,
+      sheet,
+      address,
+      cell: { address, value: { type: "empty" }, styleId: styleId(xfIndex) },
+    });
+    expect(css["--xlsx-cell-indent-start"]).toBe("2ch");
+  });
+
+  it("45544.xlsx: formats percent number formats without duplicating %", async () => {
+    const workbook = await parseWorkbookFromFixture("45544.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const percentNumberFormat = workbook.styles.numberFormats.find((fmt) => fmt.formatCode === "0.0%");
+    if (!percentNumberFormat) {
+      throw new Error('Expected custom number format "0.0%" to exist');
+    }
+
+    const xfIndex = workbook.styles.cellXfs.findIndex((xf) => xf.numFmtId === percentNumberFormat.numFmtId);
+    if (xfIndex === -1) {
+      throw new Error("Expected at least one cellXf using the percent numFmtId");
+    }
+
+    const address = createAddress(1, 1);
+    const cell = { address, value: { type: "number", value: 0.1 }, styleId: styleId(xfIndex) } satisfies Cell;
+    const formatCode = resolveCellFormatCode({ styles: workbook.styles, sheet, address, cell });
+    expect(formatCode).toBe("0.0%");
+
+    const display = formatCellValueForDisplay(cell.value, formatCode);
+    expect(display).toBe("10.0%");
+  });
+
+  it("bug66215.xlsx: formats built-in percent (numFmtId=9) without duplicating % and aligns numbers to the right (general)", async () => {
+    const workbook = await parseWorkbookFromFixture("bug66215.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const xfIndex = workbook.styles.cellXfs.findIndex((xf) => xf.numFmtId === 9);
+    if (xfIndex === -1) {
+      throw new Error("Expected at least one cellXf with numFmtId=9 (0%)");
+    }
+
+    const address = createAddress(1, 1);
+    const cell = { address, value: { type: "number", value: 0.1 }, styleId: styleId(xfIndex) } satisfies Cell;
+
+    const formatCode = resolveCellFormatCode({ styles: workbook.styles, sheet, address, cell });
+    expect(formatCode).toBe("0%");
+
+    const display = formatCellValueForDisplay(cell.value, formatCode);
+    expect(display).toBe("10%");
+    expect(display.includes("%%")).toBe(false);
+
+    const css = resolveCellRenderStyle({ styles: workbook.styles, sheet, address, cell });
+    expect(css.justifyContent).toBe("flex-end");
+  });
+
   it("ShrinkToFit.xlsx: parses alignment.shrinkToFit and resolves a shrink-to-fit CSS hint", async () => {
     const workbook = await parseWorkbookFromFixture("ShrinkToFit.xlsx");
     const sheet = workbook.sheets[0];
@@ -2080,6 +2157,28 @@ describe("POI spreadsheet fixtures (parsing + formulas + style)", () => {
     expect(numberCss.justifyContent).toBe("flex-end");
   });
 
+  it("bug66675.xlsx: parses alignment.readingOrder and resolves CSS direction", async () => {
+    const workbook = await parseWorkbookFromFixture("bug66675.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const xfIndex = workbook.styles.cellXfs.findIndex((xf) => xf.alignment?.readingOrder === 1);
+    if (xfIndex === -1) {
+      throw new Error("Expected at least one cellXf with readingOrder=1");
+    }
+
+    const address = createAddress(1, 1);
+    const css = resolveCellRenderStyle({
+      styles: workbook.styles,
+      sheet,
+      address,
+      cell: { address, value: { type: "empty" }, styleId: styleId(xfIndex) },
+    });
+    expect(css.direction).toBe("ltr");
+  });
+
   it("picture.xlsx: parses alignment.textRotation and resolves CSS rotate transform", async () => {
     const workbook = await parseWorkbookFromFixture("picture.xlsx");
     const sheet = workbook.sheets[0];
@@ -2101,6 +2200,52 @@ describe("POI spreadsheet fixtures (parsing + formulas + style)", () => {
     });
     expect(css.transform).toBe("rotate(-90deg)");
     expect(css.transformOrigin).toBe("center");
+  });
+
+  it("49273.xlsx: parses alignment.textRotation=31 and resolves CSS rotate transform", async () => {
+    const workbook = await parseWorkbookFromFixture("49273.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const xfIndex = workbook.styles.cellXfs.findIndex((xf) => xf.alignment?.textRotation === 31);
+    if (xfIndex === -1) {
+      throw new Error("Expected at least one cellXf with textRotation=31");
+    }
+
+    const address = createAddress(1, 1);
+    const css = resolveCellRenderStyle({
+      styles: workbook.styles,
+      sheet,
+      address,
+      cell: { address, value: { type: "empty" }, styleId: styleId(xfIndex) },
+    });
+    expect(css.transform).toBe("rotate(-31deg)");
+    expect(css.transformOrigin).toBe("center");
+  });
+
+  it("FormulaEvalTestData_Copy.xlsx: parses alignment.textRotation=255 and resolves vertical writing mode", async () => {
+    const workbook = await parseWorkbookFromFixture("FormulaEvalTestData_Copy.xlsx");
+    const sheet = workbook.sheets[0];
+    if (!sheet) {
+      throw new Error("sheet[0] is required");
+    }
+
+    const xfIndex = workbook.styles.cellXfs.findIndex((xf) => xf.alignment?.textRotation === 255);
+    if (xfIndex === -1) {
+      throw new Error("Expected at least one cellXf with textRotation=255");
+    }
+
+    const address = createAddress(1, 1);
+    const css = resolveCellRenderStyle({
+      styles: workbook.styles,
+      sheet,
+      address,
+      cell: { address, value: { type: "empty" }, styleId: styleId(xfIndex) },
+    });
+    expect(css.writingMode).toBe("vertical-rl");
+    expect(css.textOrientation).toBe("upright");
   });
 
   it("styles.xlsx: resolves basic font/decoration/alignment/fill styles", async () => {

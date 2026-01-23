@@ -38,6 +38,7 @@ function createDemoStyles(): XlsxStyleSheet {
       { numFmtId: numFmtId(0), fontId: fontId(boldFontIndex), fillId: fillId(0), borderId: borderId(0), applyFont: true },
       { numFmtId: numFmtId(0), fontId: fontId(0), fillId: fillId(0), borderId: borderId(0), alignment: { wrapText: true }, applyAlignment: true },
       { numFmtId: numFmtId(0), fontId: fontId(boldFontIndex), fillId: fillId(0), borderId: borderId(0), alignment: { wrapText: true }, applyFont: true, applyAlignment: true },
+      { numFmtId: numFmtId(0), fontId: fontId(0), fillId: fillId(0), borderId: borderId(0), alignment: { horizontal: "right" }, applyAlignment: true },
     ],
   };
 }
@@ -102,6 +103,7 @@ describe("resolveSelectionFormatFlags", () => {
     expect(flags.underline).toEqual({ mixed: false, value: false });
     expect(flags.strikethrough).toEqual({ mixed: false, value: false });
     expect(flags.wrapText).toEqual({ mixed: false, value: false });
+    expect(flags.horizontal).toEqual({ mixed: false, value: "general" });
   });
 
   it("marks bold as mixed when selection contains both bold and non-bold cells", () => {
@@ -144,6 +146,7 @@ describe("resolveSelectionFormatFlags", () => {
     expect(flags.underline).toEqual({ mixed: true });
     expect(flags.strikethrough).toEqual({ mixed: true });
     expect(flags.wrapText).toEqual({ mixed: true });
+    expect(flags.horizontal).toEqual({ mixed: true });
   });
 
   it("treats column styles as effective styles when rows have no row-level style", () => {
@@ -169,5 +172,27 @@ describe("resolveSelectionFormatFlags", () => {
 
     const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange(1, 1, 2, 1) });
     expect(flags.bold).toEqual({ mixed: false, value: true });
+  });
+
+  it("returns horizontal alignment when all cells share the same effective alignment", () => {
+    const styles = createDemoStyles();
+    const sheet = createSheet([
+      { col: 1, row: 1, styleId: 4 },
+      { col: 2, row: 1, styleId: 4 },
+    ]);
+
+    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange(1, 1, 2, 1) });
+    expect(flags.horizontal).toEqual({ mixed: false, value: "right" });
+  });
+
+  it("marks horizontal alignment as mixed when the selection contains differing values", () => {
+    const styles = createDemoStyles();
+    const sheet = createSheet([
+      { col: 1, row: 1, styleId: 0 }, // general
+      { col: 2, row: 1, styleId: 4 }, // right
+    ]);
+
+    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange(1, 1, 2, 1) });
+    expect(flags.horizontal).toEqual({ mixed: true });
   });
 });

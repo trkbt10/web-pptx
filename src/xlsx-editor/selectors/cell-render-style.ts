@@ -14,13 +14,39 @@ import type { XlsxFill } from "../../xlsx/domain/style/fill";
 import { xlsxColorToCss, type XlsxColorLike } from "./xlsx-color";
 import { resolveCellXf } from "./cell-xf";
 
+type XlsxCellRenderCssProperties = CSSProperties &
+  Partial<Record<"--xlsx-cell-indent-start" | "--xlsx-cell-indent-end", string>>;
+
 function pointsToCssPx(points: number): string {
   return `${(points * 96) / 72}px`;
 }
 
-function applyAlignment(style: CSSProperties, alignment: XlsxAlignment | undefined, cell: Cell | undefined): void {
+function applyAlignment(style: XlsxCellRenderCssProperties, alignment: XlsxAlignment | undefined, cell: Cell | undefined): void {
+  // ECMA-376 defines ST_HorizontalAlignment including `general`, but it is application-defined.
+  // The editor adopts the common spreadsheet behavior (Excel): numbers/dates align right, most others align left.
+  const horizontal = alignment?.horizontal;
+  if (horizontal === "general" || horizontal === undefined) {
+    if (cell?.value.type === "number" || cell?.value.type === "date") {
+      style.justifyContent = "flex-end";
+    } else {
+      style.justifyContent = "flex-start";
+    }
+  } else if (horizontal === "left") {
+    style.justifyContent = "flex-start";
+  } else if (horizontal === "center" || horizontal === "centerContinuous") {
+    style.justifyContent = "center";
+  } else if (horizontal === "right") {
+    style.justifyContent = "flex-end";
+  }
+
   if (!alignment) {
     return;
+  }
+
+  if (alignment.readingOrder === 1) {
+    style.direction = "ltr";
+  } else if (alignment.readingOrder === 2) {
+    style.direction = "rtl";
   }
 
   if (alignment.shrinkToFit === true && alignment.wrapText !== true) {
@@ -45,20 +71,6 @@ function applyAlignment(style: CSSProperties, alignment: XlsxAlignment | undefin
     }
   }
 
-  if (alignment.horizontal === "general" || alignment.horizontal === undefined) {
-    if (cell?.value.type === "number" || cell?.value.type === "date") {
-      style.justifyContent = "flex-end";
-    } else {
-      style.justifyContent = "flex-start";
-    }
-  } else if (alignment.horizontal === "left") {
-    style.justifyContent = "flex-start";
-  } else if (alignment.horizontal === "center" || alignment.horizontal === "centerContinuous") {
-    style.justifyContent = "center";
-  } else if (alignment.horizontal === "right") {
-    style.justifyContent = "flex-end";
-  }
-
   if (alignment.vertical === "top") {
     style.alignItems = "flex-start";
   } else if (alignment.vertical === "center") {
@@ -69,6 +81,17 @@ function applyAlignment(style: CSSProperties, alignment: XlsxAlignment | undefin
 
   if (alignment.wrapText === true) {
     style.whiteSpace = "normal";
+  }
+
+  const indent = alignment.indent;
+  if (typeof indent === "number" && indent > 0) {
+    const amount = `${indent * 2}ch`;
+    const justify = style.justifyContent;
+    if (justify === "flex-end") {
+      style["--xlsx-cell-indent-end"] = amount;
+    } else {
+      style["--xlsx-cell-indent-start"] = amount;
+    }
   }
 }
 
@@ -137,10 +160,10 @@ export function resolveCellRenderStyle(params: {
   readonly cell: Cell | undefined;
   readonly conditionalFormat?: XlsxDifferentialFormat;
   readonly tableStyleFormat?: XlsxDifferentialFormat;
-}): CSSProperties {
+}): XlsxCellRenderCssProperties {
   const { styles, sheet, address, cell } = params;
   const { xf: resolvedXf } = resolveCellXf({ styles, sheet, address, cell });
-  const css: CSSProperties = {};
+  const css: XlsxCellRenderCssProperties = {};
 
   const font = styles.fonts[resolvedXf.fontId as number];
   const tableFont = params.tableStyleFormat?.font;
