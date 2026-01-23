@@ -11,6 +11,7 @@
 import { isDateFormat } from "./number-format";
 import type { XlsxDateSystem } from "../date-system";
 import { EXCEL_1904_TO_1900_DAY_OFFSET } from "../date-system";
+import { parseNumberFormatSection } from "./format-code/number-section";
 
 const MS_IN_DAY = 86_400_000;
 
@@ -176,58 +177,8 @@ function wantsGrouping(integerPattern: string): boolean {
   return integerPattern.includes(",");
 }
 
-function countPercentSigns(section: string): number {
-  const state = { inQuoted: false, count: 0 };
-  for (let i = 0; i < section.length; i += 1) {
-    const ch = section[i]!;
-    if (ch === "\\" && i + 1 < section.length) {
-      i += 1;
-      continue;
-    }
-    if (ch === "\"") {
-      if (state.inQuoted && section[i + 1] === "\"") {
-        i += 1;
-        continue;
-      }
-      state.inQuoted = !state.inQuoted;
-      continue;
-    }
-    if (state.inQuoted) {
-      continue;
-    }
-    if (ch === "[") {
-      const end = section.indexOf("]", i + 1);
-      if (end !== -1) {
-        i = end;
-        continue;
-      }
-    }
-    if (ch === "%") {
-      state.count += 1;
-    }
-  }
-  return state.count;
-}
-
 function isScientific(section: string): boolean {
   return /E\+0+/iu.test(removeLiteralsForPattern(section));
-}
-
-function splitIntegerAndFractionPatterns(cleanedPattern: string): { readonly integer: string; readonly fraction: string } {
-  const dot = cleanedPattern.indexOf(".");
-  if (dot === -1) {
-    return { integer: cleanedPattern, fraction: "" };
-  }
-  return { integer: cleanedPattern.slice(0, dot), fraction: cleanedPattern.slice(dot + 1) };
-}
-
-function countTrailingCommas(pattern: string): number {
-  const match = /,+$/u.exec(pattern);
-  return match ? match[0].length : 0;
-}
-
-function stripTrailingCommas(pattern: string): string {
-  return pattern.replace(/,+$/u, "");
 }
 
 type ScientificMarker = Readonly<{
@@ -622,51 +573,6 @@ function resolveApproxScientificDigitsShown(args: {
     return args.maxMantissaIntegerDigits >= 4 ? 2 : 1;
   }
   return args.maxMantissaIntegerDigits >= 7 ? 3 : args.maxMantissaIntegerDigits;
-}
-
-function findNumberPlaceholderIndices(section: string): { readonly first: number; readonly last: number } {
-  const state = { inQuoted: false, first: -1, last: -1 };
-
-  for (let i = 0; i < section.length; i += 1) {
-    const ch = section[i]!;
-    if (ch === "\\" && i + 1 < section.length) {
-      i += 1;
-      continue;
-    }
-    if (ch === "\"") {
-      if (state.inQuoted && section[i + 1] === "\"") {
-        i += 1;
-        continue;
-      }
-      state.inQuoted = !state.inQuoted;
-      continue;
-    }
-    if (!state.inQuoted && ch === "[") {
-      const end = section.indexOf("]", i + 1);
-      if (end !== -1) {
-        i = end;
-        continue;
-      }
-    }
-    if (!state.inQuoted && (ch === "0" || ch === "#")) {
-      if (state.first === -1) {
-        state.first = i;
-      }
-      state.last = i;
-    }
-  }
-
-  return { first: state.first, last: state.last };
-}
-
-function extractAffixes(section: string): { readonly prefix: string; readonly suffix: string } {
-  const { first, last } = findNumberPlaceholderIndices(section);
-  if (first === -1) {
-    return { prefix: unescapeAffix(section), suffix: "" };
-  }
-  const prefixRaw = section.slice(0, first);
-  const suffixRaw = last === -1 ? "" : section.slice(last + 1);
-  return { prefix: unescapeAffix(prefixRaw), suffix: unescapeAffix(suffixRaw) };
 }
 
 function unescapeAffix(text: string): string {
@@ -1207,19 +1113,20 @@ export function formatNumberByCode(value: number, formatCode: string, options?: 
     return formatDateByCode(value, section, options?.dateSystem ?? "1900");
   }
 
-  const percentCount = countPercentSigns(section);
-  const cleanedTrimmed = cleaned.replace(/\s+$/u, "");
-  const scaleCommas = countTrailingCommas(cleanedTrimmed);
-  const cleanedNoScale = stripTrailingCommas(cleanedTrimmed);
-  const { integer: integerPattern, fraction: fractionPattern } = splitIntegerAndFractionPatterns(cleanedNoScale);
-  const scaled = (value * 100 ** percentCount) / 1000 ** scaleCommas;
+  const parsed = parseNumberFormatSection(section);
+  if (parsed.kind === "literal") {
+    return parsed.literal;
+  }
+
+  const scaled = (value * 100 ** parsed.percentCount) / 1000 ** parsed.scaleCommas;
 
   if (isScientific(section)) {
-    const expDigitsMatch = /E\+0+/iu.exec(cleanedNoScale);
+    const templateNoScale = parsed.fractionPattern.length > 0 ? `${parsed.integerPattern}.${parsed.fractionPattern}` : parsed.integerPattern;
+    const expDigitsMatch = /E\+0+/iu.exec(templateNoScale);
     const expDigits = expDigitsMatch ? expDigitsMatch[0].length - 2 : 2;
 
-    const dot = cleanedNoScale.indexOf(".");
-    const fractionPatternForDigits = dot === -1 ? "" : cleanedNoScale.slice(dot + 1);
+    const dot = templateNoScale.indexOf(".");
+    const fractionPatternForDigits = dot === -1 ? "" : templateNoScale.slice(dot + 1);
     const { min, max } = countFractionDigits(fractionPatternForDigits);
     const decimals = Math.max(min, max);
 
@@ -1231,9 +1138,9 @@ export function formatNumberByCode(value: number, formatCode: string, options?: 
     return `${mantissa}E${sign}${String(abs).padStart(expDigits, "0")}`;
   }
 
-  const minIntegerDigits = Math.max(1, countIntegerZeros(integerPattern));
-  const { min: minFractionDigits, max: maxFractionDigits } = countFractionDigits(fractionPattern);
-  const grouping = wantsGrouping(integerPattern);
+  const minIntegerDigits = Math.max(1, countIntegerZeros(parsed.integerPattern));
+  const { min: minFractionDigits, max: maxFractionDigits } = countFractionDigits(parsed.fractionPattern);
+  const grouping = wantsGrouping(parsed.integerPattern);
 
   const formatter = new Intl.NumberFormat("en-US", {
     useGrouping: grouping,
@@ -1244,9 +1151,8 @@ export function formatNumberByCode(value: number, formatCode: string, options?: 
 
   const isNegative = scaled < 0;
   const formattedCore = formatter.format(Math.abs(scaled));
-  const { prefix, suffix } = extractAffixes(section);
-  const suffixWithoutScale = suffix.replace(/^,+/u, "");
+  const suffixWithoutScale = parsed.suffix.replace(/^,+/u, "");
   const negativePrefix = isNegative && !hasNegativeSection ? "-" : "";
 
-  return `${negativePrefix}${prefix}${formattedCore}${suffixWithoutScale}`;
+  return `${negativePrefix}${parsed.prefix}${formattedCore}${suffixWithoutScale}`;
 }

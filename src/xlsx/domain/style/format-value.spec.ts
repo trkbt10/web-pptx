@@ -23,4 +23,8 @@ describe("formatNumberByCode", () => {
   it("does not scale for escaped % (0\\%)", () => {
     expect(formatNumberByCode(0.1, "0\\%")).toBe("0%");
   });
+
+  it("treats quoted sections without placeholders as literals", () => {
+    expect(formatNumberByCode(0.1, "\"10%%\"")).toBe("10%%");
+  });
 });
