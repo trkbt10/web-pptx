@@ -27,9 +27,7 @@ function XlsxWorkbookEditorInner({ grid }: { readonly grid: XlsxGridMetrics }) {
   const activeSheet = activeSheetIndex !== undefined ? workbook.sheets[activeSheetIndex] : undefined;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: spacingTokens.sm, minHeight: 0, height: "100%" }}>
-      <XlsxSheetTabBar />
-
+    <div style={{ display: "flex", flexDirection: "column", minHeight: 0, height: "100%" }}>
       {activeSheet && activeSheetIndex !== undefined && (
         <div style={{ display: "flex", flexDirection: "column", gap: spacingTokens.sm, minHeight: 0, flex: 1 }}>
           <XlsxWorkbookToolbar
@@ -47,6 +45,7 @@ function XlsxWorkbookEditorInner({ grid }: { readonly grid: XlsxGridMetrics }) {
           </div>
         </div>
       )}
+      <XlsxSheetTabBar />
     </div>
   );
 }

@@ -16,16 +16,14 @@ import type { DropTargetPosition, XlsxSheetTabProps } from "./types";
 
 const DROP_INDICATOR_WIDTH = "2px";
 const TAB_MIN_WIDTH = "80px";
-const TAB_MAX_WIDTH = "200px";
 
 const tabBaseStyle: CSSProperties = {
   display: "flex",
   alignItems: "center",
   gap: spacingTokens.xs,
   padding: `${spacingTokens.xs} ${spacingTokens.sm}`,
-  borderRadius: `${radiusTokens.sm} ${radiusTokens.sm} 0 0`,
   border: `1px solid var(--border-primary, ${colorTokens.border.primary})`,
-  borderBottom: "none",
+  borderTop: "none",
   backgroundColor: `var(--bg-secondary, ${colorTokens.background.secondary})`,
   cursor: "pointer",
   fontSize: fontTokens.size.sm,
@@ -34,7 +32,6 @@ const tabBaseStyle: CSSProperties = {
   transition: "background-color 0.15s ease, box-shadow 0.1s ease",
   flex: "1 1 0",
   minWidth: TAB_MIN_WIDTH,
-  maxWidth: TAB_MAX_WIDTH,
   boxSizing: "border-box",
 };
 

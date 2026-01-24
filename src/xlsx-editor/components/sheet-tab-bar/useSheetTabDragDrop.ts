@@ -2,7 +2,6 @@
  * @file Sheet tab drag-and-drop hook
  *
  * Manages drag-and-drop for sheet tab reordering.
- * Uses target-based approach: shows indicator on left/right of target tab.
  */
 
 import { useCallback, useState } from "react";
@@ -24,50 +23,38 @@ export type UseSheetTabDragDropResult = {
 };
 
 /**
- * Calculate the target position based on cursor position over a tab.
- * Returns the index where the dragged item should be inserted.
+ * Calculate the final position after moving a tab.
+ *
+ * Uses cursor position to determine which gap to insert into.
+ * Gaps are numbered: 0 (before first tab), 1 (between tab 0 and 1), etc.
+ * If the target gap is adjacent to the dragging tab, it's a no-op.
  */
-function calculateTargetPosition(
-  e: React.DragEvent,
-  targetTabIndex: number,
-  rect: DOMRect,
+function calculateFinalPosition(
   draggingIndex: number,
-): number {
-  const midX = rect.left + rect.width / 2;
-  const insertBefore = e.clientX < midX;
-
-  if (insertBefore) {
-    // Insert before the target tab
-    if (draggingIndex < targetTabIndex) {
-      return targetTabIndex - 1;
-    }
-    return targetTabIndex;
-  }
-  // Insert after the target tab
-  if (draggingIndex > targetTabIndex) {
-    return targetTabIndex + 1;
-  }
-  return targetTabIndex;
-}
-
-/**
- * Check if the drop would result in an actual position change.
- */
-function wouldPositionChange(draggingIndex: number, targetIndex: number): boolean {
-  return draggingIndex !== targetIndex;
-}
-
-/**
- * Get the gap index for visual indicator.
- * Gap 0 is before tab 0, gap 1 is between tab 0 and 1, etc.
- */
-function calculateVisualGapIndex(
-  e: React.DragEvent,
   targetTabIndex: number,
-  rect: DOMRect,
-): number {
-  const midX = rect.left + rect.width / 2;
-  return e.clientX < midX ? targetTabIndex : targetTabIndex + 1;
+  clientX: number,
+  rectLeft: number,
+  rectWidth: number,
+): { position: number; gapIndex: number } | undefined {
+  // Can't drop on self
+  if (draggingIndex === targetTabIndex) {
+    return undefined;
+  }
+
+  // Determine which gap based on cursor position
+  const midX = rectLeft + rectWidth / 2;
+  const insertBefore = clientX < midX;
+  const targetGapIndex = insertBefore ? targetTabIndex : targetTabIndex + 1;
+
+  // If targeting the gap immediately before or after the dragging tab, no-op
+  if (targetGapIndex === draggingIndex || targetGapIndex === draggingIndex + 1) {
+    return undefined;
+  }
+
+  // Calculate the final position after removal and insertion
+  const position = targetGapIndex > draggingIndex ? targetGapIndex - 1 : targetGapIndex;
+
+  return { position, gapIndex: targetGapIndex };
 }
 
 /**
@@ -101,30 +88,37 @@ export function useSheetTabDragDrop(
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
 
+      const target = e.currentTarget as HTMLElement | null;
+      if (!target) {
+        return;
+      }
+      const rect = target.getBoundingClientRect();
+      const clientX = e.clientX;
+
       setDragState((prev) => {
         if (prev.type !== "dragging") {
           return prev;
         }
 
-        const target = e.currentTarget as HTMLElement;
-        const rect = target.getBoundingClientRect();
+        const result = calculateFinalPosition(
+          prev.draggingIndex,
+          itemIndex,
+          clientX,
+          rect.left,
+          rect.width,
+        );
 
-        // Calculate the actual target position
-        const targetPosition = calculateTargetPosition(e, itemIndex, rect, prev.draggingIndex);
-
-        // Only show visual indicator if the drop would result in a change
-        if (!wouldPositionChange(prev.draggingIndex, targetPosition)) {
+        if (!result) {
           if (prev.targetGapIndex === undefined) {
             return prev;
           }
           return { ...prev, targetGapIndex: undefined };
         }
 
-        const gapIndex = calculateVisualGapIndex(e, itemIndex, rect);
-        if (prev.targetGapIndex === gapIndex) {
+        if (prev.targetGapIndex === result.gapIndex) {
           return prev;
         }
-        return { ...prev, targetGapIndex: gapIndex };
+        return { ...prev, targetGapIndex: result.gapIndex };
       });
     },
     [],
@@ -144,7 +138,7 @@ export function useSheetTabDragDrop(
       // Calculate the actual target index from the gap
       const targetIndex = targetGapIndex > draggingIndex ? targetGapIndex - 1 : targetGapIndex;
 
-      if (wouldPositionChange(draggingIndex, targetIndex)) {
+      if (draggingIndex !== targetIndex) {
         onMoveSheet(draggingIndex, targetIndex);
       }
 

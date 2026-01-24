@@ -11,7 +11,7 @@
  */
 
 import { useCallback, useState, type CSSProperties } from "react";
-import { colorTokens, radiusTokens, spacingTokens } from "../../../office-editor-components";
+import { colorTokens, spacingTokens } from "../../../office-editor-components";
 import { useXlsxWorkbookEditor } from "../../context/workbook/XlsxWorkbookEditorContext";
 import { getUsedRange } from "../../cell/query";
 import { generateUniqueName } from "../../sheet/mutation";
@@ -30,14 +30,16 @@ export type XlsxSheetTabBarProps = {
 
 const containerStyle: CSSProperties = {
   display: "flex",
-  alignItems: "stretch",
-  borderBottom: `1px solid var(--border-primary, ${colorTokens.border.primary})`,
+  flexDirection: "row",
+  width: "100%",
+  borderTop: `1px solid var(--border-primary, ${colorTokens.border.primary})`,
   backgroundColor: `var(--bg-secondary, ${colorTokens.background.secondary})`,
 };
 
 const tabScrollAreaStyle: CSSProperties = {
-  display: "flex",
-  flex: 1,
+  flexGrow: 1,
+  flexShrink: 1,
+  flexBasis: 0,
   minWidth: 0,
   overflowX: "auto",
   overflowY: "hidden",
@@ -45,10 +47,9 @@ const tabScrollAreaStyle: CSSProperties = {
 };
 
 const tabListStyle: CSSProperties = {
-  display: "flex",
-  alignItems: "stretch",
-  width: "100%",
-  minWidth: "max-content",
+  display: "inline-flex",
+  minWidth: "100%",
+  verticalAlign: "top",
 };
 
 const addButtonStyle: CSSProperties = {
@@ -56,9 +57,8 @@ const addButtonStyle: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   padding: `${spacingTokens.xs} ${spacingTokens.sm}`,
-  borderRadius: `${radiusTokens.sm} ${radiusTokens.sm} 0 0`,
   border: `1px solid var(--border-primary, ${colorTokens.border.primary})`,
-  borderBottom: "none",
+  borderTop: "none",
   backgroundColor: `var(--bg-secondary, ${colorTokens.background.secondary})`,
   cursor: "pointer",
   fontSize: "14px",
