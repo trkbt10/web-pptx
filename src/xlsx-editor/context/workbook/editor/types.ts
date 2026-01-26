@@ -256,6 +256,7 @@ export type XlsxEditorAction =
 
   // Formatting
   | { readonly type: "APPLY_STYLE"; readonly range: CellRange; readonly styleId: StyleId }
+  | { readonly type: "APPLY_NAMED_STYLE"; readonly range: CellRange; readonly cellStyleIndex: number }
   | { readonly type: "SET_SELECTION_FORMAT"; readonly range: CellRange; readonly format: SelectionFormatUpdate }
   | { readonly type: "MERGE_CELLS"; readonly range: CellRange }
   | { readonly type: "UNMERGE_CELLS"; readonly range: CellRange }

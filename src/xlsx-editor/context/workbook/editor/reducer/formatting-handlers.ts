@@ -24,6 +24,7 @@ import {
 import type { StyleId } from "../../../../../xlsx/domain/types";
 
 type ApplyStyleAction = Extract<XlsxEditorAction, { type: "APPLY_STYLE" }>;
+type ApplyNamedStyleAction = Extract<XlsxEditorAction, { type: "APPLY_NAMED_STYLE" }>;
 type SetSelectionFormatAction = Extract<XlsxEditorAction, { type: "SET_SELECTION_FORMAT" }>;
 type MergeCellsAction = Extract<XlsxEditorAction, { type: "MERGE_CELLS" }>;
 type UnmergeCellsAction = Extract<XlsxEditorAction, { type: "UNMERGE_CELLS" }>;
@@ -75,6 +76,80 @@ function handleApplyStyle(
     sheetIndex,
     (worksheet) => applyStyleToRange(worksheet, action.range, action.styleId),
   );
+
+  return {
+    ...state,
+    workbookHistory: pushHistory(state.workbookHistory, updatedWorkbook),
+  };
+}
+
+/**
+ * Apply a named style (cellStyle) to a range.
+ *
+ * Resolves the cellStyle → cellStyleXfs → creates appropriate cellXfs entry.
+ */
+function handleApplyNamedStyle(
+  state: XlsxEditorState,
+  action: ApplyNamedStyleAction,
+): XlsxEditorState {
+  const sheetIndex = state.activeSheetIndex;
+  if (sheetIndex === undefined) {
+    return state;
+  }
+
+  const currentWorkbook = state.workbookHistory.present;
+  const { styles } = currentWorkbook;
+
+  // Get the named style from cellStyles
+  const cellStyle = styles.cellStyles[action.cellStyleIndex];
+  if (!cellStyle) {
+    return state;
+  }
+
+  // Get the base format from cellStyleXfs via xfId reference
+  const baseXfId = cellStyle.xfId;
+  const cellStyleXf = styles.cellStyleXfs[baseXfId];
+  if (!cellStyleXf) {
+    return state;
+  }
+
+  // Create a cellXf that references this base style (xfId)
+  const xf: XlsxCellXf = {
+    numFmtId: cellStyleXf.numFmtId,
+    fontId: cellStyleXf.fontId,
+    fillId: cellStyleXf.fillId,
+    borderId: cellStyleXf.borderId,
+    xfId: baseXfId,
+    alignment: cellStyleXf.alignment,
+    protection: cellStyleXf.protection,
+    applyNumberFormat: cellStyleXf.applyNumberFormat,
+    applyFont: cellStyleXf.applyFont,
+    applyFill: cellStyleXf.applyFill,
+    applyBorder: cellStyleXf.applyBorder,
+    applyAlignment: cellStyleXf.applyAlignment,
+    applyProtection: cellStyleXf.applyProtection,
+  };
+
+  // Upsert the cellXf entry (reuses existing if identical)
+  const xfResult = upsertCellXf(styles, xf);
+  const updatedStyles = xfResult.styles;
+  const nextStyleId = xfResult.styleId;
+
+  // Apply the style to the range
+  const workbookWithSheetUpdated = updateWorksheetInWorkbook(
+    currentWorkbook,
+    sheetIndex,
+    (worksheet) => applyStyleToRange(worksheet, action.range, nextStyleId),
+  );
+
+  // Update styles if changed
+  function mergeStylesIfChanged() {
+    if (workbookWithSheetUpdated.styles === updatedStyles) {
+      return workbookWithSheetUpdated;
+    }
+    return { ...workbookWithSheetUpdated, styles: updatedStyles };
+  }
+  const updatedWorkbook = mergeStylesIfChanged();
 
   return {
     ...state,
@@ -150,6 +225,7 @@ function handleSetSelectionFormat(
 
 export const formattingHandlers: HandlerMap = {
   APPLY_STYLE: handleApplyStyle,
+  APPLY_NAMED_STYLE: handleApplyNamedStyle,
   SET_SELECTION_FORMAT: handleSetSelectionFormat,
   MERGE_CELLS: (state: XlsxEditorState, action: MergeCellsAction) => {
     const sheetIndex = state.activeSheetIndex;

@@ -7,7 +7,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { AlignCenterIcon, AlignLeftIcon, AlignRightIcon, Button, Input, ToggleButton, spacingTokens, MergeCellsIcon, UnmergeCellsIcon } from "../../../office-editor-components";
 import { indexToColumnLetter, type CellAddress, type CellRange } from "../../../xlsx/domain/cell/address";
-import { colIdx, rowIdx, styleId } from "../../../xlsx/domain/types";
+import { colIdx, rowIdx } from "../../../xlsx/domain/types";
 import { StylePicker } from "./StylePicker";
 import { parseCellUserInput } from "../cell-input/parse-cell-user-input";
 import { formatCellEditText } from "../cell-input/format-cell-edit-text";
@@ -307,11 +307,11 @@ export function XlsxWorkbookToolbar({ sheetIndex, isFormatPanelOpen, onToggleFor
         styles={workbook.styles}
         currentStyleId={styleDetails?.styleId}
         disabled={!targetRange || disableInputs}
-        onStyleSelect={(id) => {
+        onNamedStyleSelect={(cellStyleIndex) => {
           if (!targetRange) {
             return;
           }
-          dispatch({ type: "APPLY_STYLE", range: targetRange, styleId: styleId(id) });
+          dispatch({ type: "APPLY_NAMED_STYLE", range: targetRange, cellStyleIndex });
         }}
       />
 
