@@ -158,6 +158,18 @@ describe("serializeCellValue", () => {
     expect(result.v).toBe("42");
   });
 
+  it("should serialize non-finite number values as #NUM! errors", () => {
+    const sharedStrings = createMockSharedStrings();
+
+    const cases: number[] = [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY];
+    for (const v of cases) {
+      const value: CellValue = { type: "number", value: v };
+      const result = serializeCellValue(value, sharedStrings);
+      expect(result.t).toBe("e");
+      expect(result.v).toBe("#NUM!");
+    }
+  });
+
   it("should serialize float number value", () => {
     const value: CellValue = { type: "number", value: 3.14159 };
     const sharedStrings = createMockSharedStrings();
@@ -273,6 +285,17 @@ describe("serializeCell", () => {
     expect(xml).toBe('<c r="A1"><v>42</v></c>');
   });
 
+  it("should serialize cell with non-finite number value as #NUM! error", () => {
+    const cell: Cell = {
+      address: addr(1, 1),
+      value: { type: "number", value: Number.POSITIVE_INFINITY },
+    };
+    const sharedStrings = createMockSharedStrings();
+    const element = serializeCell(cell, sharedStrings);
+    const xml = serializeElement(element);
+    expect(xml).toBe('<c r="A1" t="e"><v>#NUM!</v></c>');
+  });
+
   it("should serialize cell with string value", () => {
     const cell: Cell = {
       address: addr(2, 1),
@@ -334,7 +357,7 @@ describe("serializeCell", () => {
     const cell: Cell = {
       address: addr(6, 1),
       value: { type: "number", value: 55 },
-      formula: "SUM(A1:A10)",
+      formula: { type: "normal", expression: "SUM(A1:A10)" },
     };
     const sharedStrings = createMockSharedStrings();
     const element = serializeCell(cell, sharedStrings);
@@ -441,7 +464,7 @@ describe("Child element order", () => {
     const cell: Cell = {
       address: addr(1, 1),
       value: { type: "number", value: 55 },
-      formula: "SUM(A1:A10)",
+      formula: { type: "normal", expression: "SUM(A1:A10)" },
     };
     const sharedStrings = createMockSharedStrings();
     const element = serializeCell(cell, sharedStrings);
@@ -507,7 +530,7 @@ describe("Edge cases", () => {
     const cell: Cell = {
       address: addr(1, 1),
       value: { type: "number", value: 10 },
-      formula: "IF(A1>5,\"Yes\",\"No\")",
+      formula: { type: "normal", expression: "IF(A1>5,\"Yes\",\"No\")" },
     };
     const sharedStrings = createMockSharedStrings();
     const element = serializeCell(cell, sharedStrings);
@@ -554,7 +577,7 @@ describe("Round-trip compatibility", () => {
     const cell: Cell = {
       address: addr(1, 10),
       value: { type: "number", value: 45 },
-      formula: "SUM(A1:A9)",
+      formula: { type: "normal", expression: "SUM(A1:A9)" },
     };
     const sharedStrings = createMockSharedStrings();
     const element = serializeCell(cell, sharedStrings);

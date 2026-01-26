@@ -38,6 +38,7 @@ export {
   Undo2 as UndoIcon,
   Redo2 as RedoIcon,
   Trash2 as TrashIcon,
+  Trash2 as DeleteIcon,
   Copy as CopyIcon,
   Clipboard as PasteIcon,
   Scissors as CutIcon,
@@ -56,6 +57,8 @@ export {
   // Objects
   Image as PictureIcon,
   Table as TableIcon,
+  TableCellsMerge as MergeCellsIcon,
+  TableCellsSplit as UnmergeCellsIcon,
   BarChart3 as ChartIcon,
   GitBranch as DiagramIcon,
   FileBox as OleObjectIcon,

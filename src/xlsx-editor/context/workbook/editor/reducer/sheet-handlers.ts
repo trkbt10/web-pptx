@@ -103,12 +103,7 @@ function handleAddSheet(
 ): XlsxEditorState {
   const currentWorkbook = state.workbookHistory.present;
   const newWorkbook = addSheet(currentWorkbook, action.name, action.afterIndex);
-  const insertIndex = (() => {
-    if (action.afterIndex === undefined) {
-      return currentWorkbook.sheets.length;
-    }
-    return action.afterIndex + 1;
-  })();
+  const insertIndex = action.afterIndex === undefined ? currentWorkbook.sheets.length : action.afterIndex + 1;
 
   return {
     ...state,
@@ -137,26 +132,9 @@ function handleDeleteSheet(
     newWorkbook.sheets.length,
   );
 
-  const cellSelection = (() => {
-    if (wasActiveSheetDeleted) {
-      return createEmptyCellSelection();
-    }
-    return state.cellSelection;
-  })();
-
-  const drag = (() => {
-    if (wasActiveSheetDeleted) {
-      return createIdleDragState();
-    }
-    return state.drag;
-  })();
-
-  const editingCell = (() => {
-    if (wasActiveSheetDeleted) {
-      return undefined;
-    }
-    return state.editingCell;
-  })();
+  const cellSelection = wasActiveSheetDeleted ? createEmptyCellSelection() : state.cellSelection;
+  const drag = wasActiveSheetDeleted ? createIdleDragState() : state.drag;
+  const editingCell = wasActiveSheetDeleted ? undefined : state.editingCell;
 
   return {
     ...state,

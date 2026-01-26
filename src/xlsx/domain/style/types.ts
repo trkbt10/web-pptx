@@ -14,7 +14,9 @@ import type { XlsxFont } from "./font";
 import type { XlsxFill } from "./fill";
 import type { XlsxBorder } from "./border";
 import type { XlsxNumberFormat } from "./number-format";
-import type { NumFmtId, FontId, FillId, BorderId, numFmtId, fontId, fillId, borderId } from "../types";
+import type { XlsxDifferentialFormat } from "./dxf";
+import type { XlsxTableStyle } from "./table-style";
+import type { NumFmtId, FontId, FillId, BorderId } from "../types";
 
 // =============================================================================
 // XlsxAlignment Type
@@ -29,7 +31,7 @@ import type { NumFmtId, FontId, FillId, BorderId, numFmtId, fontId, fillId, bord
  */
 export type XlsxAlignment = {
   /** Horizontal text alignment */
-  readonly horizontal?: "left" | "center" | "right" | "fill" | "justify" | "centerContinuous" | "distributed";
+  readonly horizontal?: "general" | "left" | "center" | "right" | "fill" | "justify" | "centerContinuous" | "distributed";
 
   /** Vertical text alignment */
   readonly vertical?: "top" | "center" | "bottom" | "justify" | "distributed";
@@ -177,6 +179,18 @@ export type XlsxStyleSheet = {
   /** Border definitions */
   readonly borders: readonly XlsxBorder[];
 
+  /**
+   * Optional legacy indexed color palette overrides.
+   *
+   * When present, this corresponds to `styles.xml`:
+   * `styleSheet/colors/indexedColors/rgbColor/@rgb` (typically 64 entries).
+   *
+   * @see ECMA-376 Part 4, Section 18.8.3 (CT_Color)
+   * @see ECMA-376 Part 4, Section 18.8.11 (colors)
+   * @see ECMA-376 Part 4, Section 18.8.21 (indexedColors)
+   */
+  readonly indexedColors?: readonly string[];
+
   /** Custom number format definitions (built-in formats are implicit) */
   readonly numberFormats: readonly XlsxNumberFormat[];
 
@@ -188,6 +202,21 @@ export type XlsxStyleSheet = {
 
   /** Named cell styles */
   readonly cellStyles: readonly XlsxCellStyle[];
+
+  /** Differential formats used by conditional formatting rules */
+  readonly dxfs?: readonly XlsxDifferentialFormat[];
+
+  /**
+   * Table style definitions (`styles.xml` `<tableStyles>`).
+   *
+   * These map table style elements to DXF indices (`dxfId`) and are referenced by tables via
+   * `tableStyleInfo/@name`.
+   */
+  readonly tableStyles?: readonly XlsxTableStyle[];
+  /** Default table style name (`tableStyles/@defaultTableStyle`). */
+  readonly defaultTableStyle?: string;
+  /** Default pivot style name (`tableStyles/@defaultPivotStyle`). */
+  readonly defaultPivotStyle?: string;
 };
 
 // =============================================================================

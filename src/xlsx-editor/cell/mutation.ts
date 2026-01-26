@@ -7,6 +7,7 @@
 import type { XlsxRow, XlsxWorksheet } from "../../xlsx/domain/workbook";
 import type { Cell, CellValue } from "../../xlsx/domain/cell/types";
 import type { CellAddress, CellRange } from "../../xlsx/domain/cell/address";
+import type { Formula } from "../../xlsx/domain/cell/formula";
 
 const EMPTY_VALUE: CellValue = { type: "empty" };
 
@@ -101,15 +102,15 @@ export function updateCellById(
   const currentCell = cellIndex === -1 ? undefined : row.cells[cellIndex];
   const updatedCell = normalizeUpdaterResult(address, updater(currentCell));
 
-  const updatedCells = (() => {
-    if (cellIndex === -1) {
-      return insertCellSorted(row.cells, updatedCell);
+  const updateCellsInRow = (rowCells: readonly Cell[], idx: number, cell: Cell): readonly Cell[] => {
+    if (idx === -1) {
+      return insertCellSorted(rowCells, cell);
     }
-
-    const cells = [...row.cells];
-    cells[cellIndex] = updatedCell;
-    return cells;
-  })();
+    const next = [...rowCells];
+    next[idx] = cell;
+    return next;
+  };
+  const updatedCells = updateCellsInRow(row.cells, cellIndex, updatedCell);
 
   const updatedRow: XlsxRow = { ...row, cells: updatedCells };
   const updatedRows = [...worksheet.rows];
@@ -299,13 +300,15 @@ export function setCellFormula(
   address: CellAddress,
   formula: string,
 ): XlsxWorksheet {
-  if (formula.trim().length === 0) {
+  const expression = formula.trim();
+  if (expression.length === 0) {
     throw new Error("formula is required");
   }
+  const nextFormula: Formula = { type: "normal", expression };
   return updateCellById(worksheet, address, (cell) => {
     if (!cell) {
-      return { address, value: EMPTY_VALUE, formula };
+      return { address, value: EMPTY_VALUE, formula: nextFormula };
     }
-    return { ...cell, formula };
+    return { ...cell, formula: nextFormula };
   });
 }

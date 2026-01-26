@@ -50,6 +50,7 @@ function createWorksheet(cells: readonly Cell[]): XlsxWorksheet {
     }));
 
   return {
+    dateSystem: "1900",
     name: "Sheet1",
     sheetId: 1,
     state: "visible",
@@ -67,7 +68,7 @@ function cellAt(
   return {
     address: addr(col, row),
     value,
-    ...(opts?.formula ? { formula: opts.formula } : {}),
+    ...(opts?.formula ? { formula: { type: "normal", expression: opts.formula } } : {}),
     ...(opts?.styleId !== undefined ? { styleId: styleId(opts.styleId) } : {}),
   };
 }
@@ -94,7 +95,7 @@ describe("xlsx-editor/cell/mutation", () => {
 
     expect(getCellValue(worksheet, addr(1, 1))).toEqual({ type: "string", value: "old" });
     expect(getCell(worksheet, addr(1, 1))?.styleId).toEqual(styleId(10));
-    expect(getCell(worksheet, addr(1, 1))?.formula).toBe("SUM(1,2)");
+    expect(getCell(worksheet, addr(1, 1))?.formula).toEqual({ type: "normal", expression: "SUM(1,2)" });
 
     expect(updated.rows[1]).toBe(worksheet.rows[1]);
     expect(updated.rows[0]).not.toBe(worksheet.rows[0]);

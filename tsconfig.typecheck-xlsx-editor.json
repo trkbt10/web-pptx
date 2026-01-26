@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "src/xlsx-editor/**/*",
+    "src/files/ooxml-zip.ts",
+    "src/files/ooxml-zip.spec.ts",
+    "src/office-editor-components/**/*",
+    "src/pptx-editor/ui/context-menu/**/*",
+    "spec/xlsx-editor/**/*",
+    "src/vite-env.d.ts"
+  ]
+}

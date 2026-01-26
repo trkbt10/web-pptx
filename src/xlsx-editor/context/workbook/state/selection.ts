@@ -72,12 +72,7 @@ export function addRangeToSelection(
   selection: CellSelectionState,
   range: CellRange,
 ): CellSelectionState {
-  const existingRanges = (() => {
-    if (!selection.selectedRange) {
-      return [];
-    }
-    return [selection.selectedRange, ...(selection.multiRanges ?? [])];
-  })();
+  const existingRanges = selection.selectedRange ? [selection.selectedRange, ...(selection.multiRanges ?? [])] : [];
 
   return {
     selectedRange: range,

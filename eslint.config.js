@@ -15,6 +15,7 @@ import rulesRestrictedSyntax from "./eslint/rules/rules-restricted-syntax.js";
 import rulesCurly from "./eslint/rules/rules-curly.js";
 import rulesNoTestImports from "./eslint/rules/rules-no-test-imports.js";
 import rulesNoMocks from "./eslint/rules/rules-no-mocks.js";
+import rulesCatchError from "./eslint/rules/rules-catch-error.js";
 
 export default [
   // Ignore patterns
@@ -79,6 +80,7 @@ export default [
         ...rulesCurly,
         ...rulesNoTestImports,
         ...rulesNoMocks,
+        ...rulesCatchError,
       },
     },
 

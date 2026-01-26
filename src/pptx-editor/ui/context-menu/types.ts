@@ -62,3 +62,4 @@ export function isSubmenu(entry: MenuEntry): entry is MenuSubmenu {
 export function isMenuItem(entry: MenuEntry): entry is MenuItem {
   return !isSeparator(entry) && !isSubmenu(entry);
 }
+

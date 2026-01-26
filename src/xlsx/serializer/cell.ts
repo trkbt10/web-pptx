@@ -195,6 +195,9 @@ export function serializeCellValue(
 ): CellValueSerializeResult {
   switch (value.type) {
     case "number":
+      if (!Number.isFinite(value.value)) {
+        return { t: "e", v: "#NUM!" };
+      }
       // Number type: t attribute is omitted (default is "n")
       return { v: String(value.value) };
 
@@ -270,12 +273,7 @@ export function serializeCell(
 
   // Formula element (if present)
   if (cell.formula) {
-    // For simple string formula, convert to Formula object
-    const formulaElement = serializeFormula({
-      expression: cell.formula,
-      type: "normal",
-    });
-    children.push(formulaElement);
+    children.push(serializeFormula(cell.formula));
   }
 
   // Value element (if present)

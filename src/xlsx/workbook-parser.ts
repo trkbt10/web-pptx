@@ -162,11 +162,15 @@ async function parseSheets(
     const name = sheetEl.attrs["name"];
     const rId = sheetEl.attrs["r:id"];
 
-    if (!name || !rId) continue;
+    if (!name || !rId) {
+      continue;
+    }
 
     // Resolve sheet path from relationships
     const target = relsMap.get(rId);
-    if (!target) continue;
+    if (!target) {
+      continue;
+    }
 
     // Sheet paths are relative to xl/, so resolve
     const xmlPath = target.startsWith("/") ? target.substring(1) : `xl/${target}`;
@@ -185,10 +189,14 @@ async function parseSheets(
  */
 function parseRelsToMap(relsXml: XmlDocument | null): Map<string, string> {
   const map = new Map<string, string>();
-  if (!relsXml) return map;
+  if (!relsXml) {
+    return map;
+  }
 
   const rels = getByPath(relsXml, ["Relationships"]);
-  if (!rels) return map;
+  if (!rels) {
+    return map;
+  }
 
   const relElements = getChildren(rels, "Relationship");
   for (const rel of relElements) {
@@ -228,7 +236,9 @@ function parseSheet(
 
   for (const rowEl of rowElements) {
     const rowNumStr = rowEl.attrs["r"];
-    if (!rowNumStr) continue;
+    if (!rowNumStr) {
+      continue;
+    }
 
     const rowNumber = parseInt(rowNumStr, 10);
     const cells = new Map<string, WorkbookCell>();
@@ -258,35 +268,35 @@ function parseCell(
   sharedStrings: readonly string[],
 ): WorkbookCell | undefined {
   const ref = cellEl.attrs["r"];
-  if (!ref) return undefined;
+  if (!ref) {
+    return undefined;
+  }
 
   const type = cellEl.attrs["t"] as WorkbookCell["type"];
   const vElement = getChild(cellEl, "v");
   const rawValue = vElement ? getTextContent(vElement) ?? "" : "";
 
   // Resolve value based on type
-  let value: string | number | boolean;
-
-  if (type === "s") {
-    // Shared string reference
-    const index = parseInt(rawValue, 10);
-    value = sharedStrings[index] ?? "";
-  } else if (type === "b") {
-    // Boolean
-    value = rawValue === "1" || rawValue === "true";
-  } else if (type === "str") {
-    // Formula string result
-    value = rawValue;
-  } else if (type === "inlineStr") {
-    // Inline string
-    const isElement = getChild(cellEl, "is");
-    const tElement = isElement ? getChild(isElement, "t") : null;
-    value = tElement ? getTextContent(tElement) ?? "" : "";
-  } else {
-    // Number (default) or empty
+  const resolveValue = (): string | number | boolean => {
+    if (type === "s") {
+      const index = parseInt(rawValue, 10);
+      return sharedStrings[index] ?? "";
+    }
+    if (type === "b") {
+      return rawValue === "1" || rawValue === "true";
+    }
+    if (type === "str") {
+      return rawValue;
+    }
+    if (type === "inlineStr") {
+      const isElement = getChild(cellEl, "is");
+      const tElement = isElement ? getChild(isElement, "t") : null;
+      return tElement ? getTextContent(tElement) ?? "" : "";
+    }
     const num = parseFloat(rawValue);
-    value = Number.isNaN(num) ? rawValue : num;
-  }
+    return Number.isNaN(num) ? rawValue : num;
+  };
+  const value = resolveValue();
 
   return { ref, type, rawValue, value };
 }
@@ -305,7 +315,9 @@ export function getCellValue(
   row: number,
 ): string | number | boolean | undefined {
   const rowData = sheet.rows.get(row);
-  if (!rowData) return undefined;
+  if (!rowData) {
+    return undefined;
+  }
 
   const cell = rowData.cells.get(col.toUpperCase());
   return cell?.value;

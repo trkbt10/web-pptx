@@ -19,10 +19,6 @@ import type {
   XlsxCellStyle,
 } from "../../domain/style/types";
 import {
-  type NumFmtId,
-  type FontId,
-  type FillId,
-  type BorderId,
   numFmtId,
   fontId,
   fillId,
@@ -32,9 +28,11 @@ import { parseFonts } from "./font";
 import { parseFills } from "./fill";
 import { parseBorders } from "./border";
 import { parseNumFmts } from "./number-format";
+import { parseDxfs } from "./dxf";
 import { parseBooleanAttr, parseIntAttr } from "../primitive";
 import type { XmlElement } from "../../../xml";
 import { getChild, getChildren, getAttr } from "../../../xml";
+import type { XlsxTableStyle, XlsxTableStyleElementType } from "../../domain/style/table-style";
 
 // =============================================================================
 // Alignment Parsing
@@ -145,7 +143,9 @@ export function parseCellXf(xfElement: XmlElement): XlsxCellXf {
  * @see ECMA-376 Part 4, Section 18.8.9 (cellStyleXfs)
  */
 export function parseCellXfs(cellXfsElement: XmlElement | undefined): readonly XlsxCellXf[] {
-  if (!cellXfsElement) return [];
+  if (!cellXfsElement) {
+    return [];
+  }
   return getChildren(cellXfsElement, "xf").map(parseCellXf);
 }
 
@@ -186,13 +186,107 @@ export function parseCellStyle(cellStyleElement: XmlElement): XlsxCellStyle {
  * @see ECMA-376 Part 4, Section 18.8.8 (cellStyles)
  */
 export function parseCellStyles(cellStylesElement: XmlElement | undefined): readonly XlsxCellStyle[] {
-  if (!cellStylesElement) return [];
+  if (!cellStylesElement) {
+    return [];
+  }
   return getChildren(cellStylesElement, "cellStyle").map(parseCellStyle);
 }
 
 // =============================================================================
 // StyleSheet Parsing (Main Entry Point)
 // =============================================================================
+
+/**
+ * Parse `styles.xml` indexed palette overrides.
+ *
+ * Extracts `styleSheet/colors/indexedColors/rgbColor/@rgb` when present.
+ *
+ * @param styleSheetElement - Root `<styleSheet>` element
+ * @returns Palette entries (may be empty)
+ *
+ * @see ECMA-376 Part 4, Section 18.8.11 (colors)
+ * @see ECMA-376 Part 4, Section 18.8.21 (indexedColors)
+ */
+function parseIndexedColors(styleSheetElement: XmlElement): readonly string[] {
+  const colorsEl = getChild(styleSheetElement, "colors");
+  if (!colorsEl) {
+    return [];
+  }
+  const indexedColorsEl = getChild(colorsEl, "indexedColors");
+  if (!indexedColorsEl) {
+    return [];
+  }
+  return getChildren(indexedColorsEl, "rgbColor")
+    .map((el) => getAttr(el, "rgb"))
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
+}
+
+function parseTableStyleElementType(raw: string): XlsxTableStyleElementType | undefined {
+  switch (raw) {
+    case "wholeTable":
+    case "headerRow":
+    case "totalRow":
+    case "firstColumn":
+    case "lastColumn":
+    case "firstRowStripe":
+    case "secondRowStripe":
+    case "firstColumnStripe":
+    case "secondColumnStripe":
+    case "firstHeaderCell":
+    case "lastHeaderCell":
+    case "firstTotalCell":
+    case "lastTotalCell":
+      return raw;
+  }
+  return undefined;
+}
+
+/**
+ * Parse `styles.xml` `<tableStyles>`.
+ *
+ * @param styleSheetElement - Root `<styleSheet>` element
+ * @returns Parsed table styles and defaults
+ *
+ * @see ECMA-376 Part 4, Section 18.8.57 (tableStyles)
+ */
+function parseTableStyles(styleSheetElement: XmlElement): {
+  readonly tableStyles: readonly XlsxTableStyle[];
+  readonly defaultTableStyle?: string;
+  readonly defaultPivotStyle?: string;
+} {
+  const tableStylesEl = getChild(styleSheetElement, "tableStyles");
+  if (!tableStylesEl) {
+    return { tableStyles: [], defaultTableStyle: undefined, defaultPivotStyle: undefined };
+  }
+
+  const defaultTableStyle = getAttr(tableStylesEl, "defaultTableStyle") ?? undefined;
+  const defaultPivotStyle = getAttr(tableStylesEl, "defaultPivotStyle") ?? undefined;
+
+  const tableStyles = getChildren(tableStylesEl, "tableStyle").map((tableStyleEl): XlsxTableStyle => {
+    const name = getAttr(tableStyleEl, "name");
+    if (!name) {
+      throw new Error('tableStyle missing required attribute "name"');
+    }
+    const pivot = parseBooleanAttr(getAttr(tableStyleEl, "pivot"));
+    const count = parseIntAttr(getAttr(tableStyleEl, "count"));
+
+    const elements = getChildren(tableStyleEl, "tableStyleElement")
+      .map((el) => {
+        const typeRaw = getAttr(el, "type");
+        const type = typeRaw ? parseTableStyleElementType(typeRaw) : undefined;
+        const dxfId = parseIntAttr(getAttr(el, "dxfId"));
+        if (!type || dxfId === undefined) {
+          return undefined;
+        }
+        return { type, dxfId };
+      })
+      .filter((value): value is NonNullable<typeof value> => value !== undefined);
+
+    return { name, pivot, count, elements };
+  });
+
+  return { tableStyles, defaultTableStyle, defaultPivotStyle };
+}
 
 /**
  * Parse the complete stylesheet from a styleSheet element.
@@ -220,6 +314,10 @@ export function parseStyleSheet(styleSheetElement: XmlElement): XlsxStyleSheet {
   const cellStyleXfsEl = getChild(styleSheetElement, "cellStyleXfs");
   const cellXfsEl = getChild(styleSheetElement, "cellXfs");
   const cellStylesEl = getChild(styleSheetElement, "cellStyles");
+  const dxfsEl = getChild(styleSheetElement, "dxfs");
+  const indexedColors = parseIndexedColors(styleSheetElement);
+  const parsedTableStyles = parseTableStyles(styleSheetElement);
+  const dxfs = parseDxfs(dxfsEl);
 
   return {
     numberFormats: parseNumFmts(numFmtsEl),
@@ -229,5 +327,10 @@ export function parseStyleSheet(styleSheetElement: XmlElement): XlsxStyleSheet {
     cellStyleXfs: parseCellXfs(cellStyleXfsEl),
     cellXfs: parseCellXfs(cellXfsEl),
     cellStyles: parseCellStyles(cellStylesEl),
+    ...(indexedColors.length > 0 ? { indexedColors } : {}),
+    ...(dxfs.length > 0 ? { dxfs } : {}),
+    ...(parsedTableStyles.tableStyles.length > 0 ? { tableStyles: parsedTableStyles.tableStyles } : {}),
+    ...(parsedTableStyles.defaultTableStyle ? { defaultTableStyle: parsedTableStyles.defaultTableStyle } : {}),
+    ...(parsedTableStyles.defaultPivotStyle ? { defaultPivotStyle: parsedTableStyles.defaultPivotStyle } : {}),
   };
 }

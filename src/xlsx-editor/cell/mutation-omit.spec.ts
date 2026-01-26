@@ -20,6 +20,7 @@ function addr(col: number, row: number): CellAddress {
 
 function createWorksheet(cells: readonly Cell[]): XlsxWorksheet {
   return {
+    dateSystem: "1900",
     name: "Sheet1",
     sheetId: 1,
     state: "visible",
@@ -43,7 +44,7 @@ describe("xlsx-editor/cell/mutation (omit keys)", () => {
       {
         address: addr(1, 1),
         value: { type: "string", value: "old" },
-        formula: "SUM(1,2)",
+        formula: { type: "normal", expression: "SUM(1,2)" },
         styleId: styleId(10),
       },
     ]);

@@ -11,6 +11,7 @@
 
 import type { CellAddress } from "./address";
 import type { StyleId } from "../types";
+import type { Formula } from "./formula";
 
 // =============================================================================
 // Error Values
@@ -125,8 +126,8 @@ export type Cell = {
   readonly address: CellAddress;
   /** Cell value (discriminated union) */
   readonly value: CellValue;
-  /** Optional formula expression (TODO: replace with Formula type) */
-  readonly formula?: string;
+  /** Optional formula (ECMA-376 <f> element) */
+  readonly formula?: Formula;
   /** Optional style index referencing cellXfs in styles.xml */
   readonly styleId?: StyleId;
 };

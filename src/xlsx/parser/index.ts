@@ -18,14 +18,20 @@
 
 import type { XlsxWorkbook, XlsxDefinedName, XlsxWorksheet } from "../domain/workbook";
 import { createDefaultStyleSheet } from "../domain/style/types";
+import type { XlsxTable } from "../domain/table/types";
 import type { XlsxSheetInfo, XlsxWorkbookInfo } from "./context";
 import { createParseContext } from "./context";
+import type { XlsxParseOptions } from "./options";
+import { resolveXlsxDateSystem } from "../domain/date-system";
 import { parseSharedStrings } from "./shared-strings";
 import { parseStyleSheet } from "./styles/index";
+import { parseComments } from "./comments";
+import { parseTable } from "./table";
 import { parseWorksheet } from "./worksheet";
 import { parseBooleanAttr, parseIntAttr } from "./primitive";
 import type { XmlElement, XmlDocument } from "../../xml";
 import { parseXml, getAttr, getChild, getChildren, getTextContent, isXmlElement } from "../../xml";
+import { basenamePosixPath, dirnamePosixPath, joinPosixPath, normalizePosixPath } from "../../files/ooxml-path";
 
 // =============================================================================
 // Helper Functions
@@ -76,6 +82,26 @@ export function parseRelationships(relsElement: XmlElement): ReadonlyMap<string,
     }
   }
   return map;
+}
+
+type RelationshipInfo = {
+  readonly id: string;
+  readonly type: string;
+  readonly target: string;
+  readonly targetMode?: "External" | "Internal";
+};
+
+function parseRelationshipInfos(relsElement: XmlElement): readonly RelationshipInfo[] {
+  return getChildren(relsElement, "Relationship").flatMap((rel): readonly RelationshipInfo[] => {
+    const id = getAttr(rel, "Id");
+    const target = getAttr(rel, "Target");
+    const type = getAttr(rel, "Type");
+    if (!id || !target || !type) {
+      return [];
+    }
+    const targetMode = getAttr(rel, "TargetMode") as RelationshipInfo["targetMode"];
+    return [{ id, target, type, targetMode }];
+  });
 }
 
 // =============================================================================
@@ -173,12 +199,14 @@ export function parseDefinedNames(definedNamesElement: XmlElement | undefined): 
  * @see ECMA-376 Part 4, Section 18.2.28 (workbook)
  */
 export function parseWorkbookXml(workbookElement: XmlElement): XlsxWorkbookInfo {
+  const workbookPrEl = getChild(workbookElement, "workbookPr");
   const sheetsEl = getChild(workbookElement, "sheets");
   const definedNamesEl = getChild(workbookElement, "definedNames");
 
   return {
     sheets: parseSheets(sheetsEl),
     definedNames: parseDefinedNames(definedNamesEl),
+    dateSystem: resolveXlsxDateSystem(workbookPrEl ? parseBooleanAttr(getAttr(workbookPrEl, "date1904")) : undefined),
   };
 }
 
@@ -205,11 +233,12 @@ export function resolveSheetPath(rId: string, relationships: ReadonlyMap<string,
   if (!target) {
     throw new Error(`Relationship ${rId} not found`);
   }
+  const normalizedTarget = target.startsWith("/") ? target.slice(1) : target;
   // xl/worksheets/sheet1.xml or worksheets/sheet1.xml
-  if (target.startsWith("xl/")) {
-    return target;
+  if (normalizedTarget.startsWith("xl/")) {
+    return normalizedTarget;
   }
-  return `xl/${target}`;
+  return `xl/${normalizedTarget}`;
 }
 
 // =============================================================================
@@ -246,6 +275,103 @@ function parseStylesOrDefault(xml: string | undefined) {
   return parseStyleSheet(getDocumentRoot(parseXml(xml)));
 }
 
+function resolveRelationshipsPathForPart(partPath: string): string {
+  const dir = dirnamePosixPath(partPath);
+  const base = basenamePosixPath(partPath);
+  return joinPosixPath(dir, "_rels", `${base}.rels`);
+}
+
+function resolveTargetPath(partPath: string, target: string): string {
+  const baseDir = dirnamePosixPath(partPath);
+  const resolved = normalizePosixPath(joinPosixPath(baseDir, target));
+  return resolved.startsWith("/") ? resolved.slice(1) : resolved;
+}
+
+async function loadWorksheetComments(
+  getFileContent: (path: string) => Promise<string | undefined>,
+  worksheetXmlPath: string,
+  commentsTarget: string,
+): Promise<ReturnType<typeof parseComments>> {
+  const commentsPath = resolveTargetPath(worksheetXmlPath, commentsTarget);
+  const commentsXml = await getFileContent(commentsPath);
+  if (!commentsXml) {
+    throw new Error(`Comments part not found: ${commentsPath}`);
+  }
+  return parseComments(getDocumentRoot(parseXml(commentsXml)));
+}
+
+async function loadWorksheetCommentsFromRelationships(
+  getFileContent: (path: string) => Promise<string | undefined>,
+  worksheetXmlPath: string,
+  relationships: readonly RelationshipInfo[],
+): Promise<ReturnType<typeof parseComments> | undefined> {
+  const commentsTarget = relationships.find((rel) => rel.type.endsWith("/comments"))?.target;
+  if (!commentsTarget) {
+    return undefined;
+  }
+  const comments = await loadWorksheetComments(getFileContent, worksheetXmlPath, commentsTarget);
+  return comments.length > 0 ? comments : undefined;
+}
+
+function resolveHyperlinkTarget(
+  worksheetXmlPath: string,
+  rel: RelationshipInfo,
+): { readonly target: string; readonly targetMode?: RelationshipInfo["targetMode"] } {
+  const raw = rel.target;
+  if (rel.targetMode === "External") {
+    return { target: raw, targetMode: rel.targetMode };
+  }
+  return { target: resolveTargetPath(worksheetXmlPath, raw), targetMode: rel.targetMode };
+}
+
+function resolveWorksheetHyperlinksFromRelationships(
+  worksheetXmlPath: string,
+  baseWorksheet: XlsxWorksheet,
+  relationships: readonly RelationshipInfo[],
+): XlsxWorksheet {
+  const baseHyperlinks = baseWorksheet.hyperlinks;
+  if (!baseHyperlinks || baseHyperlinks.length === 0) {
+    return baseWorksheet;
+  }
+
+  const byId = new Map<string, RelationshipInfo>();
+  for (const rel of relationships) {
+    if (rel.type.endsWith("/hyperlink")) {
+      byId.set(rel.id, rel);
+    }
+  }
+
+  const resolved = baseHyperlinks.map((link) => {
+    const rId = link.relationshipId;
+    if (!rId) {
+      return link;
+    }
+    const rel = byId.get(rId);
+    if (!rel) {
+      return link;
+    }
+    const { target, targetMode } = resolveHyperlinkTarget(worksheetXmlPath, rel);
+    return { ...link, target, targetMode };
+  });
+
+  return { ...baseWorksheet, hyperlinks: resolved };
+}
+
+function collectTableRelationshipIds(worksheetRoot: XmlElement): readonly string[] {
+  const tablePartsEl = getChild(worksheetRoot, "tableParts");
+  if (!tablePartsEl) {
+    return [];
+  }
+  const ids: string[] = [];
+  for (const tablePartEl of getChildren(tablePartsEl, "tablePart")) {
+    const relId = getAttr(tablePartEl, "r:id") ?? getAttr(tablePartEl, "rId");
+    if (relId) {
+      ids.push(relId);
+    }
+  }
+  return ids;
+}
+
 // =============================================================================
 // Main Workbook Parser
 // =============================================================================
@@ -258,6 +384,7 @@ function parseStylesOrDefault(xml: string | undefined) {
  * a complete XlsxWorkbook object.
  *
  * @param getFileContent - Function to retrieve file content by path within the XLSX package
+ * @param options - Parser options (non-standard behaviors must be enabled explicitly)
  * @returns Parsed workbook with all sheets, styles, shared strings, and defined names
  * @throws Error if workbook.xml is not found
  *
@@ -277,6 +404,7 @@ function parseStylesOrDefault(xml: string | undefined) {
  */
 export async function parseXlsxWorkbook(
   getFileContent: (path: string) => Promise<string | undefined>,
+  options?: XlsxParseOptions,
 ): Promise<XlsxWorkbook> {
   // 1. Parse relationships
   const relsXml = await getFileContent("xl/_rels/workbook.xml.rels");
@@ -302,24 +430,58 @@ export async function parseXlsxWorkbook(
 
   // 6. Parse each worksheet
   const sheets: XlsxWorksheet[] = [];
+  const tables: XlsxTable[] = [];
   for (const sheetInfo of workbookInfo.sheets) {
     const xmlPath = resolveSheetPath(sheetInfo.rId, relationships);
     const sheetXml = await getFileContent(xmlPath);
     if (sheetXml) {
-      const worksheet = parseWorksheet(
-        getDocumentRoot(parseXml(sheetXml)),
+      const sheetDoc = parseXml(sheetXml);
+      const sheetRoot = getDocumentRoot(sheetDoc);
+      const tableRelIds = collectTableRelationshipIds(sheetRoot);
+
+      const relsPath = resolveRelationshipsPathForPart(xmlPath);
+      const sheetRelsXml = await getFileContent(relsPath);
+      const rels = parseRelsOrEmpty(sheetRelsXml);
+      const relInfos = sheetRelsXml ? parseRelationshipInfos(getDocumentRoot(parseXml(sheetRelsXml))) : [];
+
+      const baseWorksheet = parseWorksheet(
+        sheetRoot,
         context,
+        options,
         { ...sheetInfo, xmlPath },
       );
+      const comments = await loadWorksheetCommentsFromRelationships(getFileContent, xmlPath, relInfos);
+
+      const worksheetWithComments = comments ? { ...baseWorksheet, comments } : baseWorksheet;
+      const worksheet = resolveWorksheetHyperlinksFromRelationships(xmlPath, worksheetWithComments, relInfos);
+      const sheetIndex = sheets.length;
       sheets.push(worksheet);
+
+      if (tableRelIds.length > 0) {
+        for (const relId of tableRelIds) {
+          const target = rels.get(relId);
+          if (!target) {
+            throw new Error(`Missing relationship target for table rId "${relId}"`);
+          }
+          const tablePath = resolveTargetPath(xmlPath, target);
+          const tableXml = await getFileContent(tablePath);
+          if (!tableXml) {
+            throw new Error(`Table part not found: ${tablePath}`);
+          }
+          const tableRoot = getDocumentRoot(parseXml(tableXml));
+          tables.push(parseTable(tableRoot, sheetIndex));
+        }
+      }
     }
   }
 
   return {
+    dateSystem: workbookInfo.dateSystem,
     sheets,
     styles: styleSheet,
     sharedStrings,
     definedNames: workbookInfo.definedNames,
+    tables: tables.length > 0 ? tables : undefined,
   };
 }
 
@@ -330,6 +492,7 @@ export async function parseXlsxWorkbook(
 // Re-export context types and functions for external use
 export type { XlsxParseContext, XlsxSheetInfo, XlsxWorkbookInfo } from "./context";
 export { createParseContext, createDefaultParseContext } from "./context";
+export type { XlsxParseOptions } from "./options";
 
 // Re-export component parsers for granular usage
 export { parseSharedStrings, parseSharedStringsRich } from "./shared-strings";

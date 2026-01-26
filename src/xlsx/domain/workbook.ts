@@ -12,7 +12,14 @@
 import type { CellRange } from "./cell/address";
 import type { Cell } from "./cell/types";
 import type { XlsxStyleSheet } from "./style/types";
+import type { XlsxTable } from "./table/types";
 import type { RowIndex, ColIndex, StyleId } from "./types";
+import type { XlsxConditionalFormatting } from "./conditional-formatting";
+import type { XlsxComment } from "./comment";
+import type { XlsxHyperlink } from "./hyperlink";
+import type { XlsxDateSystem } from "./date-system";
+import type { XlsxColor } from "./style/font";
+import type { XlsxDataValidation } from "./data-validation";
 
 // =============================================================================
 // Column Definition
@@ -121,6 +128,26 @@ export type XlsxSheetView = {
 };
 
 // =============================================================================
+// Sheet Format Properties
+// =============================================================================
+
+/**
+ * Worksheet default formatting properties.
+ *
+ * Corresponds to `worksheet/sheetFormatPr` in SpreadsheetML.
+ *
+ * @see ECMA-376 Part 4, Section 18.3.1.82 (sheetFormatPr)
+ */
+export type XlsxSheetFormatPr = {
+  /** Default row height in points */
+  readonly defaultRowHeight?: number;
+  /** Default column width in character units */
+  readonly defaultColWidth?: number;
+  /** Whether the default row height is zero */
+  readonly zeroHeight?: boolean;
+};
+
+// =============================================================================
 // Worksheet
 // =============================================================================
 
@@ -132,6 +159,8 @@ export type XlsxSheetView = {
  * @see ECMA-376 Part 4, Section 18.3.1.99 (worksheet)
  */
 export type XlsxWorksheet = {
+  /** Workbook date system (1900/1904) that affects date serial interpretation */
+  readonly dateSystem: XlsxDateSystem;
   /** Sheet name (tab name) */
   readonly name: string;
   /** Unique sheet identifier */
@@ -142,12 +171,29 @@ export type XlsxWorksheet = {
   readonly dimension?: CellRange;
   /** Sheet view configuration */
   readonly sheetView?: XlsxSheetView;
+  /** Default sheet formatting (sheetFormatPr) */
+  readonly sheetFormatPr?: XlsxSheetFormatPr;
+  /**
+   * Sheet tab color (from `worksheet/sheetPr/tabColor`).
+   *
+   * @see ECMA-376 Part 4, Section 18.3.1.84 (sheetPr)
+   * @see ECMA-376 Part 4, Section 18.3.1.92 (tabColor)
+   */
+  readonly tabColor?: XlsxColor;
   /** Column definitions */
   readonly columns?: readonly XlsxColumnDef[];
   /** Rows with cell data */
   readonly rows: readonly XlsxRow[];
   /** Merged cell ranges */
   readonly mergeCells?: readonly CellRange[];
+  /** Conditional formatting rules for this sheet */
+  readonly conditionalFormattings?: readonly XlsxConditionalFormatting[];
+  /** Data validation rules for this sheet */
+  readonly dataValidations?: readonly XlsxDataValidation[];
+  /** Cell comments (legacy comments) */
+  readonly comments?: readonly XlsxComment[];
+  /** Hyperlinks declared for this sheet */
+  readonly hyperlinks?: readonly XlsxHyperlink[];
   /** Path to the worksheet XML within the package (e.g., "xl/worksheets/sheet1.xml") */
   readonly xmlPath: string;
 };
@@ -200,6 +246,8 @@ export type XlsxCalcProperties = {
  * @see ECMA-376 Part 4, Section 18.2.28 (workbook)
  */
 export type XlsxWorkbook = {
+  /** Workbook date system (1900/1904) that affects date serial interpretation */
+  readonly dateSystem: XlsxDateSystem;
   /** All worksheets in the workbook */
   readonly sheets: readonly XlsxWorksheet[];
   /** Workbook styles */
@@ -208,6 +256,8 @@ export type XlsxWorkbook = {
   readonly sharedStrings: readonly string[];
   /** Named ranges and formulas */
   readonly definedNames?: readonly XlsxDefinedName[];
+  /** Workbook tables (ListObjects) */
+  readonly tables?: readonly XlsxTable[];
   /** Calculation settings */
   readonly calcProperties?: XlsxCalcProperties;
 };
