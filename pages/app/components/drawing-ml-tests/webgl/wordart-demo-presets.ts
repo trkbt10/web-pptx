@@ -13,7 +13,7 @@
  * - domain/3d.ts: PresetMaterialType, PresetCameraType, etc.
  */
 
-import type { PresetMaterialType, PresetCameraType, BevelPresetType, LightRigType, LightRigDirection } from "@lib/pptx/domain/three-d";
+import type { PresetMaterialType, PresetCameraType, BevelPresetType, LightRigType, LightRigDirection } from "@oxen/pptx/domain/three-d";
 
 /**
  * Demo gradient stop (resolved color)

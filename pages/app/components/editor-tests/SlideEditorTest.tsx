@@ -17,14 +17,14 @@ import {
   Panel,
 } from "@lib/pptx-editor";
 import type { ResizeHandlePosition } from "@lib/pptx-editor";
-import type { Slide, Shape } from "@lib/pptx/domain";
-import type { SpShape, GrpShape, GraphicFrame, CxnShape } from "@lib/pptx/domain/shape";
-import type { Line } from "@lib/pptx/domain/color/types";
-import type { Table, TableRow, TableCell } from "@lib/pptx/domain/table";
-import type { ShapeId } from "@lib/pptx/domain";
-import { px, deg, pt } from "@lib/ooxml/domain/units";
-import { createCoreRenderContext } from "@lib/pptx/render/render-context";
-import { renderSlideSvg } from "@lib/pptx/render/svg/renderer";
+import type { Slide, Shape } from "@oxen/pptx/domain";
+import type { SpShape, GrpShape, GraphicFrame, CxnShape } from "@oxen/pptx/domain/shape";
+import type { Line } from "@oxen/pptx/domain/color/types";
+import type { Table, TableRow, TableCell } from "@oxen/pptx/domain/table/types";
+import type { ShapeId } from "@oxen/pptx/domain";
+import { px, deg, pt } from "@oxen/ooxml/domain/units";
+import { createCoreRenderContext } from "@oxen/pptx-render";
+import { renderSlideSvg } from "@oxen/pptx-render/svg";
 
 // =============================================================================
 // Fixture Helpers

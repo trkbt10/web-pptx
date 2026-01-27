@@ -5,11 +5,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { XlsxWorkbook, XlsxWorksheet, XlsxRow } from "../../../../xlsx/domain/workbook";
-import type { Cell, CellValue } from "../../../../xlsx/domain/cell/types";
-import type { CellAddress } from "../../../../xlsx/domain/cell/address";
-import { colIdx, rowIdx } from "../../../../xlsx/domain/types";
-import { createDefaultStyleSheet } from "../../../../xlsx/domain/style/types";
+import type { XlsxWorkbook, XlsxWorksheet, XlsxRow } from "@oxen/xlsx/domain/workbook";
+import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
+import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
 import { getCellValue } from "../../../../xlsx-editor/cell/query";
 import { createChartDataEditor, editorToSheetUpdates } from "./xlsx-integration";
 

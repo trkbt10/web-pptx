@@ -6,20 +6,20 @@
  */
 
 import type { ReactNode } from "react";
-import type { Pixels } from "../../../../ooxml/domain/units";
+import type { Pixels } from "@oxen/ooxml/domain/units";
 import type {
   LayoutResult,
   LayoutLine,
   PositionedSpan,
-} from "../../../../pptx/render/text-layout";
+} from "@oxen/pptx-render/text-layout";
 import { fontSizeToPixels, getTextVisualBounds } from "./text-geometry";
 import {
   applyTextTransform,
   applyVerticalAlign,
   buildFontFamily,
   toSvgDominantBaseline,
-} from "../../../../pptx/render/react/primitives/text/text-utils";
-import { createTextEffectsFilterDef } from "../../../../pptx/render/react/drawing-ml";
+  createTextEffectsFilterDef,
+} from "@oxen/pptx-render/react";
 import type { CompositionState } from "../coordinator/types";
 
 // =============================================================================

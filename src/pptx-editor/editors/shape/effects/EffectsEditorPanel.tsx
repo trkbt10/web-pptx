@@ -7,7 +7,7 @@
  */
 
 import { useState, useCallback, type CSSProperties } from "react";
-import type { Effects } from "../../../../pptx/domain/types";
+import type { Effects } from "@oxen/pptx/domain/types";
 import { EFFECT_CONFIGS } from "./constants";
 import { EffectListPanel } from "./EffectListPanel";
 import { EffectDetailPanel } from "./EffectDetailPanel";

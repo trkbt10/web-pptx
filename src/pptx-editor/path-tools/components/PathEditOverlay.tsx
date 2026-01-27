@@ -5,7 +5,7 @@
  */
 
 import React, { useCallback, useEffect } from "react";
-import { px } from "../../../ooxml/domain/units";
+import { px } from "@oxen/ooxml/domain/units";
 import type { DrawingPath, ModifierKeys } from "../types";
 import { getModifierKeys } from "../types";
 import { AnchorPoint } from "./AnchorPoint";

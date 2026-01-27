@@ -1,3 +1,0 @@
-/**
- * @file XML type definitions
- */

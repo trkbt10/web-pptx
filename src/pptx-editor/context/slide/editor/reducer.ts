@@ -4,9 +4,9 @@
  * State management logic for slide editing operations.
  */
 
-import type { Slide, Shape } from "../../../../pptx/domain";
-import type { Bounds, ShapeId } from "../../../../pptx/domain/types";
-import { px, deg } from "../../../../ooxml/domain/units";
+import type { Slide, Shape } from "@oxen/pptx/domain";
+import type { Bounds, ShapeId } from "@oxen/pptx/domain/types";
+import { px, deg } from "@oxen/ooxml/domain/units";
 import type { SlideEditorState, SlideEditorAction } from "./types";
 import {
   createHistory,
@@ -30,7 +30,7 @@ import {
   getCombinedCenter,
 } from "../../../shape/bounds";
 import { withUpdatedTransform } from "../../../shape/transform";
-import { getShapeTransform } from "../../../../pptx/render/svg/slide-utils";
+import { getShapeTransform } from "@oxen/pptx-render/svg";
 import { ungroupShape, groupShapes } from "../../../shape/group";
 
 // =============================================================================

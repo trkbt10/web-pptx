@@ -6,10 +6,10 @@
  */
 
 import type { CSSProperties } from "react";
-import type { SlideSize, PresentationFile } from "../../../pptx/domain";
-import type { Background } from "../../../pptx/domain/slide";
-import type { SlideLayoutAttributes } from "../../../pptx/parser/slide/layout-parser";
-import type { SlideLayoutOption } from "../../../pptx/app";
+import type { SlideSize, PresentationFile } from "@oxen/pptx/domain";
+import type { Background } from "@oxen/pptx/domain/slide/types";
+import type { SlideLayoutAttributes } from "@oxen/pptx/parser/slide/layout-parser";
+import type { SlideLayoutOption } from "@oxen/pptx/app";
 import { SlidePropertiesPanel } from "../property/SlidePropertiesPanel";
 import { InspectorSection } from "../../../office-editor-components/layout";
 

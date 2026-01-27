@@ -6,9 +6,9 @@
  */
 
 import { useMemo, type CSSProperties, type ReactNode } from "react";
-import type { DocxParagraph } from "../../docx/domain/paragraph";
-import type { DocxRun, DocxRunContent, DocxRunProperties } from "../../docx/domain/run";
-import type { DocxStyles } from "../../docx/domain/styles";
+import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
+import type { DocxRun, DocxRunContent, DocxRunProperties } from "@oxen/docx/domain/run";
+import type { DocxStyles } from "@oxen/docx/domain/styles";
 
 // =============================================================================
 // Types

@@ -12,9 +12,9 @@ import {
   extractTextProperties,
   getEffectiveRunPropertiesAtCursor,
 } from "./text-property-extractor";
-import type { TextBody, TextRun, Paragraph } from "../../../pptx/domain/text";
+import type { TextBody, TextRun, Paragraph } from "@oxen/pptx/domain/text";
 import type { CursorPosition, TextSelection } from "../../slide/text-edit";
-import type { Points, Pixels } from "../../../ooxml/domain/units";
+import type { Points, Pixels } from "@oxen/ooxml/domain/units";
 
 // =============================================================================
 // Test Fixtures

@@ -15,8 +15,8 @@
  */
 
 import * as fs from "node:fs";
-import { openPresentation, LIBREOFFICE_RENDER_OPTIONS } from "../src/pptx";
-import { renderSlideToSvg } from "../src/pptx/render/svg";
+import { openPresentation, LIBREOFFICE_RENDER_OPTIONS } from "@oxen/pptx";
+import { renderSlideToSvg } from "@oxen/pptx-render/svg";
 import { loadPptxFile } from "./lib/pptx-loader";
 
 type AnalysisResult = {

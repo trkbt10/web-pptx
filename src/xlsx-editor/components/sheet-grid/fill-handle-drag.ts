@@ -5,8 +5,8 @@
  * it converts pointer movement into target ranges and dispatches reducer actions.
  */
 
-import type { CellAddress, CellRange } from "../../../xlsx/domain/cell/address";
-import { colIdx as colIdxFn, rowIdx as rowIdxFn } from "../../../xlsx/domain/types";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import { colIdx as colIdxFn, rowIdx as rowIdxFn } from "@oxen/xlsx/domain/types";
 import type { XlsxEditorAction } from "../../context/workbook/editor/types";
 import type { createSheetLayout } from "../../selectors/sheet-layout";
 import type { NormalizedMergeRange } from "../../sheet/merge-range";

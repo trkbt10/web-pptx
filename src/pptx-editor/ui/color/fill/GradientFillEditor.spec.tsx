@@ -5,8 +5,8 @@
 // @vitest-environment jsdom
 
 import { render, fireEvent } from "@testing-library/react";
-import { pct } from "../../../../ooxml/domain/units";
-import type { GradientFill } from "../../../../ooxml/domain/fill";
+import { pct } from "@oxen/ooxml/domain/units";
+import type { GradientFill } from "@oxen/ooxml/domain/fill";
 import { GradientFillEditor } from "./GradientFillEditor";
 
 describe("GradientFillEditor", () => {

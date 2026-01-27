@@ -7,11 +7,11 @@
 
 import { useMemo, useCallback, type CSSProperties } from "react";
 import { colorTokens } from "../../../office-editor-components/design-tokens";
-import type { Shape } from "../../../pptx/domain/index";
-import type { Transform } from "../../../pptx/domain/types";
-import type { Fill, Line } from "../../../pptx/domain/color/types";
-import { px, deg } from "../../../ooxml/domain/units";
-import { type ShapeId } from "../../../pptx/domain/types";
+import type { Shape } from "@oxen/pptx/domain/index";
+import type { Transform } from "@oxen/pptx/domain/types";
+import type { Fill, Line } from "@oxen/pptx/domain/color/types";
+import { px, deg } from "@oxen/ooxml/domain/units";
+import { type ShapeId } from "@oxen/pptx/domain/types";
 import { Accordion } from "../../../office-editor-components/layout";
 import { Input } from "../../../office-editor-components/primitives/index";
 import { FillEditor } from "../../editors/color/FillEditor";

@@ -5,8 +5,8 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import type { CellAddress } from "../../../xlsx/domain/cell/address";
-import type { XlsxWorksheet } from "../../../xlsx/domain/workbook";
+import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
+import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
 import { colorTokens } from "../../../office-editor-components";
 import { parseCellUserInput } from "./parse-cell-user-input";
 import type { ParseCellUserInputResult } from "./parse-cell-user-input";

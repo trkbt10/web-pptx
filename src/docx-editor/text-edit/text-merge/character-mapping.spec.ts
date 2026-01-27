@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect } from "vitest";
-import type { DocxParagraph } from "../../../docx/domain/paragraph";
-import type { DocxRunProperties } from "../../../docx/domain/run";
-import { halfPoints, docxRelId } from "../../../docx/domain/types";
+import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
+import type { DocxRunProperties } from "@oxen/docx/domain/run";
+import { halfPoints, docxRelId } from "@oxen/docx/domain/types";
 import {
   buildCharacterPropertiesMap,
   findCommonPrefixSuffix,

@@ -5,10 +5,10 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, type CSSProperties } from "react";
-import type { CellAddress } from "../../../xlsx/domain/cell/address";
-import { colIdx, rowIdx } from "../../../xlsx/domain/types";
-import type { XlsxStyleSheet } from "../../../xlsx/domain/style/types";
-import type { XlsxWorksheet } from "../../../xlsx/domain/workbook";
+import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import type { XlsxStyleSheet } from "@oxen/xlsx/domain/style/types";
+import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
 import { colorTokens } from "../../../office-editor-components";
 import { XlsxCellEditorOverlay } from "../cell-input/XlsxCellEditorOverlay";
 import type { ParseCellUserInputResult } from "../cell-input/parse-cell-user-input";

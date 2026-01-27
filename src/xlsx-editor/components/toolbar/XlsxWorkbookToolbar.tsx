@@ -6,8 +6,8 @@
 
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { AddIcon, AlignCenterIcon, AlignLeftIcon, AlignRightIcon, Button, Input, LineIcon, Select, ToggleButton, spacingTokens, MergeCellsIcon, UnmergeCellsIcon } from "../../../office-editor-components";
-import { indexToColumnLetter, type CellAddress, type CellRange } from "../../../xlsx/domain/cell/address";
-import { colIdx, rowIdx } from "../../../xlsx/domain/types";
+import { indexToColumnLetter, type CellAddress, type CellRange } from "@oxen/xlsx/domain/cell/address";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
 import { StylePicker } from "./StylePicker";
 import { parseCellUserInput } from "../cell-input/parse-cell-user-input";
 import { formatCellEditText } from "../cell-input/format-cell-edit-text";
@@ -15,8 +15,8 @@ import { useXlsxWorkbookEditor } from "../../context/workbook/XlsxWorkbookEditor
 import { getCell } from "../../cell/query";
 import { resolveCellStyleDetails } from "../../selectors/cell-style-details";
 import { resolveSelectionFormatFlags } from "../../selectors/selection-format-flags";
-import type { XlsxFont } from "../../../xlsx/domain/style/font";
-import type { XlsxAlignment } from "../../../xlsx/domain/style/types";
+import type { XlsxFont } from "@oxen/xlsx/domain/style/font";
+import type { XlsxAlignment } from "@oxen/xlsx/domain/style/types";
 
 export type XlsxWorkbookToolbarProps = {
   readonly sheetIndex: number;

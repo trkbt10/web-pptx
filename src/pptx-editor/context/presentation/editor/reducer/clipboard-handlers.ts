@@ -4,9 +4,9 @@
  * Handlers for copy and paste operations.
  */
 
-import type { Shape } from "../../../../../pptx/domain";
-import type { ShapeId } from "../../../../../pptx/domain/types";
-import { px } from "../../../../../ooxml/domain/units";
+import type { Shape } from "@oxen/pptx/domain";
+import type { ShapeId } from "@oxen/pptx/domain/types";
+import { px } from "@oxen/ooxml/domain/units";
 import type { PresentationEditorState } from "../types";
 import type { HandlerMap } from "./handler-types";
 import { getActiveSlide, updateActiveSlideInDocument } from "./helpers";
@@ -15,7 +15,7 @@ import { pushHistory } from "../../../slide/state";
 import { findShapeById } from "../../../../shape/query";
 import { generateShapeId } from "../../../../shape/mutation";
 import { withUpdatedTransform } from "../../../../shape/transform";
-import { getShapeTransform } from "../../../../../pptx/render/svg/slide-utils";
+import { getShapeTransform } from "@oxen/pptx-render/svg";
 
 // Note: CopyAction and PasteAction types not needed since handlers don't use action payload
 

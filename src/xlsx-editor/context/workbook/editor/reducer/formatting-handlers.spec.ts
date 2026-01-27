@@ -2,11 +2,11 @@
  * @file Formatting handlers tests
  */
 
-import { EXCEL_MAX_COLS } from "../../../../../xlsx/domain/constants";
-import type { CellRange } from "../../../../../xlsx/domain/cell/address";
-import type { XlsxWorkbook, XlsxWorksheet } from "../../../../../xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "../../../../../xlsx/domain/style/types";
-import { colIdx, rowIdx, styleId } from "../../../../../xlsx/domain/types";
+import { EXCEL_MAX_COLS } from "@oxen/xlsx/domain/constants";
+import type { CellRange } from "@oxen/xlsx/domain/cell/address";
+import type { XlsxWorkbook, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
+import { colIdx, rowIdx, styleId } from "@oxen/xlsx/domain/types";
 import { createInitialState, xlsxEditorReducer } from "./index";
 
 function createWorksheet(name: string, sheetId: number): XlsxWorksheet {

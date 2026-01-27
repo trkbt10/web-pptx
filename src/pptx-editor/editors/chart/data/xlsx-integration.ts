@@ -7,16 +7,16 @@
  * @see ECMA-376 Part 4 (SpreadsheetML)
  */
 
-import type { XlsxWorkbook, XlsxWorksheet } from "../../../../xlsx/domain/workbook";
-import type { CellAddress } from "../../../../xlsx/domain/cell/address";
-import type { CellValue } from "../../../../xlsx/domain/cell/types";
-import { colIdx } from "../../../../xlsx/domain/types";
+import type { XlsxWorkbook, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
+import type { CellValue } from "@oxen/xlsx/domain/cell/types";
+import { colIdx } from "@oxen/xlsx/domain/types";
 import {
   xlsxEditorReducer,
   createInitialState,
 } from "../../../../xlsx-editor/context/workbook/editor/reducer";
 import type { XlsxEditorAction } from "../../../../xlsx-editor/context/workbook/editor/types";
-import { indexToColumnLetter } from "../../../../xlsx/domain/cell/address";
+import { indexToColumnLetter } from "@oxen/xlsx/domain/cell/address";
 import {
   type ChartDataLayout,
   detectChartDataLayout,

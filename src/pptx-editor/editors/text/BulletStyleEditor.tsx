@@ -15,11 +15,11 @@ import type {
   BulletType,
   AutoNumberBullet,
   CharBullet,
-} from "../../../pptx/domain/text";
-import type { TextTypeface } from "../../../pptx/domain/types";
-import type { Color } from "../../../ooxml/domain/color";
+} from "@oxen/pptx/domain/text";
+import type { TextTypeface } from "@oxen/pptx/domain/types";
+import type { Color } from "@oxen/ooxml/domain/color";
 import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
-import { pct, pt, type Percent, type Points } from "../../../ooxml/domain/units";
+import { pct, pt, type Percent, type Points } from "@oxen/ooxml/domain/units";
 
 // =============================================================================
 // Types

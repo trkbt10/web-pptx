@@ -6,16 +6,16 @@
  */
 
 import type { ReactNode, CSSProperties } from "react";
-import type { Pixels } from "../../ooxml/domain/units";
-import { px } from "../../ooxml/domain/units";
+import type { Pixels } from "@oxen/ooxml/domain/units";
+import { px } from "@oxen/ooxml/domain/units";
 import type {
   LayoutResult,
   PageLayout,
   HeaderFooterLayout,
   SelectionRect,
   CursorCoordinates,
-} from "../../office-text-layout/types";
-import { TextOverlay, CURSOR_ANIMATION_CSS } from "../../office-text-layout/renderers/svg-renderer";
+} from "@oxen/text-layout";
+import { TextOverlay, CURSOR_ANIMATION_CSS } from "@oxen/text-layout";
 
 // =============================================================================
 // Types

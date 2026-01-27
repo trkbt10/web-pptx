@@ -4,7 +4,7 @@
  * Generic selection state for shape-based editors.
  */
 
-import type { ShapeId } from "../../../../pptx/domain/types";
+import type { ShapeId } from "@oxen/pptx/domain/types";
 
 // =============================================================================
 // Types

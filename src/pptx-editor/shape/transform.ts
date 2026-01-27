@@ -9,9 +9,9 @@
  * according to ECMA-376.
  */
 
-import type { Shape, Transform, GrpShape, GroupTransform } from "../../pptx/domain";
+import type { Shape, Transform, GrpShape, GroupTransform } from "@oxen/pptx/domain";
 
-// getShapeTransform: import directly from "@/pptx/render/svg/slide-utils"
+// getShapeTransform: import directly from "@oxen/pptx-render/svg"
 
 // =============================================================================
 // Types

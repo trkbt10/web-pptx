@@ -4,8 +4,8 @@
  * Update and modification operations for shapes.
  */
 
-import type { Shape } from "../../pptx/domain";
-import type { ShapeId } from "../../pptx/domain/types";
+import type { Shape } from "@oxen/pptx/domain";
+import type { ShapeId } from "@oxen/pptx/domain/types";
 import { hasShapeId } from "./identity";
 
 /**

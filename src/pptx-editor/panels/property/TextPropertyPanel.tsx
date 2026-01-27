@@ -11,7 +11,7 @@ import { Accordion } from "../../../office-editor-components/layout";
 import { MixedRunPropertiesEditor } from "../../editors/text/MixedRunPropertiesEditor";
 import { MixedParagraphPropertiesEditor } from "../../editors/text/MixedParagraphPropertiesEditor";
 import { useTextEditContext } from "../../context/slide/TextEditContext";
-import type { RunProperties, ParagraphProperties } from "../../../pptx/domain/text";
+import type { RunProperties, ParagraphProperties } from "@oxen/pptx/domain/text";
 
 // =============================================================================
 // Types

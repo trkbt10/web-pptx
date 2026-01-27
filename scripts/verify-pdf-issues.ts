@@ -4,10 +4,10 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { importPdf } from "../src/pdf/importer/pdf-importer";
-import { exportPptx } from "../src/pptx/exporter";
-import { px } from "../src/ooxml/domain/units";
-import { loadZipPackage } from "../src/zip";
+import { importPdf } from "@oxen/pdf/importer/pdf-importer";
+import { exportPptx } from "@oxen/pptx/exporter";
+import { px } from "@oxen/ooxml/domain/units";
+import { loadZipPackage } from "@oxen/zip";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PDF_PATH = path.join(__dirname, "..", "fixtures", "samples", "modeling.pdf");
@@ -34,7 +34,7 @@ async function main() {
   console.log(`Specified slide size (960x540): ${result2.document.slideWidth} x ${result2.document.slideHeight}`);
 
   // Check what PDF's actual size is
-  const { parsePdf } = await import("../src/pdf/parser/pdf-parser");
+  const { parsePdf } = await import("@oxen/pdf");
   const parsed = await parsePdf(pdfBuffer, { pages: [1] });
   const page = parsed.pages[0];
   console.log(`PDF page size: ${page?.width.toFixed(2)} x ${page?.height.toFixed(2)} points`);

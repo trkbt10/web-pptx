@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import type { DocxParagraph } from "../../docx/domain/paragraph";
+import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
 import { ParagraphRenderer } from "./ParagraphRenderer";
 
 function createSimpleParagraph(text: string): DocxParagraph {

@@ -5,7 +5,7 @@
  * Extracted to eliminate code duplication across reducer handlers.
  */
 
-import type { XlsxWorkbook, XlsxWorksheet } from "../../../../xlsx/domain/workbook";
+import type { XlsxWorkbook, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
 
 /**
  * Update a worksheet in a workbook using an updater function.

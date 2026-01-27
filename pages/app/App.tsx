@@ -20,7 +20,7 @@ import { XlsxFormulaCatalogLayout } from "./pages/xlsx-editor/formula/XlsxFormul
 import { XlsxFormulaCatalogIndexPage } from "./pages/xlsx-editor/formula/XlsxFormulaCatalogIndexPage";
 import { XlsxFormulaFunctionPage } from "./pages/xlsx-editor/formula/XlsxFormulaFunctionPage";
 import { PresentationEditor } from "@lib/pptx-editor";
-import { convertToPresentationDocument, type PresentationDocument } from "@lib/pptx/app";
+import { convertToPresentationDocument, type PresentationDocument } from "@oxen/pptx/app";
 import "./App.css";
 
 // Demo PPTX URL (will be in the public folder)

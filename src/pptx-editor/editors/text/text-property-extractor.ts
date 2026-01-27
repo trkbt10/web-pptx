@@ -5,7 +5,7 @@
  * Handles Mixed property resolution for multi-run/multi-paragraph selections.
  */
 
-import type { TextBody, Paragraph, TextRun, RunProperties, ParagraphProperties } from "../../../pptx/domain/text";
+import type { TextBody, Paragraph, TextRun, RunProperties, ParagraphProperties } from "@oxen/pptx/domain/text";
 import type { CursorPosition, TextSelection } from "../../slide/text-edit";
 import { normalizeSelection, isSamePosition } from "../../slide/text-edit";
 import {

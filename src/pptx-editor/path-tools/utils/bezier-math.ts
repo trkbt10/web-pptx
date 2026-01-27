@@ -4,10 +4,10 @@
  * Mathematical functions for working with bezier curves.
  */
 
-import type { Point } from "../../../pptx/domain";
-import type { Pixels } from "../../../ooxml/domain/units";
-import type { Bounds } from "../../../pptx/domain/types";
-import { px } from "../../../ooxml/domain/units";
+import type { Point } from "@oxen/pptx/domain";
+import type { Pixels } from "@oxen/ooxml/domain/units";
+import type { Bounds } from "@oxen/pptx/domain/types";
+import { px } from "@oxen/ooxml/domain/units";
 
 // =============================================================================
 // Basic Math Utilities

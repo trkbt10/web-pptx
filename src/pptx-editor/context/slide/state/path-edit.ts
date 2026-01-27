@@ -4,9 +4,9 @@
  * State types and utilities for editing existing path shapes.
  */
 
-import type { Pixels } from "../../../../ooxml/domain/units";
-import type { ShapeId } from "../../../../pptx/domain/types";
-import type { CustomGeometry } from "../../../../pptx/domain";
+import type { Pixels } from "@oxen/ooxml/domain/units";
+import type { ShapeId } from "@oxen/pptx/domain/types";
+import type { CustomGeometry } from "@oxen/pptx/domain";
 import type {
   PathPointSelection,
   PathElementId,

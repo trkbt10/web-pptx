@@ -4,8 +4,8 @@
  * Usage: bun run scripts/debug-slide-output.ts [pptx-path] [slide-number]
  * Default: fixtures/poi-test-data/test-data/slideshow/themes.pptx slide 4
  */
-import { openPresentation } from "../src/pptx";
-import { renderSlideToSvg } from "../src/pptx/render/svg";
+import { openPresentation } from "@oxen/pptx";
+import { renderSlideToSvg } from "@oxen/pptx-render/svg";
 import * as fs from "node:fs";
 import { loadPptxFile } from "./lib/pptx-loader";
 

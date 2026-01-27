@@ -9,7 +9,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { createEmptyZipPackage } from "../src/zip";
+import { createEmptyZipPackage } from "@oxen/zip";
 
 // =============================================================================
 // Types

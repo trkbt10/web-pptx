@@ -13,11 +13,11 @@
  * @see ECMA-376 Part 4, Section 18.8.57 (tableStyles)
  */
 
-import type { CellAddress, CellRange } from "../../xlsx/domain/cell/address";
-import type { XlsxDifferentialFormat } from "../../xlsx/domain/style/dxf";
-import type { XlsxStyleSheet } from "../../xlsx/domain/style/types";
-import type { XlsxTable, XlsxTableStyleInfo } from "../../xlsx/domain/table/types";
-import type { XlsxTableStyle, XlsxTableStyleElementType } from "../../xlsx/domain/style/table-style";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import type { XlsxDifferentialFormat } from "@oxen/xlsx/domain/style/dxf";
+import type { XlsxStyleSheet } from "@oxen/xlsx/domain/style/types";
+import type { XlsxTable, XlsxTableStyleInfo } from "@oxen/xlsx/domain/table/types";
+import type { XlsxTableStyle, XlsxTableStyleElementType } from "@oxen/xlsx/domain/style/table-style";
 
 function getRangeBounds(range: CellRange): { readonly minRow: number; readonly maxRow: number; readonly minCol: number; readonly maxCol: number } {
   const startRow = range.start.row as number;

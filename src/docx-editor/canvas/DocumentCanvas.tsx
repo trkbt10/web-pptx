@@ -12,7 +12,7 @@ import {
   type CSSProperties,
   type MouseEvent,
 } from "react";
-import type { DocxBlockContent } from "../../docx/domain/document";
+import type { DocxBlockContent } from "@oxen/docx/domain/document";
 import { useDocumentEditorOptional } from "../context/document/DocumentEditorContext";
 
 // =============================================================================

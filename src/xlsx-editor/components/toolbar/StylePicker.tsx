@@ -18,7 +18,7 @@ import {
   fontTokens,
   radiusTokens,
 } from "../../../office-editor-components/design-tokens";
-import type { XlsxStyleSheet, XlsxCellXf } from "../../../xlsx/domain/style/types";
+import type { XlsxStyleSheet, XlsxCellXf } from "@oxen/xlsx/domain/style/types";
 import { StylePreview } from "./StylePreview";
 
 export type StylePickerProps = {

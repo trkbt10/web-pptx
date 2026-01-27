@@ -6,8 +6,8 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import type { Shape } from "../../../pptx/domain/index";
-import type { ShapeId } from "../../../pptx/domain/types";
+import type { Shape } from "@oxen/pptx/domain/index";
+import type { ShapeId } from "@oxen/pptx/domain/types";
 import { MultiSelectPanel } from "../property/MultiSelectPanel";
 import { SpShapePanel } from "../property/SpShapePanel";
 import { PicShapePanel } from "../property/PicShapePanel";

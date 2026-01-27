@@ -6,9 +6,9 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import type { Slide } from "../../pptx/domain/index";
-import type { SlideTransition } from "../../pptx/domain/transition";
-import type { SlideId, SlideWithId } from "../../pptx/app";
+import type { Slide } from "@oxen/pptx/domain/index";
+import type { SlideTransition } from "@oxen/pptx/domain/transition";
+import type { SlideId, SlideWithId } from "@oxen/pptx/app";
 import { usePresentationEditor } from "../context/presentation/PresentationEditorContext";
 import { SlideList } from "../slide-list";
 import { colorTokens } from "../../office-editor-components/design-tokens";

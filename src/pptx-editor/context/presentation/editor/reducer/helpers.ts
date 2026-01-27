@@ -4,9 +4,9 @@
  * Shared helper functions used across reducer handlers.
  */
 
-import type { Slide } from "../../../../../pptx/domain";
-import type { ShapeId } from "../../../../../pptx/domain/types";
-import type { PresentationDocument, SlideWithId } from "../../../../../pptx/app";
+import type { Slide } from "@oxen/pptx/domain";
+import type { ShapeId } from "@oxen/pptx/domain/types";
+import type { PresentationDocument, SlideWithId } from "@oxen/pptx/app";
 import type { PresentationEditorState } from "../types";
 import { findSlideById, updateSlide } from "../slide";
 import {

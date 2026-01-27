@@ -2,8 +2,8 @@
  * @file Sheet handlers tests
  */
 
-import type { XlsxWorkbook, XlsxWorksheet } from "../../../../../xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "../../../../../xlsx/domain/style/types";
+import type { XlsxWorkbook, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
 import type { XlsxEditorState } from "../types";
 import { createEmptyCellSelection, createIdleDragState } from "../types";
 import { createHistory, pushHistory } from "../../state/history";

@@ -4,9 +4,9 @@
  * Tests the DiagramEditor handles diagram data model correctly.
  */
 
-import type { DiagramDataModel, DiagramPoint, DiagramConnection } from "../../../pptx/domain/diagram";
-import type { BodyProperties } from "../../../pptx/domain/text";
-import { px } from "../../../ooxml/domain/units";
+import type { DiagramDataModel, DiagramPoint, DiagramConnection } from "@oxen/pptx/domain/diagram";
+import type { BodyProperties } from "@oxen/pptx/domain/text";
+import { px } from "@oxen/ooxml/domain/units";
 import { createDefaultDiagramDataModel, createDefaultDiagramPoint, createDefaultDiagramConnection } from "./index";
 
 const createDefaultBodyProperties = (): BodyProperties => ({

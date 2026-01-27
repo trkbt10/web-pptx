@@ -2,8 +2,8 @@
  * @file Document initialization tests
  */
 
-import { px } from "../../../../ooxml/domain/units";
-import type { Slide } from "../../../../pptx/domain";
+import { px } from "@oxen/ooxml/domain/units";
+import type { Slide } from "@oxen/pptx/domain";
 import {
   createDocumentFromPresentation,
   createEmptyDocument,

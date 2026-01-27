@@ -9,8 +9,8 @@
 
 import type { XlsxDragState } from "../editor/types";
 import { createIdleDragState } from "../editor/types";
-import type { CellAddress, CellRange } from "../../../../xlsx/domain/cell/address";
-import type { ColIndex, RowIndex } from "../../../../xlsx/domain/types";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import type { ColIndex, RowIndex } from "@oxen/xlsx/domain/types";
 
 // =============================================================================
 // Type Guards

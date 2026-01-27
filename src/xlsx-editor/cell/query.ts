@@ -4,10 +4,10 @@
  * Operations for reading and querying cells in a worksheet.
  */
 
-import type { XlsxRow, XlsxWorksheet } from "../../xlsx/domain/workbook";
-import type { Cell, CellValue } from "../../xlsx/domain/cell/types";
-import type { CellAddress, CellRange } from "../../xlsx/domain/cell/address";
-import { colIdx, rowIdx, type ColIndex, type RowIndex } from "../../xlsx/domain/types";
+import type { XlsxRow, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import { colIdx, rowIdx, type ColIndex, type RowIndex } from "@oxen/xlsx/domain/types";
 
 function findRow(worksheet: XlsxWorksheet, rowIndex: RowIndex): XlsxRow | undefined {
   return worksheet.rows.find((row) => row.rowNumber === rowIndex);

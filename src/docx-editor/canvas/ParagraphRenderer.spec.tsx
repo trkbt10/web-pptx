@@ -6,8 +6,8 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import type { DocxParagraph } from "../../docx/domain/paragraph";
-import { twips } from "../../docx/domain/types";
+import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
+import { twips } from "@oxen/docx/domain/types";
 import { ParagraphRenderer, computeParagraphStyles } from "./ParagraphRenderer";
 
 // =============================================================================

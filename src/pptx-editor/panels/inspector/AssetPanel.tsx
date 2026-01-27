@@ -9,10 +9,10 @@
  */
 
 import { useMemo, useState, useRef, useCallback, type CSSProperties } from "react";
-import type { PresentationFile } from "../../../pptx/domain";
-import { discoverMediaPaths } from "../../../pptx/app/media-discovery";
-import { toDataUrl, formatSize } from "../../../buffer";
-import { getMimeTypeFromPath } from "../../../pptx/opc";
+import type { PresentationFile } from "@oxen/pptx/domain";
+import { discoverMediaPaths } from "@oxen/pptx/app/media-discovery";
+import { toDataUrl, formatSize } from "@oxen/buffer";
+import { getMimeTypeFromPath } from "@oxen/pptx/opc/utils";
 import { InspectorSection, Accordion } from "../../../office-editor-components/layout";
 import { ImageIcon, AudioIcon, VideoIcon, FileIcon, AddIcon } from "../../../office-editor-components/icons";
 import { colorTokens, fontTokens, spacingTokens, iconTokens } from "../../../office-editor-components/design-tokens";

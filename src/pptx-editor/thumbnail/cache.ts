@@ -5,8 +5,8 @@
  * Since Slide objects are immutable, reference equality is used for cache hit detection.
  */
 
-import type { Slide } from "../../pptx/domain/index";
-import type { SlideId } from "../../pptx/app";
+import type { Slide } from "@oxen/pptx/domain/index";
+import type { SlideId } from "@oxen/pptx/app";
 
 // =============================================================================
 // Types

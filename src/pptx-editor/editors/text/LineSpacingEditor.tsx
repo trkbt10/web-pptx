@@ -8,9 +8,9 @@ import { useCallback, type CSSProperties } from "react";
 import { Select } from "../../../office-editor-components/primitives";
 import { FieldRow } from "../../../office-editor-components/layout";
 import { PercentEditor, PointsEditor } from "../primitives";
-import type { LineSpacing } from "../../../pptx/domain/text";
+import type { LineSpacing } from "@oxen/pptx/domain/text";
 import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
-import { pct, pt, type Percent, type Points } from "../../../ooxml/domain/units";
+import { pct, pt, type Percent, type Points } from "@oxen/ooxml/domain/units";
 
 // =============================================================================
 // Types

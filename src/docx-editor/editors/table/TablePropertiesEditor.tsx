@@ -9,8 +9,8 @@ import { useCallback, type CSSProperties, type ReactNode } from "react";
 import type {
   DocxTableProperties,
   DocxTableLook,
-} from "../../../docx/domain/table";
-import type { TableAlignment, TableLayoutType, TableWidth } from "../../../ooxml/domain/table";
+} from "@oxen/docx/domain/table";
+import type { TableAlignment, TableLayoutType, TableWidth } from "@oxen/ooxml/domain/table";
 import type { EditorProps } from "../../types";
 import { ToggleButton, Input, Select, Toggle } from "../../../office-editor-components/primitives";
 import { FieldGroup } from "../../../office-editor-components/layout";

@@ -4,7 +4,7 @@
  * Small helpers for converting UI strings to SpreadsheetML alignment enums.
  */
 
-import type { XlsxAlignment } from "../../../xlsx/domain/style/types";
+import type { XlsxAlignment } from "@oxen/xlsx/domain/style/types";
 
 /**
  * Parse a horizontal alignment string into a SpreadsheetML alignment enum.

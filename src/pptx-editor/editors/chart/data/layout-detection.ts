@@ -7,9 +7,9 @@
  * @see ECMA-376 Part 4 (SpreadsheetML)
  */
 
-import type { XlsxWorksheet } from "../../../../xlsx/domain/workbook";
-import type { CellAddress, CellRange } from "../../../../xlsx/domain/cell/address";
-import { colIdx, rowIdx } from "../../../../xlsx/domain/types";
+import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
 
 // =============================================================================
 // Types

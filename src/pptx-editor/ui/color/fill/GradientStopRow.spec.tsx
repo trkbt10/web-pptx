@@ -5,8 +5,8 @@
 // @vitest-environment jsdom
 
 import { render, fireEvent } from "@testing-library/react";
-import { pct } from "../../../../ooxml/domain/units";
-import type { GradientStop } from "../../../../ooxml/domain/fill";
+import { pct } from "@oxen/ooxml/domain/units";
+import type { GradientStop } from "@oxen/ooxml/domain/fill";
 import { GradientStopRow } from "./GradientStopRow";
 
 describe("GradientStopRow", () => {

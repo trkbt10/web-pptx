@@ -4,7 +4,7 @@
 
 import { render, fireEvent } from "@testing-library/react";
 import { JSDOM } from "jsdom";
-import type { DocxBlockContent, DocxDocument } from "../../docx/domain/document";
+import type { DocxBlockContent, DocxDocument } from "@oxen/docx/domain/document";
 import type { DocumentEditorContextValue } from "../context/document/DocumentEditorContext";
 import type { DocxEditorState } from "../context/document/editor/types";
 import { createInitialTextEditState } from "../context/document/editor/types";

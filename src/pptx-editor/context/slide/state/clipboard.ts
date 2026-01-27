@@ -4,7 +4,7 @@
  * Clipboard content type for copy/paste operations.
  */
 
-import type { Shape } from "../../../../pptx/domain";
+import type { Shape } from "@oxen/pptx/domain";
 
 // =============================================================================
 // Types

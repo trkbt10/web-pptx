@@ -4,7 +4,7 @@
  * Displays property editors for SpShape (general shape) elements.
  */
 
-import type { SpShape } from "../../../pptx/domain/index";
+import type { SpShape } from "@oxen/pptx/domain/index";
 import { Accordion } from "../../../office-editor-components/layout";
 import { LineEditor } from "../../ui/line";
 import {

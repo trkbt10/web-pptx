@@ -6,7 +6,7 @@
 
 import { useMemo, type CSSProperties } from "react";
 import { Button } from "../../../../office-editor-components/primitives";
-import type { Effects } from "../../../../pptx/domain/types";
+import type { Effects } from "@oxen/pptx/domain/types";
 import { EFFECT_CONFIGS } from "./constants";
 import type { EffectKey } from "./types";
 

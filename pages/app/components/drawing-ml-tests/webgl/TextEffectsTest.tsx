@@ -10,12 +10,12 @@
 
 import { useState, useMemo } from "react";
 import { type CheckItem, TestSubsection } from "../common";
-import { Text3DRenderer } from "@lib/pptx/render/webgl/text3d";
-import { extractText3DRuns } from "@lib/pptx/render/react/primitives";
+import { Text3DRenderer } from "@oxen/pptx-render/webgl/text3d";
+import { extractText3DRuns } from "@oxen/pptx-render/react";
 import { WordArtGallery } from "./WordArtGallery";
 import { allDemoWordArtPresets } from "./wordart-demo-presets";
-import type { PresetCameraType, PresetMaterialType, BevelPresetType } from "@lib/pptx/domain/three-d";
-import type { TextBody } from "@lib/pptx/domain/text";
+import type { PresetCameraType, PresetMaterialType, BevelPresetType } from "@oxen/pptx/domain/three-d";
+import type { TextBody } from "@oxen/pptx/domain/text";
 import {
   demoColorContext,
   createTextBody,

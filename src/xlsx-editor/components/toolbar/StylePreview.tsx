@@ -6,7 +6,7 @@
  */
 
 import type { CSSProperties } from "react";
-import type { XlsxStyleSheet, XlsxCellXf } from "../../../xlsx/domain/style/types";
+import type { XlsxStyleSheet, XlsxCellXf } from "@oxen/xlsx/domain/style/types";
 import { xlsxColorToCss } from "../../selectors/xlsx-color";
 import { radiusTokens } from "../../../office-editor-components/design-tokens";
 

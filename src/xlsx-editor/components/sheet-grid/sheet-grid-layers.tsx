@@ -9,8 +9,8 @@
 
 import { useCallback, useMemo, type CSSProperties } from "react";
 import { clampRange, useVirtualScrollContext } from "../../../office-editor-components";
-import type { XlsxWorksheet } from "../../../xlsx/domain/workbook";
-import type { FormulaEvaluator } from "../../../xlsx/formula/evaluator";
+import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import type { FormulaEvaluator } from "@oxen/xlsx/formula/evaluator";
 import { useXlsxWorkbookEditor } from "../../context/workbook/XlsxWorkbookEditorContext";
 import { normalizeMergeRange } from "../../sheet/merge-range";
 import { getAllSelectedRanges } from "../../context/workbook/state/selection";

@@ -6,8 +6,8 @@
  *
  * Usage: bun run scripts/compare-slide-details.ts [pptx-path] [slide-number]
  */
-import { openPresentation } from "../src/pptx";
-import { renderSlideToSvg } from "../src/pptx/render/svg";
+import { openPresentation } from "@oxen/pptx";
+import { renderSlideToSvg } from "@oxen/pptx-render/svg";
 import * as fs from "node:fs";
 import { loadPptxFile } from "./lib/pptx-loader";
 

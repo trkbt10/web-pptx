@@ -6,8 +6,8 @@
  */
 
 import { FieldGroup } from "../../../office-editor-components/layout";
-import { px } from "../../../ooxml/domain/units";
-import type { Backdrop3d } from "../../../pptx/domain";
+import { px } from "@oxen/ooxml/domain/units";
+import type { Backdrop3d } from "@oxen/pptx/domain";
 import type { EditorProps } from "../../../office-editor-components/types";
 import { PointEditor, createDefaultPoint } from "./PointEditor";
 

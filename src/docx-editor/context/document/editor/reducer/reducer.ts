@@ -4,7 +4,7 @@
  * Main reducer that combines all action handlers.
  */
 
-import type { DocxDocument } from "../../../../../docx/domain/document";
+import type { DocxDocument } from "@oxen/docx/domain/document";
 import type { DocxEditorState, DocxEditorAction } from "../types";
 import type { HandlerMap } from "./handler-types";
 import { combineHandlers } from "./handler-types";

@@ -7,8 +7,8 @@
 
 import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { DegreesEditor } from "../primitives/DegreesEditor";
-import { deg } from "../../../ooxml/domain/units";
-import type { Rotation3d } from "../../../pptx/domain";
+import { deg } from "@oxen/ooxml/domain/units";
+import type { Rotation3d } from "@oxen/pptx/domain";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 export type Rotation3dEditorProps = EditorProps<Rotation3d>;

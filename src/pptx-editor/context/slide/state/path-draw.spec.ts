@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { px } from "../../../../ooxml/domain/units";
+import { px } from "@oxen/ooxml/domain/units";
 import {
   createIdlePathDrawState,
   createDrawingPathDrawState,

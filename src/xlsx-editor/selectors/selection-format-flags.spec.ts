@@ -2,12 +2,12 @@
  * @file Tests for selection format "mixed" flags
  */
  
-import type { CellAddress, CellRange } from "../../xlsx/domain/cell/address";
-import type { XlsxStyleSheet } from "../../xlsx/domain/style/types";
-import type { XlsxWorksheet } from "../../xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "../../xlsx/domain/style/types";
-import { borderId, colIdx, fillId, fontId, numFmtId, rowIdx, styleId } from "../../xlsx/domain/types";
-import type { Cell } from "../../xlsx/domain/cell/types";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import type { XlsxStyleSheet } from "@oxen/xlsx/domain/style/types";
+import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
+import { borderId, colIdx, fillId, fontId, numFmtId, rowIdx, styleId } from "@oxen/xlsx/domain/types";
+import type { Cell } from "@oxen/xlsx/domain/cell/types";
 import { resolveSelectionFormatFlags } from "./selection-format-flags";
 
 function createAddress(col: number, row: number): CellAddress {

@@ -2,8 +2,8 @@
  * Debug script for master text styles
  */
 
-import { openPresentation } from "../src/pptx";
-import { parseXml, getByPath, getChild } from "../src/xml";
+import { openPresentation } from "@oxen/pptx";
+import { parseXml, getByPath, getChild } from "@oxen/xml";
 import { loadPptxFile } from "./lib/pptx-loader";
 
 async function main() {

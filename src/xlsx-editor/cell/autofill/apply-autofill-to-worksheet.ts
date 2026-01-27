@@ -9,12 +9,12 @@
  * The mutation is intentionally sparse: it creates cells only when value/formula/style need to exist.
  */
 
-import type { CellAddress, CellRange } from "../../../xlsx/domain/cell/address";
-import type { Formula } from "../../../xlsx/domain/cell/formula";
-import type { Cell } from "../../../xlsx/domain/cell/types";
-import type { XlsxRow, XlsxWorksheet } from "../../../xlsx/domain/workbook";
-import { colIdx, rowIdx } from "../../../xlsx/domain/types";
-import { shiftFormulaReferences } from "../../../xlsx/formula/shift";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import type { Formula } from "@oxen/xlsx/domain/cell/formula";
+import type { Cell } from "@oxen/xlsx/domain/cell/types";
+import type { XlsxRow, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import { shiftFormulaReferences } from "@oxen/xlsx/formula/shift";
 import { buildCellLookup, buildRowStyleIdMap, getColumnStyleId } from "./pattern";
 import { getFillColCount, getFillRowCount, computeDirection, getRangeBounds, normalizeRange } from "./range";
 import { buildCellIfNeeded, upsertCellsIntoRow } from "./mutation";

@@ -11,8 +11,8 @@ import { Accordion, FieldGroup, FieldRow } from "../../../office-editor-componen
 import { TextBodyEditor, createDefaultTextBody } from "../text";
 import { ChartShapePropertiesEditor } from "./ChartShapePropertiesEditor";
 import { LayoutEditor } from "./LayoutEditor";
-import type { ChartTitle, Layout, ChartShapeProperties } from "../../../pptx/domain/chart";
-import type { TextBody } from "../../../pptx/domain/text";
+import type { ChartTitle, Layout, ChartShapeProperties } from "@oxen/pptx/domain/chart";
+import type { TextBody } from "@oxen/pptx/domain/text";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 export type ChartTitleEditorProps = EditorProps<ChartTitle | undefined> & {

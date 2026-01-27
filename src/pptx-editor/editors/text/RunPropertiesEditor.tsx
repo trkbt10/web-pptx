@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useMemo, type CSSProperties } from "react";
-import type { RunProperties } from "../../../pptx/domain/text";
+import type { RunProperties } from "@oxen/pptx/domain/text";
 import type { EditorProps } from "../../../office-editor-components/types";
 import { MixedRunPropertiesEditor } from "./MixedRunPropertiesEditor";
 import { extractMixedRunProperties, mergeRunProperties } from "./mixed-properties";

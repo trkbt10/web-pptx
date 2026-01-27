@@ -5,7 +5,7 @@
  */
 
 import { Accordion, Button, FieldGroup, FieldRow, Input, Select, ToggleButton, type SelectOption } from "../../../../office-editor-components";
-import type { XlsxFont } from "../../../../xlsx/domain/style/font";
+import type { XlsxFont } from "@oxen/xlsx/domain/style/font";
 
 export type FontSectionProps = {
   readonly disabled: boolean;

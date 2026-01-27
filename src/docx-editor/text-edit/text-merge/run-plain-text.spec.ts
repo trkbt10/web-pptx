@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect } from "vitest";
-import type { DocxParagraph } from "../../../docx/domain/paragraph";
-import type { DocxRun } from "../../../docx/domain/run";
-import { docxRelId } from "../../../docx/domain/types";
+import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
+import type { DocxRun } from "@oxen/docx/domain/run";
+import { docxRelId } from "@oxen/docx/domain/types";
 import { getRunPlainText, getParagraphPlainText } from "./run-plain-text";
 
 // =============================================================================

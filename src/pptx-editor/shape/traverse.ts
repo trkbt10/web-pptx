@@ -4,9 +4,9 @@
  * Utilities for traversing shape trees and collecting data.
  */
 
-import type { Shape, GrpShape } from "../../pptx/domain";
-import type { ShapeId } from "../../pptx/domain/types";
-import { isShapeHidden } from "../../pptx/render/svg/slide-utils";
+import type { Shape, GrpShape } from "@oxen/pptx/domain";
+import type { ShapeId } from "@oxen/pptx/domain/types";
+import { isShapeHidden } from "@oxen/pptx-render/svg";
 import { getAbsoluteBounds } from "./transform";
 import { getShapeId } from "./identity";
 import { getFillColor, getStrokeColor, getStrokeWidth } from "./render";

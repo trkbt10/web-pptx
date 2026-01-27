@@ -9,9 +9,9 @@ import { useCallback, useMemo } from "react";
 import type { CSSProperties } from "react";
 import { Button } from "../../office-editor-components/primitives/Button";
 import { LinePickerPopover } from "../ui/line/index";
-import type { Line, Shape } from "../../pptx/domain/index";
-import type { Pixels } from "../../ooxml/domain/units";
-import type { ShapeId } from "../../pptx/domain/types";
+import type { Line, Shape } from "@oxen/pptx/domain/index";
+import type { Pixels } from "@oxen/ooxml/domain/units";
+import type { ShapeId } from "@oxen/pptx/domain/types";
 import {
   TrashIcon,
   CopyIcon,

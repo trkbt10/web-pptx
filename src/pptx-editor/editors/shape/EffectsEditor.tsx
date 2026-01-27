@@ -8,7 +8,7 @@
  * @see ECMA-376 Part 1, Section 20.1.8 (Effect)
  */
 
-import type { Effects } from "../../../pptx/domain/types";
+import type { Effects } from "@oxen/pptx/domain/types";
 import type { EditorProps } from "../../../office-editor-components/types";
 import { EffectsEditorPanel } from "./effects";
 

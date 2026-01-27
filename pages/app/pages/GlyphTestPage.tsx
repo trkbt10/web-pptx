@@ -6,8 +6,8 @@
  */
 
 import { useState, useMemo, useCallback } from "react";
-import { extractGlyphContour } from "@lib/pptx/render/glyph/extraction/glyph";
-import type { GlyphContour, GlyphStyleKey } from "@lib/pptx/render/glyph/types";
+import { extractGlyphContour } from "@oxen/pptx-render/glyph";
+import type { GlyphContour, GlyphStyleKey } from "@oxen/pptx-render/glyph";
 import "./GlyphTestPage.css";
 
 // =============================================================================

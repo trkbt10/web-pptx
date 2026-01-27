@@ -9,7 +9,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { render } from "@testing-library/react";
 import { importPdf } from "./pdf-importer";
-import { SlideRendererSvg } from "@lib/pptx/render/react/SlideRenderer";
+import { SlideRendererSvg } from "@oxen/pptx-render/react";
 import { getPdfFixturePath } from "../test-utils/pdf-fixtures";
 
 // Mock getComputedTextLength for JSDOM

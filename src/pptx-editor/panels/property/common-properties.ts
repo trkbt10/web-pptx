@@ -5,9 +5,9 @@
  * When values differ across shapes, returns undefined (representing "Mixed" state).
  */
 
-import type { Shape } from "../../../pptx/domain/index";
-import type { Transform } from "../../../pptx/domain/types";
-import type { Fill, Line } from "../../../pptx/domain/color/types";
+import type { Shape } from "@oxen/pptx/domain/index";
+import type { Transform } from "@oxen/pptx/domain/types";
+import type { Fill, Line } from "@oxen/pptx/domain/color/types";
 
 // =============================================================================
 // Types

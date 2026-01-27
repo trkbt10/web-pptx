@@ -2,8 +2,8 @@
  * @file Path edit handlers tests
  */
 
-import { px } from "../../../../../ooxml/domain/units";
-import type { CustomGeometry } from "../../../../../pptx/domain";
+import { px } from "@oxen/ooxml/domain/units";
+import type { CustomGeometry } from "@oxen/pptx/domain";
 import { createPresentationEditorState } from "./reducer";
 import { createTestDocument } from "./test-fixtures";
 import { PATH_EDIT_HANDLERS } from "./path-edit-handlers";

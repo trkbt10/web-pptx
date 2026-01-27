@@ -6,11 +6,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Button, Panel, spacingTokens, type SelectOption } from "../../../office-editor-components";
-import type { CellAddress, CellRange } from "../../../xlsx/domain/cell/address";
-import type { XlsxFont } from "../../../xlsx/domain/style/font";
-import type { XlsxFill } from "../../../xlsx/domain/style/fill";
-import type { XlsxBorder } from "../../../xlsx/domain/style/border";
-import type { XlsxAlignment } from "../../../xlsx/domain/style/types";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import type { XlsxFont } from "@oxen/xlsx/domain/style/font";
+import type { XlsxFill } from "@oxen/xlsx/domain/style/fill";
+import type { XlsxBorder } from "@oxen/xlsx/domain/style/border";
+import type { XlsxAlignment } from "@oxen/xlsx/domain/style/types";
 import { getCell } from "../../cell/query";
 import { useXlsxWorkbookEditor } from "../../context/workbook/XlsxWorkbookEditorContext";
 import { resolveCellStyleDetails } from "../../selectors/cell-style-details";

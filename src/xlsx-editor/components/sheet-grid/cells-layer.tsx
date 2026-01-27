@@ -5,12 +5,12 @@
  */
 
 import { useMemo, type CSSProperties, type ReactNode } from "react";
-import type { CellAddress } from "../../../xlsx/domain/cell/address";
-import type { Cell } from "../../../xlsx/domain/cell/types";
-import type { XlsxStyleSheet } from "../../../xlsx/domain/style/types";
-import type { XlsxWorksheet } from "../../../xlsx/domain/workbook";
-import { createFormulaEvaluator } from "../../../xlsx/formula/evaluator";
-import { colIdx, rowIdx } from "../../../xlsx/domain/types";
+import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
+import type { Cell } from "@oxen/xlsx/domain/cell/types";
+import type { XlsxStyleSheet } from "@oxen/xlsx/domain/style/types";
+import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { createFormulaEvaluator } from "@oxen/xlsx/formula/evaluator";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
 import { getCell } from "../../cell/query";
 import { resolveCellRenderStyle } from "../../selectors/cell-render-style";
 import { formatCellValueForDisplay, formatFormulaScalarForDisplay, resolveCellFormatCode } from "../../selectors/cell-display-text";

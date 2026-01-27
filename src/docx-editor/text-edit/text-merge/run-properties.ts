@@ -4,8 +4,8 @@
  * Utilities for comparing, extracting, and working with DocxRunProperties.
  */
 
-import type { DocxParagraph } from "../../../docx/domain/paragraph";
-import type { DocxRun, DocxRunProperties } from "../../../docx/domain/run";
+import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
+import type { DocxRun, DocxRunProperties } from "@oxen/docx/domain/run";
 import { getRunPlainText } from "./run-plain-text";
 
 // =============================================================================

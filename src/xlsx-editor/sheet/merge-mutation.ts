@@ -6,10 +6,10 @@
  * NOTE: In OOXML, merge regions are stored at the worksheet level as `<mergeCell ref="A1:B2"/>`.
  */
 
-import type { Cell } from "../../xlsx/domain/cell/types";
-import type { CellAddress, CellRange } from "../../xlsx/domain/cell/address";
-import type { XlsxRow, XlsxWorksheet } from "../../xlsx/domain/workbook";
-import { colIdx, rowIdx } from "../../xlsx/domain/types";
+import type { Cell } from "@oxen/xlsx/domain/cell/types";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import type { XlsxRow, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
 import { toColNumber, toRowNumber } from "../row-col/cell-range-utils";
 
 function normalizeRangeBounds(range: CellRange): {

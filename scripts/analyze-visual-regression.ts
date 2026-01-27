@@ -6,8 +6,8 @@
  * Analyzes visual differences between our SVG output and LibreOffice baseline.
  * Generates detailed report of what's different and why.
  */
-import { openPresentation } from "../src/pptx";
-import { renderSlideToSvg } from "../src/pptx/render/svg";
+import { openPresentation } from "@oxen/pptx";
+import { renderSlideToSvg } from "@oxen/pptx-render/svg";
 import { compareSvgToSnapshot, compareWithDetails, generateCompareReport, printCompareReport } from "../spec/visual-regression/compare";
 import { loadPptxFile } from "./lib/pptx-loader";
 

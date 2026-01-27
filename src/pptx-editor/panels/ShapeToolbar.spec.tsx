@@ -5,7 +5,7 @@
 // @vitest-environment jsdom
 
 import { render, fireEvent } from "@testing-library/react";
-import type { ShapeId } from "../../pptx/domain/types";
+import type { ShapeId } from "@oxen/pptx/domain/types";
 import { ShapeToolbar } from "./ShapeToolbar";
 
 describe("ShapeToolbar", () => {

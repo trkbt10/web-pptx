@@ -2,11 +2,11 @@
  * @file Cell handlers tests
  */
 
-import { colIdx, rowIdx } from "../../../../../xlsx/domain/types";
-import type { CellAddress, CellRange } from "../../../../../xlsx/domain/cell/address";
-import type { Cell, CellValue } from "../../../../../xlsx/domain/cell/types";
-import type { XlsxWorkbook, XlsxWorksheet, XlsxRow } from "../../../../../xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "../../../../../xlsx/domain/style/types";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
+import type { XlsxWorkbook, XlsxWorksheet, XlsxRow } from "@oxen/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
 import { createHistory } from "../../state/history";
 import { getCellValue, hasCell } from "../../../../cell/query";
 import type { XlsxEditorAction, XlsxEditorState } from "../types";

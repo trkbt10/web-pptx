@@ -4,8 +4,8 @@
  * Utilities for extracting plain text from DocxRun and DocxParagraph structures.
  */
 
-import type { DocxParagraph } from "../../../docx/domain/paragraph";
-import type { DocxRun } from "../../../docx/domain/run";
+import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
+import type { DocxRun } from "@oxen/docx/domain/run";
 
 // =============================================================================
 // Run Plain Text

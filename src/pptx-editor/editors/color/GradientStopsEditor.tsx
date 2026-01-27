@@ -10,9 +10,9 @@ import { Button, Popover } from "../../../office-editor-components/primitives";
 import { FillPreview } from "../../ui/color";
 import { GradientStopEditor } from "./GradientStopEditor";
 import { createDefaultColor } from "./ColorEditor";
-import type { Color } from "../../../ooxml/domain/color";
-import type { GradientStop, SolidFill } from "../../../ooxml/domain/fill";
-import { pct, type Percent } from "../../../ooxml/domain/units";
+import type { Color } from "@oxen/ooxml/domain/color";
+import type { GradientStop, SolidFill } from "@oxen/ooxml/domain/fill";
+import { pct, type Percent } from "@oxen/ooxml/domain/units";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 export type GradientStopsEditorProps = EditorProps<readonly GradientStop[]> & {

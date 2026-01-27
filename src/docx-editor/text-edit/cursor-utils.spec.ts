@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import type { DocxParagraph } from "../../docx/domain/paragraph";
+import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
 import {
   offsetToCursorPosition,
   cursorPositionToOffset,

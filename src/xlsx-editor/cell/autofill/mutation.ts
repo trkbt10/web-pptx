@@ -5,11 +5,11 @@
  * outside the updated bounds. Used by the fill-handle (autofill) implementation.
  */
 
-import type { CellAddress } from "../../../xlsx/domain/cell/address";
-import type { Formula } from "../../../xlsx/domain/cell/formula";
-import type { Cell, CellValue } from "../../../xlsx/domain/cell/types";
-import type { XlsxRow } from "../../../xlsx/domain/workbook";
-import { styleId } from "../../../xlsx/domain/types";
+import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
+import type { Formula } from "@oxen/xlsx/domain/cell/formula";
+import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
+import type { XlsxRow } from "@oxen/xlsx/domain/workbook";
+import { styleId } from "@oxen/xlsx/domain/types";
 import type { PatternCell } from "./types";
 
 function shouldCreateCell(patch: { readonly value: CellValue; readonly formula: Formula | undefined; readonly styleId: number | undefined }): boolean {

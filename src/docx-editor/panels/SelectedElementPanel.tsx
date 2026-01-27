@@ -7,10 +7,10 @@
 
 import type { CSSProperties } from "react";
 import { useCallback, useMemo } from "react";
-import type { DocxBlockContent } from "../../docx/domain/document";
-import type { DocxParagraph, DocxParagraphProperties } from "../../docx/domain/paragraph";
-import type { DocxRunProperties } from "../../docx/domain/run";
-import type { DocxTable, DocxTableCellProperties, DocxTableProperties } from "../../docx/domain/table";
+import type { DocxBlockContent } from "@oxen/docx/domain/document";
+import type { DocxParagraph, DocxParagraphProperties } from "@oxen/docx/domain/paragraph";
+import type { DocxRunProperties } from "@oxen/docx/domain/run";
+import type { DocxTable, DocxTableCellProperties, DocxTableProperties } from "@oxen/docx/domain/table";
 import { useDocumentEditor } from "../context/document/DocumentEditorContext";
 import {
   RunPropertiesEditor,

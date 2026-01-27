@@ -5,8 +5,8 @@
  * readonly and editable modes with vertical/horizontal orientation.
  */
 
-import type { SlideId, SlideWithId } from "../../pptx/app";
-import type { SlideTransition } from "../../pptx/domain/transition";
+import type { SlideId, SlideWithId } from "@oxen/pptx/app";
+import type { SlideTransition } from "@oxen/pptx/domain/transition";
 
 /**
  * Scroll orientation for the slide list

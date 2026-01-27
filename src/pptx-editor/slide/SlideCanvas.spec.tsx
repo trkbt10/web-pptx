@@ -6,8 +6,8 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { render, fireEvent } from "@testing-library/react";
-import type { Slide } from "../../pptx/domain";
-import { px } from "../../ooxml/domain/units";
+import type { Slide } from "@oxen/pptx/domain";
+import { px } from "@oxen/ooxml/domain/units";
 import { createIdleDragState, createEmptySelection } from "../context/slide/state";
 import type { CreationMode } from "../context/presentation/editor/types";
 import type { ShapeBounds } from "../shape/creation-bounds";

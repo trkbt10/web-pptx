@@ -5,13 +5,13 @@
  */
 
 import { useCallback, useEffect, type RefObject } from "react";
-import type { Slide } from "../../../pptx/domain";
-import type { Pixels } from "../../../ooxml/domain/units";
-import { px, deg } from "../../../ooxml/domain/units";
+import type { Slide } from "@oxen/pptx/domain";
+import type { Pixels } from "@oxen/ooxml/domain/units";
+import { px, deg } from "@oxen/ooxml/domain/units";
 import type { DragState, SelectionState } from "../../context/slide/state";
 import type { PresentationEditorAction } from "../../context/presentation/editor/types";
-import type { ViewportTransform } from "../../../pptx/render/svg-viewport";
-import { screenToSlideCoords } from "../../../pptx/render/svg-viewport";
+import type { ViewportTransform } from "@oxen/pptx-render/svg-viewport";
+import { screenToSlideCoords } from "@oxen/pptx-render/svg-viewport";
 import { snapValue } from "../../slide-canvas/canvas-controls";
 
 export type UseDragHandlersParams = {

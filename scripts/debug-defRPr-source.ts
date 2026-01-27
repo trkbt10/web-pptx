@@ -2,9 +2,9 @@
  * Debug script to trace where defRPr comes from
  */
 
-import { openPresentation, type PresentationFile } from "../src/pptx";
-import { parseXml, getByPath, getChild, getChildren } from "../src/xml";
-import type { ZipFile } from "../src/pptx/core/types";
+import { openPresentation, type PresentationFile } from "@oxen/pptx";
+import { parseXml, getByPath, getChild, getChildren } from "@oxen/xml";
+import type { ZipFile } from "@oxen/pptx/core/types";
 import { loadPptxFile as loadPptxBundle } from "./lib/pptx-loader";
 
 type FileCache = Map<string, { text: string; buffer: ArrayBuffer }>;

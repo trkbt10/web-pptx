@@ -7,7 +7,7 @@
 import { useCallback, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { FieldGroup } from "../../../office-editor-components/layout";
 import { ParagraphPropertiesEditor, createDefaultParagraphProperties } from "./ParagraphPropertiesEditor";
-import type { TextBody, Paragraph, ParagraphProperties, TextRun } from "../../../pptx/domain/text";
+import type { TextBody, Paragraph, ParagraphProperties, TextRun } from "@oxen/pptx/domain/text";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 // =============================================================================

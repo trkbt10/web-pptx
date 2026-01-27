@@ -16,11 +16,11 @@ import type {
   DocxTableBorders,
   DocxCellBorders,
   DocxTableLook,
-} from "../../docx/domain/table";
-import type { DocxParagraph } from "../../docx/domain/paragraph";
-import type { TableWidth, TableAlignment, TableGridColumn } from "../../ooxml/domain/table";
-import { gridSpan } from "../../ooxml/domain/table";
-import type { Pixels } from "../../ooxml/domain/units";
+} from "@oxen/docx/domain/table";
+import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
+import type { TableWidth, TableAlignment, TableGridColumn } from "@oxen/ooxml/domain/table";
+import { gridSpan } from "@oxen/ooxml/domain/table";
+import type { Pixels } from "@oxen/ooxml/domain/units";
 import { createParagraph } from "../paragraph/mutation";
 
 // =============================================================================

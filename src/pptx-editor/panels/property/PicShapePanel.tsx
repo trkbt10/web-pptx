@@ -4,8 +4,8 @@
  * Displays property editors for PicShape (picture/image) elements.
  */
 
-import type { PicShape } from "../../../pptx/domain/index";
-import type { Percent } from "../../../ooxml/domain/units";
+import type { PicShape } from "@oxen/pptx/domain/index";
+import type { Percent } from "@oxen/ooxml/domain/units";
 import { Accordion } from "../../../office-editor-components/layout";
 import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { Toggle } from "../../../office-editor-components/primitives/index";

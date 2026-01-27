@@ -6,15 +6,15 @@
  */
 
 import { useCallback, useMemo, useEffect, type CSSProperties } from "react";
-import type { PresentationFile, SlideSize, Shape } from "../../../pptx/domain";
-import type { ColorScheme } from "../../../pptx/domain/color/context";
-import type { SlideLayoutOption } from "../../../pptx/app";
-import { loadSlideLayoutBundle } from "../../../pptx/app";
-import { parseShapeTree } from "../../../pptx/parser/shape-parser";
-import { getByPath, getChild } from "../../../xml";
+import type { PresentationFile, SlideSize, Shape } from "@oxen/pptx/domain";
+import type { ColorScheme } from "@oxen/pptx/domain/color/context";
+import type { SlideLayoutOption } from "@oxen/pptx/app";
+import { loadSlideLayoutBundle } from "@oxen/pptx/app";
+import { parseShapeTree } from "@oxen/pptx/parser";
+import { getByPath, getChild } from "@oxen/xml";
 import { useLayoutThumbnails, LayoutThumbnail } from "../../thumbnail";
 import { colorTokens, fontTokens, spacingTokens, radiusTokens } from "../../../office-editor-components/design-tokens";
-import { px } from "../../../ooxml/domain/units";
+import { px } from "@oxen/ooxml/domain/units";
 import { CheckIcon, AddIcon } from "../../../office-editor-components/icons";
 import { Button } from "../../../office-editor-components/primitives/Button";
 import { usePresentationEditor } from "../../context/presentation/PresentationEditorContext";

@@ -5,7 +5,7 @@
  */
 
 import { Accordion, Button, FieldGroup, FieldRow, Input, Select } from "../../../../office-editor-components";
-import type { XlsxBorder, XlsxBorderEdge, XlsxBorderStyle } from "../../../../xlsx/domain/style/border";
+import type { XlsxBorder, XlsxBorderEdge, XlsxBorderStyle } from "@oxen/xlsx/domain/style/border";
 import { BORDER_STYLE_OPTIONS } from "../options";
 
 export type BorderSectionProps = {

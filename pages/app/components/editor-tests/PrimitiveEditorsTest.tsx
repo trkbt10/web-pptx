@@ -14,9 +14,9 @@ import {
   FieldGroup,
   createDefaultTransform,
 } from "@lib/pptx-editor";
-import type { Transform } from "@lib/pptx/domain/geometry";
-import type { Pixels, Degrees, Percent, Points } from "@lib/ooxml/domain/units";
-import { px, deg, pct, pt } from "@lib/ooxml/domain/units";
+import type { Transform } from "@oxen/pptx/domain/geometry";
+import type { Pixels, Degrees, Percent, Points } from "@oxen/ooxml/domain/units";
+import { px, deg, pct, pt } from "@oxen/ooxml/domain/units";
 
 const cardStyle: CSSProperties = {
   backgroundColor: "var(--bg-secondary)",

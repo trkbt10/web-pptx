@@ -15,9 +15,9 @@ import {
   type MouseEvent,
 } from "react";
 import { createPortal } from "react-dom";
-import type { SlideSize, SlideTransition } from "../../pptx/domain";
-import type { Timing } from "../../pptx/domain/animation";
-import { useSlideAnimation, useSlideTransition, SvgContentRenderer } from "../../pptx/render/react";
+import type { SlideSize, SlideTransition } from "@oxen/pptx/domain";
+import type { Timing } from "@oxen/pptx/domain/animation";
+import { useSlideAnimation, useSlideTransition, SvgContentRenderer } from "@oxen/pptx-render/react";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,

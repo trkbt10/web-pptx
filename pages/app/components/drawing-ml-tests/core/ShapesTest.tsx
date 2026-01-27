@@ -4,8 +4,8 @@
  * Tests for ECMA-376 shape geometries and transforms.
  */
 
-import type { Fill } from "@lib/pptx/domain";
-import { px } from "@lib/ooxml/domain/units";
+import type { Fill } from "@oxen/pptx/domain";
+import { px } from "@oxen/ooxml/domain/units";
 import { type CheckItem, TestSubsection, GeometryPreview, PresetShapePreview, TransformPreview } from "../common";
 
 // =============================================================================

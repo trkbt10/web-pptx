@@ -4,10 +4,10 @@
  * Utilities for creating and inspecting Fill values.
  */
 
-import type { Color } from "../../../../ooxml/domain/color";
-import type { GradientStop } from "../../../../ooxml/domain/fill";
-import { deg, pct } from "../../../../ooxml/domain/units";
-import type { Fill } from "../../../../pptx/domain/color/types";
+import type { Color } from "@oxen/ooxml/domain/color";
+import type { GradientStop } from "@oxen/ooxml/domain/fill";
+import { deg, pct } from "@oxen/ooxml/domain/units";
+import type { Fill } from "@oxen/pptx/domain/color/types";
 import type { SelectOption } from "../../../../office-editor-components/types";
 
 export type FillType = Fill["type"];

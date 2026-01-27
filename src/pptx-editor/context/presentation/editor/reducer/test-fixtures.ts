@@ -4,9 +4,9 @@
  * Common setup utilities and mock data for presentation editor reducer tests.
  */
 
-import type { Slide } from "../../../../../pptx/domain";
-import type { PresentationDocument } from "../../../../../pptx/app";
-import { px } from "../../../../../ooxml/domain/units";
+import type { Slide } from "@oxen/pptx/domain";
+import type { PresentationDocument } from "@oxen/pptx/app";
+import { px } from "@oxen/ooxml/domain/units";
 
 /**
  * Create an empty slide for testing

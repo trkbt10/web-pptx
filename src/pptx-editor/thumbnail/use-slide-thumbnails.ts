@@ -5,12 +5,12 @@
  */
 
 import { useRef, useMemo, useCallback } from "react";
-import type { Pixels } from "../../ooxml/domain/units";
-import type { ZipFile } from "../../pptx/domain";
-import { renderSlideSvg } from "../../pptx/render/svg/renderer";
-import { createCoreRenderContext } from "../../pptx/render/render-context";
-import type { SlideWithId } from "../../pptx/app";
-import { createRenderContext as createApiRenderContext } from "../../pptx/app";
+import type { Pixels } from "@oxen/ooxml/domain/units";
+import type { ZipFile } from "@oxen/pptx/domain";
+import { renderSlideSvg } from "@oxen/pptx-render/svg";
+import { createCoreRenderContext } from "@oxen/pptx-render";
+import type { SlideWithId } from "@oxen/pptx/app";
+import { createRenderContext as createApiRenderContext } from "@oxen/pptx/app";
 import {
   createThumbnailCache,
   getCachedThumbnail,

@@ -10,7 +10,7 @@ import {
   rgbToHex as rgbToHexBase,
   rgbToHsl as rgbToHslBase,
   hslToRgb as hslToRgbBase,
-} from "../../../color";
+} from "@oxen/color";
 
 export type RgbColor = {
   readonly r: number;

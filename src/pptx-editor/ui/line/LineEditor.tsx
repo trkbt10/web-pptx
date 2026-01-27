@@ -10,8 +10,8 @@ import { Select } from "../../../office-editor-components/primitives";
 import { LinePreview } from "./LinePreview";
 import { FillPickerPopover } from "../color/FillPickerPopover";
 import { createDefaultFill } from "../color/fill";
-import { px } from "../../../ooxml/domain/units";
-import type { Line, LineEnd, Fill } from "../../../pptx/domain/color/types";
+import { px } from "@oxen/ooxml/domain/units";
+import type { Line, LineEnd, Fill } from "@oxen/pptx/domain/color/types";
 import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 
 // =============================================================================

@@ -2,11 +2,11 @@
  * @file Tests for SpreadsheetML cell render style resolver
  */
 
-import type { XlsxStyleSheet } from "../../xlsx/domain/style/types";
-import type { XlsxWorksheet } from "../../xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "../../xlsx/domain/style/types";
-import { borderId, colIdx, fillId, fontId, numFmtId, rowIdx, styleId } from "../../xlsx/domain/types";
-import type { CellAddress } from "../../xlsx/domain/cell/address";
+import type { XlsxStyleSheet } from "@oxen/xlsx/domain/style/types";
+import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
+import { borderId, colIdx, fillId, fontId, numFmtId, rowIdx, styleId } from "@oxen/xlsx/domain/types";
+import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
 import { resolveCellBorderDecoration, resolveCellRenderStyle } from "./cell-render-style";
 
 function createAddress(col: number, row: number): CellAddress {

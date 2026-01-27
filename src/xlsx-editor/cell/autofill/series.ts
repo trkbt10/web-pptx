@@ -5,7 +5,7 @@
  * When the base includes formulas or mixed types, autofill falls back to pattern repeat.
  */
 
-import type { CellValue } from "../../../xlsx/domain/cell/types";
+import type { CellValue } from "@oxen/xlsx/domain/cell/types";
 import type { PatternCell, PatternSeries } from "./types";
 
 export type RepeatDirection = "forward" | "backward";

@@ -11,19 +11,18 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
-import type { Slide, Shape } from "../../pptx/domain";
-import type { ColorContext } from "../../pptx/domain/color/context";
-import type { FontScheme } from "../../pptx/domain/resolution";
-import type { Pixels } from "../../ooxml/domain/units";
-import type { ShapeId } from "../../pptx/domain/types";
-import { px } from "../../ooxml/domain/units";
+import type { Slide, Shape } from "@oxen/pptx/domain";
+import type { ColorContext } from "@oxen/pptx/domain/color/context";
+import type { FontScheme } from "@oxen/pptx/domain/resolution";
+import type { Pixels } from "@oxen/ooxml/domain/units";
+import type { ShapeId } from "@oxen/pptx/domain/types";
+import { px } from "@oxen/ooxml/domain/units";
 import type { DragState, SelectionState, ResizeHandlePosition, PathEditState } from "../context/slide/state";
 import { isPathEditEditing } from "../context/slide/state";
 import type { CreationMode } from "../context/presentation/editor/types";
 import { isPenMode, isPathMode } from "../context/presentation/editor/types";
-import type { ResourceResolver } from "../../pptx/domain/resource-resolver";
-import type { ResolvedBackgroundFill } from "../../pptx/render/background-fill";
-import type { RenderOptions } from "../../pptx/render/render-options";
+import type { ResourceResolver } from "@oxen/pptx/domain/resource-resolver";
+import type { ResolvedBackgroundFill, RenderOptions } from "@oxen/pptx-render";
 import type { DrawingPath } from "../path-tools/types";
 import { PenToolOverlay } from "../path-tools/components/PenToolOverlay";
 import { PathEditOverlay } from "../path-tools/components/PathEditOverlay";
@@ -38,7 +37,7 @@ import { createBoundsFromDrag } from "../shape/factory";
 import type { ShapeBounds as CreationBounds } from "../shape/creation-bounds";
 import { SlideContextMenu, type ContextMenuActions } from "./context-menu/SlideContextMenu";
 import { SelectionBox } from "../selection/SelectionBox";
-import { SlideRenderer } from "../../pptx/render/react";
+import { SlideRenderer } from "@oxen/pptx-render/react";
 import { colorTokens } from "../../office-editor-components/design-tokens";
 
 // =============================================================================

@@ -12,10 +12,10 @@
 
 import { useRef, useMemo, useCallback, useState, useEffect, type CSSProperties } from "react";
 import { GridLayout } from "react-panel-layout";
-import type { Shape, RunProperties, ParagraphProperties, ZipFile, TextBody } from "../../pptx/domain";
-import type { ShapeId } from "../../pptx/domain/types";
-import { px } from "../../ooxml/domain/units";
-import type { PresentationDocument, SlideWithId } from "../../pptx/app";
+import type { Shape, RunProperties, ParagraphProperties, ZipFile, TextBody } from "@oxen/pptx/domain";
+import type { ShapeId } from "@oxen/pptx/domain/types";
+import { px } from "@oxen/ooxml/domain/units";
+import type { PresentationDocument, SlideWithId } from "@oxen/pptx/app";
 import { PresentationEditorProvider, usePresentationEditor } from "../context/presentation/PresentationEditorContext";
 import { EditorResourceProvider, useEditorResourceStore } from "../context/editor/EditorResourceContext";
 import { SlideThumbnailPanel } from "../panels";
@@ -35,7 +35,7 @@ import {
   createPicShape,
 } from "../shape/factory";
 import { createOleGraphicFrame } from "../graphic-frame/factory";
-import { getOleTypeFromFile } from "../../pptx/patcher/resources/ole-manager";
+import { getOleTypeFromFile } from "@oxen/pptx/patcher/resources/ole-manager";
 import type { ShapeBounds } from "../shape/creation-bounds";
 import { drawingPathToCustomGeometry } from "../path-tools/utils/path-commands";
 import {
@@ -55,14 +55,14 @@ import {
   buildSlideLayoutOptions,
   createRenderContext,
   getLayoutNonPlaceholderShapes,
-} from "../../pptx/app";
-import { getSlideLayoutAttributes } from "../../pptx/parser/slide/layout-parser";
-import { RELATIONSHIP_TYPES } from "../../pptx/opc";
-import { createZipAdapter } from "../../pptx/domain";
+} from "@oxen/pptx/app";
+import { getSlideLayoutAttributes } from "@oxen/pptx/parser/slide/layout-parser";
+import { RELATIONSHIP_TYPES } from "@oxen/pptx/domain/relationships";
+import { createZipAdapter } from "@oxen/pptx/domain";
 import { CanvasControls } from "../slide-canvas/CanvasControls";
 import type { ZoomMode } from "../slide-canvas/canvas-controls";
 import { SvgEditorCanvas, type AssetDropData } from "../slide-canvas/SvgEditorCanvas";
-import type { ViewportTransform } from "../../pptx/render/svg-viewport";
+import type { ViewportTransform } from "@oxen/pptx-render/svg-viewport";
 import { TextEditContextProvider, useTextEditContextValue } from "../context/slide/TextEditContext";
 import { PresentationPreviewProvider, usePresentationPreview } from "../context/presentation/PresentationPreviewContext";
 import { Button } from "../../office-editor-components/primitives/Button";
@@ -87,8 +87,8 @@ import { SelectedElementTab, SlideInfoTab, LayersTab } from "../panels/right-pan
 import { AssetPanel, LayoutInfoPanel, ThemeViewerPanel } from "../panels/inspector";
 import { ThemeEditorTabs, ThemeEditorCanvas, extractThemeFromPptx } from "../panels/theme-editor";
 import type { ThemePreset } from "../panels/theme-editor/types";
-import type { SchemeColorName } from "../../ooxml/domain/color";
-import type { FontSpec } from "../../pptx/domain/resolution";
+import type { SchemeColorName } from "@oxen/ooxml/domain/color";
+import type { FontSpec } from "@oxen/pptx/domain/resolution";
 import {
   editorContainerStyle,
   toolbarStyle,
@@ -103,8 +103,8 @@ import { usePanelCallbacks, useContextMenuActions, useKeyboardShortcuts, useDrag
 import type { TabContents } from "./hooks";
 import { ListViewIcon, PlayIcon, SettingsIcon } from "../../office-editor-components/icons";
 import { ExportButton } from "./components";
-import { renderSlideSvg } from "../../pptx/render/svg/renderer";
-import { createCoreRenderContext } from "../../pptx/render";
+import { renderSlideSvg } from "@oxen/pptx-render/svg";
+import { createCoreRenderContext } from "@oxen/pptx-render";
 
 // =============================================================================
 // Types

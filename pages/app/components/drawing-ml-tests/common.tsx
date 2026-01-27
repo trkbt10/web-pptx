@@ -3,11 +3,11 @@
  */
 
 import type { ReactNode } from "react";
-import type { Fill, Line, GradientFill, SchemeColorValue } from "@lib/pptx/domain";
-import type { Effects } from "@lib/pptx/domain/effects";
-import type { Pixels } from "@lib/ooxml/domain/units";
-import { px, deg, pct } from "@lib/ooxml/domain/units";
-import { useShapeStyle } from "@lib/pptx/render/react/drawing-ml";
+import type { Fill, Line, GradientFill, SchemeColorValue } from "@oxen/pptx/domain";
+import type { Effects } from "@oxen/pptx/domain/effects";
+import type { Pixels } from "@oxen/ooxml/domain/units";
+import { px, deg, pct } from "@oxen/ooxml/domain/units";
+import { useShapeStyle } from "@oxen/pptx-render/react";
 
 // =============================================================================
 // Types

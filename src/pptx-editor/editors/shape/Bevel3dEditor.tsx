@@ -8,8 +8,8 @@
 import { Select } from "../../../office-editor-components/primitives";
 import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
-import { px } from "../../../ooxml/domain/units";
-import type { Bevel3d, BevelPresetType } from "../../../pptx/domain";
+import { px } from "@oxen/ooxml/domain/units";
+import type { Bevel3d, BevelPresetType } from "@oxen/pptx/domain";
 import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 
 export type Bevel3dEditorProps = EditorProps<Bevel3d>;

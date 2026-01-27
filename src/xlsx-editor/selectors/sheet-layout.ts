@@ -5,8 +5,8 @@
  * without allocating per-row/per-column arrays for the full sheet size.
  */
 
-import type { XlsxColumnDef, XlsxWorksheet } from "../../xlsx/domain/workbook";
-import { colIdx, rowIdx, type ColIndex, type RowIndex } from "../../xlsx/domain/types";
+import type { XlsxColumnDef, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { colIdx, rowIdx, type ColIndex, type RowIndex } from "@oxen/xlsx/domain/types";
 
 export type SheetLayoutOptions = {
   readonly rowCount: number;

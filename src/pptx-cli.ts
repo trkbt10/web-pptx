@@ -6,8 +6,8 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { openPresentation } from "./pptx";
-import { loadPptxBundleFromBuffer } from "./pptx/app/pptx-loader";
+import { openPresentation } from "@oxen/pptx";
+import { loadPptxBundleFromBuffer } from "@oxen/pptx/app/pptx-loader";
 
 type CliArgs = {
   input: string;

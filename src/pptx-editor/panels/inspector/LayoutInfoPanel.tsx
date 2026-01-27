@@ -6,10 +6,10 @@
  */
 
 import { useMemo, type CSSProperties } from "react";
-import type { SlideSize, PresentationFile } from "../../../pptx/domain";
-import { px } from "../../../ooxml/domain/units";
-import type { SlideLayoutAttributes } from "../../../pptx/parser/slide/layout-parser";
-import type { SlideLayoutOption } from "../../../pptx/app";
+import type { SlideSize, PresentationFile } from "@oxen/pptx/domain";
+import { px } from "@oxen/ooxml/domain/units";
+import type { SlideLayoutAttributes } from "@oxen/pptx/parser/slide/layout-parser";
+import type { SlideLayoutOption } from "@oxen/pptx/app";
 import { InspectorSection, Accordion } from "../../../office-editor-components/layout";
 import { colorTokens, fontTokens, spacingTokens } from "../../../office-editor-components/design-tokens";
 import { LayoutThumbnail, useLayoutThumbnails, type LayoutThumbnailData } from "../../thumbnail";

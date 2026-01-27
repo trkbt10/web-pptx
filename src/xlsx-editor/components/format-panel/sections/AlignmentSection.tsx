@@ -5,7 +5,7 @@
  */
 
 import { Accordion, Button, FieldGroup, FieldRow, Select, ToggleButton } from "../../../../office-editor-components";
-import type { XlsxAlignment } from "../../../../xlsx/domain/style/types";
+import type { XlsxAlignment } from "@oxen/xlsx/domain/style/types";
 import { HORIZONTAL_OPTIONS, VERTICAL_OPTIONS } from "../options";
 import { parseHorizontalAlignment, parseVerticalAlignment } from "../alignment";
 

@@ -5,11 +5,11 @@
 // @vitest-environment jsdom
 
 import { render, screen } from "@testing-library/react";
-import type { XlsxWorkbook, XlsxWorksheet } from "../../../xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "../../../xlsx/domain/style/types";
-import { colIdx, rowIdx } from "../../../xlsx/domain/types";
+import type { XlsxWorkbook, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
 import { createSheetLayout } from "../../selectors/sheet-layout";
-import { createFormulaEvaluator } from "../../../xlsx/formula/evaluator";
+import { createFormulaEvaluator } from "@oxen/xlsx/formula/evaluator";
 import { XlsxSheetGridCellsLayer } from "./cells-layer";
 
 describe("xlsx-editor/components/sheet-grid/cells-layer", () => {

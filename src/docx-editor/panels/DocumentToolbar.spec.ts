@@ -6,7 +6,7 @@
 
 import { createElement } from "react";
 import { render } from "@testing-library/react";
-import type { DocxDocument } from "../../docx/domain/document";
+import type { DocxDocument } from "@oxen/docx/domain/document";
 import { DocumentEditorProvider } from "../context/document/DocumentEditorContext";
 import { DocumentToolbar } from "./DocumentToolbar";
 

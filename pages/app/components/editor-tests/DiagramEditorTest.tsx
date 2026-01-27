@@ -13,7 +13,7 @@ import {
   createDefaultDiagramPoint,
   createDefaultDiagramConnection,
 } from "@lib/pptx-editor";
-import type { DiagramDataModel, DiagramPoint, DiagramConnection } from "@lib/pptx/domain/diagram";
+import type { DiagramDataModel, DiagramPoint, DiagramConnection } from "@oxen/pptx/domain/diagram";
 
 const cardStyle: CSSProperties = {
   backgroundColor: "var(--bg-secondary)",

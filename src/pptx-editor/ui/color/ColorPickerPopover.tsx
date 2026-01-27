@@ -7,8 +7,8 @@
  */
 
 import { useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
-import type { SolidFill } from "../../../ooxml/domain/fill";
-import { pct } from "../../../ooxml/domain/units";
+import type { SolidFill } from "@oxen/ooxml/domain/fill";
+import { pct } from "@oxen/ooxml/domain/units";
 import { Popover } from "../../../office-editor-components/primitives";
 import { LabeledSlider } from "../common";
 import { FillPreview } from "./FillPreview";

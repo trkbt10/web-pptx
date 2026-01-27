@@ -8,8 +8,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, custom/no-as-outside-guard, no-restricted-syntax -- Test file uses flexible typing for mock data */
 import { presentationEditorReducer, createPresentationEditorState } from "./reducer";
 import type { PresentationEditorState, CreationMode } from "../types";
-import type { SpShape } from "../../../../../pptx/domain/shape";
-import { px } from "../../../../../ooxml/domain/units";
+import type { SpShape } from "@oxen/pptx/domain/shape";
+import { px } from "@oxen/ooxml/domain/units";
 import { createShapeFromMode, getDefaultBoundsForMode } from "../../../../shape/factory";
 import { createTestDocument } from "./test-fixtures";
 

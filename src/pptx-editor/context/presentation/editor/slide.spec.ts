@@ -4,9 +4,9 @@
 
 /* eslint-disable no-restricted-syntax, @typescript-eslint/no-explicit-any, custom/no-as-outside-guard -- Test file uses flexible typing for mock data */
 
-import { px } from "../../../../ooxml/domain/units";
-import type { Slide } from "../../../../pptx/domain";
-import type { PresentationDocument, SlideWithId } from "../../../../pptx/app";
+import { px } from "@oxen/ooxml/domain/units";
+import type { Slide } from "@oxen/pptx/domain";
+import type { PresentationDocument, SlideWithId } from "@oxen/pptx/app";
 import {
   generateSlideId,
   findSlideById,

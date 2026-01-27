@@ -2,8 +2,8 @@
  * @file Unit tests for merge range normalization and lookup helpers.
  */
 
-import { colIdx, rowIdx } from "../../xlsx/domain/types";
-import type { CellAddress } from "../../xlsx/domain/cell/address";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
 import { findMergeForCell, normalizeMergeRange } from "./merge-range";
 
 function addr(col: number, row: number): CellAddress {

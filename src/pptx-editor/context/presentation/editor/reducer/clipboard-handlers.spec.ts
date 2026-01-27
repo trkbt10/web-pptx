@@ -2,8 +2,8 @@
  * @file Clipboard handlers tests
  */
 
-import { px, deg } from "../../../../../ooxml/domain/units";
-import type { Shape, SpShape } from "../../../../../pptx/domain";
+import { px, deg } from "@oxen/ooxml/domain/units";
+import type { Shape, SpShape } from "@oxen/pptx/domain";
 import { createPresentationEditorState } from "./reducer";
 import { createTestDocument } from "./test-fixtures";
 import { createSingleSelection } from "../../../slide/state";

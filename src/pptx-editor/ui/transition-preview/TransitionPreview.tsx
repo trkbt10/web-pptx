@@ -6,11 +6,11 @@
  */
 
 import { useEffect, useRef, useCallback, type CSSProperties } from "react";
-import type { TransitionType } from "../../../pptx/domain/transition";
+import type { TransitionType } from "@oxen/pptx/domain/transition";
 import {
   applyBrowserEffect,
   type BrowserEffectType,
-} from "../../../pptx/render/animation/browser-effects";
+} from "@oxen/pptx-render/animation";
 import { colorTokens } from "../../../office-editor-components/design-tokens";
 
 // =============================================================================

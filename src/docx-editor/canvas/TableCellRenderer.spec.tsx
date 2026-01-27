@@ -6,8 +6,8 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import type { DocxTableCell, DocxTableCellProperties } from "../../docx/domain/table";
-import { gridSpan } from "../../ooxml/domain/table";
+import type { DocxTableCell, DocxTableCellProperties } from "@oxen/docx/domain/table";
+import { gridSpan } from "@oxen/ooxml/domain/table";
 import { TableCellRenderer, computeCellStyles } from "./TableCellRenderer";
 
 // =============================================================================

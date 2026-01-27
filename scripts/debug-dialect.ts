@@ -1,8 +1,8 @@
 /**
  * Debug test to verify dialect is being applied
  */
-import { openPresentation, LIBREOFFICE_RENDER_OPTIONS, DEFAULT_RENDER_OPTIONS } from "../src/pptx";
-import { renderSlideToSvg } from "../src/pptx/render/svg";
+import { openPresentation, LIBREOFFICE_RENDER_OPTIONS, DEFAULT_RENDER_OPTIONS } from "@oxen/pptx";
+import { renderSlideToSvg } from "@oxen/pptx-render/svg";
 import { loadPptxFile } from "./lib/pptx-loader";
 
 async function main() {

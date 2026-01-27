@@ -13,8 +13,8 @@ import type {
   DocxColor,
   DocxUnderline,
   DocxHighlightColor,
-} from "../../docx/domain/run";
-import type { HalfPoints } from "../../docx/domain/types";
+} from "@oxen/docx/domain/run";
+import type { HalfPoints } from "@oxen/docx/domain/types";
 
 // =============================================================================
 // Run Creation

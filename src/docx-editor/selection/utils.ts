@@ -12,9 +12,9 @@ import type {
   ElementSelectionState,
   DocxSelectionState,
 } from "../context/document/state/selection";
-import type { DocxDocument, DocxBlockContent } from "../../docx/domain/document";
-import type { DocxParagraph } from "../../docx/domain/paragraph";
-import type { DocxRun } from "../../docx/domain/run";
+import type { DocxDocument, DocxBlockContent } from "@oxen/docx/domain/document";
+import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
+import type { DocxRun } from "@oxen/docx/domain/run";
 import { getRunText } from "../run/mutation";
 import { getParagraphText } from "../paragraph/mutation";
 

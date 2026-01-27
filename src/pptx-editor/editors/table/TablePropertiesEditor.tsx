@@ -9,7 +9,7 @@ import { Toggle, Input } from "../../../office-editor-components/primitives";
 import { Accordion, FieldGroup } from "../../../office-editor-components/layout";
 import { FillEditor, createNoFill } from "../color/FillEditor";
 import { EffectsEditor, createDefaultEffects } from "../shape/EffectsEditor";
-import type { TableProperties } from "../../../pptx/domain/table/types";
+import type { TableProperties } from "@oxen/pptx/domain/table/types";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 export type TablePropertiesEditorProps = EditorProps<TableProperties> & {

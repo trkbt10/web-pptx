@@ -5,8 +5,8 @@
  */
 
 import type { CSSProperties } from "react";
-import type { Background } from "../../../pptx/domain/slide";
-import type { Fill } from "../../../pptx/domain/color/types";
+import type { Background } from "@oxen/pptx/domain/slide/types";
+import type { Fill } from "@oxen/pptx/domain/color/types";
 import type { EditorProps } from "../../../office-editor-components/types";
 import { FieldGroup } from "../../../office-editor-components/layout";
 import { Toggle } from "../../../office-editor-components/primitives";

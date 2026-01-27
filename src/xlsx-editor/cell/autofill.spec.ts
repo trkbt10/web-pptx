@@ -2,10 +2,10 @@
  * @file Autofill (fill handle) mutation tests
  */
 
-import { colIdx, rowIdx, styleId } from "../../xlsx/domain/types";
-import { parseRange } from "../../xlsx/domain/cell/address";
-import type { Cell } from "../../xlsx/domain/cell/types";
-import type { XlsxWorksheet } from "../../xlsx/domain/workbook";
+import { colIdx, rowIdx, styleId } from "@oxen/xlsx/domain/types";
+import { parseRange } from "@oxen/xlsx/domain/cell/address";
+import type { Cell } from "@oxen/xlsx/domain/cell/types";
+import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
 import { applyAutofillToWorksheet } from "./autofill";
 import { getCell } from "./query";
 

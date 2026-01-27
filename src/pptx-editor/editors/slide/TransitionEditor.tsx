@@ -5,7 +5,7 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import type { SlideTransition, TransitionType } from "../../../pptx/domain/transition";
+import type { SlideTransition, TransitionType } from "@oxen/pptx/domain/transition";
 import type { EditorProps } from "../../../office-editor-components/types";
 import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { Toggle, Input, SearchableSelect } from "../../../office-editor-components/primitives";

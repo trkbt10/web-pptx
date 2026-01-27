@@ -7,7 +7,7 @@
 // =============================================================================
 // Viewport-aware coordinate functions - DO NOT RE-EXPORT
 // =============================================================================
-// Import directly from "@/pptx/render/svg-viewport" for:
+// Import directly from "@oxen/pptx-render/svg-viewport" for:
 // screenToSlideCoords, slideToScreenCoords, screenToCanvasCoords,
 // isPointInCanvasArea, isPointInRulerArea, ViewportTransform
 // =============================================================================

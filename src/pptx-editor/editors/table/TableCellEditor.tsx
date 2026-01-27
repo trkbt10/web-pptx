@@ -12,8 +12,8 @@ import {
   TableCellPropertiesEditor,
   createDefaultTableCellProperties,
 } from "./TableCellPropertiesEditor";
-import type { TableCell, TableCellProperties } from "../../../pptx/domain/table/types";
-import type { TextBody } from "../../../pptx/domain/text";
+import type { TableCell, TableCellProperties } from "@oxen/pptx/domain/table/types";
+import type { TextBody } from "@oxen/pptx/domain/text";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 export type TableCellEditorProps = EditorProps<TableCell> & {

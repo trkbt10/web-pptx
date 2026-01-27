@@ -8,10 +8,10 @@
  * This file provides convenience wrappers for demo/preview purposes.
  */
 
-import { pt, px } from "@lib/ooxml/domain/units";
-import type { TextBody, Paragraph, RegularRun, RunProperties } from "@lib/pptx/domain/text";
-import type { SolidFill } from "@lib/pptx/domain/color/types";
-import type { ColorContext } from "@lib/pptx/domain/color/context";
+import { pt, px } from "@oxen/ooxml/domain/units";
+import type { TextBody, Paragraph, RegularRun, RunProperties } from "@oxen/pptx/domain/text";
+import type { SolidFill } from "@oxen/pptx/domain/color/types";
+import type { ColorContext } from "@oxen/pptx/domain/color/context";
 import type {
   Shape3d,
   Scene3d,
@@ -20,8 +20,8 @@ import type {
   PresetCameraType,
   PresetMaterialType,
   BevelPresetType,
-} from "@lib/pptx/domain/three-d";
-import type { Material3DFill } from "@lib/pptx/render/webgl/text3d";
+} from "@oxen/pptx/domain/three-d";
+import type { Material3DFill } from "@oxen/pptx-render/webgl/text3d";
 import type { DemoWordArtPreset, DemoFill } from "./wordart-demo-presets";
 
 // =============================================================================

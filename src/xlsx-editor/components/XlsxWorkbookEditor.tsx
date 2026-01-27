@@ -5,7 +5,7 @@
  */
 
 import { useState, type CSSProperties } from "react";
-import type { XlsxWorkbook } from "../../xlsx/domain/workbook";
+import type { XlsxWorkbook } from "@oxen/xlsx/domain/workbook";
 import { spacingTokens } from "../../office-editor-components";
 import { XlsxWorkbookEditorProvider, useXlsxWorkbookEditor } from "../context/workbook/XlsxWorkbookEditorContext";
 import { XlsxSheetGrid, type XlsxGridMetrics } from "./XlsxSheetGrid";

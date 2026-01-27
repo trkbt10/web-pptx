@@ -19,7 +19,7 @@ import {
   useSlideContextMenu,
 } from "./hooks";
 import { ContextMenu } from "../ui/context-menu";
-import type { SlideTransition } from "../../pptx/domain/transition";
+import type { SlideTransition } from "@oxen/pptx/domain/transition";
 import type { SlideSelectionState } from "./types";
 
 function buildControlledSelection(

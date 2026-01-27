@@ -4,8 +4,8 @@
  * Tests for ECMA-376 color specifications and transforms.
  */
 
-import { pct } from "@lib/ooxml/domain/units";
-import { ColorSwatch, ColorSwatchRow } from "@lib/pptx/render/react/drawing-ml";
+import { pct } from "@oxen/ooxml/domain/units";
+import { ColorSwatch, ColorSwatchRow } from "@oxen/pptx-render/react";
 import { type CheckItem, TestSubsection } from "../common";
 
 /**

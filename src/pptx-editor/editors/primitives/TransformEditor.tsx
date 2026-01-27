@@ -9,8 +9,8 @@ import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { Toggle } from "../../../office-editor-components/primitives";
 import { PixelsEditor } from "./PixelsEditor";
 import { DegreesEditor } from "./DegreesEditor";
-import { px, deg } from "../../../ooxml/domain/units";
-import type { Transform } from "../../../pptx/domain/types";
+import { px, deg } from "@oxen/ooxml/domain/units";
+import type { Transform } from "@oxen/pptx/domain/types";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 export type TransformEditorProps = EditorProps<Transform> & {

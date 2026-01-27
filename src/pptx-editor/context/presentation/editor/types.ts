@@ -5,14 +5,14 @@
  * Uses state/ module for shared state management primitives.
  */
 
-import type { Slide, Shape, TextBody, SlideSize } from "../../../../pptx/domain";
-import type { ShapeId } from "../../../../pptx/domain/types";
-import type { Pixels, Degrees } from "../../../../ooxml/domain/units";
-import type { PresentationDocument, SlideWithId, SlideId, SlideLayoutBundle } from "../../../../pptx/app";
+import type { Slide, Shape, TextBody, SlideSize } from "@oxen/pptx/domain";
+import type { ShapeId } from "@oxen/pptx/domain/types";
+import type { Pixels, Degrees } from "@oxen/ooxml/domain/units";
+import type { PresentationDocument, SlideWithId, SlideId, SlideLayoutBundle } from "@oxen/pptx/app";
 import type { ShapeHierarchyTarget } from "../../../shape";
-import type { FontSpec } from "../../../../pptx/domain/resolution";
+import type { FontSpec } from "@oxen/pptx/domain/resolution";
 import type { ThemePreset } from "../../../panels/theme-editor/types";
-import type { SchemeColorName } from "../../../../ooxml/domain/color";
+import type { SchemeColorName } from "@oxen/ooxml/domain/color";
 import type {
   UndoRedoHistory,
   SelectionState,

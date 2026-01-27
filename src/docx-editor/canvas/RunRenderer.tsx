@@ -10,7 +10,7 @@ import type {
   DocxRunProperties,
   DocxRunContent,
   DocxHighlightColor,
-} from "../../docx/domain/run";
+} from "@oxen/docx/domain/run";
 
 // =============================================================================
 // Types

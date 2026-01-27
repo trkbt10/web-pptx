@@ -10,9 +10,9 @@ import { Button } from "../../../office-editor-components/primitives";
 import { FieldGroup } from "../../../office-editor-components/layout";
 import { PercentEditor } from "../primitives";
 import { ColorEditor } from "./ColorEditor";
-import type { Color } from "../../../ooxml/domain/color";
-import type { GradientStop } from "../../../ooxml/domain/fill";
-import { pct, type Percent } from "../../../ooxml/domain/units";
+import type { Color } from "@oxen/ooxml/domain/color";
+import type { GradientStop } from "@oxen/ooxml/domain/fill";
+import { pct, type Percent } from "@oxen/ooxml/domain/units";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 export type GradientStopEditorProps = EditorProps<GradientStop> & {

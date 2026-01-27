@@ -5,10 +5,10 @@
  * These operate on the layoutEdit state, which is separate from slide editing.
  */
 
-import type { Shape } from "../../../../../pptx/domain";
-import type { ShapeId } from "../../../../../pptx/domain/types";
-import type { Degrees } from "../../../../../ooxml/domain/units";
-import { px, deg } from "../../../../../ooxml/domain/units";
+import type { Shape } from "@oxen/pptx/domain";
+import type { ShapeId } from "@oxen/pptx/domain/types";
+import type { Degrees } from "@oxen/ooxml/domain/units";
+import { px, deg } from "@oxen/ooxml/domain/units";
 import type {
   PresentationEditorState,
   PresentationEditorAction,
@@ -27,7 +27,7 @@ import {
   getCombinedCenter,
 } from "../../../../shape/bounds";
 import { withUpdatedTransform } from "../../../../shape/transform";
-import { getShapeTransform } from "../../../../../pptx/render/svg/slide-utils";
+import { getShapeTransform } from "@oxen/pptx-render/svg";
 
 // =============================================================================
 // Action Types

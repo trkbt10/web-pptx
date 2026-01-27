@@ -4,7 +4,7 @@
 
 import { useCallback, type CSSProperties } from "react";
 import { Input } from "../../../office-editor-components/primitives";
-import { deg, type Degrees } from "../../../ooxml/domain/units";
+import { deg, type Degrees } from "@oxen/ooxml/domain/units";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 export type DegreesEditorProps = EditorProps<Degrees> & {

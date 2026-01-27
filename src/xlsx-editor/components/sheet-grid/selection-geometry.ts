@@ -5,7 +5,7 @@
  * current visible area. Used for selection overlays and cell editor positioning.
  */
 
-import type { CellAddress } from "../../../xlsx/domain/cell/address";
+import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
 import { createSheetLayout, toColIndex0, toRowIndex0 } from "../../selectors/sheet-layout";
 
 export type RangeBounds = {

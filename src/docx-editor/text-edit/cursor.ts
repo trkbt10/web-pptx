@@ -7,9 +7,9 @@
  * 3. Visual coordinates (x, y, height for rendering)
  */
 
-import type { DocxDocument, DocxBlockContent } from "../../docx/domain/document";
-import type { DocxParagraph, DocxParagraphContent } from "../../docx/domain/paragraph";
-import type { DocxRun, DocxRunContent } from "../../docx/domain/run";
+import type { DocxDocument, DocxBlockContent } from "@oxen/docx/domain/document";
+import type { DocxParagraph, DocxParagraphContent } from "@oxen/docx/domain/paragraph";
+import type { DocxRun, DocxRunContent } from "@oxen/docx/domain/run";
 
 // =============================================================================
 // Types

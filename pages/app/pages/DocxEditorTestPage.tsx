@@ -20,14 +20,14 @@ import {
   createDefaultTableCellProperties,
   ContinuousEditor,
 } from "@lib/docx-editor";
-import type { DocxRunProperties } from "@lib/docx/domain/text";
-import type { DocxParagraphProperties, DocxParagraph } from "@lib/docx/domain/paragraph";
-import type { DocxStyle } from "@lib/docx/domain/styles";
-import type { DocxLevel, DocxNumbering, DocxAbstractNum, DocxNum } from "@lib/docx/domain/numbering";
-import { docxAbstractNumId, docxNumId, docxIlvl } from "@lib/docx/domain/types";
-import type { DocxTableProperties, DocxTableCellProperties } from "@lib/docx/domain/table";
+import type { DocxRunProperties } from "@oxen/docx/domain/run";
+import type { DocxParagraphProperties, DocxParagraph } from "@oxen/docx/domain/paragraph";
+import type { DocxStyle } from "@oxen/docx/domain/styles";
+import type { DocxLevel, DocxNumbering, DocxAbstractNum, DocxNum } from "@oxen/docx/domain/numbering";
+import { docxAbstractNumId, docxNumId, docxIlvl } from "@oxen/docx/domain/types";
+import type { DocxTableProperties, DocxTableCellProperties } from "@oxen/docx/domain/table";
 import { Button } from "@lib/office-editor-components/primitives";
-import { px } from "@lib/ooxml/domain/units";
+import { px } from "@oxen/ooxml/domain/units";
 
 type DocxEditorTestPageProps = {
   readonly onBack: () => void;

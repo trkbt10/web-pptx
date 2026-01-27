@@ -1,9 +1,9 @@
 /**
  * Debug: trace line spacing parsing
  */
-import { openPresentation, LIBREOFFICE_RENDER_OPTIONS, DEFAULT_RENDER_OPTIONS } from "../src/pptx";
-import { renderSlideToSvg } from "../src/pptx/render/svg";
-import { getEffectiveLineSpacing } from "../src/pptx/render/render-options";
+import { openPresentation, LIBREOFFICE_RENDER_OPTIONS, DEFAULT_RENDER_OPTIONS } from "@oxen/pptx";
+import { renderSlideToSvg } from "@oxen/pptx-render/svg";
+import { getEffectiveLineSpacing } from "@oxen/pptx-render/render-options";
 import { loadPptxFile } from "./lib/pptx-loader";
 
 async function main() {

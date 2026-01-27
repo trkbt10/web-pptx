@@ -5,8 +5,8 @@
  */
 
 import { useCallback, useState, useRef, useEffect } from "react";
-import type { Pixels } from "../../../ooxml/domain/units";
-import { px } from "../../../ooxml/domain/units";
+import type { Pixels } from "@oxen/ooxml/domain/units";
+import { px } from "@oxen/ooxml/domain/units";
 import type {
   DrawingPath,
   PathAnchorPoint,

@@ -7,7 +7,7 @@
 
 import { Input, Toggle } from "../../../office-editor-components/primitives";
 import { FieldGroup } from "../../../office-editor-components/layout";
-import type { Hyperlink } from "../../../pptx/domain/types";
+import type { Hyperlink } from "@oxen/pptx/domain/types";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 export type HyperlinkEditorProps = EditorProps<Hyperlink | undefined> & {

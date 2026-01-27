@@ -9,8 +9,8 @@ import { useCallback, type CSSProperties } from "react";
 import { FieldGroup } from "../../../office-editor-components/layout";
 import { FillEditor, createNoFill } from "../color/FillEditor";
 import { LineEditor, createDefaultLine } from "../../ui/line";
-import type { ChartShapeProperties } from "../../../pptx/domain/chart";
-import type { Fill, Line } from "../../../pptx/domain/color/types";
+import type { ChartShapeProperties } from "@oxen/pptx/domain/chart";
+import type { Fill, Line } from "@oxen/pptx/domain/color/types";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 export type ChartShapePropertiesEditorProps = EditorProps<

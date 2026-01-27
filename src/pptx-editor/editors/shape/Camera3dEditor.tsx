@@ -10,9 +10,9 @@ import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { DegreesEditor } from "../primitives/DegreesEditor";
 import { PercentEditor } from "../primitives/PercentEditor";
 import { Rotation3dEditor, createDefaultRotation3d } from "./Rotation3dEditor";
-import { deg, pct } from "../../../ooxml/domain/units";
-import type { PresetCameraType } from "../../../pptx/domain/types";
-import type { Camera3d } from "../../../pptx/domain";
+import { deg, pct } from "@oxen/ooxml/domain/units";
+import type { PresetCameraType } from "@oxen/pptx/domain/types";
+import type { Camera3d } from "@oxen/pptx/domain";
 import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 
 export type Camera3dEditorProps = EditorProps<Camera3d>;

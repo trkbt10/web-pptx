@@ -4,9 +4,9 @@
  * Handlers for drag operations: start, preview, commit, end.
  */
 
-import type { Slide, Shape } from "../../../../../pptx/domain";
-import type { Degrees } from "../../../../../ooxml/domain/units";
-import { px, deg } from "../../../../../ooxml/domain/units";
+import type { Slide, Shape } from "@oxen/pptx/domain";
+import type { Degrees } from "@oxen/ooxml/domain/units";
+import { px, deg } from "@oxen/ooxml/domain/units";
 import type {
   PresentationEditorState,
   PresentationEditorAction,
@@ -22,7 +22,7 @@ import {
   getCombinedCenter,
 } from "../../../../shape/bounds";
 import { withUpdatedTransform } from "../../../../shape/transform";
-import { getShapeTransform } from "../../../../../pptx/render/svg/slide-utils";
+import { getShapeTransform } from "@oxen/pptx-render/svg";
 
 type StartMoveAction = Extract<
   PresentationEditorAction,

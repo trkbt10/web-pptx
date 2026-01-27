@@ -1,4 +1,4 @@
 /**
  * @file Main entry point for the TypeScript library.
  */
-export * as PPTX from "./pptx";
+export * as PPTX from "@oxen/pptx";

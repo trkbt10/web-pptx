@@ -21,10 +21,10 @@ import {
   createDefaultEffects,
   createDefaultTextBody,
 } from "@lib/pptx-editor";
-import type { Slide, TextBody, TextRun } from "@lib/pptx/domain";
-import { px, deg, pt, type Pixels } from "@lib/ooxml/domain/units";
-import { SlideRendererSvg } from "@lib/pptx/render/react";
-import { layoutTextBody, toLayoutInput } from "@lib/pptx/render/text-layout";
+import type { Slide, TextBody, TextRun } from "@oxen/pptx/domain";
+import { px, deg, pt, type Pixels } from "@oxen/ooxml/domain/units";
+import { SlideRendererSvg } from "@oxen/pptx-render/react";
+import { layoutTextBody, toLayoutInput } from "@oxen/pptx-render/text-layout";
 import { TextEditController } from "@lib/pptx-editor/slide/text-edit";
 import type { TextSelection, CursorPosition, SelectionChangeEvent } from "@lib/pptx-editor/slide/text-edit";
 import {

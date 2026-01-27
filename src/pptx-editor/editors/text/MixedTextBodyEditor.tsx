@@ -15,7 +15,7 @@ import {
   extractMixedParagraphProperties,
   mergeRunProperties,
 } from "./mixed-properties";
-import type { TextBody, RunProperties, ParagraphProperties, Paragraph, TextRun } from "../../../pptx/domain/text";
+import type { TextBody, RunProperties, ParagraphProperties, Paragraph, TextRun } from "@oxen/pptx/domain/text";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 // =============================================================================

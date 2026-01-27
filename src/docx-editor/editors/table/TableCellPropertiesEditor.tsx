@@ -6,8 +6,8 @@
  */
 
 import { useCallback, type CSSProperties, type ReactNode } from "react";
-import type { DocxTableCellProperties } from "../../../docx/domain/table";
-import type { TableCellVerticalAlignment } from "../../../ooxml/domain/table";
+import type { DocxTableCellProperties } from "@oxen/docx/domain/table";
+import type { TableCellVerticalAlignment } from "@oxen/ooxml/domain/table";
 import type { EditorProps } from "../../types";
 import { ToggleButton, Input, Select, Toggle, Button } from "../../../office-editor-components/primitives";
 import { FieldGroup } from "../../../office-editor-components/layout";

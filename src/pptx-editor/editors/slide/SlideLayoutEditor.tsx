@@ -3,10 +3,10 @@
  */
 
 import { useCallback } from "react";
-import type { SlideSize, PresentationFile } from "../../../pptx/domain";
-import type { SlideLayoutType } from "../../../pptx/domain/slide";
-import type { SlideLayoutAttributes } from "../../../pptx/parser/slide/layout-parser";
-import type { SlideLayoutOption } from "../../../pptx/app";
+import type { SlideSize, PresentationFile } from "@oxen/pptx/domain";
+import type { SlideLayoutType } from "@oxen/pptx/domain/slide/types";
+import type { SlideLayoutAttributes } from "@oxen/pptx/parser/slide/layout-parser";
+import type { SlideLayoutOption } from "@oxen/pptx/app";
 import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { Input } from "../../../office-editor-components/primitives/Input";

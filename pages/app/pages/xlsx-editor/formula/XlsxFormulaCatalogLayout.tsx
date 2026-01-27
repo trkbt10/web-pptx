@@ -8,7 +8,7 @@ import {
   getFunctionsByCategory,
   listFunctionCategories,
   type FormulaFunctionDefinition,
-} from "@lib/xlsx/formula/functionRegistry";
+} from "@oxen/xlsx/formula/functionRegistry";
 import { Input } from "@lib/office-editor-components/primitives";
 
 type NavItem = {

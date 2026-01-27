@@ -4,7 +4,7 @@
  * Handlers for shape selection operations.
  */
 
-import type { ShapeId } from "../../../../../pptx/domain/types";
+import type { ShapeId } from "@oxen/pptx/domain/types";
 import type {
   PresentationEditorState,
   PresentationEditorAction,

@@ -9,7 +9,7 @@
  * @see ECMA-376 Part 1, Section 20.1.6 (Theme)
  */
 import * as fs from "node:fs";
-import { parseXml, getChild, getChildren, getAttr } from "../src/xml";
+import { parseXml, getChild, getChildren, getAttr } from "@oxen/xml";
 import { loadPptxFile } from "./lib/pptx-loader";
 
 type ThemeInfo = {

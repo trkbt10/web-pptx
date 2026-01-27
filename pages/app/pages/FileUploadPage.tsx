@@ -3,8 +3,8 @@
  */
 
 import { useCallback, useRef, useState, useEffect } from "react";
-import { importPdfFromFile, PdfImportError } from "@lib/pdf/importer/pdf-importer";
-import type { PresentationDocument } from "@lib/pptx/app";
+import { importPdfFromFile, PdfImportError } from "@oxen/pdf/importer/pdf-importer";
+import type { PresentationDocument } from "@oxen/pptx/app";
 import {
   UploadIcon,
   ArrowRightIcon,

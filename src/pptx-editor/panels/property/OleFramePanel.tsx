@@ -4,8 +4,8 @@
  * Displays property editors for GraphicFrame elements containing OLE objects.
  */
 
-import type { GraphicFrame } from "../../../pptx/domain/index";
-import type { OleReference } from "../../../pptx/domain/shape";
+import type { GraphicFrame } from "@oxen/pptx/domain/index";
+import type { OleReference } from "@oxen/pptx/domain/shape";
 import { Accordion } from "../../../office-editor-components/layout";
 import {
   NonVisualPropertiesEditor,

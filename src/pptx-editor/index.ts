@@ -212,7 +212,7 @@ export {
 } from "./editors";
 
 // Shape Types (re-export from domain)
-export type { ShapeId } from "../pptx/domain/types";
+export type { ShapeId } from "@oxen/pptx/domain/types";
 
 // State Types (from state module)
 export type {

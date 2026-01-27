@@ -17,7 +17,7 @@ import {
   createDefaultChartSeries,
   createDefaultChart,
 } from "@lib/pptx-editor";
-import type { DataLabels, Legend, Axis, ChartSeries, Chart } from "@lib/pptx/domain/chart";
+import type { DataLabels, Legend, Axis, ChartSeries, Chart } from "@oxen/pptx/domain/chart";
 
 const cardStyle: CSSProperties = {
   backgroundColor: "var(--bg-secondary)",

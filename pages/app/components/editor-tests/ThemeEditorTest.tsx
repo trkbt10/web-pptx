@@ -13,8 +13,8 @@ import {
   ThemePresetSelector,
 } from "@lib/pptx-editor/panels/theme-editor";
 import type { SchemeColorName, ThemePreset } from "@lib/pptx-editor/panels/theme-editor/types";
-import type { ColorScheme } from "@lib/pptx/domain/color/context";
-import type { FontScheme, FontSpec } from "@lib/pptx/domain/resolution";
+import type { ColorScheme } from "@oxen/pptx/domain/color/context";
+import type { FontScheme, FontSpec } from "@oxen/pptx/domain/resolution";
 
 const containerStyle: CSSProperties = {
   display: "flex",

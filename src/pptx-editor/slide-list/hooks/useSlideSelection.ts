@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useState } from "react";
-import type { SlideId, SlideWithId } from "../../../pptx/app";
+import type { SlideId, SlideWithId } from "@oxen/pptx/app";
 import type { SlideSelectionState } from "../types";
 import { createEmptySlideSelection } from "../types";
 import {

@@ -17,7 +17,7 @@ import {
   createDragStartState,
 } from "./drag-drop";
 import { createIdleDragState } from "./types";
-import type { SlideWithId } from "../../pptx/app";
+import type { SlideWithId } from "@oxen/pptx/app";
 
 // =============================================================================
 // Test fixtures

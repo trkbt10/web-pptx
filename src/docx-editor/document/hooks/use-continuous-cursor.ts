@@ -6,8 +6,8 @@
  */
 
 import { useMemo, useCallback } from "react";
-import type { Pixels } from "../../../ooxml/domain/units";
-import { px } from "../../../ooxml/domain/units";
+import type { Pixels } from "@oxen/ooxml/domain/units";
+import { px } from "@oxen/ooxml/domain/units";
 import type {
   LayoutParagraphResult,
   LayoutLine,
@@ -16,9 +16,9 @@ import type {
   ContinuousSelection,
   CursorCoordinates,
   SelectionRect,
-} from "../../../office-text-layout/types";
-import { getAscenderRatio } from "../../../text/font-metrics";
-import { PT_TO_PX, getLineTextLength } from "../../../office-text-layout";
+} from "@oxen/text-layout";
+import { getAscenderRatio } from "@oxen/text";
+import { PT_TO_PX, getLineTextLength } from "@oxen/text-layout";
 
 // =============================================================================
 // Types

@@ -7,8 +7,8 @@
  * Based on PPTX text-geometry.ts implementation for accurate text measurement.
  */
 
-import type { DocxParagraph } from "../../docx/domain/paragraph";
-import { px } from "../../ooxml/domain/units";
+import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
+import { px } from "@oxen/ooxml/domain/units";
 import type {
   PagedLayoutResult,
   LayoutLine,
@@ -16,18 +16,18 @@ import type {
   SelectionRect,
   CursorCoordinates,
   WritingMode,
-} from "../../office-text-layout/types";
-import { isVertical } from "../../office-text-layout/writing-mode";
+} from "@oxen/text-layout";
 import {
+  isVertical,
   getLineTextLength,
   getLineMaxFontInfo,
   PT_TO_PX,
   measureSpanTextWidth,
   getCharIndexAtOffset,
-} from "../../office-text-layout";
+  getParagraphPlainText,
+} from "@oxen/text-layout";
 import { editorLayoutTokens } from "../../office-editor-components/design-tokens";
-import { getAscenderRatio } from "../../text/font-metrics";
-import { getParagraphPlainText } from "../../office-text-layout/adapters/docx-adapter";
+import { getAscenderRatio } from "@oxen/text";
 
 // =============================================================================
 // Text Position Mapping

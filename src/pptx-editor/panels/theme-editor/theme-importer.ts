@@ -4,9 +4,9 @@
  * Extracts theme (color scheme, font scheme) from existing PPTX files.
  */
 
-import { loadZipPackage } from "../../../pptx/opc/zip-package";
-import { parseXml, getChildren, isXmlElement } from "../../../xml";
-import { parseColorScheme, parseFontScheme } from "../../../pptx/parser/drawing-ml/theme";
+import { loadZipPackage } from "@oxen/zip";
+import { parseXml, getChildren, isXmlElement } from "@oxen/xml";
+import { parseColorScheme, parseFontScheme } from "@oxen/pptx/parser/drawing-ml/theme";
 import type { ThemePreset } from "./types";
 import { OFFICE_THEME } from "./presets";
 

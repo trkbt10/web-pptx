@@ -5,8 +5,8 @@
  */
 
 import { useState, useCallback, useMemo, type CSSProperties } from "react";
-import type { ColorScheme } from "../../../pptx/domain/color/context";
-import type { FontScheme, FontSpec } from "../../../pptx/domain/resolution";
+import type { ColorScheme } from "@oxen/pptx/domain/color/context";
+import type { FontScheme, FontSpec } from "@oxen/pptx/domain/resolution";
 import type { ThemePreset, SchemeColorName } from "./types";
 import { ColorSchemeEditor } from "./ColorSchemeEditor";
 import { FontSchemeEditor } from "./FontSchemeEditor";

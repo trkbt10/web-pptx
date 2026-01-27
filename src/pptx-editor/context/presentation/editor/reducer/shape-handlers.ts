@@ -4,8 +4,8 @@
  * Handlers for shape operations on the active slide.
  */
 
-import type { Shape } from "../../../../../pptx/domain";
-import type { ShapeId } from "../../../../../pptx/domain/types";
+import type { Shape } from "@oxen/pptx/domain";
+import type { ShapeId } from "@oxen/pptx/domain/types";
 import type {
   PresentationEditorState,
   PresentationEditorAction,

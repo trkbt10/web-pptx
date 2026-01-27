@@ -4,8 +4,8 @@
  * Search and traversal operations for shapes.
  */
 
-import type { Shape, GrpShape } from "../../pptx/domain";
-import type { ShapeId } from "../../pptx/domain/types";
+import type { Shape, GrpShape } from "@oxen/pptx/domain";
+import type { ShapeId } from "@oxen/pptx/domain/types";
 import { hasShapeId } from "./identity";
 
 /**

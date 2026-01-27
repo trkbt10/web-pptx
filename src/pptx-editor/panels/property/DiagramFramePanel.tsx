@@ -4,9 +4,9 @@
  * Displays property editors for GraphicFrame elements containing diagrams (SmartArt).
  */
 
-import type { GraphicFrame } from "../../../pptx/domain/index";
-import type { DiagramDataModel } from "../../../pptx/domain/diagram";
-import type { Shape } from "../../../pptx/domain/index";
+import type { GraphicFrame } from "@oxen/pptx/domain/index";
+import type { DiagramDataModel } from "@oxen/pptx/domain/diagram";
+import type { Shape } from "@oxen/pptx/domain/index";
 import { Accordion } from "../../../office-editor-components/layout";
 import {
   NonVisualPropertiesEditor,

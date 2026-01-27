@@ -7,8 +7,8 @@
  */
 
 import type { CSSProperties } from "react";
-import type { GradientFill } from "../../../ooxml/domain/fill";
-import type { Fill } from "../../../pptx/domain/color/types";
+import type { GradientFill } from "@oxen/ooxml/domain/fill";
+import type { Fill } from "@oxen/pptx/domain/color/types";
 import { getHexFromColor, getStopHex } from "./fill/fill-utils";
 import { colorTokens } from "../../../office-editor-components/design-tokens";
 

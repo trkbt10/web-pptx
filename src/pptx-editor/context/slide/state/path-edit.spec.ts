@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { px } from "../../../../ooxml/domain/units";
-import type { CustomGeometry } from "../../../../pptx/domain";
+import { px } from "@oxen/ooxml/domain/units";
+import type { CustomGeometry } from "@oxen/pptx/domain";
 import {
   createInactivePathEditState,
   createActivePathEditState,

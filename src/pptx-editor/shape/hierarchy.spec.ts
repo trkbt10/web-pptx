@@ -3,8 +3,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { Shape, GrpShape, SpShape } from "../../pptx/domain";
-import { px, deg } from "../../ooxml/domain/units";
+import type { Shape, GrpShape, SpShape } from "@oxen/pptx/domain";
+import { px, deg } from "@oxen/ooxml/domain/units";
 import { moveShapeInHierarchy } from "./hierarchy";
 
 const createShape = (id: string, x: number, y: number): SpShape => ({

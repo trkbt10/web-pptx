@@ -7,8 +7,8 @@
  */
 
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Text3DRenderer } from "@lib/pptx/render/webgl/text3d";
-import { extractText3DRuns } from "@lib/pptx/render/react/primitives";
+import { Text3DRenderer } from "@oxen/pptx-render/webgl/text3d";
+import { extractText3DRuns } from "@oxen/pptx-render/react";
 import { demoWordArtPresetRows, type DemoWordArtPreset } from "./wordart-demo-presets";
 import {
   demoColorContext,
@@ -29,7 +29,7 @@ import type {
   BevelPresetType,
   LightRigType,
   LightRigDirection,
-} from "@lib/pptx/domain/three-d";
+} from "@oxen/pptx/domain/three-d";
 
 // =============================================================================
 // WordArt Thumbnail Component (Static Image)

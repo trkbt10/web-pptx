@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import type { SlideWithId } from "../../pptx/app";
+import type { SlideWithId } from "@oxen/pptx/app";
 import {
   createEmptySlideSelection,
   createSingleSlideSelection,

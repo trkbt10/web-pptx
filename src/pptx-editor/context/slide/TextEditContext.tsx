@@ -6,7 +6,7 @@
  */
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
-import type { TextBody, RunProperties, ParagraphProperties } from "../../../pptx/domain";
+import type { TextBody, RunProperties, ParagraphProperties } from "@oxen/pptx/domain";
 import type { TextEditState, StickyFormattingState, TextCursorState } from "../../slide/text-edit";
 import type { TextSelectionContext } from "../../editors/text/text-property-extractor";
 

@@ -4,8 +4,8 @@
 
 import { describe, it, expect } from "vitest";
 import { createClipboardContent, incrementPasteCount } from "./clipboard";
-import type { Shape } from "../../../../pptx/domain";
-import { px, deg } from "../../../../ooxml/domain/units";
+import type { Shape } from "@oxen/pptx/domain";
+import { px, deg } from "@oxen/ooxml/domain/units";
 
 const createTestShape = (id: string): Shape => ({
   type: "sp",

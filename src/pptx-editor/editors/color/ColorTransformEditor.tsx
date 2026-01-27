@@ -8,8 +8,8 @@ import { useCallback, type CSSProperties } from "react";
 import { FieldGroup } from "../../../office-editor-components/layout";
 import { Toggle } from "../../../office-editor-components/primitives";
 import { PercentEditor, DegreesEditor } from "../primitives";
-import { pct, deg, type Percent, type Degrees } from "../../../ooxml/domain/units";
-import type { ColorTransform } from "../../../ooxml/domain/color";
+import { pct, deg, type Percent, type Degrees } from "@oxen/ooxml/domain/units";
+import type { ColorTransform } from "@oxen/ooxml/domain/color";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 export type ColorTransformEditorProps = EditorProps<ColorTransform | undefined> & {

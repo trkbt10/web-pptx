@@ -111,7 +111,7 @@ async function main() {
     const tsCode = generateTypeScript(mappings);
 
     // Write to file
-    const outputPath = "src/pdf/domain/font/japan1-kanji-mappings.ts";
+    const outputPath = "packages/@oxen/pdf/src/domain/font/japan1-kanji-mappings.ts";
     await Bun.write(outputPath, tsCode);
     console.log(`Generated: ${outputPath}`);
 

@@ -4,8 +4,8 @@
  * Displays property editors for GraphicFrame elements containing charts.
  */
 
-import type { GraphicFrame } from "../../../pptx/domain/index";
-import type { Chart } from "../../../pptx/domain/chart";
+import type { GraphicFrame } from "@oxen/pptx/domain/index";
+import type { Chart } from "@oxen/pptx/domain/chart";
 import { Accordion } from "../../../office-editor-components/layout";
 import {
   NonVisualPropertiesEditor,

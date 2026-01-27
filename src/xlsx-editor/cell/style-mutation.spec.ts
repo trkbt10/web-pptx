@@ -2,11 +2,11 @@
  * @file Cell style mutation tests
  */
 
-import { EXCEL_MAX_COLS, EXCEL_MAX_ROWS } from "../../xlsx/domain/constants";
-import { colIdx, rowIdx, styleId } from "../../xlsx/domain/types";
-import type { Cell, CellValue } from "../../xlsx/domain/cell/types";
-import type { CellAddress, CellRange } from "../../xlsx/domain/cell/address";
-import type { XlsxRow, XlsxWorksheet } from "../../xlsx/domain/workbook";
+import { EXCEL_MAX_COLS, EXCEL_MAX_ROWS } from "@oxen/xlsx/domain/constants";
+import { colIdx, rowIdx, styleId } from "@oxen/xlsx/domain/types";
+import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import type { XlsxRow, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
 import { getCell } from "./query";
 import { applyStyleToRange } from "./style-mutation";
 

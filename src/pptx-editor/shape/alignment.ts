@@ -4,9 +4,9 @@
  * Pure functions for calculating shape alignment and distribution positions.
  */
 
-import type { Pixels } from "../../ooxml/domain/units";
-import type { Bounds, ShapeId } from "../../pptx/domain/types";
-import { px } from "../../ooxml/domain/units";
+import type { Pixels } from "@oxen/ooxml/domain/units";
+import type { Bounds, ShapeId } from "@oxen/pptx/domain/types";
+import { px } from "@oxen/ooxml/domain/units";
 
 // =============================================================================
 // Types
@@ -328,7 +328,7 @@ export function nudgeShapes(
 // High-level API
 // =============================================================================
 
-import type { Shape } from "../../pptx/domain";
+import type { Shape } from "@oxen/pptx/domain";
 import { getShapeBounds } from "./bounds";
 
 /**

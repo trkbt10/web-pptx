@@ -2,8 +2,8 @@
  * @file Selection state tests
  */
 
-import { colIdx, rowIdx } from "../../../../xlsx/domain/types";
-import type { CellAddress, CellRange } from "../../../../xlsx/domain/cell/address";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
 import type { CellSelectionState } from "../editor/types";
 import {
   addRangeToSelection,

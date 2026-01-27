@@ -10,10 +10,10 @@
  */
 
 import { useState, useCallback, useMemo, useRef, type CSSProperties, type ChangeEvent } from "react";
-import type { ColorScheme } from "../../../pptx/domain/color/context";
-import type { FontScheme, FontSpec } from "../../../pptx/domain/resolution";
-import type { PresentationFile, SlideSize } from "../../../pptx/domain";
-import type { SlideLayoutOption } from "../../../pptx/app";
+import type { ColorScheme } from "@oxen/pptx/domain/color/context";
+import type { FontScheme, FontSpec } from "@oxen/pptx/domain/resolution";
+import type { PresentationFile, SlideSize } from "@oxen/pptx/domain";
+import type { SlideLayoutOption } from "@oxen/pptx/app";
 import type { SchemeColorName, ThemePreset } from "./types";
 import { THEME_PRESETS, OFFICE_THEME } from "./presets";
 import { LayoutEditor } from "./LayoutEditor";
@@ -22,7 +22,7 @@ import { Input } from "../../../office-editor-components/primitives/Input";
 import { Button } from "../../../office-editor-components/primitives/Button";
 import { colorTokens, fontTokens, spacingTokens, radiusTokens, iconTokens } from "../../../office-editor-components/design-tokens";
 import { TileViewIcon, ListViewIcon, UndoIcon, RedoIcon, DownloadIcon, FolderIcon } from "../../../office-editor-components/icons";
-import { hexToRgb } from "../../../color";
+import { hexToRgb } from "@oxen/color";
 
 export type ThemeEditorCanvasProps = {
   readonly colorScheme: ColorScheme;

@@ -2,9 +2,9 @@
  * Debug script for 2411-Performance_Up.pptx slide 1 structure
  */
 
-import { openPresentation } from "../src/pptx";
-import { renderSlideToSvg } from "../src/pptx/render/svg";
-import { parseXml } from "../src/xml";
+import { openPresentation } from "@oxen/pptx";
+import { renderSlideToSvg } from "@oxen/pptx-render/svg";
+import { parseXml } from "@oxen/xml";
 import { loadPptxFile } from "./lib/pptx-loader";
 import * as fs from "node:fs";
 

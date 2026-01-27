@@ -20,10 +20,10 @@
  */
 
 import * as fs from "node:fs/promises";
-import { loadPptxBundleFromBuffer, type PptxFileBundle } from "../../src/pptx/app/pptx-loader";
+import { loadPptxBundleFromBuffer, type PptxFileBundle } from "@oxen/pptx/app/pptx-loader";
 
-export type { PptxFileBundle } from "../../src/pptx/app/pptx-loader";
-export type { ZipPackage } from "../../src/pptx/opc/zip-package";
+export type { PptxFileBundle } from "@oxen/pptx/app/pptx-loader";
+export type { ZipPackage } from "@oxen/zip";
 
 /**
  * Load a PPTX file and return the bundle containing ZipPackage and PresentationFile.

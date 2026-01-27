@@ -7,7 +7,7 @@
 import { describe, it, expect } from "vitest";
 import { JSDOM } from "jsdom";
 import { render } from "@testing-library/react";
-import type { DocxParagraph } from "../../docx/domain/paragraph";
+import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
 import { DocxTextOverlay } from "./DocxTextOverlay";
 
 function ensureDom(): void {

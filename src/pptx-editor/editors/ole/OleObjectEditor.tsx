@@ -5,7 +5,7 @@
  */
 
 import type { CSSProperties } from "react";
-import type { OleReference, OleObjectFollowColorScheme } from "../../../pptx/domain/shape";
+import type { OleReference, OleObjectFollowColorScheme } from "@oxen/pptx/domain/shape";
 import type { EditorProps } from "../../../office-editor-components/types";
 import type { SelectOption } from "../../../office-editor-components/types";
 import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";

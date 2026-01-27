@@ -5,11 +5,11 @@
  * Used by both cursor positioning and text overlay rendering.
  */
 
-import type { Pixels, Points } from "../../../../ooxml/domain/units";
-import type { LayoutLine, PositionedSpan } from "../../../../pptx/render/text-layout";
-import { PT_TO_PX } from "../../../../pptx/domain/unit-conversion";
-import { measureLayoutSpanTextWidth } from "../../../../pptx/render/react/text-measure/span-measure";
-import { getAscenderRatio } from "../../../../text/font-metrics";
+import type { Pixels, Points } from "@oxen/ooxml/domain/units";
+import type { LayoutLine, PositionedSpan } from "@oxen/pptx-render/text-layout";
+import { PT_TO_PX } from "@oxen/pptx/domain/unit-conversion";
+import { measureLayoutSpanTextWidth } from "@oxen/pptx-render/react";
+import { getAscenderRatio } from "@oxen/text";
 
 // =============================================================================
 // Constants

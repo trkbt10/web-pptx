@@ -10,8 +10,8 @@ import {
   createResourceStore,
   type ResourceStore,
   type ResourceKind,
-} from "../../../pptx/domain/resource-store";
-import type { ResourceId } from "../../../pptx/domain/resource";
+} from "@oxen/pptx/domain/resource-store";
+import type { ResourceId } from "@oxen/pptx/domain/resource";
 
 // =============================================================================
 // Types

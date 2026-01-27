@@ -4,7 +4,7 @@
  * Displays property editors for CxnShape (connector) elements.
  */
 
-import type { CxnShape } from "../../../pptx/domain/index";
+import type { CxnShape } from "@oxen/pptx/domain/index";
 import { Accordion } from "../../../office-editor-components/layout";
 import { FieldGroup } from "../../../office-editor-components/layout";
 import { LineEditor } from "../../ui/line";

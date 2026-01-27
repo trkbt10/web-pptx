@@ -5,7 +5,7 @@
  * This is UI-only: it emits reducer actions based on pointer movement.
  */
 
-import type { CellAddress } from "../../../xlsx/domain/cell/address";
+import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
 import type { XlsxEditorAction } from "../../context/workbook/editor/types";
 import type { createSheetLayout } from "../../selectors/sheet-layout";
 import { findMergeForCell, type NormalizedMergeRange } from "../../sheet/merge-range";

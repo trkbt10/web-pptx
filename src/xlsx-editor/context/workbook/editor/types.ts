@@ -7,14 +7,14 @@
  * @see ECMA-376 Part 4 (SpreadsheetML)
  */
 
-import type { XlsxWorkbook } from "../../../../xlsx/domain/workbook";
-import type { CellAddress, CellRange } from "../../../../xlsx/domain/cell/address";
-import type { CellValue } from "../../../../xlsx/domain/cell/types";
-import type { XlsxAlignment } from "../../../../xlsx/domain/style/types";
-import type { XlsxFont } from "../../../../xlsx/domain/style/font";
-import type { XlsxFill } from "../../../../xlsx/domain/style/fill";
-import type { XlsxBorder } from "../../../../xlsx/domain/style/border";
-import type { ColIndex, RowIndex, StyleId } from "../../../../xlsx/domain/types";
+import type { XlsxWorkbook } from "@oxen/xlsx/domain/workbook";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import type { CellValue } from "@oxen/xlsx/domain/cell/types";
+import type { XlsxAlignment } from "@oxen/xlsx/domain/style/types";
+import type { XlsxFont } from "@oxen/xlsx/domain/style/font";
+import type { XlsxFill } from "@oxen/xlsx/domain/style/fill";
+import type { XlsxBorder } from "@oxen/xlsx/domain/style/border";
+import type { ColIndex, RowIndex, StyleId } from "@oxen/xlsx/domain/types";
 
 // =============================================================================
 // Undo/Redo History (shared with pptx-editor)

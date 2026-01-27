@@ -6,8 +6,8 @@
  */
 
 import type { CSSProperties } from "react";
-import type { ColorContext, ColorScheme } from "../../../pptx/domain/color/context";
-import type { FontScheme } from "../../../pptx/domain/resolution";
+import type { ColorContext, ColorScheme } from "@oxen/pptx/domain/color/context";
+import type { FontScheme } from "@oxen/pptx/domain/resolution";
 import { InspectorSection, Accordion } from "../../../office-editor-components/layout";
 import { colorTokens, fontTokens, spacingTokens } from "../../../office-editor-components/design-tokens";
 

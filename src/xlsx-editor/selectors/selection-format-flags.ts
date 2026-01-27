@@ -5,9 +5,9 @@
  * This is used to render toolbar/panel states for multi-cell selections.
  */
 
-import type { CellRange } from "../../xlsx/domain/cell/address";
-import type { XlsxAlignment, XlsxStyleSheet } from "../../xlsx/domain/style/types";
-import type { XlsxWorksheet } from "../../xlsx/domain/workbook";
+import type { CellRange } from "@oxen/xlsx/domain/cell/address";
+import type { XlsxAlignment, XlsxStyleSheet } from "@oxen/xlsx/domain/style/types";
+import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
 import { resolveMergedCellXfFromStyleId } from "./cell-xf";
 
 export type MixedBoolean = { readonly mixed: false; readonly value: boolean } | { readonly mixed: true };

@@ -5,10 +5,10 @@
 // @vitest-environment jsdom
 
 import { render, screen, renderHook } from "@testing-library/react";
-import type { XlsxWorkbook } from "../../../xlsx/domain/workbook";
-import { colIdx, rowIdx } from "../../../xlsx/domain/types";
-import { createDefaultStyleSheet } from "../../../xlsx/domain/style/types";
-import type { CellAddress } from "../../../xlsx/domain/cell/address";
+import type { XlsxWorkbook } from "@oxen/xlsx/domain/workbook";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
+import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
 import {
   XlsxWorkbookEditorProvider,
   useXlsxWorkbookEditor,

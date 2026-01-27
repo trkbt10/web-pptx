@@ -1,0 +1,70 @@
+{
+  "name": "@oxen/pptx-render",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "dependencies": {
+    "@oxen/buffer": "workspace:*",
+    "@oxen/color": "workspace:*",
+    "@oxen/ooxml": "workspace:*",
+    "@oxen/pptx": "workspace:*",
+    "@oxen/text": "workspace:*",
+    "@oxen/xml": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "three": "^0.182.0"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest --run --passWithNoTests --config ../../../vitest.config.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./animation": {
+      "types": "./src/animation/index.ts",
+      "default": "./src/animation/index.ts"
+    },
+    "./html": {
+      "types": "./src/html/index.ts",
+      "default": "./src/html/index.ts"
+    },
+    "./react": {
+      "types": "./src/react/index.ts",
+      "default": "./src/react/index.ts"
+    },
+    "./svg": {
+      "types": "./src/svg/index.ts",
+      "default": "./src/svg/index.ts"
+    },
+    "./svg-viewport": {
+      "types": "./src/svg-viewport/index.ts",
+      "default": "./src/svg-viewport/index.ts"
+    },
+    "./glyph": {
+      "types": "./src/glyph/index.ts",
+      "default": "./src/glyph/index.ts"
+    },
+    "./text-layout": {
+      "types": "./src/text-layout/index.ts",
+      "default": "./src/text-layout/index.ts"
+    },
+    "./webgl/text3d": {
+      "types": "./src/webgl/text3d/index.ts",
+      "default": "./src/webgl/text3d/index.ts"
+    },
+    "./render-options": {
+      "types": "./src/render-options.ts",
+      "default": "./src/render-options.ts"
+    },
+    "./slide-render": {
+      "types": "./src/slide-render.ts",
+      "default": "./src/slide-render.ts"
+    }
+  }
+}

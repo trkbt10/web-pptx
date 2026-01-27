@@ -15,8 +15,8 @@ import type {
   PresetGeometry,
   CustomGeometry,
   TextRect,
-} from "../../../pptx/domain/shape";
-import type { AdjustValue } from "../../../pptx/domain/types";
+} from "@oxen/pptx/domain/shape";
+import type { AdjustValue } from "@oxen/pptx/domain/types";
 import type { EditorProps, SelectOption } from "../../../office-editor-components/types";
 
 export type GeometryEditorProps = EditorProps<Geometry>;

@@ -6,7 +6,7 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { render } from "@testing-library/react";
-import type { DocxTable, DocxTableProperties } from "../../docx/domain/table";
+import type { DocxTable, DocxTableProperties } from "@oxen/docx/domain/table";
 import { computeTableStyles, TableRenderer } from "./TableRenderer";
 
 function createMinimalTable(): DocxTable {

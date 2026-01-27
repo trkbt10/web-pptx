@@ -3,12 +3,72 @@
  *
  * Usage: bun run scripts/debug-background.ts [pptx-file]
  */
-import { openPresentation } from "../src/pptx";
-import { getSlideBackgroundFill, getBackgroundFillData } from "../src/pptx/render/drawing-ml";
-import { getTextByPathList, getNode, getString } from "../src/pptx/parser/traverse";
-import { getSolidFill, getSchemeColorFromTheme } from "../src/pptx/parser/drawing-ml";
-import { isXmlElement, getChild, getChildren, getByPath } from "../src/xml";
+import { DEFAULT_RENDER_OPTIONS, openPresentation } from "@oxen/pptx";
+import type { Slide } from "@oxen/pptx/app/types";
+import { getBackgroundFillData, getSolidFill, getSchemeColorFromTheme, parseTheme, parseMasterTextStyles } from "@oxen/pptx/parser/drawing-ml/index";
+import { createSlideContext, type SlideContext } from "@oxen/pptx/parser/slide/context";
+import { createPlaceholderTable, createColorMap } from "@oxen/pptx/parser/slide/resource-adapters";
+import { toResolvedBackgroundFill } from "@oxen/pptx-render";
+import { getTextByPathList, getNode, getString } from "@oxen/pptx/parser/traverse";
+import { isXmlElement, getChild, getChildren, getByPath, type XmlElement } from "@oxen/xml";
 import { loadPptxFile } from "./lib/pptx-loader";
+
+function buildSlideContextFromSlide(slide: Slide): SlideContext {
+  const slideContent = getByPath(slide.content, ["p:sld"]);
+  if (!isXmlElement(slideContent)) {
+    throw new Error("Failed to locate slide root element (p:sld).");
+  }
+
+  const masterClrMapNode = getByPath(slide.master, ["p:sldMaster", "p:clrMap"]);
+  if (!isXmlElement(masterClrMapNode)) {
+    throw new Error("Failed to locate master color map (p:clrMap).");
+  }
+
+  const slideClrMapOvrNode = getByPath(slide.content, ["p:sld", "p:clrMapOvr", "a:overrideClrMapping"]);
+  const slideClrMapOvr = isXmlElement(slideClrMapOvrNode) ? slideClrMapOvrNode : undefined;
+
+  const layoutContentNode = getByPath(slide.layout, ["p:sldLayout"]);
+  const layoutContent = isXmlElement(layoutContentNode) ? layoutContentNode : undefined;
+
+  const masterContentNode = getByPath(slide.master, ["p:sldMaster"]);
+  const masterContent = isXmlElement(masterContentNode) ? masterContentNode : undefined;
+
+  const masterTextStyles = isXmlElement(slide.masterTextStyles) ? slide.masterTextStyles : undefined;
+  const defaultTextStyle = isXmlElement(slide.defaultTextStyle) ? slide.defaultTextStyle : null;
+
+  const slideParams = {
+    content: slideContent,
+    resources: slide.relationships,
+    colorMapOverride: slideClrMapOvr !== undefined ? createColorMap(slideClrMapOvr as XmlElement) : undefined,
+  };
+
+  const layout = {
+    placeholders: createPlaceholderTable(slide.layoutTables),
+    resources: slide.layoutRelationships,
+    content: layoutContent,
+  };
+
+  const master = {
+    textStyles: parseMasterTextStyles(masterTextStyles),
+    placeholders: createPlaceholderTable(slide.masterTables),
+    colorMap: createColorMap(masterClrMapNode as XmlElement),
+    resources: slide.masterRelationships,
+    content: masterContent,
+  };
+
+  const theme = parseTheme(slide.theme, slide.themeOverrides);
+
+  const presentation = {
+    theme,
+    defaultTextStyle,
+    zip: slide.zip,
+    renderOptions: slide.renderOptions ?? DEFAULT_RENDER_OPTIONS,
+    themeResources: slide.themeRelationships,
+    tableStyles: slide.tableStyles ?? undefined,
+  };
+
+  return createSlideContext(slideParams, layout, master, presentation);
+}
 
 async function main() {
   const pptxPath = process.argv[2] || "fixtures/poi-test-data/test-data/slideshow/60810.pptx";
@@ -19,6 +79,7 @@ async function main() {
 
   const presentation = openPresentation(presentationFile);
   const slide = presentation.getSlide(1);
+  const slideContext = buildSlideContextFromSlide(slide);
 
   // Build warpObj from slide properties (matching factory.ts buildWarpObject)
   const warpObj = {
@@ -152,13 +213,13 @@ async function main() {
   }
 
   // Now try the actual background fill function
-  console.log("\n=== getSlideBackgroundFill Result ===");
-  const bgFill = getSlideBackgroundFill(warpObj);
-  console.log("Result:", bgFill);
-
   console.log("\n=== getBackgroundFillData Result ===");
-  const bgData = getBackgroundFillData(warpObj);
+  const bgData = getBackgroundFillData(slideContext);
   console.log("Result:", bgData);
+
+  console.log("\n=== toResolvedBackgroundFill Result ===");
+  const resolved = toResolvedBackgroundFill(bgData);
+  console.log("Result:", resolved);
 }
 
 main().catch(console.error);

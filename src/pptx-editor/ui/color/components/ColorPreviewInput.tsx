@@ -5,8 +5,8 @@
  */
 
 import { useCallback, useMemo, type CSSProperties } from "react";
-import type { SolidFill } from "../../../../ooxml/domain/fill";
-import { pct } from "../../../../ooxml/domain/units";
+import type { SolidFill } from "@oxen/ooxml/domain/fill";
+import { pct } from "@oxen/ooxml/domain/units";
 import { Input } from "../../../../office-editor-components/primitives";
 import { FillPreview } from "../FillPreview";
 import { parseHexInput } from "../color-convert";

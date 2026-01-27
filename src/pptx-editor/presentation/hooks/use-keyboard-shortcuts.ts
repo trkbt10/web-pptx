@@ -5,8 +5,8 @@
  */
 
 import { useEffect } from "react";
-import type { Slide, Shape } from "../../../pptx/domain";
-import type { ShapeId } from "../../../pptx/domain/types";
+import type { Slide, Shape } from "@oxen/pptx/domain";
+import type { ShapeId } from "@oxen/pptx/domain/types";
 import type { SelectionState } from "../../context/slide/state";
 import type { PresentationEditorAction } from "../../context/presentation/editor/types";
 

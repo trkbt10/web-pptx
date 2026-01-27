@@ -11,9 +11,9 @@ import type {
   DocxParagraphSpacing,
   DocxParagraphIndent,
   DocxOutlineLevel,
-} from "../../../docx/domain/paragraph";
-import type { ParagraphAlignment } from "../../../ooxml/domain/text";
-import type { Twips } from "../../../docx/domain/types";
+} from "@oxen/docx/domain/paragraph";
+import type { ParagraphAlignment } from "@oxen/ooxml/domain/text";
+import type { Twips } from "@oxen/docx/domain/types";
 import type { EditorProps } from "../../types";
 import { ToggleButton, Input, Select, Toggle } from "../../../office-editor-components/primitives";
 import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";

@@ -5,8 +5,8 @@
  */
 
 import type { CSSProperties, ReactNode, MouseEvent } from "react";
-import type { DocxParagraph, DocxParagraphContent } from "../../docx/domain/paragraph";
-import type { DocxRun } from "../../docx/domain/run";
+import type { DocxParagraph, DocxParagraphContent } from "@oxen/docx/domain/paragraph";
+import type { DocxRun } from "@oxen/docx/domain/run";
 import type { ElementId } from "./DocumentCanvas";
 import { RunRenderer, computeRunStyles } from "./RunRenderer";
 

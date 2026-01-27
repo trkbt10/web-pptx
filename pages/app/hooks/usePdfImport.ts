@@ -5,7 +5,7 @@ import {
   PdfImportError,
   type PdfImportOptions,
   type PdfImportResult,
-} from "../../../src/pdf/importer/pdf-importer";
+} from "@oxen/pdf/importer/pdf-importer";
 import type { PresentationDocument } from "../../../src/pptx-editor/context/presentation/editor/types";
 
 type PdfImportState = {

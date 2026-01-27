@@ -3,7 +3,7 @@
  */
 
 import type { ReactNode } from "react";
-import type { Effects } from "../../../../pptx/domain/types";
+import type { Effects } from "@oxen/pptx/domain/types";
 
 /** Keys of the Effects object */
 export type EffectKey = keyof Effects;

@@ -7,8 +7,8 @@
 
 import { FieldGroup, FieldRow } from "../../../office-editor-components/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
-import { px } from "../../../ooxml/domain/units";
-import type { Point } from "../../../pptx/domain/types";
+import { px } from "@oxen/ooxml/domain/units";
+import type { Point } from "@oxen/pptx/domain/types";
 import type { EditorProps } from "../../../office-editor-components/types";
 
 export type PointEditorProps = EditorProps<Point>;
