@@ -8,24 +8,24 @@
  */
 
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
-import { openPresentation } from "../../src/pptx";
-import { parseSlide } from "../../src/pptx/parser/slide/slide-parser";
-import { renderSlideToSvg } from "../../src/pptx/render/svg";
-import { resolveColor } from "../../src/pptx/domain/color/resolution";
-import { parseXml, getByPath } from "../../src/xml";
-import { createParseContext } from "../../src/pptx/parser/context";
-import { createSlideContext } from "../../src/pptx/parser/slide/context";
-import type { ZipFile } from "../../src/pptx/domain";
+import { openPresentation } from "@oxen/pptx";
+import { parseSlide } from "@oxen/pptx/parser/slide/slide-parser";
+import { renderSlideToSvg } from "@oxen/pptx-render/svg";
+import { resolveColor } from "@oxen/pptx/domain/color/resolution";
+import { parseXml, getByPath } from "@oxen/xml";
+import { createParseContext } from "@oxen/pptx/parser/context";
+import { createSlideContext } from "@oxen/pptx/parser/slide/context";
+import type { ZipFile } from "@oxen/pptx/domain";
 import {
   createPlaceholderTable,
   createColorMap,
-} from "../../src/pptx/parser/slide/resource-adapters";
-import { createEmptyResourceMap } from "../../src/pptx/opc";
-import { parseTheme, parseColorScheme, parseMasterTextStyles } from "../../src/pptx/parser/drawing-ml";
-import { renderSlideSvgIntegrated } from "../../src/pptx/app/slide-render";
-import type { Pixels } from "../../src/ooxml/domain/units";
-import type { Color } from "../../src/ooxml/domain/color";
-import type { SpShape } from "../../src/pptx/domain";
+} from "@oxen/pptx/parser/slide/resource-adapters";
+import { createEmptyResourceMap } from "@oxen/pptx/domain/relationships";
+import { parseTheme, parseColorScheme, parseMasterTextStyles } from "@oxen/pptx/parser/drawing-ml/index";
+import { renderSlideSvgIntegrated } from "@oxen/pptx-render/slide-render";
+import type { Pixels } from "@oxen/ooxml/domain/units";
+import type { Color } from "@oxen/ooxml/domain/color";
+import type { SpShape } from "@oxen/pptx/domain";
 import { createPresentationFile, THEMES_PPTX_PATH } from "./test-utils";
 
 describe("a:fontRef schemeClr application", () => {

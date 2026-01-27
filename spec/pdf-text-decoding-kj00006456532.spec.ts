@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { parsePdf, type PdfText } from "../src/pdf";
+import { parsePdf, type PdfText } from "@oxen/pdf";
 
 const PDF_PATH = path.resolve("fixtures/samples/KJ00006456532.pdf");
 
@@ -35,4 +35,3 @@ describe("PDF text decoding (KJ00006456532.pdf)", () => {
     expect(all).toContain("改造");
   });
 });
-

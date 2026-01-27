@@ -15,13 +15,15 @@
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
-import { convertToPresentationDocument } from "../../src/pptx/app";
-import { loadPptxBundleFromBuffer } from "../../src/pptx/app/pptx-loader";
-import { openPresentation } from "../../src/pptx";
-import { exportPptxAsBuffer } from "../../src/pptx/exporter";
-import { getBasename, getByPath, getChildren, parseXml } from "../../src/xml";
-import { CONTENT_TYPES, RELATIONSHIP_TYPES, getRelationshipPath } from "../../src/pptx/opc/content-types";
-import { addSlide, duplicateSlide, removeSlide, reorderSlide } from "../../src/pptx/patcher";
+import { convertToPresentationDocument } from "@oxen/pptx/app";
+import { loadPptxBundleFromBuffer } from "@oxen/pptx/app/pptx-loader";
+import { openPresentation } from "@oxen/pptx";
+import { exportPptxAsBuffer } from "@oxen/pptx/exporter";
+import { getBasename, getByPath, getChildren, parseXml } from "@oxen/xml";
+import { CONTENT_TYPES } from "@oxen/pptx/opc/content-types";
+import { RELATIONSHIP_TYPES } from "@oxen/pptx/domain/relationships";
+import { getRelationshipPath } from "@oxen/pptx/parser/relationships";
+import { addSlide, duplicateSlide, removeSlide, reorderSlide } from "@oxen/pptx/patcher";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURE_DIR = path.resolve(__dirname, "../../fixtures");
@@ -194,4 +196,3 @@ describe("Slide structure export round-trip (Phase 8)", () => {
     expect(hasOverride(contentTypes, `/${removedNotesPath}`, CONTENT_TYPES.NOTES)).toBe(false);
   });
 });
-

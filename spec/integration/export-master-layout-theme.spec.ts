@@ -10,11 +10,11 @@
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
-import { openPresentation } from "../../src/pptx";
-import { convertToPresentationDocument, loadPptxFromBuffer } from "../../src/pptx/app";
-import { exportPptxAsBuffer } from "../../src/pptx/exporter";
-import type { XmlDocument } from "../../src/xml";
-import type { PresentationDocument, SlideWithId } from "../../src/pptx/app/presentation-document";
+import { openPresentation } from "@oxen/pptx";
+import { convertToPresentationDocument, loadPptxFromBuffer } from "@oxen/pptx/app";
+import { exportPptxAsBuffer } from "@oxen/pptx/exporter";
+import type { XmlDocument } from "@oxen/xml";
+import type { PresentationDocument, SlideWithId } from "@oxen/pptx/app/presentation-document";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURE_DIR = path.resolve(__dirname, "../../fixtures");

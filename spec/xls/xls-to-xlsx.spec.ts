@@ -2,12 +2,12 @@
  * @file XLS-to-XLSX end-to-end conversion tests
  */
 
-import { parseXls } from "../../src/xls";
-import { CFB_SIGNATURE, ENDOFCHAIN, FATSECT, FREESECT, NOSTREAM } from "../../src/cfb/constants";
-import { BIFF_RECORD_TYPES } from "../../src/xls/biff/record-types";
-import { exportXlsx } from "../../src/xlsx/exporter";
-import { parseXlsxWorkbook } from "../../src/xlsx/parser";
-import { loadZipPackage } from "../../src/zip";
+import { parseXls } from "@oxen/xls";
+import { CFB_SIGNATURE, ENDOFCHAIN, FATSECT, FREESECT, NOSTREAM } from "@oxen/cfb";
+import { BIFF_RECORD_TYPES } from "@oxen/xls/biff/record-types";
+import { exportXlsx } from "@oxen/xlsx/exporter";
+import { parseXlsxWorkbook } from "@oxen/xlsx/parser";
+import { loadZipPackage } from "@oxen/zip";
 
 function u16le(view: DataView, offset: number, v: number): void {
   view.setUint16(offset, v, true);

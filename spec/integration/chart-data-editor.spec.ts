@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { XlsxWorkbook, XlsxRow, XlsxWorksheet } from "../../src/xlsx/domain/workbook";
-import type { Cell, CellValue } from "../../src/xlsx/domain/cell/types";
-import type { CellAddress } from "../../src/xlsx/domain/cell/address";
-import { colIdx, rowIdx } from "../../src/xlsx/domain/types";
-import { createDefaultStyleSheet } from "../../src/xlsx/domain/style/types";
-import { getCellValue } from "../../src/xlsx-editor/cell/query";
-import { createChartDataEditor } from "../../src/pptx-editor/editors/chart/data/xlsx-integration";
+import type { XlsxWorkbook, XlsxRow, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
+import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
+import { getCellValue } from "@oxen-ui/xlsx-editor/cell/query";
+import { createChartDataEditor } from "@oxen-ui/pptx-editor/editors/chart/data/xlsx-integration";
 
 function addr(col: number, row: number): CellAddress {
   return {

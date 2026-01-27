@@ -9,8 +9,8 @@ import { describe, it, expect } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadNativePdfDocument } from "../../src/pdf/native";
-import { isPdfPath, parsePdf, type PdfPaintOp, type PdfPath } from "../../src/pdf";
+import { loadNativePdfDocument } from "@oxen/pdf/native";
+import { isPdfPath, parsePdf, type PdfPaintOp, type PdfPath } from "@oxen/pdf";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PDF_PATH = path.join(__dirname, "..", "..", "fixtures", "samples", "panel2.pdf");

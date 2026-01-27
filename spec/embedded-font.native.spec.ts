@@ -7,9 +7,9 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { loadNativePdfDocument } from "../src/pdf/native";
-import type { PdfDict, PdfName, PdfObject } from "../src/pdf/native";
-import { extractEmbeddedFontsFromNativePages } from "../src/pdf/domain/font/font-extractor.native";
+import { loadNativePdfDocument } from "@oxen/pdf/native";
+import type { PdfDict, PdfName, PdfObject } from "@oxen/pdf/native";
+import { extractEmbeddedFontsFromNativePages } from "@oxen/pdf/domain/font/font-extractor.native";
 
 function asDict(obj: PdfObject | undefined): PdfDict | null {
   return obj?.type === "dict" ? obj : null;

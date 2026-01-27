@@ -9,11 +9,11 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type { PresentationFile, Presentation } from "../../src/pptx";
-import { openPresentation } from "../../src/pptx";
-import { getByPath, getChild, getChildren, isXmlElement, getAttr, type XmlElement } from "../../src/xml";
+import type { PresentationFile, Presentation } from "@oxen/pptx";
+import { openPresentation } from "@oxen/pptx";
+import { getByPath, getChild, getChildren, isXmlElement, getAttr, type XmlElement } from "@oxen/xml";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
-import { renderSlideToSvg } from "../../src/pptx/render/svg";
+import { renderSlideToSvg } from "@oxen/pptx-render/svg";
 
 const FIXTURE_PATH = "fixtures/poi-test-data/test-data/slideshow/shapes.pptx";
 

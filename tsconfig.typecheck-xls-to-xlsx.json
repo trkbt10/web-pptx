@@ -1,4 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "include": ["src/xls/**/*", "src/cfb/**/*", "scripts/generate-xls-fixtures/**/*", "spec/xls/**/*"]
-}

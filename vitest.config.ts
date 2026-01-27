@@ -19,7 +19,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    setupFiles: ["spec/vitest.setup.ts"],
+    setupFiles: [path.resolve(__dirname, "spec/vitest.setup.ts")],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],

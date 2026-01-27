@@ -11,13 +11,13 @@ import { fileURLToPath } from "node:url";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
 
 // Import directly from src instead of using @lib alias
-import { openPresentation } from "../../src/pptx";
-import { parseColorScheme, parseFontScheme, parseColorMap } from "../../src/pptx/parser/drawing-ml";
-import { getByPath } from "../../src/xml";
-import { getMimeTypeFromPath } from "../../src/pptx/opc";
-import type { ColorContext, ColorScheme, ColorMap } from "../../src/pptx/domain/color/context";
-import type { FontScheme } from "../../src/pptx/domain/resolution";
-import type { ResourceResolver } from "../../src/pptx/domain/resource-resolver";
+import { openPresentation } from "@oxen/pptx";
+import { parseColorScheme, parseFontScheme, parseColorMap } from "@oxen/pptx/parser/drawing-ml/index";
+import { getByPath } from "@oxen/xml";
+import { getMimeTypeFromPath } from "@oxen/pptx/opc/utils";
+import type { ColorContext, ColorScheme, ColorMap } from "@oxen/pptx/domain/color/context";
+import type { FontScheme } from "@oxen/pptx/domain/resolution";
+import type { ResourceResolver } from "@oxen/pptx/domain/resource-resolver";
 
 // Fixture path
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -31,14 +31,14 @@ function extractColorScheme(apiSlide: { theme?: unknown }): ColorScheme {
   if (!apiSlide.theme) {
     return {};
   }
-  return parseColorScheme(apiSlide.theme as import("../../src/xml").XmlDocument);
+  return parseColorScheme(apiSlide.theme as import("@oxen/xml").XmlDocument);
 }
 
 function extractColorMap(apiSlide: { master?: unknown }): ColorMap {
   if (!apiSlide.master) {
     return {};
   }
-  const clrMapElement = getByPath(apiSlide.master as import("../../src/xml").XmlElement, ["p:sldMaster", "p:clrMap"]);
+  const clrMapElement = getByPath(apiSlide.master as import("@oxen/xml").XmlElement, ["p:sldMaster", "p:clrMap"]);
   return parseColorMap(clrMapElement);
 }
 
@@ -53,7 +53,7 @@ function extractFontScheme(apiSlide: { theme?: unknown }): FontScheme | undefine
   if (!apiSlide.theme) {
     return undefined;
   }
-  return parseFontScheme(apiSlide.theme as import("../../src/xml").XmlDocument);
+  return parseFontScheme(apiSlide.theme as import("@oxen/xml").XmlDocument);
 }
 
 // =============================================================================

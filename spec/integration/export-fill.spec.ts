@@ -10,14 +10,14 @@
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
-import { openPresentation } from "../../src/pptx";
-import { convertToPresentationDocument, loadPptxFromBuffer } from "../../src/pptx/app";
-import { exportPptxAsBuffer } from "../../src/pptx/exporter";
-import { detectSlideChanges, patchSlideXml } from "../../src/pptx/patcher";
-import { deg, pct, px } from "../../src/ooxml/domain/units";
-import type { Slide as DomainSlide } from "../../src/pptx/domain/slide/types";
-import type { Effects, Fill, Line } from "../../src/pptx/domain";
-import type { Shape, SpShape } from "../../src/pptx/domain/shape";
+import { openPresentation } from "@oxen/pptx";
+import { convertToPresentationDocument, loadPptxFromBuffer } from "@oxen/pptx/app";
+import { exportPptxAsBuffer } from "@oxen/pptx/exporter";
+import { detectSlideChanges, patchSlideXml } from "@oxen/pptx/patcher";
+import { deg, pct, px } from "@oxen/ooxml/domain/units";
+import type { Slide as DomainSlide } from "@oxen/pptx/domain/slide/types";
+import type { Effects, Fill, Line } from "@oxen/pptx/domain";
+import type { Shape, SpShape } from "@oxen/pptx/domain/shape";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURE_DIR = path.resolve(__dirname, "../../fixtures");

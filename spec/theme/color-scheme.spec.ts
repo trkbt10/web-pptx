@@ -7,12 +7,12 @@
  * @see ECMA-376 Part 1, Section 19.3.1.6 (p:clrMap)
  */
 
-import { openPresentation } from "../../src/pptx";
-import { resolveColor } from "../../src/pptx/domain/color/resolution";
-import type { Color } from "../../src/ooxml/domain/color";
-import type { ColorContext } from "../../src/pptx/domain/color/context";
+import { openPresentation } from "@oxen/pptx";
+import { resolveColor } from "@oxen/pptx/domain/color/resolution";
+import type { Color } from "@oxen/ooxml/domain/color";
+import type { ColorContext } from "@oxen/pptx/domain/color/context";
 import { createPresentationFile, THEMES_PPTX_PATH } from "./test-utils";
-import { renderSlideToSvg } from "../../src/pptx/render/svg";
+import { renderSlideToSvg } from "@oxen/pptx-render/svg";
 
 describe("Color Scheme Application", () => {
   /**

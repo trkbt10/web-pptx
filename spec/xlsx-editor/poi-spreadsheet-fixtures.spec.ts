@@ -9,22 +9,22 @@
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { parseXlsxWorkbook, type XlsxParseOptions } from "../../src/xlsx/parser";
-import { createFormulaEvaluator } from "../../src/xlsx/formula/evaluator";
-import { colIdx, rowIdx, styleId } from "../../src/xlsx/domain/types";
-import type { CellAddress } from "../../src/xlsx/domain/cell/address";
-import type { Cell } from "../../src/xlsx/domain/cell/types";
-import type { CellValue } from "../../src/xlsx/domain/cell/types";
-import { getCell } from "../../src/xlsx-editor/cell/query";
-import { resolveCellBorderDecoration, resolveCellRenderStyle } from "../../src/xlsx-editor/selectors/cell-render-style";
-import { resolveCellStyleDetails } from "../../src/xlsx-editor/selectors/cell-style-details";
-import { formatCellValueForDisplay, resolveCellFormatCode } from "../../src/xlsx-editor/selectors/cell-display-text";
-import { resolveCellConditionalDifferentialFormat } from "../../src/xlsx-editor/selectors/conditional-formatting";
-import { xlsxColorToCss } from "../../src/xlsx-editor/selectors/xlsx-color";
-import { resolveCellTableStyleDifferentialFormat } from "../../src/xlsx-editor/selectors/table-style";
-import { createSheetLayout } from "../../src/xlsx-editor/selectors/sheet-layout";
-import { buildBorderOverlayLines } from "../../src/xlsx-editor/selectors/border-overlay";
-import { createGetZipTextFileContentFromBytes } from "../../src/files/ooxml-zip";
+import { parseXlsxWorkbook, type XlsxParseOptions } from "@oxen/xlsx/parser";
+import { createFormulaEvaluator } from "@oxen/xlsx/formula/evaluator";
+import { colIdx, rowIdx, styleId } from "@oxen/xlsx/domain/types";
+import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
+import type { Cell } from "@oxen/xlsx/domain/cell/types";
+import type { CellValue } from "@oxen/xlsx/domain/cell/types";
+import { getCell } from "@oxen-ui/xlsx-editor/cell/query";
+import { resolveCellBorderDecoration, resolveCellRenderStyle } from "@oxen-ui/xlsx-editor/selectors/cell-render-style";
+import { resolveCellStyleDetails } from "@oxen-ui/xlsx-editor/selectors/cell-style-details";
+import { formatCellValueForDisplay, resolveCellFormatCode } from "@oxen-ui/xlsx-editor/selectors/cell-display-text";
+import { resolveCellConditionalDifferentialFormat } from "@oxen-ui/xlsx-editor/selectors/conditional-formatting";
+import { xlsxColorToCss } from "@oxen-ui/xlsx-editor/selectors/xlsx-color";
+import { resolveCellTableStyleDifferentialFormat } from "@oxen-ui/xlsx-editor/selectors/table-style";
+import { createSheetLayout } from "@oxen-ui/xlsx-editor/selectors/sheet-layout";
+import { buildBorderOverlayLines } from "@oxen-ui/xlsx-editor/selectors/border-overlay";
+import { createGetZipTextFileContentFromBytes } from "@oxen/files";
 
 function fixturePath(name: string): string {
   return path.join(process.cwd(), "fixtures/poi-test-data/test-data/spreadsheet", name);

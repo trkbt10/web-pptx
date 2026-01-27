@@ -6,10 +6,10 @@
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { parseXls } from "../../src/xls";
-import { exportXlsx } from "../../src/xlsx/exporter";
-import { parseXlsxWorkbook } from "../../src/xlsx/parser";
-import { loadZipPackage } from "../../src/zip";
+import { parseXls } from "@oxen/xls";
+import { exportXlsx } from "@oxen/xlsx/exporter";
+import { parseXlsxWorkbook } from "@oxen/xlsx/parser";
+import { loadZipPackage } from "@oxen/zip";
 
 function fixturePath(name: string): string {
   return path.join(process.cwd(), "spec", "xls-fixtures", name);

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { parsePdf } from "../../src/pdf";
+import { parsePdf } from "@oxen/pdf";
 import { DEFAULT_PDF_FIXTURE_DIR, generatePdfFixtures } from "../../scripts/generate-pdf-fixtures";
 
 type FixtureExpectation = {
@@ -142,4 +142,3 @@ describe("PDF fixtures", () => {
     }
   });
 });
-

@@ -10,18 +10,18 @@
 import fs from "node:fs";
 import path from "node:path";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
-import { openPresentation } from "../../src/pptx";
-import { createElement, parseXml, serializeDocument, type XmlDocument, type XmlElement, isXmlElement } from "../../src/xml";
-import { patchChartData, patchChartTitle } from "../../src/pptx/patcher/chart/chart-data-patcher";
-import { parseChart } from "../../src/pptx/parser/chart-parser";
-import type { DataReference } from "../../src/pptx/domain/chart";
-import { patchTable } from "../../src/pptx/patcher/table/table-patcher";
-import { parseTable } from "../../src/pptx/parser/table/table-parser";
-import { patchDiagramNodeText } from "../../src/pptx/patcher/diagram/diagram-patcher";
-import { parseDiagramDataModel } from "../../src/pptx/parser/diagram/data-parser";
-import { patchOleObject } from "../../src/pptx/patcher/ole/ole-patcher";
-import { parseGraphicFrame } from "../../src/pptx/parser/shape-parser/graphic-frame";
-import { deg, px } from "../../src/ooxml/domain/units";
+import { openPresentation } from "@oxen/pptx";
+import { createElement, parseXml, serializeDocument, type XmlDocument, type XmlElement, isXmlElement } from "@oxen/xml";
+import { patchChartData, patchChartTitle } from "@oxen/pptx/patcher/chart/chart-data-patcher";
+import { parseChart } from "@oxen/pptx/parser/chart-parser/index";
+import type { DataReference } from "@oxen/pptx/domain/chart";
+import { patchTable } from "@oxen/pptx/patcher/table/table-patcher";
+import { parseTable } from "@oxen/pptx/parser/table/table-parser";
+import { patchDiagramNodeText } from "@oxen/pptx/patcher/diagram/diagram-patcher";
+import { parseDiagramDataModel } from "@oxen/pptx/parser/diagram/data-parser";
+import { patchOleObject } from "@oxen/pptx/patcher/ole/ole-patcher";
+import { parseGraphicFrame } from "@oxen/pptx/parser/shape-parser/graphic-frame";
+import { deg, px } from "@oxen/ooxml/domain/units";
 
 const FIXTURES_DIR = path.resolve(process.cwd(), "fixtures/poi-test-data/test-data/slideshow");
 

@@ -5,13 +5,13 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
-import { importPdf } from "../../src/pdf/importer/pdf-importer";
-import { exportPptxAsBuffer } from "../../src/pptx/exporter";
-import { openPresentation } from "../../src/pptx";
+import { importPdf } from "@oxen/pdf/importer/pdf-importer";
+import { exportPptxAsBuffer } from "@oxen/pptx/exporter";
+import { openPresentation } from "@oxen/pptx";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
 import { compareSvgToPdfBaseline } from "./compare";
-import { px } from "../../src/ooxml/domain/units";
-import { renderSlideToSvg } from "../../src/pptx/render/svg";
+import { px } from "@oxen/ooxml/domain/units";
+import { renderSlideToSvg } from "@oxen/pptx-render/svg";
 
 function guessFontExtension(bytes: Uint8Array): "ttf" | "otf" {
   if (bytes.length >= 4) {

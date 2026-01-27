@@ -9,12 +9,12 @@ import { describe, it, expect } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadNativePdfDocument } from "../../src/pdf/native";
-import { decodePdfStream } from "../../src/pdf/native/stream/stream";
-import type { PdfDict, PdfObject, PdfStream } from "../../src/pdf/native";
-import { parsePdf } from "../../src/pdf";
-import { extractFontMappings } from "../../src/pdf/parser/font/font-decoder";
-import { decodeText } from "../../src/pdf/domain/font/text-decoder";
+import { loadNativePdfDocument } from "@oxen/pdf/native";
+import { decodePdfStream } from "@oxen/pdf/native/stream/stream";
+import type { PdfDict, PdfObject, PdfStream } from "@oxen/pdf/native";
+import { parsePdf } from "@oxen/pdf";
+import { extractFontMappings } from "@oxen/pdf/parser/font/font-decoder";
+import { decodeText } from "@oxen/pdf/domain/font/text-decoder";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PDF_PATH = path.join(__dirname, "..", "..", "fixtures", "samples", "panel2.pdf");

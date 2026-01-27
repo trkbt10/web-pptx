@@ -16,12 +16,12 @@ import * as fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { importPdf } from "../src/pdf/importer/pdf-importer";
-import { exportPptx } from "../src/pptx/exporter";
-import { loadPptxFromBuffer } from "../src/pptx/app/pptx-loader";
-import { px } from "../src/ooxml/domain/units";
-import { parseXml } from "../src/xml";
-import { loadZipPackage } from "../src/zip";
+import { importPdf } from "@oxen/pdf/importer/pdf-importer";
+import { exportPptx } from "@oxen/pptx/exporter";
+import { loadPptxFromBuffer } from "@oxen/pptx/app/pptx-loader";
+import { px } from "@oxen/ooxml/domain/units";
+import { parseXml } from "@oxen/xml";
+import { loadZipPackage } from "@oxen/zip";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = path.join(__dirname, "fixtures", "pdf");

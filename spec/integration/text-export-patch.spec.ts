@@ -5,11 +5,11 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
-import { parseXml, getChild, getChildren, getTextContent, isXmlElement } from "../../src/xml";
-import { patchSlideXml } from "../../src/pptx/patcher";
-import { parseTextBody } from "../../src/pptx/parser/text/text-parser";
-import type { ShapeChange } from "../../src/pptx/patcher/core/shape-differ";
-import type { TextBody } from "../../src/pptx/domain/text";
+import { parseXml, getChild, getChildren, getTextContent, isXmlElement } from "@oxen/xml";
+import { patchSlideXml } from "@oxen/pptx/patcher";
+import { parseTextBody } from "@oxen/pptx/parser/text/text-parser";
+import type { ShapeChange } from "@oxen/pptx/patcher/core/shape-differ";
+import type { TextBody } from "@oxen/pptx/domain/text";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURE_DIR = path.resolve(__dirname, "../../fixtures");

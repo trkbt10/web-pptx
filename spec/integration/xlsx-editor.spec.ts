@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { Cell, CellValue } from "../../src/xlsx/domain/cell/types";
-import type { CellAddress, CellRange } from "../../src/xlsx/domain/cell/address";
-import type { XlsxWorkbook, XlsxRow, XlsxWorksheet } from "../../src/xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "../../src/xlsx/domain/style/types";
-import { colIdx, rowIdx } from "../../src/xlsx/domain/types";
-import { getCellValue } from "../../src/xlsx-editor/cell/query";
-import { createInitialState, xlsxEditorReducer } from "../../src/xlsx-editor/context/workbook/editor/reducer";
+import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
+import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import type { XlsxWorkbook, XlsxRow, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
+import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import { getCellValue } from "@oxen-ui/xlsx-editor/cell/query";
+import { createInitialState, xlsxEditorReducer } from "@oxen-ui/xlsx-editor";
 
 function addr(col: number, row: number): CellAddress {
   return {

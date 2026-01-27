@@ -10,9 +10,9 @@
  * @see ECMA-376 Part 1, Section 20.1.6.2 (a:clrScheme)
  */
 
-import { openPresentation } from "../../src/pptx";
+import { openPresentation } from "@oxen/pptx";
 import { createPresentationFile, extractSvgColors, THEMES_PPTX_PATH } from "./test-utils";
-import { renderSlideToSvg } from "../../src/pptx/render/svg";
+import { renderSlideToSvg } from "@oxen/pptx-render/svg";
 
 /**
  * Check if colors include a light center (for gradient tests)

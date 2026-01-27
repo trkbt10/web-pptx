@@ -3,8 +3,8 @@ import { spawnSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { parsePdf } from "../../src/pdf";
-import type { PdfParserOptions } from "../../src/pdf";
+import { parsePdf } from "@oxen/pdf";
+import type { PdfParserOptions } from "@oxen/pdf";
 
 type FixtureExpectation = Readonly<{
   readonly fileName: string;

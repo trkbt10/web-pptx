@@ -18,11 +18,11 @@
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { px } from "../src/ooxml/domain/units";
-import { parsePdf, createDefaultGraphicsState, type PdfText } from "../src/pdf";
-import { convertTextToShape } from "../src/pdf/converter/text-to-shapes";
-import { createFitContext } from "../src/pdf/converter/transform-converter";
-import { buildSimplePdfBytes } from "../src/pdf/test-utils/simple-pdf";
+import { px } from "@oxen/ooxml/domain/units";
+import { parsePdf, createDefaultGraphicsState, type PdfText } from "@oxen/pdf";
+import { convertTextToShape } from "@oxen/pdf/converter/text-to-shapes";
+import { createFitContext } from "@oxen/pdf/converter/transform-converter";
+import { buildSimplePdfBytes } from "@oxen/pdf/test-utils/simple-pdf";
 
 describe("CIDOrdering extraction from real PDFs", () => {
   it("Identity-H encoded CJK PDF has Identity ordering (cjk-test.pdf)", async () => {

@@ -7,9 +7,9 @@
  * @see ECMA-376 Part 1, Section 20.1.4.1.16-17 (theme font references)
  */
 
-import { openPresentation } from "../../src/pptx";
+import { openPresentation } from "@oxen/pptx";
 import { createPresentationFile, THEMES_PPTX_PATH } from "./test-utils";
-import { renderSlideToSvg } from "../../src/pptx/render/svg";
+import { renderSlideToSvg } from "@oxen/pptx-render/svg";
 
 describe("Font Scheme Application", () => {
   /**

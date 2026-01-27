@@ -12,3 +12,16 @@ declare module "*?worker" {
   };
   export default WorkerConstructor;
 }
+
+/**
+ * Minimal JSDOM type declaration for package-local typechecking.
+ *
+ * Some package test suites import `JSDOM` directly, but `jsdom` does not ship
+ * TypeScript declarations.
+ */
+declare module "jsdom" {
+  export class JSDOM {
+    constructor(html?: string, options?: unknown);
+    readonly window: Window;
+  }
+}

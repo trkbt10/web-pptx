@@ -4,8 +4,8 @@
 
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
-import { exportXlsx } from "../../src/xlsx/exporter";
-import { parseSpreadsheetFile } from "../../src/spreadsheet/parser";
+import { exportXlsx } from "@oxen/xlsx/exporter";
+import { parseSpreadsheetFile } from "../../src/spreadsheet-parser";
 
 const SPREADSHEET_DIR = path.join(process.cwd(), "fixtures", "poi-test-data", "test-data", "spreadsheet");
 

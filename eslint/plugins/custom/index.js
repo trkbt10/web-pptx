@@ -9,6 +9,8 @@ import noAsOutsideGuard from "./rules/no-as-outside-guard.js";
 import noNestedTry from "./rules/no-nested-try.js";
 import noIifeInAnonymous from "./rules/no-iife-in-anonymous.js";
 import noDeepReexport from "./rules/no-deep-reexport.js";
+import noOxenUiImportInOxen from "./rules/no-oxen-ui-import-in-oxen.js";
+import noCrossPackageReexport from "./rules/no-cross-package-reexport.js";
 
 export default {
   rules: {
@@ -20,5 +22,7 @@ export default {
     "no-nested-try": noNestedTry,
     "no-iife-in-anonymous": noIifeInAnonymous,
     "no-deep-reexport": noDeepReexport,
+    "no-oxen-ui-import-in-oxen": noOxenUiImportInOxen,
+    "no-cross-package-reexport": noCrossPackageReexport,
   },
 };
