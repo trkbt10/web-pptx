@@ -10,7 +10,6 @@
  */
 
 import { describe, it, expect, vi } from "vitest";
-import JSZip from "jszip";
 import {
   resolveRelativePath,
   getChartRelsPath,
@@ -20,6 +19,7 @@ import {
 } from "./chart-embedding";
 import type { ChartDataUpdate } from "../patcher/chart/chart-workbook-syncer";
 import { exportXlsx } from "../../xlsx/exporter";
+import { loadZipPackage } from "../../zip";
 import type { XlsxWorkbook, XlsxWorksheet, XlsxRow } from "../../xlsx/domain/workbook";
 import { createDefaultStyleSheet } from "../../xlsx/domain/style/types";
 import { colIdx, rowIdx } from "../../xlsx/domain/types";
@@ -78,6 +78,7 @@ function createWorksheet(
   rows: readonly XlsxRow[],
 ): XlsxWorksheet {
   return {
+    dateSystem: "1900",
     name,
     sheetId,
     state: "visible",
@@ -111,6 +112,7 @@ function createChartWorkbook(
   });
 
   return {
+    dateSystem: "1900",
     sheets: [createWorksheet("Sheet1", 1, rows)],
     styles: createDefaultStyleSheet(),
     sharedStrings: [],
@@ -297,11 +299,10 @@ describe("updateEmbeddedXlsx", () => {
     expect(updatedXlsx).toBeInstanceOf(Uint8Array);
 
     // Parse the updated xlsx and verify content
-    const zip = await JSZip.loadAsync(updatedXlsx);
-    const sharedStringsFile = zip.file("xl/sharedStrings.xml");
-    expect(sharedStringsFile).not.toBeNull();
+    const xlsxPkg = await loadZipPackage(updatedXlsx as Uint8Array);
+    const sharedStringsXml = xlsxPkg.readText("xl/sharedStrings.xml");
+    expect(sharedStringsXml).not.toBeNull();
 
-    const sharedStringsXml = await sharedStringsFile!.async("text");
     expect(sharedStringsXml).toContain("Q1");
     expect(sharedStringsXml).toContain("Q2");
     expect(sharedStringsXml).toContain("Q3");
@@ -468,13 +469,15 @@ describe("syncAllChartEmbeddings", () => {
     expect(files["ppt/embeddings/workbook2.xlsx"]).toBeInstanceOf(Uint8Array);
 
     // Verify first workbook was updated
-    const zip1 = await JSZip.loadAsync(files["ppt/embeddings/workbook1.xlsx"] as Uint8Array);
-    const ss1 = await zip1.file("xl/sharedStrings.xml")!.async("text");
+    const zip1 = await loadZipPackage(files["ppt/embeddings/workbook1.xlsx"] as Uint8Array);
+    const ss1 = zip1.readText("xl/sharedStrings.xml");
+    expect(ss1).not.toBeNull();
     expect(ss1).toContain("C"); // New category
 
     // Verify second workbook was updated
-    const zip2 = await JSZip.loadAsync(files["ppt/embeddings/workbook2.xlsx"] as Uint8Array);
-    const ss2 = await zip2.file("xl/sharedStrings.xml")!.async("text");
+    const zip2 = await loadZipPackage(files["ppt/embeddings/workbook2.xlsx"] as Uint8Array);
+    const ss2 = zip2.readText("xl/sharedStrings.xml");
+    expect(ss2).not.toBeNull();
     expect(ss2).toContain("Z"); // New category
   });
 
@@ -534,8 +537,9 @@ describe("syncAllChartEmbeddings", () => {
     expect(warnSpy).toHaveBeenCalled();
 
     // Chart2 should still have been updated
-    const zip2 = await JSZip.loadAsync(files["ppt/embeddings/workbook2.xlsx"] as Uint8Array);
-    const ss2 = await zip2.file("xl/sharedStrings.xml")!.async("text");
+    const zip2 = await loadZipPackage(files["ppt/embeddings/workbook2.xlsx"] as Uint8Array);
+    const ss2 = zip2.readText("xl/sharedStrings.xml");
+    expect(ss2).not.toBeNull();
     expect(ss2).toContain("Z"); // New category from chart2 update
 
     warnSpy.mockRestore();

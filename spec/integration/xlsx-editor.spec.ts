@@ -30,6 +30,7 @@ function createRow(rowNumber: number, cells: readonly Cell[]): XlsxRow {
 
 function createWorksheet(name: string, sheetId: number, rows: readonly XlsxRow[]): XlsxWorksheet {
   return {
+    dateSystem: "1900",
     name,
     sheetId,
     state: "visible",
@@ -39,7 +40,7 @@ function createWorksheet(name: string, sheetId: number, rows: readonly XlsxRow[]
 }
 
 function createWorkbook(sheets: readonly XlsxWorksheet[]): XlsxWorkbook {
-  return { sheets, styles: createDefaultStyleSheet(), sharedStrings: [] };
+  return { dateSystem: "1900", sheets, styles: createDefaultStyleSheet(), sharedStrings: [] };
 }
 
 describe("xlsx-editor integration", () => {
@@ -117,4 +118,3 @@ describe("xlsx-editor integration", () => {
     });
   });
 });
-

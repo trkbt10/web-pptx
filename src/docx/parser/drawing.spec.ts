@@ -2,7 +2,7 @@
  * @file Tests for DOCX Drawing Parser
  */
 
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { parseDrawing } from "./drawing";
 import { parseXml } from "../../xml";
 

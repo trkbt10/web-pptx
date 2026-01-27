@@ -5,9 +5,9 @@
 import { parseXls } from "../../src/xls";
 import { CFB_SIGNATURE, ENDOFCHAIN, FATSECT, FREESECT, NOSTREAM } from "../../src/cfb/constants";
 import { BIFF_RECORD_TYPES } from "../../src/xls/biff/record-types";
-import JSZip from "jszip";
 import { exportXlsx } from "../../src/xlsx/exporter";
 import { parseXlsxWorkbook } from "../../src/xlsx/parser";
+import { loadZipPackage } from "../../src/zip";
 
 function u16le(view: DataView, offset: number, v: number): void {
   view.setUint16(offset, v, true);
@@ -485,11 +485,10 @@ describe("XLS → XLSX (end-to-end)", () => {
     const wb = parseXls(xlsBytes);
 
     const xlsxBytes = await exportXlsx(wb);
-    const zip = await JSZip.loadAsync(xlsxBytes);
+    const pkg = await loadZipPackage(xlsxBytes);
 
     const parsed = await parseXlsxWorkbook(async (path) => {
-      const file = zip.file(path);
-      return file ? await file.async("text") : undefined;
+      return pkg.readText(path) ?? undefined;
     });
 
     expect(parsed.sheets).toHaveLength(2);
@@ -525,7 +524,8 @@ describe("XLS → XLSX (end-to-end)", () => {
       alignment: { horizontal: "center", vertical: "center", wrapText: true, indent: 1 },
     });
 
-    const sheet1Xml = await zip.file("xl/worksheets/sheet1.xml")!.async("text");
+    const sheet1Xml = pkg.readText("xl/worksheets/sheet1.xml");
+    expect(sheet1Xml).not.toBeNull();
     expect(sheet1Xml).toContain('<sheetFormatPr defaultRowHeight="20" defaultColWidth="10" zeroHeight="0"/>');
   });
 });

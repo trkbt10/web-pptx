@@ -10,6 +10,7 @@ import type { PresentationFile, ZipFile } from "../domain";
 import type { XmlDocument } from "../../xml";
 import { exportPptx, exportPptxAsBuffer } from "./pptx-exporter";
 import { DEFAULT_RENDER_OPTIONS } from "../render/render-options";
+import { px } from "../../ooxml/domain/units";
 
 const mockZip: ZipFile = { file: () => null };
 
@@ -19,8 +20,8 @@ describe("exportPptx", () => {
       const doc: PresentationDocument = {
         presentation: {} as PresentationDocument["presentation"],
         slides: [],
-        slideWidth: 960 as PresentationDocument["slideWidth"],
-        slideHeight: 540 as PresentationDocument["slideHeight"],
+        slideWidth: px(960),
+        slideHeight: px(540),
         colorContext: {} as PresentationDocument["colorContext"],
         resources: {} as PresentationDocument["resources"],
         // presentationFile is undefined
@@ -139,13 +140,13 @@ describe("exportPptx", () => {
               zip: mockZip,
               defaultTextStyle: null,
               tableStyles: null,
-              slideSize: { width: 960, height: 540 },
+              slideSize: { width: px(960), height: px(540) },
               renderOptions: DEFAULT_RENDER_OPTIONS,
             },
           },
         ],
-        slideWidth: 960 as PresentationDocument["slideWidth"],
-        slideHeight: 540 as PresentationDocument["slideHeight"],
+        slideWidth: px(960),
+        slideHeight: px(540),
         colorContext: {} as PresentationDocument["colorContext"],
         resources: {} as PresentationDocument["resources"],
         presentationFile: createMockPresentationFile(mockFiles),
@@ -167,8 +168,8 @@ describe("exportPptxAsBuffer", () => {
     const doc: PresentationDocument = {
       presentation: {} as PresentationDocument["presentation"],
       slides: [],
-      slideWidth: 960 as PresentationDocument["slideWidth"],
-      slideHeight: 540 as PresentationDocument["slideHeight"],
+      slideWidth: px(960),
+      slideHeight: px(540),
       colorContext: {} as PresentationDocument["colorContext"],
       resources: {} as PresentationDocument["resources"],
     };

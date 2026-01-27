@@ -11,7 +11,6 @@
  * - Round-trip tests (export -> parse -> verify)
  */
 
-import JSZip from "jszip";
 import {
   exportXlsx,
   generateContentTypes,
@@ -22,6 +21,7 @@ import {
   collectSharedStrings,
 } from "./exporter";
 import { parseXlsxWorkbook } from "./parser/index";
+import { loadZipPackage } from "../zip";
 import type { XlsxWorkbook, XlsxWorksheet, XlsxRow } from "./domain/workbook";
 import type { Cell } from "./domain/cell/types";
 import { createDefaultStyleSheet } from "./domain/style/types";
@@ -96,6 +96,7 @@ function createWorksheet(
   rows: readonly XlsxRow[],
 ): XlsxWorksheet {
   return {
+    dateSystem: "1900",
     name,
     sheetId,
     state: "visible",
@@ -109,6 +110,7 @@ function createWorksheet(
  */
 function createTestWorkbook(sheets: readonly XlsxWorksheet[]): XlsxWorkbook {
   return {
+    dateSystem: "1900",
     sheets,
     styles: createDefaultStyleSheet(),
     sharedStrings: [],
@@ -382,14 +384,14 @@ describe("exportXlsx", () => {
     expect(xlsxData.length).toBeGreaterThan(0);
 
     // Verify it's a valid ZIP
-    const zip = await JSZip.loadAsync(xlsxData);
-    expect(zip.file("[Content_Types].xml")).not.toBeNull();
-    expect(zip.file("_rels/.rels")).not.toBeNull();
-    expect(zip.file("xl/workbook.xml")).not.toBeNull();
-    expect(zip.file("xl/_rels/workbook.xml.rels")).not.toBeNull();
-    expect(zip.file("xl/styles.xml")).not.toBeNull();
-    expect(zip.file("xl/sharedStrings.xml")).not.toBeNull();
-    expect(zip.file("xl/worksheets/sheet1.xml")).not.toBeNull();
+    const pkg = await loadZipPackage(xlsxData);
+    expect(pkg.exists("[Content_Types].xml")).toBe(true);
+    expect(pkg.exists("_rels/.rels")).toBe(true);
+    expect(pkg.exists("xl/workbook.xml")).toBe(true);
+    expect(pkg.exists("xl/_rels/workbook.xml.rels")).toBe(true);
+    expect(pkg.exists("xl/styles.xml")).toBe(true);
+    expect(pkg.exists("xl/sharedStrings.xml")).toBe(true);
+    expect(pkg.exists("xl/worksheets/sheet1.xml")).toBe(true);
   });
 
   it("should export a workbook with strings", async () => {
@@ -403,11 +405,9 @@ describe("exportXlsx", () => {
     const xlsxData = await exportXlsx(workbook);
 
     // Verify sharedStrings.xml contains the strings
-    const zip = await JSZip.loadAsync(xlsxData);
-    const sharedStringsFile = zip.file("xl/sharedStrings.xml");
-    expect(sharedStringsFile).not.toBeNull();
-
-    const sharedStringsXml = await sharedStringsFile!.async("text");
+    const pkg = await loadZipPackage(xlsxData);
+    const sharedStringsXml = pkg.readText("xl/sharedStrings.xml");
+    expect(sharedStringsXml).not.toBeNull();
     expect(sharedStringsXml).toContain("Hello");
     expect(sharedStringsXml).toContain("World");
   });
@@ -422,14 +422,14 @@ describe("exportXlsx", () => {
     const workbook = createTestWorkbook([sheet1, sheet2]);
 
     const xlsxData = await exportXlsx(workbook);
-    const zip = await JSZip.loadAsync(xlsxData);
+    const pkg = await loadZipPackage(xlsxData);
 
-    expect(zip.file("xl/worksheets/sheet1.xml")).not.toBeNull();
-    expect(zip.file("xl/worksheets/sheet2.xml")).not.toBeNull();
+    expect(pkg.exists("xl/worksheets/sheet1.xml")).toBe(true);
+    expect(pkg.exists("xl/worksheets/sheet2.xml")).toBe(true);
 
     // Check workbook.xml has both sheets
-    const workbookFile = zip.file("xl/workbook.xml");
-    const workbookXml = await workbookFile!.async("text");
+    const workbookXml = pkg.readText("xl/workbook.xml");
+    expect(workbookXml).not.toBeNull();
     expect(workbookXml).toContain('name="Sheet1"');
     expect(workbookXml).toContain('name="Sheet2"');
   });
@@ -439,11 +439,14 @@ describe("exportXlsx", () => {
     const workbook = createTestWorkbook([sheet]);
 
     const xlsxData = await exportXlsx(workbook);
-    const zip = await JSZip.loadAsync(xlsxData);
+    const pkg = await loadZipPackage(xlsxData);
 
-    const contentTypesXml = await zip.file("[Content_Types].xml")!.async("text");
-    const workbookXml = await zip.file("xl/workbook.xml")!.async("text");
-    const stylesXml = await zip.file("xl/styles.xml")!.async("text");
+    const contentTypesXml = pkg.readText("[Content_Types].xml");
+    const workbookXml = pkg.readText("xl/workbook.xml");
+    const stylesXml = pkg.readText("xl/styles.xml");
+    expect(contentTypesXml).not.toBeNull();
+    expect(workbookXml).not.toBeNull();
+    expect(stylesXml).not.toBeNull();
 
     const expectedDeclaration = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
     expect(contentTypesXml).toContain(expectedDeclaration);
@@ -469,10 +472,9 @@ describe("Round-trip: export -> parse", () => {
     const xlsxData = await exportXlsx(original);
 
     // Parse
-    const zip = await JSZip.loadAsync(xlsxData);
+    const pkg = await loadZipPackage(xlsxData);
     const parsed = await parseXlsxWorkbook(async (path) => {
-      const file = zip.file(path);
-      return file ? await file.async("text") : undefined;
+      return pkg.readText(path) ?? undefined;
     });
 
     // Verify
@@ -503,10 +505,9 @@ describe("Round-trip: export -> parse", () => {
     const xlsxData = await exportXlsx(original);
 
     // Parse
-    const zip = await JSZip.loadAsync(xlsxData);
+    const pkg = await loadZipPackage(xlsxData);
     const parsed = await parseXlsxWorkbook(async (path) => {
-      const file = zip.file(path);
-      return file ? await file.async("text") : undefined;
+      return pkg.readText(path) ?? undefined;
     });
 
     // Verify
@@ -535,10 +536,9 @@ describe("Round-trip: export -> parse", () => {
     const xlsxData = await exportXlsx(original);
 
     // Parse
-    const zip = await JSZip.loadAsync(xlsxData);
+    const pkg = await loadZipPackage(xlsxData);
     const parsed = await parseXlsxWorkbook(async (path) => {
-      const file = zip.file(path);
-      return file ? await file.async("text") : undefined;
+      return pkg.readText(path) ?? undefined;
     });
 
     // Verify
@@ -561,10 +561,9 @@ describe("Round-trip: export -> parse", () => {
     const xlsxData = await exportXlsx(original);
 
     // Parse
-    const zip = await JSZip.loadAsync(xlsxData);
+    const pkg = await loadZipPackage(xlsxData);
     const parsed = await parseXlsxWorkbook(async (path) => {
-      const file = zip.file(path);
-      return file ? await file.async("text") : undefined;
+      return pkg.readText(path) ?? undefined;
     });
 
     // Verify
@@ -586,10 +585,9 @@ describe("Round-trip: export -> parse", () => {
     const xlsxData = await exportXlsx(original);
 
     // Parse
-    const zip = await JSZip.loadAsync(xlsxData);
+    const pkg = await loadZipPackage(xlsxData);
     const parsed = await parseXlsxWorkbook(async (path) => {
-      const file = zip.file(path);
-      return file ? await file.async("text") : undefined;
+      return pkg.readText(path) ?? undefined;
     });
 
     // Verify
@@ -612,10 +610,9 @@ describe("Round-trip: export -> parse", () => {
     const xlsxData = await exportXlsx(original);
 
     // Parse
-    const zip = await JSZip.loadAsync(xlsxData);
+    const pkg = await loadZipPackage(xlsxData);
     const parsed = await parseXlsxWorkbook(async (path) => {
-      const file = zip.file(path);
-      return file ? await file.async("text") : undefined;
+      return pkg.readText(path) ?? undefined;
     });
 
     // Verify
@@ -637,20 +634,18 @@ describe("Round-trip: export -> parse", () => {
     const xlsxData1 = await exportXlsx(original);
 
     // Parse
-    const zip1 = await JSZip.loadAsync(xlsxData1);
+    const pkg1 = await loadZipPackage(xlsxData1);
     const parsed = await parseXlsxWorkbook(async (path) => {
-      const file = zip1.file(path);
-      return file ? await file.async("text") : undefined;
+      return pkg1.readText(path) ?? undefined;
     });
 
     // Second export
     const xlsxData2 = await exportXlsx(parsed);
 
     // Parse again
-    const zip2 = await JSZip.loadAsync(xlsxData2);
+    const pkg2 = await loadZipPackage(xlsxData2);
     const reparsed = await parseXlsxWorkbook(async (path) => {
-      const file = zip2.file(path);
-      return file ? await file.async("text") : undefined;
+      return pkg2.readText(path) ?? undefined;
     });
 
     // Verify data is preserved

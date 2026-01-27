@@ -139,7 +139,7 @@ describe("parseCellValue", () => {
     const context = createParseContext(
       ["First", "Second", "Third"],
       createDefaultStyleSheet(),
-      { sheets: [] },
+      { sheets: [], dateSystem: "1900" },
       new Map(),
     );
     const xml = `<c r="A1"><v>1</v></c>`;
@@ -151,7 +151,7 @@ describe("parseCellValue", () => {
     const context = createParseContext(
       ["Only one"],
       createDefaultStyleSheet(),
-      { sheets: [] },
+      { sheets: [], dateSystem: "1900" },
       new Map(),
     );
     const xml = `<c r="A1"><v>99</v></c>`;
@@ -229,7 +229,7 @@ describe("parseCell", () => {
     const context = createParseContext(
       ["Hello", "World"],
       createDefaultStyleSheet(),
-      { sheets: [] },
+      { sheets: [], dateSystem: "1900" },
       new Map(),
     );
     const xml = `<c r="D4" t="s"><v>0</v></c>`;
@@ -267,7 +267,7 @@ describe("parseCell", () => {
     const context = createParseContext(
       ["Test Value"],
       createDefaultStyleSheet(),
-      { sheets: [] },
+      { sheets: [], dateSystem: "1900" },
       new Map(),
     );
     const xml = `<c r="Z100" t="s" s="10"><f>A1</f><v>0</v></c>`;

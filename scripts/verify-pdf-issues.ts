@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { importPdf } from "../src/pdf/importer/pdf-importer";
 import { exportPptx } from "../src/pptx/exporter";
 import { px } from "../src/ooxml/domain/units";
+import { loadZipPackage } from "../src/zip";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PDF_PATH = path.join(__dirname, "..", "fixtures", "samples", "modeling.pdf");
@@ -70,10 +71,9 @@ async function main() {
   console.log(`PPTX size: ${arrayBuffer.byteLength} bytes`);
 
   // Check PPTX structure
-  const JSZip = (await import("jszip")).default;
-  const zip = await JSZip.loadAsync(arrayBuffer);
+  const pkg = await loadZipPackage(arrayBuffer);
   console.log("\nPPTX contents:");
-  const files = Object.keys(zip.files).sort();
+  const files = pkg.listFiles().slice().sort();
   for (const file of files.slice(0, 20)) {
     console.log(`  ${file}`);
   }
@@ -82,7 +82,7 @@ async function main() {
   }
 
   // Check presentation.xml
-  const presentationXml = await zip.file("ppt/presentation.xml")?.async("string");
+  const presentationXml = pkg.readText("ppt/presentation.xml");
   if (presentationXml) {
     // Extract slide size from presentation.xml
     const sldSzMatch = presentationXml.match(/<p:sldSz[^>]*cx="(\d+)"[^>]*cy="(\d+)"/);
@@ -98,7 +98,7 @@ async function main() {
   }
 
   // Check slide1.xml content
-  const slide1Xml = await zip.file("ppt/slides/slide1.xml")?.async("string");
+  const slide1Xml = pkg.readText("ppt/slides/slide1.xml");
   if (slide1Xml) {
     const shapeCount = (slide1Xml.match(/<p:sp\b/g) || []).length;
     const picCount = (slide1Xml.match(/<p:pic\b/g) || []).length;

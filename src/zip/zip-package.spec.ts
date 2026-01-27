@@ -2,26 +2,24 @@
  * @file ZIP Package Tests
  */
 
-import JSZip from "jszip";
-import {
-  loadZipPackage,
-  createEmptyZipPackage,
-  isBinaryFile,
-  type ZipPackage,
-} from "./zip-package";
+import { zipSync } from "fflate";
+import { loadZipPackage, createEmptyZipPackage, isBinaryFile } from "./zip-package";
 
 // =============================================================================
 // Test Helpers
 // =============================================================================
 
-async function createTestZipBuffer(
+function createTestZipBytes(
   files: Record<string, string | Uint8Array>,
-): Promise<ArrayBuffer> {
-  const zip = new JSZip();
+): Uint8Array {
+  const encoder = new TextEncoder();
+  const entries: Record<string, Uint8Array> = {};
+
   for (const [path, content] of Object.entries(files)) {
-    zip.file(path, content);
+    entries[path] = typeof content === "string" ? encoder.encode(content) : content;
   }
-  return zip.generateAsync({ type: "arraybuffer" });
+
+  return zipSync(entries, { level: 6 });
 }
 
 // =============================================================================
@@ -30,23 +28,23 @@ async function createTestZipBuffer(
 
 describe("loadZipPackage", () => {
   it("loads a ZIP buffer and reads text files", async () => {
-    const buffer = await createTestZipBuffer({
+    const bytes = createTestZipBytes({
       "hello.txt": "Hello, World!",
       "folder/nested.xml": "<root/>",
     });
 
-    const pkg = await loadZipPackage(buffer);
+    const pkg = await loadZipPackage(bytes);
 
     expect(pkg.readText("hello.txt")).toBe("Hello, World!");
     expect(pkg.readText("folder/nested.xml")).toBe("<root/>");
   });
 
   it("returns null for non-existent files", async () => {
-    const buffer = await createTestZipBuffer({
+    const bytes = createTestZipBytes({
       "exists.txt": "content",
     });
 
-    const pkg = await loadZipPackage(buffer);
+    const pkg = await loadZipPackage(bytes);
 
     expect(pkg.readText("not-exists.txt")).toBeNull();
     expect(pkg.readBinary("not-exists.bin")).toBeNull();
@@ -54,11 +52,11 @@ describe("loadZipPackage", () => {
 
   it("reads binary files", async () => {
     const binaryData = new Uint8Array([0x89, 0x50, 0x4e, 0x47]); // PNG header
-    const buffer = await createTestZipBuffer({
+    const bytes = createTestZipBytes({
       "image.png": binaryData,
     });
 
-    const pkg = await loadZipPackage(buffer);
+    const pkg = await loadZipPackage(bytes);
     const result = pkg.readBinary("image.png");
 
     expect(result).not.toBeNull();
@@ -68,13 +66,13 @@ describe("loadZipPackage", () => {
   });
 
   it("lists all files", async () => {
-    const buffer = await createTestZipBuffer({
+    const bytes = createTestZipBytes({
       "a.txt": "a",
       "b.txt": "b",
       "folder/c.txt": "c",
     });
 
-    const pkg = await loadZipPackage(buffer);
+    const pkg = await loadZipPackage(bytes);
     const files = pkg.listFiles();
 
     expect(files).toContain("a.txt");
@@ -84,11 +82,11 @@ describe("loadZipPackage", () => {
   });
 
   it("checks file existence", async () => {
-    const buffer = await createTestZipBuffer({
+    const bytes = createTestZipBytes({
       "exists.txt": "content",
     });
 
-    const pkg = await loadZipPackage(buffer);
+    const pkg = await loadZipPackage(bytes);
 
     expect(pkg.exists("exists.txt")).toBe(true);
     expect(pkg.exists("not-exists.txt")).toBe(false);
@@ -134,30 +132,31 @@ describe("createEmptyZipPackage", () => {
 // =============================================================================
 
 describe("write operations", () => {
-  let pkg: ZipPackage;
-
-  beforeEach(async () => {
-    pkg = await loadZipPackage(
-      await createTestZipBuffer({
+  function createPkg(): ReturnType<typeof loadZipPackage> {
+    return loadZipPackage(
+      createTestZipBytes({
         "original.txt": "original content",
       }),
     );
-  });
+  }
 
-  it("overwrites existing files", () => {
+  it("overwrites existing files", async () => {
+    const pkg = await createPkg();
     pkg.writeText("original.txt", "new content");
 
     expect(pkg.readText("original.txt")).toBe("new content");
   });
 
-  it("adds new files", () => {
+  it("adds new files", async () => {
+    const pkg = await createPkg();
     pkg.writeText("new.txt", "new file");
 
     expect(pkg.readText("new.txt")).toBe("new file");
     expect(pkg.listFiles()).toContain("new.txt");
   });
 
-  it("removes files", () => {
+  it("removes files", async () => {
+    const pkg = await createPkg();
     pkg.remove("original.txt");
 
     expect(pkg.exists("original.txt")).toBe(false);
@@ -165,7 +164,8 @@ describe("write operations", () => {
     expect(pkg.listFiles()).not.toContain("original.txt");
   });
 
-  it("handles remove of non-existent file gracefully", () => {
+  it("handles remove of non-existent file gracefully", async () => {
+    const pkg = await createPkg();
     // Should not throw
     pkg.remove("not-exists.txt");
     expect(pkg.exists("not-exists.txt")).toBe(false);
@@ -230,11 +230,11 @@ describe("export operations", () => {
 
 describe("asPresentationFile", () => {
   it("returns a PresentationFile compatible interface", async () => {
-    const buffer = await createTestZipBuffer({
+    const bytes = createTestZipBytes({
       "test.xml": "<root/>",
       "data.bin": new Uint8Array([1, 2, 3]),
     });
-    const pkg = await loadZipPackage(buffer);
+    const pkg = await loadZipPackage(bytes);
 
     const pf = pkg.asPresentationFile();
 

@@ -46,6 +46,7 @@ function createWorksheet(
   rows: readonly XlsxRow[] = [],
 ): XlsxWorksheet {
   return {
+    dateSystem: "1900",
     name,
     sheetId,
     state: "visible",
@@ -56,6 +57,7 @@ function createWorksheet(
 
 function createWorkbook(sheets: readonly XlsxWorksheet[]): XlsxWorkbook {
   return {
+    dateSystem: "1900",
     sheets,
     styles: createDefaultStyleSheet(),
     sharedStrings: [],

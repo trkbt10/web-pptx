@@ -32,6 +32,7 @@ function createWorksheet(
   state: "visible" | "hidden" | "veryHidden" = "visible",
 ): XlsxWorksheet {
   return {
+    dateSystem: "1900",
     name,
     sheetId,
     state,
@@ -50,6 +51,7 @@ function createWorkbook(
   },
 ): XlsxWorkbook {
   return {
+    dateSystem: "1900",
     sheets,
     styles: createDefaultStyleSheet(),
     sharedStrings: [],

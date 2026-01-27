@@ -10,9 +10,9 @@
  * @see ECMA-376 Part 4 (SpreadsheetML)
  */
 
-import JSZip from "jszip";
 import type { XmlElement, XmlNode } from "../xml";
 import { serializeElement, createElement } from "../xml";
+import { createEmptyZipPackage } from "../zip";
 import type { XlsxWorkbook } from "./domain/workbook";
 import { serializeWorkbook, type XlsxRelationship, serializeRelationships } from "./serializer/workbook";
 import { serializeStyleSheet } from "./serializer/styles";
@@ -348,7 +348,7 @@ function buildSheetRelationships(workbook: XlsxWorkbook): Map<number, string> {
  * ```
  */
 export async function exportXlsx(workbook: XlsxWorkbook): Promise<Uint8Array> {
-  const zip = new JSZip();
+  const pkg = createEmptyZipPackage();
 
   // 1. Build SharedStrings table from all sheet string cells
   const sharedStringsBuilder = collectSharedStrings(workbook);
@@ -356,37 +356,43 @@ export async function exportXlsx(workbook: XlsxWorkbook): Promise<Uint8Array> {
 
   // 2. Generate xl/sharedStrings.xml
   const sharedStringsXml = generateSharedStrings(sharedStrings);
-  zip.file("xl/sharedStrings.xml", serializeWithDeclaration(sharedStringsXml));
+  pkg.writeText("xl/sharedStrings.xml", serializeWithDeclaration(sharedStringsXml));
 
   // 3. Generate xl/styles.xml
   const stylesXml = serializeStyleSheet(workbook.styles);
-  zip.file("xl/styles.xml", serializeWithDeclaration(stylesXml));
+  pkg.writeText("xl/styles.xml", serializeWithDeclaration(stylesXml));
 
   // 4. Generate each xl/worksheets/sheet*.xml
   for (let i = 0; i < workbook.sheets.length; i++) {
     const sheet = workbook.sheets[i];
     const worksheetXml = serializeWorksheet(sheet, sharedStringsBuilder);
-    zip.file(`xl/worksheets/sheet${i + 1}.xml`, serializeWithDeclaration(worksheetXml));
+    pkg.writeText(
+      `xl/worksheets/sheet${i + 1}.xml`,
+      serializeWithDeclaration(worksheetXml),
+    );
   }
 
   // 5. Generate xl/workbook.xml
   const sheetRelationships = buildSheetRelationships(workbook);
   const workbookXml = serializeWorkbook(workbook, sheetRelationships);
-  zip.file("xl/workbook.xml", serializeWithDeclaration(workbookXml));
+  pkg.writeText("xl/workbook.xml", serializeWithDeclaration(workbookXml));
 
   // 6. Generate xl/_rels/workbook.xml.rels
   const workbookRelsXml = generateWorkbookRels(workbook);
-  zip.file("xl/_rels/workbook.xml.rels", serializeWithDeclaration(workbookRelsXml));
+  pkg.writeText(
+    "xl/_rels/workbook.xml.rels",
+    serializeWithDeclaration(workbookRelsXml),
+  );
 
   // 7. Generate _rels/.rels
   const rootRelsXml = generateRootRels();
-  zip.file("_rels/.rels", serializeWithDeclaration(rootRelsXml));
+  pkg.writeText("_rels/.rels", serializeWithDeclaration(rootRelsXml));
 
   // 8. Generate [Content_Types].xml
   const contentTypesXml = generateContentTypes(workbook);
-  zip.file("[Content_Types].xml", serializeWithDeclaration(contentTypesXml));
+  pkg.writeText("[Content_Types].xml", serializeWithDeclaration(contentTypesXml));
 
   // 9. Write ZIP package
-  const buffer = await zip.generateAsync({ type: "uint8array" });
-  return buffer;
+  const buffer = await pkg.toArrayBuffer({ compressionLevel: 6 });
+  return new Uint8Array(buffer);
 }

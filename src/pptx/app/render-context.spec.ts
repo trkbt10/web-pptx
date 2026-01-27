@@ -150,7 +150,7 @@ function createMockApiSlide(): ApiSlide {
     zip: createMockZip(),
     defaultTextStyle: null,
     tableStyles: null,
-    slideSize: { width: 960, height: 540 },
+    slideSize: { width: px(960), height: px(540) },
     renderOptions: DEFAULT_RENDER_OPTIONS,
   };
 }

@@ -15,13 +15,13 @@ import { describe, it, expect } from "vitest";
 import * as fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import JSZip from "jszip";
 
 import { importPdf } from "../src/pdf/importer/pdf-importer";
 import { exportPptx } from "../src/pptx/exporter";
 import { loadPptxFromBuffer } from "../src/pptx/app/pptx-loader";
 import { px } from "../src/ooxml/domain/units";
 import { parseXml } from "../src/xml";
+import { loadZipPackage } from "../src/zip";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = path.join(__dirname, "fixtures", "pdf");
@@ -111,8 +111,8 @@ describe("PDF Export Validation", () => {
 
       const { blob } = await exportPptx(document);
       const arrayBuffer = await blob.arrayBuffer();
-      const zip = await JSZip.loadAsync(arrayBuffer);
-      const files = Object.keys(zip.files);
+      const pkg = await loadZipPackage(arrayBuffer);
+      const files = pkg.listFiles();
 
       // Check each OPC required file individually for clear error messages
       for (const requiredFile of OPC_REQUIRED_FILES) {
@@ -131,8 +131,8 @@ describe("PDF Export Validation", () => {
 
       const { blob } = await exportPptx(document);
       const arrayBuffer = await blob.arrayBuffer();
-      const zip = await JSZip.loadAsync(arrayBuffer);
-      const files = Object.keys(zip.files);
+      const pkg = await loadZipPackage(arrayBuffer);
+      const files = pkg.listFiles();
 
       // Check each PPTX required file individually
       for (const requiredFile of PPTX_REQUIRED_FILES) {
@@ -151,8 +151,8 @@ describe("PDF Export Validation", () => {
 
       const { blob } = await exportPptx(document);
       const arrayBuffer = await blob.arrayBuffer();
-      const zip = await JSZip.loadAsync(arrayBuffer);
-      const files = Object.keys(zip.files);
+      const pkg = await loadZipPackage(arrayBuffer);
+      const files = pkg.listFiles();
 
       // Check slide files
       for (let i = 1; i <= pageCount; i++) {
@@ -172,10 +172,10 @@ describe("PDF Export Validation", () => {
 
       const { blob } = await exportPptx(document);
       const arrayBuffer = await blob.arrayBuffer();
-      const zip = await JSZip.loadAsync(arrayBuffer);
+      const pkg = await loadZipPackage(arrayBuffer);
 
-      const rootRels = await zip.files["_rels/.rels"]?.async("string");
-      expect(rootRels, "_rels/.rels must exist").toBeDefined();
+      const rootRels = pkg.readText("_rels/.rels");
+      expect(rootRels, "_rels/.rels must exist").not.toBeNull();
 
       // Must reference the main presentation document
       expect(rootRels).toContain("officeDocument");
@@ -193,8 +193,8 @@ describe("PDF Export Validation", () => {
 
       const { blob } = await exportPptx(document);
       const arrayBuffer = await blob.arrayBuffer();
-      const zip = await JSZip.loadAsync(arrayBuffer);
-      const files = Object.keys(zip.files);
+      const pkg = await loadZipPackage(arrayBuffer);
+      const files = pkg.listFiles();
 
       // Check ALL required files for this slide count
       const allRequired = getRequiredFilesForSlideCount(pageCount);
@@ -221,11 +221,11 @@ describe("PDF Export Validation", () => {
       saveForInspection(arrayBuffer, "simple-rect-export.pptx");
 
       // Verify it's a valid ZIP
-      const zip = await JSZip.loadAsync(arrayBuffer);
-      expect(zip).toBeDefined();
+      const pkg = await loadZipPackage(arrayBuffer);
+      expect(pkg).toBeDefined();
 
       // List all files in the ZIP
-      const files = Object.keys(zip.files).sort();
+      const files = pkg.listFiles().slice().sort();
       console.log("Files in exported PPTX:", files);
 
       // Verify required files exist (detailed checks in CRITICAL section above)
@@ -245,14 +245,14 @@ describe("PDF Export Validation", () => {
 
       const { blob } = await exportPptx(document);
       const arrayBuffer = await blob.arrayBuffer();
-      const zip = await JSZip.loadAsync(arrayBuffer);
+      const pkg = await loadZipPackage(arrayBuffer);
 
       // Verify slide files exist
       for (let i = 1; i <= pageCount; i++) {
         const slideFile = `ppt/slides/slide${i}.xml`;
         const slideRelsFile = `ppt/slides/_rels/slide${i}.xml.rels`;
-        expect(zip.files[slideFile]).toBeDefined();
-        expect(zip.files[slideRelsFile]).toBeDefined();
+        expect(pkg.exists(slideFile)).toBe(true);
+        expect(pkg.exists(slideRelsFile)).toBe(true);
       }
     });
   });
@@ -269,10 +269,10 @@ describe("PDF Export Validation", () => {
 
       const { blob } = await exportPptx(document);
       const arrayBuffer = await blob.arrayBuffer();
-      const zip = await JSZip.loadAsync(arrayBuffer);
+      const pkg = await loadZipPackage(arrayBuffer);
 
-      const contentTypesText = await zip.files["[Content_Types].xml"]?.async("string");
-      expect(contentTypesText).toBeDefined();
+      const contentTypesText = pkg.readText("[Content_Types].xml");
+      expect(contentTypesText).not.toBeNull();
       console.log("Content_Types.xml:", contentTypesText);
 
       // Verify it's valid XML
@@ -291,10 +291,10 @@ describe("PDF Export Validation", () => {
 
       const { blob } = await exportPptx(document);
       const arrayBuffer = await blob.arrayBuffer();
-      const zip = await JSZip.loadAsync(arrayBuffer);
+      const pkg = await loadZipPackage(arrayBuffer);
 
-      const presentationText = await zip.files["ppt/presentation.xml"]?.async("string");
-      expect(presentationText).toBeDefined();
+      const presentationText = pkg.readText("ppt/presentation.xml");
+      expect(presentationText).not.toBeNull();
       console.log("presentation.xml:", presentationText);
 
       // Verify it's valid XML
@@ -313,10 +313,10 @@ describe("PDF Export Validation", () => {
 
       const { blob } = await exportPptx(document);
       const arrayBuffer = await blob.arrayBuffer();
-      const zip = await JSZip.loadAsync(arrayBuffer);
+      const pkg = await loadZipPackage(arrayBuffer);
 
-      const slideText = await zip.files["ppt/slides/slide1.xml"]?.async("string");
-      expect(slideText).toBeDefined();
+      const slideText = pkg.readText("ppt/slides/slide1.xml");
+      expect(slideText).not.toBeNull();
       console.log("slide1.xml (first 2000 chars):", slideText!.substring(0, 2000));
 
       // Verify it's valid XML
@@ -340,10 +340,10 @@ describe("PDF Export Validation", () => {
 
       const { blob } = await exportPptx(document);
       const arrayBuffer = await blob.arrayBuffer();
-      const zip = await JSZip.loadAsync(arrayBuffer);
+      const pkg = await loadZipPackage(arrayBuffer);
 
-      const relsText = await zip.files["ppt/_rels/presentation.xml.rels"]?.async("string");
-      expect(relsText).toBeDefined();
+      const relsText = pkg.readText("ppt/_rels/presentation.xml.rels");
+      expect(relsText).not.toBeNull();
       console.log("presentation.xml.rels:", relsText);
 
       // Verify it's valid XML
@@ -365,10 +365,10 @@ describe("PDF Export Validation", () => {
 
       const { blob } = await exportPptx(document);
       const arrayBuffer = await blob.arrayBuffer();
-      const zip = await JSZip.loadAsync(arrayBuffer);
+      const pkg = await loadZipPackage(arrayBuffer);
 
-      const slideRelsText = await zip.files["ppt/slides/_rels/slide1.xml.rels"]?.async("string");
-      expect(slideRelsText).toBeDefined();
+      const slideRelsText = pkg.readText("ppt/slides/_rels/slide1.xml.rels");
+      expect(slideRelsText).not.toBeNull();
       console.log("slide1.xml.rels:", slideRelsText);
 
       // Verify it's valid XML
@@ -397,10 +397,10 @@ describe("PDF Export Validation", () => {
       saveForInspection(arrayBuffer, "modeling-export.pptx");
 
       // Verify it's a valid ZIP
-      const zip = await JSZip.loadAsync(arrayBuffer);
-      expect(zip).toBeDefined();
+      const pkg = await loadZipPackage(arrayBuffer);
+      expect(pkg).toBeDefined();
 
-      const files = Object.keys(zip.files).sort();
+      const files = pkg.listFiles().slice().sort();
       console.log("Files in complex PDF export:", files);
 
       // Check if there are media files (images from PDF)
@@ -408,13 +408,13 @@ describe("PDF Export Validation", () => {
       console.log("Media files:", mediaFiles);
 
       // Verify slide XML
-      const slideText = await zip.files["ppt/slides/slide1.xml"]?.async("string");
-      expect(slideText).toBeDefined();
+      const slideText = pkg.readText("ppt/slides/slide1.xml");
+      expect(slideText).not.toBeNull();
 
       // Check for picture shapes if media exists
       if (mediaFiles.length > 0) {
         // If we have media, we should have pic elements in slide
-        const slideRelsText = await zip.files["ppt/slides/_rels/slide1.xml.rels"]?.async("string");
+        const slideRelsText = pkg.readText("ppt/slides/_rels/slide1.xml.rels");
         console.log("slide1.xml.rels with media:", slideRelsText);
       }
     });
@@ -438,15 +438,15 @@ describe("PDF Export Validation", () => {
       // Save for manual inspection
       saveForInspection(arrayBuffer, "multi-page-export.pptx");
 
-      const zip = await JSZip.loadAsync(arrayBuffer);
+      const pkg = await loadZipPackage(arrayBuffer);
 
       // Verify all slides exist
       for (let i = 1; i <= pageCount; i++) {
         const slideFile = `ppt/slides/slide${i}.xml`;
-        expect(zip.files[slideFile]).toBeDefined();
+        expect(pkg.exists(slideFile)).toBe(true);
 
-        const slideText = await zip.files[slideFile]?.async("string");
-        expect(slideText).toBeDefined();
+        const slideText = pkg.readText(slideFile);
+        expect(slideText).not.toBeNull();
 
         // Verify each slide is valid XML
         const slideXml = parseXml(slideText!);
@@ -454,8 +454,8 @@ describe("PDF Export Validation", () => {
       }
 
       // Verify presentation.xml.rels references all slides
-      const relsText = await zip.files["ppt/_rels/presentation.xml.rels"]?.async("string");
-      expect(relsText).toBeDefined();
+      const relsText = pkg.readText("ppt/_rels/presentation.xml.rels");
+      expect(relsText).not.toBeNull();
 
       for (let i = 1; i <= pageCount; i++) {
         expect(relsText).toContain(`slides/slide${i}.xml`);

@@ -10,9 +10,9 @@
  * @see ECMA-376 Part 1, Section 17 (WordprocessingML)
  */
 
-import JSZip from "jszip";
 import type { XmlElement, XmlNode } from "../xml";
 import { serializeElement, createElement } from "../xml";
+import { createEmptyZipPackage } from "../zip";
 import type { DocxDocument } from "./domain/document";
 import { serializeDocument } from "./serializer/document";
 import { serializeStyles } from "./serializer/styles";
@@ -264,42 +264,45 @@ export async function exportDocx(
   document: DocxDocument,
   options: ExportDocxOptions = {},
 ): Promise<Uint8Array> {
-  const zip = new JSZip();
+  const pkg = createEmptyZipPackage();
 
   const includeStyles = options.includeStyles ?? !!document.styles;
   const includeNumbering = options.includeNumbering ?? !!document.numbering;
 
   // 1. Generate word/document.xml
   const documentXml = serializeDocument(document);
-  zip.file("word/document.xml", serializeWithDeclaration(documentXml));
+  pkg.writeText("word/document.xml", serializeWithDeclaration(documentXml));
 
   // 2. Generate word/styles.xml (if present)
   if (includeStyles && document.styles) {
     const stylesXml = serializeStyles(document.styles);
-    zip.file("word/styles.xml", serializeWithDeclaration(stylesXml));
+    pkg.writeText("word/styles.xml", serializeWithDeclaration(stylesXml));
   }
 
   // 3. Generate word/numbering.xml (if present)
   if (includeNumbering && document.numbering) {
     const numberingXml = serializeNumbering(document.numbering);
-    zip.file("word/numbering.xml", serializeWithDeclaration(numberingXml));
+    pkg.writeText("word/numbering.xml", serializeWithDeclaration(numberingXml));
   }
 
   // 4. Generate word/_rels/document.xml.rels
   const documentRelsXml = generateDocumentRels(document);
-  zip.file("word/_rels/document.xml.rels", serializeWithDeclaration(documentRelsXml));
+  pkg.writeText(
+    "word/_rels/document.xml.rels",
+    serializeWithDeclaration(documentRelsXml),
+  );
 
   // 5. Generate _rels/.rels
   const rootRelsXml = generateRootRels();
-  zip.file("_rels/.rels", serializeWithDeclaration(rootRelsXml));
+  pkg.writeText("_rels/.rels", serializeWithDeclaration(rootRelsXml));
 
   // 6. Generate [Content_Types].xml
   const contentTypesXml = generateContentTypes(document);
-  zip.file("[Content_Types].xml", serializeWithDeclaration(contentTypesXml));
+  pkg.writeText("[Content_Types].xml", serializeWithDeclaration(contentTypesXml));
 
   // 7. Write ZIP package
-  const buffer = await zip.generateAsync({ type: "uint8array" });
-  return buffer;
+  const buffer = await pkg.toArrayBuffer({ compressionLevel: 6 });
+  return new Uint8Array(buffer);
 }
 
 /**

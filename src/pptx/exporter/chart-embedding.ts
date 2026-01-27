@@ -21,11 +21,11 @@
  * @see src/xlsx/exporter.ts - XLSX serialization
  */
 
-import JSZip from "jszip";
 import type { ChartDataUpdate } from "../patcher/chart/chart-workbook-syncer";
 import { resolveEmbeddedXlsxPath, syncChartToWorkbook } from "../patcher/chart/chart-workbook-syncer";
 import { parseXlsxWorkbook } from "../../xlsx/parser/index";
 import { exportXlsx } from "../../xlsx/exporter";
+import { loadZipPackage } from "../../zip";
 
 // =============================================================================
 // Types
@@ -102,7 +102,7 @@ export function getChartRelsPath(chartPath: string): string {
  * This function:
  * 1. Resolves the embedded XLSX path from chart.xml.rels
  * 2. Reads the embedded XLSX (binary)
- * 3. Parses it using JSZip and parseXlsxWorkbook
+ * 3. Parses it using ZipPackage and parseXlsxWorkbook
  * 4. Updates with chart data using syncChartToWorkbook
  * 5. Re-serializes using exportXlsx
  * 6. Writes back to the PPTX package
@@ -161,18 +161,13 @@ export async function updateEmbeddedXlsx(
     ? xlsxContent
     : new TextEncoder().encode(xlsxContent);
 
-  try {
-    // 4. Parse the XLSX using JSZip
-    const zip = await JSZip.loadAsync(xlsxBuffer);
+ try {
+    // 4. Parse the XLSX using ZipPackage
+    const pkg = await loadZipPackage(xlsxBuffer);
 
     // Create a file content getter for parseXlsxWorkbook
-    const xlsxGetFile = async (path: string): Promise<string | undefined> => {
-      const file = zip.file(path);
-      if (!file) {
-        return undefined;
-      }
-      return file.async("text");
-    };
+    const xlsxGetFile = async (path: string): Promise<string | undefined> =>
+      pkg.readText(path) ?? undefined;
 
     // 5. Parse the workbook
     const workbook = await parseXlsxWorkbook(xlsxGetFile);

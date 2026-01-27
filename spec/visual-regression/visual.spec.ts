@@ -17,7 +17,7 @@ import { loadPptxFile } from "../../scripts/lib/pptx-loader";
 import { renderSlideToSvg } from "../../src/pptx/render/svg";
 
 // Note: loadPptxFile is now imported from scripts/lib/pptx-loader.ts
-// This shared utility avoids duplicating JSZip loading logic across tests
+// This shared utility avoids duplicating ZIP loading logic across tests
 
 type TestCase = {
   name: string;

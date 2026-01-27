@@ -68,6 +68,7 @@ function createRow(rowNumber: number, cells: Cell[]): XlsxRow {
  */
 function createWorksheet(rows: XlsxRow[]): XlsxWorksheet {
   return {
+    dateSystem: "1900",
     name: "Sheet1",
     sheetId: 1,
     state: "visible",

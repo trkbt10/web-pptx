@@ -24,6 +24,7 @@ import { colIdx, rowIdx } from "../../../xlsx/domain/types";
  */
 function createTestWorkbook(sheets: XlsxWorksheet[]): XlsxWorkbook {
   return {
+    dateSystem: "1900",
     sheets,
     styles: createDefaultStyleSheet(),
     sharedStrings: [],
@@ -38,6 +39,7 @@ function createTestWorksheet(
   rows: XlsxRow[] = [],
 ): XlsxWorksheet {
   return {
+    dateSystem: "1900",
     name,
     sheetId: 1,
     state: "visible",

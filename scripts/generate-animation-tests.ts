@@ -7,9 +7,9 @@
  * @see MS-OE376 Part 4 Section 4.6.3 (Filter Effects)
  */
 
-import JSZip from "jszip";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { createEmptyZipPackage } from "../src/zip";
 
 // =============================================================================
 // Types
@@ -467,27 +467,27 @@ function generateSlideXml(config: SlideConfig): string {
 // =============================================================================
 
 async function generatePptx(slides: SlideConfig[], outputPath: string): Promise<void> {
-  const zip = new JSZip();
+  const pkg = createEmptyZipPackage();
   const slideCount = slides.length;
 
   // Add required files
-  zip.file("[Content_Types].xml", CONTENT_TYPES_TEMPLATE(slideCount));
-  zip.file("_rels/.rels", ROOT_RELS_XML);
-  zip.file("ppt/_rels/presentation.xml.rels", PRESENTATION_RELS_TEMPLATE(slideCount));
-  zip.file("ppt/presentation.xml", PRESENTATION_TEMPLATE(slideCount));
+  pkg.writeText("[Content_Types].xml", CONTENT_TYPES_TEMPLATE(slideCount));
+  pkg.writeText("_rels/.rels", ROOT_RELS_XML);
+  pkg.writeText("ppt/_rels/presentation.xml.rels", PRESENTATION_RELS_TEMPLATE(slideCount));
+  pkg.writeText("ppt/presentation.xml", PRESENTATION_TEMPLATE(slideCount));
 
   // Add slides
   for (let i = 0; i < slideCount; i++) {
-    zip.file(`ppt/slides/_rels/slide${i + 1}.xml.rels`, SLIDE_RELS_XML);
-    zip.file(`ppt/slides/slide${i + 1}.xml`, generateSlideXml(slides[i]));
+    pkg.writeText(`ppt/slides/_rels/slide${i + 1}.xml.rels`, SLIDE_RELS_XML);
+    pkg.writeText(`ppt/slides/slide${i + 1}.xml`, generateSlideXml(slides[i]));
   }
 
   // Add layout/master/theme
-  zip.file("ppt/slideLayouts/_rels/slideLayout1.xml.rels", SLIDE_LAYOUT_RELS_XML);
-  zip.file("ppt/slideLayouts/slideLayout1.xml", SLIDE_LAYOUT_XML);
-  zip.file("ppt/slideMasters/_rels/slideMaster1.xml.rels", SLIDE_MASTER_RELS_XML);
-  zip.file("ppt/slideMasters/slideMaster1.xml", SLIDE_MASTER_XML);
-  zip.file("ppt/theme/theme1.xml", THEME_XML);
+  pkg.writeText("ppt/slideLayouts/_rels/slideLayout1.xml.rels", SLIDE_LAYOUT_RELS_XML);
+  pkg.writeText("ppt/slideLayouts/slideLayout1.xml", SLIDE_LAYOUT_XML);
+  pkg.writeText("ppt/slideMasters/_rels/slideMaster1.xml.rels", SLIDE_MASTER_RELS_XML);
+  pkg.writeText("ppt/slideMasters/slideMaster1.xml", SLIDE_MASTER_XML);
+  pkg.writeText("ppt/theme/theme1.xml", THEME_XML);
 
   // Ensure output directory exists
   const dir = path.dirname(outputPath);
@@ -496,8 +496,8 @@ async function generatePptx(slides: SlideConfig[], outputPath: string): Promise<
   }
 
   // Write ZIP file
-  const buffer = await zip.generateAsync({ type: "nodebuffer" });
-  fs.writeFileSync(outputPath, buffer);
+  const buffer = await pkg.toArrayBuffer({ compressionLevel: 6 });
+  fs.writeFileSync(outputPath, Buffer.from(buffer));
   console.log(`Generated: ${outputPath}`);
 }
 

@@ -7,8 +7,8 @@
  * @see ECMA-376 Part 1, Section 17 (WordprocessingML)
  */
 
-import JSZip from "jszip";
 import { parseXml, isXmlElement, type XmlElement, type XmlDocument } from "../xml";
+import { loadZipPackage, type ZipPackage } from "../zip";
 import type { DocxDocument, DocxRelationships, DocxRelationship, DocxHeader, DocxFooter } from "./domain/document";
 import type { DocxStyles } from "./domain/styles";
 import type { DocxNumbering } from "./domain/numbering";
@@ -82,13 +82,10 @@ function getRelationshipByType(
 /**
  * Load and parse XML from a ZIP path.
  */
-async function loadXmlPart(zip: JSZip, path: string): Promise<XmlElement | undefined> {
-  const file = zip.file(path);
-  if (!file) {
-    return undefined;
-  }
+function loadXmlPart(pkg: ZipPackage, path: string): XmlElement | undefined {
+  const content = pkg.readText(path);
+  if (!content) return undefined;
 
-  const content = await file.async("text");
   const doc = parseXml(content);
   return getRootElement(doc);
 }
@@ -126,17 +123,17 @@ function normalizeDocumentPath(target: string): string {
 /**
  * Load styles from document relationships.
  */
-async function loadStyles(
-  zip: JSZip,
+function loadStyles(
+  pkg: ZipPackage,
   documentPath: string,
   relationships: DocxRelationships,
   shouldParse: boolean,
-): Promise<DocxStyles | undefined> {
+): DocxStyles | undefined {
   if (!shouldParse) {return undefined;}
   const rel = getRelationshipByType(relationships, RELATIONSHIP_TYPES.styles);
   if (!rel) {return undefined;}
   const path = resolvePath(documentPath, rel.target);
-  const element = await loadXmlPart(zip, path);
+  const element = loadXmlPart(pkg, path);
   if (!element) {return undefined;}
   return parseStyles(element);
 }
@@ -144,17 +141,17 @@ async function loadStyles(
 /**
  * Load numbering from document relationships.
  */
-async function loadNumbering(
-  zip: JSZip,
+function loadNumbering(
+  pkg: ZipPackage,
   documentPath: string,
   relationships: DocxRelationships,
   shouldParse: boolean,
-): Promise<DocxNumbering | undefined> {
+): DocxNumbering | undefined {
   if (!shouldParse) {return undefined;}
   const rel = getRelationshipByType(relationships, RELATIONSHIP_TYPES.numbering);
   if (!rel) {return undefined;}
   const path = resolvePath(documentPath, rel.target);
-  const element = await loadXmlPart(zip, path);
+  const element = loadXmlPart(pkg, path);
   if (!element) {return undefined;}
   return parseNumbering(element);
 }
@@ -162,20 +159,20 @@ async function loadNumbering(
 /**
  * Load document relationships.
  */
-async function loadDocumentRelationships(zip: JSZip, path: string): Promise<DocxRelationships> {
-  const element = await loadXmlPart(zip, path);
+function loadDocumentRelationships(pkg: ZipPackage, path: string): DocxRelationships {
+  const element = loadXmlPart(pkg, path);
   return element ? parseRelationships(element) : { relationship: [] };
 }
 
 /**
  * Load all headers from document relationships.
  */
-async function loadHeaders(
-  zip: JSZip,
+function loadHeaders(
+  pkg: ZipPackage,
   documentPath: string,
   relationships: DocxRelationships,
   context?: ReturnType<typeof createParseContext>,
-): Promise<ReadonlyMap<DocxRelId, DocxHeader>> {
+): ReadonlyMap<DocxRelId, DocxHeader> {
   const headers = new Map<DocxRelId, DocxHeader>();
 
   const headerRels = relationships.relationship.filter(
@@ -184,7 +181,7 @@ async function loadHeaders(
 
   for (const rel of headerRels) {
     const path = resolvePath(documentPath, rel.target);
-    const element = await loadXmlPart(zip, path);
+    const element = loadXmlPart(pkg, path);
     if (element) {
       headers.set(rel.id, parseHeader(element, context));
     }
@@ -196,12 +193,12 @@ async function loadHeaders(
 /**
  * Load all footers from document relationships.
  */
-async function loadFooters(
-  zip: JSZip,
+function loadFooters(
+  pkg: ZipPackage,
   documentPath: string,
   relationships: DocxRelationships,
   context?: ReturnType<typeof createParseContext>,
-): Promise<ReadonlyMap<DocxRelId, DocxFooter>> {
+): ReadonlyMap<DocxRelId, DocxFooter> {
   const footers = new Map<DocxRelId, DocxFooter>();
 
   const footerRels = relationships.relationship.filter(
@@ -210,7 +207,7 @@ async function loadFooters(
 
   for (const rel of footerRels) {
     const path = resolvePath(documentPath, rel.target);
-    const element = await loadXmlPart(zip, path);
+    const element = loadXmlPart(pkg, path);
     if (element) {
       footers.set(rel.id, parseFooter(element, context));
     }
@@ -263,10 +260,10 @@ export async function loadDocx(
   options: LoadDocxOptions = {}
 ): Promise<DocxDocument> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
-  const zip = await JSZip.loadAsync(data);
+  const pkg = await loadZipPackage(data);
 
   // 1. Parse root relationships to find the main document
-  const rootRels = await loadXmlPart(zip, DEFAULT_PART_PATHS.rootRels);
+  const rootRels = loadXmlPart(pkg, DEFAULT_PART_PATHS.rootRels);
   if (!rootRels) {
     throw new Error("Cannot find root relationships file");
   }
@@ -282,11 +279,11 @@ export async function loadDocx(
 
   // 2. Parse document relationships
   const documentRelsPath = resolvePath(documentPath, "_rels/" + documentPath.split("/").pop() + ".rels");
-  const documentRelationships = await loadDocumentRelationships(zip, documentRelsPath);
+  const documentRelationships = loadDocumentRelationships(pkg, documentRelsPath);
 
   // 3. Parse styles and numbering
-  const styles = await loadStyles(zip, documentPath, documentRelationships, opts.parseStyles);
-  const numbering = await loadNumbering(zip, documentPath, documentRelationships, opts.parseNumbering);
+  const styles = loadStyles(pkg, documentPath, documentRelationships, opts.parseStyles);
+  const numbering = loadNumbering(pkg, documentPath, documentRelationships, opts.parseNumbering);
 
   // 4. Create parse context
   const context = createParseContext({
@@ -296,7 +293,7 @@ export async function loadDocx(
   });
 
   // 5. Parse main document
-  const documentElement = await loadXmlPart(zip, documentPath);
+  const documentElement = loadXmlPart(pkg, documentPath);
   if (!documentElement) {
     throw new Error(`Cannot find main document at ${documentPath}`);
   }
@@ -308,8 +305,8 @@ export async function loadDocx(
   let footers: ReadonlyMap<DocxRelId, DocxFooter> | undefined;
 
   if (opts.parseHeadersFooters) {
-    headers = await loadHeaders(zip, documentPath, documentRelationships, context);
-    footers = await loadFooters(zip, documentPath, documentRelationships, context);
+    headers = loadHeaders(pkg, documentPath, documentRelationships, context);
+    footers = loadFooters(pkg, documentPath, documentRelationships, context);
   }
 
   // 7. Combine all parts

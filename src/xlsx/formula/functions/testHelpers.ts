@@ -10,6 +10,7 @@ import {
 } from "../functionRegistry";
 import type { FormulaAstNode } from "../ast";
 import type { FormulaPrimitiveValue } from "../types";
+import { isFormulaError } from "../types";
 import { colIdx, rowIdx } from "../../domain/types";
 import type { EvalResult, FormulaFunctionHelpers } from "./helpers";
 
@@ -36,6 +37,9 @@ export const createLiteralNode = (value: FormulaPrimitiveValue): FormulaAstNode 
 
 export const defaultLazyEvaluate: FormulaFunctionLazyContext["evaluate"] = (node) => {
   if (node.type === "Literal") {
+    if (isFormulaError(node.value)) {
+      throw new Error(node.value.value);
+    }
     return node.value;
   }
   throw new Error("Unexpected node");

@@ -6,10 +6,10 @@
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import JSZip from "jszip";
 import { parseXls } from "../../src/xls";
 import { exportXlsx } from "../../src/xlsx/exporter";
 import { parseXlsxWorkbook } from "../../src/xlsx/parser";
+import { loadZipPackage } from "../../src/zip";
 
 function fixturePath(name: string): string {
   return path.join(process.cwd(), "spec", "xls-fixtures", name);
@@ -29,16 +29,15 @@ describe("XLS fixtures (parseXls + exportXlsx)", () => {
     expect(wb.sheets[0]?.rows[0]?.cells[0]?.value).toEqual({ type: "string", value: "Hello" });
 
     const xlsxBytes = await exportXlsx(wb);
-    const zip = await JSZip.loadAsync(xlsxBytes);
-    const sheetXml = await zip.file("xl/worksheets/sheet1.xml")?.async("string");
+    const pkg = await loadZipPackage(xlsxBytes);
+    const sheetXml = pkg.readText("xl/worksheets/sheet1.xml");
     if (!sheetXml) {
       throw new Error("sheet1.xml must exist");
     }
     expect(sheetXml).toContain("<v>0</v>");
 
     const parsed = await parseXlsxWorkbook((p) => {
-      const entry = zip.file(p);
-      return entry ? entry.async("string") : Promise.resolve(undefined);
+      return Promise.resolve(pkg.readText(p) ?? undefined);
     });
     expect(parsed.sheets[0]?.rows[0]?.cells[0]?.value).toEqual({ type: "string", value: "Hello" });
   });
@@ -76,8 +75,8 @@ describe("XLS fixtures (parseXls + exportXlsx)", () => {
     expect(cellE1.formula).toEqual({ type: "normal", expression: "5+6" });
 
     const xlsxBytes = await exportXlsx(wb);
-    const zip = await JSZip.loadAsync(xlsxBytes);
-    const sheetXml = await zip.file("xl/worksheets/sheet1.xml")?.async("string");
+    const pkg = await loadZipPackage(xlsxBytes);
+    const sheetXml = pkg.readText("xl/worksheets/sheet1.xml");
     if (!sheetXml) {
       throw new Error("sheet1.xml must exist");
     }
@@ -86,8 +85,7 @@ describe("XLS fixtures (parseXls + exportXlsx)", () => {
     expect(sheetXml).toContain("<f>5+6</f>");
 
     const parsed = await parseXlsxWorkbook((p) => {
-      const entry = zip.file(p);
-      return entry ? entry.async("string") : Promise.resolve(undefined);
+      return Promise.resolve(pkg.readText(p) ?? undefined);
     });
     const parsedRow1 = parsed.sheets[0]?.rows.find((r) => (r.rowNumber as number) === 1);
     const parsedE1 = parsedRow1?.cells.find((c) => (c.address.col as number) === 5);
