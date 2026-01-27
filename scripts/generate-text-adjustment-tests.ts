@@ -392,7 +392,7 @@ async function main(): Promise<void> {
   console.log(`Total: 17 test files generated in ${BASE_DIR}/`);
   console.log("\nNext steps:");
   console.log("1. Generate LibreOffice baselines: ./spec/visual-regression/scripts/generate-snapshots.sh");
-  console.log("2. Run visual regression tests: bun test spec/font-spacing/");
+  console.log("2. Run visual regression tests: bun run test:visual -- spec/font-spacing/");
 }
 
 main().catch(console.error);

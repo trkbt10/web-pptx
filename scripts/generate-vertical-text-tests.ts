@@ -88,7 +88,7 @@ async function main(): Promise<void> {
   console.log(`   ./spec/visual-regression/scripts/generate-snapshots.sh ${BASE_DIR}/vert-basic-english.pptx`);
   console.log(`   ./spec/visual-regression/scripts/generate-snapshots.sh ${BASE_DIR}/vert-basic-japanese.pptx`);
   console.log(`   ./spec/visual-regression/scripts/generate-snapshots.sh ${BASE_DIR}/vert-eavert-japanese.pptx`);
-  console.log("2. Run visual regression tests: bun test spec/vertical-text/");
+  console.log("2. Run visual regression tests: bun run test:visual -- spec/vertical-text/");
 }
 
 main().catch(console.error);
