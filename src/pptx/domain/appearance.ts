@@ -29,17 +29,6 @@ export type BlackWhiteMode =
  * Blip compression type
  * @see ECMA-376 Part 1, Section 20.1.10.12 (ST_BlipCompression)
  */
-export type BlipCompression =
-  | "email"
-  | "hqprint"
-  | "none"
-  | "print"
-  | "screen";
-
-/**
- * On/off style value
- * @see ECMA-376 Part 1, Section 20.1.10.36 (ST_OnOffStyleType)
- */
 export type OnOffStyleType = "on" | "off" | "def";
 
 /**

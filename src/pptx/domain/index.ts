@@ -216,7 +216,6 @@ export type {
 
 export type {
   BlackWhiteMode,
-  BlipCompression,
   OnOffStyleType,
   RectAlignment,
   FillEffectType,
@@ -318,7 +317,6 @@ export type {
   // PPTX-specific color
   ResolvedColor,
   // PPTX-specific fill types
-  TileFlipMode,
   StretchFill,
   TileFill,
   BlipEffects,

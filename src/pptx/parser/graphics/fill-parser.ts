@@ -8,7 +8,8 @@
 
 import type { Color } from "../../../ooxml/domain/color";
 import type { GradientFill, GradientStop, GroupFill, LinearGradient, NoFill, PathGradient, PatternFill, PatternType, SolidFill } from "../../../ooxml/domain/fill";
-import type { BlipEffects, BlipFill, Fill, StretchFill, StyleReference, TileFill, TileFlipMode } from "../../domain/index";
+import type { TileFlipMode } from "../../../ooxml/domain/drawing";
+import type { BlipEffects, BlipFill, Fill, StretchFill, StyleReference, TileFill } from "../../domain/index";
 import { deg, pct, px } from "../../../ooxml/domain/units";
 import {
   findChild,

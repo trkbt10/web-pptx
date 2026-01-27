@@ -9,7 +9,8 @@
 
 import type { Degrees, Percent, Pixels, Points } from "../../ooxml/domain/units";
 import type { SchemeColorValue } from "../../ooxml/domain/color";
-import type { BlackWhiteMode, BlipCompression, ColorSchemeIndex, FontCollectionIndex, OnOffStyleType, RectAlignment, ShapeId, StyleMatrixColumnIndex, TextShapeType, AlignH, AlignV, RelFromH, RelFromV, WrapText, EditAs } from "../domain";
+import type { BlipCompression } from "../../ooxml/domain/drawing";
+import type { BlackWhiteMode, ColorSchemeIndex, FontCollectionIndex, OnOffStyleType, RectAlignment, ShapeId, StyleMatrixColumnIndex, TextShapeType, AlignH, AlignV, RelFromH, RelFromV, WrapText, EditAs } from "../domain";
 import { px, deg, pct, pt } from "../../ooxml/domain/units";
 import { getAttr, getChild, type XmlElement } from "../../xml";
 

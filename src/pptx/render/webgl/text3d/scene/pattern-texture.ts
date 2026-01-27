@@ -10,7 +10,7 @@
 
 import * as THREE from "three";
 import { createPatternCanvas } from "../utils/canvas";
-import type { TileFlipMode } from "../../../../domain/color/types";
+import type { TileFlipMode } from "../../../../../ooxml/domain/drawing";
 import { applyTileFlipMode } from "./tile-config";
 
 // =============================================================================

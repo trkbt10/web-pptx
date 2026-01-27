@@ -108,7 +108,7 @@ export type {
 } from "./anchor";
 
 // Appearance types
-export type { BlackWhiteMode, BlipCompression, OnOffStyleType, RectAlignment, FillEffectType } from "./appearance";
+export type { BlackWhiteMode, OnOffStyleType, RectAlignment, FillEffectType } from "./appearance";
 
 // Style reference types
 export type { ColorSchemeIndex, SchemeColorValue, FontCollectionIndex, StyleMatrixColumnIndex, ShapeId } from "./style-ref";

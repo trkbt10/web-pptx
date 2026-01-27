@@ -11,16 +11,18 @@ import { getTextContent, isXmlElement, type XmlElement } from "../../xml";
 import { emu } from "../../ooxml/domain/units";
 import { docxRelId } from "../domain/types";
 import type {
+  DrawingExtent,
+  DrawingEffectExtent,
+  DrawingBlip,
+  DrawingBlipFill,
+  DrawingPicture,
+  NonVisualDrawingProps,
+  DrawingShapeProperties,
+} from "../../ooxml/domain/drawing";
+import type {
   DocxDrawing,
   DocxInlineDrawing,
   DocxAnchorDrawing,
-  DocxExtent,
-  DocxEffectExtent,
-  DocxNonVisualDrawingProps,
-  DocxPicture,
-  DocxBlipFill,
-  DocxBlip,
-  DocxShapeProperties,
   DocxPositionH,
   DocxPositionV,
   DocxWrapType,
@@ -80,7 +82,7 @@ function parseBoolAttr(element: XmlElement, attrName: string): boolean | undefin
 /**
  * Parse extent element (wp:extent or a:ext).
  */
-function parseExtent(element: XmlElement | undefined): DocxExtent {
+function parseExtent(element: XmlElement | undefined): DrawingExtent {
   if (element === undefined) {
     return { cx: emu(0), cy: emu(0) };
   }
@@ -93,7 +95,7 @@ function parseExtent(element: XmlElement | undefined): DocxExtent {
 /**
  * Parse effect extent element (wp:effectExtent).
  */
-function parseEffectExtent(element: XmlElement | undefined): DocxEffectExtent | undefined {
+function parseEffectExtent(element: XmlElement | undefined): DrawingEffectExtent | undefined {
   if (element === undefined) {
     return undefined;
   }
@@ -112,7 +114,7 @@ function parseEffectExtent(element: XmlElement | undefined): DocxEffectExtent | 
 /**
  * Parse document properties element (wp:docPr).
  */
-function parseDocPr(element: XmlElement | undefined): DocxNonVisualDrawingProps {
+function parseDocPr(element: XmlElement | undefined): NonVisualDrawingProps {
   if (element === undefined) {
     return { id: 0, name: "" };
   }
@@ -132,7 +134,7 @@ function parseDocPr(element: XmlElement | undefined): DocxNonVisualDrawingProps 
 /**
  * Parse blip element (a:blip).
  */
-function parseBlip(element: XmlElement | undefined): DocxBlip | undefined {
+function parseBlip(element: XmlElement | undefined): DrawingBlip | undefined {
   if (element === undefined) {
     return undefined;
   }
@@ -144,14 +146,14 @@ function parseBlip(element: XmlElement | undefined): DocxBlip | undefined {
   return {
     rEmbed: rEmbed !== undefined ? docxRelId(rEmbed) : undefined,
     rLink: rLink !== undefined ? docxRelId(rLink) : undefined,
-    cstate: element.attrs.cstate as DocxBlip["cstate"],
+    cstate: element.attrs.cstate as DrawingBlip["cstate"],
   };
 }
 
 /**
  * Parse blip fill element (pic:blipFill).
  */
-function parseBlipFill(element: XmlElement | undefined): DocxBlipFill | undefined {
+function parseBlipFill(element: XmlElement | undefined): DrawingBlipFill | undefined {
   if (element === undefined) {
     return undefined;
   }
@@ -179,7 +181,7 @@ function parseBlipFill(element: XmlElement | undefined): DocxBlipFill | undefine
 /**
  * Parse shape properties element (pic:spPr).
  */
-function parseSpPr(element: XmlElement | undefined): DocxShapeProperties | undefined {
+function parseSpPr(element: XmlElement | undefined): DrawingShapeProperties | undefined {
   if (element === undefined) {
     return undefined;
   }
@@ -204,7 +206,7 @@ function parseSpPr(element: XmlElement | undefined): DocxShapeProperties | undef
 /**
  * Parse picture element (pic:pic).
  */
-function parsePicture(element: XmlElement | undefined): DocxPicture | undefined {
+function parsePicture(element: XmlElement | undefined): DrawingPicture | undefined {
   if (element === undefined) {
     return undefined;
   }

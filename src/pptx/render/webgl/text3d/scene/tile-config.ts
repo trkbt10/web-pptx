@@ -10,7 +10,8 @@
 
 import * as THREE from "three";
 import type { GradientFill } from "../../../../../ooxml/domain/fill";
-import type { TileFlipMode, TileFill } from "../../../../domain/color/types";
+import type { TileFlipMode } from "../../../../../ooxml/domain/drawing";
+import type { TileFill } from "../../../../domain/color/types";
 import type { Percent, Pixels } from "../../../../../ooxml/domain/units";
 
 // =============================================================================

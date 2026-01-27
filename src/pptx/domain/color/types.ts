@@ -6,7 +6,8 @@
  */
 
 import type { Brand, Degrees, Percent, Pixels } from "../../../ooxml/domain/units";
-import type { BlipCompression, RectAlignment, ResourceId } from "../types";
+import type { BlipCompression, TileFlipMode } from "../../../ooxml/domain/drawing";
+import type { RectAlignment, ResourceId } from "../types";
 import type { ResolvedBlipResource } from "../resource";
 
 // =============================================================================
@@ -43,12 +44,6 @@ export type ResolvedColor = Brand<string, 'ResolvedColor'>;
  * Create a ResolvedColor from a hex string.
  */
 export const color = (value: string): ResolvedColor => value as ResolvedColor;
-
-/**
- * Tile mode for picture fills
- * @see ECMA-376 Part 1, Section 20.1.10.66 (ST_TileFlipMode)
- */
-export type TileFlipMode = "none" | "x" | "y" | "xy";
 
 /**
  * Stretch fill mode

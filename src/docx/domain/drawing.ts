@@ -2,28 +2,13 @@
  * @file DOCX Drawing Type Definitions
  *
  * This module defines types for inline and floating images in WordprocessingML.
- * Uses shared DrawingML types from ooxml/domain/drawing.ts.
+ * Uses shared DrawingML types from ooxml/domain/drawing.
  *
  * Drawing elements in DOCX come from the DrawingML namespace (a:) and
  * WordprocessingML Drawing namespace (wp:).
  *
  * @see ECMA-376 Part 1, Section 20.4 (DrawingML - WordprocessingML Drawing)
  */
-
-// Import shared DrawingML types
-export type {
-  DrawingExtent as DocxExtent,
-  DrawingEffectExtent as DocxEffectExtent,
-  DrawingSourceRect as DocxSourceRect,
-  DrawingBlip as DocxBlip,
-  DrawingBlipFill as DocxBlipFill,
-  DrawingTileFill as DocxTileFill,
-  DrawingTransform as DocxTransform,
-  DrawingShapeProperties as DocxShapeProperties,
-  DrawingOutline as DocxOutline,
-  NonVisualDrawingProps as DocxNonVisualDrawingProps,
-  DrawingPicture as DocxPicture,
-} from "../../ooxml/domain/drawing";
 
 // =============================================================================
 // Inline Drawing Types

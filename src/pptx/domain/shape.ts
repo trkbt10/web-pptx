@@ -21,7 +21,7 @@ import type { Effects } from "./effects";
 import type { Hyperlink, ResourceId, ResolvedBlipResource } from "./resource";
 import type { GroupLocks, PictureLocks, ShapeLocks } from "./shape-locks";
 import type { ContentPart } from "./anchor";
-import type { BlipCompression } from "./appearance";
+import type { BlipCompression } from "../../ooxml/domain/drawing";
 import type { FontCollectionIndex, StyleMatrixColumnIndex, ShapeId } from "./style-ref";
 import type {
   LightRigDirection,
