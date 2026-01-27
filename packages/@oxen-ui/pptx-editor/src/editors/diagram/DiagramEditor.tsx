@@ -9,7 +9,7 @@ import type {
   DiagramDataModel,
   DiagramPoint,
   DiagramConnection,
-} from "@oxen/pptx/domain/diagram";
+} from "@oxen-office/pptx/domain/diagram";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 import { Accordion } from "@oxen-ui/ui-components/layout";
 import { Button } from "@oxen-ui/ui-components/primitives";

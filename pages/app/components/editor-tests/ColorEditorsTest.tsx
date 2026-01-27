@@ -13,7 +13,7 @@ import {
   createDefaultSolidFill,
   createDefaultLine,
 } from "@oxen-ui/pptx-editor";
-import type { Color, Fill, Line } from "@oxen/pptx/domain/color/types";
+import type { Color, Fill, Line } from "@oxen-office/pptx/domain/color/types";
 
 const cardStyle: CSSProperties = {
   backgroundColor: "var(--bg-secondary)",

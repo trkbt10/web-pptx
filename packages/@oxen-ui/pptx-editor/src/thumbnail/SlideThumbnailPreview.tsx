@@ -6,7 +6,7 @@
  */
 
 import { useMemo, type CSSProperties } from "react";
-import { extractSvgContent } from "@oxen/pptx-render/svg";
+import { extractSvgContent } from "@oxen-office/pptx-render/svg";
 
 // =============================================================================
 // Types

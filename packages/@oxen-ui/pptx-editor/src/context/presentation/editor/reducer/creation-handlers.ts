@@ -4,8 +4,8 @@
  * Handlers for shape/picture/chart/diagram creation.
  */
 
-import type { Shape } from "@oxen/pptx/domain";
-import type { ShapeId } from "@oxen/pptx/domain/types";
+import type { Shape } from "@oxen-office/pptx/domain";
+import type { ShapeId } from "@oxen-office/pptx/domain/types";
 import type {
   PresentationEditorState,
   PresentationEditorAction,

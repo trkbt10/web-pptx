@@ -5,7 +5,7 @@
 // @vitest-environment jsdom
 
 import { fireEvent, render, screen } from "@testing-library/react";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
 import { createSheetLayout } from "../../selectors/sheet-layout";
 import { createIdleDragState } from "../../context/workbook/editor/types";
 import { XlsxSheetGridHeaderLayer } from "./header-layer";

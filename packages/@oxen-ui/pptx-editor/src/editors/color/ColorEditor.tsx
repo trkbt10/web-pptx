@@ -11,10 +11,10 @@ import { Button, Select } from "@oxen-ui/ui-components/primitives";
 import { ColorPickerPopover } from "../../ui/color";
 import { ColorTransformEditor } from "./ColorTransformEditor";
 import { createDefaultSrgbColor } from "./ColorSpecEditor";
-import type { Color, ColorSpec, ColorTransform, SrgbColor, SchemeColor } from "@oxen/ooxml/domain/color";
+import type { Color, ColorSpec, ColorTransform, SrgbColor, SchemeColor } from "@oxen-office/ooxml/domain/color";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
-import type { ColorContext } from "@oxen/pptx/domain/color/context";
-import { resolveColor } from "@oxen/pptx/domain/color/resolution";
+import type { ColorContext } from "@oxen-office/pptx/domain/color/context";
+import { resolveColor } from "@oxen-office/pptx/domain/color/resolution";
 import { useEditorConfig } from "../../context/editor/EditorConfigContext";
 
 export type ColorEditorProps = EditorProps<Color> & {

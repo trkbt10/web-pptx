@@ -4,8 +4,8 @@
  * Rendering-related utilities for shapes (fill, stroke extraction).
  */
 
-import type { Shape, SpShape, CxnShape } from "@oxen/pptx/domain";
-import type { SolidFill } from "@oxen/ooxml/domain/fill";
+import type { Shape, SpShape, CxnShape } from "@oxen-office/pptx/domain";
+import type { SolidFill } from "@oxen-office/ooxml/domain/fill";
 
 /**
  * Extract fill color from shape as hex string

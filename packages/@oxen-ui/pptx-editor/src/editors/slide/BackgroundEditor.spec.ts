@@ -4,7 +4,7 @@
  * Tests the BackgroundEditor handles slide background correctly.
  */
 
-import type { Background } from "@oxen/pptx/domain/slide/types";
+import type { Background } from "@oxen-office/pptx/domain/slide/types";
 import { createDefaultBackground } from "./BackgroundEditor";
 
 describe("BackgroundEditor: Background handling", () => {

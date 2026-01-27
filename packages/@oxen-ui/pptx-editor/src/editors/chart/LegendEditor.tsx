@@ -17,8 +17,8 @@ import type {
   LegendEntry,
   Layout,
   ChartShapeProperties,
-} from "@oxen/pptx/domain/chart";
-import type { TextBody } from "@oxen/pptx/domain/text";
+} from "@oxen-office/pptx/domain/chart";
+import type { TextBody } from "@oxen-office/pptx/domain/text";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
 
 export type LegendEditorProps = EditorProps<Legend> & {

@@ -4,9 +4,9 @@
  * Manages state for editing text within shapes.
  */
 
-import type { TextBody, RunProperties } from "@oxen/pptx/domain";
-import type { Pixels } from "@oxen/ooxml/domain/units";
-import type { ShapeId } from "@oxen/pptx/domain/types";
+import type { TextBody, RunProperties } from "@oxen-office/pptx/domain";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { ShapeId } from "@oxen-office/pptx/domain/types";
 import type { CursorPosition, TextSelection } from "./cursor";
 
 // =============================================================================

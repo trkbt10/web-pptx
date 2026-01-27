@@ -5,7 +5,7 @@
 // @vitest-environment jsdom
 
 import { render, fireEvent } from "@testing-library/react";
-import type { Fill } from "@oxen/pptx/domain/color/types";
+import type { Fill } from "@oxen-office/pptx/domain/color/types";
 import { FillPickerPopover } from "./FillPickerPopover";
 
 describe("FillPickerPopover", () => {

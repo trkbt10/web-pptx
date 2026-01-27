@@ -5,7 +5,7 @@
  */
 
 import type { CSSProperties, ReactNode, MouseEvent } from "react";
-import type { DocxTable, DocxTableProperties, DocxTableBorders } from "@oxen/docx/domain/table";
+import type { DocxTable, DocxTableProperties, DocxTableBorders } from "@oxen-office/docx/domain/table";
 import type { ElementId } from "./DocumentCanvas";
 import { TableCellRenderer } from "./TableCellRenderer";
 

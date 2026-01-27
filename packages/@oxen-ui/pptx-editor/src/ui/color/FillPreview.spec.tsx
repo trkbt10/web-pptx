@@ -5,8 +5,8 @@
 // @vitest-environment jsdom
 
 import { render } from "@testing-library/react";
-import { deg, pct } from "@oxen/ooxml/domain/units";
-import type { Fill } from "@oxen/pptx/domain/color/types";
+import { deg, pct } from "@oxen-office/ooxml/domain/units";
+import type { Fill } from "@oxen-office/pptx/domain/color/types";
 import { FillPreview } from "./FillPreview";
 
 describe("FillPreview", () => {

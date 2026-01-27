@@ -5,12 +5,12 @@
  */
 
 import type { CSSProperties } from "react";
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import type { Cell } from "@oxen/xlsx/domain/cell/types";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import type { XlsxStyleSheet, XlsxAlignment } from "@oxen/xlsx/domain/style/types";
-import type { XlsxDifferentialFormat } from "@oxen/xlsx/domain/style/dxf";
-import type { XlsxFill } from "@oxen/xlsx/domain/style/fill";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import type { Cell } from "@oxen-office/xlsx/domain/cell/types";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import type { XlsxStyleSheet, XlsxAlignment } from "@oxen-office/xlsx/domain/style/types";
+import type { XlsxDifferentialFormat } from "@oxen-office/xlsx/domain/style/dxf";
+import type { XlsxFill } from "@oxen-office/xlsx/domain/style/fill";
 import { xlsxColorToCss, type XlsxColorLike } from "./xlsx-color";
 import { resolveCellXf } from "./cell-xf";
 

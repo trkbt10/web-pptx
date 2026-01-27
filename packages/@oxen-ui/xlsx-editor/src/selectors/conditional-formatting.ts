@@ -10,17 +10,17 @@
  * @see ECMA-376 Part 4, Section 18.3.1.10 (cfRule)
  */
 
-import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
-import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import type { XlsxStyleSheet } from "@oxen/xlsx/domain/style/types";
-import type { XlsxDifferentialFormat } from "@oxen/xlsx/domain/style/dxf";
-import type { XlsxConditionalFormattingRule } from "@oxen/xlsx/domain/conditional-formatting";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
-import type { FormulaEvaluator } from "@oxen/xlsx/formula/evaluator";
-import type { FormulaScalar } from "@oxen/xlsx/formula/types";
-import { isFormulaError } from "@oxen/xlsx/formula/types";
-import { shiftFormulaReferences } from "@oxen/xlsx/formula/shift";
+import type { CellAddress, CellRange } from "@oxen-office/xlsx/domain/cell/address";
+import type { Cell, CellValue } from "@oxen-office/xlsx/domain/cell/types";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import type { XlsxStyleSheet } from "@oxen-office/xlsx/domain/style/types";
+import type { XlsxDifferentialFormat } from "@oxen-office/xlsx/domain/style/dxf";
+import type { XlsxConditionalFormattingRule } from "@oxen-office/xlsx/domain/conditional-formatting";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
+import type { FormulaEvaluator } from "@oxen-office/xlsx/formula/evaluator";
+import type { FormulaScalar } from "@oxen-office/xlsx/formula/types";
+import { isFormulaError } from "@oxen-office/xlsx/formula/types";
+import { shiftFormulaReferences } from "@oxen-office/xlsx/formula/shift";
 
 type ResolvedRule = {
   readonly priority: number;

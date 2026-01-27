@@ -4,7 +4,7 @@
  * Main reducer for the xlsx-editor state management.
  */
 
-import type { XlsxWorkbook } from "@oxen/xlsx/domain/workbook";
+import type { XlsxWorkbook } from "@oxen-office/xlsx/domain/workbook";
 import { createHistory } from "../../state/history";
 import type { XlsxEditorState, XlsxEditorAction } from "../types";
 import { createEmptyCellSelection, createIdleDragState } from "../types";

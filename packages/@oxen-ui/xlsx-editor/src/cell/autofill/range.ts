@@ -4,8 +4,8 @@
  * Normalization and direction detection for fill-handle operations.
  */
 
-import type { CellRange } from "@oxen/xlsx/domain/cell/address";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import type { CellRange } from "@oxen-office/xlsx/domain/cell/address";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
 import type { FillDirection, RangeBounds } from "./types";
 
 /**

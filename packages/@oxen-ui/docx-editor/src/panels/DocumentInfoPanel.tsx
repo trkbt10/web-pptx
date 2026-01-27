@@ -9,12 +9,12 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { useCallback, useMemo } from "react";
-import type { DocxDocument } from "@oxen/docx/domain/document";
-import type { DocxStyle } from "@oxen/docx/domain/styles";
-import type { DocxSectionProperties } from "@oxen/docx/domain/section";
-import type { DocxStyleId } from "@oxen/docx/domain/types";
-import type { DocxTable } from "@oxen/docx/domain/table";
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
+import type { DocxDocument } from "@oxen-office/docx/domain/document";
+import type { DocxStyle } from "@oxen-office/docx/domain/styles";
+import type { DocxSectionProperties } from "@oxen-office/docx/domain/section";
+import type { DocxStyleId } from "@oxen-office/docx/domain/types";
+import type { DocxTable } from "@oxen-office/docx/domain/table";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
 import { Button, Select } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup, Section } from "@oxen-ui/ui-components/layout";
 import type { SelectOption } from "@oxen-ui/ui-components/types";

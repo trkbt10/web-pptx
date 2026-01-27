@@ -14,12 +14,12 @@ import * as fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { importPdf } from "@oxen/pdf/importer/pdf-importer";
-import { exportPptx } from "@oxen/pptx/exporter";
-import { convertToPresentationDocument, loadPptxFromBuffer } from "@oxen/pptx/app";
-import { px } from "@oxen/ooxml/domain/units";
-import type { PresentationDocument } from "@oxen/pptx/app/presentation-document";
-import type { GroupTransform } from "@oxen/pptx/domain/geometry";
+import { importPdf } from "@oxen-office/pdf-to-pptx/importer/pdf-importer";
+import { exportPptx } from "@oxen-office/pptx/exporter";
+import { convertToPresentationDocument, loadPptxFromBuffer } from "@oxen-office/pptx/app";
+import { px } from "@oxen-office/ooxml/domain/units";
+import type { PresentationDocument } from "@oxen-office/pptx/app/presentation-document";
+import type { GroupTransform } from "@oxen-office/pptx/domain/geometry";
 import type {
   Shape,
   SpShape,
@@ -27,7 +27,7 @@ import type {
   GrpShape,
   CustomGeometry,
   PathCommand,
-} from "@oxen/pptx/domain/shape";
+} from "@oxen-office/pptx/domain/shape";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = path.join(__dirname, "fixtures", "pdf");

@@ -5,11 +5,11 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type { PresentationFile } from "@oxen/pptx";
-import { openPresentation } from "@oxen/pptx";
+import type { PresentationFile } from "@oxen-office/pptx";
+import { openPresentation } from "@oxen-office/pptx";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
-import { renderSlideToSvg } from "@oxen/pptx-render/svg";
-import { renderSlideToHtml } from "@oxen/pptx-render/html";
+import { renderSlideToSvg } from "@oxen-office/pptx-render/svg";
+import { renderSlideToHtml } from "@oxen-office/pptx-render/html";
 
 const FIXTURE_PATH = "fixtures/poi-test-data/test-data/slideshow/2411-Performance_Up.pptx";
 

@@ -13,14 +13,14 @@ import {
   undoHistory,
   redoHistory,
 } from "../state";
-import type { Slide } from "@oxen/pptx/domain";
+import type { Slide } from "@oxen-office/pptx/domain";
 
 // =============================================================================
 // Test Fixtures
 // =============================================================================
 
-import type { Shape, SpShape } from "@oxen/pptx/domain";
-import { px, deg } from "@oxen/ooxml/domain/units";
+import type { Shape, SpShape } from "@oxen-office/pptx/domain";
+import { px, deg } from "@oxen-office/ooxml/domain/units";
 
 // Create minimal test slide using type assertion for incomplete shapes
 const createTestSlide = (shapeCount: number = 0): Slide => ({

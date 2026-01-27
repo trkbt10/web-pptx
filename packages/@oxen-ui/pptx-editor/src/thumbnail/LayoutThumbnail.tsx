@@ -6,7 +6,7 @@
  */
 
 import { useMemo, type CSSProperties } from "react";
-import type { SlideSize, Shape, SpShape } from "@oxen/pptx/domain";
+import type { SlideSize, Shape, SpShape } from "@oxen-office/pptx/domain";
 
 // =============================================================================
 // Types

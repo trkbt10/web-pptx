@@ -5,7 +5,7 @@
  * preserving original styling and properties.
  */
 
-import type { TextBody, RunProperties, TextRun, ParagraphProperties } from "@oxen/pptx/domain";
+import type { TextBody, RunProperties, TextRun, ParagraphProperties } from "@oxen-office/pptx/domain";
 import { getPlainText } from "./cursor";
 
 type TextCharEntry = {

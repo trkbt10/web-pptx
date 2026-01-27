@@ -23,7 +23,7 @@ import type {
   BulletStyle,
   ParagraphProperties,
   TextBody,
-} from "@oxen/pptx/domain/text";
+} from "@oxen-office/pptx/domain/text";
 
 const cardStyle: CSSProperties = {
   backgroundColor: "var(--bg-secondary)",

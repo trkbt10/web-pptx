@@ -3,8 +3,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { SpShape, Shape } from "@oxen/pptx/domain";
-import { px, deg } from "@oxen/ooxml/domain/units";
+import type { SpShape, Shape } from "@oxen-office/pptx/domain";
+import { px, deg } from "@oxen-office/ooxml/domain/units";
 import {
   getShapeBounds,
   getCombinedBounds,

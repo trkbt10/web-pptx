@@ -8,7 +8,7 @@ import {
   getFunctionsByCategory,
   listFunctionCategories,
   type FormulaFunctionDefinition,
-} from "@oxen/xlsx/formula/functionRegistry";
+} from "@oxen-office/xlsx/formula/functionRegistry";
 import { Input } from "@oxen-ui/ui-components/primitives";
 
 type NavItem = {

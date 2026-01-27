@@ -5,8 +5,8 @@
  * These operations preserve inline formatting during text insertion and deletion.
  */
 
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
-import type { DocxRun, DocxRunProperties } from "@oxen/docx/domain/run";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
+import type { DocxRun, DocxRunProperties } from "@oxen-office/docx/domain/run";
 import { getParagraphPlainText } from "./run-plain-text";
 import { getBaseRunProperties, getRunPropertiesAtPosition } from "./run-properties";
 import {

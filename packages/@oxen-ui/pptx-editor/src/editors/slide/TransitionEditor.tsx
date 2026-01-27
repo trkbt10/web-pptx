@@ -5,7 +5,7 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import type { SlideTransition, TransitionType } from "@oxen/pptx/domain/transition";
+import type { SlideTransition, TransitionType } from "@oxen-office/pptx/domain/transition";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { Toggle, Input, SearchableSelect } from "@oxen-ui/ui-components/primitives";

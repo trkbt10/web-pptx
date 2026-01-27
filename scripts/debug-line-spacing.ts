@@ -1,7 +1,7 @@
 /**
  * Debug line spacing values being used
  */
-import { openPresentation, LIBREOFFICE_RENDER_OPTIONS, DEFAULT_RENDER_OPTIONS } from "@oxen/pptx";
+import { openPresentation, LIBREOFFICE_RENDER_OPTIONS, DEFAULT_RENDER_OPTIONS } from "@oxen-office/pptx";
 import { getByPath } from "@oxen/xml";
 import { loadPptxFile } from "./lib/pptx-loader";
 

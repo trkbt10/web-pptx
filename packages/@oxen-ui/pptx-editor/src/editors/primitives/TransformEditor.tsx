@@ -9,8 +9,8 @@ import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { Toggle } from "@oxen-ui/ui-components/primitives";
 import { PixelsEditor } from "./PixelsEditor";
 import { DegreesEditor } from "./DegreesEditor";
-import { px, deg } from "@oxen/ooxml/domain/units";
-import type { Transform } from "@oxen/pptx/domain/types";
+import { px, deg } from "@oxen-office/ooxml/domain/units";
+import type { Transform } from "@oxen-office/pptx/domain/types";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 
 export type TransformEditorProps = EditorProps<Transform> & {

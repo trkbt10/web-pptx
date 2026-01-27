@@ -5,9 +5,9 @@
  * Designed to avoid per-cell DOM borders and to support more complex border rendering over time.
  */
 
-import type { XlsxStyleSheet } from "@oxen/xlsx/domain/style/types";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import type { XlsxStyleSheet } from "@oxen-office/xlsx/domain/style/types";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
 import { getCell } from "../cell/query";
 import { resolveCellBorderDecoration, type CellBorderEdgeDecoration } from "./cell-render-style";
 import { createSheetLayout } from "./sheet-layout";

@@ -4,10 +4,10 @@
  * Converts between DrawingPath (for editing) and PathCommand[] (for storage).
  */
 
-import type { Point, PathCommand, GeometryPath, CustomGeometry, Geometry } from "@oxen/pptx/domain";
-import type { Pixels } from "@oxen/ooxml/domain/units";
-import type { Bounds } from "@oxen/pptx/domain/types";
-import { px } from "@oxen/ooxml/domain/units";
+import type { Point, PathCommand, GeometryPath, CustomGeometry, Geometry } from "@oxen-office/pptx/domain";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Bounds } from "@oxen-office/pptx/domain/types";
+import { px } from "@oxen-office/ooxml/domain/units";
 import type { DrawingPath, PathAnchorPoint } from "../types";
 
 // =============================================================================

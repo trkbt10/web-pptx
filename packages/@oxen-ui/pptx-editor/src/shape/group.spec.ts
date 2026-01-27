@@ -3,8 +3,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type { SpShape, GrpShape, Shape, GroupTransform, Transform } from "@oxen/pptx/domain";
-import { px, deg } from "@oxen/ooxml/domain/units";
+import type { SpShape, GrpShape, Shape, GroupTransform, Transform } from "@oxen-office/pptx/domain";
+import { px, deg } from "@oxen-office/ooxml/domain/units";
 import {
   getScaleFactor,
   transformChildToSlideCoords,

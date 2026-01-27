@@ -4,14 +4,14 @@
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { parseXlsxWorkbook } from "@oxen/xlsx/parser";
-import { exportXlsx } from "@oxen/xlsx/exporter";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import type { XlsxWorkbook } from "@oxen/xlsx/domain/workbook";
+import { parseXlsxWorkbook } from "@oxen-office/xlsx/parser";
+import { exportXlsx } from "@oxen-office/xlsx/exporter";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import type { XlsxWorkbook } from "@oxen-office/xlsx/domain/workbook";
 import { getCellValue } from "@oxen-ui/xlsx-editor/cell/query";
 import { createInitialState, xlsxEditorReducer } from "@oxen-ui/xlsx-editor";
-import { createGetZipTextFileContentFromBytes } from "@oxen/files";
+import { createGetZipTextFileContentFromBytes } from "@oxen-office/ooxml/opc";
 
 function createAddress(col: number, row: number): CellAddress {
   return { col: colIdx(col), row: rowIdx(row), colAbsolute: false, rowAbsolute: false };

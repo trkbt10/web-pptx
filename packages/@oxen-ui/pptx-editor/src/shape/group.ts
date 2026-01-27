@@ -4,10 +4,10 @@
  * Functions for grouping and ungrouping shapes.
  */
 
-import type { Shape, GrpShape, GroupTransform, Transform } from "@oxen/pptx/domain";
-import type { Bounds, ShapeId } from "@oxen/pptx/domain/types";
-import { px, deg } from "@oxen/ooxml/domain/units";
-import { getShapeTransform } from "@oxen/pptx-render/svg";
+import type { Shape, GrpShape, GroupTransform, Transform } from "@oxen-office/pptx/domain";
+import type { Bounds, ShapeId } from "@oxen-office/pptx/domain/types";
+import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { getShapeTransform } from "@oxen-office/pptx-render/svg";
 import { getCombinedBounds } from "./bounds";
 import { generateShapeId } from "./mutation";
 import { hasShapeId } from "./identity";

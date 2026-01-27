@@ -5,9 +5,9 @@
  */
 
 import { useMemo, useCallback } from "react";
-import type { Slide, Shape } from "@oxen/pptx/domain";
-import type { ShapeId } from "@oxen/pptx/domain/types";
-import { px } from "@oxen/ooxml/domain/units";
+import type { Slide, Shape } from "@oxen-office/pptx/domain";
+import type { ShapeId } from "@oxen-office/pptx/domain/types";
+import { px } from "@oxen-office/ooxml/domain/units";
 import type { ContextMenuActions } from "../../slide/context-menu/SlideContextMenu";
 import type { SelectionState } from "../../context/slide/state";
 import type { PresentationEditorState } from "../../context/presentation/editor/types";

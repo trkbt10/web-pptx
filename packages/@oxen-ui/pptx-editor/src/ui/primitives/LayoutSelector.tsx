@@ -6,9 +6,9 @@
 
 import { type CSSProperties, useCallback, useState, useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { px } from "@oxen/ooxml/domain/units";
-import type { SlideSize, PresentationFile, Shape } from "@oxen/pptx/domain";
-import type { SlideLayoutOption } from "@oxen/pptx/app";
+import { px } from "@oxen-office/ooxml/domain/units";
+import type { SlideSize, PresentationFile, Shape } from "@oxen-office/pptx/domain";
+import type { SlideLayoutOption } from "@oxen-office/pptx/app";
 import { LayoutThumbnail, useLayoutThumbnails } from "../../thumbnail";
 import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "@oxen-ui/ui-components/design-tokens";
 

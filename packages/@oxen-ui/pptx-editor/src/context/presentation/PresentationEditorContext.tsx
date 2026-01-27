@@ -11,8 +11,8 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import type { Shape } from "@oxen/pptx/domain";
-import type { PresentationDocument } from "@oxen/pptx/app";
+import type { Shape } from "@oxen-office/pptx/domain";
+import type { PresentationDocument } from "@oxen-office/pptx/app";
 import type { PresentationEditorContextValue } from "./editor/types";
 import { presentationEditorReducer, createPresentationEditorState } from "./editor/reducer/reducer";
 import { findSlideById } from "./editor/slide";

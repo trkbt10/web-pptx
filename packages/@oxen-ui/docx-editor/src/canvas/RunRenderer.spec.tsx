@@ -6,8 +6,8 @@
 
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import type { DocxRun, DocxRunProperties } from "@oxen/docx/domain/run";
-import { halfPoints, twips } from "@oxen/docx/domain/types";
+import type { DocxRun, DocxRunProperties } from "@oxen-office/docx/domain/run";
+import { halfPoints, twips } from "@oxen-office/docx/domain/types";
 import { RunRenderer, RunContentRenderer, computeRunStyles } from "./RunRenderer";
 
 // =============================================================================

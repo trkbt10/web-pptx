@@ -4,7 +4,7 @@
 
 import { useCallback, type CSSProperties } from "react";
 import { Input } from "@oxen-ui/ui-components/primitives";
-import { px, type Pixels } from "@oxen/ooxml/domain/units";
+import { px, type Pixels } from "@oxen-office/ooxml/domain/units";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 
 export type PixelsEditorProps = EditorProps<Pixels> & {

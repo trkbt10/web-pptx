@@ -7,8 +7,8 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MixedTextBodyEditor } from "./MixedTextBodyEditor";
-import type { TextBody } from "@oxen/pptx/domain/text";
-import type { Points, Pixels } from "@oxen/ooxml/domain/units";
+import type { TextBody } from "@oxen-office/pptx/domain/text";
+import type { Points, Pixels } from "@oxen-office/ooxml/domain/units";
 
 // =============================================================================
 // Test Fixtures

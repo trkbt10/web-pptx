@@ -2,10 +2,10 @@
  * @file Cell mutation tests
  */
 
-import { colIdx, rowIdx, styleId } from "@oxen/xlsx/domain/types";
-import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
-import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
-import type { XlsxRow, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { colIdx, rowIdx, styleId } from "@oxen-office/xlsx/domain/types";
+import type { Cell, CellValue } from "@oxen-office/xlsx/domain/cell/types";
+import type { CellAddress, CellRange } from "@oxen-office/xlsx/domain/cell/address";
+import type { XlsxRow, XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
 import { getCell, getCellValue, hasCell } from "./query";
 import {
   clearCellContents,

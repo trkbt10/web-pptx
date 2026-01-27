@@ -10,9 +10,9 @@ import { Button } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
 import { PercentEditor } from "../primitives";
 import { ColorEditor } from "./ColorEditor";
-import type { Color } from "@oxen/ooxml/domain/color";
-import type { GradientStop } from "@oxen/ooxml/domain/fill";
-import { pct, type Percent } from "@oxen/ooxml/domain/units";
+import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { GradientStop } from "@oxen-office/ooxml/domain/fill";
+import { pct, type Percent } from "@oxen-office/ooxml/domain/units";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 
 export type GradientStopEditorProps = EditorProps<GradientStop> & {

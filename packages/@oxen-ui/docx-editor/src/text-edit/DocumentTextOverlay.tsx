@@ -7,15 +7,15 @@
 
 import type { ReactNode, CSSProperties, PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from "react";
 import { forwardRef, useMemo, useCallback } from "react";
-import type { Pixels } from "@oxen/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
 import type {
   LayoutResult,
   PagedLayoutResult,
   SelectionRect,
   CursorCoordinates,
   PositionedFloatingImage,
-} from "@oxen/text-layout";
-import { TextOverlay, CURSOR_ANIMATION_CSS } from "@oxen/text-layout";
+} from "@oxen-office/text-layout";
+import { TextOverlay, CURSOR_ANIMATION_CSS } from "@oxen-office/text-layout";
 import { colorTokens, editorLayoutTokens } from "@oxen-ui/ui-components/design-tokens";
 
 // =============================================================================

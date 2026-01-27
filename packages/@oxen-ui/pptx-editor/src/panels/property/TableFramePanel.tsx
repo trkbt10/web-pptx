@@ -4,8 +4,8 @@
  * Displays property editors for GraphicFrame elements containing tables.
  */
 
-import type { GraphicFrame } from "@oxen/pptx/domain/index";
-import type { Table } from "@oxen/pptx/domain/table/types";
+import type { GraphicFrame } from "@oxen-office/pptx/domain/index";
+import type { Table } from "@oxen-office/pptx/domain/table/types";
 import { Accordion } from "@oxen-ui/ui-components/layout";
 import {
   NonVisualPropertiesEditor,

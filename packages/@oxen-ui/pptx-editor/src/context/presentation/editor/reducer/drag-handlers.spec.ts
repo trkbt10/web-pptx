@@ -8,8 +8,8 @@
 /* eslint-disable no-restricted-syntax -- Test file uses let for sequential state updates */
 import { presentationEditorReducer, createPresentationEditorState } from "./reducer";
 import type { PresentationEditorState, CreationMode } from "../types";
-import type { Shape } from "@oxen/pptx/domain";
-import { px, deg } from "@oxen/ooxml/domain/units";
+import type { Shape } from "@oxen-office/pptx/domain";
+import { px, deg } from "@oxen-office/ooxml/domain/units";
 import { createShapeFromMode, getDefaultBoundsForMode } from "../../../../shape/factory";
 import { createTestDocument } from "./test-fixtures";
 

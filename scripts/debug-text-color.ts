@@ -2,10 +2,10 @@
  * Debug script for text color resolution
  */
 
-import { openPresentation, type PresentationFile } from "@oxen/pptx";
+import { openPresentation, type PresentationFile } from "@oxen-office/pptx";
 import { parseXml, getByPath, getChild, getChildren, isXmlElement } from "@oxen/xml";
-import { createSlideRenderContextFromWarp } from "@oxen/pptx/core/context/factory";
-import type { WarpObject, ZipFile } from "@oxen/pptx/core/types";
+import { createSlideRenderContextFromWarp } from "@oxen-office/pptx/core/context/factory";
+import type { WarpObject, ZipFile } from "@oxen-office/pptx/core/types";
 import { loadPptxFile as loadPptxBundle } from "./lib/pptx-loader";
 
 type FileCache = Map<string, { text: string; buffer: ArrayBuffer }>;

@@ -6,8 +6,8 @@
 
 import { render, fireEvent } from "@testing-library/react";
 import { useState } from "react";
-import type { GradientStop } from "@oxen/ooxml/domain/fill";
-import { pct } from "@oxen/ooxml/domain/units";
+import type { GradientStop } from "@oxen-office/ooxml/domain/fill";
+import { pct } from "@oxen-office/ooxml/domain/units";
 import { GradientStopsEditor } from "./GradientStopsEditor";
 
 function setRect(element: HTMLElement, rect: DOMRect): void {

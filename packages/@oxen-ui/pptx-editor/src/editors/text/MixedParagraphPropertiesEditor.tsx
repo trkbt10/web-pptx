@@ -10,10 +10,10 @@ import { Input, Select, Toggle } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { PixelsEditor } from "../primitives";
 import { LineSpacingEditor } from "./LineSpacingEditor";
-import type { ParagraphProperties, LineSpacing } from "@oxen/pptx/domain/text";
-import type { TextAlign } from "@oxen/pptx/domain/types";
+import type { ParagraphProperties, LineSpacing } from "@oxen-office/pptx/domain/text";
+import type { TextAlign } from "@oxen-office/pptx/domain/types";
 import type { SelectOption } from "@oxen-ui/ui-components/types";
-import { px, type Pixels } from "@oxen/ooxml/domain/units";
+import { px, type Pixels } from "@oxen-office/ooxml/domain/units";
 import type { MixedParagraphProperties, PropertyExtraction } from "./mixed-properties";
 import { getExtractionValue, isMixed } from "./mixed-properties";
 

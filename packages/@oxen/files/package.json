@@ -5,8 +5,7 @@
   "type": "module",
   "sideEffects": false,
   "dependencies": {
-    "@oxen/buffer": "workspace:*",
-    "@oxen/zip": "workspace:*"
+    "@oxen/buffer": "workspace:*"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",

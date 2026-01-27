@@ -4,9 +4,9 @@
  * Shared type definitions for text editing components.
  */
 
-import type { TextBody, RunProperties, ParagraphProperties } from "@oxen/pptx/domain";
-import type { ColorContext } from "@oxen/pptx/domain/color/context";
-import type { FontScheme } from "@oxen/pptx/domain/resolution";
+import type { TextBody, RunProperties, ParagraphProperties } from "@oxen-office/pptx/domain";
+import type { ColorContext } from "@oxen-office/pptx/domain/color/context";
+import type { FontScheme } from "@oxen-office/pptx/domain/resolution";
 import type { TextEditBounds } from "../input-support/state";
 import type {
   CursorCoordinates,

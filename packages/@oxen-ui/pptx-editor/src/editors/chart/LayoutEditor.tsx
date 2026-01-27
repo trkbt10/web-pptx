@@ -9,7 +9,7 @@
 import { useCallback, type CSSProperties } from "react";
 import { Input, Select } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
-import type { Layout, ManualLayout } from "@oxen/pptx/domain/chart";
+import type { Layout, ManualLayout } from "@oxen-office/pptx/domain/chart";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
 
 export type LayoutEditorProps = EditorProps<Layout | undefined> & {

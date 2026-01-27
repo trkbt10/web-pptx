@@ -10,11 +10,11 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type { PresentationFile } from "@oxen/pptx";
-import { openPresentation, LIBREOFFICE_RENDER_OPTIONS } from "@oxen/pptx";
+import type { PresentationFile } from "@oxen-office/pptx";
+import { openPresentation, LIBREOFFICE_RENDER_OPTIONS } from "@oxen-office/pptx";
 import { compareSvgToSnapshot, hasSnapshot, listSnapshots, type CompareOptions } from "./compare";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
-import { renderSlideToSvg } from "@oxen/pptx-render/svg";
+import { renderSlideToSvg } from "@oxen-office/pptx-render/svg";
 
 // Note: loadPptxFile is now imported from scripts/lib/pptx-loader.ts
 // This shared utility avoids duplicating ZIP loading logic across tests

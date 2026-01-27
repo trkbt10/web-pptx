@@ -6,9 +6,9 @@
 
 import { render, screen } from "@testing-library/react";
 import { fireEvent } from "@testing-library/react";
-import type { XlsxWorkbook, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import type { XlsxWorkbook, XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen-office/xlsx/domain/style/types";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
 import { createSheetLayout } from "../../selectors/sheet-layout";
 import type { XlsxEditorAction } from "../../context/workbook/editor/types";
 import { XlsxSheetGridCellViewport } from "./cell-viewport";

@@ -4,7 +4,6 @@
  * Types for PDF document structure and import options.
  */
 
-import type { Pixels } from "@oxen/ooxml/domain/units";
 import type { PdfImage } from "../image";
 import type { PdfPath } from "../path";
 import type { PdfText } from "../text";
@@ -95,29 +94,6 @@ export type PdfDocument = {
    */
   readonly embeddedFonts?: readonly PdfEmbeddedFont[];
 };
-
-// =============================================================================
-// Import Options
-// =============================================================================
-
-export type PdfImportOptions = {
-  /** Pages to import (1-based). Default: all pages */
-  readonly pages?: readonly number[];
-  /** Scale factor for coordinate conversion. Default: 1 */
-  readonly scale?: number;
-  /** Target slide width in pixels */
-  readonly slideWidth: Pixels;
-  /** Target slide height in pixels */
-  readonly slideHeight: Pixels;
-  /** Extract text as editable text boxes. Default: true */
-  readonly extractEditableText?: boolean;
-  /** Minimum path complexity to import (filter noise). Default: 0 */
-  readonly minPathComplexity?: number;
-};
-
-// =============================================================================
-// Units
-// =============================================================================
 
 /**
  * PDF coordinate system unit conversions.

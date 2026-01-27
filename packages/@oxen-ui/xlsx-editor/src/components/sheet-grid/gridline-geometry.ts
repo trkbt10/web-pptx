@@ -5,7 +5,7 @@
  * internal gridlines inside merged ranges to match typical spreadsheet behavior.
  */
 
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
 import { createSheetLayout } from "../../selectors/sheet-layout";
 import { findMergeForCell, type NormalizedMergeRange } from "../../sheet/merge-range";
 

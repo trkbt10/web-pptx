@@ -9,7 +9,7 @@ import { Button, Select } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
 import { BulletStyleEditor, createDefaultBulletStyle } from "./BulletStyleEditor";
 import { RunPropertiesEditor, createDefaultRunProperties } from "./RunPropertiesEditor";
-import type { ParagraphProperties, BulletStyle, RunProperties } from "@oxen/pptx/domain/text";
+import type { ParagraphProperties, BulletStyle, RunProperties } from "@oxen-office/pptx/domain/text";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
 import { MixedParagraphPropertiesEditor } from "./MixedParagraphPropertiesEditor";
 import { extractMixedParagraphProperties, mergeParagraphProperties } from "./mixed-properties";

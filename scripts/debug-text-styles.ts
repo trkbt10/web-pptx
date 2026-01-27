@@ -2,7 +2,7 @@
  * Debug script for master text styles
  */
 
-import { openPresentation } from "@oxen/pptx";
+import { openPresentation } from "@oxen-office/pptx";
 import { parseXml, getByPath, getChild } from "@oxen/xml";
 import { loadPptxFile } from "./lib/pptx-loader";
 

@@ -6,16 +6,16 @@
  */
 
 import type { ReactNode, CSSProperties } from "react";
-import type { Pixels } from "@oxen/ooxml/domain/units";
-import { px } from "@oxen/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/ooxml/domain/units";
 import type {
   LayoutResult,
   PageLayout,
   HeaderFooterLayout,
   SelectionRect,
   CursorCoordinates,
-} from "@oxen/text-layout";
-import { TextOverlay, CURSOR_ANIMATION_CSS } from "@oxen/text-layout";
+} from "@oxen-office/text-layout";
+import { TextOverlay, CURSOR_ANIMATION_CSS } from "@oxen-office/text-layout";
 
 // =============================================================================
 // Types

@@ -5,8 +5,8 @@
  * including edge cases with missing or undefined properties.
  */
 
-import type { PresetGeometry, CustomGeometry, Geometry, GeometryPath, ConnectionSite } from "@oxen/pptx/domain/shape";
-import { px, deg } from "@oxen/ooxml/domain/units";
+import type { PresetGeometry, CustomGeometry, Geometry, GeometryPath, ConnectionSite } from "@oxen-office/pptx/domain/shape";
+import { px, deg } from "@oxen-office/ooxml/domain/units";
 
 // =============================================================================
 // renderPresetEditor Tests

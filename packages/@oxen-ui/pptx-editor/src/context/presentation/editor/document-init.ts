@@ -4,11 +4,11 @@
  * Functions to create PresentationDocument instances.
  */
 
-import type { Slide, Presentation } from "@oxen/pptx/domain";
-import type { Pixels } from "@oxen/ooxml/domain/units";
-import type { ColorContext } from "@oxen/pptx/domain/color/context";
-import type { ResourceResolver } from "@oxen/pptx/domain/resource-resolver";
-import type { PresentationDocument, SlideWithId } from "@oxen/pptx/app";
+import type { Slide, Presentation } from "@oxen-office/pptx/domain";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { ColorContext } from "@oxen-office/pptx/domain/color/context";
+import type { ResourceResolver } from "@oxen-office/pptx/domain/resource-resolver";
+import type { PresentationDocument, SlideWithId } from "@oxen-office/pptx/app";
 
 // =============================================================================
 // Default Values

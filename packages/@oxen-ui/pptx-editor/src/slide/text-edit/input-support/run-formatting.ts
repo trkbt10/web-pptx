@@ -12,7 +12,7 @@ import type {
   RunProperties,
   ParagraphProperties,
   RegularRun,
-} from "@oxen/pptx/domain/text";
+} from "@oxen-office/pptx/domain/text";
 import type { TextSelection, CursorPosition } from "./cursor";
 import { normalizeSelection, isSamePosition } from "./cursor";
 import { mergeRunProperties, areRunPropertiesEqual } from "../../../editors/text/mixed-properties";

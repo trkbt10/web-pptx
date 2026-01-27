@@ -15,7 +15,7 @@ import { Accordion, FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { PercentEditor, DegreesEditor } from "../primitives";
 import { DataLabelsEditor, createDefaultDataLabels } from "./DataLabelsEditor";
 import { ChartShapePropertiesEditor } from "./ChartShapePropertiesEditor";
-import { pct, deg } from "@oxen/ooxml/domain/units";
+import { pct, deg } from "@oxen-office/ooxml/domain/units";
 import type {
   ChartSeries,
   BarChartSeries,
@@ -39,7 +39,7 @@ import type {
   UpDownBars,
   SeriesText,
   BandFormat,
-} from "@oxen/pptx/domain/chart";
+} from "@oxen-office/pptx/domain/chart";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
 
 export type ChartSeriesEditorProps = EditorProps<ChartSeries> & {

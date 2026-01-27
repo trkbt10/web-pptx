@@ -11,7 +11,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { TextPropertyPanel } from "./TextPropertyPanel";
 import { TextEditContextProvider } from "../../context/slide/TextEditContext";
 import type { TextEditContextValue } from "../../context/slide/TextEditContext";
-import type { TextBody } from "@oxen/pptx/domain/text";
+import type { TextBody } from "@oxen-office/pptx/domain/text";
 import type { TextEditState } from "../../slide/text-edit";
 
 // =============================================================================

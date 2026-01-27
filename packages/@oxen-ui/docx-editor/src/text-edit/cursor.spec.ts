@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from "vitest";
-import type { DocxDocument, DocxBlockContent } from "@oxen/docx/domain/document";
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
+import type { DocxDocument, DocxBlockContent } from "@oxen-office/docx/domain/document";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
 import {
   offsetToDocxCursorPosition,
   docxCursorPositionToOffset,

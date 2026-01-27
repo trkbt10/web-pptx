@@ -8,7 +8,7 @@
  * - A leading "=" indicates a formula *only if* it has a non-empty expression.
  */
 
-import type { CellValue } from "@oxen/xlsx/domain/cell/types";
+import type { CellValue } from "@oxen-office/xlsx/domain/cell/types";
 
 export type ParseCellUserInputResult =
   | { readonly type: "value"; readonly value: CellValue }

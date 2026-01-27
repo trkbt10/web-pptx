@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { px, deg } from "@oxen/ooxml/domain/units";
+import { px, deg } from "@oxen-office/ooxml/domain/units";
 import {
   createIdleDragState,
   isDragIdle,

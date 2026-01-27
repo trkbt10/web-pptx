@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { px } from "@oxen/ooxml/domain/units";
+import { px } from "@oxen-office/ooxml/domain/units";
 import {
   alignHorizontal,
   alignVertical,

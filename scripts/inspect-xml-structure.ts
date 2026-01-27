@@ -4,7 +4,7 @@
  * Usage: bun run scripts/inspect-xml-structure.ts [pptx-file] [slide-number]
  * Default: fixtures/poi-test-data/test-data/slideshow/2411-Performance_Up.pptx slide 1
  */
-import { openPresentation } from "@oxen/pptx";
+import { openPresentation } from "@oxen-office/pptx";
 import { isXmlElement, getChild, getChildren } from "@oxen/xml";
 import { loadPptxFile } from "./lib/pptx-loader";
 

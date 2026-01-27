@@ -12,8 +12,8 @@
  */
 
 import { useMemo, type CSSProperties } from "react";
-import type { GradientFill } from "@oxen/ooxml/domain/fill";
-import type { Line, LineEnd } from "@oxen/pptx/domain/color/types";
+import type { GradientFill } from "@oxen-office/ooxml/domain/fill";
+import type { Line, LineEnd } from "@oxen-office/pptx/domain/color/types";
 
 export type LinePreviewProps = {
   /** Line properties to display */

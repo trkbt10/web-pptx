@@ -3,10 +3,10 @@
  */
 
 import * as fs from "node:fs";
-import type { PresentationFile } from "@oxen/pptx";
-import { openPresentation } from "@oxen/pptx";
+import type { PresentationFile } from "@oxen-office/pptx";
+import { openPresentation } from "@oxen-office/pptx";
 import { loadPptxFile } from "../scripts/lib/pptx-loader";
-import { renderSlideToSvg } from "@oxen/pptx-render/svg";
+import { renderSlideToSvg } from "@oxen-office/pptx-render/svg";
 
 describe("Background integration tests", () => {
   describe("aptia.pptx - background from slideMaster", () => {

@@ -16,7 +16,7 @@ import {
 } from "../../domain";
 import type { FontMappings } from "../../domain/font";
 import { clamp01, cmykToRgb, grayToRgb, toByte } from "../../domain/color";
-import { convertToRgba } from "../../converter/pixel-converter";
+import { convertToRgba } from "../../image/pixel-converter";
 import {
   calculateTextDisplacement,
   createGfxOpsFromStack,

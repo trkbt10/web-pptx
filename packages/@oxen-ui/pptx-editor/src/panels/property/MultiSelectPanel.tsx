@@ -7,11 +7,11 @@
 
 import { useMemo, useCallback, type CSSProperties } from "react";
 import { colorTokens } from "@oxen-ui/ui-components/design-tokens";
-import type { Shape } from "@oxen/pptx/domain/index";
-import type { Transform } from "@oxen/pptx/domain/types";
-import type { Fill, Line } from "@oxen/pptx/domain/color/types";
-import { px, deg } from "@oxen/ooxml/domain/units";
-import { type ShapeId } from "@oxen/pptx/domain/types";
+import type { Shape } from "@oxen-office/pptx/domain/index";
+import type { Transform } from "@oxen-office/pptx/domain/types";
+import type { Fill, Line } from "@oxen-office/pptx/domain/color/types";
+import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { type ShapeId } from "@oxen-office/pptx/domain/types";
 import { Accordion } from "@oxen-ui/ui-components/layout";
 import { Input } from "@oxen-ui/ui-components/primitives";
 import { FillEditor } from "../../editors/color/FillEditor";

@@ -8,7 +8,7 @@
  */
 
 import { useCallback, useMemo } from "react";
-import type { Shape } from "@oxen/pptx/domain";
+import type { Shape } from "@oxen-office/pptx/domain";
 import { ContextMenu, type MenuEntry } from "../../ui/context-menu";
 import { getCommonMenuItems } from "./definitions/common";
 import { getZOrderMenuItems } from "./definitions/z-order";

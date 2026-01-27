@@ -21,8 +21,8 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
-import type { Slide, Shape, GrpShape } from "@oxen/pptx/domain/index";
-import type { ShapeId } from "@oxen/pptx/domain/types";
+import type { Slide, Shape, GrpShape } from "@oxen-office/pptx/domain/index";
+import type { ShapeId } from "@oxen-office/pptx/domain/types";
 import type { SelectionState } from "../context/slide/state";
 import { getShapeId, hasShapeId } from "../shape/identity";
 import { findShapeById, findShapeByIdWithParents, isTopLevelShape } from "../shape/query";

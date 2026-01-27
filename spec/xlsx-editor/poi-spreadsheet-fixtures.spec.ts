@@ -9,12 +9,12 @@
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { parseXlsxWorkbook, type XlsxParseOptions } from "@oxen/xlsx/parser";
-import { createFormulaEvaluator } from "@oxen/xlsx/formula/evaluator";
-import { colIdx, rowIdx, styleId } from "@oxen/xlsx/domain/types";
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import type { Cell } from "@oxen/xlsx/domain/cell/types";
-import type { CellValue } from "@oxen/xlsx/domain/cell/types";
+import { parseXlsxWorkbook, type XlsxParseOptions } from "@oxen-office/xlsx/parser";
+import { createFormulaEvaluator } from "@oxen-office/xlsx/formula/evaluator";
+import { colIdx, rowIdx, styleId } from "@oxen-office/xlsx/domain/types";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import type { Cell } from "@oxen-office/xlsx/domain/cell/types";
+import type { CellValue } from "@oxen-office/xlsx/domain/cell/types";
 import { getCell } from "@oxen-ui/xlsx-editor/cell/query";
 import { resolveCellBorderDecoration, resolveCellRenderStyle } from "@oxen-ui/xlsx-editor/selectors/cell-render-style";
 import { resolveCellStyleDetails } from "@oxen-ui/xlsx-editor/selectors/cell-style-details";
@@ -24,7 +24,7 @@ import { xlsxColorToCss } from "@oxen-ui/xlsx-editor/selectors/xlsx-color";
 import { resolveCellTableStyleDifferentialFormat } from "@oxen-ui/xlsx-editor/selectors/table-style";
 import { createSheetLayout } from "@oxen-ui/xlsx-editor/selectors/sheet-layout";
 import { buildBorderOverlayLines } from "@oxen-ui/xlsx-editor/selectors/border-overlay";
-import { createGetZipTextFileContentFromBytes } from "@oxen/files";
+import { createGetZipTextFileContentFromBytes } from "@oxen-office/ooxml/opc";
 
 function fixturePath(name: string): string {
   return path.join(process.cwd(), "fixtures/poi-test-data/test-data/spreadsheet", name);

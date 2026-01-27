@@ -2,10 +2,10 @@
  * @file Merge cell mutation tests
  */
 
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
-import type { Cell } from "@oxen/xlsx/domain/cell/types";
-import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
-import type { XlsxRow, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
+import type { Cell } from "@oxen-office/xlsx/domain/cell/types";
+import type { CellAddress, CellRange } from "@oxen-office/xlsx/domain/cell/address";
+import type { XlsxRow, XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
 import { getCell } from "../cell/query";
 import { mergeCells, unmergeCells } from "./merge-mutation";
 

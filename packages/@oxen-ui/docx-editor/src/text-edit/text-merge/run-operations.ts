@@ -4,8 +4,8 @@
  * Utilities for splitting and merging DocxRun structures.
  */
 
-import type { DocxParagraphContent } from "@oxen/docx/domain/paragraph";
-import type { DocxRun } from "@oxen/docx/domain/run";
+import type { DocxParagraphContent } from "@oxen-office/docx/domain/paragraph";
+import type { DocxRun } from "@oxen-office/docx/domain/run";
 import { getRunPlainText } from "./run-plain-text";
 import { areRunPropertiesEqual } from "./run-properties";
 

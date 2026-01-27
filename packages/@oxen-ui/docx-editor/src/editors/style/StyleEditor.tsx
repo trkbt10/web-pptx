@@ -6,8 +6,8 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import type { DocxStyle, DocxStyleType } from "@oxen/docx/domain/styles";
-import type { DocxStyleId } from "@oxen/docx/domain/types";
+import type { DocxStyle, DocxStyleType } from "@oxen-office/docx/domain/styles";
+import type { DocxStyleId } from "@oxen-office/docx/domain/types";
 import type { EditorProps } from "../../types";
 import { Input, Select, Toggle } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";

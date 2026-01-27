@@ -4,9 +4,9 @@
  * Tests for chart data layout detection from worksheet structure.
  */
 
-import type { XlsxWorksheet, XlsxRow } from "@oxen/xlsx/domain/workbook";
-import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import type { XlsxWorksheet, XlsxRow } from "@oxen-office/xlsx/domain/workbook";
+import type { Cell, CellValue } from "@oxen-office/xlsx/domain/cell/types";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
 import {
   detectChartDataLayout,
   countCategories,

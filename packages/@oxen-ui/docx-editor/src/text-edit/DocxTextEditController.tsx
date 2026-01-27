@@ -17,9 +17,9 @@ import {
   type ChangeEvent,
   type KeyboardEvent,
 } from "react";
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
-import type { DocxRunProperties } from "@oxen/docx/domain/run";
-import type { DocxStyles } from "@oxen/docx/domain/styles";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
+import type { DocxRunProperties } from "@oxen-office/docx/domain/run";
+import type { DocxStyles } from "@oxen-office/docx/domain/styles";
 import type { ElementId } from "../canvas/DocumentCanvas";
 import {
   type DocxCursorPosition,

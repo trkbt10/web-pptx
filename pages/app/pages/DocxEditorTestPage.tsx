@@ -20,14 +20,14 @@ import {
   createDefaultTableCellProperties,
   ContinuousEditor,
 } from "@oxen-ui/docx-editor";
-import type { DocxRunProperties } from "@oxen/docx/domain/run";
-import type { DocxParagraphProperties, DocxParagraph } from "@oxen/docx/domain/paragraph";
-import type { DocxStyle } from "@oxen/docx/domain/styles";
-import type { DocxLevel, DocxNumbering, DocxAbstractNum, DocxNum } from "@oxen/docx/domain/numbering";
-import { docxAbstractNumId, docxNumId, docxIlvl } from "@oxen/docx/domain/types";
-import type { DocxTableProperties, DocxTableCellProperties } from "@oxen/docx/domain/table";
+import type { DocxRunProperties } from "@oxen-office/docx/domain/run";
+import type { DocxParagraphProperties, DocxParagraph } from "@oxen-office/docx/domain/paragraph";
+import type { DocxStyle } from "@oxen-office/docx/domain/styles";
+import type { DocxLevel, DocxNumbering, DocxAbstractNum, DocxNum } from "@oxen-office/docx/domain/numbering";
+import { docxAbstractNumId, docxNumId, docxIlvl } from "@oxen-office/docx/domain/types";
+import type { DocxTableProperties, DocxTableCellProperties } from "@oxen-office/docx/domain/table";
 import { Button } from "@oxen-ui/ui-components/primitives";
-import { px } from "@oxen/ooxml/domain/units";
+import { px } from "@oxen-office/ooxml/domain/units";
 
 type DocxEditorTestPageProps = {
   readonly onBack: () => void;

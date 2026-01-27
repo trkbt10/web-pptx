@@ -4,9 +4,9 @@
  * Core types for pen tool, pencil tool, and path editing functionality.
  */
 
-import type { Pixels } from "@oxen/ooxml/domain/units";
-import type { ShapeId } from "@oxen/pptx/domain/types";
-import type { Point } from "@oxen/pptx/domain";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { ShapeId } from "@oxen-office/pptx/domain/types";
+import type { Point } from "@oxen-office/pptx/domain";
 
 // =============================================================================
 // Anchor Point Types

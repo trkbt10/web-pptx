@@ -8,11 +8,11 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import type { Slide, Shape } from "@oxen/pptx/domain/index";
-import type { Background } from "@oxen/pptx/domain/slide/types";
-import type { SlideLayoutAttributes } from "@oxen/pptx/parser/slide/layout-parser";
-import type { ShapeId } from "@oxen/pptx/domain/types";
-import type { SlideLayoutOption } from "@oxen/pptx/app";
+import type { Slide, Shape } from "@oxen-office/pptx/domain/index";
+import type { Background } from "@oxen-office/pptx/domain/slide/types";
+import type { SlideLayoutAttributes } from "@oxen-office/pptx/parser/slide/layout-parser";
+import type { ShapeId } from "@oxen-office/pptx/domain/types";
+import type { SlideLayoutOption } from "@oxen-office/pptx/app";
 import { SlidePropertiesPanel } from "./property/SlidePropertiesPanel";
 import { MultiSelectPanel } from "./property/MultiSelectPanel";
 import { SpShapePanel } from "./property/SpShapePanel";

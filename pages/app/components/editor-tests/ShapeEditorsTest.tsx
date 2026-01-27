@@ -15,8 +15,8 @@ import {
   createDefaultGeometry,
   createDefaultShapeProperties,
 } from "@oxen-ui/pptx-editor";
-import type { NonVisualProperties, ShapeProperties, Geometry } from "@oxen/pptx/domain/shape";
-import type { Effects } from "@oxen/pptx/domain";
+import type { NonVisualProperties, ShapeProperties, Geometry } from "@oxen-office/pptx/domain/shape";
+import type { Effects } from "@oxen-office/pptx/domain";
 
 const cardStyle: CSSProperties = {
   backgroundColor: "var(--bg-secondary)",

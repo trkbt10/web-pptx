@@ -6,9 +6,9 @@
 
 import { useMemo, type CSSProperties } from "react";
 import { VirtualScroll } from "@oxen-ui/ui-components";
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
-import { createFormulaEvaluator } from "@oxen/xlsx/formula/evaluator";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
+import { createFormulaEvaluator } from "@oxen-office/xlsx/formula/evaluator";
 import { useXlsxWorkbookEditor } from "../context/workbook/XlsxWorkbookEditorContext";
 import { createSheetLayout } from "../selectors/sheet-layout";
 import { XlsxSheetGridLayers } from "./sheet-grid/sheet-grid-layers";

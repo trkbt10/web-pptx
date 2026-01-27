@@ -4,8 +4,8 @@
  * Query and mutation functions for slides within a presentation document.
  */
 
-import type { Slide } from "@oxen/pptx/domain";
-import type { PresentationDocument, SlideWithId, SlideId } from "@oxen/pptx/app";
+import type { Slide } from "@oxen-office/pptx/domain";
+import type { PresentationDocument, SlideWithId, SlideId } from "@oxen-office/pptx/app";
 
 // =============================================================================
 // ID Generation

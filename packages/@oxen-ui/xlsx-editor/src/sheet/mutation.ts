@@ -4,7 +4,7 @@
  * Operations for adding, deleting, renaming, and reordering sheets.
  */
 
-import type { XlsxWorkbook, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import type { XlsxWorkbook, XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
 
 function assertNonEmptyString(value: string, label: string): void {
   if (value.trim().length === 0) {

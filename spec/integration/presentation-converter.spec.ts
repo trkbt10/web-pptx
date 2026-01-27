@@ -11,13 +11,13 @@ import { fileURLToPath } from "node:url";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
 
 // Import directly from src instead of using @lib alias
-import { openPresentation } from "@oxen/pptx";
-import { parseColorScheme, parseFontScheme, parseColorMap } from "@oxen/pptx/parser/drawing-ml/index";
+import { openPresentation } from "@oxen-office/pptx";
+import { parseColorScheme, parseFontScheme, parseColorMap } from "@oxen-office/pptx/parser/drawing-ml/index";
 import { getByPath } from "@oxen/xml";
-import { getMimeTypeFromPath } from "@oxen/pptx/opc/utils";
-import type { ColorContext, ColorScheme, ColorMap } from "@oxen/pptx/domain/color/context";
-import type { FontScheme } from "@oxen/pptx/domain/resolution";
-import type { ResourceResolver } from "@oxen/pptx/domain/resource-resolver";
+import { getMimeTypeFromPath } from "@oxen-office/pptx/opc/utils";
+import type { ColorContext, ColorScheme, ColorMap } from "@oxen-office/pptx/domain/color/context";
+import type { FontScheme } from "@oxen-office/pptx/domain/resolution";
+import type { ResourceResolver } from "@oxen-office/pptx/domain/resource-resolver";
 
 // Fixture path
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

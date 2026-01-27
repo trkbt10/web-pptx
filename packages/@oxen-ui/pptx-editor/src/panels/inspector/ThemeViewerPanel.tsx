@@ -6,8 +6,8 @@
  */
 
 import type { CSSProperties } from "react";
-import type { ColorContext, ColorScheme } from "@oxen/pptx/domain/color/context";
-import type { FontScheme } from "@oxen/pptx/domain/resolution";
+import type { ColorContext, ColorScheme } from "@oxen-office/pptx/domain/color/context";
+import type { FontScheme } from "@oxen-office/pptx/domain/resolution";
 import { InspectorSection, Accordion } from "@oxen-ui/ui-components/layout";
 import { colorTokens, fontTokens, spacingTokens } from "@oxen-ui/ui-components/design-tokens";
 

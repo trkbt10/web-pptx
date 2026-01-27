@@ -7,7 +7,7 @@
 
 import { Input, Toggle } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
-import type { Hyperlink } from "@oxen/pptx/domain/types";
+import type { Hyperlink } from "@oxen-office/pptx/domain/types";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 
 export type HyperlinkEditorProps = EditorProps<Hyperlink | undefined> & {

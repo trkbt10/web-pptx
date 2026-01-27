@@ -11,10 +11,10 @@ import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
 import { FillEditor, createNoFill } from "../color/FillEditor";
 import { Bevel3dEditor, createDefaultBevel3d } from "./Bevel3dEditor";
-import { px } from "@oxen/ooxml/domain/units";
-import type { PresetMaterialType } from "@oxen/pptx/domain/types";
-import type { Shape3d } from "@oxen/pptx/domain";
-import type { Fill } from "@oxen/pptx/domain/color/types";
+import { px } from "@oxen-office/ooxml/domain/units";
+import type { PresetMaterialType } from "@oxen-office/pptx/domain/types";
+import type { Shape3d } from "@oxen-office/pptx/domain";
+import type { Fill } from "@oxen-office/pptx/domain/color/types";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
 
 export type Shape3dEditorProps = EditorProps<Shape3d>;

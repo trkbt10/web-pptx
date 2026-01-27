@@ -2,21 +2,21 @@
 
 import { render, fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { px } from "@oxen/ooxml/domain/units";
-import { createEmptyResourceResolver } from "@oxen/pptx/domain/resource-resolver";
-import type { PresentationDocument } from "@oxen/pptx/app";
-import type { PdfImportOptions, PdfImportResult } from "@oxen/pdf/importer/pdf-importer";
+import { px } from "@oxen-office/ooxml/domain/units";
+import { createEmptyResourceResolver } from "@oxen-office/pptx/domain/resource-resolver";
+import type { PresentationDocument } from "@oxen-office/pptx/app";
+import type { PdfImportOptions, PdfImportResult } from "@oxen-office/pdf-to-pptx/importer/pdf-importer";
 import { FileUploadPage } from "./FileUploadPage";
 
-vi.mock("@oxen/pdf/importer/pdf-importer", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@oxen/pdf/importer/pdf-importer")>();
+vi.mock("@oxen-office/pdf-to-pptx/importer/pdf-importer", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@oxen-office/pdf-to-pptx/importer/pdf-importer")>();
   return {
     ...actual,
     importPdfFromFile: vi.fn(),
   };
 });
 
-import { PdfImportError, importPdfFromFile } from "@oxen/pdf/importer/pdf-importer";
+import { PdfImportError, importPdfFromFile } from "@oxen-office/pdf-to-pptx/importer/pdf-importer";
 
 function createDocumentFixture(): PresentationDocument {
   return {

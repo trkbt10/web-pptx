@@ -5,8 +5,8 @@
  * including edge cases with empty tables or incomplete data.
  */
 
-import type { Table, TableRow, TableCell } from "@oxen/pptx/domain/table/types";
-import { px } from "@oxen/ooxml/domain/units";
+import type { Table, TableRow, TableCell } from "@oxen-office/pptx/domain/table/types";
+import { px } from "@oxen-office/ooxml/domain/units";
 
 // =============================================================================
 // Helper functions

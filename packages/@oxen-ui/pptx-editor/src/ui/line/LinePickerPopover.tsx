@@ -9,7 +9,7 @@ import { type CSSProperties, type ReactNode } from "react";
 import { Popover } from "@oxen-ui/ui-components/primitives";
 import { LineSwatch, type LineSwatchSize } from "./LineSwatch";
 import { LineEditor } from "./LineEditor";
-import type { Line } from "@oxen/pptx/domain/color/types";
+import type { Line } from "@oxen-office/pptx/domain/color/types";
 
 export type LinePickerPopoverProps = {
   /** Current line value */

@@ -1,9 +1,9 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, mock } from "bun:test";
 import { JSDOM } from "jsdom";
-import { px } from "@oxen/ooxml/domain/units";
-import { createEmptyResourceResolver } from "@oxen/pptx/domain/resource-resolver";
-import type { PresentationDocument } from "@oxen/pptx/app";
-import type { PdfImportOptions, PdfImportResult } from "@oxen/pdf/importer/pdf-importer";
+import { px } from "@oxen-office/ooxml/domain/units";
+import { createEmptyResourceResolver } from "@oxen-office/pptx/domain/resource-resolver";
+import type { PresentationDocument } from "@oxen-office/pptx/app";
+import type { PdfImportOptions, PdfImportResult } from "@oxen-office/pdf-to-pptx/importer/pdf-importer";
 
 const importPdfFromFileMock = mock(async () => {
   throw new Error("importPdfFromFileMock not configured");
@@ -13,7 +13,7 @@ const importPdfFromUrlMock = mock(async () => {
   throw new Error("importPdfFromUrlMock not configured");
 });
 
-mock.module("@oxen/pdf/importer/pdf-importer", () => {
+mock.module("@oxen-office/pdf-to-pptx/importer/pdf-importer", () => {
   class PdfImportError extends Error {
     constructor(
       message: string,
@@ -37,7 +37,7 @@ mock.module("@oxen/pdf/importer/pdf-importer", () => {
   };
 });
 
-import { PdfImportError } from "@oxen/pdf/importer/pdf-importer";
+import { PdfImportError } from "@oxen-office/pdf-to-pptx/importer/pdf-importer";
 import { usePdfImport } from "./usePdfImport";
 
 let cleanup: (() => void) | undefined;

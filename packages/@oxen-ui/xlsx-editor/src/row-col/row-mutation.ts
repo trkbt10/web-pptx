@@ -4,8 +4,8 @@
  * Operations for inserting, deleting, resizing, and hiding rows.
  */
 
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import { rowIdx, type RowIndex } from "@oxen/xlsx/domain/types";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import { rowIdx, type RowIndex } from "@oxen-office/xlsx/domain/types";
 import {
   assertPositiveInteger,
   assertValidRowIndex,

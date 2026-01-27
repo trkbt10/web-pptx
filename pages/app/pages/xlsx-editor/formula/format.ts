@@ -4,8 +4,8 @@
  * Small UI-only utilities for the xlsx formula catalog pages.
  */
 
-import type { FormulaScalar } from "@oxen/xlsx/formula/types";
-import { isFormulaError } from "@oxen/xlsx/formula/types";
+import type { FormulaScalar } from "@oxen-office/xlsx/formula/types";
+import { isFormulaError } from "@oxen-office/xlsx/formula/types";
 
 /**
  * Format a formula evaluator result into a human-readable string for UI display.

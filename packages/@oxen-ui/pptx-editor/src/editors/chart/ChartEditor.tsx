@@ -24,7 +24,7 @@ import {
 import { ChartTitleEditor } from "./ChartTitleEditor";
 import { ChartShapePropertiesEditor } from "./ChartShapePropertiesEditor";
 import { LayoutEditor } from "./LayoutEditor";
-import { pct, deg } from "@oxen/ooxml/domain/units";
+import { pct, deg } from "@oxen-office/ooxml/domain/units";
 import type {
   Chart,
   ChartTitle,
@@ -47,8 +47,8 @@ import type {
   PivotSource,
   PictureOptions,
   PictureFormat,
-} from "@oxen/pptx/domain/chart";
-import type { TextBody } from "@oxen/pptx/domain/text";
+} from "@oxen-office/pptx/domain/chart";
+import type { TextBody } from "@oxen-office/pptx/domain/text";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
 import { TextBodyEditor, createDefaultTextBody } from "../text";
 

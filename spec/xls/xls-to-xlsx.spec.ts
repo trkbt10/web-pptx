@@ -2,11 +2,11 @@
  * @file XLS-to-XLSX end-to-end conversion tests
  */
 
-import { parseXls } from "@oxen/xls";
-import { CFB_SIGNATURE, ENDOFCHAIN, FATSECT, FREESECT, NOSTREAM } from "@oxen/cfb";
-import { BIFF_RECORD_TYPES } from "@oxen/xls/biff/record-types";
-import { exportXlsx } from "@oxen/xlsx/exporter";
-import { parseXlsxWorkbook } from "@oxen/xlsx/parser";
+import { parseXls } from "@oxen-office/xls";
+import { CFB_SIGNATURE, ENDOFCHAIN, FATSECT, FREESECT, NOSTREAM } from "@oxen-office/cfb";
+import { BIFF_RECORD_TYPES } from "@oxen-office/xls/biff/record-types";
+import { exportXlsx } from "@oxen-office/xlsx/exporter";
+import { parseXlsxWorkbook } from "@oxen-office/xlsx/parser";
 import { loadZipPackage } from "@oxen/zip";
 
 function u16le(view: DataView, offset: number, v: number): void {

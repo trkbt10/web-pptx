@@ -4,10 +4,10 @@
  * Provides an in-memory workbook used by the formula catalog pages.
  */
 
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
-import type { XlsxWorkbook } from "@oxen/xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
+import type { XlsxWorkbook } from "@oxen-office/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen-office/xlsx/domain/style/types";
 
 /**
  * Default evaluation origin (A1) used by the formula catalog page.

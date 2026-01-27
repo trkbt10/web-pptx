@@ -4,8 +4,8 @@
  * Tests for ECMA-376 line/stroke styles.
  */
 
-import type { Line, LineCap, DashStyle } from "@oxen/pptx/domain";
-import { px, pct } from "@oxen/ooxml/domain/units";
+import type { Line, LineCap, DashStyle } from "@oxen-office/pptx/domain";
+import { px, pct } from "@oxen-office/ooxml/domain/units";
 import { type CheckItem, TestSubsection, LinePreview } from "../common";
 
 /**

@@ -16,7 +16,7 @@ import { PercentEditor } from "../primitives";
 import { TextBodyEditor, createDefaultTextBody } from "../text";
 import { ChartShapePropertiesEditor } from "./ChartShapePropertiesEditor";
 import { ChartTitleEditor } from "./ChartTitleEditor";
-import { pct } from "@oxen/ooxml/domain/units";
+import { pct } from "@oxen-office/ooxml/domain/units";
 import type {
   Axis,
   AxisPosition,
@@ -32,8 +32,8 @@ import type {
   ChartTitle,
   ChartShapeProperties,
   DisplayUnits,
-} from "@oxen/pptx/domain/chart";
-import type { TextBody } from "@oxen/pptx/domain/text";
+} from "@oxen-office/pptx/domain/chart";
+import type { TextBody } from "@oxen-office/pptx/domain/text";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
 
 export type AxisEditorProps = EditorProps<Axis> & {

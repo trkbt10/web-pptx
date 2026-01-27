@@ -4,8 +4,8 @@
  * Tests for ECMA-376 line end markers (arrow heads/tails).
  */
 
-import type { Line, LineEnd } from "@oxen/pptx/domain";
-import { px } from "@oxen/ooxml/domain/units";
+import type { Line, LineEnd } from "@oxen-office/pptx/domain";
+import { px } from "@oxen-office/ooxml/domain/units";
 import { type CheckItem, TestSubsection, LineMarkerPreview } from "../common";
 
 /**

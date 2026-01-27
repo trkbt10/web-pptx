@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useEffect } from "react";
-import type { SlideId, SlideWithId } from "@oxen/pptx/app";
+import type { SlideId, SlideWithId } from "@oxen-office/pptx/app";
 import type { SlideListOrientation, SlideSelectionState } from "../types";
 
 export type UseSlideKeyNavigationOptions = {

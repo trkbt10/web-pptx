@@ -4,7 +4,7 @@
  * Type definitions for the slide thumbnail components.
  */
 
-import type { SlideWithId, SlideId } from "@oxen/pptx/app";
+import type { SlideWithId, SlideId } from "@oxen-office/pptx/app";
 
 /**
  * Props for individual thumbnail item

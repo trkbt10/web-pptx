@@ -1,8 +1,8 @@
 /**
  * Compare multi-line text rendering between ECMA-376 and LibreOffice dialects
  */
-import { openPresentation, LIBREOFFICE_RENDER_OPTIONS, DEFAULT_RENDER_OPTIONS } from "@oxen/pptx";
-import { renderSlideToSvg } from "@oxen/pptx-render/svg";
+import { openPresentation, LIBREOFFICE_RENDER_OPTIONS, DEFAULT_RENDER_OPTIONS } from "@oxen-office/pptx";
+import { renderSlideToSvg } from "@oxen-office/pptx-render/svg";
 import { loadPptxFile } from "./lib/pptx-loader";
 
 async function main() {

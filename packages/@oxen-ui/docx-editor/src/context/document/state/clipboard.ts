@@ -4,9 +4,9 @@
  * Manages clipboard content for copy/cut/paste operations.
  */
 
-import type { DocxParagraph, DocxParagraphContent } from "@oxen/docx/domain/paragraph";
-import type { DocxTable, DocxTableRow, DocxTableCell } from "@oxen/docx/domain/table";
-import type { DocxRun, DocxRunContent } from "@oxen/docx/domain/run";
+import type { DocxParagraph, DocxParagraphContent } from "@oxen-office/docx/domain/paragraph";
+import type { DocxTable, DocxTableRow, DocxTableCell } from "@oxen-office/docx/domain/table";
+import type { DocxRun, DocxRunContent } from "@oxen-office/docx/domain/run";
 
 // =============================================================================
 // Types

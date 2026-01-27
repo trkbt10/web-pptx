@@ -5,8 +5,8 @@
  * Used for drag operations (range selection, fill handle).
  */
 
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
 import type { createSheetLayout } from "../../selectors/sheet-layout";
 import { findMergeForCell, type NormalizedMergeRange } from "../../sheet/merge-range";
 

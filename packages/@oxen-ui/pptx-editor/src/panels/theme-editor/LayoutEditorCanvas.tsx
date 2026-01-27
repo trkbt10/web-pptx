@@ -7,14 +7,14 @@
  */
 
 import { useCallback, useMemo, useState, useRef, useEffect } from "react";
-import type { Slide, Shape } from "@oxen/pptx/domain";
-import type { ShapeId } from "@oxen/pptx/domain/types";
-import type { Pixels } from "@oxen/ooxml/domain/units";
-import { px, deg } from "@oxen/ooxml/domain/units";
-import type { SlideSize } from "@oxen/pptx/domain";
-import type { ColorContext, ColorScheme } from "@oxen/pptx/domain/color/context";
+import type { Slide, Shape } from "@oxen-office/pptx/domain";
+import type { ShapeId } from "@oxen-office/pptx/domain/types";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/ooxml/domain/units";
+import type { SlideSize } from "@oxen-office/pptx/domain";
+import type { ColorContext, ColorScheme } from "@oxen-office/pptx/domain/color/context";
 import type { XmlDocument } from "@oxen/xml";
-import { parseTheme } from "@oxen/pptx/parser/drawing-ml/index";
+import { parseTheme } from "@oxen-office/pptx/parser/drawing-ml/index";
 import type { ResizeHandlePosition } from "../../context/slide/state";
 import { SvgEditorCanvas } from "../../slide-canvas/SvgEditorCanvas";
 import type { ContextMenuActions } from "../../slide/context-menu/SlideContextMenu";
@@ -22,8 +22,8 @@ import { createInactiveTextEditState } from "../../slide/text-edit";
 import type { ZoomMode } from "../../slide-canvas/canvas-controls";
 import { usePresentationEditor } from "../../context/presentation/PresentationEditorContext";
 import { findShapeById } from "../../shape/query";
-import type { ViewportTransform } from "@oxen/pptx-render/svg-viewport";
-import { screenToSlideCoords } from "@oxen/pptx-render/svg-viewport";
+import type { ViewportTransform } from "@oxen-office/pptx-render/svg-viewport";
+import { screenToSlideCoords } from "@oxen-office/pptx-render/svg-viewport";
 
 // =============================================================================
 // Types

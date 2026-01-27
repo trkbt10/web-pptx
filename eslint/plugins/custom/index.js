@@ -10,6 +10,7 @@ import noNestedTry from "./rules/no-nested-try.js";
 import noIifeInAnonymous from "./rules/no-iife-in-anonymous.js";
 import noDeepReexport from "./rules/no-deep-reexport.js";
 import noOxenUiImportInOxen from "./rules/no-oxen-ui-import-in-oxen.js";
+import noOxenOfficeImportInOxen from "./rules/no-oxen-office-import-in-oxen.js";
 import noCrossPackageReexport from "./rules/no-cross-package-reexport.js";
 
 export default {
@@ -23,6 +24,7 @@ export default {
     "no-iife-in-anonymous": noIifeInAnonymous,
     "no-deep-reexport": noDeepReexport,
     "no-oxen-ui-import-in-oxen": noOxenUiImportInOxen,
+    "no-oxen-office-import-in-oxen": noOxenOfficeImportInOxen,
     "no-cross-package-reexport": noCrossPackageReexport,
   },
 };

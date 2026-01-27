@@ -8,7 +8,7 @@
 import { Select, Toggle } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { Rotation3dEditor, createDefaultRotation3d } from "./Rotation3dEditor";
-import type { LightRigType, LightRigDirection, LightRig } from "@oxen/pptx/domain";
+import type { LightRigType, LightRigDirection, LightRig } from "@oxen-office/pptx/domain";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
 
 export type LightRigEditorProps = EditorProps<LightRig>;

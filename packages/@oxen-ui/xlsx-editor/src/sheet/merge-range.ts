@@ -4,8 +4,8 @@
  * Normalizes SpreadsheetML merge ranges and provides lookup helpers for merge-aware rendering.
  */
 
-import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import type { CellAddress, CellRange } from "@oxen-office/xlsx/domain/cell/address";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
 
 export type NormalizedMergeRange = {
   readonly key: string;

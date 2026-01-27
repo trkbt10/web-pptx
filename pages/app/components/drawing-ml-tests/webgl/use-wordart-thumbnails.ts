@@ -9,8 +9,8 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import { createText3DRendererAsync, type Text3DRenderConfig } from "@oxen/pptx-render/webgl/text3d";
-import { extractText3DRuns } from "@oxen/pptx-render/react";
+import { createText3DRendererAsync, type Text3DRenderConfig } from "@oxen-office/pptx-render/webgl/text3d";
+import { extractText3DRuns } from "@oxen-office/pptx-render/react";
 import type { DemoWordArtPreset } from "./wordart-demo-presets";
 import {
   demoColorContext,

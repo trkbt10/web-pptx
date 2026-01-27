@@ -10,7 +10,7 @@
  */
 
 import { useCallback, useState } from "react";
-import type { SlideId } from "@oxen/pptx/app";
+import type { SlideId } from "@oxen-office/pptx/app";
 
 export type SlideItemHoverState = {
   /** ID of the currently hovered slide, or null if none */

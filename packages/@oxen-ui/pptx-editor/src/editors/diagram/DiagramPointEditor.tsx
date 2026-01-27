@@ -5,9 +5,9 @@
  */
 
 import type { CSSProperties } from "react";
-import type { DiagramPoint, DiagramPropertySet } from "@oxen/pptx/domain/diagram";
-import type { ShapeProperties } from "@oxen/pptx/domain/shape";
-import type { TextBody } from "@oxen/pptx/domain/text";
+import type { DiagramPoint, DiagramPropertySet } from "@oxen-office/pptx/domain/diagram";
+import type { ShapeProperties } from "@oxen-office/pptx/domain/shape";
+import type { TextBody } from "@oxen-office/pptx/domain/text";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 import { Accordion, FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { Input, Toggle } from "@oxen-ui/ui-components/primitives";

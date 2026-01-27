@@ -4,10 +4,10 @@
  * Tests for drag operation reducer handlers (3-stage pattern).
  */
 
-import type { XlsxWorkbook } from "@oxen/xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
-import { parseCellRef, parseRange } from "@oxen/xlsx/domain/cell/address";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import type { XlsxWorkbook } from "@oxen-office/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen-office/xlsx/domain/style/types";
+import { parseCellRef, parseRange } from "@oxen-office/xlsx/domain/cell/address";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
 import { createHistory } from "../../state/history";
 import { createEmptyCellSelection, createIdleDragState, type XlsxEditorState } from "../types";
 import { dragHandlers } from "./drag-handlers";

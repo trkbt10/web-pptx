@@ -5,9 +5,9 @@
  * Uses LayoutResult from the text-layout engine to compute visual positions.
  */
 
-import type { TextBody } from "@oxen/pptx/domain";
-import type { Pixels } from "@oxen/ooxml/domain/units";
-import type { LayoutResult, LayoutLine } from "@oxen/pptx-render/text-layout";
+import type { TextBody } from "@oxen-office/pptx/domain";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { LayoutResult, LayoutLine } from "@oxen-office/pptx-render/text-layout";
 import {
   getVisualBoundsForRange,
   getLineVisualBounds,

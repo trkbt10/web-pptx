@@ -7,9 +7,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, fireEvent } from "@testing-library/react";
 import { JSDOM } from "jsdom";
-import type { DocxDocument } from "@oxen/docx/domain/document";
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
-import type { DocxTable } from "@oxen/docx/domain/table";
+import type { DocxDocument } from "@oxen-office/docx/domain/document";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
+import type { DocxTable } from "@oxen-office/docx/domain/table";
 import type { DocumentEditorContextValue } from "../context/document/DocumentEditorContext";
 import { createInitialState } from "../context/document/editor";
 import { createEmptyDocxSelection, createIdleDragState } from "../context/document/state";

@@ -5,11 +5,11 @@
  */
 
 import { useMemo, useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
-import type { LoadedPresentation } from "@oxen/pptx/app";
+import type { LoadedPresentation } from "@oxen-office/pptx/app";
 import { SlideList } from "@oxen-ui/pptx-editor/slide-list";
-import type { SlideWithId } from "@oxen/pptx/app";
-import { useLazySvgCache, SvgContentRenderer } from "@oxen/pptx-render/react";
-import { renderSlideToSvg } from "@oxen/pptx-render/svg";
+import type { SlideWithId } from "@oxen-office/pptx/app";
+import { useLazySvgCache, SvgContentRenderer } from "@oxen-office/pptx-render/react";
+import { renderSlideToSvg } from "@oxen-office/pptx-render/svg";
 import { useSlideNavigation, useViewerKeyboard } from "../hooks";
 import {
   ChevronLeftIcon,

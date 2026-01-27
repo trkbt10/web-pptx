@@ -4,9 +4,9 @@
  * Tests for cell selection reducer handlers.
  */
 
-import type { XlsxWorkbook } from "@oxen/xlsx/domain/workbook";
-import { parseCellRef, parseRange } from "@oxen/xlsx/domain/cell/address";
-import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
+import type { XlsxWorkbook } from "@oxen-office/xlsx/domain/workbook";
+import { parseCellRef, parseRange } from "@oxen-office/xlsx/domain/cell/address";
+import { createDefaultStyleSheet } from "@oxen-office/xlsx/domain/style/types";
 import { createHistory } from "../../state/history";
 import { createEmptyCellSelection, createIdleDragState, type XlsxEditorState } from "../types";
 import { selectionHandlers } from "./selection-handlers";

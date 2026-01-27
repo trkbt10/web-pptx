@@ -4,7 +4,7 @@
  * Main reducer that composes all domain handlers.
  */
 
-import type { PresentationDocument } from "@oxen/pptx/app";
+import type { PresentationDocument } from "@oxen-office/pptx/app";
 import type { PresentationEditorState, PresentationEditorAction } from "../types";
 import { createSelectMode, createSlideEditorMode } from "../types";
 import type { HandlerMap, ActionHandler } from "./handler-types";

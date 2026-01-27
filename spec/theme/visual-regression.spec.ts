@@ -12,10 +12,10 @@
  * @see ECMA-376 Part 1, Section 20.1.6 (Theme)
  */
 
-import { openPresentation } from "@oxen/pptx";
+import { openPresentation } from "@oxen-office/pptx";
 import { compareSvgToSnapshot } from "../visual-regression/compare";
 import { createPresentationFile, THEMES_PPTX_PATH } from "./test-utils";
-import { renderSlideToSvg } from "@oxen/pptx-render/svg";
+import { renderSlideToSvg } from "@oxen-office/pptx-render/svg";
 
 const DIFF_THRESHOLD = 0.15; // 15% allowed difference
 

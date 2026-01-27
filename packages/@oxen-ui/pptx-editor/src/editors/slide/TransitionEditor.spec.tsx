@@ -6,7 +6,7 @@
 
 // @vitest-environment jsdom
 
-import type { SlideTransition } from "@oxen/pptx/domain/transition";
+import type { SlideTransition } from "@oxen-office/pptx/domain/transition";
 import { render, fireEvent } from "@testing-library/react";
 import { TransitionEditor, createDefaultTransition } from "./TransitionEditor";
 

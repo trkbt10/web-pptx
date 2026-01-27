@@ -3,7 +3,7 @@
  */
 
 import { parsePdf } from "../core/pdf-parser";
-import { convertToRgba } from "../../converter/pixel-converter";
+import { convertToRgba } from "../../image/pixel-converter";
 import { base64ToArrayBuffer } from "@oxen/buffer";
 import jpeg from "jpeg-js";
 import { decodeJpxNative } from "../jpeg2000/jpx-decode.native";

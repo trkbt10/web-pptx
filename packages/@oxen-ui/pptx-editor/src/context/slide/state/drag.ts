@@ -4,8 +4,8 @@
  * State types and utilities for drag operations (move, resize, rotate).
  */
 
-import type { Pixels, Degrees } from "@oxen/ooxml/domain/units";
-import type { Bounds, ShapeId } from "@oxen/pptx/domain/types";
+import type { Pixels, Degrees } from "@oxen-office/ooxml/domain/units";
+import type { Bounds, ShapeId } from "@oxen-office/pptx/domain/types";
 
 // =============================================================================
 // Types

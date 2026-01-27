@@ -17,11 +17,11 @@ import { createDefaultColor } from "./ColorEditor";
 import { GradientStopsEditor, createDefaultGradientStops } from "./GradientStopsEditor";
 import { DegreesEditor } from "../primitives/DegreesEditor";
 import { colorTokens, fontTokens, radiusTokens, spacingTokens } from "@oxen-ui/ui-components/design-tokens";
-import type { NoFill, SolidFill, GradientFill, PatternFill, PatternType, LinearGradient } from "@oxen/ooxml/domain/fill";
-import { PATTERN_PRESETS } from "@oxen/ooxml/domain/fill";
-import type { Fill, BlipFill } from "@oxen/pptx/domain/color/types";
-import { deg } from "@oxen/ooxml/domain/units";
-import type { ResourceId } from "@oxen/pptx/domain/types";
+import type { NoFill, SolidFill, GradientFill, PatternFill, PatternType, LinearGradient } from "@oxen-office/ooxml/domain/fill";
+import { PATTERN_PRESETS } from "@oxen-office/ooxml/domain/fill";
+import type { Fill, BlipFill } from "@oxen-office/pptx/domain/color/types";
+import { deg } from "@oxen-office/ooxml/domain/units";
+import type { ResourceId } from "@oxen-office/pptx/domain/types";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
 import { useEditorResourceContext } from "../../context/editor/EditorResourceContext";
 

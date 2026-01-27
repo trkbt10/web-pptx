@@ -4,10 +4,10 @@
  * Bounding box and geometry operations for shapes.
  */
 
-import type { Shape } from "@oxen/pptx/domain";
-import type { Bounds, ShapeId } from "@oxen/pptx/domain/types";
-import { px } from "@oxen/ooxml/domain/units";
-import { getShapeTransform } from "@oxen/pptx-render/svg";
+import type { Shape } from "@oxen-office/pptx/domain";
+import type { Bounds, ShapeId } from "@oxen-office/pptx/domain/types";
+import { px } from "@oxen-office/ooxml/domain/units";
+import { getShapeTransform } from "@oxen-office/pptx-render/svg";
 import { findShapeById } from "./query";
 import { getRotatedCorners } from "./rotate";
 

@@ -6,8 +6,8 @@
  * - Fast access to base-range cells by (row, col)
  */
 
-import type { Cell } from "@oxen/xlsx/domain/cell/types";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import type { Cell } from "@oxen-office/xlsx/domain/cell/types";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
 import type { RangeBounds } from "./types";
 
 /**

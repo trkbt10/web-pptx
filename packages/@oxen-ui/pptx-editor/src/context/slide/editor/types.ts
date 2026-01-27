@@ -5,9 +5,9 @@
  * For shared state types, import directly from ../state/
  */
 
-import type { Slide, Shape } from "@oxen/pptx/domain";
-import type { Pixels } from "@oxen/ooxml/domain/units";
-import type { ShapeId } from "@oxen/pptx/domain/types";
+import type { Slide, Shape } from "@oxen-office/pptx/domain";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { ShapeId } from "@oxen-office/pptx/domain/types";
 import type {
   UndoRedoHistory,
   SelectionState,

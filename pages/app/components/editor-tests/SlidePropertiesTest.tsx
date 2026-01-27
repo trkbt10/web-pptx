@@ -13,9 +13,9 @@ import {
   createDefaultTransition,
   createDefaultOleReference,
 } from "@oxen-ui/pptx-editor";
-import type { Background } from "@oxen/pptx/domain/slide/types";
-import type { SlideTransition } from "@oxen/pptx/domain/transition";
-import type { OleReference } from "@oxen/pptx/domain/shape";
+import type { Background } from "@oxen-office/pptx/domain/slide/types";
+import type { SlideTransition } from "@oxen-office/pptx/domain/transition";
+import type { OleReference } from "@oxen-office/pptx/domain/shape";
 
 const cardStyle: CSSProperties = {
   backgroundColor: "var(--bg-secondary)",

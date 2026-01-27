@@ -29,14 +29,14 @@
  * @see ECMA-376 Part 1, Section 20.1.4.1.18 - CT_FontScheme
  */
 
-import type { FontSpec } from "@oxen/pptx/domain/resolution";
-import type { SchemeColorName } from "@oxen/ooxml/domain/color";
+import type { FontSpec } from "@oxen-office/pptx/domain/resolution";
+import type { SchemeColorName } from "@oxen-office/ooxml/domain/color";
 
 // SchemeColorName is the ECMA-376 aligned type for color scheme slot names.
 // Canonical definition: ooxml/domain/color.ts (ECMA-376 Part 1, Section 20.1.6.2)
 // Re-exported here for convenient access from theme editor components.
 // eslint-disable-next-line custom/no-deep-reexport -- legitimate API re-export
-export type { SchemeColorName } from "@oxen/ooxml/domain/color";
+export type { SchemeColorName } from "@oxen-office/ooxml/domain/color";
 
 // =============================================================================
 // Color Scheme Types

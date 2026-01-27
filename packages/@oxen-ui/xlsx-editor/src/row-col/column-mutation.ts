@@ -4,8 +4,8 @@
  * Operations for inserting, deleting, resizing, and hiding columns.
  */
 
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import { colIdx, type ColIndex } from "@oxen/xlsx/domain/types";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import { colIdx, type ColIndex } from "@oxen-office/xlsx/domain/types";
 import {
   assertPositiveInteger,
   assertValidColIndex,

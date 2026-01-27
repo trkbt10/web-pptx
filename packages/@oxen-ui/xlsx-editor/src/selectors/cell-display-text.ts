@@ -6,16 +6,16 @@
  * NOTE: This is an MVP formatter. It intentionally supports a limited subset of Excel format codes.
  */
 
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import type { XlsxStyleSheet } from "@oxen/xlsx/domain/style/types";
-import type { XlsxDifferentialFormat } from "@oxen/xlsx/domain/style/dxf";
-import type { XlsxDateSystem } from "@oxen/xlsx/domain/date-system";
-import { resolveFormatCode } from "@oxen/xlsx/domain/style/number-format";
-import { formatNumberByCode } from "@oxen/xlsx/domain/style/format-value";
-import type { FormulaScalar } from "@oxen/xlsx/formula/types";
-import { isFormulaError, toDisplayText } from "@oxen/xlsx/formula/types";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import type { Cell, CellValue } from "@oxen-office/xlsx/domain/cell/types";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import type { XlsxStyleSheet } from "@oxen-office/xlsx/domain/style/types";
+import type { XlsxDifferentialFormat } from "@oxen-office/xlsx/domain/style/dxf";
+import type { XlsxDateSystem } from "@oxen-office/xlsx/domain/date-system";
+import { resolveFormatCode } from "@oxen-office/xlsx/domain/style/number-format";
+import { formatNumberByCode } from "@oxen-office/xlsx/domain/style/format-value";
+import type { FormulaScalar } from "@oxen-office/xlsx/formula/types";
+import { isFormulaError, toDisplayText } from "@oxen-office/xlsx/formula/types";
 import { resolveCellXf } from "./cell-xf";
 
 /**

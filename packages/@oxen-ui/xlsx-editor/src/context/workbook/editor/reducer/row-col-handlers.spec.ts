@@ -2,10 +2,10 @@
  * @file Row/column handlers tests
  */
 
-import type { XlsxWorkbook, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import type { XlsxWorkbook, XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import { createDefaultStyleSheet } from "@oxen-office/xlsx/domain/style/types";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
 import { getCellValue } from "../../../../cell/query";
 import { createInitialState, xlsxEditorReducer } from "./index";
 

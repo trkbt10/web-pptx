@@ -5,8 +5,8 @@
  */
 
 import type { CSSProperties, ReactNode, MouseEvent } from "react";
-import type { DocxTableCell, DocxTableCellProperties, DocxCellBorders } from "@oxen/docx/domain/table";
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
+import type { DocxTableCell, DocxTableCellProperties, DocxCellBorders } from "@oxen-office/docx/domain/table";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
 import { ParagraphRenderer } from "./ParagraphRenderer";
 
 // =============================================================================

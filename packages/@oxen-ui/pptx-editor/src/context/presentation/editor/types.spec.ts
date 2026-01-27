@@ -5,7 +5,7 @@
  * accept branded unit values (Pixels/Degrees) from ooxml/domain/units.
  */
 
-import { px, deg } from "@oxen/ooxml/domain/units";
+import { px, deg } from "@oxen-office/ooxml/domain/units";
 import type { PresentationEditorAction } from "./types";
 
 describe("PresentationEditorAction", () => {

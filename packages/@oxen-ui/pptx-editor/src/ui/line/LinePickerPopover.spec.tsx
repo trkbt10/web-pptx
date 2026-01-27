@@ -5,7 +5,7 @@
 // @vitest-environment jsdom
 
 import { render, fireEvent } from "@testing-library/react";
-import type { Line } from "@oxen/pptx/domain/color/types";
+import type { Line } from "@oxen-office/pptx/domain/color/types";
 import { LinePickerPopover } from "./LinePickerPopover";
 import { createDefaultLine } from "./LineEditor";
 

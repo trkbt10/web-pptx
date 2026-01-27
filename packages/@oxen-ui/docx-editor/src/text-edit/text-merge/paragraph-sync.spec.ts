@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from "vitest";
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
-import type { DocxRun, DocxRunProperties } from "@oxen/docx/domain/run";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
+import type { DocxRun, DocxRunProperties } from "@oxen-office/docx/domain/run";
 import { syncParagraphsWithPlainText, paragraphsToPlainText } from "./paragraph-sync";
 
 // =============================================================================

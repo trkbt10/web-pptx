@@ -1,9 +1,9 @@
 /**
  * @file Shape transform utilities tests
  */
-import { px, deg } from "@oxen/ooxml/domain/units";
-import type { SpShape, GraphicFrame, GrpShape, CxnShape, ContentPartShape } from "@oxen/pptx/domain/shape";
-import { getShapeTransform } from "@oxen/pptx-render/svg";
+import { px, deg } from "@oxen-office/ooxml/domain/units";
+import type { SpShape, GraphicFrame, GrpShape, CxnShape, ContentPartShape } from "@oxen-office/pptx/domain/shape";
+import { getShapeTransform } from "@oxen-office/pptx-render/svg";
 import { withUpdatedTransform, hasEditableTransform } from "./transform";
 
 // =============================================================================

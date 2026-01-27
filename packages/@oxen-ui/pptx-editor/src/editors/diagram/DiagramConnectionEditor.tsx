@@ -5,7 +5,7 @@
  */
 
 import type { CSSProperties } from "react";
-import type { DiagramConnection, DiagramCxnType, DiagramPoint } from "@oxen/pptx/domain/diagram";
+import type { DiagramConnection, DiagramCxnType, DiagramPoint } from "@oxen-office/pptx/domain/diagram";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { Select, Button } from "@oxen-ui/ui-components/primitives";

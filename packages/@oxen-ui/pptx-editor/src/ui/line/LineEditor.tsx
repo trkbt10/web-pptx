@@ -10,8 +10,8 @@ import { Select } from "@oxen-ui/ui-components/primitives";
 import { LinePreview } from "./LinePreview";
 import { FillPickerPopover } from "../color/FillPickerPopover";
 import { createDefaultFill } from "../color/fill";
-import { px } from "@oxen/ooxml/domain/units";
-import type { Line, LineEnd, Fill } from "@oxen/pptx/domain/color/types";
+import { px } from "@oxen-office/ooxml/domain/units";
+import type { Line, LineEnd, Fill } from "@oxen-office/pptx/domain/color/types";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
 
 // =============================================================================

@@ -10,18 +10,18 @@
 import fs from "node:fs";
 import path from "node:path";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
-import { openPresentation } from "@oxen/pptx";
+import { openPresentation } from "@oxen-office/pptx";
 import { createElement, parseXml, serializeDocument, type XmlDocument, type XmlElement, isXmlElement } from "@oxen/xml";
-import { patchChartData, patchChartTitle } from "@oxen/pptx/patcher/chart/chart-data-patcher";
-import { parseChart } from "@oxen/pptx/parser/chart-parser/index";
-import type { DataReference } from "@oxen/pptx/domain/chart";
-import { patchTable } from "@oxen/pptx/patcher/table/table-patcher";
-import { parseTable } from "@oxen/pptx/parser/table/table-parser";
-import { patchDiagramNodeText } from "@oxen/pptx/patcher/diagram/diagram-patcher";
-import { parseDiagramDataModel } from "@oxen/pptx/parser/diagram/data-parser";
-import { patchOleObject } from "@oxen/pptx/patcher/ole/ole-patcher";
-import { parseGraphicFrame } from "@oxen/pptx/parser/shape-parser/graphic-frame";
-import { deg, px } from "@oxen/ooxml/domain/units";
+import { patchChartData, patchChartTitle } from "@oxen-office/pptx/patcher/chart/chart-data-patcher";
+import { parseChart } from "@oxen-office/pptx/parser/chart-parser/index";
+import type { DataReference } from "@oxen-office/pptx/domain/chart";
+import { patchTable } from "@oxen-office/pptx/patcher/table/table-patcher";
+import { parseTable } from "@oxen-office/pptx/parser/table/table-parser";
+import { patchDiagramNodeText } from "@oxen-office/pptx/patcher/diagram/diagram-patcher";
+import { parseDiagramDataModel } from "@oxen-office/pptx/parser/diagram/data-parser";
+import { patchOleObject } from "@oxen-office/pptx/patcher/ole/ole-patcher";
+import { parseGraphicFrame } from "@oxen-office/pptx/parser/shape-parser/graphic-frame";
+import { deg, px } from "@oxen-office/ooxml/domain/units";
 
 const FIXTURES_DIR = path.resolve(process.cwd(), "fixtures/poi-test-data/test-data/slideshow");
 

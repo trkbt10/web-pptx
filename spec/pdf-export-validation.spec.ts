@@ -16,10 +16,10 @@ import * as fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { importPdf } from "@oxen/pdf/importer/pdf-importer";
-import { exportPptx } from "@oxen/pptx/exporter";
-import { loadPptxFromBuffer } from "@oxen/pptx/app/pptx-loader";
-import { px } from "@oxen/ooxml/domain/units";
+import { importPdf } from "@oxen-office/pdf-to-pptx/importer/pdf-importer";
+import { exportPptx } from "@oxen-office/pptx/exporter";
+import { loadPptxFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
+import { px } from "@oxen-office/ooxml/domain/units";
 import { parseXml } from "@oxen/xml";
 import { loadZipPackage } from "@oxen/zip";
 

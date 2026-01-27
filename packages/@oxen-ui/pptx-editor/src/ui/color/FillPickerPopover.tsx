@@ -7,7 +7,7 @@
 import { useCallback, type CSSProperties, type ReactNode } from "react";
 import { Popover } from "@oxen-ui/ui-components/primitives";
 import { Select } from "@oxen-ui/ui-components/primitives";
-import type { Fill } from "@oxen/pptx/domain/color/types";
+import type { Fill } from "@oxen-office/pptx/domain/color/types";
 import { FillPreview } from "./FillPreview";
 import {
   fillTypeOptions,

@@ -4,10 +4,10 @@
  * Main state and action type definitions for the DOCX editor.
  */
 
-import type { DocxDocument } from "@oxen/docx/domain/document";
-import type { DocxParagraph, DocxParagraphProperties } from "@oxen/docx/domain/paragraph";
-import type { DocxRunProperties } from "@oxen/docx/domain/run";
-import type { DocxTableCellProperties, DocxTableProperties } from "@oxen/docx/domain/table";
+import type { DocxDocument } from "@oxen-office/docx/domain/document";
+import type { DocxParagraph, DocxParagraphProperties } from "@oxen-office/docx/domain/paragraph";
+import type { DocxRunProperties } from "@oxen-office/docx/domain/run";
+import type { DocxTableCellProperties, DocxTableProperties } from "@oxen-office/docx/domain/table";
 import type {
   UndoRedoHistory,
   DocxSelectionState,

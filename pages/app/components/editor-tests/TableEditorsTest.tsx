@@ -20,7 +20,7 @@ import type {
   TableCell,
   TableProperties,
   Table,
-} from "@oxen/pptx/domain/table/types";
+} from "@oxen-office/pptx/domain/table/types";
 
 const cardStyle: CSSProperties = {
   backgroundColor: "var(--bg-secondary)",

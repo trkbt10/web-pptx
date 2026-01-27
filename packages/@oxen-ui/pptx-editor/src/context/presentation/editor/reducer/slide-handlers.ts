@@ -4,8 +4,8 @@
  * Handlers for slide-level operations: add, delete, duplicate, move, select.
  */
 
-import type { SlideId, PresentationDocument } from "@oxen/pptx/app";
-import type { SlideSize } from "@oxen/pptx/domain";
+import type { SlideId, PresentationDocument } from "@oxen-office/pptx/app";
+import type { SlideSize } from "@oxen-office/pptx/domain";
 import type {
   PresentationEditorState,
   PresentationEditorAction,

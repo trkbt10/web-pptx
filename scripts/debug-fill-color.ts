@@ -4,8 +4,8 @@
  * Usage: bun run scripts/debug-fill-color.ts [pptx-file] [slide-number]
  */
 import * as fs from "node:fs";
-import { openPresentation } from "@oxen/pptx";
-import { renderSlideToSvg } from "@oxen/pptx-render/svg";
+import { openPresentation } from "@oxen-office/pptx";
+import { renderSlideToSvg } from "@oxen-office/pptx-render/svg";
 import { loadPptxFile } from "./lib/pptx-loader";
 
 async function main() {

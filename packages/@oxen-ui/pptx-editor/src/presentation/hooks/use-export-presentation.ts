@@ -6,7 +6,7 @@
 
 import { useState, useCallback } from "react";
 import { usePresentationEditor } from "../../context/presentation/PresentationEditorContext";
-import { exportPptx, type ExportOptions, type ExportResult } from "@oxen/pptx/exporter/pptx-exporter";
+import { exportPptx, type ExportOptions, type ExportResult } from "@oxen-office/pptx/exporter/pptx-exporter";
 
 // =============================================================================
 // File System Access API Types (for browsers that support it)

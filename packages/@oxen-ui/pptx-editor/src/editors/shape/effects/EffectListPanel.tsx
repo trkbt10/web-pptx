@@ -6,7 +6,7 @@
 
 import { useMemo, type CSSProperties } from "react";
 import { Toggle } from "@oxen-ui/ui-components/primitives";
-import type { Effects } from "@oxen/pptx/domain/types";
+import type { Effects } from "@oxen-office/pptx/domain/types";
 import { EFFECT_CONFIGS } from "./constants";
 import { EFFECT_CATEGORIES, type EffectKey, type EffectCategory } from "./types";
 

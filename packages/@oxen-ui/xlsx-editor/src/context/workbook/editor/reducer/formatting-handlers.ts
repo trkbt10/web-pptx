@@ -12,7 +12,7 @@ import { applyStyleToRange } from "../../../../cell/style-mutation";
 import { mergeCells, unmergeCells } from "../../../../sheet/merge-mutation";
 import { getCell } from "../../../../cell/query";
 import { resolveCellStyleDetails } from "../../../../selectors/cell-style-details";
-import type { XlsxCellXf } from "@oxen/xlsx/domain/style/types";
+import type { XlsxCellXf } from "@oxen-office/xlsx/domain/style/types";
 import {
   upsertBorder,
   upsertCellXf,
@@ -20,10 +20,10 @@ import {
   upsertFill,
   upsertFont,
   useBuiltinNumberFormat,
-} from "@oxen/xlsx/domain/style/mutation";
-import type { StyleId } from "@oxen/xlsx/domain/types";
-import { isEqualCellXf } from "@oxen/xlsx/domain/style/mutation/equality";
-import type { XlsxCellStyle, XlsxStyleSheet } from "@oxen/xlsx/domain/style/types";
+} from "@oxen-office/xlsx/domain/style/mutation";
+import type { StyleId } from "@oxen-office/xlsx/domain/types";
+import { isEqualCellXf } from "@oxen-office/xlsx/domain/style/mutation/equality";
+import type { XlsxCellStyle, XlsxStyleSheet } from "@oxen-office/xlsx/domain/style/types";
 
 type ApplyStyleAction = Extract<XlsxEditorAction, { type: "APPLY_STYLE" }>;
 type ApplyNamedStyleAction = Extract<XlsxEditorAction, { type: "APPLY_NAMED_STYLE" }>;

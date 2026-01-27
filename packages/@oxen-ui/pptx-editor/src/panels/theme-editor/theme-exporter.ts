@@ -11,8 +11,8 @@
  */
 
 import type { ThemeColorScheme, ThemeFontScheme } from "./types";
-import { CONTENT_TYPES } from "@oxen/pptx/opc/content-types";
-import { RELATIONSHIP_TYPES } from "@oxen/pptx/domain/relationships";
+import { CONTENT_TYPES } from "@oxen-office/pptx/opc/content-types";
+import { RELATIONSHIP_TYPES } from "@oxen-office/pptx/domain/relationships";
 import { createEmptyZipPackage } from "@oxen/zip";
 
 // =============================================================================

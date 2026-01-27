@@ -15,10 +15,10 @@ import type {
   LineSpacing,
   BulletStyle,
   TextTypeface,
-} from "@oxen/pptx/domain/text";
-import type { Color } from "@oxen/ooxml/domain/color";
-import type { Fill, Line } from "@oxen/pptx/domain/color/types";
-import type { Pixels, Points, Percent } from "@oxen/ooxml/domain/units";
+} from "@oxen-office/pptx/domain/text";
+import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Fill, Line } from "@oxen-office/pptx/domain/color/types";
+import type { Pixels, Points, Percent } from "@oxen-office/ooxml/domain/units";
 
 // =============================================================================
 // Property Extraction Types

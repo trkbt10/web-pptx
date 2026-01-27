@@ -2,10 +2,10 @@
  * @file XLSX Editor Reducer tests
  */
 
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import type { XlsxWorkbook, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import type { XlsxWorkbook, XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen-office/xlsx/domain/style/types";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
 import { getCellValue } from "../../../../cell/query";
 import { createHistory, pushHistory } from "../../state/history";
 import { createEmptyCellSelection, createIdleDragState } from "../types";

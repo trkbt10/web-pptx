@@ -5,7 +5,7 @@
  */
 
 import { useMemo, type CSSProperties } from "react";
-import type { GradientStop, SolidFill } from "@oxen/ooxml/domain/fill";
+import type { GradientStop, SolidFill } from "@oxen-office/ooxml/domain/fill";
 import { Input } from "@oxen-ui/ui-components/primitives";
 import { FillPreview } from "../FillPreview";
 import { parseHexInput } from "../color-convert";

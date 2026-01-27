@@ -4,7 +4,7 @@
  * Shape editing capabilities based on ECMA-376 lock attributes.
  */
 
-import type { Shape } from "@oxen/pptx/domain";
+import type { Shape } from "@oxen-office/pptx/domain";
 
 // =============================================================================
 // Types

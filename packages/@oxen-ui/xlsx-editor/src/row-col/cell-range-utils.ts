@@ -5,10 +5,10 @@
  * used by row and column mutation operations.
  */
 
-import type { Cell } from "@oxen/xlsx/domain/cell/types";
-import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
-import type { XlsxColumnDef, XlsxRow } from "@oxen/xlsx/domain/workbook";
-import { colIdx, rowIdx, type ColIndex, type RowIndex } from "@oxen/xlsx/domain/types";
+import type { Cell } from "@oxen-office/xlsx/domain/cell/types";
+import type { CellAddress, CellRange } from "@oxen-office/xlsx/domain/cell/address";
+import type { XlsxColumnDef, XlsxRow } from "@oxen-office/xlsx/domain/workbook";
+import { colIdx, rowIdx, type ColIndex, type RowIndex } from "@oxen-office/xlsx/domain/types";
 
 // =============================================================================
 // Validation Helpers

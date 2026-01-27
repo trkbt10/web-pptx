@@ -2,7 +2,7 @@
  * @file Reducer test fixtures tests
  */
 
-import { px } from "@oxen/ooxml/domain/units";
+import { px } from "@oxen-office/ooxml/domain/units";
 import { createTestDocument } from "./test-fixtures";
 
 describe("createTestDocument", () => {

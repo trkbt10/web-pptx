@@ -5,8 +5,8 @@
  * (ARGB stored as `rgb="AARRGGBB"`).
  */
 
-import type { XlsxColor as XlsxFontColor } from "@oxen/xlsx/domain/style/font";
-import type { XlsxColor as XlsxFillColor } from "@oxen/xlsx/domain/style/fill";
+import type { XlsxColor as XlsxFontColor } from "@oxen-office/xlsx/domain/style/font";
+import type { XlsxColor as XlsxFillColor } from "@oxen-office/xlsx/domain/style/fill";
 
 /**
  * Normalize a user-entered RGB hex string to `RRGGBB` (uppercase), or return `undefined` if invalid/empty.

@@ -13,10 +13,10 @@
  * - GraphicFrame (table, chart, diagram, oleObject)
  */
 
-import type { Slide, SpShape, PicShape, CxnShape, GrpShape, GraphicFrame, Shape } from "@oxen/pptx/domain";
-import type { PresetGeometry } from "@oxen/pptx/domain/shape";
-import type { Table, TableRow, TableCell, TableGrid } from "@oxen/pptx/domain/table/types";
-import { px, deg, pct } from "@oxen/ooxml/domain/units";
+import type { Slide, SpShape, PicShape, CxnShape, GrpShape, GraphicFrame, Shape } from "@oxen-office/pptx/domain";
+import type { PresetGeometry } from "@oxen-office/pptx/domain/shape";
+import type { Table, TableRow, TableCell, TableGrid } from "@oxen-office/pptx/domain/table/types";
+import { px, deg, pct } from "@oxen-office/ooxml/domain/units";
 
 // =============================================================================
 // Test Fixtures (same as SlideEditorTest.tsx)

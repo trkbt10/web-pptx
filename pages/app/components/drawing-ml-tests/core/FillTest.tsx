@@ -5,8 +5,8 @@
  */
 
 import { useMemo } from "react";
-import type { PatternType } from "@oxen/pptx/domain";
-import { getSupportedPatterns } from "@oxen/pptx-render/react";
+import type { PatternType } from "@oxen-office/pptx/domain";
+import { getSupportedPatterns } from "@oxen-office/pptx-render/react";
 import { type CheckItem, TestSubsection, ShapePreview, makeGradient } from "../common";
 
 /**

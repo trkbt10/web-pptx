@@ -5,7 +5,7 @@
 // @vitest-environment jsdom
 
 import { render, fireEvent } from "@testing-library/react";
-import type { Chart } from "@oxen/pptx/domain/chart";
+import type { Chart } from "@oxen-office/pptx/domain/chart";
 import { ChartEditor, createDefaultChart } from "./ChartEditor";
 
 describe("ChartEditor", () => {

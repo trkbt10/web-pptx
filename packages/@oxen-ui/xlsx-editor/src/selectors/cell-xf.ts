@@ -5,10 +5,10 @@
  * the merged CellXf (cellXfs + cellStyleXfs xfId) that should be used for rendering.
  */
 
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import type { Cell } from "@oxen/xlsx/domain/cell/types";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import type { XlsxStyleSheet, XlsxCellXf } from "@oxen/xlsx/domain/style/types";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import type { Cell } from "@oxen-office/xlsx/domain/cell/types";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import type { XlsxStyleSheet, XlsxCellXf } from "@oxen-office/xlsx/domain/style/types";
 
 function getColumnStyleId(sheet: XlsxWorksheet, colNumber: number): number | undefined {
   for (const def of sheet.columns ?? []) {

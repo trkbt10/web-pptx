@@ -10,22 +10,22 @@
 
 import type { ReactNode, CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useState, useCallback, useRef, useEffect } from "react";
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
-import type { DocxSectionProperties } from "@oxen/docx/domain/section";
-import type { DocxNumbering } from "@oxen/docx/domain/numbering";
-import type { Pixels } from "@oxen/ooxml/domain/units";
-import { px } from "@oxen/ooxml/domain/units";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
+import type { DocxSectionProperties } from "@oxen-office/docx/domain/section";
+import type { DocxNumbering } from "@oxen-office/docx/domain/numbering";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/ooxml/domain/units";
 import type {
   ContinuousCursorPosition,
   ContinuousSelection,
   PageFlowConfig,
   SelectionRect,
   CursorCoordinates,
-} from "@oxen/text-layout";
+} from "@oxen-office/text-layout";
 import {
   DEFAULT_PAGE_FLOW_CONFIG,
   getDocumentPlainText,
-} from "@oxen/text-layout";
+} from "@oxen-office/text-layout";
 import { useDocumentLayout } from "../document/hooks/use-document-layout";
 import {
   coordinatesToCursorPosition,

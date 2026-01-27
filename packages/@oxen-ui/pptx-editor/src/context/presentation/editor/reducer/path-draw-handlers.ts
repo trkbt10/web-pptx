@@ -7,8 +7,8 @@
 import type { PresentationEditorState, PresentationEditorAction } from "../types";
 import { createSelectMode } from "../types";
 import type { HandlerMap, ActionHandler } from "./handler-types";
-import type { Pixels } from "@oxen/ooxml/domain/units";
-import { px } from "@oxen/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/ooxml/domain/units";
 import {
   createDrawingPathDrawState,
   createIdlePathDrawState,

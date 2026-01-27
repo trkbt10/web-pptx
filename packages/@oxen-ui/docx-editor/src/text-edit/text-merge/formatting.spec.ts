@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect } from "vitest";
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
-import type { DocxRun, DocxRunProperties } from "@oxen/docx/domain/run";
-import { halfPoints } from "@oxen/docx/domain/types";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
+import type { DocxRun, DocxRunProperties } from "@oxen-office/docx/domain/run";
+import { halfPoints } from "@oxen-office/docx/domain/types";
 import { applyFormatToRange, toggleFormatOnRange, removeFormatFromRange } from "./formatting";
 
 // =============================================================================

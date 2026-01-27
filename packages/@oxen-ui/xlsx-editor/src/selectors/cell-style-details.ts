@@ -4,14 +4,14 @@
  * Expands resolved CellXf into referenced font/fill/border objects for UI editors.
  */
 
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import type { Cell } from "@oxen/xlsx/domain/cell/types";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import type { XlsxStyleSheet, XlsxCellXf } from "@oxen/xlsx/domain/style/types";
-import type { XlsxFont } from "@oxen/xlsx/domain/style/font";
-import type { XlsxFill } from "@oxen/xlsx/domain/style/fill";
-import type { XlsxBorder } from "@oxen/xlsx/domain/style/border";
-import { resolveFormatCode } from "@oxen/xlsx/domain/style/number-format";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import type { Cell } from "@oxen-office/xlsx/domain/cell/types";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import type { XlsxStyleSheet, XlsxCellXf } from "@oxen-office/xlsx/domain/style/types";
+import type { XlsxFont } from "@oxen-office/xlsx/domain/style/font";
+import type { XlsxFill } from "@oxen-office/xlsx/domain/style/fill";
+import type { XlsxBorder } from "@oxen-office/xlsx/domain/style/border";
+import { resolveFormatCode } from "@oxen-office/xlsx/domain/style/number-format";
 import { resolveCellXf } from "./cell-xf";
 
 export type ResolvedCellStyleDetails = {

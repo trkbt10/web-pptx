@@ -5,8 +5,8 @@
  */
 
 import type { CSSProperties } from "react";
-import type { Slide, Shape } from "@oxen/pptx/domain/index";
-import type { ShapeId } from "@oxen/pptx/domain/types";
+import type { Slide, Shape } from "@oxen-office/pptx/domain/index";
+import type { ShapeId } from "@oxen-office/pptx/domain/types";
 import type { SelectionState } from "../../context/slide/state";
 import type { ShapeHierarchyTarget } from "../../shape/hierarchy";
 import { LayerPanel } from "../LayerPanel";

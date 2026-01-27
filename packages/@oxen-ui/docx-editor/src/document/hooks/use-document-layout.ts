@@ -6,18 +6,18 @@
  */
 
 import { useMemo } from "react";
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
-import type { DocxSectionProperties } from "@oxen/docx/domain/section";
-import type { DocxNumbering } from "@oxen/docx/domain/numbering";
-import type { Pixels } from "@oxen/ooxml/domain/units";
-import { px } from "@oxen/ooxml/domain/units";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
+import type { DocxSectionProperties } from "@oxen-office/docx/domain/section";
+import type { DocxNumbering } from "@oxen-office/docx/domain/numbering";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/ooxml/domain/units";
 import type {
   LayoutParagraphResult,
   LayoutParagraphInput,
   PagedLayoutResult,
   PageFlowConfig,
   PageBreakHint,
-} from "@oxen/text-layout";
+} from "@oxen-office/text-layout";
 import {
   layoutDocument,
   paragraphsToLayoutInputs,
@@ -25,11 +25,11 @@ import {
   flowIntoPages,
   createSinglePageLayout,
   DEFAULT_PAGE_FLOW_CONFIG,
-} from "@oxen/text-layout";
+} from "@oxen-office/text-layout";
 import {
   sectionPropertiesToPageConfig,
   getSectionContentWidth,
-} from "@oxen/text-layout";
+} from "@oxen-office/text-layout";
 
 // =============================================================================
 // Types

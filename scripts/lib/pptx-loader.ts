@@ -20,9 +20,9 @@
  */
 
 import * as fs from "node:fs/promises";
-import { loadPptxBundleFromBuffer, type PptxFileBundle } from "@oxen/pptx/app/pptx-loader";
+import { loadPptxBundleFromBuffer, type PptxFileBundle } from "@oxen-office/pptx/app/pptx-loader";
 
-export type { PptxFileBundle } from "@oxen/pptx/app/pptx-loader";
+export type { PptxFileBundle } from "@oxen-office/pptx/app/pptx-loader";
 export type { ZipPackage } from "@oxen/zip";
 
 /**

@@ -9,10 +9,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { ContextMenu, type MenuEntry, colorTokens } from "@oxen-ui/ui-components";
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
-import { indexToColumnLetter } from "@oxen/xlsx/domain/cell/address";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
+import { indexToColumnLetter } from "@oxen-office/xlsx/domain/cell/address";
 import type { XlsxEditorAction, XlsxDragState } from "../../context/workbook/editor/types";
 import {
   type SheetLayout,

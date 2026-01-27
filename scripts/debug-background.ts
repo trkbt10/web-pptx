@@ -3,13 +3,13 @@
  *
  * Usage: bun run scripts/debug-background.ts [pptx-file]
  */
-import { DEFAULT_RENDER_OPTIONS, openPresentation } from "@oxen/pptx";
-import type { Slide } from "@oxen/pptx/app/types";
-import { getBackgroundFillData, getSolidFill, getSchemeColorFromTheme, parseTheme, parseMasterTextStyles } from "@oxen/pptx/parser/drawing-ml/index";
-import { createSlideContext, type SlideContext } from "@oxen/pptx/parser/slide/context";
-import { createPlaceholderTable, createColorMap } from "@oxen/pptx/parser/slide/resource-adapters";
-import { toResolvedBackgroundFill } from "@oxen/pptx-render";
-import { getTextByPathList, getNode, getString } from "@oxen/pptx/parser/traverse";
+import { DEFAULT_RENDER_OPTIONS, openPresentation } from "@oxen-office/pptx";
+import type { Slide } from "@oxen-office/pptx/app/types";
+import { getBackgroundFillData, getSolidFill, getSchemeColorFromTheme, parseTheme, parseMasterTextStyles } from "@oxen-office/pptx/parser/drawing-ml/index";
+import { createSlideContext, type SlideContext } from "@oxen-office/pptx/parser/slide/context";
+import { createPlaceholderTable, createColorMap } from "@oxen-office/pptx/parser/slide/resource-adapters";
+import { toResolvedBackgroundFill } from "@oxen-office/pptx-render";
+import { getTextByPathList, getNode, getString } from "@oxen-office/pptx/parser/traverse";
 import { isXmlElement, getChild, getChildren, getByPath, type XmlElement } from "@oxen/xml";
 import { loadPptxFile } from "./lib/pptx-loader";
 

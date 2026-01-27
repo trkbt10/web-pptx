@@ -10,7 +10,7 @@
  * Character-level editing does NOT treat newlines as paragraph separators.
  */
 
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
 import { mergeTextIntoParagraph } from "./paragraph-edit";
 import { getParagraphPlainText } from "./run-plain-text";
 

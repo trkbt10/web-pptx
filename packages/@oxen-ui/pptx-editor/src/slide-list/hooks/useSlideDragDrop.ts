@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useState } from "react";
-import type { SlideId, SlideWithId } from "@oxen/pptx/app";
+import type { SlideId, SlideWithId } from "@oxen-office/pptx/app";
 import type { SlideDragState, SlideListOrientation } from "../types";
 import { createIdleDragState } from "../types";
 import {

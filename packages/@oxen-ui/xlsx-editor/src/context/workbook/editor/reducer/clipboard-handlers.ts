@@ -6,12 +6,12 @@
 
 import type { HandlerMap } from "./handler-types";
 import type { XlsxClipboardContent, XlsxEditorState } from "../types";
-import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
-import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
-import type { Formula } from "@oxen/xlsx/domain/cell/formula";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import { colIdx, rowIdx, type StyleId } from "@oxen/xlsx/domain/types";
-import { shiftFormulaReferences } from "@oxen/xlsx/formula/shift";
+import type { CellAddress, CellRange } from "@oxen-office/xlsx/domain/cell/address";
+import type { Cell, CellValue } from "@oxen-office/xlsx/domain/cell/types";
+import type { Formula } from "@oxen-office/xlsx/domain/cell/formula";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import { colIdx, rowIdx, type StyleId } from "@oxen-office/xlsx/domain/types";
+import { shiftFormulaReferences } from "@oxen-office/xlsx/formula/shift";
 import { getCellsInRange, getCellValuesInRange } from "../../../../cell/query";
 import { deleteCellRange, updateCellById } from "../../../../cell/mutation";
 import { pushHistory } from "../../state/history";

@@ -4,7 +4,7 @@
  * Displays a fallback message for unrecognized shape types.
  */
 
-import type { Shape } from "@oxen/pptx/domain/index";
+import type { Shape } from "@oxen-office/pptx/domain/index";
 
 // =============================================================================
 // Types

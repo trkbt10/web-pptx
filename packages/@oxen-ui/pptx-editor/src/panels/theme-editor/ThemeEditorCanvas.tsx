@@ -10,10 +10,10 @@
  */
 
 import { useState, useCallback, useMemo, useRef, type CSSProperties, type ChangeEvent } from "react";
-import type { ColorScheme } from "@oxen/pptx/domain/color/context";
-import type { FontScheme, FontSpec } from "@oxen/pptx/domain/resolution";
-import type { PresentationFile, SlideSize } from "@oxen/pptx/domain";
-import type { SlideLayoutOption } from "@oxen/pptx/app";
+import type { ColorScheme } from "@oxen-office/pptx/domain/color/context";
+import type { FontScheme, FontSpec } from "@oxen-office/pptx/domain/resolution";
+import type { PresentationFile, SlideSize } from "@oxen-office/pptx/domain";
+import type { SlideLayoutOption } from "@oxen-office/pptx/app";
 import type { SchemeColorName, ThemePreset } from "./types";
 import { THEME_PRESETS, OFFICE_THEME } from "./presets";
 import { LayoutEditor } from "./LayoutEditor";

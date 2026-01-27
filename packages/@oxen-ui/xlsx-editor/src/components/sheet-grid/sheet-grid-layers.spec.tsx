@@ -6,11 +6,11 @@
 
 import { act, render, screen } from "@testing-library/react";
 import { triggerResizeObservers } from "../../../../../../spec/test-utils/resize-observer";
-import type { XlsxWorkbook } from "@oxen/xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
+import type { XlsxWorkbook } from "@oxen-office/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen-office/xlsx/domain/style/types";
 import { VirtualScroll } from "@oxen-ui/ui-components";
 import { createSheetLayout } from "../../selectors/sheet-layout";
-import { createFormulaEvaluator } from "@oxen/xlsx/formula/evaluator";
+import { createFormulaEvaluator } from "@oxen-office/xlsx/formula/evaluator";
 import { XlsxWorkbookEditorProvider } from "../../context/workbook/XlsxWorkbookEditorContext";
 import { XlsxSheetGridLayers } from "./sheet-grid-layers";
 

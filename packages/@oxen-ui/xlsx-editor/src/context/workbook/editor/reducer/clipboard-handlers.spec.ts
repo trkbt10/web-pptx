@@ -2,11 +2,11 @@
  * @file Clipboard handlers tests
  */
 
-import type { XlsxWorkbook, XlsxWorksheet, XlsxRow } from "@oxen/xlsx/domain/workbook";
-import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
-import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
-import { colIdx, rowIdx, styleId } from "@oxen/xlsx/domain/types";
-import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
+import type { XlsxWorkbook, XlsxWorksheet, XlsxRow } from "@oxen-office/xlsx/domain/workbook";
+import type { Cell, CellValue } from "@oxen-office/xlsx/domain/cell/types";
+import type { CellAddress, CellRange } from "@oxen-office/xlsx/domain/cell/address";
+import { colIdx, rowIdx, styleId } from "@oxen-office/xlsx/domain/types";
+import { createDefaultStyleSheet } from "@oxen-office/xlsx/domain/style/types";
 import { getCell, getCellValue } from "../../../../cell/query";
 import { createHistory } from "../../state/history";
 import { createRangeSelection } from "../../state/selection";

@@ -4,7 +4,7 @@
  * Provides immutable operations for cell selection within a worksheet.
  */
 
-import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
+import type { CellAddress, CellRange } from "@oxen-office/xlsx/domain/cell/address";
 import type { CellSelectionState } from "../editor/types";
 import { createEmptyCellSelection } from "../editor/types";
 

@@ -23,7 +23,7 @@ import {
   fontTokens,
   radiusTokens,
 } from "@oxen-ui/ui-components/design-tokens";
-import type { XlsxStyleSheet, XlsxCellXf, XlsxCellStyle } from "@oxen/xlsx/domain/style/types";
+import type { XlsxStyleSheet, XlsxCellXf, XlsxCellStyle } from "@oxen-office/xlsx/domain/style/types";
 import { xlsxColorToCss } from "../../../selectors/xlsx-color";
 
 // =============================================================================

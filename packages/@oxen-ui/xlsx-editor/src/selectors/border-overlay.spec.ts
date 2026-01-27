@@ -2,11 +2,11 @@
  * @file Tests for border overlay builder
  */
 
-import type { XlsxStyleSheet } from "@oxen/xlsx/domain/style/types";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
-import { borderId, colIdx, fillId, fontId, numFmtId, rowIdx, styleId } from "@oxen/xlsx/domain/types";
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
+import type { XlsxStyleSheet } from "@oxen-office/xlsx/domain/style/types";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen-office/xlsx/domain/style/types";
+import { borderId, colIdx, fillId, fontId, numFmtId, rowIdx, styleId } from "@oxen-office/xlsx/domain/types";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
 import { createSheetLayout } from "./sheet-layout";
 import { buildBorderOverlayLines } from "./border-overlay";
 

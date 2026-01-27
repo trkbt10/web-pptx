@@ -5,8 +5,8 @@ import {
   PdfImportError,
   type PdfImportOptions,
   type PdfImportResult,
-} from "@oxen/pdf/importer/pdf-importer";
-import type { PresentationDocument } from "@oxen/pptx/app";
+} from "@oxen-office/pdf-to-pptx/importer/pdf-importer";
+import type { PresentationDocument } from "@oxen-office/pptx/app";
 
 type PdfImportState = {
   /** インポート状態 */

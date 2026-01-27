@@ -4,8 +4,8 @@
  * Moves shapes between groups and top-level while preserving visual position.
  */
 
-import type { Shape, GrpShape, Transform, GroupTransform } from "@oxen/pptx/domain";
-import type { ShapeId } from "@oxen/pptx/domain/types";
+import type { Shape, GrpShape, Transform, GroupTransform } from "@oxen-office/pptx/domain";
+import type { ShapeId } from "@oxen-office/pptx/domain/types";
 import { findShapeByIdWithParents, findShapeById } from "./query";
 import { hasShapeId } from "./identity";
 import { updateShapeById } from "./mutation";

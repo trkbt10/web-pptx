@@ -4,7 +4,7 @@
  * Tests the OleObjectEditor handles OLE object references correctly.
  */
 
-import type { OleReference, OleObjectFollowColorScheme } from "@oxen/pptx/domain/shape";
+import type { OleReference, OleObjectFollowColorScheme } from "@oxen-office/pptx/domain/shape";
 import { createDefaultOleReference } from "./OleObjectEditor";
 
 describe("OleObjectEditor: OLE reference handling", () => {

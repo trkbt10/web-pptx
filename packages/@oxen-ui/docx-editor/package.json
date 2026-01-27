@@ -5,8 +5,8 @@
   "type": "module",
   "sideEffects": false,
   "dependencies": {
-    "@oxen/docx": "workspace:*",
-    "@oxen/text-layout": "workspace:*",
+    "@oxen-office/docx": "workspace:*",
+    "@oxen-office/text-layout": "workspace:*",
     "@oxen-ui/ui-components": "workspace:*"
   },
   "peerDependencies": {

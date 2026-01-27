@@ -6,9 +6,9 @@
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { parseXls } from "@oxen/xls";
-import { exportXlsx } from "@oxen/xlsx/exporter";
-import { parseXlsxWorkbook } from "@oxen/xlsx/parser";
+import { parseXls } from "@oxen-office/xls";
+import { exportXlsx } from "@oxen-office/xlsx/exporter";
+import { parseXlsxWorkbook } from "@oxen-office/xlsx/parser";
 import { loadZipPackage } from "@oxen/zip";
 
 function fixturePath(name: string): string {

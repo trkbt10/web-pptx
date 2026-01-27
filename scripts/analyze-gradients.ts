@@ -6,8 +6,8 @@
  * Usage: bun run scripts/analyze-gradients.ts [pptx-path] [slide-number]
  * Default: fixtures/poi-test-data/test-data/slideshow/themes.pptx all slides
  */
-import { openPresentation } from "@oxen/pptx";
-import { renderSlideToSvg } from "@oxen/pptx-render/svg";
+import { openPresentation } from "@oxen-office/pptx";
+import { renderSlideToSvg } from "@oxen-office/pptx-render/svg";
 import * as fs from "node:fs";
 import { loadPptxFile } from "./lib/pptx-loader";
 

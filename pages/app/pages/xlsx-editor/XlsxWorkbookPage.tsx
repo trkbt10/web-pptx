@@ -4,14 +4,14 @@
 
 import { useCallback, useMemo, useState, type CSSProperties } from "react";
 import { XlsxWorkbookEditor } from "@oxen-ui/xlsx-editor";
-import type { XlsxWorkbook } from "@oxen/xlsx/domain/workbook";
-import { createDefaultStyleSheet } from "@oxen/xlsx/domain/style/types";
-import { borderId, colIdx, fillId, fontId, numFmtId, rowIdx, styleId, type ColIndex, type RowIndex } from "@oxen/xlsx/domain/types";
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import type { Formula } from "@oxen/xlsx/domain/cell/formula";
+import type { XlsxWorkbook } from "@oxen-office/xlsx/domain/workbook";
+import { createDefaultStyleSheet } from "@oxen-office/xlsx/domain/style/types";
+import { borderId, colIdx, fillId, fontId, numFmtId, rowIdx, styleId, type ColIndex, type RowIndex } from "@oxen-office/xlsx/domain/types";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import type { Formula } from "@oxen-office/xlsx/domain/cell/formula";
 import { Button, Input } from "@oxen-ui/ui-components/primitives";
 import { parseSpreadsheetFile, SpreadsheetParseError } from "@lib/spreadsheet-parser";
-import { exportXlsx } from "@oxen/xlsx/exporter";
+import { exportXlsx } from "@oxen-office/xlsx/exporter";
 
 const controlsStyle: CSSProperties = {
   display: "flex",

@@ -5,8 +5,8 @@
  * including edge cases with empty paragraphs or missing data.
  */
 
-import type { TextBody, Paragraph, TextRun, ParagraphProperties, BodyProperties } from "@oxen/pptx/domain/text";
-import { px } from "@oxen/ooxml/domain/units";
+import type { TextBody, Paragraph, TextRun, ParagraphProperties, BodyProperties } from "@oxen-office/pptx/domain/text";
+import { px } from "@oxen-office/ooxml/domain/units";
 
 // =============================================================================
 // Helper functions

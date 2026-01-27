@@ -10,12 +10,12 @@ import { Input, Select } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
 import { FillPreview } from "../../ui/color";
 import { PercentEditor, DegreesEditor } from "../primitives";
-import { deg, pct } from "@oxen/ooxml/domain/units";
-import type { ColorSpec, SrgbColor, SchemeColor, SystemColor, PresetColor, HslColor } from "@oxen/ooxml/domain/color";
-import type { SolidFill } from "@oxen/ooxml/domain/fill";
+import { deg, pct } from "@oxen-office/ooxml/domain/units";
+import type { ColorSpec, SrgbColor, SchemeColor, SystemColor, PresetColor, HslColor } from "@oxen-office/ooxml/domain/color";
+import type { SolidFill } from "@oxen-office/ooxml/domain/fill";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
-import type { ColorContext } from "@oxen/pptx/domain/color/context";
-import { resolveColor } from "@oxen/pptx/domain/color/resolution";
+import type { ColorContext } from "@oxen-office/pptx/domain/color/context";
+import { resolveColor } from "@oxen-office/pptx/domain/color/resolution";
 import { useEditorConfig } from "../../context/editor/EditorConfigContext";
 
 export type ColorSpecEditorProps = EditorProps<ColorSpec> & {

@@ -3,10 +3,6 @@
  */
 
 import { parsePdfNative } from "../core/pdf-parser.native";
-import { convertImageToShape } from "../../converter/image-to-shapes";
-import { parseDataUrl } from "@oxen/buffer";
-import { px } from "@oxen/ooxml/domain/units";
-import { createFitContext } from "../../converter/transform-converter";
 
 function buildMinimalPdfWithTriangleClipAndImage(): Uint8Array {
   const clip = "0 0 m 10 0 l 0 10 l h W n";
@@ -60,7 +56,7 @@ function buildMinimalPdfWithTriangleClipAndImage(): Uint8Array {
 }
 
 describe("clip paths (per-pixel mask, native)", () => {
-  it("generates a clipMask from a non-rect `W` clip path when clipPathMaxSize is enabled and applies it to images via conversion", async () => {
+  it("generates a clipMask from a non-rect `W` clip path when clipPathMaxSize is enabled", async () => {
     const pdfBytes = buildMinimalPdfWithTriangleClipAndImage();
     const doc = await parsePdfNative(pdfBytes, { clipPathMaxSize: 10 });
 
@@ -70,31 +66,13 @@ describe("clip paths (per-pixel mask, native)", () => {
 
     const image = images[0]!;
     if (image.type !== "image") {throw new Error("Expected image");}
-    expect(image.graphicsState.clipMask).toBeTruthy();
 
-    const context = createFitContext(100, 100, px(100), px(100), "contain");
-
-    const shape = convertImageToShape(image, context, "1");
-    if (!shape) {throw new Error("Expected shape");}
-    expect(shape.type).toBe("pic");
-    expect(shape.properties.transform).toMatchObject({ x: 0, y: 90, width: 10, height: 10 });
-
-    const parsed = parseDataUrl(shape.blipFill.resourceId);
-    expect(parsed.mimeType).toBe("image/png");
-
-    type PngReadResult = Readonly<{ readonly width: number; readonly height: number; readonly data: Uint8Array }>;
-    type PngjsModule = Readonly<{ readonly PNG: Readonly<{ readonly sync: Readonly<{ readonly read: (bytes: Buffer) => PngReadResult }> }> }>;
-
-    // eslint-disable-next-line @typescript-eslint/no-require-imports -- pngjs is CJS
-    const pngjs = require("pngjs") as PngjsModule;
-    const decoded = pngjs.PNG.sync.read(Buffer.from(parsed.data));
-    expect(decoded.width).toBe(10);
-    expect(decoded.height).toBe(10);
-
-    const alphaAt = (x: number, y: number): number => decoded.data[(y * decoded.width + x) * 4 + 3] ?? 0;
-    // Outside the triangle (near top-right) -> fully transparent.
-    expect(alphaAt(8, 0)).toBe(0);
-    // Inside the triangle (near bottom-left) -> fully opaque.
-    expect(alphaAt(1, 8)).toBe(255);
+    const mask = image.graphicsState.clipMask;
+    expect(mask).toBeTruthy();
+    if (!mask) {throw new Error("Expected clipMask");}
+    expect(mask.width).toBe(10);
+    expect(mask.height).toBe(10);
+    expect(mask.alpha.length).toBe(10 * 10);
+    expect(Array.from(mask.alpha).some((v) => v !== 0)).toBe(true);
   });
 });

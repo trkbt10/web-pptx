@@ -11,10 +11,10 @@ import type {
 } from "../types";
 import type { HandlerMap } from "./handler-types";
 import { pushHistory } from "../../../slide/state";
-import type { PresentationDocument } from "@oxen/pptx/app";
+import type { PresentationDocument } from "@oxen-office/pptx/app";
 import type { ThemePreset } from "../../../../panels/theme-editor/types";
-import type { SchemeColorName } from "@oxen/ooxml/domain/color";
-import type { FontSpec } from "@oxen/pptx/domain/resolution";
+import type { SchemeColorName } from "@oxen-office/ooxml/domain/color";
+import type { FontSpec } from "@oxen-office/pptx/domain/resolution";
 
 type SetEditorModeAction = Extract<
   PresentationEditorAction,

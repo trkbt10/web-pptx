@@ -15,15 +15,15 @@
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
-import { convertToPresentationDocument } from "@oxen/pptx/app";
-import { loadPptxBundleFromBuffer } from "@oxen/pptx/app/pptx-loader";
-import { openPresentation } from "@oxen/pptx";
-import { exportPptxAsBuffer } from "@oxen/pptx/exporter";
+import { convertToPresentationDocument } from "@oxen-office/pptx/app";
+import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
+import { openPresentation } from "@oxen-office/pptx";
+import { exportPptxAsBuffer } from "@oxen-office/pptx/exporter";
 import { getBasename, getByPath, getChildren, parseXml } from "@oxen/xml";
-import { CONTENT_TYPES } from "@oxen/pptx/opc/content-types";
-import { RELATIONSHIP_TYPES } from "@oxen/pptx/domain/relationships";
-import { getRelationshipPath } from "@oxen/pptx/parser/relationships";
-import { addSlide, duplicateSlide, removeSlide, reorderSlide } from "@oxen/pptx/patcher";
+import { CONTENT_TYPES } from "@oxen-office/pptx/opc/content-types";
+import { RELATIONSHIP_TYPES } from "@oxen-office/pptx/domain/relationships";
+import { getRelationshipPath } from "@oxen-office/pptx/parser/relationships";
+import { addSlide, duplicateSlide, removeSlide, reorderSlide } from "@oxen-office/pptx/patcher";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURE_DIR = path.resolve(__dirname, "../../fixtures");

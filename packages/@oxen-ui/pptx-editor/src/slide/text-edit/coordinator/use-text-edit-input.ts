@@ -14,8 +14,8 @@ import {
   type Dispatch,
   type SetStateAction,
 } from "react";
-import type { TextBody } from "@oxen/pptx/domain";
-import type { LayoutResult } from "@oxen/pptx-render/text-layout";
+import type { TextBody } from "@oxen-office/pptx/domain";
+import type { LayoutResult } from "@oxen-office/pptx-render/text-layout";
 import {
   offsetToCursorPosition,
   cursorPositionToCoordinates,

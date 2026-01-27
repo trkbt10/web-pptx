@@ -5,7 +5,7 @@
  */
 
 import { createContext, useContext, useEffect, useMemo, useReducer, type ReactNode } from "react";
-import type { XlsxWorkbook, XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import type { XlsxWorkbook, XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
 import type { CellSelectionState, XlsxEditorAction, XlsxEditorState } from "./editor/types";
 import { xlsxEditorReducer, createInitialState } from "./editor/reducer";
 import { canRedo, canUndo } from "./state/history";

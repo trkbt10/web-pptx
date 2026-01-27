@@ -10,8 +10,8 @@
  */
 
 import { slideEditorReducer } from "./reducer";
-import type { Slide, SpShape, Shape } from "@oxen/pptx/domain";
-import { px, deg } from "@oxen/ooxml/domain/units";
+import type { Slide, SpShape, Shape } from "@oxen-office/pptx/domain";
+import { px, deg } from "@oxen-office/ooxml/domain/units";
 import {
   createSlideEditorState,
   type SlideEditorState,

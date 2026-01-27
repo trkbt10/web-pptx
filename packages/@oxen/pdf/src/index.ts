@@ -65,7 +65,7 @@ export type { PdfText } from "./domain";
 export type { PdfImage } from "./domain";
 
 // Document Types
-export type { PdfElement, PdfPage, PdfDocument, PdfImportOptions } from "./domain";
+export type { PdfElement, PdfPage, PdfDocument } from "./domain";
 export { isPdfPath, isPdfText, isPdfImage } from "./domain";
 
 // Constants

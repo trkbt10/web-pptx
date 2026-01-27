@@ -2,8 +2,8 @@
  * @file format-cell-edit-text
  */
 
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
 import { getCell } from "../../cell/query";
 
 /**

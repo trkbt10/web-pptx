@@ -2,10 +2,10 @@
  * @file Cell query tests
  */
 
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
-import type { Cell, CellValue } from "@oxen/xlsx/domain/cell/types";
-import type { CellAddress, CellRange } from "@oxen/xlsx/domain/cell/address";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
+import type { Cell, CellValue } from "@oxen-office/xlsx/domain/cell/types";
+import type { CellAddress, CellRange } from "@oxen-office/xlsx/domain/cell/address";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
 import {
   findCells,
   getCell,

@@ -7,14 +7,14 @@
 
 import { useMemo, type CSSProperties } from "react";
 import { PresentationEditor } from "@oxen-ui/pptx-editor";
-import type { PresentationDocument, SlideWithId } from "@oxen/pptx/app";
-import type { Slide, Presentation } from "@oxen/pptx/domain";
-import type { SpShape, GrpShape, GraphicFrame } from "@oxen/pptx/domain/shape";
-import type { Line } from "@oxen/pptx/domain/color/types";
-import type { Table, TableRow, TableCell } from "@oxen/pptx/domain/table/types";
-import type { ColorContext } from "@oxen/pptx/domain/color/context";
-import type { ResourceResolver } from "@oxen/pptx/domain/resource-resolver";
-import { px, deg, pt } from "@oxen/ooxml/domain/units";
+import type { PresentationDocument, SlideWithId } from "@oxen-office/pptx/app";
+import type { Slide, Presentation } from "@oxen-office/pptx/domain";
+import type { SpShape, GrpShape, GraphicFrame } from "@oxen-office/pptx/domain/shape";
+import type { Line } from "@oxen-office/pptx/domain/color/types";
+import type { Table, TableRow, TableCell } from "@oxen-office/pptx/domain/table/types";
+import type { ColorContext } from "@oxen-office/pptx/domain/color/context";
+import type { ResourceResolver } from "@oxen-office/pptx/domain/resource-resolver";
+import { px, deg, pt } from "@oxen-office/ooxml/domain/units";
 
 // =============================================================================
 // Fixture Helpers

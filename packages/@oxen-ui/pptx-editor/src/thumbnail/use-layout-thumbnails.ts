@@ -5,10 +5,10 @@
  */
 
 import { useMemo } from "react";
-import type { PresentationFile, Shape, SlideSize } from "@oxen/pptx/domain";
-import type { SlideLayoutOption } from "@oxen/pptx/app";
-import { loadSlideLayoutBundle } from "@oxen/pptx/app";
-import { parseShapeTree } from "@oxen/pptx/parser";
+import type { PresentationFile, Shape, SlideSize } from "@oxen-office/pptx/domain";
+import type { SlideLayoutOption } from "@oxen-office/pptx/app";
+import { loadSlideLayoutBundle } from "@oxen-office/pptx/app";
+import { parseShapeTree } from "@oxen-office/pptx/parser";
 import { getChild } from "@oxen/xml";
 import { getByPath } from "@oxen/xml";
 

@@ -6,15 +6,15 @@
  * @see ECMA-376 Part 1, Section 20.1.4.1.7 (a:bgFillStyleLst)
  */
 
-import { openPresentation } from "@oxen/pptx";
+import { openPresentation } from "@oxen-office/pptx";
 import { parseXml, type XmlElement } from "@oxen/xml";
-import { renderSlideToSvg } from "@oxen/pptx-render/svg";
-import { createColorMap } from "@oxen/pptx/parser/slide/resource-adapters";
-import { parseFormatScheme, parseColorScheme } from "@oxen/pptx/parser/drawing-ml/index";
-import { loadLayoutData, loadMasterData, loadThemeData } from "@oxen/pptx/parser/slide/loader";
-import { getRelationships, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS } from "@oxen/pptx/parser/slide/xml-reader";
-import { getGradientFill } from "@oxen/pptx/parser/drawing-ml/index";
-import { getSolidFill } from "@oxen/pptx/parser/drawing-ml/index";
+import { renderSlideToSvg } from "@oxen-office/pptx-render/svg";
+import { createColorMap } from "@oxen-office/pptx/parser/slide/resource-adapters";
+import { parseFormatScheme, parseColorScheme } from "@oxen-office/pptx/parser/drawing-ml/index";
+import { loadLayoutData, loadMasterData, loadThemeData } from "@oxen-office/pptx/parser/slide/loader";
+import { getRelationships, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS } from "@oxen-office/pptx/parser/slide/xml-reader";
+import { getGradientFill } from "@oxen-office/pptx/parser/drawing-ml/index";
+import { getSolidFill } from "@oxen-office/pptx/parser/drawing-ml/index";
 import { createPresentationFile, THEMES_PPTX_PATH } from "./test-utils";
 
 /**

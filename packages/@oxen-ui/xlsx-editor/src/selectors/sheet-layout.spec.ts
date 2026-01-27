@@ -2,8 +2,8 @@
  * @file Unit tests for sheet layout calculations (row/column metrics).
  */
 
-import { colIdx, rowIdx } from "@oxen/xlsx/domain/types";
-import type { XlsxWorksheet } from "@oxen/xlsx/domain/workbook";
+import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
+import type { XlsxWorksheet } from "@oxen-office/xlsx/domain/workbook";
 import {
   columnWidthCharToPixels,
   createSheetLayout,

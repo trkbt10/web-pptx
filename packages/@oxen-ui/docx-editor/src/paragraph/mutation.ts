@@ -12,9 +12,9 @@ import type {
   DocxParagraphSpacing,
   DocxParagraphIndent,
   DocxNumberingProperties,
-} from "@oxen/docx/domain/paragraph";
-import type { DocxRun, DocxRunProperties } from "@oxen/docx/domain/run";
-import type { Twips, DocxNumId, DocxIlvl } from "@oxen/docx/domain/types";
+} from "@oxen-office/docx/domain/paragraph";
+import type { DocxRun, DocxRunProperties } from "@oxen-office/docx/domain/run";
+import type { Twips, DocxNumId, DocxIlvl } from "@oxen-office/docx/domain/types";
 import { createTextRun, getRunText, splitRun, mergeRuns, mergeRunProperties } from "../run/mutation";
 
 // =============================================================================

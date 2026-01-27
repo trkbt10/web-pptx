@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import type { DocxRun } from "@oxen/docx/domain/run";
+import type { DocxRun } from "@oxen-office/docx/domain/run";
 import { splitRunAtOffset, mergeAdjacentRuns } from "./run-operations";
 
 // =============================================================================

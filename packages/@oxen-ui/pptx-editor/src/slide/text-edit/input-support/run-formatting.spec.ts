@@ -16,9 +16,9 @@ import type {
   TextRun,
   Paragraph,
   RegularRun,
-} from "@oxen/pptx/domain/text";
+} from "@oxen-office/pptx/domain/text";
 import type { TextSelection } from "./cursor";
-import type { Points } from "@oxen/ooxml/domain/units";
+import type { Points } from "@oxen-office/ooxml/domain/units";
 
 // =============================================================================
 // Test Fixtures

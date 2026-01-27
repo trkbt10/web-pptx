@@ -5,9 +5,9 @@
  * These are higher-level operations that work across paragraphs and runs.
  */
 
-import type { DocxDocument } from "@oxen/docx/domain/document";
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
-import type { DocxRunProperties } from "@oxen/docx/domain/run";
+import type { DocxDocument } from "@oxen-office/docx/domain/document";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
+import type { DocxRunProperties } from "@oxen-office/docx/domain/run";
 import type { TextPosition, TextRange } from "../context/document/state/selection";
 import {
   getParagraphText,

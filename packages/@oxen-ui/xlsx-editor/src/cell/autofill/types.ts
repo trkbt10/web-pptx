@@ -4,9 +4,9 @@
  * Shared types/constants for the XLSX editor fill-handle implementation.
  */
 
-import type { CellAddress } from "@oxen/xlsx/domain/cell/address";
-import type { Formula } from "@oxen/xlsx/domain/cell/formula";
-import type { CellValue } from "@oxen/xlsx/domain/cell/types";
+import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
+import type { Formula } from "@oxen-office/xlsx/domain/cell/formula";
+import type { CellValue } from "@oxen-office/xlsx/domain/cell/types";
 
 export type FillDirection = "up" | "down" | "left" | "right";
 

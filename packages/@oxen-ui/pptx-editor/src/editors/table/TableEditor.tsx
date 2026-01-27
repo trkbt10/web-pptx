@@ -9,7 +9,7 @@ import { Accordion, FieldGroup } from "@oxen-ui/ui-components/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
 import { TablePropertiesEditor, createDefaultTableProperties } from "./TablePropertiesEditor";
 import { TableCellEditor, createDefaultTableCell } from "./TableCellEditor";
-import { px } from "@oxen/ooxml/domain/units";
+import { px } from "@oxen-office/ooxml/domain/units";
 import type {
   Table,
   TableProperties,
@@ -17,7 +17,7 @@ import type {
   TableRow,
   TableCell,
   TableColumn,
-} from "@oxen/pptx/domain/table/types";
+} from "@oxen-office/pptx/domain/table/types";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 
 export type TableEditorProps = EditorProps<Table> & {

@@ -5,11 +5,11 @@
  */
 
 import { useCallback, useMemo, type CSSProperties } from "react";
-import type { DocxDocument } from "@oxen/docx/domain/document";
-import type { DocxNumberingProperties } from "@oxen/docx/domain/paragraph";
-import type { DocxRunProperties } from "@oxen/docx/domain/run";
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
-import type { NumberFormat } from "@oxen/ooxml";
+import type { DocxDocument } from "@oxen-office/docx/domain/document";
+import type { DocxNumberingProperties } from "@oxen-office/docx/domain/paragraph";
+import type { DocxRunProperties } from "@oxen-office/docx/domain/run";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
+import type { NumberFormat } from "@oxen-office/ooxml";
 import { Button, ToggleButton } from "@oxen-ui/ui-components/primitives";
 import { iconTokens } from "@oxen-ui/ui-components/design-tokens";
 import {

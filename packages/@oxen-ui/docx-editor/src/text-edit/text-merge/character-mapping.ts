@@ -5,8 +5,8 @@
  * during text editing operations.
  */
 
-import type { DocxParagraph } from "@oxen/docx/domain/paragraph";
-import type { DocxRun, DocxRunProperties } from "@oxen/docx/domain/run";
+import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
+import type { DocxRun, DocxRunProperties } from "@oxen-office/docx/domain/run";
 import { getRunPlainText } from "./run-plain-text";
 import { areRunPropertiesEqual } from "./run-properties";
 

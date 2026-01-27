@@ -4,8 +4,8 @@
  * Displays property editors for GrpShape (group) elements.
  */
 
-import type { GrpShape, Shape } from "@oxen/pptx/domain/index";
-import type { Transform } from "@oxen/pptx/domain/types";
+import type { GrpShape, Shape } from "@oxen-office/pptx/domain/index";
+import type { Transform } from "@oxen-office/pptx/domain/types";
 import { Accordion } from "@oxen-ui/ui-components/layout";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
 import {

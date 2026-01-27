@@ -13,10 +13,10 @@
  */
 
 import * as fs from "node:fs";
-import { openPresentation, LIBREOFFICE_RENDER_OPTIONS } from "@oxen/pptx";
+import { openPresentation, LIBREOFFICE_RENDER_OPTIONS } from "@oxen-office/pptx";
 import { compareSvgToSnapshot, hasSnapshot, listSnapshots } from "./compare";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
-import { renderSlideToSvg } from "@oxen/pptx-render/svg";
+import { renderSlideToSvg } from "@oxen-office/pptx-render/svg";
 
 type EmptyTemplateTestCase = {
   name: string;

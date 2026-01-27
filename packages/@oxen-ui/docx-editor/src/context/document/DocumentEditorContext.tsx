@@ -11,7 +11,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
-import type { DocxDocument, DocxBlockContent } from "@oxen/docx/domain/document";
+import type { DocxDocument, DocxBlockContent } from "@oxen-office/docx/domain/document";
 import type { DocxEditorState, DocxEditorAction, TextEditState, EditorMode } from "./editor/types";
 import { reducer, createInitialState } from "./editor/reducer/reducer";
 import { canUndo as canUndoHistory, canRedo as canRedoHistory } from "./state/history";

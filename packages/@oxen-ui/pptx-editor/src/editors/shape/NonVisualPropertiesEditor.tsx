@@ -10,7 +10,7 @@ import { useCallback } from "react";
 import { Input, Toggle } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
 import { HyperlinkEditor } from "./HyperlinkEditor";
-import type { NonVisualProperties } from "@oxen/pptx/domain/shape";
+import type { NonVisualProperties } from "@oxen-office/pptx/domain/shape";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 
 export type NonVisualPropertiesEditorProps = EditorProps<NonVisualProperties> & {

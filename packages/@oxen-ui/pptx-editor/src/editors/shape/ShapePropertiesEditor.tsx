@@ -14,11 +14,11 @@ import { GeometryEditor, createDefaultGeometry } from "./GeometryEditor";
 import { EffectsEditor, createDefaultEffects } from "./EffectsEditor";
 import { Scene3dEditor, createDefaultScene3d } from "./Scene3dEditor";
 import { Shape3dEditor, createDefaultShape3d } from "./Shape3dEditor";
-import type { ShapeProperties, Geometry } from "@oxen/pptx/domain/shape";
-import type { Scene3d, Shape3d } from "@oxen/pptx/domain";
+import type { ShapeProperties, Geometry } from "@oxen-office/pptx/domain/shape";
+import type { Scene3d, Shape3d } from "@oxen-office/pptx/domain";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
-import type { Transform, Effects } from "@oxen/pptx/domain/types";
-import type { Fill, Line } from "@oxen/pptx/domain/color/types";
+import type { Transform, Effects } from "@oxen-office/pptx/domain/types";
+import type { Fill, Line } from "@oxen-office/pptx/domain/color/types";
 
 export type ShapePropertiesEditorProps = EditorProps<ShapeProperties> & {
   readonly showTransform?: boolean;

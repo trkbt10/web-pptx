@@ -7,10 +7,10 @@
 import type { PresentationEditorState, PresentationEditorAction } from "../types";
 import { createSelectMode } from "../types";
 import type { HandlerMap, ActionHandler } from "./handler-types";
-import type { ShapeId } from "@oxen/pptx/domain/types";
-import type { Pixels } from "@oxen/ooxml/domain/units";
-import { px } from "@oxen/ooxml/domain/units";
-import type { CustomGeometry, Shape, SpShape } from "@oxen/pptx/domain";
+import type { ShapeId } from "@oxen-office/pptx/domain/types";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/ooxml/domain/units";
+import type { CustomGeometry, Shape, SpShape } from "@oxen-office/pptx/domain";
 import {
   createInactivePathEditState,
   createActivePathEditState,

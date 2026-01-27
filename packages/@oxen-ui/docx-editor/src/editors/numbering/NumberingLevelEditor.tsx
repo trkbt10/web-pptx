@@ -6,9 +6,9 @@
  */
 
 import { useCallback, type CSSProperties, type ReactNode } from "react";
-import type { DocxLevel, DocxLevelJustification } from "@oxen/docx/domain/numbering";
-import type { NumberFormat, LevelSuffix } from "@oxen/ooxml";
-import type { DocxIlvl } from "@oxen/docx/domain/types";
+import type { DocxLevel, DocxLevelJustification } from "@oxen-office/docx/domain/numbering";
+import type { NumberFormat, LevelSuffix } from "@oxen-office/ooxml";
+import type { DocxIlvl } from "@oxen-office/docx/domain/types";
 import type { EditorProps } from "../../types";
 import { ToggleButton, Input, Select, Toggle } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
