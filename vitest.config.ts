@@ -11,11 +11,7 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
 export default defineConfig({
-  resolve: {
-    alias: {
-      "@lib": path.resolve(__dirname, "src"),
-    },
-  },
+  resolve: { alias: {} },
   test: {
     globals: true,
     environment: "node",
@@ -24,7 +20,7 @@ export default defineConfig({
       provider: "v8",
       reporter: ["text", "lcov"],
       reportsDirectory: "coverage",
-      include: ["src/**/*.{ts,tsx}"],
+      include: ["packages/**/*.{ts,tsx}", "spec/**/*.{ts,tsx}"],
     },
   },
 });

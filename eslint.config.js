@@ -33,7 +33,6 @@ export default [
       "pages/dist/**",
       "*.config.ts",
       "eslint/**",
-      "src/index.ts",
       ".*/**",
     ],
   },
