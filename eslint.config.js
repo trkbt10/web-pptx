@@ -79,6 +79,8 @@ export default [
         "custom/no-cross-package-reexport": "error",
         // Prohibit export * from (barrel exports)
         "custom/no-export-star": "error",
+        // Require object parameter for functions with 4+ params
+        "custom/max-params": ["error", { max: 3 }],
         // Spread from modular groups
         ...rulesJSDoc,
         ...rulesRestrictedSyntax,
