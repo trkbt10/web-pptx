@@ -18,7 +18,7 @@ import type {
   WritingMode,
 } from "../types";
 import { PT_TO_PX } from "../measurer";
-import { getAscenderRatio } from "@oxen/text";
+import { getAscenderRatio } from "@oxen/glyph";
 import { isVertical } from "../writing-mode";
 
 const DEFAULT_HYPERLINK_COLOR = "#0563C1";

@@ -15,22 +15,13 @@ import type { XlsxFont } from "@oxen-office/xlsx/domain/style/font";
 import type { XlsxFill } from "@oxen-office/xlsx/domain/style/fill";
 import type { XlsxBorder } from "@oxen-office/xlsx/domain/style/border";
 import type { ColIndex, RowIndex, StyleId } from "@oxen-office/xlsx/domain/types";
+import type { UndoRedoHistory as CoreUndoRedoHistory } from "@oxen-ui/editor-core/history";
 
 // =============================================================================
 // Undo/Redo History (shared with pptx-editor)
 // =============================================================================
 
-/**
- * Undo/Redo history for any type T
- */
-export type UndoRedoHistory<T> = {
-  /** Past states (most recent at end) */
-  readonly past: readonly T[];
-  /** Current state */
-  readonly present: T;
-  /** Future states (for redo, most recent at start) */
-  readonly future: readonly T[];
-};
+export type UndoRedoHistory<T> = CoreUndoRedoHistory<T>;
 
 // =============================================================================
 // Cell Selection State

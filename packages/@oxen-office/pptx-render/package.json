@@ -10,7 +10,6 @@
     "@oxen/glyph": "workspace:*",
     "@oxen-office/ooxml": "workspace:*",
     "@oxen-office/pptx": "workspace:*",
-    "@oxen/text": "workspace:*",
     "@oxen/xml": "workspace:*"
   },
   "peerDependencies": {

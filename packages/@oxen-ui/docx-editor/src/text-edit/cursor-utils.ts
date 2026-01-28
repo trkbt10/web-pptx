@@ -27,7 +27,7 @@ import {
   getParagraphPlainText,
 } from "@oxen-office/text-layout";
 import { editorLayoutTokens } from "@oxen-ui/ui-components/design-tokens";
-import { getAscenderRatio } from "@oxen/text";
+import { getAscenderRatio } from "@oxen/glyph";
 
 // =============================================================================
 // Text Position Mapping

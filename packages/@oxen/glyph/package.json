@@ -21,6 +21,18 @@
     "./layout": {
       "types": "./src/layout/index.ts",
       "default": "./src/layout/index.ts"
+    },
+    "./metrics": {
+      "types": "./src/metrics/index.ts",
+      "default": "./src/metrics/index.ts"
+    },
+    "./measure": {
+      "types": "./src/measure/index.ts",
+      "default": "./src/measure/index.ts"
+    },
+    "./breaking": {
+      "types": "./src/breaking/index.ts",
+      "default": "./src/breaking/index.ts"
     }
   }
 }

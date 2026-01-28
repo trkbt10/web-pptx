@@ -6,6 +6,7 @@
   "sideEffects": false,
   "dependencies": {
     "@oxen/color": "workspace:*",
+    "@oxen/xml": "workspace:*",
     "@oxen/zip": "workspace:*"
   },
   "scripts": {
@@ -37,6 +38,18 @@
     "./opc/*": {
       "types": "./src/opc/*.ts",
       "default": "./src/opc/*.ts"
+    },
+    "./parser": {
+      "types": "./src/parser/index.ts",
+      "default": "./src/parser/index.ts"
+    },
+    "./parser/*": {
+      "types": "./src/parser/*.ts",
+      "default": "./src/parser/*.ts"
+    },
+    "./parser/*/*": {
+      "types": "./src/parser/*/*.ts",
+      "default": "./src/parser/*/*.ts"
     },
     "./serializer": {
       "types": "./src/serializer/index.ts",

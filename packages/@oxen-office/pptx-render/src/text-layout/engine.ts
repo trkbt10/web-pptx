@@ -23,7 +23,7 @@ import { measureSpans, estimateBulletWidth } from "./measurer";
 import { breakIntoLines, getLineWidth } from "./line-breaker";
 import { PT_TO_PX } from "@oxen-office/pptx/domain/unit-conversion";
 import { DEFAULT_FONT_SIZE_PT } from "@oxen-office/pptx/domain/defaults";
-import { getAscenderRatio } from "@oxen/text";
+import { getAscenderRatio } from "@oxen/glyph";
 import type { RenderOptions } from "../render-options";
 import { DEFAULT_RENDER_OPTIONS } from "../render-options";
 

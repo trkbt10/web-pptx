@@ -8,20 +8,18 @@
  * @see RFC 3986, Section 5.2 (Relative Resolution)
  */
 
-import type { XmlDocument } from "@oxen/xml";
 import type { PresentationFile, ResourceMap } from "../domain/opc";
 import {
   RELATIONSHIP_TYPES,
   createEmptyResourceMap,
-  createResourceMap,
-  type ResourceEntry,
 } from "../domain/relationships";
-import { parseXml, getByPath, getChildren } from "@oxen/xml";
-import { resolveRelationshipTargetPath } from "@oxen-office/ooxml/opc";
-
-function isAbsoluteIri(value: string): boolean {
-  return /^[A-Za-z][A-Za-z0-9+.-]*:/.test(value);
-}
+import type { XmlDocument } from "@oxen/xml";
+import {
+  parseRelationships as parseRelationshipsShared,
+  getRelationshipPath as getRelationshipPathShared,
+  parseRelationshipsFromText as parseRelationshipsFromTextShared,
+  resolvePartPath as resolvePartPathShared,
+} from "@oxen-office/ooxml/parser/relationships";
 
 /**
  * Resolve a relative URI reference against a base path.
@@ -44,10 +42,7 @@ function isAbsoluteIri(value: string): boolean {
  * // => "ppt/slides/slide2.xml"
  */
 export function resolvePartPath(basePath: string, reference: string): string {
-  if (isAbsoluteIri(reference)) {
-    return reference;
-  }
-  return resolveRelationshipTargetPath(basePath, reference);
+  return resolvePartPathShared(basePath, reference);
 }
 
 // =============================================================================
@@ -72,13 +67,7 @@ export function resolvePartPath(basePath: string, reference: string): string {
  * // => "ppt/_rels/presentation.xml.rels"
  */
 export function getRelationshipPath(partPath: string): string {
-  const lastSlash = partPath.lastIndexOf("/");
-  if (lastSlash === -1) {
-    return `_rels/${partPath}.rels`;
-  }
-  const dir = partPath.substring(0, lastSlash);
-  const filename = partPath.substring(lastSlash + 1);
-  return `${dir}/_rels/${filename}.rels`;
+  return getRelationshipPathShared(partPath);
 }
 
 // =============================================================================
@@ -100,34 +89,7 @@ export function parseRelationships(
   relsXml: XmlDocument | null,
   sourcePath: string,
 ): ResourceMap {
-  if (relsXml === null) {
-    return createEmptyResourceMap();
-  }
-
-  const relationshipsElement = getByPath(relsXml, ["Relationships"]);
-  if (!relationshipsElement) {
-    return createEmptyResourceMap();
-  }
-
-  const relationships = getChildren(relationshipsElement, "Relationship");
-  const entries: Record<string, ResourceEntry> = {};
-
-  for (const rel of relationships) {
-    const id = rel.attrs["Id"];
-    const type = rel.attrs["Type"];
-    const target = rel.attrs["Target"];
-    const targetMode = rel.attrs["TargetMode"];
-
-    if (id !== undefined && target !== undefined) {
-      const resolvedTarget = targetMode === "External" ? target : resolvePartPath(sourcePath, target);
-      entries[id] = {
-        type: type ?? "",
-        target: resolvedTarget,
-      };
-    }
-  }
-
-  return createResourceMap(entries);
+  return parseRelationshipsShared(relsXml, sourcePath);
 }
 
 // =============================================================================
@@ -150,22 +112,12 @@ export function loadRelationships(
   file: PresentationFile,
   partPath: string,
 ): ResourceMap {
-  const relsPath = getRelationshipPath(partPath);
+  const relsPath = getRelationshipPathShared(partPath);
   const relsText = file.readText(relsPath);
-
   if (relsText === null) {
     return createEmptyResourceMap();
   }
-
-  const relsXml = parseRelsXml(relsText);
-  return parseRelationships(relsXml, partPath);
-}
-
-/**
- * Parse .rels XML text into document.
- */
-function parseRelsXml(text: string): XmlDocument {
-  return parseXml(text);
+  return parseRelationshipsFromTextShared(relsText, partPath);
 }
 
 // =============================================================================

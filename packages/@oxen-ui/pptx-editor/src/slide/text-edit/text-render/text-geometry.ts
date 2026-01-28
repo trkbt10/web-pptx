@@ -9,7 +9,7 @@ import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
 import type { LayoutLine, PositionedSpan } from "@oxen-office/pptx-render/text-layout";
 import { PT_TO_PX } from "@oxen-office/pptx/domain/unit-conversion";
 import { measureLayoutSpanTextWidth } from "@oxen-office/pptx-render/react";
-import { getAscenderRatio } from "@oxen/text";
+import { getAscenderRatio } from "@oxen/glyph";
 
 // =============================================================================
 // Constants

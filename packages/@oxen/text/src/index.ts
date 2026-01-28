@@ -1,8 +1,21 @@
 /**
  * @file Text utilities - public API
+ *
+ * @deprecated Use @oxen/glyph instead.
+ * This package has been merged into @oxen/glyph for unified text metrics and measurement.
+ *
+ * Migration:
+ * ```typescript
+ * // Before:
+ * import { isCjkChar, getCharWidth } from "@oxen/text";
+ *
+ * // After:
+ * import { isCjkChar, getCharWidth } from "@oxen/glyph";
+ * ```
  */
 
-export { isCjkChar, isCjkCodePoint } from "./cjk";
-export { getAscenderRatio, getCharWidth, getKerningAdjustment, getKerningForText } from "./font-metrics";
-export { getFontCategory, getFontMetrics, isMonospace } from "./fonts";
-export type { FontCategory, FontMetrics } from "./fonts/types";
+// Re-export everything from @oxen/glyph/metrics for backward compatibility
+export { isCjkChar, isCjkCodePoint } from "@oxen/glyph";
+export { getAscenderRatio, getCharWidth, getKerningAdjustment, getKerningForText } from "@oxen/glyph";
+export { getFontCategory, getFontMetrics, isMonospace } from "@oxen/glyph";
+export type { FontCategory, FontMetrics } from "@oxen/glyph";

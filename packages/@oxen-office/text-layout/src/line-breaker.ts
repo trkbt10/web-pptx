@@ -9,7 +9,7 @@ import type { MeasuredSpan, TextWrapping } from "./types";
 import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
 import { px, pt } from "@oxen-office/ooxml/domain/units";
 import { estimateTextWidth } from "./measurer";
-import { isCjkCodePoint } from "@oxen/text";
+import { isCjkCodePoint } from "@oxen/glyph";
 import { SPEC_DEFAULT_FONT_SIZE_PT } from "@oxen-office/docx/domain/ecma376-defaults";
 
 // =============================================================================

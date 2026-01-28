@@ -1,38 +1,52 @@
 /**
  * @file Line breaking / word wrap
- * Breaks text into lines based on available width
+ *
+ * Breaks text into lines based on available width.
+ * Generic implementation that works with any span type extending BreakableSpan.
  */
 
-import type { MeasuredSpan, TextBoxConfig } from "./types";
-import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
-import { px, pt } from "@oxen-office/ooxml/domain/units";
-import { estimateTextWidth } from "./measurer";
-import { isCjkCodePoint } from "@oxen/glyph";
-import { DEFAULT_FONT_SIZE_PT } from "@oxen-office/pptx/domain/defaults";
+import type { BreakableSpan, LineFontInfo, LineBreakResult, TextWrapping } from "./types";
+import type { Pixels, Points } from "../measure/units";
+import { px, pt } from "../measure/units";
+import { measureTextWidth } from "../measure/measurer";
+import { isCjkCodePoint } from "../metrics/cjk";
 
 // =============================================================================
-// Line Break Result
+// Constants
 // =============================================================================
 
 /**
- * Result of breaking spans into lines
+ * Default font size in points when no span is available.
+ * Uses a reasonable default for text layout.
  */
-export type LineBreakResult = {
-  /** Lines of measured spans */
-  readonly lines: readonly (readonly MeasuredSpan[])[];
-  /** Height of each line in points */
-  readonly lineHeights: readonly Points[];
-};
+export const DEFAULT_FONT_SIZE_PT = 10;
 
 // =============================================================================
 // Break Detection
 // =============================================================================
 
 /**
- * Check if character is a word break opportunity (space, tab, hyphen)
+ * Check if character is a word break opportunity (space, tab, hyphen).
  */
 function isBreakChar(char: string): boolean {
   return char === " " || char === "\t" || char === "-";
+}
+
+/**
+ * Apply text transform (uppercase/lowercase) to text.
+ * Must match the transform applied during rendering.
+ */
+function applyTextTransform(
+  text: string,
+  transform: "none" | "uppercase" | "lowercase" | undefined,
+): string {
+  if (transform === "uppercase") {
+    return text.toUpperCase();
+  }
+  if (transform === "lowercase") {
+    return text.toLowerCase();
+  }
+  return text;
 }
 
 // =============================================================================
@@ -40,27 +54,31 @@ function isBreakChar(char: string): boolean {
 // =============================================================================
 
 /**
- * Create an overflow span if there's remaining text
+ * Create an overflow span if there's remaining text.
+ * Applies textTransform before measuring to match rendered width.
  */
-function createOverflowSpan(span: MeasuredSpan, overflowText: string): MeasuredSpan | null {
+function createOverflowSpan<T extends BreakableSpan>(span: T, overflowText: string): T | null {
   if (overflowText.length === 0) {
     return null;
   }
+  // Apply text transform before measuring (matches rendering)
+  const transformedText = applyTextTransform(overflowText, span.textTransform);
   return {
     ...span,
     text: overflowText,
-    width: estimateTextWidth(overflowText, span.fontSize, span.letterSpacing, span.fontFamily),
+    width: measureTextWidth(transformedText, span.fontSize, span.letterSpacing, span.fontFamily, span.fontWeight),
   };
 }
 
 /**
- * Break a single span into multiple spans at word boundaries
+ * Break a single span into multiple spans at word boundaries.
+ * Applies textTransform for width calculations to match rendered width.
  */
-function breakSpanAtWidth(
-  span: MeasuredSpan,
+function breakSpanAtWidth<T extends BreakableSpan>(
+  span: T,
   maxWidth: Pixels,
   currentLineWidth: Pixels,
-): { fits: MeasuredSpan | null; overflow: MeasuredSpan | null } {
+): { fits: T | null; overflow: T | null } {
   const availableWidth = (maxWidth as number) - (currentLineWidth as number);
 
   // If the whole span fits, return it
@@ -69,12 +87,17 @@ function breakSpanAtWidth(
   }
 
   const text = span.text;
+  // Apply text transform for width calculations (matches rendering)
+  const transformedText = applyTextTransform(text, span.textTransform);
   const state = { breakIndex: -1, accumulatedWidth: 0 };
 
   // Find the best break point
   for (const i of Array.from({ length: text.length }, (_, index) => index)) {
     const char = text[i];
-    const charWidth = (estimateTextWidth(char, span.fontSize, px(0), span.fontFamily) as number) +
+    // Use transformed character for width calculation
+    const transformedChar = transformedText[i];
+    const charWidth =
+      (measureTextWidth(transformedChar, span.fontSize, px(0), span.fontFamily, span.fontWeight) as number) +
       (i > 0 ? (span.letterSpacing as number) : 0);
 
     if (state.accumulatedWidth + charWidth > availableWidth && state.breakIndex >= 0) {
@@ -84,7 +107,7 @@ function breakSpanAtWidth(
 
     state.accumulatedWidth += charWidth;
 
-    // Check for break opportunities
+    // Check for break opportunities (use original char for break detection)
     const charCode = char.charCodeAt(0);
     if (isBreakChar(char)) {
       // Break after space/hyphen
@@ -107,7 +130,10 @@ function breakSpanAtWidth(
       // Force break - find where we exceed the width
       state.accumulatedWidth = 0;
       for (const i of Array.from({ length: text.length }, (_, index) => index)) {
-        const charWidth = (estimateTextWidth(text[i], span.fontSize, px(0), span.fontFamily) as number) +
+        // Use transformed character for width calculation
+        const transformedChar = transformedText[i];
+        const charWidth =
+          (measureTextWidth(transformedChar, span.fontSize, px(0), span.fontFamily, span.fontWeight) as number) +
           (i > 0 ? (span.letterSpacing as number) : 0);
         if (state.accumulatedWidth + charWidth > availableWidth && i > 0) {
           state.breakIndex = i;
@@ -128,10 +154,12 @@ function breakSpanAtWidth(
   const fitsText = text.slice(0, state.breakIndex);
   const overflowText = text.slice(state.breakIndex);
 
-  const fitsSpan: MeasuredSpan = {
+  // Apply text transform before measuring (matches rendering)
+  const transformedFitsText = applyTextTransform(fitsText, span.textTransform);
+  const fitsSpan: T = {
     ...span,
     text: fitsText,
-    width: estimateTextWidth(fitsText, span.fontSize, span.letterSpacing, span.fontFamily),
+    width: measureTextWidth(transformedFitsText, span.fontSize, span.letterSpacing, span.fontFamily, span.fontWeight),
   };
 
   return { fits: fitsSpan, overflow: createOverflowSpan(span, overflowText) };
@@ -142,23 +170,30 @@ function breakSpanAtWidth(
 // =============================================================================
 
 /**
- * Break spans into lines with word wrapping
+ * Break spans into lines with word wrapping.
+ *
+ * @param spans - Array of measured spans to break
+ * @param firstLineWidth - Maximum width for the first line
+ * @param nextLineWidth - Maximum width for subsequent lines
+ * @param wrapMode - Text wrapping mode ("wrap" or "none")
+ * @returns Line break result with lines, heights, and page break flags
  */
-export function breakIntoLines(
-  spans: readonly MeasuredSpan[],
+export function breakIntoLines<T extends BreakableSpan>(
+  spans: readonly T[],
   firstLineWidth: Pixels,
   nextLineWidth: Pixels,
-  wrapMode: TextBoxConfig["wrapMode"],
-): LineBreakResult {
-  const lines: MeasuredSpan[][] = [];
+  wrapMode: TextWrapping | "wrap",
+): LineBreakResult<T> {
+  const lines: T[][] = [];
   const lineHeights: Points[] = [];
+  const pageBreaksAfter: boolean[] = [];
 
   if (spans.length === 0) {
-    return { lines: [[]], lineHeights: [pt(0)] };
+    return { lines: [[] as T[]], lineHeights: [pt(0)], pageBreaksAfter: [false] };
   }
 
   type State = {
-    currentLine: MeasuredSpan[];
+    currentLine: T[];
     currentLineWidth: number;
     currentLineHeight: number;
     currentMaxWidth: Pixels;
@@ -178,18 +213,20 @@ export function breakIntoLines(
     state.currentMaxWidth = nextLineWidth;
   };
 
-  const pushLine = (height: number) => {
+  const pushLine = (height: number, pageBreak: boolean = false) => {
     lines.push(state.currentLine);
     lineHeights.push(pt(height));
+    pageBreaksAfter.push(pageBreak);
     resetLineState();
   };
 
   for (const spanItem of spans) {
-    const pending: MeasuredSpan[] = [spanItem];
+    const pending: T[] = [spanItem];
 
-    // Handle explicit line breaks
-    if (spanItem.isBreak) {
-      pushLine(state.currentLineHeight);
+    // Handle explicit breaks (page, column, or line)
+    if (spanItem.breakType !== "none") {
+      const isPageBreak = spanItem.breakType === "page";
+      pushLine(state.currentLineHeight, isPageBreak);
       continue;
     }
 
@@ -214,7 +251,7 @@ export function breakIntoLines(
       }
 
       if (overflow !== null) {
-        const height = state.currentLineHeight !== 0 ? state.currentLineHeight : overflow.fontSize as number;
+        const height = state.currentLineHeight !== 0 ? state.currentLineHeight : (overflow.fontSize as number);
         pushLine(height);
         pending.unshift(overflow);
       }
@@ -226,9 +263,10 @@ export function breakIntoLines(
     lines.push(state.currentLine);
     const fallbackFontSize = (spans[0]?.fontSize ?? pt(DEFAULT_FONT_SIZE_PT)) as number;
     lineHeights.push(pt(state.currentLineHeight !== 0 ? state.currentLineHeight : fallbackFontSize));
+    pageBreaksAfter.push(false); // Last line doesn't have a page break after it
   }
 
-  return { lines, lineHeights };
+  return { lines, lineHeights, pageBreaksAfter };
 }
 
 // =============================================================================
@@ -236,17 +274,17 @@ export function breakIntoLines(
 // =============================================================================
 
 /**
- * Calculate the total width of a line
+ * Calculate the total width of a line.
  */
-export function getLineWidth(spans: readonly MeasuredSpan[]): Pixels {
+export function getLineWidth<T extends BreakableSpan>(spans: readonly T[]): Pixels {
   const width = spans.reduce((sum, span) => sum + (span.width as number), 0);
   return px(width);
 }
 
 /**
- * Get the maximum font size in a line
+ * Get the maximum font size in a line.
  */
-export function getLineMaxFontSize(spans: readonly MeasuredSpan[]): Points {
+export function getLineMaxFontSize<T extends BreakableSpan>(spans: readonly T[]): Points {
   if (spans.length === 0) {
     return pt(DEFAULT_FONT_SIZE_PT);
   }
@@ -255,18 +293,10 @@ export function getLineMaxFontSize(spans: readonly MeasuredSpan[]): Points {
 }
 
 /**
- * Line font info for baseline calculation
- */
-export type LineFontInfo = {
-  readonly fontSize: Points;
-  readonly fontFamily: string;
-};
-
-/**
  * Get font info for the span with the maximum font size.
  * Used for calculating baseline position with ascender ratio.
  */
-export function getLineMaxFontInfo(spans: readonly MeasuredSpan[]): LineFontInfo {
+export function getLineMaxFontInfo<T extends BreakableSpan>(spans: readonly T[]): LineFontInfo {
   if (spans.length === 0) {
     return { fontSize: pt(DEFAULT_FONT_SIZE_PT), fontFamily: "sans-serif" };
   }
@@ -282,4 +312,11 @@ export function getLineMaxFontInfo(spans: readonly MeasuredSpan[]): LineFontInfo
     fontSize: maxSpan.fontSize,
     fontFamily: maxSpan.fontFamily,
   };
+}
+
+/**
+ * Get the total text length of a line.
+ */
+export function getLineTextLength<T extends BreakableSpan>(spans: readonly T[]): number {
+  return spans.reduce((sum, span) => sum + span.text.length, 0);
 }

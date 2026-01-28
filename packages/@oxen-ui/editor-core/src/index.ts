@@ -1,4 +1,4 @@
-export type { UndoRedoHistory } from "@oxen-ui/editor-core/history";
+export type { UndoRedoHistory } from "./history";
 export {
   canRedo,
   canUndo,
@@ -10,4 +10,5 @@ export {
   replacePresent,
   undoCount,
   undoHistory,
-} from "@oxen-ui/editor-core/history";
+} from "./history";
+

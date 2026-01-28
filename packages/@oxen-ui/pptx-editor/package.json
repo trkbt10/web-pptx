@@ -5,6 +5,7 @@
   "type": "module",
   "sideEffects": false,
   "dependencies": {
+    "@oxen/glyph": "workspace:*",
     "@oxen-office/pptx": "workspace:*",
     "@oxen-office/pptx-render": "workspace:*",
     "@oxen-ui/editor-core": "workspace:*",
