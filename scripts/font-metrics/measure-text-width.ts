@@ -36,7 +36,6 @@ type TextAnalysis = {
 function findTextLines(png: PNG): TextLine[] {
   const lines: TextLine[] = [];
   let inText = false;
-  let startRow = 0;
   let currentLine: { rows: number[]; startXs: number[]; endXs: number[] } = {
     rows: [],
     startXs: [],
@@ -63,7 +62,6 @@ function findTextLines(png: PNG): TextLine[] {
 
     if (hasText && !inText) {
       inText = true;
-      startRow = y;
       currentLine = { rows: [y], startXs: [firstX], endXs: [lastX] };
     } else if (hasText && inText) {
       currentLine.rows.push(y);
@@ -135,12 +133,10 @@ function printAnalysis(analysis: TextAnalysis): void {
   );
   console.log("-----|----------------|--------------|-----------|----------|-------");
 
-  let totalWidthDiff = 0;
   let totalWidthDiffPct = 0;
 
   for (let i = 0; i < analysis.lines.length; i++) {
     const line = analysis.lines[i];
-    totalWidthDiff += line.widthDiff;
     totalWidthDiffPct += line.widthDiffPercent;
 
     console.log(

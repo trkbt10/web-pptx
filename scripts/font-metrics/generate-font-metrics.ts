@@ -41,9 +41,12 @@ function generateFontMetricsFile(config: FontMetricsConfig): string {
 ${entries}`;
   }
 
-  const ascenderCode = ascenderRatio !== undefined
-    ? `  ascenderRatio: ${ascenderRatio.toFixed(2)},`
-    : "";
+  const ascenderCode = (() => {
+    if (ascenderRatio === undefined) {
+      return "";
+    }
+    return `  ascenderRatio: ${ascenderRatio.toFixed(2)},`;
+  })();
 
   return `/**
  * @file ${displayName} font metrics

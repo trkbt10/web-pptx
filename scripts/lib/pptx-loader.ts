@@ -20,21 +20,50 @@
  */
 
 import * as fs from "node:fs/promises";
+import type { ZipPackage } from "@oxen/zip";
 import { loadPptxBundleFromBuffer, type PptxFileBundle } from "@oxen-office/pptx/app/pptx-loader";
 
-export type { PptxFileBundle } from "@oxen-office/pptx/app/pptx-loader";
-export type { ZipPackage } from "@oxen/zip";
+export type FileCacheEntry = { readonly text: string; readonly buffer: ArrayBuffer };
+export type FileCache = Map<string, FileCacheEntry>;
+export type CachedPptxFileBundle = PptxFileBundle & { readonly cache: FileCache };
+
+function isProbablyTextFile(filePath: string): boolean {
+  const lower = filePath.toLowerCase();
+  return (
+    lower.endsWith(".xml") ||
+    lower.endsWith(".rels") ||
+    lower.endsWith(".txt") ||
+    lower.endsWith(".json") ||
+    lower.endsWith(".vml")
+  );
+}
+
+function readCachedText(zipPackage: ZipPackage, entryPath: string): string {
+  if (!isProbablyTextFile(entryPath)) {
+    return "";
+  }
+  return zipPackage.readText(entryPath) ?? "";
+}
 
 /**
  * Load a PPTX file and return the bundle containing ZipPackage and PresentationFile.
  *
  * @param filePath - Path to the PPTX file
- * @returns PptxFileBundle containing { zipPackage, presentationFile }
+ * @returns PptxFileBundle containing { zipPackage, presentationFile, cache }
  */
-export async function loadPptxFile(filePath: string): Promise<PptxFileBundle> {
+export async function loadPptxFile(filePath: string): Promise<CachedPptxFileBundle> {
   if (!filePath) {
     throw new Error("filePath is required");
   }
   const pptxBuffer = await fs.readFile(filePath);
-  return loadPptxBundleFromBuffer(pptxBuffer);
+  const bundle = await loadPptxBundleFromBuffer(pptxBuffer);
+
+  const cache: FileCache = new Map();
+  for (const entryPath of bundle.zipPackage.listFiles()) {
+    const buffer = bundle.zipPackage.readBinary(entryPath) ?? new ArrayBuffer(0);
+    const text = readCachedText(bundle.zipPackage, entryPath);
+    cache.set(entryPath, { text, buffer });
+  }
+
+  return { ...bundle, cache };
 }

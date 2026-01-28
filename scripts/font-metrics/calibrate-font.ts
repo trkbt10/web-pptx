@@ -51,7 +51,6 @@ function findTextWidth(png: PNG, row: number): { startX: number; endX: number; w
 function findTextRows(png: PNG): number[] {
   const rows: number[] = [];
   let inText = false;
-  let startRow = 0;
   let textRows: number[] = [];
 
   for (let y = 0; y < png.height; y++) {
@@ -71,7 +70,6 @@ function findTextRows(png: PNG): number[] {
 
     if (hasText && !inText) {
       inText = true;
-      startRow = y;
       textRows = [y];
     } else if (hasText && inText) {
       textRows.push(y);

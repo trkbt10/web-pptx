@@ -4,7 +4,7 @@
  * Analyzes visual regression test results to identify specification gaps.
  */
 
-import { compareSlideToSnapshot, printCompareResult } from "./visual-compare";
+import { compareSlideToSnapshot } from "./visual-compare";
 
 export type DiffAnalysisResult = {
   name: string;
