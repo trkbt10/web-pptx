@@ -100,6 +100,16 @@ export {
   buildSlideFileInfoList,
 } from "./content-types";
 
+export type { RelationshipType } from "./relationships";
+export {
+  RELATIONSHIP_TYPES,
+  createEmptyResourceMap,
+  createResourceMap,
+  isImageRelationship,
+  isHyperlinkRelationship,
+  isMediaRelationship,
+} from "./relationships";
+
 // =============================================================================
 // Theme Types (with XmlElement references)
 // =============================================================================

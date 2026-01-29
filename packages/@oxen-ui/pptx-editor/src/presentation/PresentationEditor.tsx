@@ -58,8 +58,7 @@ import {
   getLayoutNonPlaceholderShapes,
 } from "@oxen-office/pptx/app";
 import { getSlideLayoutAttributes } from "@oxen-office/pptx/parser/slide/layout-parser";
-import { RELATIONSHIP_TYPES } from "@oxen-office/pptx/domain/relationships";
-import { createZipAdapter } from "@oxen-office/pptx/domain";
+import { RELATIONSHIP_TYPES, createZipAdapter } from "@oxen-office/pptx/domain";
 import { CanvasControls } from "../slide-canvas/CanvasControls";
 import type { ZoomMode } from "../slide-canvas/canvas-controls";
 import { SvgEditorCanvas, type AssetDropData } from "../slide-canvas/SvgEditorCanvas";
