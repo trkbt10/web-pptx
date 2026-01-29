@@ -6,8 +6,10 @@
       "name": "workbox",
       "dependencies": {
         "@oxen-office/cfb": "workspace:*",
+        "@oxen-office/chart": "workspace:*",
         "@oxen-office/docx": "workspace:*",
         "@oxen-office/ooxml": "workspace:*",
+        "@oxen-office/opc": "workspace:*",
         "@oxen-office/pdf-to-pptx": "workspace:*",
         "@oxen-office/pptx": "workspace:*",
         "@oxen-office/pptx-render": "workspace:*",
@@ -25,7 +27,6 @@
         "@oxen/jpeg": "workspace:*",
         "@oxen/pdf": "workspace:*",
         "@oxen/png": "workspace:*",
-        "@oxen/text": "workspace:*",
         "@oxen/url": "workspace:*",
         "@oxen/xml": "workspace:*",
         "@oxen/zip": "workspace:*",
@@ -77,6 +78,23 @@
       "name": "@oxen-office/cfb",
       "version": "0.1.0",
     },
+    "packages/@oxen-office/chart": {
+      "name": "@oxen-office/chart",
+      "version": "0.1.0",
+      "dependencies": {
+        "@oxen-office/ooxml": "workspace:*",
+        "@oxen-office/xlsx": "workspace:*",
+        "@oxen/xml": "workspace:*",
+      },
+    },
+    "packages/@oxen-office/diagram": {
+      "name": "@oxen-office/diagram",
+      "version": "0.1.0",
+      "dependencies": {
+        "@oxen-office/ooxml": "workspace:*",
+        "@oxen/xml": "workspace:*",
+      },
+    },
     "packages/@oxen-office/docx": {
       "name": "@oxen-office/docx",
       "version": "0.1.0",
@@ -90,7 +108,16 @@
       "name": "@oxen-office/ooxml",
       "version": "0.1.0",
       "dependencies": {
+        "@oxen-office/opc": "workspace:*",
         "@oxen/color": "workspace:*",
+        "@oxen/xml": "workspace:*",
+        "@oxen/zip": "workspace:*",
+      },
+    },
+    "packages/@oxen-office/opc": {
+      "name": "@oxen-office/opc",
+      "version": "0.1.0",
+      "dependencies": {
         "@oxen/zip": "workspace:*",
       },
     },
@@ -119,12 +146,14 @@
       "name": "@oxen-office/pptx",
       "version": "0.1.0",
       "dependencies": {
+        "@oxen-office/chart": "workspace:*",
+        "@oxen-office/diagram": "workspace:*",
         "@oxen-office/ooxml": "workspace:*",
+        "@oxen-office/opc": "workspace:*",
         "@oxen-office/xlsx": "workspace:*",
         "@oxen/buffer": "workspace:*",
         "@oxen/color": "workspace:*",
         "@oxen/files": "workspace:*",
-        "@oxen/text": "workspace:*",
         "@oxen/xml": "workspace:*",
         "@oxen/zip": "workspace:*",
       },
@@ -133,11 +162,14 @@
       "name": "@oxen-office/pptx-render",
       "version": "0.1.0",
       "dependencies": {
+        "@oxen-office/chart": "workspace:*",
         "@oxen-office/ooxml": "workspace:*",
         "@oxen-office/pptx": "workspace:*",
+        "@oxen-renderer/chart": "workspace:*",
+        "@oxen-renderer/diagram": "workspace:*",
         "@oxen/buffer": "workspace:*",
         "@oxen/color": "workspace:*",
-        "@oxen/text": "workspace:*",
+        "@oxen/glyph": "workspace:*",
         "@oxen/xml": "workspace:*",
       },
       "peerDependencies": {
@@ -152,7 +184,7 @@
       "dependencies": {
         "@oxen-office/docx": "workspace:*",
         "@oxen-office/ooxml": "workspace:*",
-        "@oxen/text": "workspace:*",
+        "@oxen/glyph": "workspace:*",
       },
       "peerDependencies": {
         "react": "^18.0.0 || ^19.0.0",
@@ -171,8 +203,63 @@
       "version": "0.1.0",
       "dependencies": {
         "@oxen-office/ooxml": "workspace:*",
+        "@oxen-office/opc": "workspace:*",
         "@oxen/xml": "workspace:*",
         "@oxen/zip": "workspace:*",
+      },
+    },
+    "packages/@oxen-renderer/chart": {
+      "name": "@oxen-renderer/chart",
+      "version": "0.1.0",
+      "dependencies": {
+        "@oxen-office/chart": "workspace:*",
+        "@oxen-office/ooxml": "workspace:*",
+      },
+    },
+    "packages/@oxen-renderer/diagram": {
+      "name": "@oxen-renderer/diagram",
+      "version": "0.1.0",
+      "dependencies": {
+        "@oxen-office/diagram": "workspace:*",
+        "@oxen-office/ooxml": "workspace:*",
+      },
+      "peerDependencies": {
+        "react": "^18.0.0 || ^19.0.0",
+      },
+    },
+    "packages/@oxen-renderer/visual-regression": {
+      "name": "@oxen-renderer/visual-regression",
+      "version": "0.1.0",
+      "dependencies": {
+        "@oxen-office/pptx": "workspace:*",
+        "@oxen-office/pptx-render": "workspace:*",
+        "@oxen-renderer/chart": "workspace:*",
+        "@oxen-renderer/diagram": "workspace:*",
+      },
+    },
+    "packages/@oxen-ui/chart-editor": {
+      "name": "@oxen-ui/chart-editor",
+      "version": "0.1.0",
+      "dependencies": {
+        "@oxen-office/chart": "workspace:*",
+        "@oxen-office/ooxml": "workspace:*",
+        "@oxen-ui/ui-components": "workspace:*",
+      },
+      "peerDependencies": {
+        "react": "^18.0.0 || ^19.0.0",
+        "react-dom": "^18.0.0 || ^19.0.0",
+      },
+    },
+    "packages/@oxen-ui/diagram-editor": {
+      "name": "@oxen-ui/diagram-editor",
+      "version": "0.1.0",
+      "dependencies": {
+        "@oxen-office/diagram": "workspace:*",
+        "@oxen-ui/ui-components": "workspace:*",
+      },
+      "peerDependencies": {
+        "react": "^18.0.0 || ^19.0.0",
+        "react-dom": "^18.0.0 || ^19.0.0",
       },
     },
     "packages/@oxen-ui/docx-editor": {
@@ -181,8 +268,17 @@
       "dependencies": {
         "@oxen-office/docx": "workspace:*",
         "@oxen-office/text-layout": "workspace:*",
+        "@oxen-ui/editor-core": "workspace:*",
         "@oxen-ui/ui-components": "workspace:*",
+        "@oxen/glyph": "workspace:*",
       },
+      "peerDependencies": {
+        "react": "^18.0.0 || ^19.0.0",
+      },
+    },
+    "packages/@oxen-ui/editor-core": {
+      "name": "@oxen-ui/editor-core",
+      "version": "0.1.0",
       "peerDependencies": {
         "react": "^18.0.0 || ^19.0.0",
       },
@@ -191,10 +287,15 @@
       "name": "@oxen-ui/pptx-editor",
       "version": "0.1.0",
       "dependencies": {
+        "@oxen-office/chart": "workspace:*",
         "@oxen-office/pptx": "workspace:*",
         "@oxen-office/pptx-render": "workspace:*",
+        "@oxen-ui/chart-editor": "workspace:*",
+        "@oxen-ui/diagram-editor": "workspace:*",
+        "@oxen-ui/editor-core": "workspace:*",
         "@oxen-ui/ui-components": "workspace:*",
         "@oxen-ui/xlsx-editor": "workspace:*",
+        "@oxen/glyph": "workspace:*",
         "react-panel-layout": "^0.6.1",
       },
       "peerDependencies": {
@@ -218,6 +319,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@oxen-office/xlsx": "workspace:*",
+        "@oxen-ui/editor-core": "workspace:*",
         "@oxen-ui/ui-components": "workspace:*",
       },
       "peerDependencies": {
@@ -243,6 +345,10 @@
         "@oxen/buffer": "workspace:*",
       },
     },
+    "packages/@oxen/glyph": {
+      "name": "@oxen/glyph",
+      "version": "0.1.0",
+    },
     "packages/@oxen/jpeg": {
       "name": "@oxen/jpeg",
       "version": "0.1.0",
@@ -265,10 +371,6 @@
         "@oxen/buffer": "workspace:*",
         "pngjs": "^7.0.0",
       },
-    },
-    "packages/@oxen/text": {
-      "name": "@oxen/text",
-      "version": "0.1.0",
     },
     "packages/@oxen/url": {
       "name": "@oxen/url",
@@ -461,9 +563,15 @@
 
     "@oxen-office/cfb": ["@oxen-office/cfb@workspace:packages/@oxen-office/cfb"],
 
+    "@oxen-office/chart": ["@oxen-office/chart@workspace:packages/@oxen-office/chart"],
+
+    "@oxen-office/diagram": ["@oxen-office/diagram@workspace:packages/@oxen-office/diagram"],
+
     "@oxen-office/docx": ["@oxen-office/docx@workspace:packages/@oxen-office/docx"],
 
     "@oxen-office/ooxml": ["@oxen-office/ooxml@workspace:packages/@oxen-office/ooxml"],
+
+    "@oxen-office/opc": ["@oxen-office/opc@workspace:packages/@oxen-office/opc"],
 
     "@oxen-office/pdf-to-pptx": ["@oxen-office/pdf-to-pptx@workspace:packages/@oxen-office/pdf-to-pptx"],
 
@@ -477,7 +585,19 @@
 
     "@oxen-office/xlsx": ["@oxen-office/xlsx@workspace:packages/@oxen-office/xlsx"],
 
+    "@oxen-renderer/chart": ["@oxen-renderer/chart@workspace:packages/@oxen-renderer/chart"],
+
+    "@oxen-renderer/diagram": ["@oxen-renderer/diagram@workspace:packages/@oxen-renderer/diagram"],
+
+    "@oxen-renderer/visual-regression": ["@oxen-renderer/visual-regression@workspace:packages/@oxen-renderer/visual-regression"],
+
+    "@oxen-ui/chart-editor": ["@oxen-ui/chart-editor@workspace:packages/@oxen-ui/chart-editor"],
+
+    "@oxen-ui/diagram-editor": ["@oxen-ui/diagram-editor@workspace:packages/@oxen-ui/diagram-editor"],
+
     "@oxen-ui/docx-editor": ["@oxen-ui/docx-editor@workspace:packages/@oxen-ui/docx-editor"],
+
+    "@oxen-ui/editor-core": ["@oxen-ui/editor-core@workspace:packages/@oxen-ui/editor-core"],
 
     "@oxen-ui/pptx-editor": ["@oxen-ui/pptx-editor@workspace:packages/@oxen-ui/pptx-editor"],
 
@@ -493,13 +613,13 @@
 
     "@oxen/files": ["@oxen/files@workspace:packages/@oxen/files"],
 
+    "@oxen/glyph": ["@oxen/glyph@workspace:packages/@oxen/glyph"],
+
     "@oxen/jpeg": ["@oxen/jpeg@workspace:packages/@oxen/jpeg"],
 
     "@oxen/pdf": ["@oxen/pdf@workspace:packages/@oxen/pdf"],
 
     "@oxen/png": ["@oxen/png@workspace:packages/@oxen/png"],
-
-    "@oxen/text": ["@oxen/text@workspace:packages/@oxen/text"],
 
     "@oxen/url": ["@oxen/url@workspace:packages/@oxen/url"],
 

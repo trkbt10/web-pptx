@@ -7,13 +7,14 @@
   "workspaces": [
     "packages/@oxen/*",
     "packages/@oxen-office/*",
+    "packages/@oxen-renderer/*",
     "packages/@oxen-ui/*"
   ],
   "scripts": {
     "build": "vite build --config pages/vite.config.ts",
     "clean": "rimraf dist",
     "lint": "eslint .",
-    "lint:xlsx-editor": "eslint packages/@oxen-ui/xlsx-editor/src packages/@oxen-office/xlsx/src/formula packages/@oxen-office/ooxml/src/opc/ooxml-zip.ts packages/@oxen-office/ooxml/src/opc/ooxml-zip.spec.ts packages/@oxen-ui/ui-components/src/index.ts packages/@oxen-ui/ui-components/src/scroll packages/@oxen-ui/ui-components/src/context-menu packages/@oxen-ui/ui-components/src/grid packages/@oxen-ui/pptx-editor/src/ui/context-menu spec/xlsx-editor pages/app/App.tsx pages/app/pages/FileUploadPage.tsx pages/app/pages/xlsx-editor --max-warnings 0",
+    "lint:xlsx-editor": "eslint packages/@oxen-ui/xlsx-editor/src packages/@oxen-office/xlsx/src/formula packages/@oxen-office/opc/src/zip.ts packages/@oxen-office/opc/src/zip.spec.ts packages/@oxen-ui/ui-components/src/index.ts packages/@oxen-ui/ui-components/src/scroll packages/@oxen-ui/ui-components/src/context-menu packages/@oxen-ui/ui-components/src/grid packages/@oxen-ui/pptx-editor/src/ui/context-menu spec/xlsx-editor pages/app/App.tsx pages/app/pages/FileUploadPage.tsx pages/app/pages/xlsx-editor --max-warnings 0",
     "lint:xlsx-editor:scope": "eslint packages/@oxen-ui/xlsx-editor/src packages/@oxen-office/xlsx/src --max-warnings 0",
     "lint:xls-to-xlsx": "eslint packages/@oxen-office/xls/src packages/@oxen-office/cfb/src spec/xls scripts/generate-xls-fixtures --max-warnings 0",
     "lint:fix": "eslint . --fix",
@@ -69,6 +70,7 @@
   },
   "dependencies": {
     "@oxen/buffer": "workspace:*",
+    "@oxen-office/chart": "workspace:*",
     "@oxen-office/cfb": "workspace:*",
     "@oxen/color": "workspace:*",
     "@oxen/css": "workspace:*",
@@ -76,6 +78,7 @@
     "@oxen/files": "workspace:*",
     "@oxen/jpeg": "workspace:*",
     "@oxen-office/ooxml": "workspace:*",
+    "@oxen-office/opc": "workspace:*",
     "@oxen-office/pptx": "workspace:*",
     "@oxen/pdf": "workspace:*",
     "@oxen-office/pdf-to-pptx": "workspace:*",
@@ -88,7 +91,6 @@
     "@oxen-office/xls": "workspace:*",
     "@oxen-office/xlsx": "workspace:*",
     "@oxen/png": "workspace:*",
-    "@oxen/text": "workspace:*",
     "@oxen/url": "workspace:*",
     "@oxen/xml": "workspace:*",
     "@oxen/zip": "workspace:*",

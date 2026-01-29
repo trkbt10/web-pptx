@@ -15,7 +15,7 @@ import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
 import { parseXml, getByPath } from "@oxen/xml";
 import { createParseContext } from "@oxen-office/pptx/parser/context";
 import { createSlideContext } from "@oxen-office/pptx/parser/slide/context";
-import type { ZipFile } from "@oxen-office/pptx/domain";
+import type { ZipFile } from "@oxen-office/opc";
 import {
   createPlaceholderTable,
   createColorMap,
