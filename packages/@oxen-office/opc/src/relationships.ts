@@ -7,7 +7,7 @@
  * @see ECMA-376 Part 2, Section 9.3 (Relationships)
  */
 
-import type { ResourceMap } from "../domain/opc";
+import type { ResourceMap } from "./types";
 
 // =============================================================================
 // Internal Types
@@ -73,3 +73,4 @@ export function createResourceMap(entries: Record<string, ResourceEntry>): Resou
     },
   };
 }
+

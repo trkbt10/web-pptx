@@ -27,3 +27,4 @@ describe("OPC pack IRI", () => {
     expect(arePackIrisEquivalent(left, right)).toBe(true);
   });
 });
+

@@ -7,22 +7,4 @@
  * @see ECMA-376 Part 2 (Open Packaging Conventions)
  */
 
-// =============================================================================
-// Resource Resolution Types (ECMA-376 Part 2, Section 9.3)
-// =============================================================================
-
-/**
- * Resource map for relationship ID resolution.
- *
- * @see ECMA-376 Part 2, Section 9.3 (Relationships)
- */
-export type ResourceMap = {
-  /** Get target path by relationship ID */
-  getTarget(rId: string): string | undefined;
-  /** Get relationship type by ID */
-  getType(rId: string): string | undefined;
-  /** Get first target matching a relationship type */
-  getTargetByType(relType: string): string | undefined;
-  /** Get all targets matching a relationship type */
-  getAllTargetsByType(relType: string): readonly string[];
-};
+export type { ResourceMap } from "@oxen-office/opc";

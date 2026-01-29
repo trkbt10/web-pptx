@@ -8,10 +8,9 @@
  * @see RFC 3986, Section 5.2 (Relative Resolution)
  */
 
+import type { ResourceMap, ResourceEntry } from "@oxen-office/opc";
+import { createEmptyResourceMap, createResourceMap, resolveRelationshipTargetPath } from "@oxen-office/opc";
 import type { XmlDocument } from "@oxen/xml";
-import type { ResourceMap } from "../domain/opc";
-import { createEmptyResourceMap, createResourceMap, type ResourceEntry } from "../opc/relationships";
-import { resolveRelationshipTargetPath } from "../opc/relationship-target";
 import { getByPath, getChildren, parseXml } from "@oxen/xml";
 
 export type OoxmlTextReader = {
@@ -97,4 +96,3 @@ export function loadRelationships(reader: OoxmlTextReader, partPath: string): Re
   const relsText = reader.readText(relsPath);
   return parseRelationshipsFromText(relsText, partPath);
 }
-

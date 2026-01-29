@@ -1,5 +1,5 @@
-import type { ChartRenderContext, FillResolver, ResolvedFill, ResolvedTextStyle } from "@oxen-office/chart-render";
-import type { GenericTextBody } from "@oxen-office/chart-render";
+import type { ChartRenderContext, FillResolver, ResolvedFill, ResolvedTextStyle } from "@oxen-renderer/chart";
+import type { GenericTextBody } from "@oxen-renderer/chart";
 import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
 import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
 import { resolveThemeFont } from "@oxen-office/ooxml/domain/font-scheme";

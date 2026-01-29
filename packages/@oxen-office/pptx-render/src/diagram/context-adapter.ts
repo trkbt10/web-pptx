@@ -1,10 +1,10 @@
 /**
  * @file Diagram render context adapter (PPTX)
  *
- * Adapts `CoreRenderContext` into `@oxen-office/diagram-render` abstractions.
+ * Adapts `CoreRenderContext` into `@oxen-renderer/diagram` abstractions.
  */
 
-import type { DiagramRenderContext } from "@oxen-office/diagram-render";
+import type { DiagramRenderContext } from "@oxen-renderer/diagram";
 import type { CoreRenderContext } from "../render-context";
 
 export type CreateDiagramRenderContextOptions<TShape> = {

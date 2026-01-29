@@ -36,3 +36,4 @@ describe("OPC Part name validation", () => {
     expect(arePartNamesEquivalent("/ppt/Slides/Slide1.xml", "/PPT/slides/slide1.xml")).toBe(true);
   });
 });
+

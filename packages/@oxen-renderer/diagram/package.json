@@ -1,5 +1,5 @@
 {
-  "name": "@oxen-office/diagram-render",
+  "name": "@oxen-renderer/diagram",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -14,7 +14,7 @@
   "scripts": {
     "lint": "eslint src",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest --run --passWithNoTests --config ../../../vitest.config.ts '../../../packages/@oxen-office/diagram-render/src'"
+    "test": "vitest --run --passWithNoTests --config ../../../vitest.config.ts '../../../packages/@oxen-renderer/diagram/src'"
   },
   "exports": {
     ".": {

@@ -10,7 +10,7 @@
 import { memo } from "react";
 import type { DiagramReference, Shape } from "@oxen-office/pptx/domain";
 import type { ShapeId } from "@oxen-office/pptx/domain/types";
-import { DiagramContainer } from "@oxen-office/diagram-render/react";
+import { DiagramContainer } from "@oxen-renderer/diagram/react";
 import { useRenderResourceStore } from "../../../context";
 import { ShapeRenderer } from "../../../ShapeRenderer";
 import { Placeholder } from "../shared";

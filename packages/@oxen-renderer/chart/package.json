@@ -1,5 +1,5 @@
 {
-  "name": "@oxen-office/chart-render",
+  "name": "@oxen-renderer/chart",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -11,7 +11,7 @@
   "scripts": {
     "lint": "eslint src",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest --run --passWithNoTests --config ../../../vitest.config.ts '../../../packages/@oxen-office/chart-render/src'"
+    "test": "vitest --run --passWithNoTests --config ../../../vitest.config.ts '../../../packages/@oxen-renderer/chart/src'"
   },
   "exports": {
     ".": {

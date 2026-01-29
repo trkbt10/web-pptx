@@ -6,6 +6,7 @@
   "sideEffects": false,
   "dependencies": {
     "@oxen/color": "workspace:*",
+    "@oxen-office/opc": "workspace:*",
     "@oxen/xml": "workspace:*",
     "@oxen/zip": "workspace:*"
   },
@@ -34,10 +35,6 @@
     "./opc": {
       "types": "./src/opc/index.ts",
       "default": "./src/opc/index.ts"
-    },
-    "./opc/*": {
-      "types": "./src/opc/*.ts",
-      "default": "./src/opc/*.ts"
     },
     "./parser": {
       "types": "./src/parser/index.ts",

@@ -2,10 +2,10 @@
  * @file OOXML zip access helper tests
  */
 
-import { createGetZipTextFileContentFromBytes } from "./ooxml-zip";
+import { createGetZipTextFileContentFromBytes } from "./zip";
 import { createEmptyZipPackage } from "@oxen/zip";
 
-describe("ooxml/opc/ooxml-zip", () => {
+describe("opc/zip", () => {
   it("returns a getFileContent function that reads text entries", async () => {
     const pkg = createEmptyZipPackage();
     pkg.writeText("xl/workbook.xml", "<workbook/>");
@@ -16,3 +16,4 @@ describe("ooxml/opc/ooxml-zip", () => {
     await expect(getFileContent("missing.xml")).resolves.toBeUndefined();
   });
 });
+

@@ -1,7 +1,7 @@
 /**
  * @file Diagram (SmartArt) renderer (PPTX wrapper)
  *
- * Delegates container rendering to `@oxen-office/diagram-render` and injects
+ * Delegates container rendering to `@oxen-renderer/diagram` and injects
  * PPTX-specific shape rendering.
  */
 
@@ -11,7 +11,7 @@ import type { CoreRenderContext } from "../render-context";
 import { renderShape } from "./shape";
 import type { HtmlString } from "./index";
 import { unsafeHtml } from "./index";
-import { renderDiagram as renderDiagramBase, renderDiagramPlaceholder as renderDiagramPlaceholderBase } from "@oxen-office/diagram-render";
+import { renderDiagram as renderDiagramBase, renderDiagramPlaceholder as renderDiagramPlaceholderBase } from "@oxen-renderer/diagram";
 import { createDiagramRenderContext } from "../diagram/context-adapter";
 
 /**

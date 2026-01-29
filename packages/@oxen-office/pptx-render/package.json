@@ -9,8 +9,8 @@
     "@oxen/color": "workspace:*",
     "@oxen/glyph": "workspace:*",
     "@oxen-office/chart": "workspace:*",
-    "@oxen-office/chart-render": "workspace:*",
-    "@oxen-office/diagram-render": "workspace:*",
+    "@oxen-renderer/chart": "workspace:*",
+    "@oxen-renderer/diagram": "workspace:*",
     "@oxen-office/ooxml": "workspace:*",
     "@oxen-office/pptx": "workspace:*",
     "@oxen/xml": "workspace:*"

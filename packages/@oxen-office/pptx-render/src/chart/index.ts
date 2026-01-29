@@ -5,11 +5,11 @@
  * - CoreRenderContext -> ChartRenderContext
  * - BaseFill -> ResolvedFill via FillResolver
  *
- * The actual chart SVG renderer lives in @oxen-office/chart-render.
+ * The actual chart SVG renderer lives in @oxen-renderer/chart.
  */
 
 import type { Chart } from "@oxen-office/chart/domain";
-import { renderChart as renderChartSvg } from "@oxen-office/chart-render";
+import { renderChart as renderChartSvg } from "@oxen-renderer/chart";
 import type { CoreRenderContext } from "../render-context";
 import { type HtmlString, unsafeHtml } from "../html/index";
 import { createChartRenderContext, createFillResolver } from "./context-adapter";
