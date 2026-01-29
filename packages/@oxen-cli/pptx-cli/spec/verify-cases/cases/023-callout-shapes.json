@@ -1,0 +1,31 @@
+{
+  "name": "callout-shapes",
+  "description": "Verify callout preset shapes",
+  "tags": ["shape", "callout", "preset"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/callout-shapes.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          { "type": "wedgeRectCallout", "x": 50, "y": 50, "width": 200, "height": 120, "fill": "FFFACD", "text": "Hello!" },
+          { "type": "wedgeEllipseCallout", "x": 300, "y": 50, "width": 200, "height": 150, "fill": "E6E6FA", "text": "Wow!" },
+          { "type": "cloudCallout", "x": 550, "y": 50, "width": 200, "height": 150, "fill": "F0FFF0", "text": "Hmm..." }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -3, "type": "sp", "geometry": { "preset": "wedgeRectCallout" }, "text": "Hello!" },
+          { "index": -2, "type": "sp", "geometry": { "preset": "wedgeEllipseCallout" }, "text": "Wow!" },
+          { "index": -1, "type": "sp", "geometry": { "preset": "cloudCallout" }, "text": "Hmm..." }
+        ]
+      }
+    ]
+  }
+}

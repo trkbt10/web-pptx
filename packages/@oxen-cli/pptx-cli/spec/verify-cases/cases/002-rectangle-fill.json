@@ -1,0 +1,44 @@
+{
+  "name": "rectangle-fill",
+  "description": "Verify rectangle shape with solid fill color",
+  "tags": ["shape", "rectangle", "fill", "basic"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/rectangle-fill.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 100,
+            "y": 100,
+            "width": 200,
+            "height": 150,
+            "fill": "FF0000"
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "sp",
+            "geometry": {
+              "preset": "rect"
+            },
+            "fill": {
+              "type": "solid",
+              "color": "FF0000"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

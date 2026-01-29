@@ -1,0 +1,45 @@
+{
+  "name": "rectangle-line",
+  "description": "Verify rectangle shape with line stroke",
+  "tags": ["shape", "rectangle", "line"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/rectangle-line.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 100,
+            "y": 100,
+            "width": 200,
+            "height": 150,
+            "lineColor": "0000FF",
+            "lineWidth": 3
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "sp",
+            "geometry": {
+              "preset": "rect"
+            },
+            "line": {
+              "color": "0000FF",
+              "width": 3
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

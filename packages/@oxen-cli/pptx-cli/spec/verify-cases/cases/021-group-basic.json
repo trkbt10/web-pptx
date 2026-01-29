@@ -1,0 +1,41 @@
+{
+  "name": "group-basic",
+  "description": "Verify basic group with child shapes",
+  "tags": ["group", "basic"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/group-basic.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addGroups": [
+          {
+            "type": "group",
+            "x": 50,
+            "y": 50,
+            "width": 300,
+            "height": 200,
+            "children": [
+              { "type": "rectangle", "x": 0, "y": 0, "width": 140, "height": 90, "fill": "FF0000" },
+              { "type": "ellipse", "x": 160, "y": 0, "width": 140, "height": 90, "fill": "00FF00" },
+              { "type": "triangle", "x": 80, "y": 100, "width": 140, "height": 90, "fill": "0000FF" }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "grpSp"
+          }
+        ]
+      }
+    ]
+  }
+}

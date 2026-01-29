@@ -1,0 +1,46 @@
+{
+  "name": "roundRect-basic",
+  "description": "Verify rounded rectangle shape is placed correctly",
+  "tags": ["shape", "roundRect", "basic"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/roundRect-basic.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "roundRect",
+            "x": 100,
+            "y": 100,
+            "width": 250,
+            "height": 120
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "sp",
+            "bounds": {
+              "x": 100,
+              "y": 100,
+              "width": 250,
+              "height": 120
+            },
+            "geometry": {
+              "kind": "preset",
+              "preset": "roundRect"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

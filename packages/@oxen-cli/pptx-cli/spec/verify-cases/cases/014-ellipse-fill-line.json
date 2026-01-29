@@ -1,0 +1,42 @@
+{
+  "name": "ellipse-fill-line",
+  "description": "Verify ellipse with both fill and line",
+  "tags": ["shape", "ellipse", "fill", "line"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/ellipse-fill-line.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "ellipse",
+            "x": 200,
+            "y": 200,
+            "width": 300,
+            "height": 200,
+            "fill": "FFCC00",
+            "lineColor": "CC6600",
+            "lineWidth": 4
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "sp",
+            "geometry": { "preset": "ellipse" },
+            "fill": { "type": "solid", "color": "FFCC00" },
+            "line": { "color": "CC6600", "width": 4 }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "name": "multiple-slides",
+  "description": "Verify shapes added to multiple slides",
+  "tags": ["shape", "multiple-slides"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/multiple-slides.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 100,
+            "y": 100,
+            "width": 200,
+            "height": 100,
+            "fill": "FF0000"
+          }
+        ]
+      },
+      {
+        "slideNumber": 2,
+        "addShapes": [
+          {
+            "type": "ellipse",
+            "x": 100,
+            "y": 100,
+            "width": 200,
+            "height": 100,
+            "fill": "00FF00"
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "sp",
+            "geometry": { "preset": "rect" },
+            "fill": { "color": "FF0000" }
+          }
+        ]
+      },
+      {
+        "slideNumber": 2,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "sp",
+            "geometry": { "preset": "ellipse" },
+            "fill": { "color": "00FF00" }
+          }
+        ]
+      }
+    ]
+  }
+}

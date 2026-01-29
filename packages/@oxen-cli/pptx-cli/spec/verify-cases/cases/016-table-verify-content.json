@@ -1,0 +1,51 @@
+{
+  "name": "table-verify-content",
+  "description": "Verify table dimensions and cell content",
+  "tags": ["table", "content", "cells"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/table-verify-content.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addTables": [
+          {
+            "type": "table",
+            "x": 50,
+            "y": 50,
+            "width": 400,
+            "height": 200,
+            "rows": [
+              [{"text": "A1"}, {"text": "B1"}, {"text": "C1"}],
+              [{"text": "A2"}, {"text": "B2"}, {"text": "C2"}]
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "graphicFrame",
+            "content": {
+              "type": "table",
+              "table": {
+                "rows": 2,
+                "cols": 3,
+                "cells": [
+                  [{"text": "A1"}, {"text": "B1"}, {"text": "C1"}],
+                  [{"text": "A2"}, {"text": "B2"}, {"text": "C2"}]
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

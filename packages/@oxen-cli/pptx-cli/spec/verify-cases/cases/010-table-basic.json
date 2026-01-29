@@ -1,0 +1,41 @@
+{
+  "name": "table-basic",
+  "description": "Verify basic table creation",
+  "tags": ["table", "basic"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/table-basic.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addTables": [
+          {
+            "type": "table",
+            "x": 100,
+            "y": 100,
+            "width": 400,
+            "height": 200,
+            "rows": [
+              [{"text": "Header 1"}, {"text": "Header 2"}],
+              [{"text": "Cell A"}, {"text": "Cell B"}],
+              [{"text": "Cell C"}, {"text": "Cell D"}]
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "graphicFrame"
+          }
+        ]
+      }
+    ]
+  }
+}

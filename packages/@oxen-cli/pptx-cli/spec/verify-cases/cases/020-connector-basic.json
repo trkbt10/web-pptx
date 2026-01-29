@@ -1,0 +1,40 @@
+{
+  "name": "connector-basic",
+  "description": "Verify basic connector shape",
+  "tags": ["connector", "basic"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/connector-basic.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addConnectors": [
+          {
+            "type": "connector",
+            "preset": "straightConnector1",
+            "x": 100,
+            "y": 100,
+            "width": 300,
+            "height": 200,
+            "lineColor": "333333",
+            "lineWidth": 2
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "cxnSp",
+            "geometry": { "preset": "straightConnector1" }
+          }
+        ]
+      }
+    ]
+  }
+}

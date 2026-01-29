@@ -1,0 +1,41 @@
+{
+  "name": "rectangle-text",
+  "description": "Verify rectangle shape with text content",
+  "tags": ["shape", "rectangle", "text"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/rectangle-text.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 100,
+            "y": 100,
+            "width": 300,
+            "height": 100,
+            "text": "Hello World"
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "sp",
+            "geometry": {
+              "preset": "rect"
+            },
+            "text": "Hello World"
+          }
+        ]
+      }
+    ]
+  }
+}

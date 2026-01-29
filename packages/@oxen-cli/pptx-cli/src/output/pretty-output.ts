@@ -8,6 +8,7 @@ import type { ShowData } from "../commands/show";
 import type { ExtractData } from "../commands/extract";
 import type { ThemeData } from "../commands/theme";
 import type { BuildData } from "../commands/build";
+import type { VerifyData } from "../commands/verify";
 
 function getSlideFlags(slide: SlideListItem): string[] {
   const flags: string[] = [];
@@ -167,5 +168,33 @@ export function formatBuildPretty(data: BuildData): string {
   lines.push(`Output: ${data.outputPath}`);
   lines.push(`Slides: ${data.slideCount}`);
   lines.push(`Shapes added: ${data.shapesAdded}`);
+  return lines.join("\n");
+}
+
+/**
+ * Format verify result for human-readable output.
+ */
+export function formatVerifyPretty(data: VerifyData): string {
+  const lines: string[] = [];
+  const total = data.passed + data.failed;
+  const status = data.failed === 0 ? "PASS" : "FAIL";
+
+  lines.push(`${status}: ${data.passed}/${total} tests passed`);
+  lines.push("");
+
+  for (const result of data.results) {
+    const icon = result.passed ? "✓" : "✗";
+    lines.push(`${icon} ${result.name}`);
+
+    if (!result.passed) {
+      const failedAssertions = result.assertions.filter((a) => !a.passed);
+      for (const assertion of failedAssertions) {
+        lines.push(`    ${assertion.path}:`);
+        lines.push(`      expected: ${JSON.stringify(assertion.expected)}`);
+        lines.push(`      actual:   ${JSON.stringify(assertion.actual)}`);
+      }
+    }
+  }
+
   return lines.join("\n");
 }

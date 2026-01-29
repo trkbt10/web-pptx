@@ -1,0 +1,33 @@
+{
+  "name": "arrow-shapes",
+  "description": "Verify arrow preset shapes",
+  "tags": ["shape", "arrow", "preset"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/arrow-shapes.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          { "type": "rightArrow", "x": 50, "y": 50, "width": 150, "height": 80, "fill": "00AA00" },
+          { "type": "leftArrow", "x": 250, "y": 50, "width": 150, "height": 80, "fill": "AA0000" },
+          { "type": "upDownArrow", "x": 450, "y": 50, "width": 80, "height": 150, "fill": "0000AA" },
+          { "type": "chevron", "x": 50, "y": 200, "width": 150, "height": 80, "fill": "FF8800" }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -4, "type": "sp", "geometry": { "preset": "rightArrow" } },
+          { "index": -3, "type": "sp", "geometry": { "preset": "leftArrow" } },
+          { "index": -2, "type": "sp", "geometry": { "preset": "upDownArrow" } },
+          { "index": -1, "type": "sp", "geometry": { "preset": "chevron" } }
+        ]
+      }
+    ]
+  }
+}

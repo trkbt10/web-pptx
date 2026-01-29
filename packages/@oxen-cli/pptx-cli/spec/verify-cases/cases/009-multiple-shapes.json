@@ -1,0 +1,67 @@
+{
+  "name": "multiple-shapes",
+  "description": "Verify multiple shapes on a single slide",
+  "tags": ["shape", "multiple"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/multiple-shapes.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 50,
+            "width": 150,
+            "height": 100,
+            "fill": "FF0000"
+          },
+          {
+            "type": "ellipse",
+            "x": 250,
+            "y": 50,
+            "width": 150,
+            "height": 100,
+            "fill": "00FF00"
+          },
+          {
+            "type": "triangle",
+            "x": 450,
+            "y": 50,
+            "width": 150,
+            "height": 100,
+            "fill": "0000FF"
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -3,
+            "type": "sp",
+            "geometry": { "preset": "rect" },
+            "fill": { "color": "FF0000" }
+          },
+          {
+            "index": -2,
+            "type": "sp",
+            "geometry": { "preset": "ellipse" },
+            "fill": { "color": "00FF00" }
+          },
+          {
+            "index": -1,
+            "type": "sp",
+            "geometry": { "preset": "triangle" },
+            "fill": { "color": "0000FF" }
+          }
+        ]
+      }
+    ]
+  }
+}

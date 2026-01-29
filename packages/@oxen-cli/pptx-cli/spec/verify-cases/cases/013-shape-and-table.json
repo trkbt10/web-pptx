@@ -1,0 +1,57 @@
+{
+  "name": "shape-and-table",
+  "description": "Verify both shapes and tables on same slide",
+  "tags": ["shape", "table", "combined"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/shape-and-table.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 50,
+            "width": 150,
+            "height": 80,
+            "fill": "3366CC",
+            "text": "Title"
+          }
+        ],
+        "addTables": [
+          {
+            "type": "table",
+            "x": 50,
+            "y": 150,
+            "width": 400,
+            "height": 200,
+            "rows": [
+              [{"text": "Col A"}, {"text": "Col B"}],
+              [{"text": "1"}, {"text": "2"}]
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -2,
+            "type": "sp",
+            "geometry": { "preset": "rect" },
+            "text": "Title"
+          },
+          {
+            "index": -1,
+            "type": "graphicFrame"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "roundRect-text",
+  "description": "Verify rounded rectangle with text",
+  "tags": ["shape", "roundRect", "text"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/roundRect-text.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "roundRect",
+            "x": 100,
+            "y": 100,
+            "width": 400,
+            "height": 150,
+            "fill": "99CC99",
+            "text": "Rounded Rectangle Button"
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "sp",
+            "geometry": { "preset": "roundRect" },
+            "fill": { "type": "solid", "color": "99CC99" },
+            "text": "Rounded Rectangle Button"
+          }
+        ]
+      }
+    ]
+  }
+}

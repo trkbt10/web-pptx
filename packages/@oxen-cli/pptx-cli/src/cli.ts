@@ -17,6 +17,7 @@ import { runShow } from "./commands/show";
 import { runExtract } from "./commands/extract";
 import { runTheme } from "./commands/theme";
 import { runBuild } from "./commands/build";
+import { runVerify } from "./commands/verify";
 import { formatJson, type Result } from "./output/json-output";
 import {
   formatInfoPretty,
@@ -25,6 +26,7 @@ import {
   formatExtractPretty,
   formatThemePretty,
   formatBuildPretty,
+  formatVerifyPretty,
 } from "./output/pretty-output";
 
 type OutputMode = "json" | "pretty";
@@ -119,6 +121,17 @@ program
     const mode = program.opts().output as OutputMode;
     const result = await runBuild(spec);
     output(result, mode, formatBuildPretty);
+  });
+
+program
+  .command("verify")
+  .description("Verify PPTX build results against expected values")
+  .argument("<path>", "Test case file or directory path")
+  .option("--tag <tag>", "Filter test cases by tag")
+  .action(async (specPath: string, options: { tag?: string }) => {
+    const mode = program.opts().output as OutputMode;
+    const result = await runVerify(specPath, options);
+    output(result, mode, formatVerifyPretty);
   });
 
 program.parse();

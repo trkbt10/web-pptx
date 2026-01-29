@@ -98,9 +98,13 @@ export function serializeConnectionShape(conn: CxnShape): XmlElement {
     createElement("p:nvPr"),
   ]);
 
+  const geometryElement = conn.properties.geometry
+    ? serializeGeometry(conn.properties.geometry)
+    : createElement("a:prstGeom", { prst: "line" }, [createElement("a:avLst")]);
+
   const spPr = createElement("p:spPr", {}, [
     serializeTransformOrDefault(conn.properties.transform),
-    createElement("a:prstGeom", { prst: "line" }, [createElement("a:avLst")]),
+    geometryElement,
     ...serializeShapeStyleElements(conn.properties),
   ]);
 

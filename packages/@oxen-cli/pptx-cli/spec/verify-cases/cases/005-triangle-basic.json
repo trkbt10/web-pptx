@@ -1,0 +1,46 @@
+{
+  "name": "triangle-basic",
+  "description": "Verify triangle shape is placed correctly",
+  "tags": ["shape", "triangle", "basic"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/triangle-basic.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "triangle",
+            "x": 150,
+            "y": 100,
+            "width": 200,
+            "height": 180
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "sp",
+            "bounds": {
+              "x": 150,
+              "y": 100,
+              "width": 200,
+              "height": 180
+            },
+            "geometry": {
+              "kind": "preset",
+              "preset": "triangle"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

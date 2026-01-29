@@ -1,0 +1,87 @@
+/**
+ * @file Preset shape type mapping
+ */
+
+/**
+ * Map from friendly shape type names to OOXML preset geometry names
+ */
+export const PRESET_MAP: Record<string, string> = {
+  // Basic shapes
+  rectangle: "rect",
+  ellipse: "ellipse",
+  triangle: "triangle",
+  diamond: "diamond",
+  pentagon: "pentagon",
+  hexagon: "hexagon",
+  heptagon: "heptagon",
+  octagon: "octagon",
+  decagon: "decagon",
+  dodecagon: "dodecagon",
+  parallelogram: "parallelogram",
+  trapezoid: "trapezoid",
+  // Rounded rectangles
+  roundRect: "roundRect",
+  round1Rect: "round1Rect",
+  round2SameRect: "round2SameRect",
+  round2DiagRect: "round2DiagRect",
+  snip1Rect: "snip1Rect",
+  snip2SameRect: "snip2SameRect",
+  snip2DiagRect: "snip2DiagRect",
+  snipRoundRect: "snipRoundRect",
+  // Arrows
+  rightArrow: "rightArrow",
+  leftArrow: "leftArrow",
+  upArrow: "upArrow",
+  downArrow: "downArrow",
+  leftRightArrow: "leftRightArrow",
+  upDownArrow: "upDownArrow",
+  bentArrow: "bentArrow",
+  uturnArrow: "uturnArrow",
+  chevron: "chevron",
+  notchedRightArrow: "notchedRightArrow",
+  stripedRightArrow: "stripedRightArrow",
+  // Stars
+  star4: "star4",
+  star5: "star5",
+  star6: "star6",
+  star7: "star7",
+  star8: "star8",
+  star10: "star10",
+  star12: "star12",
+  star16: "star16",
+  star24: "star24",
+  star32: "star32",
+  // Callouts
+  wedgeRectCallout: "wedgeRectCallout",
+  wedgeRoundRectCallout: "wedgeRoundRectCallout",
+  wedgeEllipseCallout: "wedgeEllipseCallout",
+  cloudCallout: "cloudCallout",
+  // Flow chart
+  flowChartProcess: "flowChartProcess",
+  flowChartDecision: "flowChartDecision",
+  flowChartTerminator: "flowChartTerminator",
+  flowChartDocument: "flowChartDocument",
+  flowChartData: "flowChartInputOutput",
+  flowChartConnector: "flowChartConnector",
+  // Misc
+  heart: "heart",
+  lightning: "lightningBolt",
+  sun: "sun",
+  moon: "moon",
+  cloud: "cloud",
+  arc: "arc",
+  donut: "donut",
+  pie: "pie",
+  frame: "frame",
+  cube: "cube",
+  can: "can",
+  foldedCorner: "foldedCorner",
+  smileyFace: "smileyFace",
+  noSmoking: "noSmoking",
+  plus: "mathPlus",
+  cross: "plus",
+  ribbon: "ribbon",
+  ribbon2: "ribbon2",
+  homePlate: "homePlate",
+  plaque: "plaque",
+};

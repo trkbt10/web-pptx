@@ -1,0 +1,31 @@
+{
+  "name": "flowchart-shapes",
+  "description": "Verify flowchart preset shapes",
+  "tags": ["shape", "flowchart", "preset"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/flowchart-shapes.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          { "type": "flowChartProcess", "x": 50, "y": 50, "width": 150, "height": 80, "fill": "B0C4DE", "text": "Process" },
+          { "type": "flowChartDecision", "x": 250, "y": 50, "width": 120, "height": 100, "fill": "FFE4B5", "text": "?" },
+          { "type": "flowChartTerminator", "x": 420, "y": 50, "width": 150, "height": 60, "fill": "98FB98", "text": "End" }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -3, "type": "sp", "geometry": { "preset": "flowChartProcess" }, "text": "Process" },
+          { "index": -2, "type": "sp", "geometry": { "preset": "flowChartDecision" }, "text": "?" },
+          { "index": -1, "type": "sp", "geometry": { "preset": "flowChartTerminator" }, "text": "End" }
+        ]
+      }
+    ]
+  }
+}

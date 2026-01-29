@@ -1,0 +1,46 @@
+{
+  "name": "ellipse-basic",
+  "description": "Verify ellipse shape is placed correctly",
+  "tags": ["shape", "ellipse", "basic"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/ellipse-basic.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "ellipse",
+            "x": 200,
+            "y": 150,
+            "width": 180,
+            "height": 180
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "sp",
+            "bounds": {
+              "x": 200,
+              "y": 150,
+              "width": 180,
+              "height": 180
+            },
+            "geometry": {
+              "kind": "preset",
+              "preset": "ellipse"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
