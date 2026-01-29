@@ -20,15 +20,15 @@ import type {
 } from "@oxen-office/text-layout";
 import {
   layoutDocument,
-  paragraphsToLayoutInputs,
-  extractFloatingImages,
   flowIntoPages,
   createSinglePageLayout,
   DEFAULT_PAGE_FLOW_CONFIG,
 } from "@oxen-office/text-layout";
 import {
+  paragraphsToLayoutInputs,
+  extractFloatingImages,
   sectionPropertiesToPageConfig,
-} from "@oxen-office/text-layout";
+} from "@oxen-office/docx/adapters";
 
 // =============================================================================
 // Types

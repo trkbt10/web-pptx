@@ -50,6 +50,7 @@ export type {
   FloatingImageWrap,
   FloatingImageConfig,
   PositionedFloatingImage,
+  InlineImageConfig,
   // Continuous document types
   HeaderFooterLayout,
   PageLayout,
@@ -88,69 +89,9 @@ export type { LineBreakResult, LineFontInfo } from "./measure/line-breaker";
 // Layout engine
 export { layoutTextBody, layoutDocument } from "./layout/engine";
 
-// DOCX adapter
-export {
-  paragraphToLayoutInput,
-  paragraphsToLayoutInputs,
-  getParagraphPlainText,
-  getDocumentPlainText,
-  extractFloatingImages,
-  DEFAULT_PAGE_CONFIG,
-  getContentWidth,
-  getContentHeight,
-  createParagraphLayoutContext,
-} from "./adapters/docx-adapter";
-export type { DocxPageConfig, ParagraphLayoutContext } from "./adapters/docx-adapter";
-
-// DOCX table adapter
-export {
-  tableToLayoutInput,
-  isParagraph,
-  isTable,
-} from "./adapters/docx-table-adapter";
-
 // Table layout engine
 export { layoutTable } from "./layout/table-layout";
 export type { TableLayoutConfig } from "./layout/table-layout";
-
-// Numbering resolver
-export {
-  formatNumber,
-  substituteLevelText,
-  resolveBulletConfig,
-  createNumberingContext,
-} from "./adapters/numbering-resolver";
-export type { NumberingContext } from "./adapters/numbering-resolver";
-
-// DOCX section adapter
-export {
-  sectionPropertiesToPageConfig,
-  getSectionContentWidth,
-  getSectionContentHeight,
-  getAllSectionConfigs,
-} from "./adapters/docx-section-adapter";
-
-// DOCX header/footer resolver
-export {
-  resolveHeaderFooter,
-  hasHeaders,
-  hasFooters,
-  layoutHeader,
-  layoutFooter,
-} from "./adapters/docx-header-footer-resolver";
-export type {
-  ResolvedHeaderFooter,
-  HeaderFooterContext,
-  HeaderFooterLayoutConfig,
-} from "./adapters/docx-header-footer-resolver";
-
-// DOCX style resolver
-export {
-  createStyleResolver,
-  resolveRunProperties,
-  resolveRunPropertiesWithStyles,
-} from "./adapters/docx-style-resolver";
-export type { ResolvedRunProperties } from "./adapters/docx-style-resolver";
 
 // Writing mode utilities
 export {
@@ -194,4 +135,4 @@ export {
   createSinglePageLayout,
   DEFAULT_PAGE_FLOW_CONFIG,
 } from "./layout/page-flow";
-export type { PageFlowConfig, PageBreakHint, PageFlowInput } from "./layout/page-flow";
+export type { PageFlowConfig, PageBreakHint, PageFlowInput, ColumnConfig } from "./layout/page-flow";

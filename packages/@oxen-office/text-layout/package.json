@@ -5,7 +5,6 @@
   "type": "module",
   "sideEffects": false,
   "dependencies": {
-    "@oxen-office/docx": "workspace:*",
     "@oxen-office/ooxml": "workspace:*",
     "@oxen/glyph": "workspace:*"
   },

@@ -2,10 +2,10 @@
  * @file Tests for DOCX Header/Footer Resolver
  */
 
-import type { DocxSectionProperties } from "@oxen-office/docx/domain/section";
-import type { DocxHeader, DocxFooter } from "@oxen-office/docx/domain/document";
-import type { DocxRelId } from "@oxen-office/docx/domain/types";
-import { docxRelId } from "@oxen-office/docx/domain/types";
+import type { DocxSectionProperties } from "../domain/section";
+import type { DocxHeader, DocxFooter } from "../domain/document";
+import type { DocxRelId } from "../domain/types";
+import { docxRelId } from "../domain/types";
 import {
   resolveHeaderFooter,
   hasHeaders,

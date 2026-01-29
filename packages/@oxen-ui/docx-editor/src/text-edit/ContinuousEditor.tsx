@@ -21,10 +21,8 @@ import type {
   PageFlowConfig,
   SelectionRect,
   CursorCoordinates,
-	} from "@oxen-office/text-layout";
-	import {
-	  getDocumentPlainText,
-	} from "@oxen-office/text-layout";
+} from "@oxen-office/text-layout";
+import { getDocumentPlainText } from "@oxen-office/docx/adapters";
 import { useDocumentLayout } from "../document/hooks/use-document-layout";
 import {
   coordinatesToCursorPosition,

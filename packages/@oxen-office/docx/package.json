@@ -7,6 +7,7 @@
   "dependencies": {
     "@oxen-office/opc": "workspace:*",
     "@oxen-office/ooxml": "workspace:*",
+    "@oxen-office/text-layout": "workspace:*",
     "@oxen/xml": "workspace:*",
     "@oxen/zip": "workspace:*"
   },
@@ -55,6 +56,14 @@
     "./serializer/*": {
       "types": "./src/serializer/*.ts",
       "default": "./src/serializer/*.ts"
+    },
+    "./adapters": {
+      "types": "./src/adapters/index.ts",
+      "default": "./src/adapters/index.ts"
+    },
+    "./adapters/*": {
+      "types": "./src/adapters/*.ts",
+      "default": "./src/adapters/*.ts"
     }
   }
 }

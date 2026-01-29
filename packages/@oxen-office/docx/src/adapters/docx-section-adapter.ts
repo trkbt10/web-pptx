@@ -7,9 +7,8 @@
  * @see ECMA-376-1:2016 Section 17.6 (Sections)
  */
 
-import type { DocxSectionProperties, DocxColumns } from "@oxen-office/docx/domain/section";
-import type { PageFlowConfig, ColumnConfig } from "../layout/page-flow";
-import type { WritingMode } from "../types";
+import type { DocxSectionProperties, DocxColumns } from "../domain/section";
+import type { PageFlowConfig, ColumnConfig, WritingMode } from "@oxen-office/text-layout";
 import type { Pixels } from "@oxen-office/ooxml/domain/units";
 import { px } from "@oxen-office/ooxml/domain/units";
 import {
@@ -19,9 +18,9 @@ import {
   SPEC_DEFAULT_TEXT_DIRECTION,
   SPEC_DEFAULT_HEADER_FOOTER_DISTANCE_TWIPS,
   twipsToPx,
-} from "@oxen-office/docx/domain/ecma376-defaults";
-import { textDirectionToWritingMode } from "../writing-mode";
-import type { EcmaTextDirection } from "@oxen-office/docx/domain/ecma376-defaults";
+} from "../domain/ecma376-defaults";
+import { textDirectionToWritingMode } from "@oxen-office/text-layout";
+import type { EcmaTextDirection } from "../domain/ecma376-defaults";
 
 // =============================================================================
 // Column Configuration Conversion

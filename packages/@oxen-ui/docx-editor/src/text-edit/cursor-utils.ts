@@ -24,8 +24,8 @@ import {
   PT_TO_PX,
   measureSpanTextWidth,
   getCharIndexAtOffset,
-  getParagraphPlainText,
 } from "@oxen-office/text-layout";
+import { getParagraphPlainText } from "@oxen-office/docx/adapters";
 import { editorLayoutTokens } from "@oxen-ui/ui-components/design-tokens";
 import { getAscenderRatio } from "@oxen/glyph";
 

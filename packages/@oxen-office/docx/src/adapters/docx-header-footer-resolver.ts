@@ -7,17 +7,17 @@
  * @see ECMA-376 Part 1, Section 17.10 (Headers and Footers)
  */
 
-import type { DocxSectionProperties, DocxHeaderFooterRef } from "@oxen-office/docx/domain/section";
-import type { DocxHeader, DocxFooter, DocxBlockContent } from "@oxen-office/docx/domain/document";
-import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
-import type { DocxRelId, HeaderFooterType } from "@oxen-office/docx/domain/types";
-import type { DocxNumbering } from "@oxen-office/docx/domain/numbering";
-import type { DocxStyles } from "@oxen-office/docx/domain/styles";
-import type { LayoutParagraphInput, HeaderFooterLayout } from "../types";
+import type { DocxSectionProperties, DocxHeaderFooterRef } from "../domain/section";
+import type { DocxHeader, DocxFooter, DocxBlockContent } from "../domain/document";
+import type { DocxParagraph } from "../domain/paragraph";
+import type { DocxRelId, HeaderFooterType } from "../domain/types";
+import type { DocxNumbering } from "../domain/numbering";
+import type { DocxStyles } from "../domain/styles";
+import type { LayoutParagraphInput, HeaderFooterLayout } from "@oxen-office/text-layout";
 import type { Pixels } from "@oxen-office/ooxml/domain/units";
 import { px } from "@oxen-office/ooxml/domain/units";
 import { paragraphToLayoutInput, createParagraphLayoutContext } from "./docx-adapter";
-import { layoutDocument } from "../layout/engine";
+import { layoutDocument } from "@oxen-office/text-layout";
 
 // =============================================================================
 // Types

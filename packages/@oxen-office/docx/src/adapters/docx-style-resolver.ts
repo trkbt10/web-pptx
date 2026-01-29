@@ -14,15 +14,15 @@
  * @see ECMA-376-1:2016 Section 17.3.2 (Run Properties)
  */
 
-import type { DocxRunProperties, DocxHighlightColor } from "@oxen-office/docx/domain/run";
-import type { DocxStyle, DocxStyles, DocxDocDefaults } from "@oxen-office/docx/domain/styles";
+import type { DocxRunProperties, DocxHighlightColor } from "../domain/run";
+import type { DocxStyle, DocxStyles, DocxDocDefaults } from "../domain/styles";
 import type { Points, Pixels } from "@oxen-office/ooxml/domain/units";
 import { pt, px } from "@oxen-office/ooxml/domain/units";
 import {
   SPEC_DEFAULT_FONT_SIZE_PT,
   TWIPS_PER_POINT,
   PT_TO_PX,
-} from "@oxen-office/docx/domain/ecma376-defaults";
+} from "../domain/ecma376-defaults";
 
 // =============================================================================
 // Resolved Properties Type

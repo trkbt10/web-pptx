@@ -14,7 +14,7 @@ import type {
   LayoutBorderStyle,
   LayoutCellBorders,
   LayoutParagraphInput,
-} from "../types";
+} from "@oxen-office/text-layout";
 import type {
   DocxTable,
   DocxTableRow,
@@ -24,10 +24,10 @@ import type {
   DocxTableBorderEdge,
   DocxCellBorders,
   DocxTableBorders,
-} from "@oxen-office/docx/domain/table";
-import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
-import type { DocxNumbering } from "@oxen-office/docx/domain/numbering";
-import type { DocxStyles } from "@oxen-office/docx/domain/styles";
+} from "../domain/table";
+import type { DocxParagraph } from "../domain/paragraph";
+import type { DocxNumbering } from "../domain/numbering";
+import type { DocxStyles } from "../domain/styles";
 import type { TableWidth, TableCellMargins } from "@oxen-office/ooxml/domain/table";
 import type { Pixels } from "@oxen-office/ooxml/domain/units";
 import { px } from "@oxen-office/ooxml/domain/units";
@@ -35,7 +35,7 @@ import { paragraphToLayoutInput, createParagraphLayoutContext } from "./docx-ada
 import {
   TWIPS_PER_POINT,
   PT_TO_PX,
-} from "@oxen-office/docx/domain/ecma376-defaults";
+} from "../domain/ecma376-defaults";
 
 // =============================================================================
 // Constants

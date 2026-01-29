@@ -17,12 +17,12 @@ import type {
   FloatingImageHorizontalRef,
   FloatingImageVerticalRef,
   FloatingImageWrap,
-} from "../types";
-import type { DocxParagraph, DocxParagraphContent, DocxParagraphSpacing, DocxTabStops } from "@oxen-office/docx/domain/paragraph";
-import type { DocxRun, DocxRunProperties, DocxRunContent } from "@oxen-office/docx/domain/run";
-import type { DocxNumbering } from "@oxen-office/docx/domain/numbering";
-import type { DocxStyles } from "@oxen-office/docx/domain/styles";
-import type { DocxAnchorDrawing } from "@oxen-office/docx/domain/drawing";
+} from "@oxen-office/text-layout";
+import type { DocxParagraph, DocxParagraphContent, DocxParagraphSpacing, DocxTabStops } from "../domain/paragraph";
+import type { DocxRun, DocxRunProperties, DocxRunContent } from "../domain/run";
+import type { DocxNumbering } from "../domain/numbering";
+import type { DocxStyles } from "../domain/styles";
+import type { DocxAnchorDrawing } from "../domain/drawing";
 import type { ParagraphAlignment } from "@oxen-office/ooxml/domain/text";
 import {
   resolveBulletConfig,
@@ -46,7 +46,7 @@ import {
   PT_TO_PX,
   twipsToPx,
   emuToPx,
-} from "@oxen-office/docx/domain/ecma376-defaults";
+} from "../domain/ecma376-defaults";
 
 // =============================================================================
 // Constants
