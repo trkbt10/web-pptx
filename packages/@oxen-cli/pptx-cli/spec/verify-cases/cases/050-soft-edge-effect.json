@@ -1,0 +1,55 @@
+{
+  "name": "soft-edge-effect",
+  "description": "Verify shapes with soft edge effects",
+  "tags": ["shape", "effect", "softEdge"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/soft-edge-effect.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 100,
+            "y": 100,
+            "width": 200,
+            "height": 150,
+            "fill": "5B9BD5",
+            "text": "Soft Edges",
+            "effects": {
+              "softEdge": {
+                "radius": 10
+              }
+            }
+          },
+          {
+            "type": "roundRect",
+            "x": 350,
+            "y": 100,
+            "width": 200,
+            "height": 150,
+            "fill": "ED7D31",
+            "text": "Blurred Edges",
+            "effects": {
+              "softEdge": {
+                "radius": 25
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -2, "type": "sp", "geometry": { "preset": "rect" }, "effects": { "softEdge": { "radius": 10 } } },
+          { "index": -1, "type": "sp", "geometry": { "preset": "roundRect" }, "effects": { "softEdge": { "radius": 25 } } }
+        ]
+      }
+    ]
+  }
+}

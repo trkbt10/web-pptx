@@ -1,0 +1,115 @@
+{
+  "name": "text-effects",
+  "description": "Verify text with shadow and glow effects",
+  "tags": ["text", "effect", "shadow", "glow"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/text-effects.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 50,
+            "width": 300,
+            "height": 80,
+            "fill": "FFFFFF",
+            "lineColor": "CCCCCC",
+            "text": [
+              {
+                "runs": [
+                  {
+                    "text": "Shadow Text",
+                    "fontSize": 32,
+                    "bold": true,
+                    "color": "4472C4",
+                    "effects": {
+                      "shadow": {
+                        "color": "000000",
+                        "blur": 4,
+                        "distance": 3,
+                        "direction": 45
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 150,
+            "width": 300,
+            "height": 80,
+            "fill": "1F2937",
+            "text": [
+              {
+                "runs": [
+                  {
+                    "text": "Glow Text",
+                    "fontSize": 32,
+                    "bold": true,
+                    "color": "FFFFFF",
+                    "effects": {
+                      "glow": {
+                        "color": "00FFFF",
+                        "radius": 10
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 250,
+            "width": 400,
+            "height": 80,
+            "fill": "374151",
+            "text": [
+              {
+                "runs": [
+                  {
+                    "text": "Combined ",
+                    "fontSize": 28,
+                    "color": "FFC000",
+                    "effects": {
+                      "shadow": { "color": "000000", "blur": 6, "distance": 4 },
+                      "glow": { "color": "FF8C00", "radius": 8 }
+                    }
+                  },
+                  {
+                    "text": "Effects",
+                    "fontSize": 28,
+                    "bold": true,
+                    "color": "FF6B6B",
+                    "effects": {
+                      "glow": { "color": "FF0000", "radius": 12 }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -3, "type": "sp", "text": "Shadow Text" },
+          { "index": -2, "type": "sp", "text": "Glow Text" },
+          { "index": -1, "type": "sp", "text": "Combined Effects" }
+        ]
+      }
+    ]
+  }
+}

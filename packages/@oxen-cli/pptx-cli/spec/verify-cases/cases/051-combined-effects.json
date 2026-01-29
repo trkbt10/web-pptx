@@ -1,0 +1,88 @@
+{
+  "name": "combined-effects",
+  "description": "Verify shapes with multiple effects combined",
+  "tags": ["shape", "effect", "combined"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/combined-effects.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "star6",
+            "x": 100,
+            "y": 100,
+            "width": 200,
+            "height": 200,
+            "fill": {
+              "type": "gradient",
+              "gradientType": "radial",
+              "stops": [
+                { "position": 0, "color": "FFFF00" },
+                { "position": 100, "color": "FFC000" }
+              ]
+            },
+            "effects": {
+              "shadow": {
+                "color": "000000",
+                "blur": 10,
+                "distance": 8,
+                "direction": 45
+              },
+              "glow": {
+                "color": "FFD700",
+                "radius": 12
+              }
+            }
+          },
+          {
+            "type": "roundRect",
+            "x": 350,
+            "y": 100,
+            "width": 200,
+            "height": 120,
+            "fill": "4472C4",
+            "rotation": 15,
+            "lineColor": "1F4E79",
+            "lineWidth": 3,
+            "effects": {
+              "shadow": {
+                "color": "333333",
+                "blur": 6,
+                "distance": 4,
+                "direction": 135
+              },
+              "softEdge": {
+                "radius": 8
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -2,
+            "type": "sp",
+            "geometry": { "preset": "star6" },
+            "fill": { "type": "gradient" },
+            "effects": { "shadow": { "type": "outer" }, "glow": { "radius": 12 } }
+          },
+          {
+            "index": -1,
+            "type": "sp",
+            "geometry": { "preset": "roundRect" },
+            "rotation": 15,
+            "effects": { "shadow": { "type": "outer" }, "softEdge": { "radius": 8 } }
+          }
+        ]
+      }
+    ]
+  }
+}

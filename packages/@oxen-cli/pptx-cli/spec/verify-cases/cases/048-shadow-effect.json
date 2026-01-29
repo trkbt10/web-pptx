@@ -1,0 +1,61 @@
+{
+  "name": "shadow-effect",
+  "description": "Verify shapes with shadow effects",
+  "tags": ["shape", "effect", "shadow"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/shadow-effect.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 100,
+            "y": 100,
+            "width": 200,
+            "height": 100,
+            "fill": "4472C4",
+            "text": "Shadow",
+            "effects": {
+              "shadow": {
+                "color": "000000",
+                "blur": 8,
+                "distance": 6,
+                "direction": 45
+              }
+            }
+          },
+          {
+            "type": "ellipse",
+            "x": 350,
+            "y": 100,
+            "width": 150,
+            "height": 150,
+            "fill": "70AD47",
+            "text": "Circle Shadow",
+            "effects": {
+              "shadow": {
+                "color": "333333",
+                "blur": 10,
+                "distance": 8,
+                "direction": 135
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -2, "type": "sp", "geometry": { "preset": "rect" }, "effects": { "shadow": { "type": "outer" } } },
+          { "index": -1, "type": "sp", "geometry": { "preset": "ellipse" }, "effects": { "shadow": { "type": "outer" } } }
+        ]
+      }
+    ]
+  }
+}

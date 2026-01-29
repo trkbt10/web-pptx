@@ -1,0 +1,60 @@
+{
+  "name": "gradient-fill-linear",
+  "description": "Verify linear gradient fill",
+  "tags": ["shape", "fill", "gradient"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/gradient-fill-linear.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 100,
+            "width": 200,
+            "height": 100,
+            "fill": {
+              "type": "gradient",
+              "gradientType": "linear",
+              "angle": 0,
+              "stops": [
+                { "position": 0, "color": "FF0000" },
+                { "position": 100, "color": "0000FF" }
+              ]
+            }
+          },
+          {
+            "type": "rectangle",
+            "x": 280,
+            "y": 100,
+            "width": 200,
+            "height": 100,
+            "fill": {
+              "type": "gradient",
+              "gradientType": "linear",
+              "angle": 90,
+              "stops": [
+                { "position": 0, "color": "00FF00" },
+                { "position": 50, "color": "FFFF00" },
+                { "position": 100, "color": "FF00FF" }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -2, "type": "sp", "fill": { "type": "gradient" } },
+          { "index": -1, "type": "sp", "fill": { "type": "gradient" } }
+        ]
+      }
+    ]
+  }
+}

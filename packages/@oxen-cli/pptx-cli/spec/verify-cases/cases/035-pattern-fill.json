@@ -1,0 +1,67 @@
+{
+  "name": "pattern-fill",
+  "description": "Verify pattern fill",
+  "tags": ["shape", "fill", "pattern"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/pattern-fill.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 100,
+            "width": 150,
+            "height": 100,
+            "fill": {
+              "type": "pattern",
+              "preset": "horz",
+              "fgColor": "000000",
+              "bgColor": "FFFFFF"
+            }
+          },
+          {
+            "type": "rectangle",
+            "x": 220,
+            "y": 100,
+            "width": 150,
+            "height": 100,
+            "fill": {
+              "type": "pattern",
+              "preset": "diagCross",
+              "fgColor": "4472C4",
+              "bgColor": "E2F0D9"
+            }
+          },
+          {
+            "type": "rectangle",
+            "x": 390,
+            "y": 100,
+            "width": 150,
+            "height": 100,
+            "fill": {
+              "type": "pattern",
+              "preset": "pct50",
+              "fgColor": "ED7D31",
+              "bgColor": "FFF2CC"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -3, "type": "sp", "fill": { "type": "pattern" } },
+          { "index": -2, "type": "sp", "fill": { "type": "pattern" } },
+          { "index": -1, "type": "sp", "fill": { "type": "pattern" } }
+        ]
+      }
+    ]
+  }
+}

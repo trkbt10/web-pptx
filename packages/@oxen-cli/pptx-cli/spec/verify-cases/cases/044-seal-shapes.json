@@ -1,0 +1,29 @@
+{
+  "name": "seal-shapes",
+  "description": "Verify irregular seal (explosion) shapes",
+  "tags": ["shape", "seal", "preset"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/seal-shapes.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          { "type": "irregularSeal1", "x": 100, "y": 100, "width": 180, "height": 180, "fill": "FF4444", "text": "POW!" },
+          { "type": "irregularSeal2", "x": 350, "y": 100, "width": 180, "height": 180, "fill": "FF8C00", "text": "BANG!" }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -2, "type": "sp", "geometry": { "preset": "irregularSeal1" } },
+          { "index": -1, "type": "sp", "geometry": { "preset": "irregularSeal2" } }
+        ]
+      }
+    ]
+  }
+}

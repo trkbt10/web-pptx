@@ -1,0 +1,56 @@
+{
+  "name": "glow-effect",
+  "description": "Verify shapes with glow effects",
+  "tags": ["shape", "effect", "glow"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/glow-effect.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "star5",
+            "x": 100,
+            "y": 100,
+            "width": 150,
+            "height": 150,
+            "fill": "FFC000",
+            "text": "Glow",
+            "effects": {
+              "glow": {
+                "color": "FFFF00",
+                "radius": 15
+              }
+            }
+          },
+          {
+            "type": "heart",
+            "x": 300,
+            "y": 100,
+            "width": 150,
+            "height": 140,
+            "fill": "FF1493",
+            "effects": {
+              "glow": {
+                "color": "FF69B4",
+                "radius": 20
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -2, "type": "sp", "geometry": { "preset": "star5" }, "effects": { "glow": { "radius": 15 } } },
+          { "index": -1, "type": "sp", "geometry": { "preset": "heart" }, "effects": { "glow": { "radius": 20 } } }
+        ]
+      }
+    ]
+  }
+}

@@ -19,6 +19,8 @@ import type { Paragraph, TextRun, ParagraphProperties, RunProperties } from "@ox
 import type { Transform } from "@oxen-office/pptx/domain/geometry";
 import type { TableRow, TableCell } from "@oxen-office/pptx/domain/table/types";
 import type { Fill, Line } from "@oxen-office/pptx/domain/color/types";
+import type { Effects } from "@oxen-office/pptx/domain/effects";
+import type { Shape3d } from "@oxen-office/pptx/domain/three-d";
 import { extractTextFromShape, extractTextFromParagraph, extractTextFromBody } from "./text-serializer";
 
 // =============================================================================
@@ -114,6 +116,46 @@ export type LineJson = {
   readonly width?: number;
   readonly color?: string;
   readonly dashStyle?: string;
+  readonly compound?: string;
+};
+
+/**
+ * Effects info for JSON output
+ */
+export type EffectsJson = {
+  readonly shadow?: {
+    readonly type?: string;
+    readonly color?: string;
+    readonly blur?: number;
+    readonly distance?: number;
+    readonly direction?: number;
+  };
+  readonly glow?: {
+    readonly color?: string;
+    readonly radius?: number;
+  };
+  readonly softEdge?: {
+    readonly radius?: number;
+  };
+};
+
+/**
+ * Bevel info for JSON output
+ */
+export type BevelJson = {
+  readonly preset?: string;
+  readonly width?: number;
+  readonly height?: number;
+};
+
+/**
+ * 3D shape properties for JSON output
+ */
+export type Shape3dJson = {
+  readonly bevelTop?: BevelJson;
+  readonly bevelBottom?: BevelJson;
+  readonly material?: string;
+  readonly extrusionHeight?: number;
 };
 
 // =============================================================================
@@ -223,6 +265,8 @@ export type ShapeJson = {
   readonly geometry?: GeometryJson;
   readonly fill?: FillJson;
   readonly line?: LineJson;
+  readonly effects?: EffectsJson;
+  readonly shape3d?: Shape3dJson;
   readonly style?: StyleReferenceJson;
   readonly content?: GraphicContentJson;
   readonly connection?: {
@@ -378,7 +422,7 @@ function serializeLine(line: Line | undefined): LineJson | undefined {
   if (!line) {
     return undefined;
   }
-  const result: { width?: number; color?: string; dashStyle?: string } = {};
+  const result: { width?: number; color?: string; dashStyle?: string; compound?: string } = {};
   if (line.width !== undefined) {
     result.width = line.width;
   }
@@ -390,6 +434,9 @@ function serializeLine(line: Line | undefined): LineJson | undefined {
   }
   if (line.dash !== undefined && typeof line.dash === "string") {
     result.dashStyle = line.dash;
+  }
+  if (line.compound !== undefined && line.compound !== "sng") {
+    result.compound = line.compound;
   }
   return Object.keys(result).length > 0 ? result : undefined;
 }
@@ -411,6 +458,71 @@ function serializeStyle(style: ShapeStyle | undefined): StyleReferenceJson | und
   if (style.fontReference?.index !== undefined) {
     result.fontRef = style.fontReference.index;
   }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
+function serializeEffects(effects: Effects | undefined): EffectsJson | undefined {
+  if (!effects) {
+    return undefined;
+  }
+  const result: EffectsJson = {};
+
+  if (effects.shadow) {
+    (result as { shadow?: EffectsJson["shadow"] }).shadow = {
+      type: effects.shadow.type,
+      color: getColorValue(effects.shadow.color),
+      blur: effects.shadow.blurRadius,
+      distance: effects.shadow.distance,
+      direction: effects.shadow.direction,
+    };
+  }
+
+  if (effects.glow) {
+    (result as { glow?: EffectsJson["glow"] }).glow = {
+      color: getColorValue(effects.glow.color),
+      radius: effects.glow.radius,
+    };
+  }
+
+  if (effects.softEdge) {
+    (result as { softEdge?: EffectsJson["softEdge"] }).softEdge = {
+      radius: effects.softEdge.radius,
+    };
+  }
+
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
+function serializeShape3d(shape3d: Shape3d | undefined): Shape3dJson | undefined {
+  if (!shape3d) {
+    return undefined;
+  }
+  const result: Shape3dJson = {};
+
+  if (shape3d.bevelTop) {
+    (result as { bevelTop?: BevelJson }).bevelTop = {
+      preset: shape3d.bevelTop.preset,
+      width: shape3d.bevelTop.width,
+      height: shape3d.bevelTop.height,
+    };
+  }
+
+  if (shape3d.bevelBottom) {
+    (result as { bevelBottom?: BevelJson }).bevelBottom = {
+      preset: shape3d.bevelBottom.preset,
+      width: shape3d.bevelBottom.width,
+      height: shape3d.bevelBottom.height,
+    };
+  }
+
+  if (shape3d.preset) {
+    (result as { material?: string }).material = shape3d.preset;
+  }
+
+  if (shape3d.extrusionHeight !== undefined && shape3d.extrusionHeight > 0) {
+    (result as { extrusionHeight?: number }).extrusionHeight = shape3d.extrusionHeight;
+  }
+
   return Object.keys(result).length > 0 ? result : undefined;
 }
 
@@ -477,11 +589,15 @@ function serializeShapeProperties(props: ShapeProperties): {
   geometry?: GeometryJson;
   fill?: FillJson;
   line?: LineJson;
+  effects?: EffectsJson;
+  shape3d?: Shape3dJson;
 } {
   return {
     geometry: serializeGeometry(props.geometry),
     fill: serializeFill(props.fill),
     line: serializeLine(props.line),
+    effects: serializeEffects(props.effects),
+    shape3d: serializeShape3d(props.shape3d),
   };
 }
 
@@ -492,7 +608,7 @@ export function serializeShape(shape: Shape): ShapeJson {
   switch (shape.type) {
     case "sp": {
       const text = extractTextFromShape(shape);
-      const { geometry, fill, line } = serializeShapeProperties(shape.properties);
+      const { geometry, fill, line, effects, shape3d } = serializeShapeProperties(shape.properties);
       const transform = shape.properties.transform;
       return {
         id: shape.nonVisual.id,
@@ -508,6 +624,8 @@ export function serializeShape(shape: Shape): ShapeJson {
         geometry,
         fill,
         line,
+        effects,
+        shape3d,
         style: serializeStyle(shape.style),
       };
     }

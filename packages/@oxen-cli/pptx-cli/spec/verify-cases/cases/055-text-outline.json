@@ -1,0 +1,81 @@
+{
+  "name": "text-outline",
+  "description": "Verify text with outline (stroke) styling",
+  "tags": ["text", "outline", "stroke"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/text-outline.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 50,
+            "width": 400,
+            "height": 100,
+            "fill": "1F2937",
+            "text": [
+              {
+                "runs": [
+                  {
+                    "text": "Outlined Text",
+                    "fontSize": 48,
+                    "bold": true,
+                    "color": "FFFFFF",
+                    "outline": {
+                      "color": "FF0000",
+                      "width": 2
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 180,
+            "width": 500,
+            "height": 100,
+            "fill": "0F172A",
+            "text": [
+              {
+                "runs": [
+                  {
+                    "text": "Neon ",
+                    "fontSize": 44,
+                    "bold": true,
+                    "color": "00FFFF",
+                    "outline": { "color": "0099FF", "width": 1 },
+                    "effects": { "glow": { "color": "00FFFF", "radius": 15 } }
+                  },
+                  {
+                    "text": "Style",
+                    "fontSize": 44,
+                    "bold": true,
+                    "color": "FF00FF",
+                    "outline": { "color": "9900FF", "width": 1 },
+                    "effects": { "glow": { "color": "FF00FF", "radius": 15 } }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -2, "type": "sp", "text": "Outlined Text" },
+          { "index": -1, "type": "sp", "text": "Neon Style" }
+        ]
+      }
+    ]
+  }
+}

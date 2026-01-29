@@ -1,0 +1,58 @@
+{
+  "name": "gradient-fill-radial",
+  "description": "Verify radial gradient fill",
+  "tags": ["shape", "fill", "gradient"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/gradient-fill-radial.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "ellipse",
+            "x": 100,
+            "y": 100,
+            "width": 200,
+            "height": 200,
+            "fill": {
+              "type": "gradient",
+              "gradientType": "radial",
+              "stops": [
+                { "position": 0, "color": "FFFFFF" },
+                { "position": 100, "color": "4472C4" }
+              ]
+            }
+          },
+          {
+            "type": "ellipse",
+            "x": 350,
+            "y": 100,
+            "width": 200,
+            "height": 200,
+            "fill": {
+              "type": "gradient",
+              "gradientType": "radial",
+              "stops": [
+                { "position": 0, "color": "FFFF00" },
+                { "position": 50, "color": "FF6600" },
+                { "position": 100, "color": "FF0000" }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -2, "type": "sp", "fill": { "type": "gradient" } },
+          { "index": -1, "type": "sp", "fill": { "type": "gradient" } }
+        ]
+      }
+    ]
+  }
+}

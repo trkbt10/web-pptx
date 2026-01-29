@@ -7,7 +7,7 @@ import * as path from "node:path";
 import { runBuild, type BuildSpec } from "./build";
 import { runShow } from "./show";
 import { success, error, type Result } from "../output/json-output";
-import type { ShapeJson, BoundsJson, GeometryJson, FillJson, LineJson, GraphicContentJson, TableJson } from "../serializers/shape-serializer";
+import type { ShapeJson, BoundsJson, GeometryJson, FillJson, LineJson, EffectsJson, Shape3dJson, GraphicContentJson, TableJson } from "../serializers/shape-serializer";
 
 // =============================================================================
 // Type Definitions
@@ -23,15 +23,39 @@ export type ExpectedTable = {
 };
 
 /**
+ * Expected effects for verification
+ */
+export type ExpectedEffects = {
+  readonly shadow?: { type?: string };
+  readonly glow?: { radius?: number };
+  readonly softEdge?: { radius?: number };
+};
+
+/**
+ * Expected 3D properties for verification
+ */
+export type ExpectedShape3d = {
+  readonly bevelTop?: { preset?: string };
+  readonly bevelBottom?: { preset?: string };
+  readonly material?: string;
+  readonly extrusionHeight?: number;
+};
+
+/**
  * Expected shape specification for verification
  */
 export type ExpectedShape = {
   readonly index: number; // -1 = last added shape
   readonly type?: "sp" | "pic" | "grpSp" | "cxnSp" | "graphicFrame";
   readonly bounds?: { x: number; y: number; width: number; height: number };
+  readonly rotation?: number;
+  readonly flipH?: boolean;
+  readonly flipV?: boolean;
   readonly geometry?: { kind?: "preset" | "custom"; preset?: string };
-  readonly fill?: { type?: "solid" | "none"; color?: string };
-  readonly line?: { color?: string; width?: number };
+  readonly fill?: { type?: "solid" | "gradient" | "pattern" | "none"; color?: string };
+  readonly line?: { color?: string; width?: number; dashStyle?: string; compound?: string };
+  readonly effects?: ExpectedEffects;
+  readonly shape3d?: ExpectedShape3d;
   readonly text?: string;
   readonly content?: { type?: "table"; table?: ExpectedTable };
 };
@@ -145,7 +169,7 @@ function matchGeometry(
 }
 
 function matchFill(
-  expected: { type?: "solid" | "none"; color?: string },
+  expected: { type?: "solid" | "gradient" | "pattern" | "none"; color?: string },
   actual: FillJson | undefined,
   basePath: string,
 ): Assertion[] {
@@ -167,7 +191,7 @@ function matchFill(
 }
 
 function matchLine(
-  expected: { color?: string; width?: number },
+  expected: { color?: string; width?: number; dashStyle?: string; compound?: string },
   actual: LineJson | undefined,
   basePath: string,
 ): Assertion[] {
@@ -181,6 +205,79 @@ function matchLine(
   }
   if (expected.width !== undefined) {
     assertions.push(createAssertion(`${basePath}.line.width`, expected.width, actual.width));
+  }
+  if (expected.dashStyle !== undefined) {
+    assertions.push(createAssertion(`${basePath}.line.dashStyle`, expected.dashStyle, actual.dashStyle));
+  }
+  if (expected.compound !== undefined) {
+    assertions.push(createAssertion(`${basePath}.line.compound`, expected.compound, actual.compound));
+  }
+  return assertions;
+}
+
+function matchEffects(
+  expected: ExpectedEffects,
+  actual: EffectsJson | undefined,
+  basePath: string,
+): Assertion[] {
+  const assertions: Assertion[] = [];
+  if (!actual) {
+    assertions.push(createAssertion(`${basePath}.effects`, expected, undefined));
+    return assertions;
+  }
+  if (expected.shadow !== undefined) {
+    if (!actual.shadow) {
+      assertions.push(createAssertion(`${basePath}.effects.shadow`, expected.shadow, undefined));
+    } else if (expected.shadow.type !== undefined) {
+      assertions.push(createAssertion(`${basePath}.effects.shadow.type`, expected.shadow.type, actual.shadow.type));
+    }
+  }
+  if (expected.glow !== undefined) {
+    if (!actual.glow) {
+      assertions.push(createAssertion(`${basePath}.effects.glow`, expected.glow, undefined));
+    } else if (expected.glow.radius !== undefined) {
+      assertions.push(createAssertion(`${basePath}.effects.glow.radius`, expected.glow.radius, actual.glow.radius));
+    }
+  }
+  if (expected.softEdge !== undefined) {
+    if (!actual.softEdge) {
+      assertions.push(createAssertion(`${basePath}.effects.softEdge`, expected.softEdge, undefined));
+    } else if (expected.softEdge.radius !== undefined) {
+      assertions.push(createAssertion(`${basePath}.effects.softEdge.radius`, expected.softEdge.radius, actual.softEdge.radius));
+    }
+  }
+  return assertions;
+}
+
+function matchShape3d(
+  expected: ExpectedShape3d,
+  actual: Shape3dJson | undefined,
+  basePath: string,
+): Assertion[] {
+  const assertions: Assertion[] = [];
+  if (!actual) {
+    assertions.push(createAssertion(`${basePath}.shape3d`, expected, undefined));
+    return assertions;
+  }
+  if (expected.bevelTop !== undefined) {
+    if (!actual.bevelTop) {
+      assertions.push(createAssertion(`${basePath}.shape3d.bevelTop`, expected.bevelTop, undefined));
+    } else if (expected.bevelTop.preset !== undefined) {
+      assertions.push(createAssertion(`${basePath}.shape3d.bevelTop.preset`, expected.bevelTop.preset, actual.bevelTop.preset));
+    }
+  }
+  if (expected.bevelBottom !== undefined) {
+    if (!actual.bevelBottom) {
+      assertions.push(createAssertion(`${basePath}.shape3d.bevelBottom`, expected.bevelBottom, undefined));
+    } else if (expected.bevelBottom.preset !== undefined) {
+      assertions.push(createAssertion(`${basePath}.shape3d.bevelBottom.preset`, expected.bevelBottom.preset, actual.bevelBottom.preset));
+    }
+  }
+  if (expected.material !== undefined) {
+    assertions.push(createAssertion(`${basePath}.shape3d.material`, expected.material, actual.material));
+  }
+  if (expected.extrusionHeight !== undefined) {
+    assertions.push(createAssertion(`${basePath}.shape3d.extrusionHeight`, expected.extrusionHeight, actual.extrusionHeight));
   }
   return assertions;
 }
@@ -251,6 +348,15 @@ function matchShape(expected: ExpectedShape, actual: ShapeJson, basePath: string
   if (expected.bounds !== undefined) {
     assertions.push(...matchBounds(expected.bounds, actual.bounds, basePath));
   }
+  if (expected.rotation !== undefined) {
+    assertions.push(createAssertion(`${basePath}.rotation`, expected.rotation, actual.rotation));
+  }
+  if (expected.flipH !== undefined) {
+    assertions.push(createAssertion(`${basePath}.flipH`, expected.flipH, actual.flipH));
+  }
+  if (expected.flipV !== undefined) {
+    assertions.push(createAssertion(`${basePath}.flipV`, expected.flipV, actual.flipV));
+  }
   if (expected.geometry !== undefined) {
     assertions.push(...matchGeometry(expected.geometry, actual.geometry, basePath));
   }
@@ -259,6 +365,12 @@ function matchShape(expected: ExpectedShape, actual: ShapeJson, basePath: string
   }
   if (expected.line !== undefined) {
     assertions.push(...matchLine(expected.line, actual.line, basePath));
+  }
+  if (expected.effects !== undefined) {
+    assertions.push(...matchEffects(expected.effects, actual.effects, basePath));
+  }
+  if (expected.shape3d !== undefined) {
+    assertions.push(...matchShape3d(expected.shape3d, actual.shape3d, basePath));
   }
   if (expected.text !== undefined) {
     assertions.push(createAssertion(`${basePath}.text`, expected.text, actual.text));

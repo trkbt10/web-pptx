@@ -1,0 +1,114 @@
+{
+  "name": "bevel-3d",
+  "description": "Verify shapes with 3D bevel effects",
+  "tags": ["shape", "3d", "bevel"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/bevel-3d.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 50,
+            "width": 150,
+            "height": 100,
+            "fill": "4472C4",
+            "text": "Circle Bevel",
+            "shape3d": {
+              "bevelTop": {
+                "preset": "circle",
+                "width": 10,
+                "height": 10
+              }
+            }
+          },
+          {
+            "type": "roundRect",
+            "x": 230,
+            "y": 50,
+            "width": 150,
+            "height": 100,
+            "fill": "70AD47",
+            "text": "Soft Round",
+            "shape3d": {
+              "bevelTop": {
+                "preset": "softRound",
+                "width": 12,
+                "height": 12
+              }
+            }
+          },
+          {
+            "type": "ellipse",
+            "x": 410,
+            "y": 50,
+            "width": 150,
+            "height": 100,
+            "fill": "ED7D31",
+            "text": "Art Deco",
+            "shape3d": {
+              "bevelTop": {
+                "preset": "artDeco",
+                "width": 8,
+                "height": 8
+              },
+              "material": "metal"
+            }
+          },
+          {
+            "type": "star5",
+            "x": 50,
+            "y": 200,
+            "width": 150,
+            "height": 150,
+            "fill": "FFC000",
+            "shape3d": {
+              "bevelTop": {
+                "preset": "convex",
+                "width": 15,
+                "height": 15
+              },
+              "bevelBottom": {
+                "preset": "circle",
+                "width": 8,
+                "height": 8
+              }
+            }
+          },
+          {
+            "type": "hexagon",
+            "x": 250,
+            "y": 200,
+            "width": 150,
+            "height": 130,
+            "fill": "7030A0",
+            "shape3d": {
+              "bevelTop": {
+                "preset": "hardEdge"
+              },
+              "material": "plastic",
+              "extrusionHeight": 20
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -5, "type": "sp", "shape3d": { "bevelTop": { "preset": "circle" } } },
+          { "index": -4, "type": "sp", "shape3d": { "bevelTop": { "preset": "softRound" } } },
+          { "index": -3, "type": "sp", "shape3d": { "bevelTop": { "preset": "artDeco" }, "material": "metal" } },
+          { "index": -2, "type": "sp", "shape3d": { "bevelTop": { "preset": "convex" }, "bevelBottom": { "preset": "circle" } } },
+          { "index": -1, "type": "sp", "shape3d": { "bevelTop": { "preset": "hardEdge" }, "material": "plastic", "extrusionHeight": 20 } }
+        ]
+      }
+    ]
+  }
+}

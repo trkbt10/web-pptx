@@ -1,0 +1,37 @@
+{
+  "name": "action-button-shapes",
+  "description": "Verify action button preset shapes",
+  "tags": ["shape", "action-button", "preset"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/action-button-shapes.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          { "type": "actionButtonBackPrevious", "x": 50, "y": 50, "width": 80, "height": 80, "fill": "4472C4" },
+          { "type": "actionButtonForwardNext", "x": 150, "y": 50, "width": 80, "height": 80, "fill": "4472C4" },
+          { "type": "actionButtonHome", "x": 250, "y": 50, "width": 80, "height": 80, "fill": "4472C4" },
+          { "type": "actionButtonHelp", "x": 350, "y": 50, "width": 80, "height": 80, "fill": "4472C4" },
+          { "type": "actionButtonInformation", "x": 450, "y": 50, "width": 80, "height": 80, "fill": "4472C4" },
+          { "type": "actionButtonBlank", "x": 550, "y": 50, "width": 80, "height": 80, "fill": "4472C4" }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -6, "type": "sp", "geometry": { "preset": "actionButtonBackPrevious" } },
+          { "index": -5, "type": "sp", "geometry": { "preset": "actionButtonForwardNext" } },
+          { "index": -4, "type": "sp", "geometry": { "preset": "actionButtonHome" } },
+          { "index": -3, "type": "sp", "geometry": { "preset": "actionButtonHelp" } },
+          { "index": -2, "type": "sp", "geometry": { "preset": "actionButtonInformation" } },
+          { "index": -1, "type": "sp", "geometry": { "preset": "actionButtonBlank" } }
+        ]
+      }
+    ]
+  }
+}

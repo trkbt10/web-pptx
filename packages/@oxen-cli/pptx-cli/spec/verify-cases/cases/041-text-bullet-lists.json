@@ -1,0 +1,71 @@
+{
+  "name": "text-bullet-lists",
+  "description": "Verify text bullet lists",
+  "tags": ["shape", "text", "bullet"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/text-bullet-lists.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 50,
+            "width": 250,
+            "height": 150,
+            "fill": "DEEBF7",
+            "text": [
+              {
+                "runs": [{ "text": "First bullet item" }],
+                "bullet": { "type": "char", "char": "•" }
+              },
+              {
+                "runs": [{ "text": "Second bullet item" }],
+                "bullet": { "type": "char", "char": "•" }
+              },
+              {
+                "runs": [{ "text": "Third bullet item" }],
+                "bullet": { "type": "char", "char": "•" }
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 320,
+            "y": 50,
+            "width": 250,
+            "height": 150,
+            "fill": "E2F0D9",
+            "text": [
+              {
+                "runs": [{ "text": "First numbered item" }],
+                "bullet": { "type": "autoNum", "autoNumType": "arabicPeriod" }
+              },
+              {
+                "runs": [{ "text": "Second numbered item" }],
+                "bullet": { "type": "autoNum", "autoNumType": "arabicPeriod" }
+              },
+              {
+                "runs": [{ "text": "Third numbered item" }],
+                "bullet": { "type": "autoNum", "autoNumType": "arabicPeriod" }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -2, "type": "sp" },
+          { "index": -1, "type": "sp" }
+        ]
+      }
+    ]
+  }
+}

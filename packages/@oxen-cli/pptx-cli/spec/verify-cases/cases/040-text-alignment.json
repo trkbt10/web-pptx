@@ -1,0 +1,85 @@
+{
+  "name": "text-alignment",
+  "description": "Verify text paragraph alignment",
+  "tags": ["shape", "text", "alignment"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/text-alignment.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 50,
+            "width": 250,
+            "height": 60,
+            "fill": "DEEBF7",
+            "text": [
+              {
+                "runs": [{ "text": "Left Aligned" }],
+                "alignment": "left"
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 320,
+            "y": 50,
+            "width": 250,
+            "height": 60,
+            "fill": "E2F0D9",
+            "text": [
+              {
+                "runs": [{ "text": "Center Aligned" }],
+                "alignment": "center"
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 140,
+            "width": 250,
+            "height": 60,
+            "fill": "FFF2CC",
+            "text": [
+              {
+                "runs": [{ "text": "Right Aligned" }],
+                "alignment": "right"
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 320,
+            "y": 140,
+            "width": 250,
+            "height": 60,
+            "fill": "FCE4D6",
+            "text": [
+              {
+                "runs": [{ "text": "Justified text that should span the width of the shape" }],
+                "alignment": "justify"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -4, "type": "sp" },
+          { "index": -3, "type": "sp" },
+          { "index": -2, "type": "sp" },
+          { "index": -1, "type": "sp" }
+        ]
+      }
+    ]
+  }
+}

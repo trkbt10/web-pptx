@@ -1,0 +1,45 @@
+{
+  "name": "flowchart-shapes-complete",
+  "description": "Verify complete flowchart preset shapes",
+  "tags": ["shape", "flowchart", "preset"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/flowchart-shapes-complete.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          { "type": "flowChartAlternateProcess", "x": 50, "y": 50, "width": 120, "height": 80, "fill": "DEEBF7" },
+          { "type": "flowChartSort", "x": 190, "y": 50, "width": 80, "height": 80, "fill": "FCE4D6" },
+          { "type": "flowChartExtract", "x": 290, "y": 50, "width": 80, "height": 80, "fill": "E2EFDA" },
+          { "type": "flowChartMerge", "x": 390, "y": 50, "width": 80, "height": 80, "fill": "FFF2CC" },
+          { "type": "flowChartOnlineStorage", "x": 490, "y": 50, "width": 120, "height": 80, "fill": "EDEDED" },
+          { "type": "flowChartMagneticDisk", "x": 50, "y": 150, "width": 80, "height": 80, "fill": "D9E2F3" },
+          { "type": "flowChartDisplay", "x": 150, "y": 150, "width": 120, "height": 80, "fill": "FBE5D6" },
+          { "type": "flowChartDelay", "x": 290, "y": 150, "width": 80, "height": 80, "fill": "E2EFDA" },
+          { "type": "flowChartPreparation", "x": 390, "y": 150, "width": 100, "height": 80, "fill": "FFF2CC" },
+          { "type": "flowChartManualInput", "x": 510, "y": 150, "width": 100, "height": 80, "fill": "EDEDED" }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -10, "type": "sp", "geometry": { "preset": "flowChartAlternateProcess" } },
+          { "index": -9, "type": "sp", "geometry": { "preset": "flowChartSort" } },
+          { "index": -8, "type": "sp", "geometry": { "preset": "flowChartExtract" } },
+          { "index": -7, "type": "sp", "geometry": { "preset": "flowChartMerge" } },
+          { "index": -6, "type": "sp", "geometry": { "preset": "flowChartOnlineStorage" } },
+          { "index": -5, "type": "sp", "geometry": { "preset": "flowChartMagneticDisk" } },
+          { "index": -4, "type": "sp", "geometry": { "preset": "flowChartDisplay" } },
+          { "index": -3, "type": "sp", "geometry": { "preset": "flowChartDelay" } },
+          { "index": -2, "type": "sp", "geometry": { "preset": "flowChartPreparation" } },
+          { "index": -1, "type": "sp", "geometry": { "preset": "flowChartManualInput" } }
+        ]
+      }
+    ]
+  }
+}

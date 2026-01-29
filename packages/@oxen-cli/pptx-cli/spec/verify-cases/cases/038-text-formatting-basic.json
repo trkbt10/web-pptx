@@ -1,0 +1,91 @@
+{
+  "name": "text-formatting-basic",
+  "description": "Verify basic text formatting (bold, italic)",
+  "tags": ["shape", "text", "formatting"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/text-formatting-basic.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 50,
+            "width": 200,
+            "height": 60,
+            "fill": "DEEBF7",
+            "text": [
+              {
+                "runs": [
+                  { "text": "Bold Text", "bold": true }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 280,
+            "y": 50,
+            "width": 200,
+            "height": 60,
+            "fill": "E2F0D9",
+            "text": [
+              {
+                "runs": [
+                  { "text": "Italic Text", "italic": true }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 140,
+            "width": 200,
+            "height": 60,
+            "fill": "FFF2CC",
+            "text": [
+              {
+                "runs": [
+                  { "text": "Bold ", "bold": true },
+                  { "text": "and ", "italic": false },
+                  { "text": "Italic", "italic": true }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 280,
+            "y": 140,
+            "width": 200,
+            "height": 60,
+            "fill": "FCE4D6",
+            "text": [
+              {
+                "runs": [
+                  { "text": "Bold Italic", "bold": true, "italic": true }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -4, "type": "sp" },
+          { "index": -3, "type": "sp" },
+          { "index": -2, "type": "sp" },
+          { "index": -1, "type": "sp" }
+        ]
+      }
+    ]
+  }
+}

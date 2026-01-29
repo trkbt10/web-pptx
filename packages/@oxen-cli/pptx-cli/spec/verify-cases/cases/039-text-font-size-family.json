@@ -1,0 +1,90 @@
+{
+  "name": "text-font-size-family",
+  "description": "Verify text font size and family",
+  "tags": ["shape", "text", "font"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/text-font-size-family.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 50,
+            "width": 250,
+            "height": 60,
+            "fill": "DEEBF7",
+            "text": [
+              {
+                "runs": [
+                  { "text": "Small Text 10pt", "fontSize": 10 }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 320,
+            "y": 50,
+            "width": 250,
+            "height": 60,
+            "fill": "E2F0D9",
+            "text": [
+              {
+                "runs": [
+                  { "text": "Large Text 24pt", "fontSize": 24 }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 140,
+            "width": 250,
+            "height": 60,
+            "fill": "FFF2CC",
+            "text": [
+              {
+                "runs": [
+                  { "text": "Arial Font", "fontFamily": "Arial" }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 320,
+            "y": 140,
+            "width": 250,
+            "height": 60,
+            "fill": "FCE4D6",
+            "text": [
+              {
+                "runs": [
+                  { "text": "Mixed ", "fontSize": 12, "fontFamily": "Arial" },
+                  { "text": "Formatting", "fontSize": 18, "fontFamily": "Times New Roman", "bold": true }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -4, "type": "sp" },
+          { "index": -3, "type": "sp" },
+          { "index": -2, "type": "sp" },
+          { "index": -1, "type": "sp" }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "name": "combined-properties",
+  "description": "Verify shapes with multiple combined properties (rotation + gradient + dash line)",
+  "tags": ["shape", "combined", "transform", "fill", "line"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/combined-properties.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "star5",
+            "x": 50,
+            "y": 50,
+            "width": 150,
+            "height": 150,
+            "rotation": 36,
+            "fill": {
+              "type": "gradient",
+              "gradientType": "radial",
+              "stops": [
+                { "position": 0, "color": "FFFF00" },
+                { "position": 100, "color": "FF8C00" }
+              ]
+            },
+            "lineColor": "8B0000",
+            "lineWidth": 3,
+            "lineDash": "dash"
+          },
+          {
+            "type": "heart",
+            "x": 250,
+            "y": 50,
+            "width": 150,
+            "height": 140,
+            "flipH": true,
+            "fill": {
+              "type": "gradient",
+              "gradientType": "linear",
+              "angle": 90,
+              "stops": [
+                { "position": 0, "color": "FF69B4" },
+                { "position": 50, "color": "FF1493" },
+                { "position": 100, "color": "8B0000" }
+              ]
+            },
+            "lineColor": "800080",
+            "lineWidth": 2
+          },
+          {
+            "type": "rightArrow",
+            "x": 450,
+            "y": 80,
+            "width": 150,
+            "height": 80,
+            "rotation": 15,
+            "flipV": true,
+            "fill": {
+              "type": "pattern",
+              "preset": "diagCross",
+              "fgColor": "4472C4",
+              "bgColor": "FFFFFF"
+            },
+            "lineColor": "000080",
+            "lineWidth": 2,
+            "lineDash": "dashDot"
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -3, "type": "sp", "geometry": { "preset": "star5" }, "rotation": 36, "fill": { "type": "gradient" }, "line": { "dashStyle": "dash" } },
+          { "index": -2, "type": "sp", "geometry": { "preset": "heart" }, "flipH": true, "fill": { "type": "gradient" } },
+          { "index": -1, "type": "sp", "geometry": { "preset": "rightArrow" }, "rotation": 15, "flipV": true, "fill": { "type": "pattern" }, "line": { "dashStyle": "dashDot" } }
+        ]
+      }
+    ]
+  }
+}

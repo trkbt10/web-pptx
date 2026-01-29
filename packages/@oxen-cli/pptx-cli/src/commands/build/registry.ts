@@ -16,7 +16,7 @@ import type { GroupTransform } from "@oxen-office/pptx/domain/geometry";
 import type { Pixels, Degrees } from "@oxen-office/ooxml/domain/units";
 import type { ShapeSpec, ImageSpec, ConnectorSpec, GroupSpec, TableSpec, TableCellSpec } from "./types";
 import { PRESET_MAP } from "./presets";
-import { generateShapeId, buildSolidFill, buildLine, buildTextBody } from "./common";
+import { generateShapeId, buildFill, buildLine, buildTextBody, buildEffects, buildShape3d } from "./common";
 
 // =============================================================================
 // Context Types
@@ -71,13 +71,24 @@ function buildSpShape(spec: ShapeSpec, id: string): SpShape {
         y: spec.y as Pixels,
         width: spec.width as Pixels,
         height: spec.height as Pixels,
-        rotation: 0 as Degrees,
-        flipH: false,
-        flipV: false,
+        rotation: (spec.rotation ?? 0) as Degrees,
+        flipH: spec.flipH ?? false,
+        flipV: spec.flipV ?? false,
       },
       geometry: { type: "preset", preset, adjustValues: [] },
-      fill: spec.fill ? buildSolidFill(spec.fill) : undefined,
-      line: spec.lineColor ? buildLine(spec.lineColor, spec.lineWidth ?? 1) : undefined,
+      fill: spec.fill ? buildFill(spec.fill) : undefined,
+      line: spec.lineColor
+        ? buildLine(spec.lineColor, spec.lineWidth ?? 1, {
+            dash: spec.lineDash,
+            cap: spec.lineCap,
+            join: spec.lineJoin,
+            compound: spec.lineCompound,
+            headEnd: spec.lineHeadEnd,
+            tailEnd: spec.lineTailEnd,
+          })
+        : undefined,
+      effects: spec.effects ? buildEffects(spec.effects) : undefined,
+      shape3d: spec.shape3d ? buildShape3d(spec.shape3d) : undefined,
     },
     textBody: spec.text ? buildTextBody(spec.text) : undefined,
   };
@@ -225,7 +236,7 @@ function buildGrpShape(spec: GroupSpec, id: string, existingIds: string[]): GrpS
     nonVisual: { id, name: `Group ${id}` },
     properties: {
       transform,
-      fill: spec.fill ? buildSolidFill(spec.fill) : undefined,
+      fill: spec.fill ? buildFill(spec.fill) : undefined,
     },
     children,
   };

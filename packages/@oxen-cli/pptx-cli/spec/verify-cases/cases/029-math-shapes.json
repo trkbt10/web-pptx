@@ -1,0 +1,37 @@
+{
+  "name": "math-shapes",
+  "description": "Verify math preset shapes",
+  "tags": ["shape", "math", "preset"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/math-shapes.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          { "type": "mathPlus", "x": 50, "y": 100, "width": 80, "height": 80, "fill": "5B9BD5" },
+          { "type": "mathMinus", "x": 150, "y": 100, "width": 80, "height": 80, "fill": "ED7D31" },
+          { "type": "mathMultiply", "x": 250, "y": 100, "width": 80, "height": 80, "fill": "A5A5A5" },
+          { "type": "mathDivide", "x": 350, "y": 100, "width": 80, "height": 80, "fill": "FFC000" },
+          { "type": "mathEqual", "x": 450, "y": 100, "width": 80, "height": 80, "fill": "70AD47" },
+          { "type": "mathNotEqual", "x": 550, "y": 100, "width": 80, "height": 80, "fill": "FF0000" }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -6, "type": "sp", "geometry": { "preset": "mathPlus" } },
+          { "index": -5, "type": "sp", "geometry": { "preset": "mathMinus" } },
+          { "index": -4, "type": "sp", "geometry": { "preset": "mathMultiply" } },
+          { "index": -3, "type": "sp", "geometry": { "preset": "mathDivide" } },
+          { "index": -2, "type": "sp", "geometry": { "preset": "mathEqual" } },
+          { "index": -1, "type": "sp", "geometry": { "preset": "mathNotEqual" } }
+        ]
+      }
+    ]
+  }
+}

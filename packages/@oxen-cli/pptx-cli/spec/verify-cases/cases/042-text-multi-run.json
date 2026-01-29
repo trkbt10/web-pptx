@@ -1,0 +1,88 @@
+{
+  "name": "text-multi-run",
+  "description": "Verify text with multiple runs and colors",
+  "tags": ["shape", "text", "color"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/text-multi-run.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 50,
+            "width": 300,
+            "height": 80,
+            "fill": "FFFFFF",
+            "lineColor": "000000",
+            "lineWidth": 1,
+            "text": [
+              {
+                "runs": [
+                  { "text": "Red ", "color": "FF0000", "bold": true },
+                  { "text": "Green ", "color": "00FF00", "bold": true },
+                  { "text": "Blue", "color": "0000FF", "bold": true }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 380,
+            "y": 50,
+            "width": 200,
+            "height": 80,
+            "fill": "FFFFFF",
+            "lineColor": "000000",
+            "lineWidth": 1,
+            "text": [
+              {
+                "runs": [
+                  { "text": "Normal " },
+                  { "text": "Bold ", "bold": true },
+                  { "text": "Italic ", "italic": true },
+                  { "text": "Both", "bold": true, "italic": true }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 160,
+            "width": 530,
+            "height": 100,
+            "fill": "F5F5F5",
+            "text": [
+              {
+                "runs": [{ "text": "Paragraph 1: Large heading", "fontSize": 24, "bold": true }],
+                "alignment": "center"
+              },
+              {
+                "runs": [{ "text": "Paragraph 2: Normal body text with some ", "fontSize": 12 }, { "text": "highlighted", "fontSize": 12, "color": "FF6600", "bold": true }, { "text": " content.", "fontSize": 12 }]
+              },
+              {
+                "runs": [{ "text": "Paragraph 3: Small footer text", "fontSize": 9, "italic": true, "color": "666666" }],
+                "alignment": "right"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -3, "type": "sp" },
+          { "index": -2, "type": "sp" },
+          { "index": -1, "type": "sp" }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "shape-flip",
+  "description": "Verify shape flip (flipH, flipV) properties",
+  "tags": ["shape", "transform", "flip"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/shape-flip.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          { "type": "rightArrow", "x": 100, "y": 100, "width": 150, "height": 80, "fill": "4472C4", "text": "Normal" },
+          { "type": "rightArrow", "x": 300, "y": 100, "width": 150, "height": 80, "fill": "ED7D31", "flipH": true, "text": "FlipH" },
+          { "type": "rightArrow", "x": 100, "y": 220, "width": 150, "height": 80, "fill": "70AD47", "flipV": true, "text": "FlipV" },
+          { "type": "rightArrow", "x": 300, "y": 220, "width": 150, "height": 80, "fill": "FFC000", "flipH": true, "flipV": true, "text": "Both" }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -4, "type": "sp", "geometry": { "preset": "rightArrow" } },
+          { "index": -3, "type": "sp", "geometry": { "preset": "rightArrow" }, "flipH": true },
+          { "index": -2, "type": "sp", "geometry": { "preset": "rightArrow" }, "flipV": true },
+          { "index": -1, "type": "sp", "geometry": { "preset": "rightArrow" }, "flipH": true, "flipV": true }
+        ]
+      }
+    ]
+  }
+}
