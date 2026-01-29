@@ -18,7 +18,7 @@ import type { ResourceId } from "../domain/types";
 import type { XmlDocument } from "@oxen/xml";
 import { serializeDocument } from "@oxen/xml";
 import { parseDataUrl } from "@oxen/buffer";
-import { resolveRelationshipTargetPath } from "@oxen-office/ooxml/opc";
+import { resolveRelationshipTargetPath } from "@oxen-office/opc";
 import {
   createEmptyZipPackage,
   isBinaryFile,

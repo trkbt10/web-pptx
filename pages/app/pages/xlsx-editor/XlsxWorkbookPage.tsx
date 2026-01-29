@@ -11,7 +11,7 @@ import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
 import type { Formula } from "@oxen-office/xlsx/domain/cell/formula";
 import { Button, Input } from "@oxen-ui/ui-components/primitives";
 import { detectSpreadsheetFileType, parseXlsWithReport, type SpreadsheetFileType } from "@oxen-office/xls";
-import { createGetZipTextFileContentFromBytes } from "@oxen-office/ooxml/opc";
+import { createGetZipTextFileContentFromBytes } from "@oxen-office/opc";
 import { parseXlsxWorkbook } from "@oxen-office/xlsx/parser";
 import { exportXlsx } from "@oxen-office/xlsx/exporter";
 

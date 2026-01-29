@@ -56,7 +56,8 @@ type TextPositionTestCase = {
 function extractTextElements(svg: string): TextElement[] {
   const elements: TextElement[] = [];
 
-  const pushText = (attrs: string, content: string, baseX: number, baseY: number): void => {
+  const pushText = (args: { attrs: string; content: string; baseX: number; baseY: number }): void => {
+    const { attrs, content, baseX, baseY } = args;
     const xMatch = attrs.match(/x="([^"]+)"/);
     const yMatch = attrs.match(/y="([^"]+)"/);
     const anchorMatch = attrs.match(/text-anchor="([^"]+)"/);
@@ -110,7 +111,7 @@ function extractTextElements(svg: string): TextElement[] {
 
     let textMatch;
     while ((textMatch = textRegex.exec(groupContent)) !== null) {
-      pushText(textMatch[1], textMatch[2], baseX, baseY);
+      pushText({ attrs: textMatch[1], content: textMatch[2], baseX, baseY });
     }
   }
 
@@ -152,7 +153,7 @@ const PERFORMANCE_UP_SLIDE1: TextPositionTestCase = {
   expectedPositions: [
     {
       textMatch: "Apache Performance",
-      expectedX: 165.73333333333344, // 現在の出力値 (PDF期待: 480)
+      expectedX: 165.733333333333, // 現在の出力値 (PDF期待: 480)
       expectedY: 200.8, // 現在の出力値 (PDF期待: 170)
       tolerance: 10,
     },

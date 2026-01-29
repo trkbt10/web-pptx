@@ -24,7 +24,7 @@ import { xlsxColorToCss } from "@oxen-ui/xlsx-editor/selectors/xlsx-color";
 import { resolveCellTableStyleDifferentialFormat } from "@oxen-ui/xlsx-editor/selectors/table-style";
 import { createSheetLayout } from "@oxen-ui/xlsx-editor/selectors/sheet-layout";
 import { buildBorderOverlayLines } from "@oxen-ui/xlsx-editor/selectors/border-overlay";
-import { createGetZipTextFileContentFromBytes } from "@oxen-office/ooxml/opc";
+import { createGetZipTextFileContentFromBytes } from "@oxen-office/opc";
 
 function fixturePath(name: string): string {
   return path.join(process.cwd(), "fixtures/poi-test-data/test-data/spreadsheet", name);

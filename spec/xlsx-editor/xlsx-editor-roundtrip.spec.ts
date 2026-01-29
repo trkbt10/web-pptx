@@ -11,7 +11,7 @@ import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
 import type { XlsxWorkbook } from "@oxen-office/xlsx/domain/workbook";
 import { getCellValue } from "@oxen-ui/xlsx-editor/cell/query";
 import { createInitialState, xlsxEditorReducer } from "@oxen-ui/xlsx-editor";
-import { createGetZipTextFileContentFromBytes } from "@oxen-office/ooxml/opc";
+import { createGetZipTextFileContentFromBytes } from "@oxen-office/opc";
 
 function createAddress(col: number, row: number): CellAddress {
   return { col: colIdx(col), row: rowIdx(row), colAbsolute: false, rowAbsolute: false };

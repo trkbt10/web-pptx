@@ -7,4 +7,4 @@
  * @see ECMA-376 Part 2 (Open Packaging Conventions)
  */
 
-export type { ResourceMap } from "@oxen-office/opc";
+export type ResourceMap = import("@oxen-office/opc").ResourceMap;

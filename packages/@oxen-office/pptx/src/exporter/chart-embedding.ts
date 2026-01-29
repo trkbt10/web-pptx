@@ -25,7 +25,7 @@ import type { ChartDataUpdate } from "@oxen-office/chart/patcher";
 import { resolveEmbeddedXlsxPath, syncChartToWorkbook } from "@oxen-office/chart/patcher";
 import { parseXlsxWorkbook } from "@oxen-office/xlsx/parser";
 import { exportXlsx } from "@oxen-office/xlsx/exporter";
-import { resolveRelationshipTargetPath } from "@oxen-office/ooxml/opc";
+import { resolveRelationshipTargetPath } from "@oxen-office/opc";
 import { loadZipPackage } from "@oxen/zip";
 
 // =============================================================================

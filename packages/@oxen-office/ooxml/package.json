@@ -32,10 +32,6 @@
       "types": "./src/domain/drawing/*.ts",
       "default": "./src/domain/drawing/*.ts"
     },
-    "./opc": {
-      "types": "./src/opc/index.ts",
-      "default": "./src/opc/index.ts"
-    },
     "./parser": {
       "types": "./src/parser/index.ts",
       "default": "./src/parser/index.ts"

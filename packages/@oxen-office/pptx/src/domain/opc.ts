@@ -21,7 +21,9 @@ import type { PackageFile } from "@oxen-office/opc";
  */
 export type PresentationFile = PackageFile;
 
-export type { ResourceMap, ZipEntry, ZipFile } from "@oxen-office/opc";
+export type ResourceMap = import("@oxen-office/opc").ResourceMap;
+export type ZipEntry = import("@oxen-office/opc").ZipEntry;
+export type ZipFile = import("@oxen-office/opc").ZipFile;
 
 // =============================================================================
 // Placeholder Types (ECMA-376 Part 1, Section 19.3.1.36)

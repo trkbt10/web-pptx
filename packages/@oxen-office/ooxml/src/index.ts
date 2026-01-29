@@ -67,32 +67,6 @@ export type {
   BreakClear,
 } from "./domain/text";
 
-// OPC utilities (Part 2)
-export {
-  // Part name utilities
-  arePartNamesEquivalent,
-  isValidPartName,
-  assertValidPartName,
-  // Pack URI utilities
-  parsePackIri,
-  composePackIri,
-  createPartBaseIri,
-  arePackIrisEquivalent,
-  getPackScheme,
-  // Relationship utilities
-  createEmptyResourceMap,
-  createResourceMap,
-  // OOXML/OPC path helpers
-  basenamePosixPath,
-  dirnamePosixPath,
-  joinPosixPath,
-  normalizePosixPath,
-  // OOXML zip access helpers
-  createGetZipTextFileContentFromBytes,
-} from "./opc";
-export type { PackResource, ResourceEntry } from "./opc";
-export type { GetZipTextFileContent } from "./opc";
-
 // Serializer utilities
 export {
   ooxmlBool,

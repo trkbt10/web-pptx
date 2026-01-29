@@ -31,7 +31,7 @@ import { parseWorksheet } from "./worksheet";
 import { parseBooleanAttr, parseIntAttr } from "./primitive";
 import type { XmlElement, XmlDocument } from "@oxen/xml";
 import { parseXml, getAttr, getChild, getChildren, getTextContent, isXmlElement } from "@oxen/xml";
-import { basenamePosixPath, dirnamePosixPath, joinPosixPath, normalizePosixPath } from "@oxen-office/ooxml/opc";
+import { basenamePosixPath, dirnamePosixPath, joinPosixPath, normalizePosixPath } from "@oxen-office/opc";
 
 // =============================================================================
 // Helper Functions
