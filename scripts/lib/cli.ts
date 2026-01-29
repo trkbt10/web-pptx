@@ -5,9 +5,19 @@ import { existsSync } from "node:fs";
 
 
 
+
+
+
+
+
 export function usageError(message: string, usage: string): Error {
   return new Error(`${message}\n\nUsage:\n  ${usage}`);
 }
+
+
+
+
+
 
 
 
@@ -30,6 +40,11 @@ export function requirePositionalArg(
 
 
 
+
+
+
+
+
 export function optionalIntArg(value: string | undefined, name: string, usage: string): number | undefined {
   if (value === undefined) {
     return undefined;
@@ -46,6 +61,11 @@ export function optionalIntArg(value: string | undefined, name: string, usage: s
 
 
 
+
+
+
+
+
 export function requireIntArg(value: string | undefined, name: string, usage: string): number {
   const parsed = optionalIntArg(value, name, usage);
   if (parsed === undefined) {
@@ -53,6 +73,11 @@ export function requireIntArg(value: string | undefined, name: string, usage: st
   }
   return parsed;
 }
+
+
+
+
+
 
 
 

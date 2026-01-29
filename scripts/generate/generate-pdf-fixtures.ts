@@ -40,6 +40,11 @@ const FIXTURES: readonly FixtureWriter[] = [
 
 
 
+
+
+
+
+
 export async function generatePdfFixtures(
   options: GeneratePdfFixturesOptions,
 ): Promise<readonly string[]> {

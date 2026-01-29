@@ -1,0 +1,45 @@
+/**
+ * @file Library exports for @oxen-cli/pptx-cli
+ */
+
+// Commands
+export { runInfo, type InfoData } from "./commands/info";
+export { runList, type ListData, type SlideListItem } from "./commands/list";
+export { runShow, type ShowData } from "./commands/show";
+export { runExtract, type ExtractData, type ExtractOptions, type SlideTextItem } from "./commands/extract";
+export { runTheme, type ThemeData, type FontSchemeJson, type ColorSchemeJson, type FormatSchemeJson } from "./commands/theme";
+export { runBuild, type BuildSpec, type BuildData, type ShapeSpec, type SlideModSpec } from "./commands/build";
+
+// Serializers
+export {
+  extractTextFromBody,
+  extractTextFromParagraph,
+  extractTextFromRun,
+  extractTextFromShape,
+} from "./serializers/text-serializer";
+export {
+  serializeShape,
+  type ShapeJson,
+  type BoundsJson,
+  type ParagraphJson,
+  type TextRunJson,
+  type PlaceholderJson,
+  type GeometryJson,
+  type FillJson,
+  type LineJson,
+  type TableJson,
+  type ChartJson,
+  type DiagramJson,
+  type GraphicContentJson,
+} from "./serializers/shape-serializer";
+
+// Output helpers
+export { success, error, formatJson, type Result, type SuccessResult, type ErrorResult } from "./output/json-output";
+export {
+  formatInfoPretty,
+  formatListPretty,
+  formatShowPretty,
+  formatExtractPretty,
+  formatThemePretty,
+  formatBuildPretty,
+} from "./output/pretty-output";
