@@ -201,15 +201,17 @@ export function lerpRGB(from: RgbColor, to: RgbColor, t: number): RgbColor {
  * @param direction - Hue rotation direction: "cw" (clockwise) or "ccw" (counter-clockwise)
  * @returns Interpolated color
  */
-export function lerpHSL(
-  ...args: [
-    from: HslColor,
-    to: HslColor,
-    t: number,
-    direction?: AnimateColorDirection,
-  ]
-): HslColor {
-  const [from, to, t, direction = "cw"] = args;
+export function lerpHSL({
+  from,
+  to,
+  t,
+  direction = "cw",
+}: {
+  from: HslColor;
+  to: HslColor;
+  t: number;
+  direction?: AnimateColorDirection;
+}): HslColor {
   // Handle saturation and lightness linearly
   const s = lerp(from.s, to.s, t);
   const l = lerp(from.l, to.l, t);
@@ -247,16 +249,19 @@ export function lerpHSL(
  * @param direction - Direction for HSL hue interpolation
  * @returns Interpolated color as CSS string
  */
-export function interpolateColor(
-  ...args: [
-    from: ParsedColor,
-    to: ParsedColor,
-    t: number,
-    colorSpace?: AnimateColorSpace,
-    direction?: AnimateColorDirection,
-  ]
-): string {
-  const [from, to, t, colorSpace = "rgb", direction = "cw"] = args;
+export function interpolateColor({
+  from,
+  to,
+  t,
+  colorSpace = "rgb",
+  direction = "cw",
+}: {
+  from: ParsedColor;
+  to: ParsedColor;
+  t: number;
+  colorSpace?: AnimateColorSpace;
+  direction?: AnimateColorDirection;
+}): string {
   // Interpolate alpha
   const alpha = lerp(from.alpha, to.alpha, t);
 
@@ -266,7 +271,7 @@ export function interpolateColor(
     // Convert to HSL using existing utility
     const fromHsl = rgbToHsl(from.rgb.r, from.rgb.g, from.rgb.b);
     const toHsl = rgbToHsl(to.rgb.r, to.rgb.g, to.rgb.b);
-    const hsl = lerpHSL(fromHsl, toHsl, t, direction);
+    const hsl = lerpHSL({ from: fromHsl, to: toHsl, t, direction });
     const converted = hslToRgb(hsl.h, hsl.s, hsl.l);
     rgb = {
       r: Math.round(converted.r),
@@ -338,13 +343,13 @@ export function createColorAnimationFunction(
   }
 
   return (progress: number) => {
-    const color = interpolateColor(
-      fromColor,
-      toColor!,
-      progress,
-      colorSpace ?? "rgb",
-      direction ?? "cw"
-    );
+    const color = interpolateColor({
+      from: fromColor,
+      to: toColor!,
+      t: progress,
+      colorSpace: colorSpace ?? "rgb",
+      direction: direction ?? "cw",
+    });
 
     if (element instanceof SVGElement && (cssProperty === "fill" || cssProperty === "stroke")) {
       element.setAttribute(cssProperty, color);

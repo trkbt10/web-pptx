@@ -44,10 +44,17 @@ export function getNextZoomValue(currentZoom: number, direction: "in" | "out"): 
 /**
  * Calculates the viewport transform to center the slide in the viewport.
  */
-export function getCenteredViewport(
-  ...args: [viewportSize: ViewportSize, slideSize: SlideSize, scale: number, rulerThickness: number]
-): ViewportTransform {
-  const [viewportSize, slideSize, scale, rulerThickness] = args;
+export function getCenteredViewport({
+  viewportSize,
+  slideSize,
+  scale,
+  rulerThickness,
+}: {
+  viewportSize: ViewportSize;
+  slideSize: SlideSize;
+  scale: number;
+  rulerThickness: number;
+}): ViewportTransform {
   const availableWidth = viewportSize.width - rulerThickness;
   const availableHeight = viewportSize.height - rulerThickness;
 
@@ -67,10 +74,17 @@ export function getCenteredViewport(
 /**
  * Calculates the fit-to-view scale for a slide.
  */
-export function getFitScale(
-  ...args: [viewportSize: ViewportSize, slideSize: SlideSize, rulerThickness: number, padding?: number]
-): number {
-  const [viewportSize, slideSize, rulerThickness, padding = 40] = args;
+export function getFitScale({
+  viewportSize,
+  slideSize,
+  rulerThickness,
+  padding = 40,
+}: {
+  viewportSize: ViewportSize;
+  slideSize: SlideSize;
+  rulerThickness: number;
+  padding?: number;
+}): number {
   const availableWidth = viewportSize.width - rulerThickness - padding * 2;
   const availableHeight = viewportSize.height - rulerThickness - padding * 2;
 
@@ -84,10 +98,17 @@ export function getFitScale(
  * Applies zoom toward a cursor position.
  * Returns the new viewport transform.
  */
-export function zoomTowardCursor(
-  ...args: [viewport: ViewportTransform, cursorX: number, cursorY: number, newScale: number]
-): ViewportTransform {
-  const [viewport, cursorX, cursorY, newScale] = args;
+export function zoomTowardCursor({
+  viewport,
+  cursorX,
+  cursorY,
+  newScale,
+}: {
+  viewport: ViewportTransform;
+  cursorX: number;
+  cursorY: number;
+  newScale: number;
+}): ViewportTransform {
   const scaleRatio = newScale / viewport.scale;
 
   // Adjust translation to keep cursor position fixed
@@ -115,16 +136,19 @@ export function panViewport(viewport: ViewportTransform, dx: number, dy: number)
 /**
  * Clamps viewport to prevent slide from going too far off-screen.
  */
-export function clampViewport(
-  ...args: [
-    viewport: ViewportTransform,
-    viewportSize: ViewportSize,
-    slideSize: SlideSize,
-    rulerThickness: number,
-    margin?: number,
-  ]
-): ViewportTransform {
-  const [viewport, viewportSize, slideSize, rulerThickness, margin = 100] = args;
+export function clampViewport({
+  viewport,
+  viewportSize,
+  slideSize,
+  rulerThickness,
+  margin = 100,
+}: {
+  viewport: ViewportTransform;
+  viewportSize: ViewportSize;
+  slideSize: SlideSize;
+  rulerThickness: number;
+  margin?: number;
+}): ViewportTransform {
   const scaledWidth = slideSize.width * viewport.scale;
   const scaledHeight = slideSize.height * viewport.scale;
 
@@ -152,6 +176,6 @@ export function createFittedViewport(
   slideSize: SlideSize,
   rulerThickness: number
 ): ViewportTransform {
-  const scale = getFitScale(viewportSize, slideSize, rulerThickness);
-  return getCenteredViewport(viewportSize, slideSize, scale, rulerThickness);
+  const scale = getFitScale({ viewportSize, slideSize, rulerThickness });
+  return getCenteredViewport({ viewportSize, slideSize, scale, rulerThickness });
 }

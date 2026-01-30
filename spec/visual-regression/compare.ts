@@ -433,6 +433,26 @@ export type CompareSvgToPdfBaselineOptions = {
   readonly options?: CompareOptions;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function compareSvgToPdfBaseline({
   svg,
   snapshotName,
@@ -528,6 +548,26 @@ export type CompareWithDetailsOptions = {
   readonly options?: CompareOptions;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function compareWithDetails({
   svg,
   snapshotName,
@@ -618,6 +658,26 @@ export type CompareReport = {
   failed: number;
   totalDiffPercent: number;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

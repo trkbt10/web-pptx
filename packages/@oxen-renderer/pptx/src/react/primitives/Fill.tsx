@@ -52,15 +52,17 @@ export type FillResult = {
 /**
  * Convert resolved fill to SVG fill props and optional def element.
  */
-function resolvedFillToResult(
-  ...args: [
-    fill: ResolvedFill,
-    getNextId: (prefix: string) => string,
-    width?: number,
-    height?: number,
-  ]
-): FillResult {
-  const [fill, getNextId, width, height] = args;
+function resolvedFillToResult({
+  fill,
+  getNextId,
+  width,
+  height,
+}: {
+  fill: ResolvedFill;
+  getNextId: (prefix: string) => string;
+  width?: number;
+  height?: number;
+}): FillResult {
   switch (fill.type) {
     case "none":
     case "unresolved":
@@ -86,7 +88,7 @@ function resolvedFillToResult(
         return { props: { fill: "none" } };
       }
       const patternId = getNextId("img-pattern");
-      const defElement = createImagePatternDef(fill, patternId, width, height);
+      const defElement = createImagePatternDef({ fill, id: patternId, width, height });
       return {
         props: { fill: `url(#${patternId})` },
         defElement,
@@ -157,15 +159,17 @@ function createGradientDef(fill: ResolvedGradientFill, id: string): ReactNode {
 /**
  * Create image pattern definition element
  */
-function createImagePatternDef(
-  ...args: [
-    fill: ResolvedImageFill,
-    id: string,
-    width: number,
-    height: number,
-  ]
-): ReactNode {
-  const [fill, id, width, height] = args;
+function createImagePatternDef({
+  fill,
+  id,
+  width,
+  height,
+}: {
+  fill: ResolvedImageFill;
+  id: string;
+  width: number;
+  height: number;
+}): ReactNode {
   return (
     <pattern
       id={id}
@@ -247,7 +251,7 @@ export function useFillWithDefs(
   };
 
   const resolved = resolveFill(fill, colorContext, compositeResolver);
-  const result = resolvedFillToResult(resolved, getNextId, width, height);
+  const result = resolvedFillToResult({ fill: resolved, getNextId, width, height });
 
   return {
     props: result.props,
@@ -290,7 +294,7 @@ export function useFill(
   };
 
   const resolved = resolveFill(fill, colorContext, compositeResolver);
-  const result = resolvedFillToResult(resolved, getNextId, width, height);
+  const result = resolvedFillToResult({ fill: resolved, getNextId, width, height });
 
   // Register def if present and not already registered
   if (result.defId && result.defElement && !hasDef(result.defId)) {
@@ -311,21 +315,25 @@ export function useFill(
  * @param height - Shape height (needed for image patterns)
  * @param resourceResolver - Optional resource resolver for blipFill resolution
  */
-export function resolveFillForReact(
-  ...args: [
-    fill: Fill | undefined,
-    colorContext: ColorContext | undefined,
-    getNextId: (prefix: string) => string,
-    width?: number,
-    height?: number,
-    resourceResolver?: ResourceResolverFn,
-  ]
-): FillResult {
-  const [fill, colorContext, getNextId, width, height, resourceResolver] = args;
+export function resolveFillForReact({
+  fill,
+  colorContext,
+  getNextId,
+  width,
+  height,
+  resourceResolver,
+}: {
+  fill: Fill | undefined;
+  colorContext: ColorContext | undefined;
+  getNextId: (prefix: string) => string;
+  width?: number;
+  height?: number;
+  resourceResolver?: ResourceResolverFn;
+}): FillResult {
   if (fill === undefined || fill.type === "noFill") {
     return { props: { fill: "none" } };
   }
 
   const resolved = resolveFill(fill, colorContext, resourceResolver);
-  return resolvedFillToResult(resolved, getNextId, width, height);
+  return resolvedFillToResult({ fill: resolved, getNextId, width, height });
 }

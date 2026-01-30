@@ -33,15 +33,12 @@ function mergeIfContiguous(
   return null;
 }
 
-function getMergeKeyForCell(
-  ...args: readonly [
-    merges: readonly NormalizedMergeRange[],
-    cache: Map<string, string | null>,
-    col0: number,
-    row0: number,
-  ]
-): string | undefined {
-  const [merges, cache, col0, row0] = args;
+function getMergeKeyForCell({ merges, cache, col0, row0 }: {
+  readonly merges: readonly NormalizedMergeRange[];
+  readonly cache: Map<string, string | null>;
+  readonly col0: number;
+  readonly row0: number;
+}): string | undefined {
   if (merges.length === 0) {
     return undefined;
   }
@@ -75,7 +72,7 @@ export function getVisibleGridLineSegments(params: {
   const { rowRange, colRange, layout, scrollTop, scrollLeft, viewportWidth, viewportHeight, normalizedMerges, rowCount, colCount } = params;
 
   const mergeKeyCache = new Map<string, string | null>();
-  const getMergeKey = (col0: number, row0: number): string | undefined => getMergeKeyForCell(normalizedMerges, mergeKeyCache, col0, row0);
+  const getMergeKey = (col0: number, row0: number): string | undefined => getMergeKeyForCell({ merges: normalizedMerges, cache: mergeKeyCache, col0, row0 });
 
   const vertical: GridLineSegment[] = [];
   const horizontal: GridLineSegment[] = [];

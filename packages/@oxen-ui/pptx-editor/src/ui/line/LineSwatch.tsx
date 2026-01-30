@@ -93,10 +93,16 @@ function getBorderStyle(selected: boolean): string {
 // Styles
 // =============================================================================
 
-const containerStyle = (
-  ...args: readonly [size: number, hasOnClick: boolean, disabled: boolean, selected: boolean]
-): CSSProperties => {
-  const [size, hasOnClick, disabled, selected] = args;
+type ContainerStyleInput = {
+  readonly size: number;
+  readonly hasOnClick: boolean;
+  readonly disabled: boolean;
+  readonly selected: boolean;
+};
+
+const containerStyle = ({
+  size, hasOnClick, disabled, selected,
+}: ContainerStyleInput): CSSProperties => {
   return {
     position: "relative",
     width: `${size}px`,
@@ -159,7 +165,7 @@ export function LineSwatch({
   return (
     <div
       style={{
-        ...containerStyle(sizeValue, !!onClick, disabled ?? false, selected),
+        ...containerStyle({ size: sizeValue, hasOnClick: !!onClick, disabled: disabled ?? false, selected }),
         ...style,
       }}
       className={className}

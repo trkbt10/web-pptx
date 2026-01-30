@@ -17,6 +17,18 @@ function createResolveResource(
   return (resourceId: string) => pptxContext.resources.resolve(resourceId);
 }
 
+function createRenderSize(
+  slideSize: ReactRenderContext["slideSize"],
+): DrawingMLRenderContext["renderSize"] {
+  if (!slideSize) {
+    return undefined;
+  }
+  return {
+    width: slideSize.width as number,
+    height: slideSize.height as number,
+  };
+}
+
 /**
  * Create a DrawingMLRenderContext from a PPTX ReactRenderContext.
  *
@@ -72,9 +84,7 @@ export function createDrawingMLContext(
     warnings,
     // Add resolved background and render size for background/shape rendering
     resolvedBackground: pptxContext.resolvedBackground,
-    renderSize: pptxContext.slideSize
-      ? { width: pptxContext.slideSize.width as number, height: pptxContext.slideSize.height as number }
-      : undefined,
+    renderSize: createRenderSize(pptxContext.slideSize),
   };
 }
 

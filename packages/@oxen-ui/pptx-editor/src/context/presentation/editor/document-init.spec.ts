@@ -20,12 +20,12 @@ describe("createDocumentFromPresentation", () => {
     };
     const slides = [createEmptySlide(), createEmptySlide()];
 
-    const doc = createDocumentFromPresentation(
+    const doc = createDocumentFromPresentation({
       presentation,
       slides,
-      px(1920),
-      px(1080)
-    );
+      slideWidth: px(1920),
+      slideHeight: px(1080),
+    });
 
     expect(doc.slides).toHaveLength(2);
     expect(doc.slides[0].id).toBe("1");

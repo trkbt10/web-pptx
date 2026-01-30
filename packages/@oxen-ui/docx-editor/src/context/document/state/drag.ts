@@ -150,15 +150,17 @@ export function createElementMoveDragState(
 /**
  * Create table resize drag state.
  */
-export function createTableResizeDragState(
-  ...args: readonly [
-    tableId: ElementId,
-    direction: "column" | "row",
-    index: number,
-    startSize: number,
-  ]
-): TableResizeDragState {
-  const [tableId, direction, index, startSize] = args;
+export function createTableResizeDragState({
+  tableId,
+  direction,
+  index,
+  startSize,
+}: {
+  tableId: ElementId;
+  direction: "column" | "row";
+  index: number;
+  startSize: number;
+}): TableResizeDragState {
   return {
     type: "tableResize",
     tableId,
@@ -172,16 +174,19 @@ export function createTableResizeDragState(
 /**
  * Create image resize drag state.
  */
-export function createImageResizeDragState(
-  ...args: readonly [
-    imageId: ElementId,
-    handle: ImageResizeDragState["handle"],
-    startWidth: number,
-    startHeight: number,
-    preserveAspectRatio?: boolean,
-  ]
-): ImageResizeDragState {
-  const [imageId, handle, startWidth, startHeight, preserveAspectRatio = true] = args;
+export function createImageResizeDragState({
+  imageId,
+  handle,
+  startWidth,
+  startHeight,
+  preserveAspectRatio = true,
+}: {
+  imageId: ElementId;
+  handle: ImageResizeDragState["handle"];
+  startWidth: number;
+  startHeight: number;
+  preserveAspectRatio?: boolean;
+}): ImageResizeDragState {
   return {
     type: "imageResize",
     imageId,

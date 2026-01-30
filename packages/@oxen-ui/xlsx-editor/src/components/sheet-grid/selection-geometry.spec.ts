@@ -34,12 +34,12 @@ describe("xlsx-editor/components/sheet-grid/selection-geometry", () => {
 
   it("computes active cell rect", () => {
     const layout = createSheetLayout(sheet(), { rowCount: 10, colCount: 10, defaultRowHeightPx: 20, defaultColWidthPx: 50 });
-    expect(getActiveCellRect(addr(1, 1), layout, 0, 0)).toEqual({ left: 0, top: 0, width: 50, height: 20 });
+    expect(getActiveCellRect({ cell: addr(1, 1), layout, scrollTop: 0, scrollLeft: 0 })).toEqual({ left: 0, top: 0, width: 50, height: 20 });
   });
 
   it("computes selected range rect", () => {
     const layout = createSheetLayout(sheet(), { rowCount: 10, colCount: 10, defaultRowHeightPx: 20, defaultColWidthPx: 50 });
-    expect(getSelectedRangeRect({ start: addr(1, 1), end: addr(2, 2) }, layout, 0, 0)).toEqual({
+    expect(getSelectedRangeRect({ range: { start: addr(1, 1), end: addr(2, 2) }, layout, scrollTop: 0, scrollLeft: 0 })).toEqual({
       left: 0,
       top: 0,
       width: 100,

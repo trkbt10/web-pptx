@@ -10,16 +10,14 @@ import {
   resolveFieldIndex,
 } from "./common";
 
-const evaluateExtremum = (
-  ...params: readonly [
-    formulaArgs: Parameters<FormulaFunctionEagerDefinition["evaluate"]>[0],
-    helpers: Parameters<FormulaFunctionEagerDefinition["evaluate"]>[1],
-    functionName: string,
-    reducer: (values: number[]) => number,
-    emptyErrorMessage: string,
-  ]
-) => {
-  const [formulaArgs, helpers, functionName, reducer, emptyErrorMessage] = params;
+const evaluateExtremum = (params: {
+  readonly formulaArgs: Parameters<FormulaFunctionEagerDefinition["evaluate"]>[0];
+  readonly helpers: Parameters<FormulaFunctionEagerDefinition["evaluate"]>[1];
+  readonly functionName: string;
+  readonly reducer: (values: number[]) => number;
+  readonly emptyErrorMessage: string;
+}) => {
+  const { formulaArgs, helpers, functionName, reducer, emptyErrorMessage } = params;
   if (formulaArgs.length !== 3) {
     throw new Error(`${functionName} expects exactly three arguments`);
   }
@@ -28,7 +26,7 @@ const evaluateExtremum = (
   const database = parseDatabaseArgument(databaseArg, functionName);
   const fieldValue = helpers.coerceScalar(fieldArg, `${functionName} field`);
   const fieldIndex = resolveFieldIndex(fieldValue, database, functionName);
-  const matchingRows = filterDatabaseRows(database, criteriaArg, helpers, functionName);
+  const matchingRows = filterDatabaseRows({ database, criteriaArg, helpers, functionName });
   const numericValues = collectNumericFieldValues(matchingRows, fieldIndex);
 
   if (numericValues.length === 0) {
@@ -73,13 +71,13 @@ export const dMaxFunction: FormulaFunctionEagerDefinition = {
     },
   ],
   evaluate: (args, helpers) => {
-    return evaluateExtremum(
-      args,
+    return evaluateExtremum({
+      formulaArgs: args,
       helpers,
-      "DMAX",
-      (values) => Math.max(...values),
-      "DMAX found no numeric values matching criteria",
-    );
+      functionName: "DMAX",
+      reducer: (values) => Math.max(...values),
+      emptyErrorMessage: "DMAX found no numeric values matching criteria",
+    });
   },
 };
 
@@ -118,12 +116,12 @@ export const dMinFunction: FormulaFunctionEagerDefinition = {
     },
   ],
   evaluate: (args, helpers) => {
-    return evaluateExtremum(
-      args,
+    return evaluateExtremum({
+      formulaArgs: args,
       helpers,
-      "DMIN",
-      (values) => Math.min(...values),
-      "DMIN found no numeric values matching criteria",
-    );
+      functionName: "DMIN",
+      reducer: (values) => Math.min(...values),
+      emptyErrorMessage: "DMIN found no numeric values matching criteria",
+    });
   },
 };

@@ -81,6 +81,26 @@ function buildGeometryPath(spec: GeometryPathSpec): GeometryPath {
   };
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function buildCustomGeometryFromSpec(spec: CustomGeometrySpec): CustomGeometry {
   if (!spec) {
     throw new Error("customGeometry is required");

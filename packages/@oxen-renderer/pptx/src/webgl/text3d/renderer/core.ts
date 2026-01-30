@@ -520,17 +520,24 @@ function processRunWithGeometry(...args: ProcessRunWithGeometryArgs): void {
   // Apply all effects to mesh
   // Contour comes from shape3d (shape-level), other effects from run (run-level)
   // Pass shapes for proper shape-based contour generation
-  applyAllEffects(group, mesh, geometry, material, {
-    contour: buildConfig.contour,
-    outline: run.outline,
-    shadow: run.shadow,
-    glow: run.glow,
-    reflection: run.reflection,
-    softEdge: run.softEdge,
-  }, {
-    shapes: shapes as THREE.Shape[],
-    bevelConfig,
-    extrusionDepth,
+  applyAllEffects({
+    group,
+    mesh,
+    geometry,
+    material,
+    effects: {
+      contour: buildConfig.contour,
+      outline: run.outline,
+      shadow: run.shadow,
+      glow: run.glow,
+      reflection: run.reflection,
+      softEdge: run.softEdge,
+    },
+    shapeContext: {
+      shapes: shapes as THREE.Shape[],
+      bevelConfig,
+      extrusionDepth,
+    },
   });
 }
 

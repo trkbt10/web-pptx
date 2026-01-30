@@ -38,10 +38,13 @@ function addr(col: number, row: number): CellAddress {
 /**
  * Create a cell range
  */
-function range(
-  ...args: readonly [startCol: number, startRow: number, endCol: number, endRow: number]
-): CellRange {
-  const [startCol, startRow, endCol, endRow] = args;
+function range(params: {
+  readonly startCol: number;
+  readonly startRow: number;
+  readonly endCol: number;
+  readonly endRow: number;
+}): CellRange {
+  const { startCol, startRow, endCol, endRow } = params;
   return {
     start: addr(startCol, startRow),
     end: addr(endCol, endRow),
@@ -404,7 +407,7 @@ describe("serializeCols", () => {
 
 describe("serializeMergeCells", () => {
   it("should serialize single merge cell", () => {
-    const mergeCells: CellRange[] = [range(1, 1, 2, 2)];
+    const mergeCells: CellRange[] = [range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 })];
     const element = serializeMergeCells(mergeCells);
     const xml = serializeElement(element);
     expect(xml).toBe(
@@ -413,7 +416,7 @@ describe("serializeMergeCells", () => {
   });
 
   it("should serialize multiple merge cells", () => {
-    const mergeCells: CellRange[] = [range(1, 1, 2, 2), range(4, 1, 5, 3)];
+    const mergeCells: CellRange[] = [range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 }), range({ startCol: 4, startRow: 1, endCol: 5, endRow: 3 })];
     const element = serializeMergeCells(mergeCells);
     const xml = serializeElement(element);
     expect(xml).toContain('count="2"');
@@ -422,14 +425,14 @@ describe("serializeMergeCells", () => {
   });
 
   it("should serialize merge cell spanning multiple columns", () => {
-    const mergeCells: CellRange[] = [range(1, 1, 10, 1)];
+    const mergeCells: CellRange[] = [range({ startCol: 1, startRow: 1, endCol: 10, endRow: 1 })];
     const element = serializeMergeCells(mergeCells);
     const xml = serializeElement(element);
     expect(xml).toContain('ref="A1:J1"');
   });
 
   it("should serialize merge cell spanning multiple rows", () => {
-    const mergeCells: CellRange[] = [range(1, 1, 1, 10)];
+    const mergeCells: CellRange[] = [range({ startCol: 1, startRow: 1, endCol: 1, endRow: 10 })];
     const element = serializeMergeCells(mergeCells);
     const xml = serializeElement(element);
     expect(xml).toContain('ref="A1:A10"');
@@ -484,7 +487,7 @@ describe("serializeWorksheet", () => {
   it("should serialize worksheet with merge cells", () => {
     const sharedStrings = createMockSharedStrings();
     const worksheet = createWorksheet([], {
-      mergeCells: [range(1, 1, 2, 2)],
+      mergeCells: [range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 })],
     });
     const element = serializeWorksheet(worksheet, sharedStrings);
     const xml = serializeElement(element);
@@ -564,7 +567,7 @@ describe("Element order", () => {
     const sharedStrings = createMockSharedStrings();
     const rows: XlsxRow[] = [createRow(1, [numCell(1, 1, 42)])];
     const worksheet = createWorksheet(rows, {
-      mergeCells: [range(1, 1, 2, 2)],
+      mergeCells: [range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 })],
     });
     const element = serializeWorksheet(worksheet, sharedStrings);
     const xml = serializeElement(element);
@@ -577,7 +580,7 @@ describe("Element order", () => {
   it("should have mergeCells before pageMargins", () => {
     const sharedStrings = createMockSharedStrings();
     const worksheet = createWorksheet([], {
-      mergeCells: [range(1, 1, 2, 2)],
+      mergeCells: [range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 })],
     });
     const element = serializeWorksheet(worksheet, sharedStrings);
     const xml = serializeElement(element);
@@ -660,7 +663,7 @@ describe("Complex worksheet", () => {
         { min: colIdx(1), max: colIdx(1), width: 20 },
         { min: colIdx(2), max: colIdx(2), width: 15 },
       ],
-      mergeCells: [range(1, 1, 2, 1)],
+      mergeCells: [range({ startCol: 1, startRow: 1, endCol: 2, endRow: 1 })],
     });
 
     const element = serializeWorksheet(worksheet, sharedStrings);

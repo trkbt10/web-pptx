@@ -32,10 +32,17 @@ function cellAt(col: number, row: number, value: CellValue): Cell {
   };
 }
 
-function range(
-  ...args: readonly [startCol: number, startRow: number, endCol: number, endRow: number]
-): CellRange {
-  const [startCol, startRow, endCol, endRow] = args;
+function range({
+  startCol,
+  startRow,
+  endCol,
+  endRow,
+}: {
+  startCol: number;
+  startRow: number;
+  endCol: number;
+  endRow: number;
+}): CellRange {
   return {
     start: addr(startCol, startRow),
     end: addr(endCol, endRow),
@@ -90,7 +97,7 @@ describe("cell/query", () => {
       cellAt(3, 3, { type: "string", value: "C3" }),
     ]);
 
-    const cells = getCellsInRange(worksheet, range(2, 2, 1, 1));
+    const cells = getCellsInRange(worksheet, range({ startCol: 2, startRow: 2, endCol: 1, endRow: 1 }));
     expect(cells.map((c) => [c.address.col, c.address.row])).toEqual([
       [colIdx(1), rowIdx(1)],
       [colIdx(2), rowIdx(1)],
@@ -106,7 +113,7 @@ describe("cell/query", () => {
     const originalRows = worksheet.rows;
     const originalCells = worksheet.rows[0]?.cells;
 
-    const cells = getCellsInRange(worksheet, range(10, 10, 12, 12));
+    const cells = getCellsInRange(worksheet, range({ startCol: 10, startRow: 10, endCol: 12, endRow: 12 }));
     expect(cells).toEqual([]);
     expect(worksheet.rows).toBe(originalRows);
     expect(worksheet.rows[0]?.cells).toBe(originalCells);
@@ -118,7 +125,7 @@ describe("cell/query", () => {
       cellAt(3, 2, { type: "number", value: 10 }),
     ]);
 
-    const values = getCellValuesInRange(worksheet, range(1, 1, 3, 2));
+    const values = getCellValuesInRange(worksheet, range({ startCol: 1, startRow: 1, endCol: 3, endRow: 2 }));
     expect(values).toEqual([
       [
         { type: "string", value: "A1" },

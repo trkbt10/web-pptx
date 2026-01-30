@@ -92,6 +92,26 @@ function removeTransition(root: XmlElement): XmlElement {
   return { ...root, children };
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function applySlideTransition(slideDoc: XmlDocument, transition: SlideTransitionSpec): XmlDocument {
   if (transition.type === "none") {
     return updateDocumentRoot(slideDoc, removeTransition);
@@ -119,6 +139,26 @@ export function applySlideTransition(slideDoc: XmlDocument, transition: SlideTra
     return insertTransitionAfter(root, transitionEl, "p:cSld");
   });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export function isTransitionType(value: string): value is TransitionType {
   const types: TransitionType[] = [

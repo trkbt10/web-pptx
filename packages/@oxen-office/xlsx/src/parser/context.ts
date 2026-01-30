@@ -78,21 +78,13 @@ export type XlsxParseContext = {
  * @param relationships - Map from relationship ID to target path
  * @returns A fully populated parse context
  */
-export function createParseContext(
-  ...args: readonly [
-    sharedStrings: readonly string[],
-    styleSheet: XlsxStyleSheet,
-    workbookInfo: XlsxWorkbookInfo,
-    relationships: ReadonlyMap<string, string>,
-  ]
-): XlsxParseContext {
-  const [sharedStrings, styleSheet, workbookInfo, relationships] = args;
-  return {
-    sharedStrings,
-    styleSheet,
-    workbookInfo,
-    relationships,
-  };
+export function createParseContext(params: {
+  readonly sharedStrings: readonly string[];
+  readonly styleSheet: XlsxStyleSheet;
+  readonly workbookInfo: XlsxWorkbookInfo;
+  readonly relationships: ReadonlyMap<string, string>;
+}): XlsxParseContext {
+  return params;
 }
 
 /**

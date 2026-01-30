@@ -56,15 +56,16 @@ const HIDDEN_TEXTAREA_STYLE: CSSProperties = {
   zIndex: 1,
 };
 
-function buildContainerStyle(
-  ...args: readonly [
-    bounds: TextEditBounds,
-    slideWidth: number,
-    slideHeight: number,
-    showFrameOutline: boolean,
-  ]
-): CSSProperties {
-  const [bounds, slideWidth, slideHeight, showFrameOutline] = args;
+type ContainerStyleInput = {
+  readonly bounds: TextEditBounds;
+  readonly slideWidth: number;
+  readonly slideHeight: number;
+  readonly showFrameOutline: boolean;
+};
+
+function buildContainerStyle({
+  bounds, slideWidth, slideHeight, showFrameOutline,
+}: ContainerStyleInput): CSSProperties {
   const left = ((bounds.x as number) / slideWidth) * 100;
   const top = ((bounds.y as number) / slideHeight) * 100;
   const width = ((bounds.width as number) / slideWidth) * 100;
@@ -107,7 +108,7 @@ export function TextEditInputFrame({
   showFrameOutline = true,
   children,
 }: TextEditInputFrameProps) {
-  const containerStyle = buildContainerStyle(bounds, slideWidth, slideHeight, showFrameOutline);
+  const containerStyle = buildContainerStyle({ bounds, slideWidth, slideHeight, showFrameOutline });
   const handleMouseDown: MouseEventHandler<HTMLTextAreaElement> = (event) => {
     if (event.button !== 0) {
       onNonPrimaryMouseDown?.(event);

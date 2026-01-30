@@ -198,19 +198,20 @@ function applyMovePreview(
   };
 }
 
-function calculateResizedDimensions(
-  ...args: readonly [
-    handle: ResizeHandlePosition,
-    baseW: number,
-    baseH: number,
-    baseX: number,
-    baseY: number,
-    dx: number,
-    dy: number,
-    aspectLocked: boolean,
-  ]
-): { newWidth: number; newHeight: number; newX: number; newY: number } {
-  const [handle, baseW, baseH, baseX, baseY, dx, dy, aspectLocked] = args;
+type ResizeDimensionsInput = {
+  readonly handle: ResizeHandlePosition;
+  readonly baseW: number;
+  readonly baseH: number;
+  readonly baseX: number;
+  readonly baseY: number;
+  readonly dx: number;
+  readonly dy: number;
+  readonly aspectLocked: boolean;
+};
+
+function calculateResizedDimensions({
+  handle, baseW, baseH, baseX, baseY, dx, dy, aspectLocked,
+}: ResizeDimensionsInput): { newWidth: number; newHeight: number; newX: number; newY: number } {
   const widthDelta = handle.includes("e") ? dx : handle.includes("w") ? -dx : 0;
   const heightDelta = handle.includes("s") ? dy : handle.includes("n") ? -dy : 0;
   const xDelta = handle.includes("w") ? dx : 0;
@@ -252,9 +253,9 @@ function applyResizePreview(
   const baseW = cb.width as number;
   const baseH = cb.height as number;
 
-  const { newWidth, newHeight, newX, newY } = calculateResizedDimensions(
-    handle, baseW, baseH, baseX, baseY, dx, dy, aspectLocked
-  );
+  const { newWidth, newHeight, newX, newY } = calculateResizedDimensions({
+    handle, baseW, baseH, baseX, baseY, dx, dy, aspectLocked,
+  });
 
   const scaleX = baseW > 0 ? newWidth / baseW : 1;
   const scaleY = baseH > 0 ? newHeight / baseH : 1;
@@ -697,12 +698,12 @@ export const SvgEditorCanvas = forwardRef<HTMLDivElement, SvgEditorCanvasProps>(
       ignoreNextClickRef.current = true;
 
       if (onCreateFromDrag) {
-        const bounds = createBoundsFromDrag(
-          px(current.startX),
-          px(current.startY),
-          px(current.currentX),
-          px(current.currentY)
-        );
+        const bounds = createBoundsFromDrag({
+          startX: px(current.startX),
+          startY: px(current.startY),
+          endX: px(current.currentX),
+          endY: px(current.currentY),
+        });
         onCreateFromDrag(bounds);
       }
     },

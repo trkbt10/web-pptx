@@ -13,9 +13,9 @@ async function main() {
   const usage =
     "bun run scripts/debug/debug-linespacing-parsing.ts <pptx-path> <slide-number> <base-multiplier>";
   const args = process.argv.slice(2);
-  const pptxPath = requirePositionalArg(args, 0, "pptx-path", usage);
+  const pptxPath = requirePositionalArg({ args, index: 0, name: "pptx-path", usage });
   const slideNumber = requireIntArg(args[1], "slide-number", usage);
-  const baseMultiplierStr = requirePositionalArg(args, 2, "base-multiplier", usage);
+  const baseMultiplierStr = requirePositionalArg({ args, index: 2, name: "base-multiplier", usage });
   const baseMultiplier = Number.parseFloat(baseMultiplierStr);
   if (!Number.isFinite(baseMultiplier)) {
     throw new Error(`Invalid base-multiplier: ${baseMultiplierStr}`);

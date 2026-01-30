@@ -123,7 +123,7 @@ function convertRgbToSrgb(components: readonly number[]): Color {
 
 function convertCmykToSrgb(components: readonly number[]): Color {
   const [c = 0, m = 0, y = 0, k = 0] = components;
-  const [r, g, b] = cmykToRgb(c, m, y, k);
+  const [r, g, b] = cmykToRgb({ c, m, y, k });
   return {
     spec: {
       type: "srgb",
@@ -158,19 +158,25 @@ export function noFill(): Fill {
 /**
  * PDF線スタイルをPPTX Lineに変換
  */
-export function convertLine(
-  ...args: readonly [
-    strokeColor: PdfColor,
-    lineWidth: number,
-    lineCap: PdfLineCap,
-    lineJoin: PdfLineJoin,
-    dashArray: readonly number[],
-    _dashPhase: number,
-    alpha?: number,
-    widthScale?: number,
-  ]
-): Line {
-  const [strokeColor, lineWidth, lineCap, lineJoin, dashArray, _dashPhase, alpha = 1, widthScale = 1] = args;
+export function convertLine({
+  strokeColor,
+  lineWidth,
+  lineCap,
+  lineJoin,
+  dashArray,
+  dashPhase: _dashPhase,
+  alpha = 1,
+  widthScale = 1,
+}: {
+  readonly strokeColor: PdfColor;
+  readonly lineWidth: number;
+  readonly lineCap: PdfLineCap;
+  readonly lineJoin: PdfLineJoin;
+  readonly dashArray: readonly number[];
+  readonly dashPhase: number;
+  readonly alpha?: number;
+  readonly widthScale?: number;
+}): Line {
   if (!Number.isFinite(widthScale) || widthScale <= 0) {
     throw new Error(`Invalid widthScale: ${widthScale}`);
   }
@@ -259,16 +265,16 @@ export function convertGraphicsStateToStyle(
   }
 
   if (paintOp === "stroke" || paintOp === "fillStroke") {
-    style.line = convertLine(
-      graphicsState.strokeColor,
-      graphicsState.lineWidth,
-      graphicsState.lineCap,
-      graphicsState.lineJoin,
-      graphicsState.dashArray,
-      graphicsState.dashPhase,
-      graphicsState.strokeAlpha * softMaskAlpha,
-      lineWidthScale,
-    );
+    style.line = convertLine({
+      strokeColor: graphicsState.strokeColor,
+      lineWidth: graphicsState.lineWidth,
+      lineCap: graphicsState.lineCap,
+      lineJoin: graphicsState.lineJoin,
+      dashArray: graphicsState.dashArray,
+      dashPhase: graphicsState.dashPhase,
+      alpha: graphicsState.strokeAlpha * softMaskAlpha,
+      widthScale: lineWidthScale,
+    });
   }
 
   return style;

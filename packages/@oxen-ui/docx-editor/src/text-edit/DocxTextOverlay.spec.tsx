@@ -12,8 +12,17 @@ import { DocxTextOverlay } from "./DocxTextOverlay";
  * Create a DOMRect-like object for testing.
  * jsdom doesn't have DOMRect constructor, so we create a compatible object.
  */
-function createBounds(...args: readonly [left: number, top: number, width: number, height: number]): DOMRect {
-  const [left, top, width, height] = args;
+function createBounds({
+  left,
+  top,
+  width,
+  height,
+}: {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}): DOMRect {
   return {
     x: left,
     y: top,
@@ -58,7 +67,7 @@ describe("DocxTextOverlay", () => {
     const { container } = render(
       <DocxTextOverlay
         paragraph={paragraph}
-        bounds={createBounds(0, 0, 200, 50)}
+        bounds={createBounds({ left: 0, top: 0, width: 200, height: 50 })}
         selectionStart={0}
         selectionEnd={0}
       />,
@@ -81,7 +90,7 @@ describe("DocxTextOverlay", () => {
     const { container } = render(
       <DocxTextOverlay
         paragraph={paragraph}
-        bounds={createBounds(0, 0, 800, 60)}
+        bounds={createBounds({ left: 0, top: 0, width: 800, height: 60 })}
         selectionStart={0}
         selectionEnd={0}
       />,
@@ -102,7 +111,7 @@ describe("DocxTextOverlay", () => {
     const { container } = render(
       <DocxTextOverlay
         paragraph={paragraph}
-        bounds={createBounds(0, 0, 400, 80)}
+        bounds={createBounds({ left: 0, top: 0, width: 400, height: 80 })}
         selectionStart={0}
         selectionEnd={5}
       />,
@@ -120,7 +129,7 @@ describe("DocxTextOverlay", () => {
     const { container } = render(
       <DocxTextOverlay
         paragraph={paragraph}
-        bounds={createBounds(0, 0, 40, 200)}
+        bounds={createBounds({ left: 0, top: 0, width: 40, height: 200 })}
         selectionStart={0}
         selectionEnd={0}
       />,
@@ -139,7 +148,7 @@ describe("DocxTextOverlay", () => {
     const { container } = render(
       <DocxTextOverlay
         paragraph={paragraph}
-        bounds={createBounds(0, 0, 200, 50)}
+        bounds={createBounds({ left: 0, top: 0, width: 200, height: 50 })}
         selectionStart={0}
         selectionEnd={0}
       />,

@@ -112,7 +112,7 @@ function streamHasCryptIdentity(dict: PdfDict): boolean {
 
 function decryptString(args: { readonly value: PdfString; readonly ctx: DecryptCtx }): PdfString {
   const { value, ctx } = args;
-  const bytes = ctx.decrypter.decryptBytes(ctx.objNum, ctx.gen, value.bytes, { kind: "string" });
+  const bytes = ctx.decrypter.decryptBytes({ objNum: ctx.objNum, gen: ctx.gen, bytes: value.bytes, options: { kind: "string" } });
   return {
     type: "string",
     bytes,
@@ -148,7 +148,7 @@ function decryptStream(args: { readonly value: PdfStream; readonly ctx: DecryptC
     const isEmbeddedFile = isEmbeddedFileStreamType(streamType);
     const kind = isEmbeddedFile ? "embeddedFile" : "stream";
     const cryptFilterName = getCryptFilterName(value.dict) ?? undefined;
-    return ctx.decrypter.decryptBytes(ctx.objNum, ctx.gen, value.data, { kind, cryptFilterName });
+    return ctx.decrypter.decryptBytes({ objNum: ctx.objNum, gen: ctx.gen, bytes: value.data, options: { kind, cryptFilterName } });
   })();
 
   return { type: "stream", dict, data };

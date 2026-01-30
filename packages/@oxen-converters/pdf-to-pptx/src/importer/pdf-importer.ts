@@ -116,7 +116,7 @@ export async function importPdf(
     }
     const baseSlide = buildSlideFromPageOrThrow(page, slideSize, options);
 
-    const slide = addPageNumberIfEnabled(baseSlide, page.pageNumber, slideSize, options.addPageNumbers ?? false);
+    const slide = addPageNumberIfEnabled({ slide: baseSlide, pageNumber: page.pageNumber, slideSize, enabled: options.addPageNumbers ?? false });
 
     slides.push(slide);
     pageStats.push(collectPageStats(page, slide));
@@ -222,10 +222,17 @@ function buildSlideFromPageOrThrow(page: PdfPage, slideSize: SlideSize, options:
   }
 }
 
-function addPageNumberIfEnabled(
-  ...args: readonly [slide: Slide, pageNumber: number, slideSize: SlideSize, enabled: boolean]
-): Slide {
-  const [slide, pageNumber, slideSize, enabled] = args;
+function addPageNumberIfEnabled({
+  slide,
+  pageNumber,
+  slideSize,
+  enabled,
+}: {
+  readonly slide: Slide;
+  readonly pageNumber: number;
+  readonly slideSize: SlideSize;
+  readonly enabled: boolean;
+}): Slide {
   if (!enabled) {
     return slide;
   }

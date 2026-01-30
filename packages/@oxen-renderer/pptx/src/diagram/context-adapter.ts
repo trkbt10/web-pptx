@@ -17,6 +17,26 @@ export type CreateDiagramRenderContextOptions<TShape> = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createDiagramRenderContext<TShape>(
   options: CreateDiagramRenderContextOptions<TShape>
 ): DiagramRenderContext<TShape, string> {

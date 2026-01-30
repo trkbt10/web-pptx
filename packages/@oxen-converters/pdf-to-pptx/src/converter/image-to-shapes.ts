@@ -46,7 +46,7 @@ export function convertImageToShape(
     if (!clipped) {
       return null;
     }
-    const warped = warpTransformedImageToPngDataUrl(image, context, clipped, { clipMask });
+    const warped = warpTransformedImageToPngDataUrl({ image, context, bbox: clipped, options: { clipMask } });
     if (warped) {
       return {
         type: "pic",
@@ -81,7 +81,7 @@ export function convertImageToShape(
       return null;
     }
     if (!isBBoxEqual(clipped, imageBBox)) {
-      const warped = warpTransformedImageToPngDataUrl(image, context, clipped);
+      const warped = warpTransformedImageToPngDataUrl({ image, context, bbox: clipped });
       if (warped) {
         return {
           type: "pic",
@@ -110,7 +110,7 @@ export function convertImageToShape(
   // PPTX Transform cannot represent shear; preserve appearance by baking into a PNG.
   if (hasShear(ctm)) {
     const imageBBox = computeImageBBoxFromCtm(ctm);
-    const warped = warpTransformedImageToPngDataUrl(image, context, imageBBox);
+    const warped = warpTransformedImageToPngDataUrl({ image, context, bbox: imageBBox });
     if (!warped) {return null;}
     return {
       type: "pic",
@@ -173,15 +173,17 @@ function createImageTransform(ctm: PdfMatrix, clippedBBox: PdfBBox | null, conte
   return convertMatrix(ctm, context);
 }
 
-function warpTransformedImageToPngDataUrl(
-  ...args: readonly [
-    image: PdfImage,
-    context: ConversionContext,
-    bbox: PdfBBox,
-    options?: Readonly<{ readonly clipMask?: PdfSoftMask }>,
-  ]
-): Readonly<{ readonly bbox: PdfBBox; readonly dataUrl: string }> | null {
-  const [image, context, bbox, options = {}] = args;
+function warpTransformedImageToPngDataUrl({
+  image,
+  context,
+  bbox,
+  options = {},
+}: {
+  readonly image: PdfImage;
+  readonly context: ConversionContext;
+  readonly bbox: PdfBBox;
+  readonly options?: Readonly<{ readonly clipMask?: PdfSoftMask }>;
+}): Readonly<{ readonly bbox: PdfBBox; readonly dataUrl: string }> | null {
   const format = detectImageFormat(image.data);
   if (format !== "raw") {
     return null;
@@ -205,8 +207,8 @@ function warpTransformedImageToPngDataUrl(
   const outHeight = Math.max(1, Math.round(size.height as number));
 
   const srcRgba = convertToRgba(image.data, image.width, image.height, image.colorSpace, image.bitsPerComponent, { decode: image.decode });
-  applySoftMaskMatteInPlace(srcRgba, image.alpha, image.softMaskMatte, image.colorSpace, image.width, image.height);
-  applyAlphaMaskInPlace(srcRgba, image.alpha, image.width, image.height);
+  applySoftMaskMatteInPlace({ rgbaData: srcRgba, alpha: image.alpha, matte: image.softMaskMatte, colorSpace: image.colorSpace, width: image.width, height: image.height });
+  applyAlphaMaskInPlace({ rgbaData: srcRgba, alpha: image.alpha, width: image.width, height: image.height });
 
   const out = new Uint8ClampedArray(outWidth * outHeight * 4);
 
@@ -290,24 +292,28 @@ function encodeRawToPngDataUrl(image: PdfImage): string {
 
   // Convert raw pixels to RGBA
   const rgbaData = convertToRgba(data, width, height, colorSpace, bitsPerComponent, { decode });
-  applySoftMaskMatteInPlace(rgbaData, image.alpha, image.softMaskMatte, colorSpace, width, height);
-  applyAlphaMaskInPlace(rgbaData, image.alpha, width, height);
+  applySoftMaskMatteInPlace({ rgbaData, alpha: image.alpha, matte: image.softMaskMatte, colorSpace, width, height });
+  applyAlphaMaskInPlace({ rgbaData, alpha: image.alpha, width, height });
 
   // Encode to PNG using png module (Canvas API or Pure JS)
   return encodeRgbaToPngDataUrl(rgbaData, width, height);
 }
 
-function applySoftMaskMatteInPlace(
-  ...args: readonly [
-    rgbaData: Uint8ClampedArray,
-    alpha: Uint8Array | undefined,
-    matte: readonly number[] | undefined,
-    colorSpace: PdfColorSpace,
-    width: number,
-    height: number,
-  ]
-): void {
-  const [rgbaData, alpha, matte, colorSpace, width, height] = args;
+function applySoftMaskMatteInPlace({
+  rgbaData,
+  alpha,
+  matte,
+  colorSpace,
+  width,
+  height,
+}: {
+  readonly rgbaData: Uint8ClampedArray;
+  readonly alpha: Uint8Array | undefined;
+  readonly matte: readonly number[] | undefined;
+  readonly colorSpace: PdfColorSpace;
+  readonly width: number;
+  readonly height: number;
+}): void {
   if (!alpha || !matte) {return;}
 
   const pixelCount = width * height;
@@ -366,7 +372,7 @@ function toMatteRgbBytes(matte: readonly number[], colorSpace: PdfColorSpace): r
         console.warn(`[PDF Image] /Matte length mismatch for DeviceCMYK: expected 4, got ${matte.length}`);
         return null;
       }
-      return cmykToRgb(matte[0] ?? 0, matte[1] ?? 0, matte[2] ?? 0, matte[3] ?? 0);
+      return cmykToRgb({ c: matte[0] ?? 0, m: matte[1] ?? 0, y: matte[2] ?? 0, k: matte[3] ?? 0 });
     }
     case "ICCBased":
     case "Pattern":
@@ -376,15 +382,17 @@ function toMatteRgbBytes(matte: readonly number[], colorSpace: PdfColorSpace): r
   }
 }
 
-function applyAlphaMaskInPlace(
-  ...args: readonly [
-    rgbaData: Uint8ClampedArray,
-    alpha: Uint8Array | undefined,
-    width: number,
-    height: number,
-  ]
-): void {
-  const [rgbaData, alpha, width, height] = args;
+function applyAlphaMaskInPlace({
+  rgbaData,
+  alpha,
+  width,
+  height,
+}: {
+  readonly rgbaData: Uint8ClampedArray;
+  readonly alpha: Uint8Array | undefined;
+  readonly width: number;
+  readonly height: number;
+}): void {
   if (!alpha) {return;}
 
   const expectedLength = width * height;

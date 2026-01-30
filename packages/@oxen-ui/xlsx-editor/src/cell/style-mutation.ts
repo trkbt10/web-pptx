@@ -149,12 +149,12 @@ function applyStyleToColumnRange(
   params: { readonly minCol: number; readonly maxCol: number; readonly styleId: StyleId },
 ): XlsxWorksheet {
   const { minCol, maxCol, styleId } = params;
-  const columns = applyColumnRangeOverride(
-    worksheet.columns,
-    colIdx(minCol),
-    colIdx(maxCol),
-    (styleId as number) === 0 ? { styleId: undefined } : { styleId },
-  );
+  const columns = applyColumnRangeOverride({
+    columns: worksheet.columns,
+    startCol: colIdx(minCol),
+    endCol: colIdx(maxCol),
+    override: (styleId as number) === 0 ? { styleId: undefined } : { styleId },
+  });
   return { ...worksheet, columns };
 }
 

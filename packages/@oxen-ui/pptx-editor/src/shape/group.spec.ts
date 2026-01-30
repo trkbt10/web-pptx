@@ -24,8 +24,19 @@ import {
 // Test Fixtures
 // =============================================================================
 
-const createTestShape = (...args: [id: string, x: number, y: number, width: number, height: number]): SpShape => {
-  const [id, x, y, width, height] = args;
+const createTestShape = ({
+  id,
+  x,
+  y,
+  width,
+  height,
+}: {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}): SpShape => {
   return {
     type: "sp",
     nonVisual: { id, name: `Shape ${id}` },
@@ -43,29 +54,40 @@ const createTestShape = (...args: [id: string, x: number, y: number, width: numb
   } satisfies SpShape;
 };
 
-const createTestGroup = (
-  ...args: [id: string, x: number, y: number, width: number, height: number, children: Shape[]]
-): GrpShape => {
-  const [id, x, y, width, height, children] = args;
-  return {
-  type: "grpSp",
-  nonVisual: { id, name: `Group ${id}` },
-  properties: {
-    transform: {
-      x: px(x),
-      y: px(y),
-      width: px(width),
-      height: px(height),
-      rotation: deg(0),
-      flipH: false,
-      flipV: false,
-      childOffsetX: px(x),
-      childOffsetY: px(y),
-      childExtentWidth: px(width),
-      childExtentHeight: px(height),
-    },
-  },
+const createTestGroup = ({
+  id,
+  x,
+  y,
+  width,
+  height,
   children,
+}: {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  children: Shape[];
+}): GrpShape => {
+  return {
+    type: "grpSp",
+    nonVisual: { id, name: `Group ${id}` },
+    properties: {
+      transform: {
+        x: px(x),
+        y: px(y),
+        width: px(width),
+        height: px(height),
+        rotation: deg(0),
+        flipH: false,
+        flipV: false,
+        childOffsetX: px(x),
+        childOffsetY: px(y),
+        childExtentWidth: px(width),
+        childExtentHeight: px(height),
+      },
+    },
+    children,
   };
 };
 
@@ -314,11 +336,11 @@ describe("group transform conversion", () => {
 
 describe("findGroupById", () => {
   it("finds group at top level", () => {
-    const group = createTestGroup("g1", 0, 0, 100, 100, []);
+    const group = createTestGroup({ id: "g1", x: 0, y: 0, width: 100, height: 100, children: [] });
     const shapes: Shape[] = [
-      createTestShape("1", 0, 0, 50, 50),
+      createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 }),
       group,
-      createTestShape("2", 0, 0, 50, 50),
+      createTestShape({ id: "2", x: 0, y: 0, width: 50, height: 50 }),
     ];
 
     const result = findGroupById(shapes, "g1");
@@ -330,8 +352,8 @@ describe("findGroupById", () => {
 
   it("returns undefined when group not found", () => {
     const shapes: Shape[] = [
-      createTestShape("1", 0, 0, 50, 50),
-      createTestShape("2", 0, 0, 50, 50),
+      createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 }),
+      createTestShape({ id: "2", x: 0, y: 0, width: 50, height: 50 }),
     ];
 
     const result = findGroupById(shapes, "nonexistent");
@@ -339,7 +361,7 @@ describe("findGroupById", () => {
   });
 
   it("returns undefined when ID belongs to non-group shape", () => {
-    const shapes: Shape[] = [createTestShape("1", 0, 0, 50, 50)];
+    const shapes: Shape[] = [createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 })];
 
     const result = findGroupById(shapes, "1");
     expect(result).toBeUndefined();
@@ -352,8 +374,8 @@ describe("findGroupById", () => {
 
 describe("getTransformedChildren", () => {
   it("transforms children with 1:1 coordinate mapping", () => {
-    const child = createTestShape("c1", 10, 20, 50, 50);
-    const group = createTestGroup("g1", 10, 20, 100, 100, [child]);
+    const child = createTestShape({ id: "c1", x: 10, y: 20, width: 50, height: 50 });
+    const group = createTestGroup({ id: "g1", x: 10, y: 20, width: 100, height: 100, children: [child] });
 
     const result = getTransformedChildren(group);
 
@@ -364,7 +386,7 @@ describe("getTransformedChildren", () => {
 
   it("handles shapes without properties", () => {
     const shapeWithoutProps: Shape = { type: "contentPart", contentPart: { id: "rId1" } };
-    const group = createTestGroup("g1", 0, 0, 100, 100, [shapeWithoutProps]);
+    const group = createTestGroup({ id: "g1", x: 0, y: 0, width: 100, height: 100, children: [shapeWithoutProps] });
 
     const result = getTransformedChildren(group);
 
@@ -373,7 +395,7 @@ describe("getTransformedChildren", () => {
   });
 
   it("handles group without transform", () => {
-    const child = createTestShape("c1", 10, 20, 50, 50);
+    const child = createTestShape({ id: "c1", x: 10, y: 20, width: 50, height: 50 });
     const group: GrpShape = {
       type: "grpSp",
       nonVisual: { id: "g1", name: "Group g1" },
@@ -396,8 +418,8 @@ describe("getTransformedChildren", () => {
 describe("extractChildIds", () => {
   it("extracts IDs from shapes with nonVisual", () => {
     const children: Shape[] = [
-      createTestShape("1", 0, 0, 50, 50),
-      createTestShape("2", 0, 0, 50, 50),
+      createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 }),
+      createTestShape({ id: "2", x: 0, y: 0, width: 50, height: 50 }),
     ];
 
     const ids = extractChildIds(children);
@@ -407,7 +429,7 @@ describe("extractChildIds", () => {
 
   it("skips shapes without nonVisual", () => {
     const children: Shape[] = [
-      createTestShape("1", 0, 0, 50, 50),
+      createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 }),
       { type: "contentPart", contentPart: { id: "rId1" } },
     ];
 
@@ -428,17 +450,17 @@ describe("extractChildIds", () => {
 
 describe("ungroupShape", () => {
   it("returns undefined when group not found", () => {
-    const shapes: Shape[] = [createTestShape("1", 0, 0, 50, 50)];
+    const shapes: Shape[] = [createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 })];
 
     const result = ungroupShape(shapes, "nonexistent");
     expect(result).toBeUndefined();
   });
 
   it("ungroups and transforms children to slide coordinates", () => {
-    const child1 = createTestShape("c1", 10, 10, 40, 40);
-    const child2 = createTestShape("c2", 60, 60, 40, 40);
-    const group = createTestGroup("g1", 10, 10, 100, 100, [child1, child2]);
-    const shapes: Shape[] = [createTestShape("1", 0, 0, 50, 50), group];
+    const child1 = createTestShape({ id: "c1", x: 10, y: 10, width: 40, height: 40 });
+    const child2 = createTestShape({ id: "c2", x: 60, y: 60, width: 40, height: 40 });
+    const group = createTestGroup({ id: "g1", x: 10, y: 10, width: 100, height: 100, children: [child1, child2] });
+    const shapes: Shape[] = [createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 }), group];
 
     const result = ungroupShape(shapes, "g1");
 
@@ -448,10 +470,10 @@ describe("ungroupShape", () => {
   });
 
   it("preserves other shapes in array", () => {
-    const child = createTestShape("c1", 10, 10, 40, 40);
-    const group = createTestGroup("g1", 10, 10, 100, 100, [child]);
-    const beforeShape = createTestShape("before", 0, 0, 50, 50);
-    const afterShape = createTestShape("after", 200, 200, 50, 50);
+    const child = createTestShape({ id: "c1", x: 10, y: 10, width: 40, height: 40 });
+    const group = createTestGroup({ id: "g1", x: 10, y: 10, width: 100, height: 100, children: [child] });
+    const beforeShape = createTestShape({ id: "before", x: 0, y: 0, width: 50, height: 50 });
+    const afterShape = createTestShape({ id: "after", x: 200, y: 200, width: 50, height: 50 });
     const shapes: Shape[] = [beforeShape, group, afterShape];
 
     const result = ungroupShape(shapes, "g1");
@@ -468,9 +490,9 @@ describe("ungroupShape", () => {
 
 describe("collectShapesToGroup", () => {
   it("collects shapes matching IDs", () => {
-    const shape1 = createTestShape("1", 0, 0, 50, 50);
-    const shape2 = createTestShape("2", 100, 100, 50, 50);
-    const shape3 = createTestShape("3", 200, 200, 50, 50);
+    const shape1 = createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 });
+    const shape2 = createTestShape({ id: "2", x: 100, y: 100, width: 50, height: 50 });
+    const shape3 = createTestShape({ id: "3", x: 200, y: 200, width: 50, height: 50 });
     const shapes: Shape[] = [shape1, shape2, shape3];
 
     const result = collectShapesToGroup(shapes, ["1", "3"]);
@@ -480,7 +502,7 @@ describe("collectShapesToGroup", () => {
   });
 
   it("skips IDs that do not exist", () => {
-    const shape1 = createTestShape("1", 0, 0, 50, 50);
+    const shape1 = createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 });
     const shapes: Shape[] = [shape1];
 
     const result = collectShapesToGroup(shapes, ["1", "nonexistent"]);
@@ -490,7 +512,7 @@ describe("collectShapesToGroup", () => {
   });
 
   it("returns empty for no matching IDs", () => {
-    const shapes: Shape[] = [createTestShape("1", 0, 0, 50, 50)];
+    const shapes: Shape[] = [createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 })];
 
     const result = collectShapesToGroup(shapes, ["nonexistent"]);
 
@@ -541,7 +563,7 @@ describe("createGroupShape", () => {
       width: px(100),
       height: px(50),
     });
-    const children = [createTestShape("1", 10, 20, 40, 30)];
+    const children = [createTestShape({ id: "1", x: 10, y: 20, width: 40, height: 30 })];
 
     const group = createGroupShape("g1", transform, children);
 
@@ -559,23 +581,23 @@ describe("createGroupShape", () => {
 
 describe("groupShapes", () => {
   it("returns undefined for less than 2 shape IDs", () => {
-    const shapes: Shape[] = [createTestShape("1", 0, 0, 50, 50)];
+    const shapes: Shape[] = [createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 })];
 
     expect(groupShapes(shapes, [])).toBeUndefined();
     expect(groupShapes(shapes, ["1"])).toBeUndefined();
   });
 
   it("returns undefined when less than 2 shapes found", () => {
-    const shapes: Shape[] = [createTestShape("1", 0, 0, 50, 50)];
+    const shapes: Shape[] = [createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 })];
 
     const result = groupShapes(shapes, ["1", "nonexistent"]);
     expect(result).toBeUndefined();
   });
 
   it("groups shapes and returns new shapes array with group", () => {
-    const shape1 = createTestShape("1", 0, 0, 50, 50);
-    const shape2 = createTestShape("2", 100, 100, 50, 50);
-    const shape3 = createTestShape("3", 200, 200, 50, 50);
+    const shape1 = createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 });
+    const shape2 = createTestShape({ id: "2", x: 100, y: 100, width: 50, height: 50 });
+    const shape3 = createTestShape({ id: "3", x: 200, y: 200, width: 50, height: 50 });
     const shapes: Shape[] = [shape1, shape2, shape3];
 
     const result = groupShapes(shapes, ["1", "2"]);
@@ -593,9 +615,9 @@ describe("groupShapes", () => {
   });
 
   it("places group at first selected shape position", () => {
-    const shape1 = createTestShape("1", 0, 0, 50, 50);
-    const shape2 = createTestShape("2", 100, 100, 50, 50);
-    const shape3 = createTestShape("3", 200, 200, 50, 50);
+    const shape1 = createTestShape({ id: "1", x: 0, y: 0, width: 50, height: 50 });
+    const shape2 = createTestShape({ id: "2", x: 100, y: 100, width: 50, height: 50 });
+    const shape3 = createTestShape({ id: "3", x: 200, y: 200, width: 50, height: 50 });
     const shapes: Shape[] = [shape1, shape2, shape3];
 
     const result = groupShapes(shapes, ["2", "3"]);
@@ -607,8 +629,8 @@ describe("groupShapes", () => {
   });
 
   it("calculates correct combined bounds for group", () => {
-    const shape1 = createTestShape("1", 10, 20, 50, 50); // x: 10-60, y: 20-70
-    const shape2 = createTestShape("2", 100, 100, 40, 30); // x: 100-140, y: 100-130
+    const shape1 = createTestShape({ id: "1", x: 10, y: 20, width: 50, height: 50 }); // x: 10-60, y: 20-70
+    const shape2 = createTestShape({ id: "2", x: 100, y: 100, width: 40, height: 30 }); // x: 100-140, y: 100-130
     const shapes: Shape[] = [shape1, shape2];
 
     const result = groupShapes(shapes, ["1", "2"]);

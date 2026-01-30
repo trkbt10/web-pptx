@@ -20,6 +20,26 @@ export type PercentEditorProps = EditorProps<Percent> & {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function PercentEditor({
   value,
   onChange,

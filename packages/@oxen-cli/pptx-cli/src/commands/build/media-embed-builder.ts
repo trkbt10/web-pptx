@@ -7,6 +7,26 @@ import type { MediaReference } from "@oxen-office/pptx/domain/shape";
 import type { MediaType } from "@oxen-office/pptx/patcher/resources/media-manager";
 import type { MediaEmbedSpec } from "./types";
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function detectEmbeddedMediaType(spec: MediaEmbedSpec): MediaType {
   const ext = path.extname(spec.path).toLowerCase();
   if (spec.type === "video") {
@@ -23,6 +43,26 @@ export function detectEmbeddedMediaType(spec: MediaEmbedSpec): MediaType {
   }
   throw new Error(`Unsupported media type: ${(spec as { type: string }).type}`);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export function buildMediaReferenceFromSpec(spec: MediaEmbedSpec, rId: string, contentType: string): {
   readonly mediaType: "video" | "audio";

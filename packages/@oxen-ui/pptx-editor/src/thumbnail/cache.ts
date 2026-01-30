@@ -54,13 +54,17 @@ export function getCachedThumbnail(
   return undefined;
 }
 
+type SetCachedThumbnailInput = {
+  readonly cache: ThumbnailCache;
+  readonly slideId: SlideId;
+  readonly slide: Slide;
+  readonly svg: string;
+};
+
 /**
  * Store rendered SVG in cache
  */
-export function setCachedThumbnail(
-  ...args: readonly [cache: ThumbnailCache, slideId: SlideId, slide: Slide, svg: string]
-): void {
-  const [cache, slideId, slide, svg] = args;
+export function setCachedThumbnail({ cache, slideId, slide, svg }: SetCachedThumbnailInput): void {
   cache.set(slideId, { slideRef: slide, svg });
 }
 

@@ -10,6 +10,26 @@ import { existsSync } from "node:fs";
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function usageError(message: string, usage: string): Error {
   return new Error(`${message}\n\nUsage:\n  ${usage}`);
 }
@@ -24,16 +44,63 @@ export function usageError(message: string, usage: string): Error {
 
 
 
-export function requirePositionalArg(
-  ...params: readonly [args: readonly string[], index: number, name: string, usage: string]
-): string {
-  const [args, index, name, usage] = params;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export function requirePositionalArg({
+  args,
+  index,
+  name,
+  usage,
+}: {
+  args: readonly string[];
+  index: number;
+  name: string;
+  usage: string;
+}): string {
   const value = args[index];
   if (!value) {
     throw usageError(`Missing required argument: ${name}`, usage);
   }
   return value;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -66,6 +133,26 @@ export function optionalIntArg(value: string | undefined, name: string, usage: s
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function requireIntArg(value: string | undefined, name: string, usage: string): number {
   const parsed = optionalIntArg(value, name, usage);
   if (parsed === undefined) {
@@ -73,6 +160,26 @@ export function requireIntArg(value: string | undefined, name: string, usage: st
   }
   return parsed;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

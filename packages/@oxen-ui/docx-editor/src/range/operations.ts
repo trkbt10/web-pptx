@@ -144,15 +144,17 @@ export function deleteRange(document: DocxDocument, range: TextRange): DocxDocum
  *
  * @returns Updated document and new cursor position.
  */
-export function insertTextAtPosition(
-  ...args: readonly [
-    document: DocxDocument,
-    position: TextPosition,
-    text: string,
-    properties?: DocxRunProperties,
-  ]
-): { document: DocxDocument; newPosition: TextPosition } {
-  const [document, position, text, properties] = args;
+export function insertTextAtPosition({
+  document,
+  position,
+  text,
+  properties,
+}: {
+  document: DocxDocument;
+  position: TextPosition;
+  text: string;
+  properties?: DocxRunProperties;
+}): { document: DocxDocument; newPosition: TextPosition } {
   const clampedPosition = clampPosition(document, position);
   const paragraph = getParagraphAtIndex(document, clampedPosition.paragraphIndex);
 
@@ -165,7 +167,7 @@ export function insertTextAtPosition(
 
   if (lines.length === 1) {
     // No newlines - simple insertion
-    const newParagraph = insertText(paragraph, clampedPosition.charOffset, text, properties);
+    const newParagraph = insertText({ paragraph, charOffset: clampedPosition.charOffset, text, properties });
     const newDocument = updateParagraphInDocument(document, clampedPosition.paragraphIndex, newParagraph);
 
     return {
@@ -195,7 +197,7 @@ export function insertTextAtPosition(
 
     if (i === 0) {
       // First line - insert at position then split
-      const withText = insertText(currentParagraph, currentOffset, line, properties);
+      const withText = insertText({ paragraph: currentParagraph, charOffset: currentOffset, text: line, properties });
       const newOffset = currentOffset + line.length;
 
       if (i < lines.length - 1) {
@@ -210,12 +212,12 @@ export function insertTextAtPosition(
       }
     } else if (i === lines.length - 1) {
       // Last line - just insert at start
-      const withText = insertText(currentParagraph, 0, line, properties);
+      const withText = insertText({ paragraph: currentParagraph, charOffset: 0, text: line, properties });
       result = updateParagraphInDocument(result, currentParagraphIndex, withText);
       currentOffset = line.length;
     } else {
       // Middle line - insert and split
-      const withText = insertText(currentParagraph, 0, line, properties);
+      const withText = insertText({ paragraph: currentParagraph, charOffset: 0, text: line, properties });
       const [before, after] = splitParagraph(withText, line.length);
       result = replaceParagraphWithMultiple(result, currentParagraphIndex, [before, after]);
       currentParagraphIndex++;
@@ -237,22 +239,24 @@ export function insertTextAtPosition(
  *
  * @returns Updated document and new cursor position.
  */
-export function replaceRange(
-  ...args: readonly [
-    document: DocxDocument,
-    range: TextRange,
-    text: string,
-    properties?: DocxRunProperties,
-  ]
-): { document: DocxDocument; newPosition: TextPosition } {
-  const [document, range, text, properties] = args;
+export function replaceRange({
+  document,
+  range,
+  text,
+  properties,
+}: {
+  document: DocxDocument;
+  range: TextRange;
+  text: string;
+  properties?: DocxRunProperties;
+}): { document: DocxDocument; newPosition: TextPosition } {
   const normalized = normalizeRange(range);
 
   // Delete existing content
   const afterDelete = deleteRange(document, range);
 
   // Insert new text at start position
-  return insertTextAtPosition(afterDelete, normalized.start, text, properties);
+  return insertTextAtPosition({ document: afterDelete, position: normalized.start, text, properties });
 }
 
 /**
@@ -279,12 +283,12 @@ export function formatRange(
       return document;
     }
 
-    const formatted = applyFormattingToRange(
+    const formatted = applyFormattingToRange({
       paragraph,
-      start.charOffset,
-      end.charOffset,
+      startOffset: start.charOffset,
+      endOffset: end.charOffset,
       properties,
-    );
+    });
 
     return updateParagraphInDocument(document, start.paragraphIndex, formatted);
   }
@@ -296,12 +300,12 @@ export function formatRange(
   // Format first paragraph
   const firstParagraph = getParagraphAtIndex(result, start.paragraphIndex);
   if (firstParagraph) {
-    const formatted = applyFormattingToRange(
-      firstParagraph,
-      start.charOffset,
-      getParagraphText(firstParagraph).length,
+    const formatted = applyFormattingToRange({
+      paragraph: firstParagraph,
+      startOffset: start.charOffset,
+      endOffset: getParagraphText(firstParagraph).length,
       properties,
-    );
+    });
     result = updateParagraphInDocument(result, start.paragraphIndex, formatted);
   }
 
@@ -309,12 +313,12 @@ export function formatRange(
   for (let i = start.paragraphIndex + 1; i < end.paragraphIndex; i++) {
     const paragraph = getParagraphAtIndex(result, i);
     if (paragraph) {
-      const formatted = applyFormattingToRange(
+      const formatted = applyFormattingToRange({
         paragraph,
-        0,
-        getParagraphText(paragraph).length,
+        startOffset: 0,
+        endOffset: getParagraphText(paragraph).length,
         properties,
-      );
+      });
       result = updateParagraphInDocument(result, i, formatted);
     }
   }
@@ -322,7 +326,7 @@ export function formatRange(
   // Format last paragraph
   const lastParagraph = getParagraphAtIndex(result, end.paragraphIndex);
   if (lastParagraph) {
-    const formatted = applyFormattingToRange(lastParagraph, 0, end.charOffset, properties);
+    const formatted = applyFormattingToRange({ paragraph: lastParagraph, startOffset: 0, endOffset: end.charOffset, properties });
     result = updateParagraphInDocument(result, end.paragraphIndex, formatted);
   }
 

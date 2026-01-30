@@ -20,8 +20,13 @@ const expectNumber = (value: unknown, label: string): number => {
   return value;
 };
 
-const computeBalance = (...args: readonly [rate: number, periods: number, payment: number, pv: number]): number => {
-  const [rate, periods, payment, pv] = args;
+const computeBalance = (params: {
+  readonly rate: number;
+  readonly periods: number;
+  readonly payment: number;
+  readonly pv: number;
+}): number => {
+  const { rate, periods, payment, pv } = params;
   if (rate === 0) {
     return pv + payment * periods;
   }
@@ -37,7 +42,7 @@ describe("RATE", () => {
     const payment = expectNumber(evaluate(pmtFunction, rate, nper, pv), "PMT payment");
     const computedRate = expectNumber(evaluate(rateFunction, nper, payment, pv), "RATE result");
 
-    const balance = computeBalance(computedRate, nper, payment, pv);
+    const balance = computeBalance({ rate: computedRate, periods: nper, payment, pv });
 
     expect(computedRate).toBeCloseTo(rate, 6);
     expect(balance).toBeCloseTo(0, 4);

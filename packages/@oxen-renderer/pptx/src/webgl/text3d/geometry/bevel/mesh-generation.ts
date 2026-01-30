@@ -252,15 +252,17 @@ function calculateSafeHoleInsetRatio(
 /**
  * Generate bevel geometry for a single path with optional width scaling.
  */
-function generatePathBevelWithScale(
-  ...args: [
-    path: BevelPath,
-    config: BevelMeshConfig,
-    vertexOffset: number,
-    widthScale: number,
-  ]
-): PathBevelResult {
-  const [path, config, vertexOffset, widthScale] = args;
+function generatePathBevelWithScale({
+  path,
+  config,
+  vertexOffset,
+  widthScale,
+}: {
+  path: BevelPath;
+  config: BevelMeshConfig;
+  vertexOffset: number;
+  widthScale: number;
+}): PathBevelResult {
   const { points: pathPoints, isHole, isClosed } = path;
   const { width, height, profile, zPosition, zDirection } = config;
   const profilePoints = profile.points;
@@ -392,12 +394,12 @@ export function generateBevelMesh(
 
   // Generate outer bevels with full width
   for (const outerPath of outerPaths) {
-    const { positions, normals, uvs, indices } = generatePathBevelWithScale(
-      outerPath,
+    const { positions, normals, uvs, indices } = generatePathBevelWithScale({
+      path: outerPath,
       config,
       vertexOffset,
-      1.0, // Full width for outer
-    );
+      widthScale: 1.0, // Full width for outer
+    });
 
     allPositions.push(...positions);
     allNormals.push(...normals);
@@ -411,12 +413,12 @@ export function generateBevelMesh(
   for (const holePath of holePaths) {
     const safeRatio = calculateSafeHoleInsetRatio(holePath, combinedOuterBounds, width);
 
-    const { positions, normals, uvs, indices } = generatePathBevelWithScale(
-      holePath,
+    const { positions, normals, uvs, indices } = generatePathBevelWithScale({
+      path: holePath,
       config,
       vertexOffset,
-      safeRatio,
-    );
+      widthScale: safeRatio,
+    });
 
     allPositions.push(...positions);
     allNormals.push(...normals);

@@ -22,10 +22,17 @@ function addr(col: number, row: number): CellAddress {
   };
 }
 
-function range(
-  ...args: readonly [startCol: number, startRow: number, endCol: number, endRow: number]
-): CellRange {
-  const [startCol, startRow, endCol, endRow] = args;
+function range({
+  startCol,
+  startRow,
+  endCol,
+  endRow,
+}: {
+  startCol: number;
+  startRow: number;
+  endCol: number;
+  endRow: number;
+}): CellRange {
   return { start: addr(startCol, startRow), end: addr(endCol, endRow) };
 }
 
@@ -129,7 +136,7 @@ describe("xlsx-editor/context/workbook/editor/reducer/cell-handlers", () => {
     const state = createState(workbook);
     const action: DeleteCellsAction = {
       type: "DELETE_CELLS",
-      range: range(1, 1, 2, 1),
+      range: range({ startCol: 1, startRow: 1, endCol: 2, endRow: 1 }),
     };
 
     const handler = cellHandlers.DELETE_CELLS;

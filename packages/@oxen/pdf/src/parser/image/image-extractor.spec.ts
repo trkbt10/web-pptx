@@ -30,10 +30,7 @@ function toRgba64x64(image: {
   return convertToRgba(image.data, image.width, image.height, image.colorSpace, image.bitsPerComponent, { decode: image.decode });
 }
 
-function pixelGray(
-  ...args: readonly [rgba: Uint8ClampedArray, x: number, y: number, width: number]
-): number {
-  const [rgba, x, y, width] = args;
+function pixelGray({ rgba, x, y, width }: { readonly rgba: Uint8ClampedArray; readonly x: number; readonly y: number; readonly width: number }): number {
   const idx = (y * width + x) * 4;
   return rgba[idx] ?? 0;
 }
@@ -636,10 +633,10 @@ describe("image-extractor (CCITTFaxDecode)", () => {
     });
 
     // Expect black on (0,0) and (63,63), white on the other diagonal.
-    expect(pixelGray(rgba, 0, 0, 64)).toBe(0);
-    expect(pixelGray(rgba, 63, 0, 64)).toBe(255);
-    expect(pixelGray(rgba, 0, 63, 64)).toBe(255);
-    expect(pixelGray(rgba, 63, 63, 64)).toBe(0);
+    expect(pixelGray({ rgba, x: 0, y: 0, width: 64 })).toBe(0);
+    expect(pixelGray({ rgba, x: 63, y: 0, width: 64 })).toBe(255);
+    expect(pixelGray({ rgba, x: 0, y: 63, width: 64 })).toBe(255);
+    expect(pixelGray({ rgba, x: 63, y: 63, width: 64 })).toBe(0);
   });
 
   it("decodes Filter chain [/ASCII85Decode /CCITTFaxDecode]", async () => {
@@ -669,10 +666,10 @@ describe("image-extractor (CCITTFaxDecode)", () => {
       bitsPerComponent: image?.bitsPerComponent ?? 1,
     });
 
-    expect(pixelGray(rgba, 0, 0, 64)).toBe(0);
-    expect(pixelGray(rgba, 63, 0, 64)).toBe(255);
-    expect(pixelGray(rgba, 0, 63, 64)).toBe(255);
-    expect(pixelGray(rgba, 63, 63, 64)).toBe(0);
+    expect(pixelGray({ rgba, x: 0, y: 0, width: 64 })).toBe(0);
+    expect(pixelGray({ rgba, x: 63, y: 0, width: 64 })).toBe(255);
+    expect(pixelGray({ rgba, x: 0, y: 63, width: 64 })).toBe(255);
+    expect(pixelGray({ rgba, x: 63, y: 63, width: 64 })).toBe(0);
   });
 
   it("respects DecodeParms /BlackIs1=false", async () => {
@@ -703,10 +700,10 @@ describe("image-extractor (CCITTFaxDecode)", () => {
     });
 
     // Inverted relative to /BlackIs1=true.
-    expect(pixelGray(rgba, 0, 0, 64)).toBe(255);
-    expect(pixelGray(rgba, 63, 0, 64)).toBe(0);
-    expect(pixelGray(rgba, 0, 63, 64)).toBe(0);
-    expect(pixelGray(rgba, 63, 63, 64)).toBe(255);
+    expect(pixelGray({ rgba, x: 0, y: 0, width: 64 })).toBe(255);
+    expect(pixelGray({ rgba, x: 63, y: 0, width: 64 })).toBe(0);
+    expect(pixelGray({ rgba, x: 0, y: 63, width: 64 })).toBe(0);
+    expect(pixelGray({ rgba, x: 63, y: 63, width: 64 })).toBe(255);
   });
 
   it("decodes when DecodeParms has EndOfLine=true (ignored for Group4)", async () => {
@@ -772,8 +769,8 @@ describe("image-extractor (CCITTFaxDecode)", () => {
 
     const rgba = convertToRgba(image.data, image.width, image.height, image.colorSpace, image.bitsPerComponent);
     // Expect white on the left half, black on the right half (row 0).
-    expect(pixelGray(rgba, 0, 0, 16)).toBe(255);
-    expect(pixelGray(rgba, 15, 0, 16)).toBe(0);
+    expect(pixelGray({ rgba, x: 0, y: 0, width: 16 })).toBe(255);
+    expect(pixelGray({ rgba, x: 15, y: 0, width: 16 })).toBe(0);
   });
 
   it("decodes /CCITTFaxDecode Group3 1D (K=0) with EndOfLine=true", async () => {
@@ -801,8 +798,8 @@ describe("image-extractor (CCITTFaxDecode)", () => {
     expect(image.bitsPerComponent).toBe(1);
 
     const rgba = convertToRgba(image.data, image.width, image.height, image.colorSpace, image.bitsPerComponent);
-    expect(pixelGray(rgba, 0, 0, 16)).toBe(255);
-    expect(pixelGray(rgba, 15, 0, 16)).toBe(0);
+    expect(pixelGray({ rgba, x: 0, y: 0, width: 16 })).toBe(255);
+    expect(pixelGray({ rgba, x: 15, y: 0, width: 16 })).toBe(0);
   });
 });
 

@@ -208,7 +208,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 400, 300, ctx);
+      const svg = renderChart({ chart, width: 400, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Vertical bars should have height > width typically
@@ -234,7 +234,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 400, 300, ctx);
+      const svg = renderChart({ chart, width: 400, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Horizontal bars should have rects
@@ -263,7 +263,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 300, 300, ctx);
+      const svg = renderChart({ chart, width: 300, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Should contain path elements for pie slices
@@ -286,7 +286,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 300, 300, ctx);
+      const svg = renderChart({ chart, width: 300, height: 300, ctx });
       const svgStr = svg.toString();
 
       // The first slice should start at 0 degrees (right side) in SVG coordinates
@@ -312,7 +312,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 300, 300, ctx);
+      const svg = renderChart({ chart, width: 300, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Should have multiple different fill colors
@@ -346,7 +346,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 400, 300, ctx);
+      const svg = renderChart({ chart, width: 400, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Should have 4 bars (2 categories × 2 series)
@@ -386,7 +386,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 400, 300, ctx);
+      const svg = renderChart({ chart, width: 400, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Should have 4 bars
@@ -425,7 +425,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 400, 300, ctx);
+      const svg = renderChart({ chart, width: 400, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Should render 4 bars
@@ -463,7 +463,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 400, 300, ctx);
+      const svg = renderChart({ chart, width: 400, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Should have path element with L (line to) commands
@@ -492,7 +492,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 400, 300, ctx);
+      const svg = renderChart({ chart, width: 400, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Should have path element with C (cubic bezier) commands
@@ -519,7 +519,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 300, 300, ctx);
+      const svg = renderChart({ chart, width: 300, height: 300, ctx });
       const svgStr = svg.toString();
 
       // All slices should share the same center point (150, 150 = 300/2)
@@ -557,7 +557,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 300, 300, ctx);
+      const svg = renderChart({ chart, width: 300, height: 300, ctx });
       const svgStr = svg.toString();
 
       // All slices should be exploded from center
@@ -596,7 +596,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 300, 300, ctx);
+      const svg = renderChart({ chart, width: 300, height: 300, ctx });
       const svgStr = svg.toString();
 
       const pathMatches = svgStr.match(/<path[^>]+d="([^"]+)"[^>]*>/g) ?? [];
@@ -644,7 +644,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 300, 300, ctx);
+      const svg = renderChart({ chart, width: 300, height: 300, ctx });
       const svgStr = svg.toString();
 
       const pathMatches = svgStr.match(/<path[^>]+d="([^"]+)"[^>]*>/g) ?? [];
@@ -707,7 +707,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 300, 300, ctx);
+      const svg = renderChart({ chart, width: 300, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Should have polygon elements (grid + data)
@@ -732,7 +732,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 300, 300, ctx);
+      const svg = renderChart({ chart, width: 300, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Should have circle elements for markers
@@ -755,7 +755,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 300, 300, ctx);
+      const svg = renderChart({ chart, width: 300, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Should have filled polygon (fill-opacity for semi-transparency)
@@ -820,7 +820,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 400, 300, ctx);
+      const svg = renderChart({ chart, width: 400, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Should have circle elements
@@ -851,7 +851,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 400, 300, ctx);
+      const svg = renderChart({ chart, width: 400, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Extract radii
@@ -884,7 +884,7 @@ describe("Chart renderer unit tests", () => {
         },
       };
 
-      const svg = renderChart(chart, 400, 300, ctx);
+      const svg = renderChart({ chart, width: 400, height: 300, ctx });
       const svgStr = svg.toString();
 
       // Should have dashed stroke for negative bubble

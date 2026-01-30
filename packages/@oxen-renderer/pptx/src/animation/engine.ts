@@ -359,16 +359,19 @@ function toKebabCase(property: string): string {
 /**
  * Animate a single CSS property
  */
-export function animateStyle(
-  ...args: [
-    el: HTMLElement | SVGElement,
-    property: AnimatableCSSProperty,
-    from: number,
-    to: number,
-    options: Omit<AnimationOptions, "onUpdate"> & { unit?: string },
-  ]
-): AnimationController {
-  const [el, property, from, to, options] = args;
+export function animateStyle({
+  el,
+  property,
+  from,
+  to,
+  options,
+}: {
+  el: HTMLElement | SVGElement;
+  property: AnimatableCSSProperty;
+  from: number;
+  to: number;
+  options: Omit<AnimationOptions, "onUpdate"> & { unit?: string };
+}): AnimationController {
   const unit = options.unit ?? "";
   const cssProperty = toKebabCase(property);
 
@@ -384,16 +387,19 @@ export function animateStyle(
 /**
  * Animate opacity
  */
-export function animateOpacity(
-  ...args: [
-    el: HTMLElement | SVGElement,
-    from: number,
-    to: number,
-    duration: number,
-    easing?: EasingFn | EasingName,
-  ]
-): AnimationController {
-  const [el, from, to, duration, easing] = args;
+export function animateOpacity({
+  el,
+  from,
+  to,
+  duration,
+  easing,
+}: {
+  el: HTMLElement | SVGElement;
+  from: number;
+  to: number;
+  duration: number;
+  easing?: EasingFn | EasingName;
+}): AnimationController {
   // Set initial value immediately
   el.style.opacity = String(from);
 
@@ -409,19 +415,25 @@ export function animateOpacity(
 /**
  * Animate transform (translate)
  */
-export function animateTranslate(
-  ...args: [
-    el: HTMLElement | SVGElement,
-    fromX: number,
-    fromY: number,
-    toX: number,
-    toY: number,
-    duration: number,
-    easing?: EasingFn | EasingName,
-    unit?: string,
-  ]
-): AnimationController {
-  const [el, fromX, fromY, toX, toY, duration, easing, unit = "%"] = args;
+export function animateTranslate({
+  el,
+  fromX,
+  fromY,
+  toX,
+  toY,
+  duration,
+  easing,
+  unit = "%",
+}: {
+  el: HTMLElement | SVGElement;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+  duration: number;
+  easing?: EasingFn | EasingName;
+  unit?: string;
+}): AnimationController {
   // Set initial value immediately
   el.style.transform = `translate(${fromX}${unit}, ${fromY}${unit})`;
 
@@ -439,16 +451,19 @@ export function animateTranslate(
 /**
  * Animate clip-path (inset)
  */
-export function animateClipInset(
-  ...args: [
-    el: HTMLElement | SVGElement,
-    from: { top: number; right: number; bottom: number; left: number },
-    to: { top: number; right: number; bottom: number; left: number },
-    duration: number,
-    easing?: EasingFn | EasingName,
-  ]
-): AnimationController {
-  const [el, from, to, duration, easing] = args;
+export function animateClipInset({
+  el,
+  from,
+  to,
+  duration,
+  easing,
+}: {
+  el: HTMLElement | SVGElement;
+  from: { top: number; right: number; bottom: number; left: number };
+  to: { top: number; right: number; bottom: number; left: number };
+  duration: number;
+  easing?: EasingFn | EasingName;
+}): AnimationController {
   // Set initial value immediately
   el.style.clipPath = `inset(${from.top}% ${from.right}% ${from.bottom}% ${from.left}%)`;
 

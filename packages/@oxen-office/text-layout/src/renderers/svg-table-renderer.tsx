@@ -40,17 +40,15 @@ function getBorderDashArray(style: LayoutBorderStyle["style"]): string | undefin
 /**
  * Render a cell border edge.
  */
-function renderBorderEdge(
-  ...args: readonly [
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    border: LayoutBorderStyle | undefined,
-    key: string,
-  ]
-): ReactNode {
-  const [x1, y1, x2, y2, border, key] = args;
+function renderBorderEdge(params: {
+  readonly x1: number;
+  readonly y1: number;
+  readonly x2: number;
+  readonly y2: number;
+  readonly border: LayoutBorderStyle | undefined;
+  readonly key: string;
+}): ReactNode {
+  const { x1, y1, x2, y2, border, key } = params;
   if (border === undefined || border.style === "none") {
     return null;
   }
@@ -202,24 +200,24 @@ function renderCell(
       {/* Cell borders */}
       {borders !== undefined && (
         <g key={`${key}-borders`}>
-          {renderBorderEdge(xVal, yVal, xVal + widthVal, yVal, borders.top, `${key}-top`)}
-          {renderBorderEdge(
-            xVal + widthVal,
-            yVal,
-            xVal + widthVal,
-            yVal + heightVal,
-            borders.right,
-            `${key}-right`,
-          )}
-          {renderBorderEdge(
-            xVal,
-            yVal + heightVal,
-            xVal + widthVal,
-            yVal + heightVal,
-            borders.bottom,
-            `${key}-bottom`,
-          )}
-          {renderBorderEdge(xVal, yVal, xVal, yVal + heightVal, borders.left, `${key}-left`)}
+          {renderBorderEdge({ x1: xVal, y1: yVal, x2: xVal + widthVal, y2: yVal, border: borders.top, key: `${key}-top` })}
+          {renderBorderEdge({
+            x1: xVal + widthVal,
+            y1: yVal,
+            x2: xVal + widthVal,
+            y2: yVal + heightVal,
+            border: borders.right,
+            key: `${key}-right`,
+          })}
+          {renderBorderEdge({
+            x1: xVal,
+            y1: yVal + heightVal,
+            x2: xVal + widthVal,
+            y2: yVal + heightVal,
+            border: borders.bottom,
+            key: `${key}-bottom`,
+          })}
+          {renderBorderEdge({ x1: xVal, y1: yVal, x2: xVal, y2: yVal + heightVal, border: borders.left, key: `${key}-left` })}
         </g>
       )}
     </g>

@@ -36,19 +36,20 @@ export type TextOverlayProps = {
 // Span Rendering
 // =============================================================================
 
+type RenderSpanInput = {
+  readonly span: PositionedSpan;
+  readonly x: number;
+  readonly lineY: number;
+  readonly dominantBaseline: string | undefined;
+  readonly key: number;
+};
+
 /**
  * Render a single text span with all its styling.
  */
-function renderSpan(
-  ...args: readonly [
-    span: PositionedSpan,
-    x: number,
-    lineY: number,
-    dominantBaseline: string | undefined,
-    key: number,
-  ]
-): ReactNode {
-  const [span, x, lineY, dominantBaseline, key] = args;
+function renderSpan({
+  span, x, lineY, dominantBaseline, key,
+}: RenderSpanInput): ReactNode {
   const fontSizePx = fontSizeToPixels(span.fontSize);
   const bounds = getTextVisualBounds(lineY as Pixels, span.fontSize, span.fontFamily);
   const elements: ReactNode[] = [];
@@ -166,7 +167,7 @@ function renderLine(
       continue;
     }
 
-    const element = renderSpan(span, cursorX, line.y as number, dominantBaseline, key++);
+    const element = renderSpan({ span, x: cursorX, lineY: line.y as number, dominantBaseline, key: key++ });
     elements.push(element);
     cursorX += (span.width as number) + (span.dx as number);
   }
@@ -178,19 +179,20 @@ function renderLine(
 // Bullet Rendering
 // =============================================================================
 
+type RenderBulletInput = {
+  readonly bullet: NonNullable<LayoutResult["paragraphs"][number]["bullet"]>;
+  readonly bulletX: number;
+  readonly bulletY: number;
+  readonly bulletWidth: number;
+  readonly key: number;
+};
+
 /**
  * Render a bullet (text or image) for a paragraph.
  */
-function renderBullet(
-  ...args: readonly [
-    bullet: NonNullable<LayoutResult["paragraphs"][number]["bullet"]>,
-    bulletX: number,
-    bulletY: number,
-    bulletWidth: number,
-    key: number,
-  ]
-): ReactNode {
-  const [bullet, bulletX, bulletY, _bulletWidth, key] = args;
+function renderBullet({
+  bullet, bulletX, bulletY, bulletWidth: _bulletWidth, key,
+}: RenderBulletInput): ReactNode {
   const bulletFontSizePx = fontSizeToPixels(bullet.fontSize);
   const bulletBounds = getTextVisualBounds(bulletY as Pixels, bullet.fontSize, bullet.fontFamily);
 
@@ -243,7 +245,7 @@ export function TextOverlay({ layoutResult, composition }: TextOverlayProps) {
       const bulletY = firstLine.y as number;
 
       elements.push(
-        renderBullet(para.bullet, bulletX, bulletY, para.bulletWidth as number, key++),
+        renderBullet({ bullet: para.bullet, bulletX, bulletY, bulletWidth: para.bulletWidth as number, key: key++ }),
       );
     }
 

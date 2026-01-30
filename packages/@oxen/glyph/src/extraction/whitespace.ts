@@ -43,5 +43,5 @@ export function createWhitespaceGlyph(
   fontFamily: string,
   style: GlyphStyleKey,
 ): GlyphContour {
-  return createWhitespaceGlyphCore(char, fontFamily, style, createMainThreadCanvas);
+  return createWhitespaceGlyphCore({ char, fontFamily, style, createCanvas: createMainThreadCanvas });
 }

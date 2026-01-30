@@ -288,6 +288,26 @@ export type SetCellOptions = {
   readonly cell: DocxTableCell;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function setCell({ table, rowIndex, colIndex, cell }: SetCellOptions): DocxTable {
   return {
     ...table,
@@ -442,6 +462,26 @@ export type MergeCellsHorizontallyOptions = {
   readonly endCol: number;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function mergeCellsHorizontally({ table, rowIndex, startCol, endCol }: MergeCellsHorizontallyOptions): DocxTable {
   const row = table.rows[rowIndex];
   if (!row || startCol >= endCol || startCol < 0 || endCol >= row.cells.length) {
@@ -469,6 +509,26 @@ export type SetCellVerticalMergeOptions = {
   readonly colIndex: number;
   readonly merge: "restart" | "continue" | undefined;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export function setCellVerticalMerge({ table, rowIndex, colIndex, merge }: SetCellVerticalMergeOptions): DocxTable {
   const cell = getCell(table, rowIndex, colIndex);
@@ -505,6 +565,26 @@ export type MergeCellsVerticallyOptions = {
   readonly startRow: number;
   readonly endRow: number;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export function mergeCellsVertically({ table, colIndex, startRow, endRow }: MergeCellsVerticallyOptions): DocxTable {
   if (startRow >= endRow || startRow < 0 || endRow >= table.rows.length) {

@@ -23,6 +23,26 @@ function createEmptyParagraph(): XmlElement {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function serializeTextBody(textBody: TextBody): XmlElement {
   const paragraphs: XmlElement[] = [];
   if (textBody.paragraphs.length > 0) {
@@ -37,6 +57,26 @@ export function serializeTextBody(textBody: TextBody): XmlElement {
     ...paragraphs,
   ]);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -14,10 +14,17 @@ function createAddress(col: number, row: number): CellAddress {
   return { col: colIdx(col), row: rowIdx(row), colAbsolute: false, rowAbsolute: false };
 }
 
-function createRange(
-  ...args: readonly [startCol: number, startRow: number, endCol: number, endRow: number]
-): CellRange {
-  const [startCol, startRow, endCol, endRow] = args;
+function createRange({
+  startCol,
+  startRow,
+  endCol,
+  endRow,
+}: {
+  startCol: number;
+  startRow: number;
+  endCol: number;
+  endRow: number;
+}): CellRange {
   return { start: createAddress(startCol, startRow), end: createAddress(endCol, endRow) };
 }
 
@@ -98,7 +105,7 @@ describe("resolveSelectionFormatFlags", () => {
       { col: 2, row: 1, styleId: 0 },
     ]);
 
-    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange(1, 1, 2, 1) });
+    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange({ startCol: 1, startRow: 1, endCol: 2, endRow: 1 }) });
     expect(flags.tooLarge).toBe(false);
 
     expect(flags.bold).toEqual({ mixed: false, value: false });
@@ -116,7 +123,7 @@ describe("resolveSelectionFormatFlags", () => {
       { col: 2, row: 1, styleId: 1 },
     ]);
 
-    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange(1, 1, 2, 1) });
+    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange({ startCol: 1, startRow: 1, endCol: 2, endRow: 1 }) });
     expect(flags.bold).toEqual({ mixed: true });
     expect(flags.italic).toEqual({ mixed: false, value: false });
     expect(flags.wrapText).toEqual({ mixed: false, value: false });
@@ -129,7 +136,7 @@ describe("resolveSelectionFormatFlags", () => {
       { col: 2, row: 1, styleId: 2 },
     ]);
 
-    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange(1, 1, 2, 1) });
+    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange({ startCol: 1, startRow: 1, endCol: 2, endRow: 1 }) });
     expect(flags.wrapText).toEqual({ mixed: true });
     expect(flags.bold).toEqual({ mixed: false, value: false });
   });
@@ -142,7 +149,7 @@ describe("resolveSelectionFormatFlags", () => {
       { col: 3, row: 1, styleId: 2 },
     ]);
 
-    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange(1, 1, 3, 1), maxCellsToAnalyze: 2 });
+    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange({ startCol: 1, startRow: 1, endCol: 3, endRow: 1 }), maxCellsToAnalyze: 2 });
     expect(flags.tooLarge).toBe(true);
     expect(flags.bold).toEqual({ mixed: true });
     expect(flags.italic).toEqual({ mixed: true });
@@ -160,7 +167,7 @@ describe("resolveSelectionFormatFlags", () => {
       ],
     });
 
-    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange(1, 1, 2, 1) });
+    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange({ startCol: 1, startRow: 1, endCol: 2, endRow: 1 }) });
     expect(flags.bold).toEqual({ mixed: true });
   });
 
@@ -173,7 +180,7 @@ describe("resolveSelectionFormatFlags", () => {
       rowStyles: new Map([[1, 1]]),
     });
 
-    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange(1, 1, 2, 1) });
+    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange({ startCol: 1, startRow: 1, endCol: 2, endRow: 1 }) });
     expect(flags.bold).toEqual({ mixed: false, value: true });
   });
 
@@ -184,7 +191,7 @@ describe("resolveSelectionFormatFlags", () => {
       { col: 2, row: 1, styleId: 4 },
     ]);
 
-    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange(1, 1, 2, 1) });
+    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange({ startCol: 1, startRow: 1, endCol: 2, endRow: 1 }) });
     expect(flags.horizontal).toEqual({ mixed: false, value: "right" });
   });
 
@@ -195,7 +202,7 @@ describe("resolveSelectionFormatFlags", () => {
       { col: 2, row: 1, styleId: 4 }, // right
     ]);
 
-    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange(1, 1, 2, 1) });
+    const flags = resolveSelectionFormatFlags({ sheet, styles, range: createRange({ startCol: 1, startRow: 1, endCol: 2, endRow: 1 }) });
     expect(flags.horizontal).toEqual({ mixed: true });
   });
 });

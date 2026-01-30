@@ -64,15 +64,17 @@ function getParagraphAtIndex(document: DocxDocument, index: number): DocxParagra
   return el?.type === "paragraph" ? el : undefined;
 }
 
-function getSelectedParagraph(
-  ...args: [
-    document: DocxDocument,
-    selectionMode: "element" | "text",
-    elementPrimaryId: string | undefined,
-    textParagraphIndex: number | undefined,
-  ]
-): DocxParagraph | undefined {
-  const [document, selectionMode, elementPrimaryId, textParagraphIndex] = args;
+function getSelectedParagraph({
+  document,
+  selectionMode,
+  elementPrimaryId,
+  textParagraphIndex,
+}: {
+  document: DocxDocument;
+  selectionMode: "element" | "text";
+  elementPrimaryId: string | undefined;
+  textParagraphIndex: number | undefined;
+}): DocxParagraph | undefined {
   if (selectionMode === "text") {
     return typeof textParagraphIndex === "number" ? getParagraphAtIndex(document, textParagraphIndex) : undefined;
   }
@@ -154,12 +156,12 @@ function useToolbarState(): ToolbarState {
     const canEdit = editorMode === "editing";
 
     const textPosition = selection.text.cursor ?? selection.text.range?.start;
-	    const paragraph = getSelectedParagraph(
+	    const paragraph = getSelectedParagraph({
 	      document,
-	      selection.mode,
-	      selection.element.primaryId,
-	      textPosition?.paragraphIndex,
-	    );
+	      selectionMode: selection.mode,
+	      elementPrimaryId: selection.element.primaryId,
+	      textParagraphIndex: textPosition?.paragraphIndex,
+	    });
 
 	    const runProperties = getRunPropertiesForSelection({
 	      paragraph,
@@ -184,6 +186,26 @@ function useToolbarState(): ToolbarState {
 // =============================================================================
 // Component
 // =============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

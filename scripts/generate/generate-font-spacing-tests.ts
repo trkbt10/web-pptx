@@ -18,7 +18,7 @@ import {
 import { requirePositionalArg } from "../lib/cli";
 
 const usage = "bun run scripts/generate/generate-font-spacing-tests.ts <output-dir>";
-const BASE_DIR = requirePositionalArg(process.argv.slice(2), 0, "output-dir", usage);
+const BASE_DIR = requirePositionalArg({ args: process.argv.slice(2), index: 0, name: "output-dir", usage });
 
 // Sample text for testing
 const SAMPLE_TEXT = "The quick brown fox jumps over the lazy dog.";

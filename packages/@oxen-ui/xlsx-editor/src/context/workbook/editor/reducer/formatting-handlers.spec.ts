@@ -36,10 +36,17 @@ function wholeRowRange(row: number): CellRange {
   };
 }
 
-function range(
-  ...args: readonly [startCol: number, startRow: number, endCol: number, endRow: number]
-): CellRange {
-  const [startCol, startRow, endCol, endRow] = args;
+function range({
+  startCol,
+  startRow,
+  endCol,
+  endRow,
+}: {
+  startCol: number;
+  startRow: number;
+  endCol: number;
+  endRow: number;
+}): CellRange {
   return {
     start: { col: colIdx(startCol), row: rowIdx(startRow), colAbsolute: false, rowAbsolute: false },
     end: { col: colIdx(endCol), row: rowIdx(endRow), colAbsolute: false, rowAbsolute: false },
@@ -71,7 +78,7 @@ describe("xlsx-editor/context/workbook/editor/reducer/formatting-handlers", () =
     const baseFont = workbook.styles.fonts[0]!;
     state = xlsxEditorReducer(state, {
       type: "SET_SELECTION_FORMAT",
-      range: range(1, 1, 1, 1),
+      range: range({ startCol: 1, startRow: 1, endCol: 1, endRow: 1 }),
       format: {
         font: { ...baseFont, bold: true },
       },
@@ -101,23 +108,23 @@ describe("xlsx-editor/context/workbook/editor/reducer/formatting-handlers", () =
     // eslint-disable-next-line no-restricted-syntax -- test requires sequential state updates
     let state = createInitialState(workbook);
 
-    state = xlsxEditorReducer(state, { type: "MERGE_CELLS", range: range(2, 2, 1, 1) });
+    state = xlsxEditorReducer(state, { type: "MERGE_CELLS", range: range({ startCol: 2, startRow: 2, endCol: 1, endRow: 1 }) });
 
     const sheet = state.workbookHistory.present.sheets[0]!;
-    expect(sheet.mergeCells).toEqual([range(1, 1, 2, 2)]);
+    expect(sheet.mergeCells).toEqual([range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 })]);
   });
 
   it("UNMERGE_CELLS removes intersecting merges", () => {
     const workbook = createWorkbook([
       {
         ...createWorksheet("Sheet1", 1),
-        mergeCells: [range(1, 1, 2, 2)],
+        mergeCells: [range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 })],
       },
     ]);
     // eslint-disable-next-line no-restricted-syntax -- test requires sequential state updates
     let state = createInitialState(workbook);
 
-    state = xlsxEditorReducer(state, { type: "UNMERGE_CELLS", range: range(2, 2, 3, 3) });
+    state = xlsxEditorReducer(state, { type: "UNMERGE_CELLS", range: range({ startCol: 2, startRow: 2, endCol: 3, endRow: 3 }) });
 
     const sheet = state.workbookHistory.present.sheets[0]!;
     expect(sheet.mergeCells).toBeUndefined();

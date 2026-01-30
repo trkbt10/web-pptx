@@ -18,6 +18,26 @@ import { parseTextBody } from "../text/text-parser";
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseDiagramLayoutDefinition(doc: XmlDocument) {
   return parseDiagramLayoutDefinitionBase(doc, { parseShapeProperties, parseTextBody });
 }
@@ -27,9 +47,49 @@ export function parseDiagramLayoutDefinition(doc: XmlDocument) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseDiagramLayoutDefinitionHeader(...args: Parameters<typeof parseDiagramLayoutDefinitionHeaderBase>) {
   return parseDiagramLayoutDefinitionHeaderBase(...args);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

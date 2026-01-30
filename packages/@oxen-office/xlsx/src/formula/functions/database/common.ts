@@ -108,18 +108,16 @@ const buildCriteriaColumns = (
   });
 };
 
-const buildCriteriaGroups = (
-  ...args: readonly [
-    rows: FormulaEvaluationResult[][],
-    criteriaColumns: CriteriaColumn[],
-    helpers: FormulaFunctionHelpers,
-    functionName: string,
-  ]
-): {
+const buildCriteriaGroups = (params: {
+  readonly rows: FormulaEvaluationResult[][];
+  readonly criteriaColumns: CriteriaColumn[];
+  readonly helpers: FormulaFunctionHelpers;
+  readonly functionName: string;
+}): {
   groups: CriteriaCondition[][];
   hasUnconditionalRow: boolean;
 } => {
-  const [rows, criteriaColumns, helpers, functionName] = args;
+  const { rows, criteriaColumns, helpers, functionName } = params;
   const conditionsByRow = rows.map((row, rowIndex) => {
     return criteriaColumns.reduce<CriteriaCondition[]>((conditions, column, columnIndex) => {
       const cellValue = row[columnIndex];
@@ -147,15 +145,13 @@ const buildCriteriaGroups = (
   };
 };
 
-const createCriteriaFilter = (
-  ...args: readonly [
-    criteriaArg: EvalResult,
-    database: DatabaseTable,
-    helpers: FormulaFunctionHelpers,
-    functionName: string,
-  ]
-): ((row: FormulaEvaluationResult[]) => boolean) => {
-  const [criteriaArg, database, helpers, functionName] = args;
+const createCriteriaFilter = (params: {
+  readonly criteriaArg: EvalResult;
+  readonly database: DatabaseTable;
+  readonly helpers: FormulaFunctionHelpers;
+  readonly functionName: string;
+}): ((row: FormulaEvaluationResult[]) => boolean) => {
+  const { criteriaArg, database, helpers, functionName } = params;
   const criteriaTable = toLookupTable(criteriaArg, `${functionName} criteria`);
   const headerRow = criteriaTable[0];
   if (!headerRow) {
@@ -164,7 +160,7 @@ const createCriteriaFilter = (
 
   const criteriaColumns = buildCriteriaColumns(headerRow, database, functionName);
   const dataRows = criteriaTable.slice(1);
-  const { groups, hasUnconditionalRow } = buildCriteriaGroups(dataRows, criteriaColumns, helpers, functionName);
+  const { groups, hasUnconditionalRow } = buildCriteriaGroups({ rows: dataRows, criteriaColumns, helpers, functionName });
 
   if (hasUnconditionalRow || groups.length === 0) {
     return () => true;
@@ -180,16 +176,14 @@ const createCriteriaFilter = (
   };
 };
 
-export const filterDatabaseRows = (
-  ...args: readonly [
-    database: DatabaseTable,
-    criteriaArg: EvalResult,
-    helpers: FormulaFunctionHelpers,
-    functionName: string,
-  ]
-): FormulaEvaluationResult[][] => {
-  const [database, criteriaArg, helpers, functionName] = args;
-  const predicate = createCriteriaFilter(criteriaArg, database, helpers, functionName);
+export const filterDatabaseRows = (params: {
+  readonly database: DatabaseTable;
+  readonly criteriaArg: EvalResult;
+  readonly helpers: FormulaFunctionHelpers;
+  readonly functionName: string;
+}): FormulaEvaluationResult[][] => {
+  const { database, criteriaArg, helpers, functionName } = params;
+  const predicate = createCriteriaFilter({ criteriaArg, database, helpers, functionName });
   return database.rows.filter((row) => predicate(row));
 };
 

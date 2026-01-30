@@ -269,6 +269,26 @@ function TableInspector({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function SelectedElementPanel({ className, style }: SelectedElementPanelProps) {
   const { primaryElement, selectedElements, state, dispatch } = useDocumentEditor();
   const selection = state.selection;

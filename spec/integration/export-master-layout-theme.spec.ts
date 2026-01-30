@@ -36,7 +36,7 @@ describe("Master/Layout/Theme export", () => {
 
       // Modify the layout XML (add a marker attribute)
       const originalLayout = firstSlide.apiSlide.layout;
-      const modifiedLayout = addMarkerAttribute(originalLayout, "p:sldLayout", "test-marker", "phase9-test");
+      const modifiedLayout = addMarkerAttribute({ doc: originalLayout, expectedRootName: "p:sldLayout", attrName: "test-marker", attrValue: "phase9-test" });
 
       // Create a modified document with the updated layout
       const modifiedSlide: SlideWithId = {
@@ -110,7 +110,7 @@ describe("Master/Layout/Theme export", () => {
 
       // Modify the master XML (add a marker attribute)
       const originalMaster = firstSlide.apiSlide.master;
-      const modifiedMaster = addMarkerAttribute(originalMaster, "p:sldMaster", "test-marker", "phase9-master-test");
+      const modifiedMaster = addMarkerAttribute({ doc: originalMaster, expectedRootName: "p:sldMaster", attrName: "test-marker", attrValue: "phase9-master-test" });
 
       // Create a modified document with the updated master
       const modifiedSlide: SlideWithId = {
@@ -161,7 +161,7 @@ describe("Master/Layout/Theme export", () => {
 
       // Modify the theme XML (add a marker attribute)
       const originalTheme = firstSlide.apiSlide.theme;
-      const modifiedTheme = addMarkerAttribute(originalTheme, "a:theme", "test-marker", "phase9-theme-test");
+      const modifiedTheme = addMarkerAttribute({ doc: originalTheme, expectedRootName: "a:theme", attrName: "test-marker", attrValue: "phase9-theme-test" });
 
       // Create a modified document with the updated theme
       const modifiedSlide: SlideWithId = {
@@ -205,15 +205,17 @@ describe("Master/Layout/Theme export", () => {
  * Add a marker attribute to the root element of an XML document.
  * Used to verify that the modified XML is written to the exported PPTX.
  */
-function addMarkerAttribute(
-  ...args: readonly [
-    doc: XmlDocument,
-    expectedRootName: string,
-    attrName: string,
-    attrValue: string,
-  ]
-): XmlDocument {
-  const [doc, expectedRootName, attrName, attrValue] = args;
+function addMarkerAttribute({
+  doc,
+  expectedRootName,
+  attrName,
+  attrValue,
+}: {
+  readonly doc: XmlDocument;
+  readonly expectedRootName: string;
+  readonly attrName: string;
+  readonly attrValue: string;
+}): XmlDocument {
   const root = doc.children.find(
     (child) => child.type === "element" && child.name === expectedRootName,
   );

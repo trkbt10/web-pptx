@@ -19,6 +19,26 @@ export type UseDiagramContentOptions = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function useDiagramContent<TShape>(options: UseDiagramContentOptions): readonly TShape[] | undefined {
   const { dataResourceId, getResource } = options;
 

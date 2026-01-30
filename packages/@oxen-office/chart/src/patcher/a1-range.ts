@@ -308,6 +308,26 @@ export type CreateRangeOptions = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createRange(options: CreateRangeOptions): CellRange {
   const { startCol, startRow, itemCount, direction } = options;
   const absolute = options.absolute ?? true;

@@ -29,6 +29,26 @@ const fillTypeOptions: SelectOption<BaseFill["type"]>[] = [
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function BaseFillEditor({
   value,
   onChange,
@@ -89,6 +109,26 @@ export function BaseFillEditor({
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

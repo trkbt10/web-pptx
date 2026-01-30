@@ -145,7 +145,7 @@ function extractPptxGradients(xml: string): Array<{ type: string; angle?: number
 async function main() {
   const usage = "bun run scripts/analyze/analyze-gradients.ts <pptx-path> (--all | <slide-number>)";
   const args = process.argv.slice(2);
-  const pptxPath = requirePositionalArg(args, 0, "pptx-path", usage);
+  const pptxPath = requirePositionalArg({ args, index: 0, name: "pptx-path", usage });
   requireFileExists(pptxPath, usage);
   const flagOrSlide = args[1];
   const analyzeAll = flagOrSlide === "--all";

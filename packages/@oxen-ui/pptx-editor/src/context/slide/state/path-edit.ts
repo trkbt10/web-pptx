@@ -230,15 +230,17 @@ export function updatePathEditTool(
 /**
  * Start moving points
  */
-export function startMovingPoints(
-  ...args: readonly [
-    state: ActivePathEditState,
-    pointIndices: readonly number[],
-    startX: Pixels,
-    startY: Pixels,
-  ]
-): MovingPointsPathEditState {
-  const [state, pointIndices, startX, startY] = args;
+export function startMovingPoints({
+  state,
+  pointIndices,
+  startX,
+  startY,
+}: {
+  state: ActivePathEditState;
+  pointIndices: readonly number[];
+  startX: Pixels;
+  startY: Pixels;
+}): MovingPointsPathEditState {
   return {
     type: "moving-points",
     shapeId: state.shapeId,
@@ -267,17 +269,21 @@ export function updateMovingPointsPreview(
 /**
  * Start moving handle
  */
-export function startMovingHandle(
-  ...args: readonly [
-    state: ActivePathEditState,
-    pointIndex: number,
-    handleSide: "in" | "out",
-    startX: Pixels,
-    startY: Pixels,
-    mirrorHandle: boolean,
-  ]
-): MovingHandlePathEditState {
-  const [state, pointIndex, handleSide, startX, startY, mirrorHandle] = args;
+export function startMovingHandle({
+  state,
+  pointIndex,
+  handleSide,
+  startX,
+  startY,
+  mirrorHandle,
+}: {
+  state: ActivePathEditState;
+  pointIndex: number;
+  handleSide: "in" | "out";
+  startX: Pixels;
+  startY: Pixels;
+  mirrorHandle: boolean;
+}): MovingHandlePathEditState {
   return {
     type: "moving-handle",
     shapeId: state.shapeId,

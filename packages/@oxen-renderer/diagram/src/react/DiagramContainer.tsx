@@ -37,6 +37,26 @@ function DefaultPlaceholder({ width, height }: { readonly width: number; readonl
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function DiagramContainer<TShape>(props: DiagramContainerProps<TShape>) {
   const { dataResourceId, width, height, getResource, renderShape, placeholder } = props;
 

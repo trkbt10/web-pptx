@@ -65,19 +65,19 @@ export function renderShapeSvg(shape: Shape, ctx: CoreRenderContext, defsCollect
 
   switch (shape.type) {
     case "sp":
-      return renderSpShapeSvg(shape, ctx, defsCollector, transformAttr, ooxmlIdAttr, w, h);
+      return renderSpShapeSvg({ shape, ctx, defsCollector, transformAttr, ooxmlIdAttr, w, h });
 
     case "pic":
-      return renderPictureSvg(shape, ctx, transformAttr, ooxmlIdAttr, w, h);
+      return renderPictureSvg({ shape, ctx, transformAttr, ooxmlIdAttr, w, h });
 
     case "grpSp":
-      return renderGroupSvg(shape, ctx, defsCollector, ooxmlIdAttr);
+      return renderGroupSvg({ shape, ctx, defsCollector, ooxmlIdAttr });
 
     case "cxnSp":
-      return renderConnectorSvg(shape, ctx, defsCollector, transformAttr, ooxmlIdAttr, w, h);
+      return renderConnectorSvg({ shape, ctx, defsCollector, transformAttr, ooxmlIdAttr, w, h });
 
     case "graphicFrame":
-      return renderGraphicFrameSvg(shape, ctx, defsCollector, transformAttr, ooxmlIdAttr, w, h);
+      return renderGraphicFrameSvg({ shape, ctx, defsCollector, transformAttr, ooxmlIdAttr, w, h });
 
     default:
       return "";
@@ -107,16 +107,19 @@ export function renderShapesSvg(shapes: readonly Shape[], ctx: CoreRenderContext
  * @param w - Shape width (needed for image pattern sizing)
  * @param h - Shape height (needed for image pattern sizing)
  */
-type RenderFillAttrsArgs = [
-  fill: Fill | undefined,
-  ctx: CoreRenderContext,
-  defsCollector: SvgDefsCollector,
-  w?: number,
-  h?: number,
-];
-
-function renderFillAttrs(...args: RenderFillAttrsArgs): string {
-  const [fill, ctx, defsCollector, w, h] = args;
+function renderFillAttrs({
+  fill,
+  ctx,
+  defsCollector,
+  w,
+  h,
+}: {
+  fill: Fill | undefined;
+  ctx: CoreRenderContext;
+  defsCollector: SvgDefsCollector;
+  w?: number;
+  h?: number;
+}): string {
   if (fill === undefined || fill.type === "noFill") {
     return 'fill="none"';
   }
@@ -135,7 +138,7 @@ function renderFillAttrs(...args: RenderFillAttrsArgs): string {
     const imageFill = getResolvedImageFill(fill, ctx.colorContext, ctx.resources.resolve);
     if (imageFill !== undefined && w !== undefined && h !== undefined) {
       const patternId = defsCollector.getNextId("img-pattern");
-      const patternDef = renderImageFillToSvgDef(imageFill, patternId, w, h);
+      const patternDef = renderImageFillToSvgDef({ imageFill, patternId, width: w, height: h });
       defsCollector.addDef(patternDef);
       return `fill="url(#${patternId})"`;
     }
@@ -186,43 +189,51 @@ function renderStrokeAttrs(line: Line | undefined, ctx: CoreRenderContext): stri
 /**
  * Render a basic shape (p:sp) to SVG
  */
-type RenderSpShapeSvgArgs = [
-  shape: SpShape,
-  ctx: CoreRenderContext,
-  defsCollector: SvgDefsCollector,
-  transformAttr: string,
-  ooxmlIdAttr: string,
-  w: number,
-  h: number,
-];
-
-function renderSpShapeSvg(...args: RenderSpShapeSvgArgs): string {
-  const [shape, ctx, defsCollector, transformAttr, ooxmlIdAttr, w, h] = args;
+function renderSpShapeSvg({
+  shape,
+  ctx,
+  defsCollector,
+  transformAttr,
+  ooxmlIdAttr,
+  w,
+  h,
+}: {
+  shape: SpShape;
+  ctx: CoreRenderContext;
+  defsCollector: SvgDefsCollector;
+  transformAttr: string;
+  ooxmlIdAttr: string;
+  w: number;
+  h: number;
+}): string {
   const { properties } = shape;
 
   // Get fill and stroke attributes
-  const fillAttr = renderFillAttrs(properties.fill, ctx, defsCollector, w, h);
+  const fillAttr = renderFillAttrs({ fill: properties.fill, ctx, defsCollector, w, h });
   const strokeAttr = renderStrokeAttrs(properties.line, ctx);
 
   // Render shape geometry
-  const shapePath = renderGeometry(properties.geometry, w, h, fillAttr, strokeAttr);
+  const shapePath = renderGeometry({ geometry: properties.geometry, w, h, fillAttr, strokeAttr });
 
   // Render text if present
-  const textSvg = renderShapeTextSvg(shape, ctx, w, h, defsCollector);
+  const textSvg = renderShapeTextSvg({ shape, ctx, w, h, defsCollector });
 
   return `<g${transformAttr}${ooxmlIdAttr}>${shapePath}${textSvg}</g>`;
 }
 
-type RenderShapeTextSvgArgs = [
-  shape: SpShape,
-  ctx: CoreRenderContext,
-  w: number,
-  h: number,
-  defsCollector: SvgDefsCollector,
-];
-
-function renderShapeTextSvg(...args: RenderShapeTextSvgArgs): string {
-  const [shape, ctx, w, h, defsCollector] = args;
+function renderShapeTextSvg({
+  shape,
+  ctx,
+  w,
+  h,
+  defsCollector,
+}: {
+  shape: SpShape;
+  ctx: CoreRenderContext;
+  w: number;
+  h: number;
+  defsCollector: SvgDefsCollector;
+}): string {
   if (shape.textBody !== undefined) {
     return renderTextSvg({ textBody: shape.textBody, ctx, boxWidth: w, boxHeight: h, defsCollector });
   }
@@ -232,16 +243,19 @@ function renderShapeTextSvg(...args: RenderShapeTextSvgArgs): string {
 /**
  * Render geometry to SVG path element
  */
-type RenderGeometryArgs = [
-  geometry: Geometry | undefined,
-  w: number,
-  h: number,
-  fillAttr: string,
-  strokeAttr: string,
-];
-
-function renderGeometry(...args: RenderGeometryArgs): string {
-  const [geometry, w, h, fillAttr, strokeAttr] = args;
+function renderGeometry({
+  geometry,
+  w,
+  h,
+  fillAttr,
+  strokeAttr,
+}: {
+  geometry: Geometry | undefined;
+  w: number;
+  h: number;
+  fillAttr: string;
+  strokeAttr: string;
+}): string {
   if (geometry === undefined) {
     // No geometry - render as rectangle (default shape)
     return `<rect x="0" y="0" width="${w}" height="${h}" ${fillAttr}${strokeAttr}/>`;
@@ -309,17 +323,21 @@ function calculateCroppedImageLayout(
  *
  * @see ECMA-376 Part 1, Section 19.3.1.37 (p:pic)
  */
-type RenderPictureSvgArgs = [
-  shape: PicShape,
-  ctx: CoreRenderContext,
-  transformAttr: string,
-  ooxmlIdAttr: string,
-  w: number,
-  h: number,
-];
-
-function renderPictureSvg(...args: RenderPictureSvgArgs): string {
-  const [shape, ctx, transformAttr, ooxmlIdAttr, w, h] = args;
+function renderPictureSvg({
+  shape,
+  ctx,
+  transformAttr,
+  ooxmlIdAttr,
+  w,
+  h,
+}: {
+  shape: PicShape;
+  ctx: CoreRenderContext;
+  transformAttr: string;
+  ooxmlIdAttr: string;
+  w: number;
+  h: number;
+}): string {
   // Use resolvedResource (resolved at parse time) if available, otherwise fall back to runtime resolution
   const imagePath = getBlipFillImageSrc(shape.blipFill, (rId) => ctx.resources.resolve(rId));
   if (imagePath === undefined) {
@@ -383,15 +401,17 @@ function renderPictureSvg(...args: RenderPictureSvgArgs): string {
  * @see ECMA-376 Part 1, Section 20.1.7.2 (chExt)
  * @see ECMA-376 Part 1, Section 20.1.7.3 (chOff)
  */
-type RenderGroupSvgArgs = [
-  shape: GrpShape,
-  ctx: CoreRenderContext,
-  defsCollector: SvgDefsCollector,
-  ooxmlIdAttr: string,
-];
-
-function renderGroupSvg(...args: RenderGroupSvgArgs): string {
-  const [shape, ctx, defsCollector, ooxmlIdAttr] = args;
+function renderGroupSvg({
+  shape,
+  ctx,
+  defsCollector,
+  ooxmlIdAttr,
+}: {
+  shape: GrpShape;
+  ctx: CoreRenderContext;
+  defsCollector: SvgDefsCollector;
+  ooxmlIdAttr: string;
+}): string {
   // Use group-specific transform that handles childOffset/childExtent scaling
   const transformAttr = buildGroupTransformAttr(shape.properties.transform);
 
@@ -439,18 +459,23 @@ function resolveConnectorStrokeColor(line: Line | undefined, ctx: CoreRenderCont
  * @see ECMA-376 Part 1, Section 20.1.8.37 (a:headEnd)
  * @see ECMA-376 Part 1, Section 20.1.8.57 (a:tailEnd)
  */
-type RenderConnectorSvgArgs = [
-  shape: CxnShape,
-  ctx: CoreRenderContext,
-  defsCollector: SvgDefsCollector,
-  transformAttr: string,
-  ooxmlIdAttr: string,
-  w: number,
-  h: number,
-];
-
-function renderConnectorSvg(...args: RenderConnectorSvgArgs): string {
-  const [shape, ctx, defsCollector, transformAttr, ooxmlIdAttr, w, h] = args;
+function renderConnectorSvg({
+  shape,
+  ctx,
+  defsCollector,
+  transformAttr,
+  ooxmlIdAttr,
+  w,
+  h,
+}: {
+  shape: CxnShape;
+  ctx: CoreRenderContext;
+  defsCollector: SvgDefsCollector;
+  transformAttr: string;
+  ooxmlIdAttr: string;
+  w: number;
+  h: number;
+}): string {
   const { properties } = shape;
   const line = properties.line;
 
@@ -519,28 +544,33 @@ function renderConnectorSvg(...args: RenderConnectorSvgArgs): string {
 /**
  * Render a graphic frame (chart, table, diagram) to SVG
  */
-type RenderGraphicFrameSvgArgs = [
-  shape: GraphicFrame,
-  ctx: CoreRenderContext,
-  defsCollector: SvgDefsCollector,
-  transformAttr: string,
-  ooxmlIdAttr: string,
-  w: number,
-  h: number,
-];
-
-function renderGraphicFrameSvg(...args: RenderGraphicFrameSvgArgs): string {
-  const [shape, ctx, defsCollector, transformAttr, ooxmlIdAttr, w, h] = args;
+function renderGraphicFrameSvg({
+  shape,
+  ctx,
+  defsCollector,
+  transformAttr,
+  ooxmlIdAttr,
+  w,
+  h,
+}: {
+  shape: GraphicFrame;
+  ctx: CoreRenderContext;
+  defsCollector: SvgDefsCollector;
+  transformAttr: string;
+  ooxmlIdAttr: string;
+  w: number;
+  h: number;
+}): string {
   const { content } = shape;
 
   switch (content.type) {
     case "chart": {
       // Try to render the chart using pre-parsed data if available
-      const chartSvg = renderChartFromRef(content.data, w, h, ctx);
+      const chartSvg = renderChartFromRef({ chartRef: content.data, w, h, ctx });
       if (chartSvg !== undefined) {
         return `<g${transformAttr}${ooxmlIdAttr}>${chartSvg}</g>`;
       }
-      return renderPlaceholder(transformAttr, ooxmlIdAttr, w, h, "Chart");
+      return renderPlaceholder({ transformAttr, ooxmlIdAttr, w, h, label: "Chart" });
     }
 
     case "table": {
@@ -548,12 +578,12 @@ function renderGraphicFrameSvg(...args: RenderGraphicFrameSvgArgs): string {
       // Render at origin, transformAttr handles positioning (like chart)
       // Pass frame dimensions for scaling options (width/height only, not full Transform)
       const { table } = content.data;
-      return `<g${transformAttr}${ooxmlIdAttr}>${renderTableSvg(table, px(w), px(h), ctx, defsCollector, ctx.options)}</g>`;
+      return `<g${transformAttr}${ooxmlIdAttr}>${renderTableSvg({ table, frameWidth: px(w), frameHeight: px(h), ctx, defsCollector, options: ctx.options })}</g>`;
     }
 
     case "diagram": {
       // Try to render diagram shapes from pre-parsed data
-      const diagramSvg = renderDiagramShapesSvg(content.data, w, h, ctx);
+      const diagramSvg = renderDiagramShapesSvg({ diagramRef: content.data, w, h, ctx });
       if (diagramSvg !== undefined) {
         return `<g${transformAttr}${ooxmlIdAttr}>${diagramSvg}</g>`;
       }
@@ -562,11 +592,11 @@ function renderGraphicFrameSvg(...args: RenderGraphicFrameSvgArgs): string {
         type: "fallback",
         message: "Diagram drawing content not available",
       });
-      return renderPlaceholder(transformAttr, ooxmlIdAttr, w, h, "Diagram");
+      return renderPlaceholder({ transformAttr, ooxmlIdAttr, w, h, label: "Diagram" });
     }
 
     case "oleObject": {
-      const oleImage = renderOleObjectImage(content.data, w, h, ctx);
+      const oleImage = renderOleObjectImage({ data: content.data, w, h, ctx });
       if (oleImage !== undefined) {
         return `<g${transformAttr}${ooxmlIdAttr}>${oleImage}</g>`;
       }
@@ -575,12 +605,12 @@ function renderGraphicFrameSvg(...args: RenderGraphicFrameSvgArgs): string {
         type: "fallback",
         message: `OLE object preview not available: ${content.data.progId ?? "unknown"}`,
       });
-      return renderPlaceholder(transformAttr, ooxmlIdAttr, w, h, "OLE Object");
+      return renderPlaceholder({ transformAttr, ooxmlIdAttr, w, h, label: "OLE Object" });
     }
 
     case "unknown":
     default: {
-      return renderPlaceholder(transformAttr, ooxmlIdAttr, w, h, "Unknown");
+      return renderPlaceholder({ transformAttr, ooxmlIdAttr, w, h, label: "Unknown" });
     }
   }
 }
@@ -588,10 +618,19 @@ function renderGraphicFrameSvg(...args: RenderGraphicFrameSvgArgs): string {
 /**
  * Render a placeholder for unsupported content
  */
-type RenderPlaceholderArgs = [transformAttr: string, ooxmlIdAttr: string, w: number, h: number, label: string];
-
-function renderPlaceholder(...args: RenderPlaceholderArgs): string {
-  const [transformAttr, ooxmlIdAttr, w, h, label] = args;
+function renderPlaceholder({
+  transformAttr,
+  ooxmlIdAttr,
+  w,
+  h,
+  label,
+}: {
+  transformAttr: string;
+  ooxmlIdAttr: string;
+  w: number;
+  h: number;
+  label: string;
+}): string {
   return `<g${transformAttr}${ooxmlIdAttr}>
   <rect x="0" y="0" width="${w}" height="${h}" fill="#f0f0f0" stroke="#cccccc"/>
   <text x="${w / 2}" y="${h / 2}" text-anchor="middle" dominant-baseline="middle" fill="#999999">[${label}]</text>
@@ -616,10 +655,17 @@ function renderPlaceholder(...args: RenderPlaceholderArgs): string {
  *
  * @see MS-ODRAWXML Section 2.4 - Diagram Drawing Elements
  */
-export function renderDiagramShapesSvg(
-  ...args: [diagramRef: DiagramReference, w: number, h: number, ctx: CoreRenderContext]
-): string | undefined {
-  const [diagramRef, _w, _h, ctx] = args;
+export function renderDiagramShapesSvg({
+  diagramRef,
+  w: _w,
+  h: _h,
+  ctx,
+}: {
+  diagramRef: DiagramReference;
+  w: number;
+  h: number;
+  ctx: CoreRenderContext;
+}): string | undefined {
   // Get diagram content from ResourceStore
   if (diagramRef.dataResourceId === undefined) {
     ctx.warnings.add({
@@ -683,10 +729,17 @@ export function renderDiagramShapesSvg(
  * @see ECMA-376 Part 1, Section 19.3.1.36a (oleObj)
  * @see MS-OE376 Part 4 Section 4.4.2.4
  */
-function renderOleObjectImage(
-  ...args: [data: OleReference, w: number, h: number, ctx: CoreRenderContext]
-): string | undefined {
-  const [data, w, h, ctx] = args;
+function renderOleObjectImage({
+  data,
+  w,
+  h,
+  ctx,
+}: {
+  data: OleReference;
+  w: number;
+  h: number;
+  ctx: CoreRenderContext;
+}): string | undefined {
   // 1. Check ResourceStore for preview URL
   if (data.resourceId !== undefined) {
     const entry = ctx.resourceStore?.get(data.resourceId);
@@ -730,16 +783,23 @@ function getConnectorPathData(geometry: Geometry | undefined, w: number, h: numb
  * Uses chart data from ResourceStore if available (populated by integration layer).
  * This allows render to render charts without directly calling parser.
  */
-function renderChartFromRef(
-  ...args: [chartRef: ChartReference, w: number, h: number, ctx: CoreRenderContext]
-): string | undefined {
-  const [chartRef, w, h, ctx] = args;
+function renderChartFromRef({
+  chartRef,
+  w,
+  h,
+  ctx,
+}: {
+  chartRef: ChartReference;
+  w: number;
+  h: number;
+  ctx: CoreRenderContext;
+}): string | undefined {
   // Get chart data from ResourceStore
   const entry = ctx.resourceStore?.get<import("@oxen-office/chart/domain").Chart>(chartRef.resourceId);
   const parsedChart = entry?.parsed;
 
   if (parsedChart !== undefined) {
-    const chartHtml = renderChart(parsedChart, w, h, ctx);
+    const chartHtml = renderChart({ chart: parsedChart, width: w, height: h, ctx });
     return extractSvgContent(chartHtml as string);
   }
 

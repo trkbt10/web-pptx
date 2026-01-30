@@ -39,10 +39,14 @@ const menuBaseStyle: CSSProperties = {
   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3)",
 };
 
-function getAdjustedHorizontalPosition(
-  ...args: readonly [x: number, menuWidth: number, viewportWidth: number, padding: number]
-): number {
-  const [x, menuWidth, viewportWidth, padding] = args;
+type AdjustHorizontalInput = {
+  readonly x: number;
+  readonly menuWidth: number;
+  readonly viewportWidth: number;
+  readonly padding: number;
+};
+
+function getAdjustedHorizontalPosition({ x, menuWidth, viewportWidth, padding }: AdjustHorizontalInput): number {
   if (x + menuWidth + padding > viewportWidth) {
     const shifted = x - menuWidth;
     return shifted < padding ? padding : shifted;
@@ -50,10 +54,14 @@ function getAdjustedHorizontalPosition(
   return x;
 }
 
-function getAdjustedVerticalPosition(
-  ...args: readonly [y: number, menuHeight: number, viewportHeight: number, padding: number]
-): number {
-  const [y, menuHeight, viewportHeight, padding] = args;
+type AdjustVerticalInput = {
+  readonly y: number;
+  readonly menuHeight: number;
+  readonly viewportHeight: number;
+  readonly padding: number;
+};
+
+function getAdjustedVerticalPosition({ y, menuHeight, viewportHeight, padding }: AdjustVerticalInput): number {
   if (y + menuHeight + padding > viewportHeight) {
     const shifted = y - menuHeight;
     return shifted < padding ? padding : shifted;
@@ -61,16 +69,20 @@ function getAdjustedVerticalPosition(
   return y;
 }
 
-function getAdjustedPosition(
-  ...args: readonly [x: number, y: number, menuWidth: number, menuHeight: number]
-): { left: number; top: number } {
-  const [x, y, menuWidth, menuHeight] = args;
+type AdjustPositionInput = {
+  readonly x: number;
+  readonly y: number;
+  readonly menuWidth: number;
+  readonly menuHeight: number;
+};
+
+function getAdjustedPosition({ x, y, menuWidth, menuHeight }: AdjustPositionInput): { left: number; top: number } {
   const padding = 8;
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
   return {
-    left: getAdjustedHorizontalPosition(x, menuWidth, viewportWidth, padding),
-    top: getAdjustedVerticalPosition(y, menuHeight, viewportHeight, padding),
+    left: getAdjustedHorizontalPosition({ x, menuWidth, viewportWidth, padding }),
+    top: getAdjustedVerticalPosition({ y, menuHeight, viewportHeight, padding }),
   };
 }
 
@@ -85,7 +97,7 @@ export function ContextMenu({ x, y, items, onAction, onClose }: ContextMenuProps
       return;
     }
     const rect = menuRef.current.getBoundingClientRect();
-    const { left, top } = getAdjustedPosition(x, y, rect.width, rect.height);
+    const { left, top } = getAdjustedPosition({ x, y, menuWidth: rect.width, menuHeight: rect.height });
     menuRef.current.style.left = `${left}px`;
     menuRef.current.style.top = `${top}px`;
   }, [x, y]);

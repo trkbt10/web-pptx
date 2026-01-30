@@ -110,7 +110,7 @@ describe("addSlide", () => {
   it("should add slide at end by default", () => {
     const doc = createTestDocument(2);
     const newSlide = createEmptySlide();
-    const result = addSlide(doc, newSlide);
+    const result = addSlide({ document: doc, slide: newSlide });
 
     expect(result.document.slides).toHaveLength(3);
     expect(result.document.slides[2].id).toBe(result.newSlideId);
@@ -119,7 +119,7 @@ describe("addSlide", () => {
   it("should add slide after specified slide", () => {
     const doc = createTestDocument(3);
     const newSlide = createEmptySlide();
-    const result = addSlide(doc, newSlide, "1");
+    const result = addSlide({ document: doc, slide: newSlide, afterSlideId: "1" });
 
     expect(result.document.slides).toHaveLength(4);
     expect(result.document.slides[1].id).toBe(result.newSlideId);
@@ -129,7 +129,7 @@ describe("addSlide", () => {
   it("should add at end if afterSlideId not found", () => {
     const doc = createTestDocument(2);
     const newSlide = createEmptySlide();
-    const result = addSlide(doc, newSlide, "999");
+    const result = addSlide({ document: doc, slide: newSlide, afterSlideId: "999" });
 
     expect(result.document.slides).toHaveLength(3);
     expect(result.document.slides[2].id).toBe(result.newSlideId);
@@ -138,7 +138,7 @@ describe("addSlide", () => {
   it("should not mutate original document", () => {
     const doc = createTestDocument(2);
     const originalLength = doc.slides.length;
-    addSlide(doc, createEmptySlide());
+    addSlide({ document: doc, slide: createEmptySlide() });
 
     expect(doc.slides).toHaveLength(originalLength);
   });

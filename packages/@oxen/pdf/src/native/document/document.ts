@@ -342,7 +342,7 @@ export function createNativePdfDocument(
   const xref = loadXRef(bytes);
   const trailer = xref.trailer;
 
-  const resolver = createPdfResolverWithEncryption(bytes, xref, trailer, options);
+  const resolver = createPdfResolverWithEncryption({ bytes, xref, trailer, options });
 
   const rootRef = asRef(dictGet(trailer, "Root"));
   if (!rootRef) {throw new Error("Missing trailer /Root");}
@@ -373,10 +373,17 @@ export function createNativePdfDocument(
   };
 }
 
-function createPdfResolverWithEncryption(
-  ...args: readonly [bytes: Uint8Array, xref: XRefTable, trailer: PdfDict, options: NativePdfLoadOptions]
-): PdfResolver {
-  const [bytes, xref, trailer, options] = args;
+function createPdfResolverWithEncryption({
+  bytes,
+  xref,
+  trailer,
+  options,
+}: {
+  readonly bytes: Uint8Array;
+  readonly xref: XRefTable;
+  readonly trailer: PdfDict;
+  readonly options: NativePdfLoadOptions;
+}): PdfResolver {
   const encryptRef = asRef(dictGet(trailer, "Encrypt"));
   if (!encryptRef) {
     return createPdfResolver(bytes, xref);

@@ -48,25 +48,25 @@ export function renderBullet(para: LayoutParagraphResult, key: number): ReactNod
 
   // Picture bullet
   if (para.bullet.imageUrl !== undefined) {
-    return renderPictureBullet(
-      bulletX,
-      bulletY,
-      bulletFontSize,
-      para.bullet.imageUrl,
+    return renderPictureBullet({
+      x: bulletX,
+      y: bulletY,
+      size: bulletFontSize,
+      imageUrl: para.bullet.imageUrl,
       key,
-    );
+    });
   }
 
   // Character bullet
-  return renderCharacterBullet(
-    bulletX,
-    bulletY,
-    bulletFontSize,
-    para.bullet.char,
-    para.bullet.color,
-    para.bullet.fontFamily,
+  return renderCharacterBullet({
+    x: bulletX,
+    y: bulletY,
+    fontSize: bulletFontSize,
+    char: para.bullet.char,
+    color: para.bullet.color,
+    fontFamily: para.bullet.fontFamily,
     key,
-  );
+  });
 }
 
 /**
@@ -74,16 +74,19 @@ export function renderBullet(para: LayoutParagraphResult, key: number): ReactNod
  *
  * @see ECMA-376 Part 1, Section 21.1.2.4.3 (buBlip)
  */
-function renderPictureBullet(
-  ...args: [
-    x: number,
-    y: number,
-    size: number,
-    imageUrl: string,
-    key: number,
-  ]
-): ReactNode {
-  const [x, y, size, imageUrl, key] = args;
+function renderPictureBullet({
+  x,
+  y,
+  size,
+  imageUrl,
+  key,
+}: {
+  x: number;
+  y: number;
+  size: number;
+  imageUrl: string;
+  key: number;
+}): ReactNode {
   const imageY = y - size * IMAGE_BULLET_OFFSET_FACTOR;
 
   return (
@@ -104,18 +107,23 @@ function renderPictureBullet(
  *
  * @see ECMA-376 Part 1, Section 21.1.2.4.4 (buChar)
  */
-function renderCharacterBullet(
-  ...args: [
-    x: number,
-    y: number,
-    fontSize: number,
-    char: string,
-    color: string,
-    fontFamily: string,
-    key: number,
-  ]
-): ReactNode {
-  const [x, y, fontSize, char, color, fontFamily, key] = args;
+function renderCharacterBullet({
+  x,
+  y,
+  fontSize,
+  char,
+  color,
+  fontFamily,
+  key,
+}: {
+  x: number;
+  y: number;
+  fontSize: number;
+  char: string;
+  color: string;
+  fontFamily: string;
+  key: number;
+}): ReactNode {
   return (
     <text
       key={`bullet-${key}`}

@@ -15,16 +15,12 @@ function add64(a: Word64, b: Word64): Word64 {
   return { hi, lo };
 }
 
-function add64_4(...args: readonly [a: Word64, b: Word64, c: Word64, d: Word64]): Word64 {
-  const [a, b, c, d] = args;
+function add64_4({ a, b, c, d }: { readonly a: Word64; readonly b: Word64; readonly c: Word64; readonly d: Word64 }): Word64 {
   return add64(add64(add64(a, b), c), d);
 }
 
-function add64_5(
-  ...args: readonly [a: Word64, b: Word64, c: Word64, d: Word64, e: Word64]
-): Word64 {
-  const [a, b, c, d, e] = args;
-  return add64(add64_4(a, b, c, d), e);
+function add64_5({ a, b, c, d, e }: { readonly a: Word64; readonly b: Word64; readonly c: Word64; readonly d: Word64; readonly e: Word64 }): Word64 {
+  return add64(add64_4({ a, b, c, d }), e);
 }
 
 function rotr64(x: Word64, n: number): Word64 {
@@ -182,7 +178,7 @@ function sha512Like(input: Uint8Array, initial: readonly Word64[]): Uint8Array {
     for (let t = 16; t < 80; t += 1) {
       const s0 = smallSigma0(w[t - 15]!);
       const s1 = smallSigma1(w[t - 2]!);
-      w[t] = add64_4(w[t - 16]!, s0, w[t - 7]!, s1);
+      w[t] = add64_4({ a: w[t - 16]!, b: s0, c: w[t - 7]!, d: s1 });
     }
 
     let a = h[0]!;
@@ -195,7 +191,7 @@ function sha512Like(input: Uint8Array, initial: readonly Word64[]): Uint8Array {
     let hh = h[7]!;
 
     for (let t = 0; t < 80; t += 1) {
-      const t1 = add64_5(hh, bigSigma1(e), ch64(e, f, g), K[t]!, w[t]!);
+      const t1 = add64_5({ a: hh, b: bigSigma1(e), c: ch64(e, f, g), d: K[t]!, e: w[t]! });
       const t2 = add64(bigSigma0(a), maj64(a, b, c));
       hh = g;
       g = f;

@@ -377,10 +377,17 @@ function collectAxisAlignedRuleSegments(
   return { hSegs, vSegs };
 }
 
-function inferGridFromPaths(
-  ...args: [paths: readonly PdfPath[], approxBounds: InferredTable["bounds"], fontSize: number, targetCols: number]
-): TableGridFromPaths | null {
-  const [paths, approxBounds, fontSize, targetCols] = args;
+function inferGridFromPaths({
+  paths,
+  approxBounds,
+  fontSize,
+  targetCols,
+}: {
+  readonly paths: readonly PdfPath[];
+  readonly approxBounds: InferredTable["bounds"];
+  readonly fontSize: number;
+  readonly targetCols: number;
+}): TableGridFromPaths | null {
   if (paths.length === 0) {return null;}
 
   const pad = Math.max(2, fontSize * 0.9);
@@ -736,6 +743,26 @@ function resolveCellAlignment(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function inferTableFromGroupedText(group: GroupedText, options: TableInferenceOptions = {}): InferredTable | null {
   const opts: Required<Omit<TableInferenceOptions, "paths">> & Pick<TableInferenceOptions, "paths"> = {
     ...DEFAULT_OPTS,
@@ -789,7 +816,7 @@ export function inferTableFromGroupedText(group: GroupedText, options: TableInfe
       // Keep an upper cap for safety, but allow larger tables (k-resource) to work.
       const maxTry = Math.min(opts.maxCols, 20);
       for (let cols = opts.minCols; cols <= maxTry; cols++) {
-        const g = inferGridFromPaths(opts.paths, group.bounds, fontSize, cols);
+        const g = inferGridFromPaths({ paths: opts.paths, approxBounds: group.bounds, fontSize, targetCols: cols });
         if (g) {
           grid = g;
           targetCols = cols;
@@ -835,7 +862,7 @@ export function inferTableFromGroupedText(group: GroupedText, options: TableInfe
   if (targetCols < opts.minCols) {return null;}
 
   // Now that we know the expected column count, try to infer a grid from page paths.
-  grid = grid ?? (opts.paths ? inferGridFromPaths(opts.paths, group.bounds, fontSize, targetCols) : null);
+  grid = grid ?? (opts.paths ? inferGridFromPaths({ paths: opts.paths, approxBounds: group.bounds, fontSize, targetCols }) : null);
   effectiveBounds = grid?.bounds ?? group.bounds;
   boundsX0 = effectiveBounds.x;
   boundsX1 = effectiveBounds.x + effectiveBounds.width;
@@ -1353,8 +1380,7 @@ export function inferTableFromGroupedText(group: GroupedText, options: TableInfe
 
     const coveredByRowSpan: boolean[][] = Array.from({ length: rowCount }, () => Array.from({ length: targetCols }, () => false));
 
-    const mergeAccForRegion = (...args: [r0: number, r1Exclusive: number, c0: number, c1Exclusive: number]): CellAcc => {
-      const [r0, r1Exclusive, c0, c1Exclusive] = args;
+    const mergeAccForRegion = ({ r0, r1Exclusive, c0, c1Exclusive }: { r0: number; r1Exclusive: number; c0: number; c1Exclusive: number }): CellAcc => {
       const merged: CellAcc = { byBaseline: new Map<number, PdfText[]>(), x0: Infinity, x1: -Infinity };
       for (let rr = r0; rr < r1Exclusive; rr++) {
         const rowMap = rowsAcc[rr]!;
@@ -1446,7 +1472,7 @@ export function inferTableFromGroupedText(group: GroupedText, options: TableInfe
           }
         }
 
-        const acc = mergeAccForRegion(ri, ri + rowSpan, ci, colEnd);
+        const acc = mergeAccForRegion({ r0: ri, r1Exclusive: ri + rowSpan, c0: ci, c1Exclusive: colEnd });
         const col = {
           index: ci,
           x0: xBounds[ci]!,

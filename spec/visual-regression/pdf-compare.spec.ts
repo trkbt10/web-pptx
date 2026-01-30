@@ -159,6 +159,26 @@ export type TestSingleSlideOptions = {
   readonly options?: CompareOptions;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export async function testSingleSlide({
   pptxPath,
   snapshotName,

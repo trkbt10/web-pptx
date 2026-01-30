@@ -104,7 +104,7 @@ function WordArtPreview({ preset, text, fontFamily, bold, italic, scene3d, shape
 
   // Use library function and apply fill and shadow overrides
   const runs = useMemo(() => {
-    const baseRuns = extractText3DRuns(textBody, 400, 150, demoColorContext, undefined, undefined, () => undefined);
+    const baseRuns = extractText3DRuns({ textBody, width: 400, height: 150, colorContext: demoColorContext, fontScheme: undefined, options: undefined, resourceResolver: () => undefined });
     return baseRuns.map((run) => ({ ...run, fill, shadow }));
   }, [textBody, fill, shadow]);
 

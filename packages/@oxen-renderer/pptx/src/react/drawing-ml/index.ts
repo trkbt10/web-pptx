@@ -7,6 +7,8 @@
  * @see ECMA-376 Part 1, Section 20.1 - DrawingML
  */
 
+/* eslint-disable custom/no-cross-package-reexport -- intentional re-export for backwards compatibility */
+
 // =============================================================================
 // Re-export from @oxen-renderer/drawing-ml
 // =============================================================================
@@ -135,6 +137,7 @@ export {
 export {
   useShapeStyle,
   type PptxShapeStyleInput as ShapeStyleInput,
+  // eslint-disable-next-line custom/no-deep-reexport -- re-export for backwards compatibility
 } from "../hooks/useShapeStylePptx";
 
 // Text Fill

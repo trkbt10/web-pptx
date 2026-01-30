@@ -157,12 +157,12 @@ export function XlsxSheetGridCellViewport({
 
   const selectedRangeRects = useMemo(() => {
     return selection.selectedRanges
-      .map((range) => clipRectToViewport(getSelectedRangeRect(range, layout, scrollTop, scrollLeft), gridViewportWidth, gridViewportHeight))
+      .map((range) => clipRectToViewport(getSelectedRangeRect({ range, layout, scrollTop, scrollLeft }), gridViewportWidth, gridViewportHeight))
       .filter((rect) => rect !== null);
   }, [gridViewportHeight, gridViewportWidth, layout, scrollLeft, scrollTop, selection.selectedRanges]);
 
   const activeRangeRect = useMemo(() => {
-    const rect = getSelectedRangeRect(selection.activeRange, layout, scrollTop, scrollLeft);
+    const rect = getSelectedRangeRect({ range: selection.activeRange, layout, scrollTop, scrollLeft });
     return clipRectToViewport(rect, gridViewportWidth, gridViewportHeight);
   }, [gridViewportHeight, gridViewportWidth, layout, scrollLeft, scrollTop, selection.activeRange]);
 
@@ -234,7 +234,7 @@ export function XlsxSheetGridCellViewport({
         height,
       };
     }
-    return getActiveCellRect(editingCell, layout, scrollTop, scrollLeft);
+    return getActiveCellRect({ cell: editingCell, layout, scrollTop, scrollLeft });
   }, [editingCell, layout, normalizedMerges, scrollLeft, scrollTop]);
 
   const handleCommitEdit = useCallback(

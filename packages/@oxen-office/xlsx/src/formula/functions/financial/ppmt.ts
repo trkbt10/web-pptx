@@ -3,6 +3,40 @@
  */
 
 import type { FormulaFunctionEagerDefinition } from "../../functionRegistry";
+import type { FormulaFunctionHelpers } from "../helpers/types";
+
+function calculateInterest({
+  helpers,
+  rate,
+  periods,
+  payment,
+  pv,
+  fv,
+  type,
+  period,
+}: {
+  helpers: FormulaFunctionHelpers;
+  rate: number;
+  periods: number;
+  payment: number;
+  pv: number;
+  fv: number;
+  type: number;
+  period: number;
+}): number {
+  if (rate === 0) {
+    return 0;
+  }
+  return helpers.calculateInterestPayment({
+    rate,
+    periods,
+    payment,
+    presentValue: pv,
+    futureValue: fv,
+    type,
+    targetPeriod: period,
+  });
+}
 
 export const ppmtFunction: FormulaFunctionEagerDefinition = {
   name: "PPMT",
@@ -64,8 +98,8 @@ export const ppmtFunction: FormulaFunctionEagerDefinition = {
       throw new Error("PPMT type must be 0 or 1");
     }
 
-    const payment = helpers.calculatePayment(rate, periods, pv, fv, type);
-    const interest = rate === 0 ? 0 : helpers.calculateInterestPayment(rate, periods, payment, pv, fv, type, period);
+    const payment = helpers.calculatePayment({ rate, periods, presentValue: pv, futureValue: fv, type });
+    const interest = calculateInterest({ helpers, rate, periods, payment, pv, fv, type, period });
     return payment - interest;
   },
 };

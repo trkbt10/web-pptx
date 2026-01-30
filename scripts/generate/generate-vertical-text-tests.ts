@@ -14,7 +14,7 @@ import { generatePptx } from "../lib/pptx-generator";
 import { requirePositionalArg } from "../lib/cli";
 
 const usage = "bun run scripts/generate/generate-vertical-text-tests.ts <output-dir>";
-const BASE_DIR = requirePositionalArg(process.argv.slice(2), 0, "output-dir", usage);
+const BASE_DIR = requirePositionalArg({ args: process.argv.slice(2), index: 0, name: "output-dir", usage });
 
 // Sample text for testing
 const SAMPLE_TEXT_EN = "Hello";

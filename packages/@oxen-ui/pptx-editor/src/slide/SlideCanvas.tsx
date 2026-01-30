@@ -172,19 +172,20 @@ function applyMovePreview(
   };
 }
 
-function calculateResizedDimensions(
-  ...args: [
-    handle: ResizeHandlePosition,
-    baseW: number,
-    baseH: number,
-    baseX: number,
-    baseY: number,
-    dx: number,
-    dy: number,
-    aspectLocked: boolean,
-  ]
-): { newWidth: number; newHeight: number; newX: number; newY: number } {
-  const [handle, baseW, baseH, baseX, baseY, dx, dy, aspectLocked] = args;
+type ResizeDimensionsInput = {
+  readonly handle: ResizeHandlePosition;
+  readonly baseW: number;
+  readonly baseH: number;
+  readonly baseX: number;
+  readonly baseY: number;
+  readonly dx: number;
+  readonly dy: number;
+  readonly aspectLocked: boolean;
+};
+
+function calculateResizedDimensions({
+  handle, baseW, baseH, baseX, baseY, dx, dy, aspectLocked,
+}: ResizeDimensionsInput): { newWidth: number; newHeight: number; newX: number; newY: number } {
   const widthDelta = handle.includes("e") ? dx : handle.includes("w") ? -dx : 0;
   const heightDelta = handle.includes("s") ? dy : handle.includes("n") ? -dy : 0;
   const xDelta = handle.includes("w") ? dx : 0;
@@ -240,7 +241,7 @@ function applyResizePreview(
   const baseW = cb.width as number;
   const baseH = cb.height as number;
 
-  const { newWidth, newHeight, newX, newY } = calculateResizedDimensions(
+  const { newWidth, newHeight, newX, newY } = calculateResizedDimensions({
     handle,
     baseW,
     baseH,
@@ -248,8 +249,8 @@ function applyResizePreview(
     baseY,
     dx,
     dy,
-    aspectLocked
-  );
+    aspectLocked,
+  });
 
   const scaleX = baseW > 0 ? newWidth / baseW : 1;
   const scaleY = baseH > 0 ? newHeight / baseH : 1;
@@ -454,7 +455,7 @@ export function SlideCanvas({
         const svg = e.currentTarget.ownerSVGElement;
         if (svg) {
           const rect = svg.getBoundingClientRect();
-          const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+          const coords = clientToSlideCoords({ clientX: e.clientX, clientY: e.clientY, containerRect: rect, slideWidth: widthNum, slideHeight: heightNum });
           onCreate(coords.x, coords.y);
           return;
         }
@@ -477,7 +478,7 @@ export function SlideCanvas({
       // If in creation mode and onCreate is provided, create shape at click position
       if (creationMode && creationMode.type !== "select" && onCreate) {
         const rect = e.currentTarget.getBoundingClientRect();
-        const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+        const coords = clientToSlideCoords({ clientX: e.clientX, clientY: e.clientY, containerRect: rect, slideWidth: widthNum, slideHeight: heightNum });
         onCreate(coords.x, coords.y);
         return;
       }
@@ -500,7 +501,7 @@ export function SlideCanvas({
           return;
         }
         const rect = e.currentTarget.getBoundingClientRect();
-        const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+        const coords = clientToSlideCoords({ clientX: e.clientX, clientY: e.clientY, containerRect: rect, slideWidth: widthNum, slideHeight: heightNum });
         const nextDrag: CreationDrag = {
           startX: coords.x,
           startY: coords.y,
@@ -514,7 +515,7 @@ export function SlideCanvas({
         return;
       }
       const rect = e.currentTarget.getBoundingClientRect();
-      const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+      const coords = clientToSlideCoords({ clientX: e.clientX, clientY: e.clientY, containerRect: rect, slideWidth: widthNum, slideHeight: heightNum });
       const additive = e.shiftKey || e.metaKey || e.ctrlKey;
       const nextMarquee: MarqueeSelection = {
         startX: coords.x,
@@ -594,12 +595,12 @@ export function SlideCanvas({
       ignoreNextClickRef.current = true;
 
       if (onCreateFromDrag) {
-        const bounds = createBoundsFromDrag(
-          px(current.startX),
-          px(current.startY),
-          px(current.currentX),
-          px(current.currentY)
-        );
+        const bounds = createBoundsFromDrag({
+          startX: px(current.startX),
+          startY: px(current.startY),
+          endX: px(current.currentX),
+          endY: px(current.currentY),
+        });
         onCreateFromDrag(bounds);
       }
     },
@@ -616,7 +617,7 @@ export function SlideCanvas({
       if (!rect) {
         return;
       }
-      const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+      const coords = clientToSlideCoords({ clientX: e.clientX, clientY: e.clientY, containerRect: rect, slideWidth: widthNum, slideHeight: heightNum });
       const nextMarquee: MarqueeSelection = {
         ...current,
         currentX: coords.x,
@@ -638,7 +639,7 @@ export function SlideCanvas({
       if (!rect) {
         return;
       }
-      const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+      const coords = clientToSlideCoords({ clientX: e.clientX, clientY: e.clientY, containerRect: rect, slideWidth: widthNum, slideHeight: heightNum });
       const nextDrag: CreationDrag = {
         ...current,
         currentX: coords.x,
@@ -725,7 +726,7 @@ export function SlideCanvas({
         return;
       }
 
-      const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+      const coords = clientToSlideCoords({ clientX: e.clientX, clientY: e.clientY, containerRect: rect, slideWidth: widthNum, slideHeight: heightNum });
       onStartMove(coords.x, coords.y);
     },
     [widthNum, heightNum, isSelected, onSelect, onStartMove],
@@ -738,7 +739,7 @@ export function SlideCanvas({
         return;
       }
 
-      const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+      const coords = clientToSlideCoords({ clientX: e.clientX, clientY: e.clientY, containerRect: rect, slideWidth: widthNum, slideHeight: heightNum });
       onStartResize({ handle, startX: coords.x, startY: coords.y, aspectLocked: e.shiftKey });
     },
     [widthNum, heightNum, onStartResize],
@@ -751,7 +752,7 @@ export function SlideCanvas({
         return;
       }
 
-      const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
+      const coords = clientToSlideCoords({ clientX: e.clientX, clientY: e.clientY, containerRect: rect, slideWidth: widthNum, slideHeight: heightNum });
       onStartRotate(coords.x, coords.y);
     },
     [widthNum, heightNum, onStartRotate],

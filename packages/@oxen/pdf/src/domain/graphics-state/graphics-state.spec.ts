@@ -106,14 +106,14 @@ describe("GraphicsStateStack", () => {
     });
 
     it("sets fill CMYK", () => {
-      stack.setFillCmyk(1, 0, 0, 0);
+      stack.setFillCmyk({ c: 1, m: 0, y: 0, k: 0 });
       const state = stack.get();
       expect(state.fillColor.colorSpace).toBe("DeviceCMYK");
       expect(state.fillColor.components).toEqual([1, 0, 0, 0]);
     });
 
     it("sets stroke CMYK", () => {
-      stack.setStrokeCmyk(0, 1, 0, 0);
+      stack.setStrokeCmyk({ c: 0, m: 1, y: 0, k: 0 });
       const state = stack.get();
       expect(state.strokeColor.colorSpace).toBe("DeviceCMYK");
       expect(state.strokeColor.components).toEqual([0, 1, 0, 0]);

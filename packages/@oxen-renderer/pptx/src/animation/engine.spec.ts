@@ -351,12 +351,12 @@ describe("animateOpacity()", () => {
   });
 
   it("sets initial opacity immediately", () => {
-    animateOpacity(el, 0, 1, 500);
+    animateOpacity({ el, from: 0, to: 1, duration: 500 });
     expect(el.style.opacity).toBe("0");
   });
 
   it("animates opacity from 0 to 1", () => {
-    animateOpacity(el, 0, 1, 500, "linear");
+    animateOpacity({ el, from: 0, to: 1, duration: 500, easing: "linear" });
 
     mockTime.tick(0);
     expect(el.style.opacity).toBe("0");
@@ -369,7 +369,7 @@ describe("animateOpacity()", () => {
   });
 
   it("animates opacity from 1 to 0 (exit)", () => {
-    animateOpacity(el, 1, 0, 500, "linear");
+    animateOpacity({ el, from: 1, to: 0, duration: 500, easing: "linear" });
 
     mockTime.tick(0);
     expect(el.style.opacity).toBe("1");
@@ -394,12 +394,12 @@ describe("animateTranslate()", () => {
   });
 
   it("sets initial transform immediately", () => {
-    animateTranslate(el, -100, 0, 0, 0, 500);
+    animateTranslate({ el, fromX: -100, fromY: 0, toX: 0, toY: 0, duration: 500 });
     expect(el.style.transform).toBe("translate(-100%, 0%)");
   });
 
   it("animates translate from offset to origin", () => {
-    animateTranslate(el, -100, 0, 0, 0, 500, "linear");
+    animateTranslate({ el, fromX: -100, fromY: 0, toX: 0, toY: 0, duration: 500, easing: "linear" });
 
     mockTime.tick(0);
     expect(el.style.transform).toBe("translate(-100%, 0%)");
@@ -427,18 +427,18 @@ describe("animateClipInset()", () => {
   });
 
   it("sets initial clip-path immediately", () => {
-    animateClipInset(el, { top: 0, right: 100, bottom: 0, left: 0 }, { top: 0, right: 0, bottom: 0, left: 0 }, 500);
+    animateClipInset({ el, from: { top: 0, right: 100, bottom: 0, left: 0 }, to: { top: 0, right: 0, bottom: 0, left: 0 }, duration: 500 });
     expect(el.style.clipPath).toBe("inset(0% 100% 0% 0%)");
   });
 
   it("animates clip-path for wipe effect", () => {
-    animateClipInset(
+    animateClipInset({
       el,
-      { top: 0, right: 100, bottom: 0, left: 0 }, // Fully clipped from right
-      { top: 0, right: 0, bottom: 0, left: 0 }, // Fully visible
-      500,
-      "linear",
-    );
+      from: { top: 0, right: 100, bottom: 0, left: 0 }, // Fully clipped from right
+      to: { top: 0, right: 0, bottom: 0, left: 0 }, // Fully visible
+      duration: 500,
+      easing: "linear",
+    });
 
     mockTime.tick(0);
     expect(el.style.clipPath).toBe("inset(0% 100% 0% 0%)");
@@ -472,8 +472,8 @@ describe("animateParallel()", () => {
     const el2 = createMockElement();
 
     const combined = animateParallel([
-      animateOpacity(el1, 0, 1, 500, "linear"),
-      animateOpacity(el2, 0, 1, 500, "linear"),
+      animateOpacity({ el: el1, from: 0, to: 1, duration: 500, easing: "linear" }),
+      animateOpacity({ el: el2, from: 0, to: 1, duration: 500, easing: "linear" }),
     ]);
 
     mockTime.tick(0);
@@ -491,8 +491,8 @@ describe("animateParallel()", () => {
     const el2 = createMockElement();
 
     const combined = animateParallel([
-      animateOpacity(el1, 0, 1, 300, "linear"),
-      animateOpacity(el2, 0, 1, 500, "linear"),
+      animateOpacity({ el: el1, from: 0, to: 1, duration: 300, easing: "linear" }),
+      animateOpacity({ el: el2, from: 0, to: 1, duration: 500, easing: "linear" }),
     ]);
 
     mockTime.tick(0);
@@ -510,8 +510,8 @@ describe("animateParallel()", () => {
     const el2 = createMockElement();
 
     const combined = animateParallel([
-      animateOpacity(el1, 0, 1, 500, "linear"),
-      animateOpacity(el2, 0, 1, 500, "linear"),
+      animateOpacity({ el: el1, from: 0, to: 1, duration: 500, easing: "linear" }),
+      animateOpacity({ el: el2, from: 0, to: 1, duration: 500, easing: "linear" }),
     ]);
 
     mockTime.tick(0);
@@ -579,7 +579,7 @@ describe("PPTX Effect Animations", () => {
 
   describe("Fade Effect", () => {
     it("entrance: 0 -> 1 opacity", () => {
-      animateOpacity(el, 0, 1, 500, "ease-out");
+      animateOpacity({ el, from: 0, to: 1, duration: 500, easing: "ease-out" });
 
       expect(el.style.opacity).toBe("0");
       mockTime.tick(0);
@@ -588,7 +588,7 @@ describe("PPTX Effect Animations", () => {
     });
 
     it("exit: 1 -> 0 opacity", () => {
-      animateOpacity(el, 1, 0, 500, "ease-out");
+      animateOpacity({ el, from: 1, to: 0, duration: 500, easing: "ease-out" });
 
       expect(el.style.opacity).toBe("1");
       mockTime.tick(0);
@@ -599,7 +599,7 @@ describe("PPTX Effect Animations", () => {
 
   describe("Slide Effect", () => {
     it("slide from left: -100% -> 0%", () => {
-      animateTranslate(el, -100, 0, 0, 0, 500, "ease-out");
+      animateTranslate({ el, fromX: -100, fromY: 0, toX: 0, toY: 0, duration: 500, easing: "ease-out" });
 
       expect(el.style.transform).toBe("translate(-100%, 0%)");
       mockTime.tick(0);
@@ -608,7 +608,7 @@ describe("PPTX Effect Animations", () => {
     });
 
     it("slide from right: 100% -> 0%", () => {
-      animateTranslate(el, 100, 0, 0, 0, 500, "ease-out");
+      animateTranslate({ el, fromX: 100, fromY: 0, toX: 0, toY: 0, duration: 500, easing: "ease-out" });
 
       expect(el.style.transform).toBe("translate(100%, 0%)");
       mockTime.tick(0);
@@ -617,7 +617,7 @@ describe("PPTX Effect Animations", () => {
     });
 
     it("slide from top: 0, -100% -> 0, 0%", () => {
-      animateTranslate(el, 0, -100, 0, 0, 500, "ease-out");
+      animateTranslate({ el, fromX: 0, fromY: -100, toX: 0, toY: 0, duration: 500, easing: "ease-out" });
 
       expect(el.style.transform).toBe("translate(0%, -100%)");
       mockTime.tick(0);
@@ -626,7 +626,7 @@ describe("PPTX Effect Animations", () => {
     });
 
     it("slide from bottom: 0, 100% -> 0, 0%", () => {
-      animateTranslate(el, 0, 100, 0, 0, 500, "ease-out");
+      animateTranslate({ el, fromX: 0, fromY: 100, toX: 0, toY: 0, duration: 500, easing: "ease-out" });
 
       expect(el.style.transform).toBe("translate(0%, 100%)");
       mockTime.tick(0);
@@ -637,13 +637,13 @@ describe("PPTX Effect Animations", () => {
 
   describe("Wipe Effect", () => {
     it("wipe from left: inset(0 0 0 100%) -> inset(0 0 0 0)", () => {
-      animateClipInset(
+      animateClipInset({
         el,
-        { top: 0, right: 0, bottom: 0, left: 100 },
-        { top: 0, right: 0, bottom: 0, left: 0 },
-        500,
-        "ease-out",
-      );
+        from: { top: 0, right: 0, bottom: 0, left: 100 },
+        to: { top: 0, right: 0, bottom: 0, left: 0 },
+        duration: 500,
+        easing: "ease-out",
+      });
 
       expect(el.style.clipPath).toBe("inset(0% 0% 0% 100%)");
       mockTime.tick(0);
@@ -652,13 +652,13 @@ describe("PPTX Effect Animations", () => {
     });
 
     it("wipe from right: inset(0 100% 0 0) -> inset(0 0 0 0)", () => {
-      animateClipInset(
+      animateClipInset({
         el,
-        { top: 0, right: 100, bottom: 0, left: 0 },
-        { top: 0, right: 0, bottom: 0, left: 0 },
-        500,
-        "ease-out",
-      );
+        from: { top: 0, right: 100, bottom: 0, left: 0 },
+        to: { top: 0, right: 0, bottom: 0, left: 0 },
+        duration: 500,
+        easing: "ease-out",
+      });
 
       expect(el.style.clipPath).toBe("inset(0% 100% 0% 0%)");
       mockTime.tick(0);
@@ -667,13 +667,13 @@ describe("PPTX Effect Animations", () => {
     });
 
     it("wipe from top: inset(100% 0 0 0) -> inset(0 0 0 0)", () => {
-      animateClipInset(
+      animateClipInset({
         el,
-        { top: 100, right: 0, bottom: 0, left: 0 },
-        { top: 0, right: 0, bottom: 0, left: 0 },
-        500,
-        "ease-out",
-      );
+        from: { top: 100, right: 0, bottom: 0, left: 0 },
+        to: { top: 0, right: 0, bottom: 0, left: 0 },
+        duration: 500,
+        easing: "ease-out",
+      });
 
       expect(el.style.clipPath).toBe("inset(100% 0% 0% 0%)");
       mockTime.tick(0);
@@ -682,13 +682,13 @@ describe("PPTX Effect Animations", () => {
     });
 
     it("wipe from bottom: inset(0 0 100% 0) -> inset(0 0 0 0)", () => {
-      animateClipInset(
+      animateClipInset({
         el,
-        { top: 0, right: 0, bottom: 100, left: 0 },
-        { top: 0, right: 0, bottom: 0, left: 0 },
-        500,
-        "ease-out",
-      );
+        from: { top: 0, right: 0, bottom: 100, left: 0 },
+        to: { top: 0, right: 0, bottom: 0, left: 0 },
+        duration: 500,
+        easing: "ease-out",
+      });
 
       expect(el.style.clipPath).toBe("inset(0% 0% 100% 0%)");
       mockTime.tick(0);
@@ -700,8 +700,8 @@ describe("PPTX Effect Animations", () => {
   describe("Combined Slide + Opacity (MS-OE376 pattern)", () => {
     it("slide with opacity fade-in", () => {
       // Common pattern: slide from left while fading in
-      const slideAnim = animateTranslate(el, -100, 0, 0, 0, 500, "ease-out");
-      const fadeAnim = animateOpacity(el, 0, 1, 500, "ease-out");
+      const slideAnim = animateTranslate({ el, fromX: -100, fromY: 0, toX: 0, toY: 0, duration: 500, easing: "ease-out" });
+      const fadeAnim = animateOpacity({ el, from: 0, to: 1, duration: 500, easing: "ease-out" });
 
       const combined = animateParallel([slideAnim, fadeAnim]);
 

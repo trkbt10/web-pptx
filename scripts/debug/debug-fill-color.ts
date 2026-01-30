@@ -13,9 +13,9 @@ async function main() {
   const usage =
     "bun run scripts/debug/debug-fill-color.ts <pptx-path> <slide-number> <output-svg-path>";
   const args = process.argv.slice(2);
-  const pptxPath = requirePositionalArg(args, 0, "pptx-path", usage);
+  const pptxPath = requirePositionalArg({ args, index: 0, name: "pptx-path", usage });
   const slideNum = requireIntArg(args[1], "slide-number", usage);
-  const outputSvgPath = requirePositionalArg(args, 2, "output-svg-path", usage);
+  const outputSvgPath = requirePositionalArg({ args, index: 2, name: "output-svg-path", usage });
   requireFileExists(pptxPath, usage);
 
   console.log(`Debugging fill colors in: ${pptxPath} slide ${slideNum}\n`);

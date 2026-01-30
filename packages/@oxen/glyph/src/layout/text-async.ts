@@ -138,7 +138,7 @@ async function extractGlyphAsync(
   // Handle whitespace synchronously (no heavy processing)
   if (char === " " || char === "\t" || char === "\n") {
     const glyph = createWhitespaceGlyph(char, fontFamily, style);
-    setCachedGlyph(fontFamily, char, style, glyph);
+    setCachedGlyph({ fontFamily, char, style, glyph });
     return glyph;
   }
 
@@ -148,7 +148,7 @@ async function extractGlyphAsync(
   if (!w) {
     // Fallback to sync extraction
     const glyph = extractGlyphContour(char, fontFamily, style);
-    setCachedGlyph(fontFamily, char, style, glyph);
+    setCachedGlyph({ fontFamily, char, style, glyph });
     return glyph;
   }
 
@@ -164,7 +164,7 @@ async function extractGlyphAsync(
     pendingRequests.set(id, {
       resolve: (glyph) => {
         clearTimeout(timeout);
-        setCachedGlyph(fontFamily, char, style, glyph);
+        setCachedGlyph({ fontFamily, char, style, glyph });
         resolve(glyph);
       },
       reject: (error) => {
@@ -253,16 +253,16 @@ export async function layoutTextAsync(
 
   for (const [i, glyph] of glyphContours.entries()) {
     // Apply kerning adjustment
-    const kerning = calculateKerningForIndex(
-      i,
+    const kerning = calculateKerningForIndex({
+      index: i,
       glyph,
       glyphContours,
       chars,
-      config.fontFamily,
+      fontFamily: config.fontFamily,
       letterSpacing,
       useOpticalKerning,
       useFontKerning,
-    );
+    });
 
     const x = cursorX + kerning;
     const y = 0;
@@ -294,28 +294,25 @@ export async function layoutTextAsync(
   };
 }
 
-function calculateKerningForIndex(
-  ...args: readonly [
-    index: number,
-    glyph: GlyphContour,
-    glyphContours: readonly GlyphContour[],
-    chars: readonly string[],
-    fontFamily: string,
-    letterSpacing: number,
-    useOpticalKerning: boolean,
-    useFontKerning: boolean,
-  ]
-): number {
-  const [
-    index,
-    glyph,
-    glyphContours,
-    chars,
-    fontFamily,
-    letterSpacing,
-    useOpticalKerning,
-    useFontKerning,
-  ] = args;
+function calculateKerningForIndex({
+  index,
+  glyph,
+  glyphContours,
+  chars,
+  fontFamily,
+  letterSpacing,
+  useOpticalKerning,
+  useFontKerning,
+}: {
+  readonly index: number;
+  readonly glyph: GlyphContour;
+  readonly glyphContours: readonly GlyphContour[];
+  readonly chars: readonly string[];
+  readonly fontFamily: string;
+  readonly letterSpacing: number;
+  readonly useOpticalKerning: boolean;
+  readonly useFontKerning: boolean;
+}): number {
   if (index === 0) {
     return 0;
   }

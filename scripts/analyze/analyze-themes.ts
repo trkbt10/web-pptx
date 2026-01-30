@@ -260,8 +260,8 @@ export type ThemeTestData = typeof THEME_TEST_DATA;
 async function main() {
   const usage = "bun run scripts/analyze/analyze-themes.ts <pptx-path> <output-path>";
   const args = process.argv.slice(2);
-  const pptxPath = requirePositionalArg(args, 0, "pptx-path", usage);
-  const outputPath = requirePositionalArg(args, 1, "output-path", usage);
+  const pptxPath = requirePositionalArg({ args, index: 0, name: "pptx-path", usage });
+  const outputPath = requirePositionalArg({ args, index: 1, name: "output-path", usage });
   requireFileExists(pptxPath, usage);
 
   console.log(`Analyzing themes in: ${pptxPath}\n`);

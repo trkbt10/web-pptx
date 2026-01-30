@@ -385,16 +385,19 @@ function getPossibleFlips(detNegative: boolean): ReadonlyArray<{ readonly flipH:
 /**
  * アスペクト比を保持しながらスライドにフィット
  */
-function computeRasterScale(
-  ...args: readonly [
-    fit: "contain" | "cover",
-    targetW: number,
-    targetH: number,
-    rasterW: number,
-    rasterH: number,
-  ]
-): number {
-  const [fit, targetW, targetH, rasterW, rasterH] = args;
+function computeRasterScale({
+  fit,
+  targetW,
+  targetH,
+  rasterW,
+  rasterH,
+}: {
+  readonly fit: "contain" | "cover";
+  readonly targetW: number;
+  readonly targetH: number;
+  readonly rasterW: number;
+  readonly rasterH: number;
+}): number {
   if (fit === "contain") {
     return Math.min(targetW / rasterW, targetH / rasterH);
   }
@@ -406,16 +409,40 @@ function computeRasterScale(
 
 
 
-export function createFitContext(
-  ...args: readonly [
-    pdfWidth: number,
-    pdfHeight: number,
-    slideWidth: Pixels,
-    slideHeight: Pixels,
-    fit?: "contain" | "cover" | "stretch",
-  ]
-): ConversionContext {
-  const [pdfWidth, pdfHeight, slideWidth, slideHeight, fit = "contain"] = args;
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export function createFitContext({
+  pdfWidth,
+  pdfHeight,
+  slideWidth,
+  slideHeight,
+  fit = "contain",
+}: {
+  pdfWidth: number;
+  pdfHeight: number;
+  slideWidth: Pixels;
+  slideHeight: Pixels;
+  fit?: "contain" | "cover" | "stretch";
+}): ConversionContext {
   if (!Number.isFinite(pdfWidth) || pdfWidth <= 0) {
     throw new Error(`Invalid pdfWidth: ${pdfWidth}`);
   }
@@ -484,7 +511,7 @@ export function createFitContext(
   const rasterW = Math.max(1, Math.round((pdfWidth / 72) * BASELINE_DPI));
   const rasterH = Math.max(1, Math.round((pdfHeight / 72) * BASELINE_DPI));
 
-  const scaleRaster = computeRasterScale(fit, targetW, targetH, rasterW, rasterH);
+  const scaleRaster = computeRasterScale({ fit: fit as "contain" | "cover", targetW, targetH, rasterW, rasterH });
 
   const fittedW = Math.max(1, Math.round(rasterW * scaleRaster));
   const fittedH = Math.max(1, Math.round(rasterH * scaleRaster));

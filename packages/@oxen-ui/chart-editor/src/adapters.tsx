@@ -38,9 +38,49 @@ export type ChartEditorAdaptersProviderProps = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function ChartEditorAdaptersProvider({ adapters, children }: ChartEditorAdaptersProviderProps) {
   return <ChartEditorAdaptersContext.Provider value={adapters}>{children}</ChartEditorAdaptersContext.Provider>;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -55,6 +95,26 @@ export type ChartEditorAdaptersBoundaryProps = {
   readonly adapters?: ChartEditorAdapters;
   readonly children: ReactNode;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

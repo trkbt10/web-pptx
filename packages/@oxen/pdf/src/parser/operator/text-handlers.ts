@@ -70,20 +70,17 @@ export function getGlyphWidth(charCode: number, metrics: FontMetrics): number {
  * @param codeByteWidth - 1 for single-byte, 2 for CID fonts
  * @param tjAdjustment - Optional TJ adjustment in 1/1000 em (default 0)
  */
+// eslint-disable-next-line custom/max-params -- Public API with many callers
 export function calculateTextDisplacement(
-  ...args: readonly [
-    text: string,
-    fontSize: number,
-    charSpacing: number,
-    wordSpacing: number,
-    horizontalScaling: number,
-    metrics: FontMetrics,
-    codeByteWidth: 1 | 2,
-    tjAdjustment?: number,
-  ]
+  text: string,
+  fontSize: number,
+  charSpacing: number,
+  wordSpacing: number,
+  horizontalScaling: number,
+  metrics: FontMetrics,
+  codeByteWidth: 1 | 2,
+  tjAdjustment = 0,
 ): number {
-  const [text, fontSize, charSpacing, wordSpacing, horizontalScaling, metrics, codeByteWidth, tjAdjustment = 0] =
-    args;
   const Th = horizontalScaling / 100;
   const totalDisplacement = { value: 0 };
 

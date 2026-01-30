@@ -141,8 +141,7 @@ function createMsbBitReader(data: Uint8Array): MsbBitReader {
 // Huffman Tries (T.4 Modified Huffman)
 // =============================================================================
 
-function addToTrie<T>(...args: readonly [root: TrieNode<T>, bits: number, code: number, value: T]): TrieNode<T> {
-  const [root, bits, code, value] = args;
+function addToTrie<T>({ root, bits, code, value }: { readonly root: TrieNode<T>; readonly bits: number; readonly code: number; readonly value: T }): TrieNode<T> {
   const state = { node: root };
   for (let i = bits - 1; i >= 0; i -= 1) {
     const bit = (code >> i) & 1;
@@ -161,7 +160,7 @@ function addToTrie<T>(...args: readonly [root: TrieNode<T>, bits: number, code: 
 function buildTrie<T>(codes: readonly Readonly<{ readonly bits: number; readonly code: number; readonly value: T }>[]): TrieNode<T> {
   const root: TrieNode<T> = {};
   for (const c of codes) {
-    addToTrie(root, c.bits, c.code, c.value);
+    addToTrie({ root, bits: c.bits, code: c.code, value: c.value });
   }
   return root;
 }
@@ -497,16 +496,19 @@ function clearRangeInRow(row: Uint8Array, startX: number, endX: number): void {
   row[endByte] = (row[endByte] ?? 0xff) & (((1 << (7 - endBitPos)) - 1) >>> 0);
 }
 
-function writeRunsToBitmapRow(
-  ...args: readonly [
-    out: Uint8Array,
-    outOffset: number,
-    rowBytes: number,
-    width: number,
-    runs: readonly number[],
-  ]
-): void {
-  const [out, outOffset, rowBytes, width, runs] = args;
+function writeRunsToBitmapRow({
+  out,
+  outOffset,
+  rowBytes,
+  width,
+  runs,
+}: {
+  readonly out: Uint8Array;
+  readonly outOffset: number;
+  readonly rowBytes: number;
+  readonly width: number;
+  readonly runs: readonly number[];
+}): void {
   // Start with all white (1 bits). Black runs (odd index) clear bits to 0.
   out.fill(0xff, outOffset, outOffset + rowBytes);
   for (let i = 0, x = 0; i < runs.length && x < width; i += 1) {
@@ -712,7 +714,7 @@ export function decodeCcittFax(args: DecodeCcittFaxArgs): Uint8Array {
       }
       try {
         const runs = decode1DLine();
-        writeRunsToBitmapRow(out, y * rowBytes, rowBytes, width, runs);
+        writeRunsToBitmapRow({ out, outOffset: y * rowBytes, rowBytes, width, runs });
         damagedState.streak = 0;
       } catch (error) {
         if (!canResyncDamagedRows) {
@@ -751,7 +753,7 @@ export function decodeCcittFax(args: DecodeCcittFaxArgs): Uint8Array {
       }
       try {
         const runs = y % groupLen === 0 ? decode1DLine() : decode2DLine(referenceRuns);
-        writeRunsToBitmapRow(out, y * rowBytes, rowBytes, width, runs);
+        writeRunsToBitmapRow({ out, outOffset: y * rowBytes, rowBytes, width, runs });
         referenceRuns = runs;
         damagedState.streak = 0;
       } catch (error) {
@@ -786,7 +788,7 @@ export function decodeCcittFax(args: DecodeCcittFaxArgs): Uint8Array {
   // Group 4 2D (K < 0)
   for (let y = 0, referenceRuns: number[] = [width, 0]; y < height; y += 1) { // all-white reference line + sentinel
     const runs = decode2DLine(referenceRuns);
-    writeRunsToBitmapRow(out, y * rowBytes, rowBytes, width, runs);
+    writeRunsToBitmapRow({ out, outOffset: y * rowBytes, rowBytes, width, runs });
     referenceRuns = runs;
     if (parms.encodedByteAlign) {reader.alignToByte();}
   }

@@ -11,7 +11,7 @@ import { createFitContext } from "./transform-converter";
 
 const graphicsState = createDefaultGraphicsState();
 
-const context = createFitContext(100, 100, px(100), px(100), "stretch");
+const context = createFitContext({ pdfWidth: 100, pdfHeight: 100, slideWidth: px(100), slideHeight: px(100), fit: "stretch" });
 
 describe("convertImageToShape", () => {
   it("creates a pic shape with data URL resourceId (PNG format)", () => {

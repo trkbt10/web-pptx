@@ -22,9 +22,49 @@ export type ChartTitleEditorProps = EditorProps<ChartTitle | undefined> & {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function ChartTitleEditor(props: ChartTitleEditorProps) {
   return <CoreChartTitleEditor {...props} adapters={pptxChartEditorAdapters} />;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -24,6 +24,26 @@ export type SelectionPrimaryFallback = "first" | "last";
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createEmptySelection<TId>(): SelectionState<TId> {
   return {
     selectedIds: [],
@@ -36,12 +56,52 @@ export function createEmptySelection<TId>(): SelectionState<TId> {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createSingleSelection<TId>(id: TId): SelectionState<TId> {
   return {
     selectedIds: [id],
     primaryId: id,
   };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -71,6 +131,26 @@ export function createMultiSelection<TId>(params: {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function addToSelection<TId>(
   selection: SelectionState<TId>,
   id: TId,
@@ -83,6 +163,26 @@ export function addToSelection<TId>(
     primaryId: id,
   };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -116,6 +216,26 @@ export function removeFromSelection<TId>(params: {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function toggleSelection<TId>(params: {
   readonly selection: SelectionState<TId>;
   readonly id: TId;
@@ -137,9 +257,49 @@ export function toggleSelection<TId>(params: {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function isSelected<TId>(selection: SelectionState<TId>, id: TId): boolean {
   return selection.selectedIds.includes(id);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

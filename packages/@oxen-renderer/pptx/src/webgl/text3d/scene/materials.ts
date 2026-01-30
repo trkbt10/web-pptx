@@ -415,11 +415,11 @@ export function createPatternMaterial(
   isWireframe: boolean = false,
 ): THREE.Material {
   // Create pattern texture using resolved colors
-  const texture = createPatternTextureFromResolved(
-    patternFill.preset,
-    patternFill.foregroundColor,
-    patternFill.backgroundColor,
-  );
+  const texture = createPatternTextureFromResolved({
+    preset: patternFill.preset,
+    fgColor: patternFill.foregroundColor,
+    bgColor: patternFill.backgroundColor,
+  });
 
   // Create material with pattern texture
   const material = new THREE.MeshStandardMaterial({

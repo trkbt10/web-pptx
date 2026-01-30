@@ -18,6 +18,26 @@ export type RenderDiagramOptions<TShape> = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function renderDiagram<TShape>(options: RenderDiagramOptions<TShape>): string {
   const { diagram, width, height, ctx } = options;
 
@@ -40,6 +60,26 @@ export type RenderDiagramPlaceholderOptions = {
   readonly height: number;
   readonly message?: string;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

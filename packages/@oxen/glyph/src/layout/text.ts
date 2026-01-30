@@ -93,16 +93,16 @@ export function layoutText(
     const glyph = deps.extractGlyph(char, config.fontFamily, style);
 
     // Apply kerning adjustment
-    const kerning = calculateKerningForGlyph(
-      i,
+    const kerning = calculateKerningForGlyph({
+      index: i,
       glyph,
       glyphs,
       chars,
-      config.fontFamily,
+      fontFamily: config.fontFamily,
       letterSpacing,
       useOpticalKerning,
       useFontKerning,
-    );
+    });
 
     const x = cursorX + kerning;
     const y = 0; // Baseline at y=0
@@ -134,19 +134,25 @@ export function layoutText(
   };
 }
 
-function calculateKerningForGlyph(
-  ...args: readonly [
-    index: number,
-    glyph: GlyphContour,
-    glyphs: readonly PositionedGlyph[],
-    chars: readonly string[],
-    fontFamily: string,
-    letterSpacing: number,
-    useOpticalKerning: boolean,
-    useFontKerning: boolean,
-  ]
-): number {
-  const [index, glyph, glyphs, chars, fontFamily, letterSpacing, useOpticalKerning, useFontKerning] = args;
+function calculateKerningForGlyph({
+  index,
+  glyph,
+  glyphs,
+  chars,
+  fontFamily,
+  letterSpacing,
+  useOpticalKerning,
+  useFontKerning,
+}: {
+  readonly index: number;
+  readonly glyph: GlyphContour;
+  readonly glyphs: readonly PositionedGlyph[];
+  readonly chars: readonly string[];
+  readonly fontFamily: string;
+  readonly letterSpacing: number;
+  readonly useOpticalKerning: boolean;
+  readonly useFontKerning: boolean;
+}): number {
   if (index === 0) {
     return 0;
   }
@@ -221,16 +227,16 @@ export function measureTextWidth(
   const result = chars.reduce(
     (acc, char, i) => {
       const glyph = deps.extractGlyph(char, config.fontFamily, style);
-      const kerning = calculateMeasureKerning(
-        i,
-        acc.prevGlyph,
-        glyph,
+      const kerning = calculateMeasureKerning({
+        index: i,
+        prevGlyph: acc.prevGlyph,
+        currentGlyph: glyph,
         chars,
-        config.fontFamily,
+        fontFamily: config.fontFamily,
         letterSpacing,
         useOpticalKerning,
         useFontKerning,
-      );
+      });
 
       return {
         width: acc.width + glyph.metrics.advanceWidth + kerning,
@@ -243,19 +249,25 @@ export function measureTextWidth(
   return result.width + letterSpacing * (chars.length - 1);
 }
 
-function calculateMeasureKerning(
-  ...args: readonly [
-    index: number,
-    prevGlyph: GlyphContour | null,
-    currentGlyph: GlyphContour,
-    chars: readonly string[],
-    fontFamily: string,
-    letterSpacing: number,
-    useOpticalKerning: boolean,
-    useFontKerning: boolean,
-  ]
-): number {
-  const [index, prevGlyph, currentGlyph, chars, fontFamily, letterSpacing, useOpticalKerning, useFontKerning] = args;
+function calculateMeasureKerning({
+  index,
+  prevGlyph,
+  currentGlyph,
+  chars,
+  fontFamily,
+  letterSpacing,
+  useOpticalKerning,
+  useFontKerning,
+}: {
+  readonly index: number;
+  readonly prevGlyph: GlyphContour | null;
+  readonly currentGlyph: GlyphContour;
+  readonly chars: readonly string[];
+  readonly fontFamily: string;
+  readonly letterSpacing: number;
+  readonly useOpticalKerning: boolean;
+  readonly useFontKerning: boolean;
+}): number {
   if (index === 0 || prevGlyph === null) {
     return 0;
   }

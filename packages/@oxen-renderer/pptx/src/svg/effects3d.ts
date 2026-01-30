@@ -468,15 +468,17 @@ function getLightingIntensity(rig: LightRigPreset): {
  *
  * @see ECMA-376 Part 1, Section 20.1.5.1 (bevelT/bevelB)
  */
-export function renderBevelEffect(
-  ...args: [
-    bevel: Bevel3d,
-    width: number,
-    height: number,
-    lightDirection?: LightDirection,
-  ]
-): string {
-  const [bevel, width, height, lightDirection = "tl"] = args;
+export function renderBevelEffect({
+  bevel,
+  width,
+  height,
+  lightDirection = "tl",
+}: {
+  bevel: Bevel3d;
+  width: number;
+  height: number;
+  lightDirection?: LightDirection;
+}): string {
   const bevelWidth = Math.min(bevel.width, width / 4, height / 4);
   const bevelHeight = Math.min(bevel.height, width / 4, height / 4);
 
@@ -591,20 +593,17 @@ function getBevelSides(direction: LightDirection): {
  *
  * @see ECMA-376 Part 1, Section 20.1.5.9 (sp3d extrusionH)
  */
-export function renderExtrusionEffect(
-  ...args: [
-    shapePath: string,
-    extrusionHeight: number,
-    extrusionColor?: string,
-    camera?: string,
-  ]
-): string {
-  const [
-    shapePath,
-    extrusionHeight,
-    extrusionColor = "#666666",
-    camera = "orthographicFront",
-  ] = args;
+export function renderExtrusionEffect({
+  shapePath,
+  extrusionHeight,
+  extrusionColor = "#666666",
+  camera = "orthographicFront",
+}: {
+  shapePath: string;
+  extrusionHeight: number;
+  extrusionColor?: string;
+  camera?: string;
+}): string {
   if (extrusionHeight <= 0) {
     return "";
   }
@@ -707,17 +706,21 @@ function getExtrusionOffset(
  *
  * @see ECMA-376 Part 1, Section 20.1.5 (3D Properties)
  */
-export function render3dEffects(
-  ...args: [
-    scene3d: Scene3d | undefined,
-    shape3d: Shape3d | undefined,
-    shapePath: string,
-    width: number,
-    height: number,
-    shapeId: string,
-  ]
-): Effect3dResult {
-  const [scene3d, shape3d, shapePath, width, height, shapeId] = args;
+export function render3dEffects({
+  scene3d,
+  shape3d,
+  shapePath,
+  width,
+  height,
+  shapeId,
+}: {
+  scene3d: Scene3d | undefined;
+  shape3d: Shape3d | undefined;
+  shapePath: string;
+  width: number;
+  height: number;
+  shapeId: string;
+}): Effect3dResult {
   const result: Effect3dResult = {
     extrusionElements: "",
     bevelElements: "",
@@ -747,7 +750,7 @@ export function render3dEffects(
 
   const gradientDefs = buildLightingGradient(scene3d?.lightRig, shapeId);
   const extrusionElements = buildExtrusionElements(shape3d, shapePath, cameraPreset);
-  const bevelElements = buildBevelElements(shape3d, width, height, lightDirection);
+  const bevelElements = buildBevelElements({ shape3d, width, height, lightDirection });
 
   return {
     extrusionElements,
@@ -771,25 +774,27 @@ function buildExtrusionElements(shape3d: Shape3d | undefined, shapePath: string,
     return "";
   }
   const extrusionColor = "#888888";
-  return renderExtrusionEffect(shapePath, shape3d.extrusionHeight, extrusionColor, cameraPreset);
+  return renderExtrusionEffect({ shapePath, extrusionHeight: shape3d.extrusionHeight, extrusionColor, camera: cameraPreset });
 }
 
-function buildBevelElements(
-  ...args: [
-    shape3d: Shape3d | undefined,
-    width: number,
-    height: number,
-    lightDirection: LightDirection,
-  ]
-): string {
-  const [shape3d, width, height, lightDirection] = args;
+function buildBevelElements({
+  shape3d,
+  width,
+  height,
+  lightDirection,
+}: {
+  shape3d: Shape3d | undefined;
+  width: number;
+  height: number;
+  lightDirection: LightDirection;
+}): string {
   // Use bevelTop (front face) for 2D SVG rendering
   // ECMA-376: bevelT is the top/front face bevel
   const bevel = shape3d?.bevelTop;
   if (!bevel) {
     return "";
   }
-  return renderBevelEffect(bevel, width, height, lightDirection);
+  return renderBevelEffect({ bevel, width, height, lightDirection });
 }
 
 /**

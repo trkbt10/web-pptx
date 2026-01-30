@@ -153,7 +153,7 @@ export function useSvgViewport({
         // Update viewport with zoom-toward-cursor
         setViewport((prev) => {
           const currentVp = { ...prev, scale: currentScale };
-          return zoomTowardCursor(currentVp, cursorPos.x, cursorPos.y, newScale);
+          return zoomTowardCursor({ viewport: currentVp, cursorX: cursorPos.x, cursorY: cursorPos.y, newScale });
         });
       } else {
         // Pan mode: scroll for vertical, Shift+scroll for horizontal
@@ -165,7 +165,7 @@ export function useSvgViewport({
 
         setViewport((prev) => {
           const panned = panViewport(prev, dx, dy);
-          return clampViewport(panned, viewportSize, slideSize, rulerThickness);
+          return clampViewport({ viewport: panned, viewportSize, slideSize, rulerThickness });
         });
       }
     },
@@ -196,7 +196,7 @@ export function useSvgViewport({
 
       setViewport((prev) => {
         const panned = panViewport(prev, dx, dy);
-        return clampViewport(panned, viewportSize, slideSize, rulerThickness);
+        return clampViewport({ viewport: panned, viewportSize, slideSize, rulerThickness });
       });
     },
     [isPanning, viewportSize, slideSize, rulerThickness]

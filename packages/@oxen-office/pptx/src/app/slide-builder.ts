@@ -44,6 +44,26 @@ export type CreateSlideOptions = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createSlide(
   { data, zip, defaultTextStyle, tableStyles, slideSize, renderOptions }: CreateSlideOptions,
 ): Slide {

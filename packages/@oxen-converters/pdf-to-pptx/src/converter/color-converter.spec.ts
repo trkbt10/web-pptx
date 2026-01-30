@@ -128,7 +128,7 @@ describe("convertFill", () => {
 describe("convertLine", () => {
   it("converts line style fields", () => {
     const strokeColor: PdfColor = { colorSpace: "DeviceRGB", components: [0, 0, 1] as const };
-    const line = convertLine(strokeColor, 2, 1, 2, [] as const, 0, 1);
+    const line = convertLine({ strokeColor, lineWidth: 2, lineCap: 1, lineJoin: 2, dashArray: [] as const, dashPhase: 0, alpha: 1 });
 
     expect(line).toEqual({
       width: px(2),
@@ -144,9 +144,9 @@ describe("convertLine", () => {
   it("converts dash patterns to preset dash styles", () => {
     const strokeColor: PdfColor = { colorSpace: "DeviceGray", components: [0] as const };
 
-    expect(convertLine(strokeColor, 1, 0, 0, [3] as const, 0, 1).dash).toBe("dot");
-    expect(convertLine(strokeColor, 1, 0, 0, [3, 3] as const, 0, 1).dash).toBe("dash");
-    expect(convertLine(strokeColor, 1, 0, 0, [6, 3] as const, 0, 1).dash).toBe("lgDash");
+    expect(convertLine({ strokeColor, lineWidth: 1, lineCap: 0, lineJoin: 0, dashArray: [3] as const, dashPhase: 0, alpha: 1 }).dash).toBe("dot");
+    expect(convertLine({ strokeColor, lineWidth: 1, lineCap: 0, lineJoin: 0, dashArray: [3, 3] as const, dashPhase: 0, alpha: 1 }).dash).toBe("dash");
+    expect(convertLine({ strokeColor, lineWidth: 1, lineCap: 0, lineJoin: 0, dashArray: [6, 3] as const, dashPhase: 0, alpha: 1 }).dash).toBe("lgDash");
   });
 });
 

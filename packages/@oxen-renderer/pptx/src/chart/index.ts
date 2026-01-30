@@ -19,15 +19,37 @@ import { createChartRenderContext, createFillResolver } from "./context-adapter"
 
 
 
-export function renderChart(
-  ...args: [
-    chart: Chart,
-    width: number,
-    height: number,
-    ctx: CoreRenderContext,
-  ]
-): HtmlString {
-  const [chart, width, height, ctx] = args;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export function renderChart({
+  chart,
+  width,
+  height,
+  ctx,
+}: {
+  chart: Chart;
+  width: number;
+  height: number;
+  ctx: CoreRenderContext;
+}): HtmlString {
   const chartCtx = createChartRenderContext(ctx);
   const fillResolver = createFillResolver(ctx);
   return unsafeHtml(renderChartSvg({ chart, width, height, ctx: chartCtx, fillResolver }));

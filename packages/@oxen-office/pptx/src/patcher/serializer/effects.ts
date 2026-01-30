@@ -107,6 +107,26 @@ export function serializeEffects(effects: Effects): XmlElement | null {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function serializeShadow(shadow: ShadowEffect): XmlElement {
   const name = shadow.type === "outer" ? "a:outerShdw" : "a:innerShdw";
 
@@ -150,6 +170,26 @@ export function serializeShadow(shadow: ShadowEffect): XmlElement {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function serializeGlow(glow: GlowEffect): XmlElement {
   return createElement(
     "a:glow",
@@ -157,6 +197,26 @@ export function serializeGlow(glow: GlowEffect): XmlElement {
     [serializeColor(glow.color)],
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -208,6 +268,26 @@ export function serializeReflection(reflection: ReflectionEffect): XmlElement {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function serializeSoftEdge(softEdge: SoftEdgeEffect): XmlElement {
   return createElement("a:softEdge", { rad: ooxmlEmu(softEdge.radius) });
 }
@@ -222,9 +302,49 @@ export function serializeSoftEdge(softEdge: SoftEdgeEffect): XmlElement {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function serializeAlphaBiLevel(effect: AlphaBiLevelEffect): XmlElement {
   return createElement("a:alphaBiLevel", { thresh: ooxmlPercent100k(effect.threshold) });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -251,10 +371,50 @@ export function serializeAlphaCeiling(effect: AlphaCeilingEffect): XmlElement {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function serializeAlphaFloor(effect: AlphaFloorEffect): XmlElement {
   void effect;
   return createElement("a:alphaFloor");
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -281,9 +441,49 @@ export function serializeAlphaInv(effect: AlphaInverseEffect): XmlElement {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function serializeAlphaMod(effect: AlphaModulateEffect): XmlElement {
   return createElement("a:alphaMod", {}, [serializeEffectContainer(effect.container, effect)]);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -309,9 +509,49 @@ export function serializeAlphaModFix(effect: AlphaModulateFixedEffect): XmlEleme
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function serializeAlphaOutset(effect: AlphaOutsetEffect): XmlElement {
   return createElement("a:alphaOutset", { rad: ooxmlEmu(effect.radius) });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -337,6 +577,26 @@ export function serializeAlphaRepl(effect: AlphaReplaceEffect): XmlElement {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function serializeBiLevel(effect: BiLevelEffect): XmlElement {
   return createElement("a:biLevel", { thresh: ooxmlPercent100k(effect.threshold) });
 }
@@ -351,9 +611,49 @@ export function serializeBiLevel(effect: BiLevelEffect): XmlElement {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function serializeBlend(effect: BlendEffect): XmlElement {
   return createElement("a:blend", { blend: effect.blend }, [serializeEffectContainer(effect.container, effect)]);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -386,9 +686,49 @@ export function serializeColorChange(effect: ColorChangeEffect): XmlElement {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function serializeColorReplace(effect: ColorReplaceEffect): XmlElement {
   return createElement("a:clrRepl", {}, [serializeColor(effect.color)]);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -406,6 +746,26 @@ export function serializeDuotone(effect: DuotoneEffect): XmlElement {
     serializeColor(effect.colors[1]),
   ]);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -437,10 +797,50 @@ export function serializeFillOverlay(effect: FillOverlayEffect): XmlElement {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function serializeGrayscale(effect: GrayscaleEffect): XmlElement {
   void effect;
   return createElement("a:grayscl");
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -463,6 +863,26 @@ export function serializePresetShadow(effect: PresetShadowEffect): XmlElement {
     [serializeColor(effect.color)],
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

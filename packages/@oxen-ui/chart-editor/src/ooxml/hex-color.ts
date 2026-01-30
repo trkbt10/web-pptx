@@ -9,6 +9,26 @@ import type { Color } from "@oxen-office/ooxml/domain/color";
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createSrgbColor(hex6: string): Color {
   const normalized = normalizeHex6(hex6);
   return {
@@ -18,6 +38,26 @@ export function createSrgbColor(hex6: string): Color {
     },
   };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

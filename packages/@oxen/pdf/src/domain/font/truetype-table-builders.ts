@@ -200,32 +200,38 @@ function buildFormat4Subtable(segments: Segment[]): Uint8Array {
   return data;
 }
 
-function readUint16FromTableOrDefault(
-  ...args: readonly [
-    view: DataView,
-    dataLength: number,
-    table: TableEntry | undefined,
-    fieldOffset: number,
-    defaultValue: number,
-  ]
-): number {
-  const [view, dataLength, table, fieldOffset, defaultValue] = args;
+function readUint16FromTableOrDefault({
+  view,
+  dataLength,
+  table,
+  fieldOffset,
+  defaultValue,
+}: {
+  readonly view: DataView;
+  readonly dataLength: number;
+  readonly table: TableEntry | undefined;
+  readonly fieldOffset: number;
+  readonly defaultValue: number;
+}): number {
   if (!table) {return defaultValue;}
   const start = table.offset + fieldOffset;
   if (start + 2 > dataLength) {return defaultValue;}
   return view.getUint16(start, false);
 }
 
-function readInt16FromTableOrDefault(
-  ...args: readonly [
-    view: DataView,
-    dataLength: number,
-    table: TableEntry | undefined,
-    fieldOffset: number,
-    defaultValue: number,
-  ]
-): number {
-  const [view, dataLength, table, fieldOffset, defaultValue] = args;
+function readInt16FromTableOrDefault({
+  view,
+  dataLength,
+  table,
+  fieldOffset,
+  defaultValue,
+}: {
+  readonly view: DataView;
+  readonly dataLength: number;
+  readonly table: TableEntry | undefined;
+  readonly fieldOffset: number;
+  readonly defaultValue: number;
+}): number {
   if (!table) {return defaultValue;}
   const start = table.offset + fieldOffset;
   if (start + 2 > dataLength) {return defaultValue;}
@@ -242,13 +248,13 @@ export function buildOS2Table(fontData: Uint8Array): Uint8Array {
   const view = new DataView(fontData.buffer, fontData.byteOffset, fontData.byteLength);
 
   const headTable = tables.find((t) => t.tag === "head");
-  const unitsPerEm = readUint16FromTableOrDefault(view, fontData.length, headTable, 18, 1000);
+  const unitsPerEm = readUint16FromTableOrDefault({ view, dataLength: fontData.length, table: headTable, fieldOffset: 18, defaultValue: 1000 });
 
   const hheaTable = tables.find((t) => t.tag === "hhea");
   const defaultAscender = Math.round(unitsPerEm * 0.8);
   const defaultDescender = Math.round(unitsPerEm * -0.2);
-  const ascender = readInt16FromTableOrDefault(view, fontData.length, hheaTable, 4, defaultAscender);
-  const descender = readInt16FromTableOrDefault(view, fontData.length, hheaTable, 6, defaultDescender);
+  const ascender = readInt16FromTableOrDefault({ view, dataLength: fontData.length, table: hheaTable, fieldOffset: 4, defaultValue: defaultAscender });
+  const descender = readInt16FromTableOrDefault({ view, dataLength: fontData.length, table: hheaTable, fieldOffset: 6, defaultValue: defaultDescender });
 
   const os2Size = 96;
   const buffer = new ArrayBuffer(os2Size);

@@ -14,6 +14,26 @@ export type DiagramTextBody = { readonly paragraphs: readonly DiagramTextParagra
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function extractPlainTextFromTextBody(textBody: unknown): string | undefined {
   if (!isDiagramTextBody(textBody)) {
     return undefined;

@@ -231,6 +231,26 @@ const FIXTURES: readonly FixtureWriter[] = [
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export async function generatePdfkitFixtures(
   options: GeneratePdfkitFixturesOptions,
 ): Promise<readonly string[]> {

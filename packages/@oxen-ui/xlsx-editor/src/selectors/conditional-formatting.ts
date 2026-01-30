@@ -82,15 +82,12 @@ function valueToScalar(value: CellValue): FormulaScalar {
   }
 }
 
-function getCellScalar(
-  ...args: readonly [
-    cell: Cell | undefined,
-    sheetIndex: number,
-    address: CellAddress,
-    formulaEvaluator: FormulaEvaluator,
-  ]
-): FormulaScalar {
-  const [cell, sheetIndex, address, formulaEvaluator] = args;
+function getCellScalar({ cell, sheetIndex, address, formulaEvaluator }: {
+  readonly cell: Cell | undefined;
+  readonly sheetIndex: number;
+  readonly address: CellAddress;
+  readonly formulaEvaluator: FormulaEvaluator;
+}): FormulaScalar {
   if (!cell) {
     return null;
   }
@@ -165,24 +162,21 @@ function compareScalars(left: FormulaScalar, right: FormulaScalar, op: "<" | "<=
   return false;
 }
 
-function evaluateRuleMatchesCell(
-  ...args: readonly [
-    rule: XlsxConditionalFormattingRule,
-    cell: Cell | undefined,
-    sheetIndex: number,
-    anchor: CellAddress,
-    address: CellAddress,
-    formulaEvaluator: FormulaEvaluator,
-  ]
-): boolean {
-  const [rule, cell, sheetIndex, anchor, address, formulaEvaluator] = args;
+function evaluateRuleMatchesCell({ rule, cell, sheetIndex, anchor, address, formulaEvaluator }: {
+  readonly rule: XlsxConditionalFormattingRule;
+  readonly cell: Cell | undefined;
+  readonly sheetIndex: number;
+  readonly anchor: CellAddress;
+  readonly address: CellAddress;
+  readonly formulaEvaluator: FormulaEvaluator;
+}): boolean {
   if (rule.type === "cellIs") {
     const compareOp = asCompareOperator(rule.operator);
     const criterion = rule.formulas[0];
     if (!compareOp || !criterion) {
       return false;
     }
-    const left = getCellScalar(cell, sheetIndex, address, formulaEvaluator);
+    const left = getCellScalar({ cell, sheetIndex, address, formulaEvaluator });
     const evaluated = formulaEvaluator.evaluateFormulaResult(sheetIndex, address, shiftConditionalFormula(criterion, anchor, address));
     if (Array.isArray(evaluated)) {
       return false;
@@ -291,14 +285,14 @@ export function resolveCellConditionalDifferentialFormat(params: {
 
   const rules = collectApplicableRules(params.sheet, params.address);
   for (const candidate of rules) {
-    const matches = evaluateRuleMatchesCell(
-      candidate.rule,
-      params.cell,
-      params.sheetIndex,
-      candidate.anchor,
-      params.address,
-      params.formulaEvaluator,
-    );
+    const matches = evaluateRuleMatchesCell({
+      rule: candidate.rule,
+      cell: params.cell,
+      sheetIndex: params.sheetIndex,
+      anchor: candidate.anchor,
+      address: params.address,
+      formulaEvaluator: params.formulaEvaluator,
+    });
     if (!matches) {
       continue;
     }

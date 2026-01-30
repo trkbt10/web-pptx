@@ -43,6 +43,26 @@ const COLOR_ELEMENT_NAMES = [
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function findColorElement(parent: XmlElement): XmlElement | undefined {
   return findChild(parent, (child) =>
     COLOR_ELEMENT_NAMES.includes(child.name as typeof COLOR_ELEMENT_NAMES[number]),
@@ -262,6 +282,26 @@ function parseColorTransforms(element: XmlElement): ColorTransform | undefined {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseColor(element: XmlElement | undefined): Color | undefined {
   if (!element) {return undefined;}
 
@@ -272,6 +312,26 @@ export function parseColor(element: XmlElement | undefined): Color | undefined {
 
   return { spec, transform };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

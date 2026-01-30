@@ -67,15 +67,17 @@ type ResolvedGradientConfig = ResolvedLinearGradient | ResolvedRadialGradient;
 
 const textureCache = new Map<string, THREE.CanvasTexture>();
 
-function getGradientCacheKey(
-  ...args: [
-    config: ResolvedGradientConfig,
-    width: number,
-    height: number,
-    tileRect?: TileRect,
-  ]
-): string {
-  const [config, width, height, tileRect] = args;
+function getGradientCacheKey({
+  config,
+  width,
+  height,
+  tileRect,
+}: {
+  config: ResolvedGradientConfig;
+  width: number;
+  height: number;
+  tileRect?: TileRect;
+}): string {
   return JSON.stringify({ config, width, height, tileRect });
 }
 
@@ -210,16 +212,18 @@ function createGradientTexture(
  *
  * @internal This function uses internal resolved types.
  */
-function createGradientTextureInternal(
-  ...args: [
-    config: ResolvedGradientConfig,
-    width?: number,
-    height?: number,
-    tileRect?: TileRect,
-  ]
-): THREE.CanvasTexture {
-  const [config, width = DEFAULT_TEXTURE_SIZE, height = DEFAULT_TEXTURE_SIZE, tileRect] = args;
-  const cacheKey = getGradientCacheKey(config, width, height, tileRect);
+function createGradientTextureInternal({
+  config,
+  width = DEFAULT_TEXTURE_SIZE,
+  height = DEFAULT_TEXTURE_SIZE,
+  tileRect,
+}: {
+  config: ResolvedGradientConfig;
+  width?: number;
+  height?: number;
+  tileRect?: TileRect;
+}): THREE.CanvasTexture {
+  const cacheKey = getGradientCacheKey({ config, width, height, tileRect });
   const cached = textureCache.get(cacheKey);
   if (cached) {
     return cached;
@@ -263,12 +267,12 @@ export function createLinearGradientTextureFromResolved(
 ): THREE.CanvasTexture {
   const width = options?.width ?? DEFAULT_TEXTURE_SIZE;
   const height = options?.height ?? DEFAULT_TEXTURE_SIZE;
-  return createGradientTextureInternal(
-    { type: "linear", angle, stops },
+  return createGradientTextureInternal({
+    config: { type: "linear", angle, stops },
     width,
     height,
-    options?.tileRect,
-  );
+    tileRect: options?.tileRect,
+  });
 }
 
 /**
@@ -298,12 +302,12 @@ export function createRadialGradientTextureFromResolved(
 ): THREE.CanvasTexture {
   const width = options?.width ?? DEFAULT_TEXTURE_SIZE;
   const height = options?.height ?? DEFAULT_TEXTURE_SIZE;
-  return createGradientTextureInternal(
-    { type: "radial", path, stops, centerX: options?.centerX, centerY: options?.centerY },
+  return createGradientTextureInternal({
+    config: { type: "radial", path, stops, centerX: options?.centerX, centerY: options?.centerY },
     width,
     height,
-    options?.tileRect,
-  );
+    tileRect: options?.tileRect,
+  });
 }
 
 

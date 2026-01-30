@@ -25,6 +25,26 @@ type CompareSvgToSnapshotArgs = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function svgToPng(
   svg: string,
   width?: number,
@@ -32,6 +52,26 @@ export function svgToPng(
 ): Buffer {
   return svgToPngImpl(svg, width, { ...options });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -53,9 +93,49 @@ export function compareSvgToSnapshot(args: CompareSvgToSnapshotArgs): CompareRes
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function hasSnapshot(snapshotName: string, slideNumber: number): boolean {
   return hasSnapshotImpl(snapshotName, slideNumber);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

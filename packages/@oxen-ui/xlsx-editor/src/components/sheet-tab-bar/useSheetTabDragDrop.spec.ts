@@ -8,16 +8,13 @@
  * Gaps are numbered: 0 (before first tab), 1 (between tab 0 and 1), etc.
  * If the target gap is adjacent to the dragging tab, it's a no-op.
  */
-function calculateFinalPosition(
-  ...args: readonly [
-    draggingIndex: number,
-    targetTabIndex: number,
-    clientX: number,
-    rectLeft: number,
-    rectWidth: number,
-  ]
-): { position: number; gapIndex: number } | undefined {
-  const [draggingIndex, targetTabIndex, clientX, rectLeft, rectWidth] = args;
+function calculateFinalPosition({ draggingIndex, targetTabIndex, clientX, rectLeft, rectWidth }: {
+  readonly draggingIndex: number;
+  readonly targetTabIndex: number;
+  readonly clientX: number;
+  readonly rectLeft: number;
+  readonly rectWidth: number;
+}): { position: number; gapIndex: number } | undefined {
   if (draggingIndex === targetTabIndex) {
     return undefined;
   }
@@ -47,12 +44,12 @@ describe("useSheetTabDragDrop", () => {
       const targetTabIndex = 1;
 
       it("left side of tab 1 -> no-op (gap 1 is adjacent to tab 0)", () => {
-        const result = calculateFinalPosition(draggingIndex, targetTabIndex, 125, 100, 100);
+        const result = calculateFinalPosition({ draggingIndex, targetTabIndex, clientX: 125, rectLeft: 100, rectWidth: 100 });
         expect(result).toBeUndefined();
       });
 
       it("right side of tab 1 -> move to position 1", () => {
-        const result = calculateFinalPosition(draggingIndex, targetTabIndex, 175, 100, 100);
+        const result = calculateFinalPosition({ draggingIndex, targetTabIndex, clientX: 175, rectLeft: 100, rectWidth: 100 });
         expect(result).toEqual({ position: 1, gapIndex: 2 });
       });
     });
@@ -62,12 +59,12 @@ describe("useSheetTabDragDrop", () => {
       const targetTabIndex = 0;
 
       it("left side of tab 0 -> move to position 0", () => {
-        const result = calculateFinalPosition(draggingIndex, targetTabIndex, 25, 0, 100);
+        const result = calculateFinalPosition({ draggingIndex, targetTabIndex, clientX: 25, rectLeft: 0, rectWidth: 100 });
         expect(result).toEqual({ position: 0, gapIndex: 0 });
       });
 
       it("right side of tab 0 -> no-op (gap 1 is adjacent to tab 1)", () => {
-        const result = calculateFinalPosition(draggingIndex, targetTabIndex, 75, 0, 100);
+        const result = calculateFinalPosition({ draggingIndex, targetTabIndex, clientX: 75, rectLeft: 0, rectWidth: 100 });
         expect(result).toBeUndefined();
       });
     });
@@ -77,12 +74,12 @@ describe("useSheetTabDragDrop", () => {
       const targetTabIndex = 2;
 
       it("left side of tab 2 -> no-op (gap 2 is adjacent to tab 1)", () => {
-        const result = calculateFinalPosition(draggingIndex, targetTabIndex, 225, 200, 100);
+        const result = calculateFinalPosition({ draggingIndex, targetTabIndex, clientX: 225, rectLeft: 200, rectWidth: 100 });
         expect(result).toBeUndefined();
       });
 
       it("right side of tab 2 -> move to position 2", () => {
-        const result = calculateFinalPosition(draggingIndex, targetTabIndex, 275, 200, 100);
+        const result = calculateFinalPosition({ draggingIndex, targetTabIndex, clientX: 275, rectLeft: 200, rectWidth: 100 });
         expect(result).toEqual({ position: 2, gapIndex: 3 });
       });
     });
@@ -92,12 +89,12 @@ describe("useSheetTabDragDrop", () => {
       const targetTabIndex = 1;
 
       it("left side of tab 1 -> move to position 1", () => {
-        const result = calculateFinalPosition(draggingIndex, targetTabIndex, 125, 100, 100);
+        const result = calculateFinalPosition({ draggingIndex, targetTabIndex, clientX: 125, rectLeft: 100, rectWidth: 100 });
         expect(result).toEqual({ position: 1, gapIndex: 1 });
       });
 
       it("right side of tab 1 -> no-op (gap 2 is adjacent to tab 2)", () => {
-        const result = calculateFinalPosition(draggingIndex, targetTabIndex, 175, 100, 100);
+        const result = calculateFinalPosition({ draggingIndex, targetTabIndex, clientX: 175, rectLeft: 100, rectWidth: 100 });
         expect(result).toBeUndefined();
       });
     });
@@ -107,12 +104,12 @@ describe("useSheetTabDragDrop", () => {
       const targetTabIndex = 2;
 
       it("left side of tab 2 -> insert before, position 1", () => {
-        const result = calculateFinalPosition(draggingIndex, targetTabIndex, 225, 200, 100);
+        const result = calculateFinalPosition({ draggingIndex, targetTabIndex, clientX: 225, rectLeft: 200, rectWidth: 100 });
         expect(result).toEqual({ position: 1, gapIndex: 2 });
       });
 
       it("right side of tab 2 -> insert after, position 2", () => {
-        const result = calculateFinalPosition(draggingIndex, targetTabIndex, 275, 200, 100);
+        const result = calculateFinalPosition({ draggingIndex, targetTabIndex, clientX: 275, rectLeft: 200, rectWidth: 100 });
         expect(result).toEqual({ position: 2, gapIndex: 3 });
       });
     });
@@ -122,19 +119,19 @@ describe("useSheetTabDragDrop", () => {
       const targetTabIndex = 0;
 
       it("left side of tab 0 -> insert before, position 0", () => {
-        const result = calculateFinalPosition(draggingIndex, targetTabIndex, 25, 0, 100);
+        const result = calculateFinalPosition({ draggingIndex, targetTabIndex, clientX: 25, rectLeft: 0, rectWidth: 100 });
         expect(result).toEqual({ position: 0, gapIndex: 0 });
       });
 
       it("right side of tab 0 -> insert after, position 1", () => {
-        const result = calculateFinalPosition(draggingIndex, targetTabIndex, 75, 0, 100);
+        const result = calculateFinalPosition({ draggingIndex, targetTabIndex, clientX: 75, rectLeft: 0, rectWidth: 100 });
         expect(result).toEqual({ position: 1, gapIndex: 1 });
       });
     });
 
     describe("self drop", () => {
       it("dragging over self returns undefined", () => {
-        const result = calculateFinalPosition(1, 1, 125, 100, 100);
+        const result = calculateFinalPosition({ draggingIndex: 1, targetTabIndex: 1, clientX: 125, rectLeft: 100, rectWidth: 100 });
         expect(result).toBeUndefined();
       });
     });

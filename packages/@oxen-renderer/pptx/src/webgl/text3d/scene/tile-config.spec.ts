@@ -130,13 +130,13 @@ describe("tile-config", () => {
     it("calculates repeat based on geometry and texture size", () => {
       const config = createDefaultTileFill();
 
-      const result = calculateTileFillTransform(
+      const result = calculateTileFillTransform({
         config,
-        200, // geometry width
-        100, // geometry height
-        50, // texture width
-        50, // texture height
-      );
+        geometryWidth: 200,
+        geometryHeight: 100,
+        textureWidth: 50,
+        textureHeight: 50,
+      });
 
       // 200px geometry / 50px tile = 4 repeats
       expect(result.repeatX).toBe(4);
@@ -151,13 +151,13 @@ describe("tile-config", () => {
         sy: 200 as Percent, // 200% scale = double size = half repeats
       };
 
-      const result = calculateTileFillTransform(
+      const result = calculateTileFillTransform({
         config,
-        100, // geometry width
-        100, // geometry height
-        50, // texture width
-        50, // texture height
-      );
+        geometryWidth: 100,
+        geometryHeight: 100,
+        textureWidth: 50,
+        textureHeight: 50,
+      });
 
       // 100 / (50 * 0.5) = 100 / 25 = 4
       expect(result.repeatX).toBe(4);
@@ -172,13 +172,13 @@ describe("tile-config", () => {
         ty: 20 as Pixels,
       };
 
-      const result = calculateTileFillTransform(
+      const result = calculateTileFillTransform({
         config,
-        100, // geometry width
-        100, // geometry height
-        50, // texture width
-        50, // texture height
-      );
+        geometryWidth: 100,
+        geometryHeight: 100,
+        textureWidth: 50,
+        textureHeight: 50,
+      });
 
       // tx=10 / geoWidth=100 = 0.1 (plus alignment offset for 'tl')
       expect(result.offsetX).toBe(0.1);

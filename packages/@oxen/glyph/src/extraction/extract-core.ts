@@ -47,21 +47,24 @@ const MAX_CANVAS_SIZE = 512;
  * Extract glyph contours from a character using canvas rendering.
  * Pure function - no caching, no side effects.
  *
- * @param char - Single character to extract
- * @param fontFamily - Font family name
- * @param style - Font style (size, weight, style)
- * @param createCanvas - Factory function to create canvas with context
+ * @param options - Options for glyph extraction
+ * @param options.char - Single character to extract
+ * @param options.fontFamily - Font family name
+ * @param options.style - Font style (size, weight, style)
+ * @param options.createCanvas - Factory function to create canvas with context
  * @returns Glyph contour data
  */
-export function extractGlyphCore(
-  ...args: readonly [
-    char: string,
-    fontFamily: string,
-    style: GlyphStyleKey,
-    createCanvas: CanvasFactory,
-  ]
-): GlyphContour {
-  const [char, fontFamily, style, createCanvas] = args;
+export function extractGlyphCore({
+  char,
+  fontFamily,
+  style,
+  createCanvas,
+}: {
+  readonly char: string;
+  readonly fontFamily: string;
+  readonly style: GlyphStyleKey;
+  readonly createCanvas: CanvasFactory;
+}): GlyphContour {
   const scaledSize = style.fontSize * RENDER_SCALE;
 
   // Calculate required canvas size based on font size
@@ -132,16 +135,25 @@ export function extractGlyphCore(
 /**
  * Create whitespace glyph (space, tab, newline).
  * No contour extraction needed - just metrics.
+ *
+ * @param options - Options for whitespace glyph creation
+ * @param options.char - Whitespace character
+ * @param options.fontFamily - Font family name
+ * @param options.style - Font style (size, weight, style)
+ * @param options.createCanvas - Factory function to create canvas with context
+ * @returns Glyph contour data with empty paths
  */
-export function createWhitespaceGlyphCore(
-  ...args: readonly [
-    char: string,
-    fontFamily: string,
-    style: GlyphStyleKey,
-    createCanvas: CanvasFactory,
-  ]
-): GlyphContour {
-  const [char, fontFamily, style, createCanvas] = args;
+export function createWhitespaceGlyphCore({
+  char,
+  fontFamily,
+  style,
+  createCanvas,
+}: {
+  readonly char: string;
+  readonly fontFamily: string;
+  readonly style: GlyphStyleKey;
+  readonly createCanvas: CanvasFactory;
+}): GlyphContour {
   const { ctx } = createCanvas(64, 64);
 
   const fontString = `${style.fontStyle} ${style.fontWeight} ${style.fontSize}px ${formatFontFamily(fontFamily, GENERIC_FONT_FAMILIES)}`;

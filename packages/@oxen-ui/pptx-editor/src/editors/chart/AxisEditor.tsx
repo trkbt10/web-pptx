@@ -24,9 +24,49 @@ export type AxisEditorProps = EditorProps<Axis> & {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function AxisEditor(props: AxisEditorProps) {
   return <CoreAxisEditor {...props} adapters={pptxChartEditorAdapters} />;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -42,9 +82,49 @@ export function createDefaultAxis() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createDefaultCategoryAxis() {
   return createDefaultCategoryAxisCore();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

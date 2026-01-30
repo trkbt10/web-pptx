@@ -118,16 +118,13 @@ export function updateCellById(
   return { ...worksheet, rows: updatedRows };
 }
 
-function processRowForDeletion(
-  ...args: readonly [
-    row: XlsxRow,
-    minRow: number,
-    maxRow: number,
-    minCol: number,
-    maxCol: number,
-  ]
-): { readonly row: XlsxRow; readonly changed: boolean } {
-  const [row, minRow, maxRow, minCol, maxCol] = args;
+function processRowForDeletion({ row, minRow, maxRow, minCol, maxCol }: {
+  readonly row: XlsxRow;
+  readonly minRow: number;
+  readonly maxRow: number;
+  readonly minCol: number;
+  readonly maxCol: number;
+}): { readonly row: XlsxRow; readonly changed: boolean } {
   const rowNumber = row.rowNumber as number;
   if (rowNumber < minRow || rowNumber > maxRow) {
     return { row, changed: false };
@@ -158,7 +155,7 @@ export function deleteCellRange(
     readonly changed: boolean;
   }>(
     (acc, row) => {
-      const processed = processRowForDeletion(row, minRow, maxRow, minCol, maxCol);
+      const processed = processRowForDeletion({ row, minRow, maxRow, minCol, maxCol });
       return {
         rows: [...acc.rows, processed.row],
         changed: acc.changed || processed.changed,
@@ -184,16 +181,13 @@ function clearCellContentInRange(
   return { cell: { ...withoutFormula, value: EMPTY_VALUE }, changed: true };
 }
 
-function processRowForContentClear(
-  ...args: readonly [
-    row: XlsxRow,
-    minRow: number,
-    maxRow: number,
-    minCol: number,
-    maxCol: number,
-  ]
-): { readonly row: XlsxRow; readonly changed: boolean } {
-  const [row, minRow, maxRow, minCol, maxCol] = args;
+function processRowForContentClear({ row, minRow, maxRow, minCol, maxCol }: {
+  readonly row: XlsxRow;
+  readonly minRow: number;
+  readonly maxRow: number;
+  readonly minCol: number;
+  readonly maxCol: number;
+}): { readonly row: XlsxRow; readonly changed: boolean } {
   const rowNumber = row.rowNumber as number;
   if (rowNumber < minRow || rowNumber > maxRow) {
     return { row, changed: false };
@@ -222,7 +216,7 @@ export function clearCellContents(
     readonly changed: boolean;
   }>(
     (acc, row) => {
-      const processed = processRowForContentClear(row, minRow, maxRow, minCol, maxCol);
+      const processed = processRowForContentClear({ row, minRow, maxRow, minCol, maxCol });
       return {
         rows: [...acc.rows, processed.row],
         changed: acc.changed || processed.changed,
@@ -251,16 +245,13 @@ function clearCellFormatInRange(
   return { cell: withoutStyle, changed: true };
 }
 
-function processRowForFormatClear(
-  ...args: readonly [
-    row: XlsxRow,
-    minRow: number,
-    maxRow: number,
-    minCol: number,
-    maxCol: number,
-  ]
-): { readonly row: XlsxRow; readonly changed: boolean } {
-  const [row, minRow, maxRow, minCol, maxCol] = args;
+function processRowForFormatClear({ row, minRow, maxRow, minCol, maxCol }: {
+  readonly row: XlsxRow;
+  readonly minRow: number;
+  readonly maxRow: number;
+  readonly minCol: number;
+  readonly maxCol: number;
+}): { readonly row: XlsxRow; readonly changed: boolean } {
   const rowNumber = row.rowNumber as number;
   if (rowNumber < minRow || rowNumber > maxRow) {
     return { row, changed: false };
@@ -289,7 +280,7 @@ export function clearCellFormats(
     readonly changed: boolean;
   }>(
     (acc, row) => {
-      const processed = processRowForFormatClear(row, minRow, maxRow, minCol, maxCol);
+      const processed = processRowForFormatClear({ row, minRow, maxRow, minCol, maxCol });
       return {
         rows: [...acc.rows, processed.row],
         changed: acc.changed || processed.changed,

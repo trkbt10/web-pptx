@@ -62,10 +62,13 @@ export type HeaderFooterContext = {
  *
  * @see ECMA-376-1:2016 Section 17.10.1 (Header/Footer Overview)
  */
-function getHeaderFooterType(
-  ...args: readonly [pageIndex: number, isFirstPage: boolean, titlePg: boolean, evenAndOddHeaders: boolean]
-): HeaderFooterType {
-  const [pageIndex, isFirstPage, titlePg, evenAndOddHeaders] = args;
+function getHeaderFooterType(params: {
+  readonly pageIndex: number;
+  readonly isFirstPage: boolean;
+  readonly titlePg: boolean;
+  readonly evenAndOddHeaders: boolean;
+}): HeaderFooterType {
+  const { pageIndex, isFirstPage, titlePg, evenAndOddHeaders } = params;
   // First page of section with titlePg enabled
   if (isFirstPage && titlePg) {
     return "first";
@@ -209,12 +212,12 @@ export function resolveHeaderFooter(
   const { sectPr, headers, footers, evenAndOddHeaders = false } = context;
 
   // Determine which type of header/footer to use
-  const type = getHeaderFooterType(
+  const type = getHeaderFooterType({
     pageIndex,
-    isFirstPageOfSection,
-    sectPr?.titlePg ?? false,
+    isFirstPage: isFirstPageOfSection,
+    titlePg: sectPr?.titlePg ?? false,
     evenAndOddHeaders,
-  );
+  });
 
   // Resolve header and footer
   const header = getHeaderForType(sectPr?.headerReference, headers, type);

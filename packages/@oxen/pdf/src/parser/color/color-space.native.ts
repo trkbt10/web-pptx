@@ -95,6 +95,26 @@ function parseNamedColorSpaceEntry(page: NativePdfPage, entry: PdfObject | undef
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function extractColorSpacesFromResourcesNative(
   page: NativePdfPage,
   resources: PdfDict | null,

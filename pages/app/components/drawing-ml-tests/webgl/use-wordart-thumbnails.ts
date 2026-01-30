@@ -55,15 +55,15 @@ async function generateThumbnail(
   ]);
 
   // Use library function for layout
-  const baseRuns = extractText3DRuns(
+  const baseRuns = extractText3DRuns({
     textBody,
     width,
     height,
-    demoColorContext,
-    undefined,
-    undefined,
-    () => undefined,
-  );
+    colorContext: demoColorContext,
+    fontScheme: undefined,
+    options: undefined,
+    resourceResolver: () => undefined,
+  });
   const runs = baseRuns.map((run) => ({ ...run, fill }));
 
   const config: Text3DRenderConfig = {

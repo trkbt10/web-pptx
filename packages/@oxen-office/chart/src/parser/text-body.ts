@@ -46,6 +46,26 @@ function mapParagraphAlignment(algn: string | undefined): ParagraphProperties["a
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseRunProperties(rPr: XmlElement | undefined): RunProperties | undefined {
   if (!rPr) {return undefined;}
 
@@ -76,6 +96,26 @@ export function parseRunProperties(rPr: XmlElement | undefined): RunProperties |
 
   return hasAny ? props : undefined;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -129,6 +169,26 @@ function parseTextRun(child: XmlElement): TextRun | undefined {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseParagraph(element: XmlElement): Paragraph {
   const pPr = getChild(element, "a:pPr");
   const endParaRPr = getChild(element, "a:endParaRPr");
@@ -146,6 +206,26 @@ export function parseParagraph(element: XmlElement): Paragraph {
     endProperties: parseRunProperties(endParaRPr),
   };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -158,19 +158,21 @@ function createInitialState(
   };
 }
 
-function computeSelectionRectsIfRange(
-  ...args: readonly [
-    layout: LayoutResult,
-    start: number,
-    end: number,
-    defaultRunProperties: DocxRunProperties | undefined,
-  ]
-): readonly SelectionRect[] {
-  const [layout, start, end, defaultRunProperties] = args;
+function computeSelectionRectsIfRange({
+  layout,
+  start,
+  end,
+  defaultRunProperties,
+}: {
+  layout: LayoutResult;
+  start: number;
+  end: number;
+  defaultRunProperties: DocxRunProperties | undefined;
+}): readonly SelectionRect[] {
   if (start === end) {
     return [];
   }
-  return computeSelectionRects(layout, start, end, defaultRunProperties);
+  return computeSelectionRects({ layout, selectionStart: start, selectionEnd: end, defaultRunProperties });
 }
 
 // =============================================================================
@@ -242,7 +244,7 @@ export function DocxTextEditController({
     const end = textarea.selectionEnd ?? 0;
 
     const cursor = getCursorCoordinates(layout, end, defaultRunProperties);
-    const selectionRects = computeSelectionRectsIfRange(layout, start, end, defaultRunProperties);
+    const selectionRects = computeSelectionRectsIfRange({ layout, start, end, defaultRunProperties });
 
     setCursorState({
       cursor,
@@ -286,7 +288,7 @@ export function DocxTextEditController({
       point.y = event.clientY;
       const local = point.matrixTransform(matrix.inverse());
 
-      return coordinatesToOffset(layout, local.x, local.y, defaultRunProperties);
+      return coordinatesToOffset({ layout, x: local.x, y: local.y, defaultRunProperties });
     },
     [layout, defaultRunProperties],
   );
@@ -462,7 +464,7 @@ export function DocxTextEditController({
       point.y = event.clientY;
       const local = point.matrixTransform(matrix.inverse());
 
-      return coordinatesToOffset(layout, local.x, local.y, defaultRunProperties);
+      return coordinatesToOffset({ layout, x: local.x, y: local.y, defaultRunProperties });
     },
     [layout, defaultRunProperties],
   );

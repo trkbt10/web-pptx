@@ -12,8 +12,17 @@ import { DocxTextOverlay } from "./DocxTextOverlay";
  * Create a DOMRect-like object for testing.
  * jsdom doesn't have DOMRect constructor, so we create a compatible object.
  */
-function createBounds(...args: readonly [left: number, top: number, width: number, height: number]): DOMRect {
-  const [left, top, width, height] = args;
+function createBounds({
+  left,
+  top,
+  width,
+  height,
+}: {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}): DOMRect {
   return {
     x: left,
     y: top,
@@ -47,7 +56,7 @@ describe("DocxTextOverlay selection fill", () => {
     const { container } = render(
       <DocxTextOverlay
         paragraph={createParagraph("Hello world")}
-        bounds={createBounds(0, 0, 400, 80)}
+        bounds={createBounds({ left: 0, top: 0, width: 400, height: 80 })}
         selectionStart={0}
         selectionEnd={5}
       />,

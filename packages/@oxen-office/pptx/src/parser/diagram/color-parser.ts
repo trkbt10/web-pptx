@@ -15,6 +15,26 @@ import {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseDiagramColorsDefinition(...args: Parameters<typeof parseDiagramColorsDefinitionBase>) {
   return parseDiagramColorsDefinitionBase(...args);
 }
@@ -24,9 +44,49 @@ export function parseDiagramColorsDefinition(...args: Parameters<typeof parseDia
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseDiagramColorsDefinitionHeader(...args: Parameters<typeof parseDiagramColorsDefinitionHeaderBase>) {
   return parseDiagramColorsDefinitionHeaderBase(...args);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

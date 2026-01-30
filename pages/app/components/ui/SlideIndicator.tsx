@@ -87,6 +87,26 @@ const animationIndicatorStyle: CSSProperties = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function SlideIndicator({
   current,
   total,

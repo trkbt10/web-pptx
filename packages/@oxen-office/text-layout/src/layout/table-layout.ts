@@ -90,15 +90,13 @@ function calculateColumnWidths(
 /**
  * Get the width of a cell spanning multiple grid columns.
  */
-function getCellWidth(
-  ...args: readonly [
-    gridColIndex: number,
-    gridSpan: number,
-    columnWidths: readonly Pixels[],
-    cellSpacing: Pixels,
-  ]
-): Pixels {
-  const [gridColIndex, gridSpan, columnWidths, cellSpacing] = args;
+function getCellWidth(params: {
+  readonly gridColIndex: number;
+  readonly gridSpan: number;
+  readonly columnWidths: readonly Pixels[];
+  readonly cellSpacing: Pixels;
+}): Pixels {
+  const { gridColIndex, gridSpan, columnWidths, cellSpacing } = params;
   const cellSpacingValue = cellSpacing as number;
   const totalWidth = columnWidths
     .slice(gridColIndex, gridColIndex + gridSpan)
@@ -113,15 +111,13 @@ function getCellWidth(
 /**
  * Get the X position of a cell.
  */
-function getCellX(
-  ...args: readonly [
-    gridColIndex: number,
-    columnWidths: readonly Pixels[],
-    cellSpacing: Pixels,
-    tableX: number,
-  ]
-): number {
-  const [gridColIndex, columnWidths, cellSpacing, tableX] = args;
+function getCellX(params: {
+  readonly gridColIndex: number;
+  readonly columnWidths: readonly Pixels[];
+  readonly cellSpacing: Pixels;
+  readonly tableX: number;
+}): number {
+  const { gridColIndex, columnWidths, cellSpacing, tableX } = params;
   const cellSpacingValue = cellSpacing as number;
   const widthBefore = columnWidths
     .slice(0, gridColIndex)
@@ -304,12 +300,12 @@ export function layoutTable(
   const availableWidthValue = availableWidth as number;
   const tableWidthValue = tableWidth as number;
 
-  const tableX = calculateTableX(
+  const tableX = calculateTableX({
     alignment,
-    indentValue,
-    availableWidthValue,
-    tableWidthValue,
-  );
+    indent: indentValue,
+    availableWidth: availableWidthValue,
+    tableWidth: tableWidthValue,
+  });
 
   // Build merge grid
   const mergeGrid = buildMergeGrid(table, columnWidths);
@@ -353,7 +349,7 @@ export function layoutTable(
       }
 
       // Calculate cell width
-      const cellWidth = getCellWidth(gridColIndexRef.value, gridSpan, columnWidths, cellSpacing);
+      const cellWidth = getCellWidth({ gridColIndex: gridColIndexRef.value, gridSpan, columnWidths, cellSpacing });
       const contentWidth = px(
         (cellWidth as number) - (padding.left as number) - (padding.right as number),
       );
@@ -372,7 +368,7 @@ export function layoutTable(
       cellHeights[rowIndex].push(minHeight / rowSpan); // Distribute height across spanned rows
 
       // Calculate X position
-      const cellX = getCellX(gridColIndexRef.value, columnWidths, cellSpacing, tableX);
+      const cellX = getCellX({ gridColIndex: gridColIndexRef.value, columnWidths, cellSpacing, tableX });
 
       // Create partial result (Y and final height will be set later)
       cellResults[rowIndex].push({
@@ -413,16 +409,14 @@ export function layoutTable(
     }
   });
 
-function getCellTotalRowHeight(
-  ...args: readonly [
-    cell: LayoutTableCellResult,
-    rowIndex: number,
-    rowHeights: readonly number[],
-    rowHeight: number,
-    cellSpacingValue: number,
-  ]
-): number {
-  const [cell, rowIndex, rowHeights, rowHeight, cellSpacingValue] = args;
+function getCellTotalRowHeight(params: {
+  readonly cell: LayoutTableCellResult;
+  readonly rowIndex: number;
+  readonly rowHeights: readonly number[];
+  readonly rowHeight: number;
+  readonly cellSpacingValue: number;
+}): number {
+  const { cell, rowIndex, rowHeights, rowHeight, cellSpacingValue } = params;
   if (cell.rowSpan <= 1) {
     return rowHeight;
   }
@@ -441,7 +435,7 @@ function getCellTotalRowHeight(
 
       // Update cell Y positions and heights
       const finalCells: LayoutTableCellResult[] = cellResults[rowIndex].map((cell) => {
-        const totalRowHeight = getCellTotalRowHeight(cell, rowIndex, rowHeights, rowHeight, cellSpacingValue);
+        const totalRowHeight = getCellTotalRowHeight({ cell, rowIndex, rowHeights, rowHeight, cellSpacingValue });
         return {
           ...cell,
           y: px(currentY),
@@ -480,15 +474,13 @@ function getCellTotalRowHeight(
 /**
  * Calculate table X position based on alignment.
  */
-function calculateTableX(
-  ...args: readonly [
-    alignment: "left" | "center" | "right",
-    indent: number,
-    availableWidth: number,
-    tableWidth: number,
-  ]
-): number {
-  const [alignment, indent, availableWidth, tableWidth] = args;
+function calculateTableX(params: {
+  readonly alignment: "left" | "center" | "right";
+  readonly indent: number;
+  readonly availableWidth: number;
+  readonly tableWidth: number;
+}): number {
+  const { alignment, indent, availableWidth, tableWidth } = params;
   switch (alignment) {
     case "center":
       return indent + (availableWidth - tableWidth) / 2;

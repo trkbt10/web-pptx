@@ -142,6 +142,26 @@ function PropertySetEditor({ propertySet, disabled, onChange }: PropertySetDispl
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function DiagramPointEditor<TTextBody, TShapeProperties>({
   value,
   onChange,
@@ -235,6 +255,26 @@ export function DiagramPointEditor<TTextBody, TShapeProperties>({
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

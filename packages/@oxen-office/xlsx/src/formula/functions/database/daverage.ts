@@ -53,7 +53,7 @@ export const dAverageFunction: FormulaFunctionEagerDefinition = {
     const database = parseDatabaseArgument(databaseArg, "DAVERAGE");
     const fieldValue = helpers.coerceScalar(fieldArg, "DAVERAGE field");
     const fieldIndex = resolveFieldIndex(fieldValue, database, "DAVERAGE");
-    const matchingRows = filterDatabaseRows(database, criteriaArg, helpers, "DAVERAGE");
+    const matchingRows = filterDatabaseRows({ database, criteriaArg, helpers, functionName: "DAVERAGE" });
     const numericValues = collectNumericFieldValues(matchingRows, fieldIndex);
 
     if (numericValues.length === 0) {

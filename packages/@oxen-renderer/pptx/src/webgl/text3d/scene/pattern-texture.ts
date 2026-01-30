@@ -676,18 +676,20 @@ const patternDrawers: Record<PatternPreset, PatternDrawer> = {
  *
  * @see ECMA-376 Part 1, Section 20.1.8.47 (pattFill)
  */
-export function createPatternTextureFromResolved(
-  ...args: [
-    preset: PatternPreset,
-    fgColor: string,
-    bgColor: string,
-    options?: {
+export function createPatternTextureFromResolved({
+  preset,
+  fgColor,
+  bgColor,
+  options,
+}: {
+  preset: PatternPreset;
+  fgColor: string;
+  bgColor: string;
+  options?: {
     readonly size?: number;
     readonly tileConfig?: PatternTileConfig;
-    },
-  ]
-): THREE.CanvasTexture {
-  const [preset, fgColor, bgColor, options] = args;
+  };
+}): THREE.CanvasTexture {
   const size = options?.size ?? 64;
   const tileConfig = options?.tileConfig ?? DEFAULT_PATTERN_TILE;
 

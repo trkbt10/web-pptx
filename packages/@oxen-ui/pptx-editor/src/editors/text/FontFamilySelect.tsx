@@ -72,26 +72,23 @@ function getCatalogTagFilter(catalogHasCategories: boolean) {
   };
 }
 
-function buildFontFamilyOptions(
-  ...args: readonly [
-    loadedFamilies: readonly string[],
-    catalogRecords: readonly FontCatalogFamilyRecord[],
-    currentValue: string,
-    catalogLabel: string,
-    showCatalogHint: boolean,
-    catalogStatus: "idle" | "loading" | "loaded" | "error",
-    catalogErrorMessage: string | null,
-  ]
-): SearchableSelectOption<FontFamilySelectValue>[] {
-  const [
-    loadedFamilies,
-    catalogRecords,
-    currentValue,
-    catalogLabel,
-    showCatalogHint,
-    catalogStatus,
-    catalogErrorMessage,
-  ] = args;
+function buildFontFamilyOptions({
+  loadedFamilies,
+  catalogRecords,
+  currentValue,
+  catalogLabel,
+  showCatalogHint,
+  catalogStatus,
+  catalogErrorMessage,
+}: {
+  loadedFamilies: readonly string[];
+  catalogRecords: readonly FontCatalogFamilyRecord[];
+  currentValue: string;
+  catalogLabel: string;
+  showCatalogHint: boolean;
+  catalogStatus: "idle" | "loading" | "loaded" | "error";
+  catalogErrorMessage: string | null;
+}): SearchableSelectOption<FontFamilySelectValue>[] {
   const categoryLabels: Record<string, string> = {
     "sans-serif": "Sans Serif",
     serif: "Serif",
@@ -333,15 +330,15 @@ export function FontFamilySelect({
 
   const options = useMemo(
     () =>
-      buildFontFamilyOptions(
-        documentFamilies,
+      buildFontFamilyOptions({
+        loadedFamilies: documentFamilies,
         catalogRecords,
-        value,
-        fontCatalog?.label ?? "Catalog",
-        !!fontCatalog,
+        currentValue: value,
+        catalogLabel: fontCatalog?.label ?? "Catalog",
+        showCatalogHint: !!fontCatalog,
         catalogStatus,
-        catalogErrorMessage
-      ),
+        catalogErrorMessage,
+      }),
     [documentFamilies, catalogRecords, value, fontCatalog?.label, catalogStatus, catalogErrorMessage, fontCatalog]
   );
 

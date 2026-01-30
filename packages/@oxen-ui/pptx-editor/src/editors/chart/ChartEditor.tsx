@@ -27,9 +27,49 @@ export type ChartEditorProps = EditorProps<Chart> & {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function ChartEditor(props: ChartEditorProps) {
   return <CoreChartEditor {...props} adapters={pptxChartEditorAdapters} />;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -45,9 +85,49 @@ export function createDefaultChart() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createDefaultView3D() {
   return createDefaultView3DCore();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -63,6 +143,26 @@ export function createDefaultChartSurface() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createDefaultDataTable() {
   return createDefaultDataTableCore();
 }
@@ -72,9 +172,49 @@ export function createDefaultDataTable() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createDefaultChartProtection() {
   return createDefaultChartProtectionCore();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

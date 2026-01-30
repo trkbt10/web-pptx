@@ -426,7 +426,7 @@ export async function parseXlsxWorkbook(
   const workbookInfo = parseWorkbookXml(getDocumentRoot(parseXml(workbookXml)));
 
   // 5. Create context
-  const context = createParseContext(sharedStrings, styleSheet, workbookInfo, relationships);
+  const context = createParseContext({ sharedStrings, styleSheet, workbookInfo, relationships });
 
   // 6. Parse each worksheet
   const sheets: XlsxWorksheet[] = [];
@@ -444,12 +444,12 @@ export async function parseXlsxWorkbook(
       const rels = parseRelsOrEmpty(sheetRelsXml);
       const relInfos = sheetRelsXml ? parseRelationshipInfos(getDocumentRoot(parseXml(sheetRelsXml))) : [];
 
-      const baseWorksheet = parseWorksheet(
-        sheetRoot,
+      const baseWorksheet = parseWorksheet({
+        worksheetElement: sheetRoot,
         context,
         options,
-        { ...sheetInfo, xmlPath },
-      );
+        sheetInfo: { ...sheetInfo, xmlPath },
+      });
       const comments = await loadWorksheetCommentsFromRelationships(getFileContent, xmlPath, relInfos);
 
       const worksheetWithComments = comments ? { ...baseWorksheet, comments } : baseWorksheet;

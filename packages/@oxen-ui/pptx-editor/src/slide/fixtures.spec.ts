@@ -22,19 +22,25 @@ import { px, deg } from "@oxen-office/ooxml/domain/units";
 // Test Fixtures (same as SlideEditorTest.tsx)
 // =============================================================================
 
-const createTestShape = (
-  ...args: readonly [
-    id: string,
-    name: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    fillColor: string,
-    rotation?: number,
-  ]
-): SpShape => {
-  const [id, name, x, y, width, height, fillColor, rotation = 0] = args;
+const createTestShape = ({
+  id,
+  name,
+  x,
+  y,
+  width,
+  height,
+  fillColor,
+  rotation = 0,
+}: {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fillColor: string;
+  rotation?: number;
+}): SpShape => {
   return {
     type: "sp",
     nonVisual: {
@@ -89,11 +95,11 @@ const createTestShape = (
 
 const createTestSlide = (): Slide => ({
   shapes: [
-    createTestShape("1", "Rectangle 1", 100, 100, 200, 120, "4A90D9"),
-    createTestShape("2", "Rectangle 2", 350, 80, 180, 150, "D94A4A"),
-    createTestShape("3", "Rectangle 3", 200, 280, 250, 100, "4AD97A", 15),
-    createTestShape("4", "Small Box", 560, 200, 80, 80, "D9C54A"),
-    createTestShape("5", "Wide Box", 50, 420, 300, 60, "9B4AD9"),
+    createTestShape({ id: "1", name: "Rectangle 1", x: 100, y: 100, width: 200, height: 120, fillColor: "4A90D9" }),
+    createTestShape({ id: "2", name: "Rectangle 2", x: 350, y: 80, width: 180, height: 150, fillColor: "D94A4A" }),
+    createTestShape({ id: "3", name: "Rectangle 3", x: 200, y: 280, width: 250, height: 100, fillColor: "4AD97A", rotation: 15 }),
+    createTestShape({ id: "4", name: "Small Box", x: 560, y: 200, width: 80, height: 80, fillColor: "D9C54A" }),
+    createTestShape({ id: "5", name: "Wide Box", x: 50, y: 420, width: 300, height: 60, fillColor: "9B4AD9" }),
   ],
 });
 
@@ -196,8 +202,8 @@ const createTestGrpShape = (id: string, name: string): GrpShape => ({
     },
   },
   children: [
-    createTestShape("child1", "Child 1", 0, 0, 100, 100, "FF0000"),
-    createTestShape("child2", "Child 2", 100, 50, 100, 100, "00FF00"),
+    createTestShape({ id: "child1", name: "Child 1", x: 0, y: 0, width: 100, height: 100, fillColor: "FF0000" }),
+    createTestShape({ id: "child2", name: "Child 2", x: 100, y: 50, width: 100, height: 100, fillColor: "00FF00" }),
   ],
 });
 
@@ -288,7 +294,7 @@ const createTestTableFrame = (id: string, name: string): GraphicFrame => ({
 describe("Test fixture validation", () => {
   describe("createTestShape", () => {
     it("creates shape with all required nonVisual properties", () => {
-      const shape = createTestShape("1", "Test", 0, 0, 100, 100, "FF0000");
+      const shape = createTestShape({ id: "1", name: "Test", x: 0, y: 0, width: 100, height: 100, fillColor: "FF0000" });
 
       expect(shape.nonVisual).toBeDefined();
       expect(shape.nonVisual.id).toBe("1");
@@ -296,7 +302,7 @@ describe("Test fixture validation", () => {
     });
 
     it("creates shape with complete transform", () => {
-      const shape = createTestShape("1", "Test", 10, 20, 100, 50, "FF0000", 45);
+      const shape = createTestShape({ id: "1", name: "Test", x: 10, y: 20, width: 100, height: 50, fillColor: "FF0000", rotation: 45 });
       const transform = shape.properties.transform;
 
       expect(transform).toBeDefined();
@@ -312,7 +318,7 @@ describe("Test fixture validation", () => {
     });
 
     it("creates shape with valid fill", () => {
-      const shape = createTestShape("1", "Test", 0, 0, 100, 100, "4A90D9");
+      const shape = createTestShape({ id: "1", name: "Test", x: 0, y: 0, width: 100, height: 100, fillColor: "4A90D9" });
       const fill = shape.properties.fill;
 
       expect(fill).toBeDefined();
@@ -326,7 +332,7 @@ describe("Test fixture validation", () => {
     });
 
     it("creates shape with valid line", () => {
-      const shape = createTestShape("1", "Test", 0, 0, 100, 100, "FF0000");
+      const shape = createTestShape({ id: "1", name: "Test", x: 0, y: 0, width: 100, height: 100, fillColor: "FF0000" });
       const line = shape.properties.line;
 
       expect(line).toBeDefined();
@@ -335,7 +341,7 @@ describe("Test fixture validation", () => {
     });
 
     it("creates shape with complete geometry including adjustValues", () => {
-      const shape = createTestShape("1", "Test", 0, 0, 100, 100, "FF0000");
+      const shape = createTestShape({ id: "1", name: "Test", x: 0, y: 0, width: 100, height: 100, fillColor: "FF0000" });
       const geometry = shape.properties.geometry as PresetGeometry;
 
       expect(geometry).toBeDefined();
@@ -385,7 +391,7 @@ describe("Test fixture validation", () => {
 
 describe("Domain type conformance", () => {
   it("SpShape has all required properties for PropertyPanel", () => {
-    const shape = createTestShape("1", "Test", 0, 0, 100, 100, "FF0000");
+    const shape = createTestShape({ id: "1", name: "Test", x: 0, y: 0, width: 100, height: 100, fillColor: "FF0000" });
 
     // These are accessed by PropertyPanel without null checks
     expect(shape.type).toBe("sp");
@@ -473,7 +479,7 @@ describe("Domain type conformance", () => {
 describe("Comprehensive slide with all shape types", () => {
   const createComprehensiveSlide = (): Slide => ({
     shapes: [
-      createTestShape("sp1", "Auto Shape", 100, 100, 200, 120, "4A90D9"),
+      createTestShape({ id: "sp1", name: "Auto Shape", x: 100, y: 100, width: 200, height: 120, fillColor: "4A90D9" }),
       createTestPicShape("pic1", "Picture"),
       createTestCxnShape("cxn1", "Connector"),
       createTestGrpShape("grp1", "Group"),

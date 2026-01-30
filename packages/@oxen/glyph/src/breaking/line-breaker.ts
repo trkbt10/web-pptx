@@ -195,21 +195,24 @@ function breakSpanAtWidth<T extends BreakableSpan>(
 /**
  * Break spans into lines with word wrapping.
  *
- * @param spans - Array of measured spans to break
- * @param firstLineWidth - Maximum width for the first line (in pixels)
- * @param nextLineWidth - Maximum width for subsequent lines (in pixels)
- * @param wrapMode - Text wrapping mode ("wrap" or "none")
+ * @param options - Options for line breaking
+ * @param options.spans - Array of measured spans to break
+ * @param options.firstLineWidth - Maximum width for the first line (in pixels)
+ * @param options.nextLineWidth - Maximum width for subsequent lines (in pixels)
+ * @param options.wrapMode - Text wrapping mode ("wrap" or "none")
  * @returns Line break result with lines, heights (in points), and page break flags
  */
-export function breakIntoLines<T extends BreakableSpan>(
-  ...args: readonly [
-    spans: readonly T[],
-    firstLineWidth: number,
-    nextLineWidth: number,
-    wrapMode: TextWrapping | "wrap",
-  ]
-): LineBreakResult<T> {
-  const [spans, firstLineWidth, nextLineWidth, wrapMode] = args;
+export function breakIntoLines<T extends BreakableSpan>({
+  spans,
+  firstLineWidth,
+  nextLineWidth,
+  wrapMode,
+}: {
+  readonly spans: readonly T[];
+  readonly firstLineWidth: number;
+  readonly nextLineWidth: number;
+  readonly wrapMode: TextWrapping | "wrap";
+}): LineBreakResult<T> {
   const lines: T[][] = [];
   const lineHeights: number[] = [];
   const pageBreaksAfter: boolean[] = [];

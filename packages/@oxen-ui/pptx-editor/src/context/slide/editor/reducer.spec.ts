@@ -23,17 +23,21 @@ import {
 // =============================================================================
 
 // Cast to SpShape since we're creating minimal test fixtures
-const createTestShape = (
-  ...args: readonly [
-    id: string,
-    name: string,
-    x?: number,
-    y?: number,
-    width?: number,
-    height?: number,
-  ]
-): SpShape => {
-  const [id, name, x = 0, y = 0, width = 100, height = 100] = args;
+const createTestShape = ({
+  id,
+  name,
+  x = 0,
+  y = 0,
+  width = 100,
+  height = 100,
+}: {
+  id: string;
+  name: string;
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+}): SpShape => {
   return {
     type: "sp",
     nonVisual: { id, name },
@@ -53,7 +57,7 @@ const createTestShape = (
 
 const createTestSlide = (shapeCount: number = 0): Slide => ({
   shapes: Array.from({ length: shapeCount }, (_, i) =>
-    createTestShape(String(i + 1), `Shape ${i + 1}`, i * 50, i * 50)
+    createTestShape({ id: String(i + 1), name: `Shape ${i + 1}`, x: i * 50, y: i * 50 })
   ) as Shape[],
 });
 
@@ -217,7 +221,7 @@ describe("SlideEditorContext Reducer - Shape Mutations", () => {
 
   it("ADD_SHAPE adds a new shape", () => {
     const state = createSlideEditorState(createTestSlide(2));
-    const newShape = createTestShape("99", "New Shape", 200, 200);
+    const newShape = createTestShape({ id: "99", name: "New Shape", x: 200, y: 200 });
     const newState = slideEditorReducer(state, {
       type: "ADD_SHAPE",
       shape: newShape,

@@ -155,7 +155,7 @@ export function openCfb(bytes: Uint8Array, opts?: { readonly strict?: boolean; r
 
   const root = directory[0];
   if (root && root.type === "root" && root.streamSize > 0n) {
-    mini.miniStreamBytes = readStreamFromFat(bytes, header, fat, root.startingSector, root.streamSize, { strict, ...(onWarning ? { onWarning } : {}) });
+    mini.miniStreamBytes = readStreamFromFat({ bytes, header, fat, startSector: root.startingSector, streamSize: root.streamSize, opts: { strict, ...(onWarning ? { onWarning } : {}) } });
   }
 
   return createCfbRunner({ bytes, header, directory, fat, miniFat: mini.miniFat, miniStreamBytes: mini.miniStreamBytes, strict, ...(onWarning ? { onWarning } : {}) });

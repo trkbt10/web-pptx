@@ -15,6 +15,26 @@ import {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function findColorElement(...args: Parameters<typeof findColorElementBase>) {
   return findColorElementBase(...args);
 }
@@ -24,9 +44,49 @@ export function findColorElement(...args: Parameters<typeof findColorElementBase
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseColor(...args: Parameters<typeof parseColorBase>) {
   return parseColorBase(...args);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

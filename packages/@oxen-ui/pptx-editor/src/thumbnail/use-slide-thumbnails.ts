@@ -87,7 +87,7 @@ export function useSlideThumbnails(
 
       // Render the edited domain slide and cache
       const result = renderSlideSvg(slide, ctx);
-      setCachedThumbnail(cache, id, slide, result.svg);
+      setCachedThumbnail({ cache, slideId: id, slide, svg: result.svg });
       return result.svg;
     },
     [slideSize, zipFile]

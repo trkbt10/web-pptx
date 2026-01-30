@@ -9,6 +9,26 @@ function escapeAttr(value: string): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function toSvgTextAttributes(style: ResolvedTextStyle): string {
   const parts: string[] = [];
 

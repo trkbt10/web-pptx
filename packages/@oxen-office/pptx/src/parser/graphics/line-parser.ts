@@ -33,11 +33,51 @@ function convertBaseLineToPptxLine(line: BaseLine): Line {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseLine(element: XmlElement | undefined): Line | undefined {
   const parsed = parseOoxmlLine(element);
   if (!parsed) {return undefined;}
   return convertBaseLineToPptxLine(parsed);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

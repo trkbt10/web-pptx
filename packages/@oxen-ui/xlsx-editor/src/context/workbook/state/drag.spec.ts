@@ -32,10 +32,17 @@ function addr(col: number, row: number): CellAddress {
   };
 }
 
-function range(
-  ...args: readonly [startCol: number, startRow: number, endCol: number, endRow: number]
-): CellRange {
-  const [startCol, startRow, endCol, endRow] = args;
+function range({
+  startCol,
+  startRow,
+  endCol,
+  endRow,
+}: {
+  startCol: number;
+  startRow: number;
+  endCol: number;
+  endRow: number;
+}): CellRange {
   return { start: addr(startCol, startRow), end: addr(endCol, endRow) };
 }
 
@@ -93,16 +100,16 @@ describe("getRangeSelectRange", () => {
 
 describe("startFillDrag / updateFillDrag", () => {
   it("creates fill drag with sourceRange as initial targetRange", () => {
-    const source = range(1, 1, 2, 2);
+    const source = range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 });
     const drag = startFillDrag(source);
     expect(drag).toEqual({ type: "fill", sourceRange: source, targetRange: source });
     expect(isDragFill(drag)).toBe(true);
   });
 
   it("updates targetRange and preserves immutability", () => {
-    const source = range(1, 1, 2, 2);
+    const source = range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 });
     const original = startFillDrag(source);
-    const target = range(3, 3, 4, 4);
+    const target = range({ startCol: 3, startRow: 3, endCol: 4, endRow: 4 });
 
     const updated = updateFillDrag(original, target);
     expect(updated).not.toBe(original);
@@ -112,7 +119,7 @@ describe("startFillDrag / updateFillDrag", () => {
 
   it("does not change non-fill drag", () => {
     const idle = endDrag();
-    const updated = updateFillDrag(idle, range(1, 1, 1, 1));
+    const updated = updateFillDrag(idle, range({ startCol: 1, startRow: 1, endCol: 1, endRow: 1 }));
     expect(updated).toBe(idle);
   });
 });

@@ -164,7 +164,7 @@ export function TransitionPreview({
     el.style.maskPosition = "";
 
     try {
-      await applyBrowserEffect(el, mapping.effect, 1500, mapping.direction);
+      await applyBrowserEffect({ el, type: mapping.effect, duration: 1500, direction: mapping.direction });
     } catch {
       // Animation cancelled or failed
     }

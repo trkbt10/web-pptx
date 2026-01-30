@@ -139,27 +139,24 @@ function getEffectiveLineSpacing(baseMultiplier: number, renderOptions: RenderOp
 /**
  * Layout a single paragraph
  */
-function layoutParagraph(
-  ...args: [
-    para: LayoutParagraphInput,
-    contentWidth: Pixels,
-    startY: number,
-    wrapMode: TextBoxConfig["wrapMode"],
-    renderOptions: RenderOptions | undefined,
-    measureParagraphFn: (paragraph: LayoutParagraphInput) => {
-      readonly spans: readonly MeasuredSpan[];
-      readonly bulletWidth?: Pixels;
-    },
-  ]
-): { paragraph: LayoutParagraphResult; endY: number } {
-  const [
-    para,
-    contentWidth,
-    startY,
-    wrapMode,
-    renderOptions = DEFAULT_RENDER_OPTIONS,
-    measureParagraphFn,
-  ] = args;
+function layoutParagraph({
+  para,
+  contentWidth,
+  startY,
+  wrapMode,
+  renderOptions = DEFAULT_RENDER_OPTIONS,
+  measureParagraphFn,
+}: {
+  para: LayoutParagraphInput;
+  contentWidth: Pixels;
+  startY: number;
+  wrapMode: TextBoxConfig["wrapMode"];
+  renderOptions?: RenderOptions | undefined;
+  measureParagraphFn: (paragraph: LayoutParagraphInput) => {
+    readonly spans: readonly MeasuredSpan[];
+    readonly bulletWidth?: Pixels;
+  };
+}): { paragraph: LayoutParagraphResult; endY: number } {
   // Calculate margins
   const marginLeft = para.marginLeft as number;
   const marginRight = para.marginRight as number;
@@ -179,7 +176,7 @@ function layoutParagraph(
   const measuredSpans = measuredParagraph.spans;
 
   // Break into lines
-  const { lines: spanLines, lineHeights } = breakIntoLines(measuredSpans, firstLineWidth, nextLineWidth, wrapMode);
+  const { lines: spanLines, lineHeights } = breakIntoLines({ spans: measuredSpans, firstLineWidth, nextLineWidth, wrapMode });
 
   // Add space before
   const layoutState = { currentY: startY + (para.spaceBefore as number) * PT_TO_PX };
@@ -213,14 +210,14 @@ function layoutParagraph(
     const availableWidth = index === 0 ? firstLineWidth : nextLineWidth;
     const lineIndent = index === 0 ? indent : 0;
     const lineBulletWidth = index === 0 ? (bulletWidth as number) : 0;
-    const x = calculateLineX(
-      para.alignment,
+    const x = calculateLineX({
+      alignment: para.alignment,
       marginLeft,
-      lineWidth as number,
-      availableWidth as number,
-      lineIndent,
-      lineBulletWidth,
-    );
+      lineWidth: lineWidth as number,
+      availableWidth: availableWidth as number,
+      indent: lineIndent,
+      bulletWidth: lineBulletWidth,
+    });
 
     // Convert spans to positioned spans
     const positionedSpans = positionSpans(lineSpans);
@@ -265,17 +262,21 @@ function layoutParagraph(
  * For subsequent lines:
  * - Text position = marL
  */
-function calculateLineX(
-  ...args: [
-    alignment: TextAlign,
-    marginLeft: number,
-    lineWidth: number,
-    availableWidth: number,
-    indent: number,
-    bulletWidth: number,
-  ]
-): number {
-  const [alignment, marginLeft, lineWidth, availableWidth, indent, bulletWidth] = args;
+function calculateLineX({
+  alignment,
+  marginLeft,
+  lineWidth,
+  availableWidth,
+  indent,
+  bulletWidth,
+}: {
+  alignment: TextAlign;
+  marginLeft: number;
+  lineWidth: number;
+  availableWidth: number;
+  indent: number;
+  bulletWidth: number;
+}): number {
   // ECMA-376: First line starts at marL + indent + bulletWidth
   // indent can be negative (hanging indent), bulletWidth is added for text after bullet
   const baseX = marginLeft + indent + bulletWidth;
@@ -318,20 +319,22 @@ function calculateYOffset(totalHeight: number, textBox: TextBoxConfig): number {
   const contentHeight = getContentHeight(textBox) as number;
   const insetTop = textBox.insetTop as number;
 
-  const rawOffset = getAnchorYOffset(textBox.anchor, insetTop, contentHeight, totalHeight);
+  const rawOffset = getAnchorYOffset({ anchor: textBox.anchor, insetTop, contentHeight, totalHeight });
 
   return Math.max(insetTop, rawOffset);
 }
 
-function getAnchorYOffset(
-  ...args: [
-    anchor: TextBoxConfig["anchor"],
-    insetTop: number,
-    contentHeight: number,
-    totalHeight: number,
-  ]
-): number {
-  const [anchor, insetTop, contentHeight, totalHeight] = args;
+function getAnchorYOffset({
+  anchor,
+  insetTop,
+  contentHeight,
+  totalHeight,
+}: {
+  anchor: TextBoxConfig["anchor"];
+  insetTop: number;
+  contentHeight: number;
+  totalHeight: number;
+}): number {
   switch (anchor) {
     case "center":
       return insetTop + (contentHeight - totalHeight) / 2;
@@ -533,14 +536,14 @@ export function layoutTextBody(input: LayoutInput): LayoutResult {
   const layoutedParagraphs: LayoutParagraphResult[] = [];
 
   adjustedParagraphs.forEach((para) => {
-    const { paragraph, endY } = layoutParagraph(
+    const { paragraph, endY } = layoutParagraph({
       para,
       contentWidth,
-      layoutState.currentY,
-      textBox.wrapMode,
-      effectiveRenderOptions,
+      startY: layoutState.currentY,
+      wrapMode: textBox.wrapMode,
+      renderOptions: effectiveRenderOptions,
       measureParagraphFn,
-    );
+    });
     layoutedParagraphs.push(paragraph);
     layoutState.currentY = endY;
   });

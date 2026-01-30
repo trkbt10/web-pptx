@@ -47,6 +47,26 @@ export type RenderTextSvgOptions = {
   readonly defsCollector: SvgDefsCollector;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function renderTextSvg({ textBody, ctx, boxWidth, boxHeight, defsCollector }: RenderTextSvgOptions): string {
   if (textBody.paragraphs.length === 0) {
     return "";

@@ -13,6 +13,26 @@ import { ooxmlEmu, ooxmlPercent100k } from "@oxen-office/ooxml/serializer/units"
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function serializeLine(line: Line): XmlElement {
   const attrs: Record<string, string> = {
     w: ooxmlEmu(line.width),

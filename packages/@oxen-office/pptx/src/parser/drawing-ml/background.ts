@@ -200,6 +200,16 @@ export function hasOwnBackground(ctx: SlideContext): boolean {
 // =============================================================================
 
 /**
+ * Extract data parameters for background fill handlers.
+ */
+type ExtractDataParams = {
+  readonly fill: XmlElement;
+  readonly ctx: SlideContext;
+  readonly phClr?: string;
+  readonly fromTheme?: boolean;
+};
+
+/**
  * Background fill handler for a specific fill type.
  * Each handler extracts fill data and returns structured BackgroundFill.
  */
@@ -209,7 +219,7 @@ type BackgroundFillHandler = {
   /** Fill type identifier */
   readonly type: FillType;
   /** Extract fill data and return structured BackgroundFill */
-  extractData: (fill: XmlElement, ctx: SlideContext, phClr?: string, fromTheme?: boolean) => BackgroundFill | null;
+  extractData: (params: ExtractDataParams) => BackgroundFill | null;
 };
 
 /**
@@ -262,7 +272,7 @@ function generateGradientCSS(gradResult: GradientFill): string {
 const SOLID_FILL_BG_HANDLER: BackgroundFillHandler = {
   xmlKey: "a:solidFill",
   type: "SOLID_FILL",
-  extractData: (fill, ctx, phClr) => {
+  extractData: ({ fill, ctx, phClr }) => {
     const solidFill = getChild(fill, "a:solidFill") ?? fill;
     const colorHex = getSolidFill(solidFill, phClr, ctx.toColorContext());
     if (colorHex === undefined) {
@@ -282,7 +292,7 @@ const SOLID_FILL_BG_HANDLER: BackgroundFillHandler = {
 const GRADIENT_FILL_BG_HANDLER: BackgroundFillHandler = {
   xmlKey: "a:gradFill",
   type: "GRADIENT_FILL",
-  extractData: (fill, ctx, phClr) => {
+  extractData: ({ fill, ctx, phClr }) => {
     const gradFill = getChild(fill, "a:gradFill") ?? fill;
     const gradResult = getGradientFill(gradFill, ctx.toColorContext(), phClr);
     const gradient = generateGradientCSS(gradResult);
@@ -348,8 +358,7 @@ function tryGetPicFill(
 const PIC_FILL_BG_HANDLER: BackgroundFillHandler = {
   xmlKey: "a:blipFill",
   type: "PIC_FILL",
-  extractData: (...args: [fill: XmlElement, ctx: SlideContext, _phClr?: string, fromTheme?: boolean]) => {
-    const [fill, ctx, _phClr, fromTheme] = args;
+  extractData: ({ fill, ctx, fromTheme }) => {
     const blipFill = getChild(fill, "a:blipFill") ?? fill;
     const imgPath = tryGetPicFill(blipFill, ctx, fromTheme);
     if (imgPath === undefined) {
@@ -400,7 +409,7 @@ export function getBackgroundFillData(ctx: SlideContext): BackgroundFill {
   // Pass bgPr directly to getFillType since it contains the fill elements
   const bgFillType = getFillType(bgResult.fill);
   const handler = BG_FILL_HANDLERS[bgFillType];
-  const result = handler?.extractData(bgResult.fill, ctx, bgResult.phClr, bgResult.fromTheme);
+  const result = handler?.extractData({ fill: bgResult.fill, ctx, phClr: bgResult.phClr, fromTheme: bgResult.fromTheme });
 
   return result ?? DEFAULT_BACKGROUND_FILL;
 }

@@ -16,10 +16,17 @@ import { px, deg } from "@oxen-office/ooxml/domain/units";
 // Test Helpers
 // =============================================================================
 
-function createTransform(
-  ...args: [x: number, y: number, width: number, height: number]
-): Transform {
-  const [x, y, width, height] = args;
+function createTransform({
+  x,
+  y,
+  width,
+  height,
+}: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}): Transform {
   return {
     x: px(x),
     y: px(y),
@@ -52,7 +59,7 @@ describe("renderSpShape", () => {
         type: "sp",
         nonVisual: { id: "1", name: "Rectangle 1" },
         properties: {
-          transform: createTransform(0, 0, 100, 50),
+          transform: createTransform({ x: 0, y: 0, width: 100, height: 50 }),
           geometry: { type: "preset", preset: "rect", adjustValues: [] },
         },
       };
@@ -70,7 +77,7 @@ describe("renderSpShape", () => {
         type: "sp",
         nonVisual: { id: "1", name: "Positioned Shape" },
         properties: {
-          transform: createTransform(50, 100, 200, 150),
+          transform: createTransform({ x: 50, y: 100, width: 200, height: 150 }),
           geometry: { type: "preset", preset: "rect", adjustValues: [] },
         },
       };
@@ -88,7 +95,7 @@ describe("renderSpShape", () => {
         type: "sp",
         nonVisual: { id: "1", name: "Filled Shape" },
         properties: {
-          transform: createTransform(0, 0, 100, 100),
+          transform: createTransform({ x: 0, y: 0, width: 100, height: 100 }),
           geometry: { type: "preset", preset: "rect", adjustValues: [] },
           fill: {
             type: "solidFill",
@@ -108,7 +115,7 @@ describe("renderSpShape", () => {
         type: "sp",
         nonVisual: { id: "1", name: "No Fill Shape" },
         properties: {
-          transform: createTransform(0, 0, 100, 100),
+          transform: createTransform({ x: 0, y: 0, width: 100, height: 100 }),
           geometry: { type: "preset", preset: "rect", adjustValues: [] },
           fill: { type: "noFill" },
         },
@@ -126,7 +133,7 @@ describe("renderSpShape", () => {
         type: "sp",
         nonVisual: { id: "1", name: "Ellipse" },
         properties: {
-          transform: createTransform(0, 0, 100, 80),
+          transform: createTransform({ x: 0, y: 0, width: 100, height: 80 }),
           geometry: { type: "preset", preset: "ellipse", adjustValues: [] },
         },
       };
@@ -143,7 +150,7 @@ describe("renderSpShape", () => {
         type: "sp",
         nonVisual: { id: "1", name: "Shape" },
         properties: {
-          transform: createTransform(0, 0, 100, 100),
+          transform: createTransform({ x: 0, y: 0, width: 100, height: 100 }),
           geometry: { type: "preset", preset: "rect", adjustValues: [] },
         },
       };
@@ -163,7 +170,7 @@ describe("renderSpShape", () => {
         type: "sp",
         nonVisual: { id: "42", name: "Animated Shape" },
         properties: {
-          transform: createTransform(0, 0, 100, 100),
+          transform: createTransform({ x: 0, y: 0, width: 100, height: 100 }),
           geometry: { type: "preset", preset: "rect", adjustValues: [] },
         },
       };
@@ -180,7 +187,7 @@ describe("renderSpShape", () => {
         type: "sp",
         nonVisual: { id: "1", name: "Text Shape" },
         properties: {
-          transform: createTransform(0, 0, 200, 100),
+          transform: createTransform({ x: 0, y: 0, width: 200, height: 100 }),
           geometry: { type: "preset", preset: "rect", adjustValues: [] },
         },
         textBody: {
@@ -232,7 +239,7 @@ describe("renderPicShape", () => {
       nonVisual: { id: "1", name: "Picture 1" },
       blipFill: { resourceId: "rId1" },
       properties: {
-        transform: createTransform(10, 20, 300, 200),
+        transform: createTransform({ x: 10, y: 20, width: 300, height: 200 }),
       },
     };
     const ctx = createEmptyHtmlRenderContext();
@@ -255,7 +262,7 @@ describe("renderShape", () => {
       type: "sp",
       nonVisual: { id: "1", name: "Shape" },
       properties: {
-        transform: createTransform(0, 0, 100, 100),
+        transform: createTransform({ x: 0, y: 0, width: 100, height: 100 }),
         geometry: { type: "preset", preset: "rect", adjustValues: [] },
       },
     };
@@ -271,7 +278,7 @@ describe("renderShape", () => {
       nonVisual: { id: "1", name: "Picture" },
       blipFill: { resourceId: "rId1" },
       properties: {
-        transform: createTransform(0, 0, 100, 100),
+        transform: createTransform({ x: 0, y: 0, width: 100, height: 100 }),
       },
     };
     const ctx = createEmptyHtmlRenderContext();

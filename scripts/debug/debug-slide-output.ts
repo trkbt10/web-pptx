@@ -12,9 +12,9 @@ import { loadPptxFile } from "../lib/pptx-loader";
 async function main() {
   const usage = "bun run scripts/debug/debug-slide-output.ts <pptx-path> <slide-number> <output-svg-path>";
   const args = process.argv.slice(2);
-  const pptxPath = requirePositionalArg(args, 0, "pptx-path", usage);
+  const pptxPath = requirePositionalArg({ args, index: 0, name: "pptx-path", usage });
   const slideNum = requireIntArg(args[1], "slide-number", usage);
-  const outputPath = requirePositionalArg(args, 2, "output-svg-path", usage);
+  const outputPath = requirePositionalArg({ args, index: 2, name: "output-svg-path", usage });
   requireFileExists(pptxPath, usage);
 
   const { presentationFile } = await loadPptxFile(pptxPath);

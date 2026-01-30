@@ -307,7 +307,7 @@ async function main(): Promise<void> {
   // Handle --find option
   const findIndex = args.indexOf("--find");
   if (findIndex !== -1) {
-    const elementToFind = requirePositionalArg(args, findIndex + 1, "element", usage);
+    const elementToFind = requirePositionalArg({ args, index: findIndex + 1, name: "element", usage });
 
     console.log(`Searching for files containing: ${elementToFind}\n`);
 
@@ -368,7 +368,7 @@ async function main(): Promise<void> {
     printResults(results);
   } else if (args.length > 0 && !args[0].startsWith("--")) {
     // Analyze specific file
-    const pptxPath = requirePositionalArg(args, 0, "pptx-path", usage);
+    const pptxPath = requirePositionalArg({ args, index: 0, name: "pptx-path", usage });
     requireFileExists(pptxPath, usage);
 
     const result = await analyzePptxFile(pptxPath);

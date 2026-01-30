@@ -23,23 +23,34 @@ function addr(col: number, row: number): CellAddress {
   };
 }
 
-function range(...args: readonly [startCol: number, startRow: number, endCol: number, endRow: number]): CellRange {
-  const [startCol, startRow, endCol, endRow] = args;
+function range({
+  startCol,
+  startRow,
+  endCol,
+  endRow,
+}: {
+  startCol: number;
+  startRow: number;
+  endCol: number;
+  endRow: number;
+}): CellRange {
   return {
     start: addr(startCol, startRow),
     end: addr(endCol, endRow),
   };
 }
 
-function cellAt(
-  ...args: readonly [
-    col: number,
-    row: number,
-    value: CellValue,
-    opts?: { readonly styleId?: number; readonly formula?: string },
-  ]
-): Cell {
-  const [col, row, value, opts] = args;
+function cellAt({
+  col,
+  row,
+  value,
+  opts,
+}: {
+  col: number;
+  row: number;
+  value: CellValue;
+  opts?: { readonly styleId?: number; readonly formula?: string };
+}): Cell {
   return {
     address: addr(col, row),
     value,
@@ -104,16 +115,16 @@ function createEditorState(
 describe("xlsx-editor/context/workbook/editor/reducer/clipboard-handlers", () => {
   it("COPY saves clipboard content with isCut=false", () => {
     const worksheet = createWorksheet("Sheet1", 1, [
-      cellAt(1, 1, { type: "string", value: "A1" }, { styleId: 10, formula: "SUM(1,2)" }),
-      cellAt(2, 2, { type: "string", value: "B2" }),
+      cellAt({ col: 1, row: 1, value: { type: "string", value: "A1" }, opts: { styleId: 10, formula: "SUM(1,2)" } }),
+      cellAt({ col: 2, row: 2, value: { type: "string", value: "B2" } }),
     ]);
     const workbook = createWorkbook([worksheet]);
-    const state = createEditorState(workbook, 0, { range: range(1, 1, 2, 2) });
+    const state = createEditorState(workbook, 0, { range: range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 }) });
 
     const next = clipboardHandlers.COPY?.(state, { type: "COPY" });
     expect(next).toBeDefined();
     expect(next?.clipboard).toEqual({
-      sourceRange: range(1, 1, 2, 2),
+      sourceRange: range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 }),
       isCut: false,
       values: [
         [{ type: "string", value: "A1" }, { type: "empty" }],
@@ -127,14 +138,14 @@ describe("xlsx-editor/context/workbook/editor/reducer/clipboard-handlers", () =>
 
   it("COPY normalizes sourceRange to top-left → bottom-right", () => {
     const worksheet = createWorksheet("Sheet1", 1, [
-      cellAt(1, 1, { type: "string", value: "A1" }),
-      cellAt(2, 2, { type: "string", value: "B2" }),
+      cellAt({ col: 1, row: 1, value: { type: "string", value: "A1" } }),
+      cellAt({ col: 2, row: 2, value: { type: "string", value: "B2" } }),
     ]);
     const workbook = createWorkbook([worksheet]);
-    const state = createEditorState(workbook, 0, { range: range(2, 2, 1, 1) });
+    const state = createEditorState(workbook, 0, { range: range({ startCol: 2, startRow: 2, endCol: 1, endRow: 1 }) });
 
     const next = clipboardHandlers.COPY?.(state, { type: "COPY" });
-    expect(next?.clipboard?.sourceRange).toEqual(range(1, 1, 2, 2));
+    expect(next?.clipboard?.sourceRange).toEqual(range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 }));
     expect(next?.clipboard?.values).toEqual([
       [{ type: "string", value: "A1" }, { type: "empty" }],
       [{ type: "empty" }, { type: "string", value: "B2" }],
@@ -143,12 +154,12 @@ describe("xlsx-editor/context/workbook/editor/reducer/clipboard-handlers", () =>
 
   it("CUT saves clipboard content with isCut=true and deletes source range (pushes history)", () => {
     const worksheet = createWorksheet("Sheet1", 1, [
-      cellAt(1, 1, { type: "string", value: "A1" }),
-      cellAt(2, 1, { type: "string", value: "B1" }),
-      cellAt(5, 5, { type: "string", value: "keep" }),
+      cellAt({ col: 1, row: 1, value: { type: "string", value: "A1" } }),
+      cellAt({ col: 2, row: 1, value: { type: "string", value: "B1" } }),
+      cellAt({ col: 5, row: 5, value: { type: "string", value: "keep" } }),
     ]);
     const workbook = createWorkbook([worksheet]);
-    const state = createEditorState(workbook, 0, { range: range(1, 1, 2, 1) });
+    const state = createEditorState(workbook, 0, { range: range({ startCol: 1, startRow: 1, endCol: 2, endRow: 1 }) });
 
     const next = clipboardHandlers.CUT?.(state, { type: "CUT" });
     expect(next).toBeDefined();
@@ -162,15 +173,15 @@ describe("xlsx-editor/context/workbook/editor/reducer/clipboard-handlers", () =>
   });
 
   it("PASTE writes values/formulas/styles from active cell and pushes history", () => {
-    const worksheet = createWorksheet("Sheet1", 1, [cellAt(9, 9, { type: "string", value: "keep" })]);
+    const worksheet = createWorksheet("Sheet1", 1, [cellAt({ col: 9, row: 9, value: { type: "string", value: "keep" } })]);
     const workbook = createWorkbook([worksheet]);
     const state: XlsxEditorState = {
       workbookHistory: createHistory(workbook),
       activeSheetIndex: 0,
-      cellSelection: createRangeSelection(range(3, 3, 3, 3), addr(3, 3)),
+      cellSelection: createRangeSelection(range({ startCol: 3, startRow: 3, endCol: 3, endRow: 3 }), addr(3, 3)),
       drag: createIdleDragState(),
       clipboard: {
-        sourceRange: range(1, 1, 2, 2),
+        sourceRange: range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 }),
         isCut: false,
         values: [
           [{ type: "string", value: "A1" }, { type: "string", value: "B1" }],
@@ -211,10 +222,10 @@ describe("xlsx-editor/context/workbook/editor/reducer/clipboard-handlers", () =>
     const state: XlsxEditorState = {
       workbookHistory: createHistory(workbook),
       activeSheetIndex: 0,
-      cellSelection: createRangeSelection(range(3, 3, 3, 3), addr(3, 3)),
+      cellSelection: createRangeSelection(range({ startCol: 3, startRow: 3, endCol: 3, endRow: 3 }), addr(3, 3)),
       drag: createIdleDragState(),
       clipboard: {
-        sourceRange: range(1, 1, 1, 1),
+        sourceRange: range({ startCol: 1, startRow: 1, endCol: 1, endRow: 1 }),
         isCut: false,
         values: [[{ type: "empty" }]],
         formulas: [["A1+$A$1+A$1+$A1"]],

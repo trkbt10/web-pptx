@@ -26,12 +26,12 @@ export type EditorResourceContextValue = {
   /** Register an uploaded file and return its resource ID */
   readonly registerUpload: (file: File) => Promise<ResourceId>;
   /** Register programmatically created data and return its resource ID */
-  readonly registerCreated: (
-    data: ArrayBuffer,
-    kind: ResourceKind,
-    mimeType?: string,
-    filename?: string
-  ) => ResourceId;
+  readonly registerCreated: (params: {
+    data: ArrayBuffer;
+    kind: ResourceKind;
+    mimeType?: string;
+    filename?: string;
+  }) => ResourceId;
 };
 
 // =============================================================================
@@ -103,15 +103,17 @@ export function EditorResourceProvider({ children }: { readonly children: ReactN
         return id;
       },
 
-      registerCreated: (
-        ...args: readonly [
-          data: ArrayBuffer,
-          kind: ResourceKind,
-          mimeType?: string,
-          filename?: string,
-        ]
-      ): ResourceId => {
-        const [data, kind, mimeType, filename] = args;
+      registerCreated: ({
+        data,
+        kind,
+        mimeType,
+        filename,
+      }: {
+        data: ArrayBuffer;
+        kind: ResourceKind;
+        mimeType?: string;
+        filename?: string;
+      }): ResourceId => {
         const id = generateId();
         store.set(id, {
           kind,

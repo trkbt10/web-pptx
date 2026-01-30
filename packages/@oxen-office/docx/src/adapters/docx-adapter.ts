@@ -246,13 +246,13 @@ function runToSpans(options: RunToSpansOptions): LayoutSpan[] {
   // Resolve properties using the full style chain
   // rStyle on the run -> pStyle on the paragraph -> docDefaults
   const rStyleId = run.properties?.rStyle;
-  const props = resolveRunPropertiesWithStyles(
+  const props = resolveRunPropertiesWithStyles({
     resolveStyle,
-    rStyleId,
+    styleId: rStyleId,
     paragraphStyleId,
     paragraphRPr,
-    run.properties,
-  );
+    runProps: run.properties,
+  });
 
   const spans: LayoutSpan[] = [];
 

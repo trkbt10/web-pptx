@@ -37,15 +37,12 @@ export type CellRect = { readonly left: number; readonly top: number; readonly w
 /**
  * Get the on-screen rectangle for an active cell, relative to the cells viewport origin.
  */
-export function getActiveCellRect(
-  ...args: readonly [
-    cell: CellAddress | undefined,
-    layout: ReturnType<typeof createSheetLayout>,
-    scrollTop: number,
-    scrollLeft: number,
-  ]
-): CellRect | null {
-  const [cell, layout, scrollTop, scrollLeft] = args;
+export function getActiveCellRect({ cell, layout, scrollTop, scrollLeft }: {
+  readonly cell: CellAddress | undefined;
+  readonly layout: ReturnType<typeof createSheetLayout>;
+  readonly scrollTop: number;
+  readonly scrollLeft: number;
+}): CellRect | null {
   if (!cell) {
     return null;
   }
@@ -68,15 +65,12 @@ export function getActiveCellRect(
 /**
  * Get the on-screen rectangle for a selected range, relative to the cells viewport origin.
  */
-export function getSelectedRangeRect(
-  ...args: readonly [
-    range: { readonly start: CellAddress; readonly end: CellAddress } | undefined,
-    layout: ReturnType<typeof createSheetLayout>,
-    scrollTop: number,
-    scrollLeft: number,
-  ]
-): CellRect | null {
-  const [range, layout, scrollTop, scrollLeft] = args;
+export function getSelectedRangeRect({ range, layout, scrollTop, scrollLeft }: {
+  readonly range: { readonly start: CellAddress; readonly end: CellAddress } | undefined;
+  readonly layout: ReturnType<typeof createSheetLayout>;
+  readonly scrollTop: number;
+  readonly scrollLeft: number;
+}): CellRect | null {
   if (!range) {
     return null;
   }

@@ -94,15 +94,17 @@ function getNextTabStop(
   return Math.ceil(currentX / defaultTabPx) * defaultTabPx;
 }
 
-function measureTextWithTabs(
-  ...args: [
-    textNode: SVGTextElement,
-    text: string,
-    paragraph: TextMeasureParagraph,
-    startX: number,
-  ]
-): { width: number; endX: number } {
-  const [textNode, text, paragraph, startX] = args;
+function measureTextWithTabs({
+  textNode,
+  text,
+  paragraph,
+  startX,
+}: {
+  textNode: SVGTextElement;
+  text: string;
+  paragraph: TextMeasureParagraph;
+  startX: number;
+}): { width: number; endX: number } {
   if (!text.includes("\t")) {
     const width = measureTextSegment(textNode, text);
     return { width, endX: startX + width };
@@ -128,15 +130,17 @@ function measureTextWithTabs(
   return { width: totalWidth, endX: currentX };
 }
 
-function measureRunWithSvg(
-  ...args: [
-    run: TextMeasureRun,
-    textNode: SVGTextElement,
-    paragraph: TextMeasureParagraph,
-    startX: number,
-  ]
-): { result: TextMeasureRunResult; endX: number } {
-  const [run, textNode, paragraph, startX] = args;
+function measureRunWithSvg({
+  run,
+  textNode,
+  paragraph,
+  startX,
+}: {
+  run: TextMeasureRun;
+  textNode: SVGTextElement;
+  paragraph: TextMeasureParagraph;
+  startX: number;
+}): { result: TextMeasureRunResult; endX: number } {
   if (run.isBreak || run.text.length === 0) {
     return { result: { ...run, width: px(0) }, endX: startX };
   }
@@ -146,7 +150,7 @@ function measureRunWithSvg(
 
   const transform = resolveTextTransform(run.properties);
   const measuredText = applyTextTransform(run.text, transform);
-  const { width, endX } = measureTextWithTabs(textNode, measuredText, paragraph, startX);
+  const { width, endX } = measureTextWithTabs({ textNode, text: measuredText, paragraph, startX });
 
   return { result: { ...run, width: px(width) }, endX };
 }
@@ -194,6 +198,26 @@ function measureBulletWidth(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createParagraphMeasurer(): ParagraphMeasurer | null {
   const textNode = ensureSvgTextNode();
   if (!textNode) {
@@ -205,7 +229,7 @@ export function createParagraphMeasurer(): ParagraphMeasurer | null {
     let currentX = 0;
 
     for (const run of paragraph.runs) {
-      const { result, endX } = measureRunWithSvg(run, textNode, paragraph, currentX);
+      const { result, endX } = measureRunWithSvg({ run, textNode, paragraph, startX: currentX });
       results.push(result);
       currentX = run.isBreak ? 0 : endX;
     }

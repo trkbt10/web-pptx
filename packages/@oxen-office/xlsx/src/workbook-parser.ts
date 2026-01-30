@@ -175,7 +175,7 @@ async function parseSheets(
     // Sheet paths are relative to xl/, so resolve
     const xmlPath = target.startsWith("/") ? target.substring(1) : `xl/${target}`;
 
-    const sheetData = parseSheet(pkg, name, rId, xmlPath, sharedStrings);
+    const sheetData = parseSheet({ pkg, name, id: rId, xmlPath, sharedStrings });
     if (sheetData) {
       sheets.set(name, sheetData);
     }
@@ -213,16 +213,14 @@ function parseRelsToMap(relsXml: XmlDocument | null): Map<string, string> {
 /**
  * Parse a single worksheet
  */
-function parseSheet(
-  ...args: readonly [
-    pkg: ZipPackage,
-    name: string,
-    id: string,
-    xmlPath: string,
-    sharedStrings: readonly string[],
-  ]
-): WorkbookSheet | undefined {
-  const [pkg, name, id, xmlPath, sharedStrings] = args;
+function parseSheet(params: {
+  readonly pkg: ZipPackage;
+  readonly name: string;
+  readonly id: string;
+  readonly xmlPath: string;
+  readonly sharedStrings: readonly string[];
+}): WorkbookSheet | undefined {
+  const { pkg, name, id, xmlPath, sharedStrings } = params;
   const sheetText = pkg.readText(xmlPath);
   if (!sheetText) {
     return undefined;
@@ -335,15 +333,13 @@ export function getCellValue(
  * @param endRow - End row (1-based)
  * @returns Array of values
  */
-export function getColumnValues(
-  ...args: readonly [
-    sheet: WorkbookSheet,
-    col: string,
-    startRow: number,
-    endRow: number,
-  ]
-): readonly (string | number | boolean | undefined)[] {
-  const [sheet, col, startRow, endRow] = args;
+export function getColumnValues(params: {
+  readonly sheet: WorkbookSheet;
+  readonly col: string;
+  readonly startRow: number;
+  readonly endRow: number;
+}): readonly (string | number | boolean | undefined)[] {
+  const { sheet, col, startRow, endRow } = params;
   const values: (string | number | boolean | undefined)[] = [];
   for (let row = startRow; row <= endRow; row++) {
     values.push(getCellValue(sheet, col, row));
@@ -360,15 +356,13 @@ export function getColumnValues(
  * @param endCol - End column letter
  * @returns Array of values
  */
-export function getRowValues(
-  ...args: readonly [
-    sheet: WorkbookSheet,
-    row: number,
-    startCol: string,
-    endCol: string,
-  ]
-): readonly (string | number | boolean | undefined)[] {
-  const [sheet, row, startCol, endCol] = args;
+export function getRowValues(params: {
+  readonly sheet: WorkbookSheet;
+  readonly row: number;
+  readonly startCol: string;
+  readonly endCol: string;
+}): readonly (string | number | boolean | undefined)[] {
+  const { sheet, row, startCol, endCol } = params;
   const startIndex = columnLetterToIndex(startCol) as number;
   const endIndex = columnLetterToIndex(endCol) as number;
 

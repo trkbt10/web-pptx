@@ -126,7 +126,7 @@ export function applyBackground(
 
   return updateDocumentRoot(slideDoc, (root) => {
     const cSld = getChild(root, "p:cSld");
-    if (!cSld) return root;
+    if (!cSld) {return root;}
 
     // Remove existing background if present
     const existingBg = getChild(cSld, "p:bg");
@@ -170,7 +170,7 @@ export async function applyImageBackground(
 
   return updateDocumentRoot(slideDoc, (root) => {
     const cSld = getChild(root, "p:cSld");
-    if (!cSld) return root;
+    if (!cSld) {return root;}
 
     // Remove existing background if present
     const existingBg = getChild(cSld, "p:bg");

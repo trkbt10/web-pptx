@@ -22,9 +22,49 @@ export type ChartShapePropertiesEditorProps = EditorProps<ChartShapeProperties |
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function ChartShapePropertiesEditor(props: ChartShapePropertiesEditorProps) {
   return <CoreChartShapePropertiesEditor {...props} adapters={pptxChartEditorAdapters} />;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

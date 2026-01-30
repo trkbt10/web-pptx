@@ -14,8 +14,8 @@ import { requireFileExists, requirePositionalArg } from "../lib/cli";
 async function main() {
   const usage = "bun run scripts/verify/verify-pdf-issues.ts <pdf-path> <output-pptx-path>";
   const args = process.argv.slice(2);
-  const pdfPath = requirePositionalArg(args, 0, "pdf-path", usage);
-  const outputPptxPath = requirePositionalArg(args, 1, "output-pptx-path", usage);
+  const pdfPath = requirePositionalArg({ args, index: 0, name: "pdf-path", usage });
+  const outputPptxPath = requirePositionalArg({ args, index: 1, name: "output-pptx-path", usage });
   requireFileExists(pdfPath, usage);
 
   console.log("=== PDF Import Issues Verification ===\n");

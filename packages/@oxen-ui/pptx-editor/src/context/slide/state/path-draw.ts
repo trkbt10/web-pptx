@@ -192,16 +192,19 @@ export function setPreviewPoint(
 /**
  * Start handle drag
  */
-export function startHandleDrag(
-  ...args: readonly [
-    path: DrawingPath,
-    pointIndex: number,
-    handleSide: "in" | "out",
-    x: Pixels,
-    y: Pixels,
-  ]
-): HandleDragPathDrawState {
-  const [path, pointIndex, handleSide, x, y] = args;
+export function startHandleDrag({
+  path,
+  pointIndex,
+  handleSide,
+  x,
+  y,
+}: {
+  path: DrawingPath;
+  pointIndex: number;
+  handleSide: "in" | "out";
+  x: Pixels;
+  y: Pixels;
+}): HandleDragPathDrawState {
   return {
     type: "dragging-handle",
     path,

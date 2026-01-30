@@ -9,9 +9,8 @@ import { convertTextToShape, convertGroupedTextToShape } from "./text-to-shapes"
 import type { GroupedText } from "./text-grouping/types";
 import { createFitContext } from "./transform-converter";
 
-function createContext(...args: readonly [pdfWidth: number, pdfHeight: number, slideWidth: number, slideHeight: number]) {
-  const [pdfWidth, pdfHeight, slideWidth, slideHeight] = args;
-  return createFitContext(pdfWidth, pdfHeight, px(slideWidth), px(slideHeight), "stretch");
+function createContext({ pdfWidth, pdfHeight, slideWidth, slideHeight }: { pdfWidth: number; pdfHeight: number; slideWidth: number; slideHeight: number }) {
+  return createFitContext({ pdfWidth, pdfHeight, slideWidth: px(slideWidth), slideHeight: px(slideHeight), fit: "stretch" });
 }
 
 function createGraphicsState(fillColor: PdfColor, fillAlpha: number = 1): PdfGraphicsState {
@@ -41,7 +40,7 @@ describe("convertTextToShape", () => {
       graphicsState,
     };
 
-    const context = createContext(200, 400, 400, 800);
+    const context = createContext({ pdfWidth: 200, pdfHeight: 400, slideWidth: 400, slideHeight: 800 });
 
     const shape = convertTextToShape(pdfText, context, "1");
 
@@ -111,7 +110,7 @@ describe("convertTextToShape", () => {
   });
 
   describe("Y coordinate conversion (baseline → top edge)", () => {
-    const context = createContext(100, 100, 100, 100);
+    const context = createContext({ pdfWidth: 100, pdfHeight: 100, slideWidth: 100, slideHeight: 100 });
 
     it.each([
       { name: "page top", y: 90, height: 10, fontSize: 10, expectedY: 0 },
@@ -193,13 +192,13 @@ describe("convertTextToShape", () => {
       graphicsState: createGraphicsState({ colorSpace: "DeviceGray", components: [0] as const }),
     };
 
-    const context = createContext(100, 100, 100, 100);
+    const context = createContext({ pdfWidth: 100, pdfHeight: 100, slideWidth: 100, slideHeight: 100 });
     expect(() => convertTextToShape(pdfText, context, "")).toThrow("shapeId is required");
   });
 
   it("throws for invalid text bounds and font size", () => {
     const g = createGraphicsState({ colorSpace: "DeviceGray", components: [0] as const });
-    const context = createContext(100, 100, 100, 100);
+    const context = createContext({ pdfWidth: 100, pdfHeight: 100, slideWidth: 100, slideHeight: 100 });
 
     expect(() =>
       convertTextToShape({ type: "text", text: "X", x: 0, y: 0, width: -1, height: 10, fontName: "ArialMT", fontSize: 10, graphicsState: g }, context, "1")
@@ -216,7 +215,7 @@ describe("convertTextToShape", () => {
 
   it("detects bold/italic from PDF font names", () => {
     const g = createGraphicsState({ colorSpace: "DeviceGray", components: [0] as const });
-    const context = createContext(100, 100, 100, 100);
+    const context = createContext({ pdfWidth: 100, pdfHeight: 100, slideWidth: 100, slideHeight: 100 });
 
     const shape = convertTextToShape(
       {
@@ -243,7 +242,7 @@ describe("convertTextToShape", () => {
 
   describe("script type detection for font elements", () => {
     const g = createGraphicsState({ colorSpace: "DeviceGray", components: [0] as const });
-    const context = createContext(100, 100, 100, 100);
+    const context = createContext({ pdfWidth: 100, pdfHeight: 100, slideWidth: 100, slideHeight: 100 });
 
     it("sets fontFamilyEastAsian for Japanese font (MS Gothic)", () => {
       const shape = convertTextToShape(
@@ -507,7 +506,7 @@ describe("convertTextToShape", () => {
   });
 
   describe("charSpacing conversion", () => {
-    const context = createContext(100, 100, 100, 100);
+    const context = createContext({ pdfWidth: 100, pdfHeight: 100, slideWidth: 100, slideHeight: 100 });
     const g = createGraphicsState({ colorSpace: "DeviceGray", components: [0] as const });
 
     it("converts positive charSpacing to PPTX spacing", () => {
@@ -600,7 +599,7 @@ describe("convertTextToShape", () => {
   });
 
   describe("wordSpacing conversion", () => {
-    const context = createContext(100, 100, 100, 100);
+    const context = createContext({ pdfWidth: 100, pdfHeight: 100, slideWidth: 100, slideHeight: 100 });
     const g = createGraphicsState({ colorSpace: "DeviceGray", components: [0] as const });
 
     it("ignores wordSpacing alone (only charSpacing is used)", () => {
@@ -676,7 +675,7 @@ describe("convertTextToShape", () => {
   });
 
   describe("spacing validation", () => {
-    const context = createContext(100, 100, 100, 100);
+    const context = createContext({ pdfWidth: 100, pdfHeight: 100, slideWidth: 100, slideHeight: 100 });
     const g = createGraphicsState({ colorSpace: "DeviceGray", components: [0] as const });
 
     it("omits negligible spacing (less than 0.5px)", () => {
@@ -717,7 +716,7 @@ describe("convertGroupedTextToShape", () => {
     ...overrides,
   });
 
-  const context = createContext(100, 100, 100, 100);
+  const context = createContext({ pdfWidth: 100, pdfHeight: 100, slideWidth: 100, slideHeight: 100 });
 
   it("converts single-paragraph group to SpShape", () => {
     const group: GroupedText = {

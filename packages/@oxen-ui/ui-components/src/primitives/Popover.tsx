@@ -108,10 +108,14 @@ const arrowConfigs: Record<PopoverSide, ArrowConfig> = {
   },
 };
 
-function buildArrowStyle(
-  ...args: readonly [side: PopoverSide, offset: number, size: number, color: string]
-): CSSProperties {
-  const [side, offset, size, color] = args;
+type BuildArrowStyleInput = {
+  readonly side: PopoverSide;
+  readonly offset: number;
+  readonly size: number;
+  readonly color: string;
+};
+
+function buildArrowStyle({ side, offset, size, color }: BuildArrowStyleInput): CSSProperties {
   const config = arrowConfigs[side];
   const style: Record<string, string | number> = {
     position: "absolute",
@@ -130,18 +134,18 @@ function buildArrowStyle(
 
 function getArrowStyles(side: PopoverSide, offset: number): ArrowStyles {
   return {
-    border: buildArrowStyle(
+    border: buildArrowStyle({
       side,
       offset,
-      arrowBorderSize,
-      `var(--border-primary, ${colorTokens.border.primary})`
-    ),
-    fill: buildArrowStyle(
+      size: arrowBorderSize,
+      color: `var(--border-primary, ${colorTokens.border.primary})`,
+    }),
+    fill: buildArrowStyle({
       side,
       offset,
-      arrowFillSize,
-      `var(--bg-secondary, ${colorTokens.background.secondary})`
-    ),
+      size: arrowFillSize,
+      color: `var(--bg-secondary, ${colorTokens.background.secondary})`,
+    }),
   };
 }
 

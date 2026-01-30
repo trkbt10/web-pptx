@@ -43,7 +43,7 @@ function getRuns(paragraph: DocxParagraph): DocxRun[] {
 describe("applyFormatToRange", () => {
   it("applies bold to middle of text", () => {
     const paragraph = createParagraphWithRuns([{ text: "Hello World" }]);
-    const result = applyFormatToRange(paragraph, 6, 11, { b: true });
+    const result = applyFormatToRange({ paragraph, start: 6, end: 11, properties: { b: true } });
 
     expect(getTextFromParagraph(result)).toBe("Hello World");
     const runs = getRuns(result);
@@ -54,7 +54,7 @@ describe("applyFormatToRange", () => {
 
   it("applies format to entire text", () => {
     const paragraph = createParagraphWithRuns([{ text: "Hello" }]);
-    const result = applyFormatToRange(paragraph, 0, 5, { i: true });
+    const result = applyFormatToRange({ paragraph, start: 0, end: 5, properties: { i: true } });
 
     const runs = getRuns(result);
     expect(runs).toHaveLength(1);
@@ -63,7 +63,7 @@ describe("applyFormatToRange", () => {
 
   it("applies format to start of text", () => {
     const paragraph = createParagraphWithRuns([{ text: "Hello World" }]);
-    const result = applyFormatToRange(paragraph, 0, 5, { b: true });
+    const result = applyFormatToRange({ paragraph, start: 0, end: 5, properties: { b: true } });
 
     const runs = getRuns(result);
     expect(runs).toHaveLength(2);
@@ -73,7 +73,7 @@ describe("applyFormatToRange", () => {
 
   it("applies format to end of text", () => {
     const paragraph = createParagraphWithRuns([{ text: "Hello World" }]);
-    const result = applyFormatToRange(paragraph, 6, 11, { i: true });
+    const result = applyFormatToRange({ paragraph, start: 6, end: 11, properties: { i: true } });
 
     const runs = getRuns(result);
     expect(runs).toHaveLength(2);
@@ -83,14 +83,14 @@ describe("applyFormatToRange", () => {
 
   it("handles empty selection", () => {
     const paragraph = createParagraphWithRuns([{ text: "Hello" }]);
-    const result = applyFormatToRange(paragraph, 2, 2, { b: true });
+    const result = applyFormatToRange({ paragraph, start: 2, end: 2, properties: { b: true } });
 
     expect(getTextFromParagraph(result)).toBe("Hello");
   });
 
   it("merges with existing properties", () => {
     const paragraph = createParagraphWithRuns([{ text: "Hello", properties: { b: true } }]);
-    const result = applyFormatToRange(paragraph, 0, 5, { i: true });
+    const result = applyFormatToRange({ paragraph, start: 0, end: 5, properties: { i: true } });
 
     const runs = getRuns(result);
     expect(runs[0].properties?.b).toBe(true);
@@ -99,7 +99,7 @@ describe("applyFormatToRange", () => {
 
   it("creates three runs for middle selection", () => {
     const paragraph = createParagraphWithRuns([{ text: "ABCDE" }]);
-    const result = applyFormatToRange(paragraph, 1, 4, { b: true });
+    const result = applyFormatToRange({ paragraph, start: 1, end: 4, properties: { b: true } });
 
     expect(getTextFromParagraph(result)).toBe("ABCDE");
     const runs = getRuns(result);

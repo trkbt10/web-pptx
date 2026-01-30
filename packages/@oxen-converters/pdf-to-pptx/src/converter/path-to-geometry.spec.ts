@@ -46,7 +46,7 @@ import {
 
 const graphicsState = createDefaultGraphicsState();
 
-const context = createFitContext(100, 100, px(100), px(100), "stretch");
+const context = createFitContext({ pdfWidth: 100, pdfHeight: 100, slideWidth: px(100), slideHeight: px(100), fit: "stretch" });
 
 const KAPPA = 0.5522847498307936;
 
@@ -559,11 +559,20 @@ describe("isRoundedRectangle", () => {
    * Create a rounded rectangle path.
    * Structure: moveTo, then alternating lineTo/curveTo for edges and corners.
    */
-	  function createRoundedRectPath(
-	    ...args: readonly [x: number, y: number, width: number, height: number, radius: number]
-	  ): PdfPath {
-	    const [x, y, width, height, radius] = args;
-	    const r = radius;
+  function createRoundedRectPath({
+    x,
+    y,
+    width,
+    height,
+    radius,
+  }: {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+    readonly radius: number;
+  }): PdfPath {
+    const r = radius;
 	    // Start at top-left, after the corner curve ends
 	    const ops = [
       // Start on top edge after top-left corner
@@ -616,7 +625,7 @@ describe("isRoundedRectangle", () => {
   }
 
   it("detects a rounded rectangle with 10% corner radius", () => {
-    const path = createRoundedRectPath(0, 0, 100, 50, 5); // 5/50 = 10%
+    const path = createRoundedRectPath({ x: 0, y: 0, width: 100, height: 50, radius: 5 }); // 5/50 = 10%
     expect(isRoundedRectangle(path)).toBe(true);
 
     const ratio = detectRoundedRectangle(path);
@@ -625,7 +634,7 @@ describe("isRoundedRectangle", () => {
   });
 
   it("detects a rounded rectangle with 25% corner radius", () => {
-    const path = createRoundedRectPath(0, 0, 100, 100, 25); // 25/100 = 25%
+    const path = createRoundedRectPath({ x: 0, y: 0, width: 100, height: 100, radius: 25 }); // 25/100 = 25%
     expect(isRoundedRectangle(path)).toBe(true);
 
     const ratio = detectRoundedRectangle(path);
@@ -662,7 +671,7 @@ describe("isRoundedRectangle", () => {
   });
 
   it("converts rounded rect to roundRect preset", () => {
-    const path = createRoundedRectPath(0, 0, 100, 100, 16.67); // ~16.7%
+    const path = createRoundedRectPath({ x: 0, y: 0, width: 100, height: 100, radius: 16.67 }); // ~16.7%
     const preset = convertToPresetRoundRect(path);
 
     expect(preset.type).toBe("preset");

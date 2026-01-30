@@ -155,15 +155,17 @@ export function deleteTextRange(paragraph: DocxParagraph, start: number, end: nu
  * @param replacement - The replacement text
  * @returns A new paragraph with the text replaced
  */
-export function replaceTextRange(
-  ...args: readonly [
-    paragraph: DocxParagraph,
-    start: number,
-    end: number,
-    replacement: string,
-  ]
-): DocxParagraph {
-  const [paragraph, start, end, replacement] = args;
+export function replaceTextRange({
+  paragraph,
+  start,
+  end,
+  replacement,
+}: {
+  paragraph: DocxParagraph;
+  start: number;
+  end: number;
+  replacement: string;
+}): DocxParagraph {
   const currentText = getParagraphPlainText(paragraph);
   const newText = currentText.slice(0, start) + replacement + currentText.slice(end);
 

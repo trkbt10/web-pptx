@@ -346,16 +346,14 @@ export function resolveRunProperties(
  * @param runProps - Direct run properties
  * @returns Fully resolved properties
  */
-export function resolveRunPropertiesWithStyles(
-  ...args: readonly [
-    resolveStyle: (styleId: string | undefined) => ResolvedRunProperties,
-    styleId: string | undefined,
-    paragraphStyleId: string | undefined,
-    paragraphRPr: DocxRunProperties | undefined,
-    runProps: DocxRunProperties | undefined,
-  ]
-): ResolvedRunProperties {
-  const [resolveStyle, styleId, paragraphStyleId, paragraphRPr, runProps] = args;
+export function resolveRunPropertiesWithStyles(params: {
+  readonly resolveStyle: (styleId: string | undefined) => ResolvedRunProperties;
+  readonly styleId: string | undefined;
+  readonly paragraphStyleId: string | undefined;
+  readonly paragraphRPr: DocxRunProperties | undefined;
+  readonly runProps: DocxRunProperties | undefined;
+}): ResolvedRunProperties {
+  const { resolveStyle, styleId, paragraphStyleId, paragraphRPr, runProps } = params;
   // Start with paragraph style
   const baseParagraphStyle = resolveStyle(paragraphStyleId);
 

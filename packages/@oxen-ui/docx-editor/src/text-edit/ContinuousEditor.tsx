@@ -105,15 +105,17 @@ const hiddenTextareaStyle: CSSProperties = {
 /**
  * Compute selection rectangles for a given range.
  */
-function computeSelectionRects(
-  ...args: [
-    start: number,
-    end: number,
-    paragraphs: readonly DocxParagraph[],
-    pagedLayout: Parameters<typeof selectionToRects>[0],
-  ]
-): readonly SelectionRect[] {
-  const [start, end, paragraphs, pagedLayout] = args;
+function computeSelectionRects({
+  start,
+  end,
+  paragraphs,
+  pagedLayout,
+}: {
+  start: number;
+  end: number;
+  paragraphs: readonly DocxParagraph[];
+  pagedLayout: Parameters<typeof selectionToRects>[0];
+}): readonly SelectionRect[] {
   if (start === end) {
     return [];
   }
@@ -242,7 +244,7 @@ export function ContinuousEditor({
     const cursorCoords = cursorPositionToCoordinates(pagedLayout, cursorPos);
 
     // Calculate selection rects if there's a selection
-    const selRects = computeSelectionRects(start, end, internalParagraphs, pagedLayout);
+    const selRects = computeSelectionRects({ start, end, paragraphs: internalParagraphs, pagedLayout });
 
     setCursorState((prev) => ({
       ...prev,

@@ -853,15 +853,12 @@ export function applyColumnOverride(
  * This is used by editor operations like applying a style to whole columns
  * without iterating and re-normalizing per column.
  */
-export function applyColumnRangeOverride(
-  ...args: readonly [
-    columns: readonly XlsxColumnDef[] | undefined,
-    startCol: ColIndex,
-    endCol: ColIndex,
-    override: Partial<XlsxColumnDef>,
-  ]
-): readonly XlsxColumnDef[] {
-  const [columns, startCol, endCol, override] = args;
+export function applyColumnRangeOverride({ columns, startCol, endCol, override }: {
+  readonly columns: readonly XlsxColumnDef[] | undefined;
+  readonly startCol: ColIndex;
+  readonly endCol: ColIndex;
+  readonly override: Partial<XlsxColumnDef>;
+}): readonly XlsxColumnDef[] {
   const min = Math.min(toColNumber(startCol), toColNumber(endCol));
   const max = Math.max(toColNumber(startCol), toColNumber(endCol));
 

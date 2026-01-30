@@ -65,13 +65,13 @@ export type ConversionOptions = {
  * PdfPageの全要素をShapeに変換
  */
 export function convertPageToShapes(page: PdfPage, options: ConversionOptions): Shape[] {
-  const context = createFitContext(
-    page.width,
-    page.height,
-    options.slideWidth,
-    options.slideHeight,
-    options.fit ?? "contain"
-  );
+  const context = createFitContext({
+    pdfWidth: page.width,
+    pdfHeight: page.height,
+    slideWidth: options.slideWidth,
+    slideHeight: options.slideHeight,
+    fit: options.fit ?? "contain",
+  });
 
   const shapes: Shape[] = [];
   const shapeIdCounter = { value: 1 };
@@ -291,12 +291,11 @@ export function convertPageToShapes(page: PdfPage, options: ConversionOptions): 
   const filterNestedTableRegions = (regions: readonly TableRegion[]): TableRegion[] => {
     const area = (r: { x0: number; y0: number; x1: number; y1: number }): number =>
       Math.max(0, r.x1 - r.x0) * Math.max(0, r.y1 - r.y0);
-    const overlap1D = (...args: [a0: number, a1: number, b0: number, b1: number]): number => {
-      const [a0, a1, b0, b1] = args;
+    const overlap1D = ({ a0, a1, b0, b1 }: { a0: number; a1: number; b0: number; b1: number }): number => {
       return Math.max(0, Math.min(a1, b1) - Math.max(a0, b0));
     };
     const overlapArea = (a: { x0: number; y0: number; x1: number; y1: number }, b: { x0: number; y0: number; x1: number; y1: number }): number =>
-      overlap1D(a.x0, a.x1, b.x0, b.x1) * overlap1D(a.y0, a.y1, b.y0, b.y1);
+      overlap1D({ a0: a.x0, a1: a.x1, b0: b.x0, b1: b.x1 }) * overlap1D({ a0: a.y0, a1: a.y1, b0: b.y0, b1: b.y1 });
 
     // Sort big-to-small and drop regions that are mostly contained in a larger one.
     const sorted = [...regions].sort((a, b) => area(b) - area(a));
@@ -680,8 +679,7 @@ export function convertPageToShapes(page: PdfPage, options: ConversionOptions): 
   const groupArray = [...groups];
   const consumedGroupIndices = new Set<number>();
 
-  const overlap1D = (...args: [a0: number, a1: number, b0: number, b1: number]): number => {
-    const [a0, a1, b0, b1] = args;
+  const overlap1D = ({ a0, a1, b0, b1 }: { a0: number; a1: number; b0: number; b1: number }): number => {
     const lo = Math.max(Math.min(a0, a1), Math.min(b0, b1));
     const hi = Math.min(Math.max(a0, a1), Math.max(b0, b1));
     return Math.max(0, hi - lo);
@@ -816,7 +814,7 @@ export function convertPageToShapes(page: PdfPage, options: ConversionOptions): 
       if (otherTop > tableTop + table.fontSize * 1.2) {continue;}
       if (other.bounds.height > table.fontSize * 1.8) {continue;}
 
-      const ov = overlap1D(x0, x1, other.bounds.x, other.bounds.x + other.bounds.width);
+      const ov = overlap1D({ a0: x0, a1: x1, b0: other.bounds.x, b1: other.bounds.x + other.bounds.width });
       const denom = Math.max(1e-6, Math.min(x1 - x0, other.bounds.width));
       const ovRatio = ov / denom;
       if (ovRatio < 0.2) {continue;}

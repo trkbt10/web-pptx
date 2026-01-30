@@ -334,10 +334,17 @@ export function getDefaultBoundsForMode(mode: CreationMode, centerX: Pixels, cen
 /**
  * Create bounds from drag start/end coordinates
  */
-export function createBoundsFromDrag(
-  ...args: readonly [startX: Pixels, startY: Pixels, endX: Pixels, endY: Pixels]
-): ShapeBounds {
-  const [startX, startY, endX, endY] = args;
+export function createBoundsFromDrag({
+  startX,
+  startY,
+  endX,
+  endY,
+}: {
+  startX: Pixels;
+  startY: Pixels;
+  endX: Pixels;
+  endY: Pixels;
+}): ShapeBounds {
   const x1 = startX as number;
   const y1 = startY as number;
   const x2 = endX as number;

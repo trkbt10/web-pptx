@@ -148,6 +148,26 @@ export type CreateTableGraphicFrameOptions = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createTableGraphicFrame({ id, bounds, rows, cols }: CreateTableGraphicFrameOptions): GraphicFrame {
   return {
     type: "graphicFrame",
@@ -276,6 +296,26 @@ export type CreateOleGraphicFrameOptions = {
   readonly embedData: ArrayBuffer;
   readonly filename: string;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

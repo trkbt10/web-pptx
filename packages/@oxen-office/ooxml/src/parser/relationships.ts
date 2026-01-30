@@ -86,6 +86,26 @@ export function parseRelationships(relsXml: XmlDocument | null, sourcePath: stri
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseRelationshipsFromText(relsText: string | null | undefined, sourcePath: string): ResourceMap {
   if (relsText === null || relsText === undefined) {
     return createEmptyResourceMap();

@@ -179,7 +179,7 @@ function printResults(result: AnalysisResult): void {
 async function main(): Promise<void> {
   const usage = "bun run scripts/analyze/analyze-ecma376-compliance.ts <pptx-path> <slide-number>";
   const args = process.argv.slice(2);
-  const pptxPath = requirePositionalArg(args, 0, "pptx-path", usage);
+  const pptxPath = requirePositionalArg({ args, index: 0, name: "pptx-path", usage });
   const slideNumber = requireIntArg(args[1], "slide-number", usage);
   requireFileExists(pptxPath, usage);
 

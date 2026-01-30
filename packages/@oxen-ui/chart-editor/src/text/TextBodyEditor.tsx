@@ -19,6 +19,26 @@ export type TextBodyEditorProps = EditorProps<TextBody> & {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function TextBodyEditor(props: TextBodyEditorProps): ReactNode {
   const adapters = useChartEditorAdapters();
   const textBodyAdapter = adapters?.textBody;

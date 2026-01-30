@@ -10,8 +10,17 @@ import { withUpdatedTransform, hasEditableTransform } from "./transform";
 // Test Fixtures
 // =============================================================================
 
-const createSpShape = (...args: readonly [x: number, y: number, width: number, height: number]): SpShape => {
-  const [x, y, width, height] = args;
+const createSpShape = ({
+  x,
+  y,
+  width,
+  height,
+}: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}): SpShape => {
   return {
     type: "sp",
     nonVisual: { id: "sp1", name: "Test Shape" },
@@ -29,10 +38,17 @@ const createSpShape = (...args: readonly [x: number, y: number, width: number, h
   };
 };
 
-const createGraphicFrame = (
-  ...args: readonly [x: number, y: number, width: number, height: number]
-): GraphicFrame => {
-  const [x, y, width, height] = args;
+const createGraphicFrame = ({
+  x,
+  y,
+  width,
+  height,
+}: {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}): GraphicFrame => {
   return {
     type: "graphicFrame",
     nonVisual: { id: "gf1", name: "Test Table" },
@@ -108,7 +124,7 @@ const createContentPart = (): ContentPartShape => ({
 
 describe("getShapeTransform", () => {
   it("returns transform from SpShape", () => {
-    const shape = createSpShape(10, 20, 100, 50);
+    const shape = createSpShape({ x: 10, y: 20, width: 100, height: 50 });
     const transform = getShapeTransform(shape);
     expect(transform?.x).toBe(10);
     expect(transform?.y).toBe(20);
@@ -117,7 +133,7 @@ describe("getShapeTransform", () => {
   });
 
   it("returns transform from GraphicFrame", () => {
-    const shape = createGraphicFrame(30, 40, 200, 150);
+    const shape = createGraphicFrame({ x: 30, y: 40, width: 200, height: 150 });
     const transform = getShapeTransform(shape);
     expect(transform?.x).toBe(30);
     expect(transform?.y).toBe(40);
@@ -142,7 +158,7 @@ describe("getShapeTransform", () => {
 
 describe("withUpdatedTransform", () => {
   it("updates SpShape transform", () => {
-    const shape = createSpShape(10, 20, 100, 50);
+    const shape = createSpShape({ x: 10, y: 20, width: 100, height: 50 });
     const updated = withUpdatedTransform(shape, { x: px(100), y: px(200) });
 
     expect(updated.type).toBe("sp");
@@ -154,7 +170,7 @@ describe("withUpdatedTransform", () => {
   });
 
   it("updates GraphicFrame transform directly", () => {
-    const shape = createGraphicFrame(30, 40, 200, 150);
+    const shape = createGraphicFrame({ x: 30, y: 40, width: 200, height: 150 });
     const updated = withUpdatedTransform(shape, { width: px(300), height: px(250) });
 
     expect(updated.type).toBe("graphicFrame");
@@ -192,7 +208,7 @@ describe("withUpdatedTransform", () => {
   });
 
   it("does not mutate original shape", () => {
-    const shape = createSpShape(10, 20, 100, 50);
+    const shape = createSpShape({ x: 10, y: 20, width: 100, height: 50 });
     withUpdatedTransform(shape, { x: px(999) });
 
     // Original should be unchanged
@@ -202,12 +218,12 @@ describe("withUpdatedTransform", () => {
 
 describe("hasEditableTransform", () => {
   it("returns true for SpShape with transform", () => {
-    const shape = createSpShape(10, 20, 100, 50);
+    const shape = createSpShape({ x: 10, y: 20, width: 100, height: 50 });
     expect(hasEditableTransform(shape)).toBe(true);
   });
 
   it("returns true for GraphicFrame", () => {
-    const shape = createGraphicFrame(30, 40, 200, 150);
+    const shape = createGraphicFrame({ x: 30, y: 40, width: 200, height: 150 });
     expect(hasEditableTransform(shape)).toBe(true);
   });
 

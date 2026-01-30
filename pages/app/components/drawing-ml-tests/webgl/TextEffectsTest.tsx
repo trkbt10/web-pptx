@@ -130,15 +130,15 @@ function Text3DPreview() {
   // Run layout engine using library function (ECMA-376 compliant)
   const runs = useMemo(() => {
     const textBody = showMixedStyles ? mixedStylesTextBody : singleRunTextBody;
-    return extractText3DRuns(
+    return extractText3DRuns({
       textBody,
-      400,
-      200,
-      demoColorContext,
-      undefined, // fontScheme
-      undefined, // options
-      () => undefined, // resourceResolver
-    );
+      width: 400,
+      height: 200,
+      colorContext: demoColorContext,
+      fontScheme: undefined,
+      options: undefined,
+      resourceResolver: () => undefined,
+    });
   }, [showMixedStyles, singleRunTextBody, mixedStylesTextBody]);
 
   return (

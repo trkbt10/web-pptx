@@ -69,7 +69,7 @@ export const ipmtFunction: FormulaFunctionEagerDefinition = {
     }
 
     helpers.validateInterestRate(rate, "IPMT rate");
-    const payment = helpers.calculatePayment(rate, periods, pv, fv, type);
-    return helpers.calculateInterestPayment(rate, periods, payment, pv, fv, type, period);
+    const payment = helpers.calculatePayment({ rate, periods, presentValue: pv, futureValue: fv, type });
+    return helpers.calculateInterestPayment({ rate, periods, payment, presentValue: pv, futureValue: fv, type, targetPeriod: period });
   },
 };

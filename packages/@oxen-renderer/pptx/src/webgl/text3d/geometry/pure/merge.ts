@@ -254,15 +254,17 @@ function analyzeExtendedGeometries(
 /**
  * Merge a custom attribute from all geometries
  */
-function mergeCustomAttribute(
-  ...args: [
-    geometries: readonly ExtendedGeometryData[],
-    attrName: string,
-    totalVertices: number,
-    componentSize: number,
-  ]
-): Float32Array {
-  const [geometries, attrName, totalVertices, componentSize] = args;
+function mergeCustomAttribute({
+  geometries,
+  attrName,
+  totalVertices,
+  componentSize,
+}: {
+  geometries: readonly ExtendedGeometryData[];
+  attrName: string;
+  totalVertices: number;
+  componentSize: number;
+}): Float32Array {
   const merged = new Float32Array(totalVertices * componentSize);
   let offset = 0;
 
@@ -316,12 +318,12 @@ export function mergeExtendedGeometries(
   // Merge custom attributes
   const customAttributes: Record<string, Float32Array> = {};
   for (const attrName of analysis.commonCustomAttrs) {
-    customAttributes[attrName] = mergeCustomAttribute(
+    customAttributes[attrName] = mergeCustomAttribute({
       geometries,
       attrName,
-      analysis.totalVertices,
-      analysis.customAttrSizes[attrName],
-    );
+      totalVertices: analysis.totalVertices,
+      componentSize: analysis.customAttrSizes[attrName],
+    });
   }
 
   return {

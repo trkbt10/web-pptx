@@ -619,6 +619,26 @@ export type CompareReport = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function generateCompareReport(
   results: DetailedCompareResult[]
 ): CompareReport {

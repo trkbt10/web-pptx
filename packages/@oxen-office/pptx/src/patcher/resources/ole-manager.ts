@@ -88,6 +88,26 @@ type AddOleObjectArgs = [
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function addOleObject(
   ...args: AddOleObjectArgs
 ): { readonly path: string; readonly rId: string; readonly progId: string } {

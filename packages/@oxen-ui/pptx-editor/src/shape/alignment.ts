@@ -79,10 +79,19 @@ function getCenterY(b: Bounds): number {
   return getTop(b) + getHeight(b) / 2;
 }
 
-function createUpdate(
-  ...args: readonly [id: ShapeId, x: number, y: number, width: number, height: number]
-): AlignmentUpdate {
-  const [id, x, y, width, height] = args;
+function createUpdate({
+  id,
+  x,
+  y,
+  width,
+  height,
+}: {
+  id: ShapeId;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}): AlignmentUpdate {
   return {
     id,
     bounds: {
@@ -113,38 +122,38 @@ export function alignHorizontal(
     case "left": {
       const minX = Math.min(...shapes.map((s) => getLeft(s.bounds)));
       return shapes.map((s) =>
-        createUpdate(
-          s.id,
-          minX,
-          getTop(s.bounds),
-          getWidth(s.bounds),
-          getHeight(s.bounds)
-        )
+        createUpdate({
+          id: s.id,
+          x: minX,
+          y: getTop(s.bounds),
+          width: getWidth(s.bounds),
+          height: getHeight(s.bounds),
+        })
       );
     }
     case "center": {
       const centers = shapes.map((s) => getCenterX(s.bounds));
       const avgCenter = centers.reduce((a, b) => a + b, 0) / centers.length;
       return shapes.map((s) =>
-        createUpdate(
-          s.id,
-          avgCenter - getWidth(s.bounds) / 2,
-          getTop(s.bounds),
-          getWidth(s.bounds),
-          getHeight(s.bounds)
-        )
+        createUpdate({
+          id: s.id,
+          x: avgCenter - getWidth(s.bounds) / 2,
+          y: getTop(s.bounds),
+          width: getWidth(s.bounds),
+          height: getHeight(s.bounds),
+        })
       );
     }
     case "right": {
       const maxRight = Math.max(...shapes.map((s) => getRight(s.bounds)));
       return shapes.map((s) =>
-        createUpdate(
-          s.id,
-          maxRight - getWidth(s.bounds),
-          getTop(s.bounds),
-          getWidth(s.bounds),
-          getHeight(s.bounds)
-        )
+        createUpdate({
+          id: s.id,
+          x: maxRight - getWidth(s.bounds),
+          y: getTop(s.bounds),
+          width: getWidth(s.bounds),
+          height: getHeight(s.bounds),
+        })
       );
     }
   }
@@ -165,38 +174,38 @@ export function alignVertical(
     case "top": {
       const minY = Math.min(...shapes.map((s) => getTop(s.bounds)));
       return shapes.map((s) =>
-        createUpdate(
-          s.id,
-          getLeft(s.bounds),
-          minY,
-          getWidth(s.bounds),
-          getHeight(s.bounds)
-        )
+        createUpdate({
+          id: s.id,
+          x: getLeft(s.bounds),
+          y: minY,
+          width: getWidth(s.bounds),
+          height: getHeight(s.bounds),
+        })
       );
     }
     case "middle": {
       const centers = shapes.map((s) => getCenterY(s.bounds));
       const avgCenter = centers.reduce((a, b) => a + b, 0) / centers.length;
       return shapes.map((s) =>
-        createUpdate(
-          s.id,
-          getLeft(s.bounds),
-          avgCenter - getHeight(s.bounds) / 2,
-          getWidth(s.bounds),
-          getHeight(s.bounds)
-        )
+        createUpdate({
+          id: s.id,
+          x: getLeft(s.bounds),
+          y: avgCenter - getHeight(s.bounds) / 2,
+          width: getWidth(s.bounds),
+          height: getHeight(s.bounds),
+        })
       );
     }
     case "bottom": {
       const maxBottom = Math.max(...shapes.map((s) => getBottom(s.bounds)));
       return shapes.map((s) =>
-        createUpdate(
-          s.id,
-          getLeft(s.bounds),
-          maxBottom - getHeight(s.bounds),
-          getWidth(s.bounds),
-          getHeight(s.bounds)
-        )
+        createUpdate({
+          id: s.id,
+          x: getLeft(s.bounds),
+          y: maxBottom - getHeight(s.bounds),
+          width: getWidth(s.bounds),
+          height: getHeight(s.bounds),
+        })
       );
     }
   }
@@ -238,13 +247,13 @@ export function distributeHorizontal(
 
   for (const s of sorted) {
     updates.push(
-      createUpdate(
-        s.id,
-        currentX,
-        getTop(s.bounds),
-        getWidth(s.bounds),
-        getHeight(s.bounds)
-      )
+      createUpdate({
+        id: s.id,
+        x: currentX,
+        y: getTop(s.bounds),
+        width: getWidth(s.bounds),
+        height: getHeight(s.bounds),
+      })
     );
     currentX += getWidth(s.bounds) + gapSize;
   }
@@ -284,13 +293,13 @@ export function distributeVertical(
 
   for (const s of sorted) {
     updates.push(
-      createUpdate(
-        s.id,
-        getLeft(s.bounds),
-        currentY,
-        getWidth(s.bounds),
-        getHeight(s.bounds)
-      )
+      createUpdate({
+        id: s.id,
+        x: getLeft(s.bounds),
+        y: currentY,
+        width: getWidth(s.bounds),
+        height: getHeight(s.bounds),
+      })
     );
     currentY += getHeight(s.bounds) + gapSize;
   }
@@ -311,13 +320,13 @@ export function nudgeShapes(
   dy: number
 ): readonly AlignmentUpdate[] {
   return shapes.map((s) =>
-    createUpdate(
-      s.id,
-      getLeft(s.bounds) + dx,
-      getTop(s.bounds) + dy,
-      getWidth(s.bounds),
-      getHeight(s.bounds)
-    )
+    createUpdate({
+      id: s.id,
+      x: getLeft(s.bounds) + dx,
+      y: getTop(s.bounds) + dy,
+      width: getWidth(s.bounds),
+      height: getHeight(s.bounds),
+    })
   );
 }
 

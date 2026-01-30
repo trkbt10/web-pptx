@@ -4,13 +4,17 @@
  * Shared helpers for virtualized 2D grids (rows/cols with sizes and offsets).
  */
 
+type ClampRangeInput = {
+  readonly start: number;
+  readonly end: number;
+  readonly min: number;
+  readonly max: number;
+};
+
 /**
  * Clamp a (start, end) range to an inclusive [min, max] bounds.
  */
-export function clampRange(
-  ...args: readonly [start: number, end: number, min: number, max: number]
-): { start: number; end: number } {
-  const [start, end, min, max] = args;
+export function clampRange({ start, end, min, max }: ClampRangeInput): { start: number; end: number } {
   return {
     start: Math.max(min, Math.min(max, start)),
     end: Math.max(min, Math.min(max, end)),

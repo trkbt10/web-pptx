@@ -456,8 +456,7 @@ describe("createSpatialGrouping", () => {
 
       const pageWidth = 500;
 
-      const makeLine = (...args: readonly [prefix: string, x: number, y: number, width: number]): PdfText => {
-        const [prefix, x, y, width] = args;
+      const makeLine = ({ prefix, x, y, width }: { prefix: string; x: number; y: number; width: number }): PdfText => {
         return createPdfText({ text: `${prefix}-${"x".repeat(40)}`, x, y, width, height: 12, fontSize: 12 });
       };
 
@@ -469,8 +468,8 @@ describe("createSpatialGrouping", () => {
         const y = 500 - row * 16;
         const spill = row === 2 ? 320 : 240; // one row intentionally overlaps the gutter
 
-        texts.push(makeLine(`L${row}`, 0, y, spill));
-        texts.push(makeLine(`R${row}`, 300, y, 180));
+        texts.push(makeLine({ prefix: `L${row}`, x: 0, y, width: spill }));
+        texts.push(makeLine({ prefix: `R${row}`, x: 300, y, width: 180 }));
       }
 
       const groups = groupFn(texts, { pageWidth });

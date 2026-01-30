@@ -183,16 +183,15 @@ type OrientedBox = Readonly<{
   readonly aabb: BBox4;
 }>;
 
-function dot(...args: readonly [ax: number, ay: number, bx: number, by: number]): number {
-  const [ax, ay, bx, by] = args;
+function dot({ ax, ay, bx, by }: { readonly ax: number; readonly ay: number; readonly bx: number; readonly by: number }): number {
   return ax * bx + ay * by;
 }
 
 function pointInOrientedBox(p: Readonly<{ x: number; y: number }>, box: OrientedBox, pad: number): boolean {
   const dx = p.x - box.origin.x;
   const dy = p.y - box.origin.y;
-  const t = dot(dx, dy, box.u.x, box.u.y);
-  const s = dot(dx, dy, box.n.x, box.n.y);
+  const t = dot({ ax: dx, ay: dy, bx: box.u.x, by: box.u.y });
+  const s = dot({ ax: dx, ay: dy, bx: box.n.x, by: box.n.y });
   return (
     t >= -pad &&
     t <= box.length + pad &&
@@ -326,12 +325,12 @@ function colorToRgbBytes(color: PdfColor): readonly [number, number, number] {
     case "DeviceRGB":
       return [toByte(color.components[0] ?? 0), toByte(color.components[1] ?? 0), toByte(color.components[2] ?? 0)];
     case "DeviceCMYK": {
-      const [r, g, b] = cmykToRgb(
-        color.components[0] ?? 0,
-        color.components[1] ?? 0,
-        color.components[2] ?? 0,
-        color.components[3] ?? 0,
-      );
+      const [r, g, b] = cmykToRgb({
+        c: color.components[0] ?? 0,
+        m: color.components[1] ?? 0,
+        y: color.components[2] ?? 0,
+        k: color.components[3] ?? 0,
+      });
       return [r, g, b];
     }
     case "ICCBased": {
@@ -344,12 +343,12 @@ function colorToRgbBytes(color: PdfColor): readonly [number, number, number] {
         return [toByte(color.components[0] ?? 0), toByte(color.components[1] ?? 0), toByte(color.components[2] ?? 0)];
       }
       if (alt === "DeviceCMYK") {
-        const [r, g, b] = cmykToRgb(
-          color.components[0] ?? 0,
-          color.components[1] ?? 0,
-          color.components[2] ?? 0,
-          color.components[3] ?? 0,
-        );
+        const [r, g, b] = cmykToRgb({
+          c: color.components[0] ?? 0,
+          m: color.components[1] ?? 0,
+          y: color.components[2] ?? 0,
+          k: color.components[3] ?? 0,
+        });
         return [r, g, b];
       }
       return [0, 0, 0];
@@ -385,12 +384,12 @@ function luminance01FromColor(color: PdfColor): number | null {
       return 0.299 * r + 0.587 * g + 0.114 * b;
     }
     case "DeviceCMYK": {
-      const [r, g, b] = cmykToRgb(
-        color.components[0] ?? 0,
-        color.components[1] ?? 0,
-        color.components[2] ?? 0,
-        color.components[3] ?? 0,
-      );
+      const [r, g, b] = cmykToRgb({
+        c: color.components[0] ?? 0,
+        m: color.components[1] ?? 0,
+        y: color.components[2] ?? 0,
+        k: color.components[3] ?? 0,
+      });
       return 0.299 * (r / 255) + 0.587 * (g / 255) + 0.114 * (b / 255);
     }
     case "ICCBased": {
@@ -406,12 +405,12 @@ function luminance01FromColor(color: PdfColor): number | null {
         return 0.299 * r + 0.587 * g + 0.114 * b;
       }
       if (alt === "DeviceCMYK") {
-        const [r, g, b] = cmykToRgb(
-          color.components[0] ?? 0,
-          color.components[1] ?? 0,
-          color.components[2] ?? 0,
-          color.components[3] ?? 0,
-        );
+        const [r, g, b] = cmykToRgb({
+          c: color.components[0] ?? 0,
+          m: color.components[1] ?? 0,
+          y: color.components[2] ?? 0,
+          k: color.components[3] ?? 0,
+        });
         return 0.299 * (r / 255) + 0.587 * (g / 255) + 0.114 * (b / 255);
       }
       // Unknown; fall back to component-count guesses.
@@ -424,7 +423,7 @@ function luminance01FromColor(color: PdfColor): number | null {
         return 0.299 * r + 0.587 * g + 0.114 * b;
       }
       if (n === 4) {
-        const [r, g, b] = cmykToRgb(color.components[0] ?? 0, color.components[1] ?? 0, color.components[2] ?? 0, color.components[3] ?? 0);
+        const [r, g, b] = cmykToRgb({ c: color.components[0] ?? 0, m: color.components[1] ?? 0, y: color.components[2] ?? 0, k: color.components[3] ?? 0 });
         return 0.299 * (r / 255) + 0.587 * (g / 255) + 0.114 * (b / 255);
       }
       return null;
@@ -514,12 +513,12 @@ function parseSoftMaskBackdropRgb(
     return [r, g, b];
   }
   if (cs === "DeviceCMYK") {
-    return cmykToRgb(
-      clamp01(comps[0] ?? 0),
-      clamp01(comps[1] ?? 0),
-      clamp01(comps[2] ?? 0),
-      clamp01(comps[3] ?? 0),
-    );
+    return cmykToRgb({
+      c: clamp01(comps[0] ?? 0),
+      m: clamp01(comps[1] ?? 0),
+      y: clamp01(comps[2] ?? 0),
+      k: clamp01(comps[3] ?? 0),
+    });
   }
   return null;
 }
@@ -534,34 +533,31 @@ function resolveXObjectStreamByName(page: NativePdfPage, xObjects: PdfDict, name
   return asStream(resolve(page, dictGet(xObjects, clean)));
 }
 
-function tryExtractPerPixelSoftMaskFromElements(
-  ...args: readonly [
-    page: NativePdfPage,
-    elements: readonly ParsedElement[],
-    bbox: BBox4,
-    matrix: PdfMatrix,
-    kind: SoftMaskKind,
-    resources: PdfDict | null,
-    fontMappings: FontMappings,
-    options: ExtGStateExtractOptions,
-    groupKnockout: boolean,
-    groupIsolated: boolean,
-    backdropRgb: readonly [number, number, number] | null,
-  ]
-): PdfSoftMask | null {
-  const [
-    page,
-    elements,
-    bbox,
-    matrix,
-    kind,
-    resources,
-    fontMappings,
-    options,
-    groupKnockout,
-    groupIsolated,
-    backdropRgb,
-  ] = args;
+function tryExtractPerPixelSoftMaskFromElements({
+  page,
+  elements,
+  bbox,
+  matrix,
+  kind,
+  resources,
+  fontMappings,
+  options,
+  groupKnockout,
+  groupIsolated,
+  backdropRgb,
+}: {
+  readonly page: NativePdfPage;
+  readonly elements: readonly ParsedElement[];
+  readonly bbox: BBox4;
+  readonly matrix: PdfMatrix;
+  readonly kind: SoftMaskKind;
+  readonly resources: PdfDict | null;
+  readonly fontMappings: FontMappings;
+  readonly options: ExtGStateExtractOptions;
+  readonly groupKnockout: boolean;
+  readonly groupIsolated: boolean;
+  readonly backdropRgb: readonly [number, number, number] | null;
+}): PdfSoftMask | null {
   type MaskLayer =
     | Readonly<{
       readonly kind: "image";
@@ -601,16 +597,19 @@ function tryExtractPerPixelSoftMaskFromElements(
   const hasXObjectImages = imageElements.length > 0;
   const hasRasterImages = rasterImageElements.length > 0;
 
-  const rasterizeTextElementToGrid = (
-    ...args: readonly [
-      elem: ParsedText,
-      width: number,
-      height: number,
-      bbox: BBox4,
-      fontMappings: FontMappings,
-    ]
-  ): RasterLayer | null | undefined => {
-    const [elem, width, height, bbox, fontMappings] = args;
+  const rasterizeTextElementToGrid = ({
+    elem,
+    width,
+    height,
+    bbox,
+    fontMappings,
+  }: {
+    readonly elem: ParsedText;
+    readonly width: number;
+    readonly height: number;
+    readonly bbox: BBox4;
+    readonly fontMappings: FontMappings;
+  }): RasterLayer | null | undefined => {
     const gs = elem.graphicsState;
     if (gs.softMask) {return null;}
 
@@ -778,7 +777,7 @@ function tryExtractPerPixelSoftMaskFromElements(
           continue;
         }
         if (elem.type === "text") {
-          const layer = rasterizeTextElementToGrid(elem, width, height, bbox, fontMappings);
+          const layer = rasterizeTextElementToGrid({ elem, width, height, bbox, fontMappings });
           if (layer === null) {return null;}
           if (!layer) {continue;}
 
@@ -830,7 +829,7 @@ function tryExtractPerPixelSoftMaskFromElements(
         if (raster.width !== width || raster.height !== height) {return null;}
         layer = { kind: "raster", width, height, data: raster.data, alpha: raster.alpha };
       } else if (elem.type === "text") {
-        layer = rasterizeTextElementToGrid(elem, width, height, bbox, fontMappings);
+        layer = rasterizeTextElementToGrid({ elem, width, height, bbox, fontMappings });
         if (layer === null) {return null;}
         if (!layer) {continue;}
       } else {
@@ -1040,7 +1039,7 @@ function tryExtractPerPixelSoftMaskFromElements(
       continue;
     }
     if (elem.type === "text") {
-      const layer = rasterizeTextElementToGrid(elem, width, height, bbox, fontMappings);
+      const layer = rasterizeTextElementToGrid({ elem, width, height, bbox, fontMappings });
       if (layer === null) {return null;}
       if (!layer) {continue;}
       if (layer.width !== width || layer.height !== height) {return null;}
@@ -1290,7 +1289,7 @@ function parseSoftMask(page: NativePdfPage, obj: PdfObject | undefined, options:
       return { present: true, softMaskAlpha: extracted, softMask: undefined };
     }
 
-    const perPixel = tryExtractPerPixelSoftMaskFromElements(
+    const perPixel = tryExtractPerPixelSoftMaskFromElements({
       page,
       elements,
       bbox,
@@ -1302,7 +1301,7 @@ function parseSoftMask(page: NativePdfPage, obj: PdfObject | undefined, options:
       groupKnockout,
       groupIsolated,
       backdropRgb,
-    );
+    });
     if (perPixel) {
       return { present: true, softMaskAlpha: 1, softMask: perPixel };
     }

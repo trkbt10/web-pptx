@@ -45,6 +45,26 @@ function NextIcon() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function NavButton({ direction, disabled, onClick }: Props) {
   function handleClick(e: MouseEvent) {
     e.stopPropagation();

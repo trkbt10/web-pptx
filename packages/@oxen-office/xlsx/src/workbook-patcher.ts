@@ -106,7 +106,7 @@ export async function patchWorkbook(
     }
 
     // Patch the sheet XML
-    patchSheetXml(pkg, sheet, update.cells, sharedStrings, update.dimension);
+    patchSheetXml({ pkg, sheet, cells: update.cells, sharedStrings, dimension: update.dimension });
     updatedSheets.push(update.sheetName);
   }
 
@@ -128,16 +128,14 @@ export async function patchWorkbook(
 /**
  * Patch a single sheet's XML with cell updates.
  */
-function patchSheetXml(
-  ...args: readonly [
-    pkg: ZipPackage,
-    sheet: WorkbookSheet,
-    cells: readonly CellUpdate[],
-    sharedStrings: readonly string[],
-    dimension?: string,
-  ]
-): void {
-  const [pkg, sheet, cells, sharedStrings, dimension] = args;
+function patchSheetXml(params: {
+  readonly pkg: ZipPackage;
+  readonly sheet: WorkbookSheet;
+  readonly cells: readonly CellUpdate[];
+  readonly sharedStrings: readonly string[];
+  readonly dimension?: string;
+}): void {
+  const { pkg, sheet, cells, sharedStrings, dimension } = params;
   const sheetText = pkg.readText(sheet.xmlPath);
   if (!sheetText) {
     throw new Error(`patchSheetXml: sheet XML not found at ${sheet.xmlPath}`);
@@ -222,7 +220,7 @@ function applyCellUpdates(
   // Update or create rows
   for (const [rowNum, updates] of byRow) {
     const existingRow = rowMap.get(rowNum);
-    const newRow = applyRowUpdates(existingRow, rowNum, updates, sharedStrings);
+    const newRow = applyRowUpdates({ existingRow, rowNum, updates, sharedStrings });
     rowMap.set(rowNum, newRow);
   }
 
@@ -242,15 +240,13 @@ function applyCellUpdates(
 /**
  * Apply updates to a single row.
  */
-function applyRowUpdates(
-  ...args: readonly [
-    existingRow: XmlElement | undefined,
-    rowNum: number,
-    updates: readonly CellUpdate[],
-    sharedStrings: readonly string[],
-  ]
-): XmlElement {
-  const [existingRow, rowNum, updates, sharedStrings] = args;
+function applyRowUpdates(params: {
+  readonly existingRow: XmlElement | undefined;
+  readonly rowNum: number;
+  readonly updates: readonly CellUpdate[];
+  readonly sharedStrings: readonly string[];
+}): XmlElement {
+  const { existingRow, rowNum, updates, sharedStrings } = params;
   // Get existing cells
   const cellMap = new Map<string, XmlElement>();
   if (existingRow) {
@@ -395,18 +391,16 @@ function columnLetterToIndex(col: string): number {
  * @param seriesNames - Names for each series (written to header row)
  * @returns Updated xlsx buffer
  */
-export async function updateChartDataInWorkbook(
-  ...args: readonly [
-    workbook: Workbook,
-    sheetName: string,
-    categories: readonly string[],
-    seriesData: readonly (readonly number[])[],
-    headerRow?: number,
-    seriesNames?: readonly string[],
-  ]
-): Promise<ArrayBuffer> {
-  const [workbook, sheetName, categories, seriesData, headerRow = 1, seriesNames] =
-    args;
+export async function updateChartDataInWorkbook(params: {
+  readonly workbook: Workbook;
+  readonly sheetName: string;
+  readonly categories: readonly string[];
+  readonly seriesData: readonly (readonly number[])[];
+  readonly headerRow?: number;
+  readonly seriesNames?: readonly string[];
+}): Promise<ArrayBuffer> {
+  const { workbook, sheetName, categories, seriesData, headerRow = 1, seriesNames } =
+    params;
   const cells: CellUpdate[] = [];
   const startRow = headerRow + 1;
 

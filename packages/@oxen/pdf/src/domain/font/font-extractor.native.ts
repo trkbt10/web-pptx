@@ -40,15 +40,17 @@ function extractBaseFontRaw(page: NativePdfPage, fontDict: PdfDict): string | nu
   return null;
 }
 
-function detectFontFormat(
-  ...args: readonly [
-    fontFile: PdfObject | undefined,
-    fontFile2: PdfObject | undefined,
-    fontFile3: PdfObject | undefined,
-    subtype: string | undefined,
-  ]
-): FontFormat {
-  const [fontFile, fontFile2, fontFile3, subtype] = args;
+function detectFontFormat({
+  fontFile,
+  fontFile2,
+  fontFile3,
+  subtype,
+}: {
+  readonly fontFile: PdfObject | undefined;
+  readonly fontFile2: PdfObject | undefined;
+  readonly fontFile3: PdfObject | undefined;
+  readonly subtype: string | undefined;
+}): FontFormat {
   if (fontFile2) {return "truetype";}
   if (fontFile) {return "type1";}
   if (fontFile3) {
@@ -175,7 +177,7 @@ export function extractEmbeddedFontsFromNativePages(pages: readonly NativePdfPag
       if (!embedded) {continue;}
 
       const rawData = decodePdfStream(embedded.stream);
-      const format = detectFontFormat(embedded.fontFile, embedded.fontFile2, embedded.fontFile3, embedded.streamSubtype);
+      const format = detectFontFormat({ fontFile: embedded.fontFile, fontFile2: embedded.fontFile2, fontFile3: embedded.fontFile3, subtype: embedded.streamSubtype });
       const mimeType = getMimeType(format);
 
       const fontFamily = normalizeFontFamily(baseFontRaw);

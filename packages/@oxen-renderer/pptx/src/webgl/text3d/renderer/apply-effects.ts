@@ -98,15 +98,17 @@ export type ShapeContext = {
  * When shapeContext is provided, uses accurate shape expansion method.
  * Otherwise falls back to scaling method (less accurate but works without shapes).
  */
-export function createContour(
-  ...args: [
-    geometry: THREE.BufferGeometry,
-    config: ContourConfig,
-    position: THREE.Vector3,
-    shapeContext?: ShapeContext,
-  ]
-): THREE.Mesh {
-  const [geometry, config, position, shapeContext] = args;
+export function createContour({
+  geometry,
+  config,
+  position,
+  shapeContext,
+}: {
+  geometry: THREE.BufferGeometry;
+  config: ContourConfig;
+  position: THREE.Vector3;
+  shapeContext?: ShapeContext;
+}): THREE.Mesh {
   // Use shape-based contour when shapes are available (more accurate)
   if (shapeContext && shapeContext.shapes.length > 0) {
     const shapeConfig: ContourFromShapesConfig = {
@@ -198,15 +200,17 @@ export function createGlow(
 /**
  * Create reflection effect for text
  */
-export function createReflection(
-  ...args: [
-    geometry: THREE.BufferGeometry,
-    material: THREE.Material,
-    config: ReflectionConfig,
-    position: THREE.Vector3,
-  ]
-): THREE.Mesh {
-  const [geometry, material, config, position] = args;
+export function createReflection({
+  geometry,
+  material,
+  config,
+  position,
+}: {
+  geometry: THREE.BufferGeometry;
+  material: THREE.Material;
+  config: ReflectionConfig;
+  position: THREE.Vector3;
+}): THREE.Mesh {
   const reflectionMesh = createReflectionMesh(geometry, material, config);
   reflectionMesh.position.x = position.x;
   reflectionMesh.position.y = position.y;
@@ -228,17 +232,21 @@ export function createReflection(
  * @param shapeContext - Optional shape context for accurate contour generation
  * @returns Applied effect objects for later manipulation
  */
-export function applyAllEffects(
-  ...args: [
-    group: THREE.Group,
-    mesh: THREE.Mesh,
-    geometry: THREE.BufferGeometry,
-    material: THREE.Material,
-    effects: TextRunEffects,
-    shapeContext?: ShapeContext,
-  ]
-): AppliedEffects {
-  const [group, mesh, geometry, material, effects, shapeContext] = args;
+export function applyAllEffects({
+  group,
+  mesh,
+  geometry,
+  material,
+  effects,
+  shapeContext,
+}: {
+  group: THREE.Group;
+  mesh: THREE.Mesh;
+  geometry: THREE.BufferGeometry;
+  material: THREE.Material;
+  effects: TextRunEffects;
+  shapeContext?: ShapeContext;
+}): AppliedEffects {
   const result: AppliedEffects = {};
 
   // Apply soft edge first (modifies material)
@@ -250,7 +258,7 @@ export function applyAllEffects(
   // Contour is the 3D shell around the extruded shape (ECMA-376 sp3d contourW)
   // Use shape-based contour when shapeContext is available (more accurate)
   if (effects.contour && effects.contour.width > 0) {
-    const contourMesh = createContour(geometry, effects.contour, mesh.position, shapeContext);
+    const contourMesh = createContour({ geometry, config: effects.contour, position: mesh.position, shapeContext });
     group.add(contourMesh);
     (result as { contourMesh: THREE.Mesh }).contourMesh = contourMesh;
   }
@@ -283,12 +291,12 @@ export function applyAllEffects(
 
   // Apply reflection
   if (effects.reflection) {
-    const reflectionMesh = createReflection(
+    const reflectionMesh = createReflection({
       geometry,
       material,
-      effects.reflection,
-      mesh.position,
-    );
+      config: effects.reflection,
+      position: mesh.position,
+    });
     group.add(reflectionMesh);
     (result as { reflectionMesh: THREE.Mesh }).reflectionMesh = reflectionMesh;
   }

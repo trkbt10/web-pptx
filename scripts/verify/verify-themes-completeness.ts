@@ -148,7 +148,7 @@ async function verifyPptxThemes(pptxPath: string): Promise<{ results: SlideResul
 // Main
 const usage = "bun run scripts/verify/verify-themes-completeness.ts <pptx-path>";
 const args = process.argv.slice(2);
-const pptxPath = requirePositionalArg(args, 0, "pptx-path", usage);
+const pptxPath = requirePositionalArg({ args, index: 0, name: "pptx-path", usage });
 requireFileExists(pptxPath, usage);
 
 verifyPptxThemes(pptxPath)

@@ -172,8 +172,8 @@ export function usePathEdit(callbacks: PathEditCallbacks): UsePathEditReturn {
           if (point) {
             const initial = initialPositionsRef.current.get(index);
             if (initial) {
-              const handleIn = translateMovedHandle(point.handleIn, dx, dy, point, initial);
-              const handleOut = translateMovedHandle(point.handleOut, dx, dy, point, initial);
+              const handleIn = translateMovedHandle({ handle: point.handleIn, dx, dy, point, initial });
+              const handleOut = translateMovedHandle({ handle: point.handleOut, dx, dy, point, initial });
               newPoints[index] = {
                 ...point,
                 x: px(initial.x + dx),
@@ -192,8 +192,19 @@ export function usePathEdit(callbacks: PathEditCallbacks): UsePathEditReturn {
 
   // Move a handle
   const moveHandle = useCallback(
-    (...args: [pointIndex: number, side: "in" | "out", x: number, y: number, modifiers: ModifierKeys]) => {
-      const [pointIndex, side, x, y, modifiers] = args;
+    ({
+      pointIndex,
+      side,
+      x,
+      y,
+      modifiers,
+    }: {
+      pointIndex: number;
+      side: "in" | "out";
+      x: number;
+      y: number;
+      modifiers: ModifierKeys;
+    }) => {
       setPath((p) =>
         updatePointInPath(p, pointIndex, (point) => {
           let handleX = x;
@@ -212,15 +223,17 @@ export function usePathEdit(callbacks: PathEditCallbacks): UsePathEditReturn {
           const newHandle: Point = { x: px(handleX), y: px(handleY) };
           const shouldMirrorHandle = point.type === "smooth" && !modifiers.alt;
 
-          function getMirroredHandle(
-            ...args: readonly [
-              point: Point,
-              newHandle: Point,
-              existing: Point | undefined,
-              shouldMirrorHandle: boolean,
-            ]
-          ): Point | undefined {
-            const [point, newHandle, existing, shouldMirrorHandle] = args;
+          function getMirroredHandle({
+            point,
+            newHandle,
+            existing,
+            shouldMirrorHandle,
+          }: {
+            point: Point;
+            newHandle: Point;
+            existing: Point | undefined;
+            shouldMirrorHandle: boolean;
+          }): Point | undefined {
             if (!shouldMirrorHandle) {
               return existing;
             }
@@ -229,11 +242,11 @@ export function usePathEdit(callbacks: PathEditCallbacks): UsePathEditReturn {
 
           if (side === "in") {
             // If smooth point, mirror the handle
-            const handleOut = getMirroredHandle(point, newHandle, point.handleOut, shouldMirrorHandle);
+            const handleOut = getMirroredHandle({ point, newHandle, existing: point.handleOut, shouldMirrorHandle });
             return { ...point, handleIn: newHandle, handleOut };
           } else {
             // If smooth point, mirror the handle
-            const handleIn = getMirroredHandle(point, newHandle, point.handleIn, shouldMirrorHandle);
+            const handleIn = getMirroredHandle({ point, newHandle, existing: point.handleIn, shouldMirrorHandle });
             return { ...point, handleIn, handleOut: newHandle };
           }
         })
@@ -270,22 +283,25 @@ export function usePathEdit(callbacks: PathEditCallbacks): UsePathEditReturn {
 
         moveSelectedPoints(finalDx, finalDy);
       } else if (isDraggingHandle && dragStartRef.current && draggingHandleSide) {
-        moveHandle(dragStartRef.current.pointIndex, draggingHandleSide, x, y, modifiers);
+        moveHandle({ pointIndex: dragStartRef.current.pointIndex, side: draggingHandleSide, x, y, modifiers });
       }
     },
     [isDraggingPoint, isDraggingHandle, draggingHandleSide, moveSelectedPoints, moveHandle]
   );
 
-function translateMovedHandle(
-  ...args: readonly [
-    handle: Point | undefined,
-    dx: number,
-    dy: number,
-    point: { readonly x: number; readonly y: number },
-    initial: { readonly x: number; readonly y: number },
-  ]
-): Point | undefined {
-  const [handle, dx, dy, point, initial] = args;
+function translateMovedHandle({
+  handle,
+  dx,
+  dy,
+  point,
+  initial,
+}: {
+  handle: Point | undefined;
+  dx: number;
+  dy: number;
+  point: { readonly x: number; readonly y: number };
+  initial: { readonly x: number; readonly y: number };
+}): Point | undefined {
   if (!handle) {
     return undefined;
   }

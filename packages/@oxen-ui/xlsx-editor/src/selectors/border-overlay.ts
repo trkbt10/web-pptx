@@ -80,18 +80,15 @@ function sameEdge(a: CellBorderEdgeDecoration, b: CellBorderEdgeDecoration): boo
   return a.width === b.width && a.style === b.style && a.color === b.color;
 }
 
-function emitLine(
-  ...args: readonly [
-    lines: SvgBorderLine[],
-    baseKey: string,
-    edge: CellBorderEdgeDecoration,
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-  ]
-): void {
-  const [lines, baseKey, edge, x1, y1, x2, y2] = args;
+function emitLine({ lines, baseKey, edge, x1, y1, x2, y2 }: {
+  readonly lines: SvgBorderLine[];
+  readonly baseKey: string;
+  readonly edge: CellBorderEdgeDecoration;
+  readonly x1: number;
+  readonly y1: number;
+  readonly x2: number;
+  readonly y2: number;
+}): void {
   const dash = dasharrayForBorderStyle(edge.style);
 
   if (edge.style === "double") {
@@ -220,7 +217,7 @@ export function buildBorderOverlayLines(params: {
 
       if (!chosen) {
         if (activeState.active) {
-          emitLine(lines, `vb-${boundaryCol0}-${row0}-seg`, activeState.active.edge, x, activeState.active.startY, x, activeState.active.endY);
+          emitLine({ lines, baseKey: `vb-${boundaryCol0}-${row0}-seg`, edge: activeState.active.edge, x1: x, y1: activeState.active.startY, x2: x, y2: activeState.active.endY });
           activeState.active = undefined;
         }
         continue;
@@ -230,14 +227,14 @@ export function buildBorderOverlayLines(params: {
         activeState.active.endY = y2;
       } else {
         if (activeState.active) {
-          emitLine(lines, `vb-${boundaryCol0}-${row0}-seg`, activeState.active.edge, x, activeState.active.startY, x, activeState.active.endY);
+          emitLine({ lines, baseKey: `vb-${boundaryCol0}-${row0}-seg`, edge: activeState.active.edge, x1: x, y1: activeState.active.startY, x2: x, y2: activeState.active.endY });
         }
         activeState.active = { edge: chosen, startY: y1, endY: y2 };
       }
     }
 
     if (activeState.active) {
-      emitLine(lines, `vb-${boundaryCol0}-end`, activeState.active.edge, x, activeState.active.startY, x, activeState.active.endY);
+      emitLine({ lines, baseKey: `vb-${boundaryCol0}-end`, edge: activeState.active.edge, x1: x, y1: activeState.active.startY, x2: x, y2: activeState.active.endY });
     }
   }
 
@@ -264,7 +261,7 @@ export function buildBorderOverlayLines(params: {
 
       if (!chosen) {
         if (activeState.active) {
-          emitLine(lines, `hb-${boundaryRow0}-${col0}-seg`, activeState.active.edge, activeState.active.startX, y, activeState.active.endX, y);
+          emitLine({ lines, baseKey: `hb-${boundaryRow0}-${col0}-seg`, edge: activeState.active.edge, x1: activeState.active.startX, y1: y, x2: activeState.active.endX, y2: y });
           activeState.active = undefined;
         }
         continue;
@@ -274,14 +271,14 @@ export function buildBorderOverlayLines(params: {
         activeState.active.endX = x2;
       } else {
         if (activeState.active) {
-          emitLine(lines, `hb-${boundaryRow0}-${col0}-seg`, activeState.active.edge, activeState.active.startX, y, activeState.active.endX, y);
+          emitLine({ lines, baseKey: `hb-${boundaryRow0}-${col0}-seg`, edge: activeState.active.edge, x1: activeState.active.startX, y1: y, x2: activeState.active.endX, y2: y });
         }
         activeState.active = { edge: chosen, startX: x1, endX: x2 };
       }
     }
 
     if (activeState.active) {
-      emitLine(lines, `hb-${boundaryRow0}-end`, activeState.active.edge, activeState.active.startX, y, activeState.active.endX, y);
+      emitLine({ lines, baseKey: `hb-${boundaryRow0}-end`, edge: activeState.active.edge, x1: activeState.active.startX, y1: y, x2: activeState.active.endX, y2: y });
     }
   }
 

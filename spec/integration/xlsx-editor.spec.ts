@@ -15,10 +15,17 @@ function addr(col: number, row: number): CellAddress {
   };
 }
 
-function range(
-  ...args: readonly [startCol: number, startRow: number, endCol: number, endRow: number]
-): CellRange {
-  const [startCol, startRow, endCol, endRow] = args;
+function range({
+  startCol,
+  startRow,
+  endCol,
+  endRow,
+}: {
+  startCol: number;
+  startRow: number;
+  endCol: number;
+  endRow: number;
+}): CellRange {
   return { start: addr(startCol, startRow), end: addr(endCol, endRow) };
 }
 
@@ -105,7 +112,7 @@ describe("xlsx-editor integration", () => {
       ]);
       let state = createInitialState(workbook);
 
-      state = xlsxEditorReducer(state, { type: "SELECT_RANGE", range: range(1, 1, 2, 2) });
+      state = xlsxEditorReducer(state, { type: "SELECT_RANGE", range: range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 }) });
       state = xlsxEditorReducer(state, { type: "COPY" });
       expect(state.clipboard?.isCut).toBe(false);
 

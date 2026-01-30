@@ -348,15 +348,13 @@ function getLevelFormats(
   });
 }
 
-function resolveBulletChar(
-  ...args: readonly [
-    level: DocxLevel,
-    counters: readonly number[],
-    formats: readonly NumberFormat[],
-    ilvl: number,
-  ]
-): string {
-  const [level, counters, formats, ilvl] = args;
+function resolveBulletChar(params: {
+  readonly level: DocxLevel;
+  readonly counters: readonly number[];
+  readonly formats: readonly NumberFormat[];
+  readonly ilvl: number;
+}): string {
+  const { level, counters, formats, ilvl } = params;
   const numFmt = level.numFmt ?? "decimal";
   if (numFmt === "bullet") {
     return level.lvlText?.val ?? "•";
@@ -405,7 +403,7 @@ export function resolveBulletConfig(
   const formats = getLevelFormats(abstractNum, ilvl as number);
 
   // Generate the bullet/number text
-  const bulletChar = resolveBulletChar(level, counters, formats, ilvl as number);
+  const bulletChar = resolveBulletChar({ level, counters, formats, ilvl: ilvl as number });
 
   // Increment counter for next paragraph with same numbering
   incrementCounter(counters, ilvl as number, abstractNum.lvl);

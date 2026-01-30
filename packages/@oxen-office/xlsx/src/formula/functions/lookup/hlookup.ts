@@ -72,12 +72,12 @@ export const hlookupFunction: FormulaFunctionEagerDefinition = {
 
     if (!approximateMatch) {
       const columnIndex = table[0].findIndex((_, column) =>
-        helpers.comparePrimitiveEquality(readTableCell(table, 0, column, "HLOOKUP"), lookupValue),
+        helpers.comparePrimitiveEquality(readTableCell({ table, rowIndex: 0, columnIndex: column, description: "HLOOKUP" }), lookupValue),
       );
       if (columnIndex === -1) {
         throw new Error("HLOOKUP could not find an exact match");
       }
-      return readTableCell(table, targetRowIndex, columnIndex, "HLOOKUP");
+      return readTableCell({ table, rowIndex: targetRowIndex, columnIndex, description: "HLOOKUP" });
     }
 
     if (typeof lookupValue !== "number") {
@@ -87,7 +87,7 @@ export const hlookupFunction: FormulaFunctionEagerDefinition = {
     const state = { candidateColumn: null as number | null };
     const columnCount = table[0].length;
     for (let columnIndex = 0; columnIndex < columnCount; columnIndex += 1) {
-      const firstRowValue = readTableCell(table, 0, columnIndex, "HLOOKUP");
+      const firstRowValue = readTableCell({ table, rowIndex: 0, columnIndex, description: "HLOOKUP" });
       if (typeof firstRowValue !== "number") {
         throw new Error("HLOOKUP approximate match requires numeric table columns");
       }
@@ -101,7 +101,7 @@ export const hlookupFunction: FormulaFunctionEagerDefinition = {
       throw new Error("HLOOKUP could not find an approximate match");
     }
 
-    return readTableCell(table, targetRowIndex, state.candidateColumn, "HLOOKUP");
+    return readTableCell({ table, rowIndex: targetRowIndex, columnIndex: state.candidateColumn, description: "HLOOKUP" });
   },
 };
 

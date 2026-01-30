@@ -115,7 +115,7 @@ function renderSlideBackgroundSvg(
   if (ctx.resolvedBackground !== undefined) {
     return renderResolvedBackgroundSvg(ctx.resolvedBackground, ctx.slideSize, defsCollector);
   }
-  return renderBackgroundSvg(slide.background, ctx.slideSize, ctx, defsCollector);
+  return renderBackgroundSvg({ background: slide.background, slideSize: ctx.slideSize, ctx, defsCollector });
 }
 
 // =============================================================================

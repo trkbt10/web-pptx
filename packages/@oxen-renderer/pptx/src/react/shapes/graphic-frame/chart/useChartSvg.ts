@@ -51,12 +51,7 @@ export function useChartSvg(
       return { svg: null, hasContent: false };
     }
 
-    const chartHtml = renderChart(
-      chart,
-      width,
-      height,
-      ctx,
-    );
+    const chartHtml = renderChart({ chart, width, height, ctx });
 
     const svg = extractSvgContent(chartHtml as string);
     return { svg, hasContent: svg !== null };

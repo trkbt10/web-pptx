@@ -43,10 +43,17 @@ function fillRect(image: ImageDataLike, rect: Rect, value: number): void {
   }
 }
 
-function createHoledRectImage(
-  ...args: readonly [width: number, height: number, outer: Rect, holes: readonly Rect[]]
-): ImageDataLike {
-  const [width, height, outer, holes] = args;
+function createHoledRectImage({
+  width,
+  height,
+  outer,
+  holes,
+}: {
+  readonly width: number;
+  readonly height: number;
+  readonly outer: Rect;
+  readonly holes: readonly Rect[];
+}): ImageDataLike {
   const image = createImage(width, height, BLACK);
   fillRect(image, outer, WHITE);
   for (const hole of holes) {
@@ -130,12 +137,12 @@ function expectContourHoles(
 describe("extractContours", () => {
   it("correctly sets isHole flag based on winding direction", () => {
     // Simple O-shape: outer rectangle with inner hole
-    const oImage = createHoledRectImage(
-      40,
-      40,
-      { x: 5, y: 5, width: 30, height: 30 },
-      [{ x: 12, y: 12, width: 16, height: 16 }],
-    );
+    const oImage = createHoledRectImage({
+      width: 40,
+      height: 40,
+      outer: { x: 5, y: 5, width: 30, height: 30 },
+      holes: [{ x: 12, y: 12, width: 16, height: 16 }],
+    });
 
     const raw = extractContours(oImage);
     const paths = processContours(raw, 1, 0);
@@ -171,15 +178,15 @@ describe("extractContours", () => {
 
   it("produces opposite winding for outer vs hole contours", () => {
     // Test with multiple holes (like letter B)
-    const bImage = createHoledRectImage(
-      50,
-      60,
-      { x: 5, y: 5, width: 40, height: 50 },
-      [
+    const bImage = createHoledRectImage({
+      width: 50,
+      height: 60,
+      outer: { x: 5, y: 5, width: 40, height: 50 },
+      holes: [
         { x: 15, y: 10, width: 20, height: 15 },
         { x: 15, y: 30, width: 20, height: 15 },
       ],
-    );
+    });
 
     const raw = extractContours(bImage);
     const paths = processContours(raw, 1, 0);
@@ -207,12 +214,12 @@ describe("extractContours", () => {
 
   it("maintains correct winding after Y-flip (for THREE.js compatibility)", () => {
     // Simple O-shape
-    const oImage = createHoledRectImage(
-      40,
-      40,
-      { x: 5, y: 5, width: 30, height: 30 },
-      [{ x: 12, y: 12, width: 16, height: 16 }],
-    );
+    const oImage = createHoledRectImage({
+      width: 40,
+      height: 40,
+      outer: { x: 5, y: 5, width: 30, height: 30 },
+      holes: [{ x: 12, y: 12, width: 16, height: 16 }],
+    });
 
     const raw = extractContours(oImage);
     const paths = processContours(raw, 1, 0);
@@ -254,27 +261,27 @@ describe("extractContours", () => {
   });
 
   it("extracts A/B/D-style holes for regular stroke weights", () => {
-    const aImage = createHoledRectImage(
-      32,
-      32,
-      { x: 4, y: 4, width: 24, height: 24 },
-      [{ x: 11, y: 11, width: 10, height: 10 }],
-    );
-    const bImage = createHoledRectImage(
-      36,
-      36,
-      { x: 4, y: 4, width: 26, height: 28 },
-      [
+    const aImage = createHoledRectImage({
+      width: 32,
+      height: 32,
+      outer: { x: 4, y: 4, width: 24, height: 24 },
+      holes: [{ x: 11, y: 11, width: 10, height: 10 }],
+    });
+    const bImage = createHoledRectImage({
+      width: 36,
+      height: 36,
+      outer: { x: 4, y: 4, width: 26, height: 28 },
+      holes: [
         { x: 12, y: 8, width: 10, height: 8 },
         { x: 12, y: 18, width: 10, height: 8 },
       ],
-    );
-    const dImage = createHoledRectImage(
-      36,
-      36,
-      { x: 6, y: 4, width: 24, height: 28 },
-      [{ x: 12, y: 10, width: 12, height: 14 }],
-    );
+    });
+    const dImage = createHoledRectImage({
+      width: 36,
+      height: 36,
+      outer: { x: 6, y: 4, width: 24, height: 28 },
+      holes: [{ x: 12, y: 10, width: 12, height: 14 }],
+    });
 
     expectContourHoles(aImage, 1, 1);
     expectContourHoles(bImage, 1, 2);
@@ -282,27 +289,27 @@ describe("extractContours", () => {
   });
 
   it("extracts A/B/D-style holes for bold stroke weights", () => {
-    const aImage = createHoledRectImage(
-      32,
-      32,
-      { x: 3, y: 3, width: 26, height: 26 },
-      [{ x: 12, y: 12, width: 8, height: 8 }],
-    );
-    const bImage = createHoledRectImage(
-      36,
-      36,
-      { x: 3, y: 3, width: 28, height: 30 },
-      [
+    const aImage = createHoledRectImage({
+      width: 32,
+      height: 32,
+      outer: { x: 3, y: 3, width: 26, height: 26 },
+      holes: [{ x: 12, y: 12, width: 8, height: 8 }],
+    });
+    const bImage = createHoledRectImage({
+      width: 36,
+      height: 36,
+      outer: { x: 3, y: 3, width: 28, height: 30 },
+      holes: [
         { x: 12, y: 8, width: 9, height: 7 },
         { x: 12, y: 19, width: 9, height: 7 },
       ],
-    );
-    const dImage = createHoledRectImage(
-      36,
-      36,
-      { x: 5, y: 3, width: 26, height: 30 },
-      [{ x: 12, y: 10, width: 10, height: 12 }],
-    );
+    });
+    const dImage = createHoledRectImage({
+      width: 36,
+      height: 36,
+      outer: { x: 5, y: 3, width: 26, height: 30 },
+      holes: [{ x: 12, y: 10, width: 10, height: 12 }],
+    });
 
     expectContourHoles(aImage, 1, 1);
     expectContourHoles(bImage, 1, 2);

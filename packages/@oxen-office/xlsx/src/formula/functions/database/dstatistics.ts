@@ -22,7 +22,7 @@ const prepareNumericSummary = (args: EvaluateArgs, helpers: EvaluateHelpers, fun
   const database = parseDatabaseArgument(databaseArg, functionName);
   const fieldValue = helpers.coerceScalar(fieldArg, `${functionName} field`);
   const fieldIndex = resolveFieldIndex(fieldValue, database, functionName);
-  const matchingRows = filterDatabaseRows(database, criteriaArg, helpers, functionName);
+  const matchingRows = filterDatabaseRows({ database, criteriaArg, helpers, functionName });
   const numericValues = collectNumericFieldValues(matchingRows, fieldIndex);
   const summary = helpers.summarizeNumbers(numericValues);
   return {

@@ -76,17 +76,14 @@ function createAddress(col: number, row: number): CellAddress {
   };
 }
 
-function getCellDisplayText(
-  ...args: readonly [
-    cell: Cell | undefined,
-    sheetIndex: number,
-    address: CellAddress,
-    formulaEvaluator: ReturnType<typeof createFormulaEvaluator>,
-    formatCode: string,
-    dateSystem: XlsxWorksheet["dateSystem"],
-  ]
-): string {
-  const [cell, sheetIndex, address, formulaEvaluator, formatCode, dateSystem] = args;
+function getCellDisplayText({ cell, sheetIndex, address, formulaEvaluator, formatCode, dateSystem }: {
+  readonly cell: Cell | undefined;
+  readonly sheetIndex: number;
+  readonly address: CellAddress;
+  readonly formulaEvaluator: ReturnType<typeof createFormulaEvaluator>;
+  readonly formatCode: string;
+  readonly dateSystem: XlsxWorksheet["dateSystem"];
+}): string {
   if (!cell) {
     return "";
   }
@@ -172,7 +169,7 @@ export function XlsxSheetGridCellsLayer({
             formulaEvaluator,
           });
           const formatCode = resolveCellFormatCode({ styles, sheet, address: originAddress, cell, conditionalFormat });
-          const text = getCellDisplayText(cell, sheetIndex, originAddress, formulaEvaluator, formatCode, sheet.dateSystem);
+          const text = getCellDisplayText({ cell, sheetIndex, address: originAddress, formulaEvaluator, formatCode, dateSystem: sheet.dateSystem });
           const cellRenderStyle = resolveCellRenderStyle({ styles, sheet, address: originAddress, cell, conditionalFormat });
 
           const leftPx = layout.cols.getBoundaryOffsetPx(merge.minCol - 1);
@@ -220,7 +217,7 @@ export function XlsxSheetGridCellsLayer({
           formulaEvaluator,
         });
         const formatCode = resolveCellFormatCode({ styles, sheet, address, cell, conditionalFormat });
-        const text = getCellDisplayText(cell, sheetIndex, address, formulaEvaluator, formatCode, sheet.dateSystem);
+        const text = getCellDisplayText({ cell, sheetIndex, address, formulaEvaluator, formatCode, dateSystem: sheet.dateSystem });
         const cellRenderStyle = resolveCellRenderStyle({ styles, sheet, address, cell, conditionalFormat });
         const width = layout.cols.getSizePx(col0);
         if (width <= 0) {

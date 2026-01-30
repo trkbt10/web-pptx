@@ -29,6 +29,26 @@ export type ChartSeriesEditorProps = CoreChartSeriesEditorProps;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function ChartSeriesEditor(props: ChartSeriesEditorProps) {
   return (
     <ChartEditorAdaptersBoundary adapters={pptxChartEditorAdapters}>
@@ -36,6 +56,26 @@ export function ChartSeriesEditor(props: ChartSeriesEditorProps) {
     </ChartEditorAdaptersBoundary>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -51,9 +91,49 @@ export function createDefaultChartSeries() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createDefaultBarChartSeries() {
   return createDefaultBarChartSeriesCore();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -69,9 +149,49 @@ export function createDefaultLineChartSeries() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createDefaultPieChartSeries() {
   return createDefaultPieChartSeriesCore();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -87,9 +207,49 @@ export function createDefaultAreaChartSeries() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createDefaultScatterChartSeries() {
   return createDefaultScatterChartSeriesCore();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -105,9 +265,49 @@ export function createDefaultRadarChartSeries() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createDefaultBubbleChartSeries() {
   return createDefaultBubbleChartSeriesCore();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -123,9 +323,49 @@ export function createDefaultOfPieChartSeries() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createDefaultStockChartSeries() {
   return createDefaultStockChartSeriesCore();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

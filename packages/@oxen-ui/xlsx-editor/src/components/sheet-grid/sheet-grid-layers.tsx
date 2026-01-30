@@ -80,8 +80,8 @@ export function XlsxSheetGridLayers({
   const firstCol0 = layout.cols.findIndexAtOffset(scrollLeftUnscaled);
   const lastCol0 = layout.cols.findIndexAtOffset(scrollLeftUnscaled + gridViewportWidth);
 
-  const rowRange = clampRange(firstRow0 - metrics.overscanRows, lastRow0 + metrics.overscanRows, 0, metrics.rowCount - 1);
-  const colRange = clampRange(firstCol0 - metrics.overscanCols, lastCol0 + metrics.overscanCols, 0, metrics.colCount - 1);
+  const rowRange = clampRange({ start: firstRow0 - metrics.overscanRows, end: lastRow0 + metrics.overscanRows, min: 0, max: metrics.rowCount - 1 });
+  const colRange = clampRange({ start: firstCol0 - metrics.overscanCols, end: lastCol0 + metrics.overscanCols, min: 0, max: metrics.colCount - 1 });
 
   const normalizedMerges = useMemo(() => {
     const merges = sheet.mergeCells ?? [];

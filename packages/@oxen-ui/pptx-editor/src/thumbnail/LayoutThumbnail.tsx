@@ -157,14 +157,19 @@ function renderShapeWireframe(shape: Shape, slideSize: SlideSize): string {
   const textSize = Math.min(w, h) * 0.25;
 
   const rect = `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${color}10" stroke="${color}" stroke-width="2" stroke-dasharray="4,2"/>`;
-  const labelSvg = buildLabelSvg(label, textSize, x + w / 2, y + h / 2, color);
+  const labelSvg = buildLabelSvg({ label, textSize, cx: x + w / 2, cy: y + h / 2, color });
   return rect + labelSvg;
 }
 
-function buildLabelSvg(
-  ...args: readonly [label: string, textSize: number, cx: number, cy: number, color: string]
-): string {
-  const [label, textSize, cx, cy, color] = args;
+type LabelSvgInput = {
+  readonly label: string;
+  readonly textSize: number;
+  readonly cx: number;
+  readonly cy: number;
+  readonly color: string;
+};
+
+function buildLabelSvg({ label, textSize, cx, cy, color }: LabelSvgInput): string {
   const showLabel = label && textSize > 8;
   if (!showLabel) {
     return "";

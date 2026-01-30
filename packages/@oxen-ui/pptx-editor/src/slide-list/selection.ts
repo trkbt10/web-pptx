@@ -144,17 +144,21 @@ export function selectAll(slides: readonly SlideWithId[]): SlideSelectionState {
 /**
  * Handle click with modifier key support
  */
-export function handleSelectionClick(
-  ...args: readonly [
-    slides: readonly SlideWithId[],
-    currentSelection: SlideSelectionState,
-    slideId: SlideId,
-    index: number,
-    shiftKey: boolean,
-    metaOrCtrlKey: boolean,
-  ]
-): SlideSelectionState {
-  const [slides, currentSelection, slideId, index, shiftKey, metaOrCtrlKey] = args;
+export function handleSelectionClick({
+  slides,
+  currentSelection,
+  slideId,
+  index,
+  shiftKey,
+  metaOrCtrlKey,
+}: {
+  slides: readonly SlideWithId[];
+  currentSelection: SlideSelectionState;
+  slideId: SlideId;
+  index: number;
+  shiftKey: boolean;
+  metaOrCtrlKey: boolean;
+}): SlideSelectionState {
   if (shiftKey && currentSelection.anchorIndex !== undefined) {
     return selectRange(slides, currentSelection.anchorIndex, index);
   }

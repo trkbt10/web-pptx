@@ -188,7 +188,7 @@ export function isSimpleRectangle(pdfPath: PdfPath): boolean {
     ops[3]?.type === "lineTo" &&
     ops[4]?.type === "closePath"
   ) {
-    return isAxisAlignedRectangle(ops[0].point, ops[1].point, ops[2].point, ops[3].point);
+    return isAxisAlignedRectangle({ p1: ops[0].point, p2: ops[1].point, p3: ops[2].point, p4: ops[3].point });
   }
 
   return false;
@@ -212,8 +212,17 @@ export function convertToPresetRect(pdfPath: PdfPath): PresetGeometry {
  * Check if 4 points form an axis-aligned rectangle.
  * Uses floating-point epsilon for near-zero comparison (IEEE 754 precision consideration).
  */
-function isAxisAlignedRectangle(...args: readonly [p1: PdfPoint, p2: PdfPoint, p3: PdfPoint, p4: PdfPoint]): boolean {
-  const [p1, p2, p3, p4] = args;
+function isAxisAlignedRectangle({
+  p1,
+  p2,
+  p3,
+  p4,
+}: {
+  readonly p1: PdfPoint;
+  readonly p2: PdfPoint;
+  readonly p3: PdfPoint;
+  readonly p4: PdfPoint;
+}): boolean {
   // Floating-point epsilon for near-zero comparison (IEEE 754 precision consideration)
   const FLOAT_EPSILON = 1e-10;
 

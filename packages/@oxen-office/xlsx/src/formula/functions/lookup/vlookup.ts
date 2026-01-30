@@ -66,13 +66,13 @@ export const vlookupFunction: FormulaFunctionEagerDefinition = {
 
     if (!approximateMatch) {
       const matchIndex = table.findIndex((_, rowIndex) => {
-        const firstColumn = readTableCell(table, rowIndex, 0, "VLOOKUP");
+        const firstColumn = readTableCell({ table, rowIndex, columnIndex: 0, description: "VLOOKUP" });
         return helpers.comparePrimitiveEquality(firstColumn, lookupValue);
       });
       if (matchIndex === -1) {
         throw new Error("VLOOKUP could not find an exact match");
       }
-      return readTableCell(table, matchIndex, columnIndex - 1, "VLOOKUP");
+      return readTableCell({ table, rowIndex: matchIndex, columnIndex: columnIndex - 1, description: "VLOOKUP" });
     }
 
     if (typeof lookupValue !== "number") {
@@ -81,7 +81,7 @@ export const vlookupFunction: FormulaFunctionEagerDefinition = {
 
     const state = { candidateIndex: null as number | null };
     for (let rowIndex = 0; rowIndex < table.length; rowIndex += 1) {
-      const firstColumn = readTableCell(table, rowIndex, 0, "VLOOKUP");
+      const firstColumn = readTableCell({ table, rowIndex, columnIndex: 0, description: "VLOOKUP" });
       if (typeof firstColumn !== "number") {
         throw new Error("VLOOKUP approximate match requires numeric table rows");
       }
@@ -95,7 +95,7 @@ export const vlookupFunction: FormulaFunctionEagerDefinition = {
       throw new Error("VLOOKUP could not find an approximate match");
     }
 
-    return readTableCell(table, state.candidateIndex, columnIndex - 1, "VLOOKUP");
+    return readTableCell({ table, rowIndex: state.candidateIndex, columnIndex: columnIndex - 1, description: "VLOOKUP" });
   },
 };
 

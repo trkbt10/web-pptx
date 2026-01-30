@@ -320,7 +320,7 @@ export function generateExtrusionWithThree(
   }
 
   // Generate side walls
-  const sideResult = generateSideWallsLocal(outerPoints, holes, depth, vertexOffset);
+  const sideResult = generateSideWallsLocal({ outer: outerPoints, holes, depth, vertexOffset });
   positions.push(...sideResult.positions);
   normals.push(...sideResult.normals);
   uvs.push(...sideResult.uvs);
@@ -411,20 +411,22 @@ function computeSignedAreaLocal(points: readonly Vector2[]): number {
 }
 
 // Local helper: generate side walls
-function generateSideWallsLocal(
-  ...args: [
-    outer: readonly Vector2[],
-    holes: readonly (readonly Vector2[])[],
-    depth: number,
-    vertexOffset: number,
-  ]
-): {
+function generateSideWallsLocal({
+  outer,
+  holes,
+  depth,
+  vertexOffset,
+}: {
+  outer: readonly Vector2[];
+  holes: readonly (readonly Vector2[])[];
+  depth: number;
+  vertexOffset: number;
+}): {
   positions: number[];
   normals: number[];
   uvs: number[];
   indices: number[];
 } {
-  const [outer, holes, depth, vertexOffset] = args;
   const positions: number[] = [];
   const normals: number[] = [];
   const uvs: number[] = [];

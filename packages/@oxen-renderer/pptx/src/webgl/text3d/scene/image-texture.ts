@@ -237,14 +237,14 @@ function applyImageTileConfig(texture: THREE.Texture, config: ImageTileConfig): 
     config.imageWidth !== undefined &&
     config.imageHeight !== undefined
   ) {
-    applyTileFillConfig(
+    applyTileFillConfig({
       texture,
       config,
-      config.geometryWidth,
-      config.geometryHeight,
-      config.imageWidth,
-      config.imageHeight,
-    );
+      geometryWidth: config.geometryWidth,
+      geometryHeight: config.geometryHeight,
+      textureWidth: config.imageWidth,
+      textureHeight: config.imageHeight,
+    });
   } else {
     // Simple flip mode with scale-based repeat
     applyTileFlipMode(texture, config.flip);

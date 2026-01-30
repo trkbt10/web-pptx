@@ -34,8 +34,7 @@ const S4 = [6, 10, 15, 21] as const;
 
 type RoundParams = { fn: number; gIdx: number; s: number };
 
-function getRoundParams(...args: readonly [n: number, bb: number, cc: number, dd: number]): RoundParams {
-  const [n, bb, cc, dd] = args;
+function getRoundParams({ n, bb, cc, dd }: { readonly n: number; readonly bb: number; readonly cc: number; readonly dd: number }): RoundParams {
   if (n < 16) {
     return { fn: f(bb, cc, dd), gIdx: n, s: S1[n % 4]! };
   }
@@ -117,7 +116,7 @@ export function md5(input: Uint8Array): Uint8Array {
     const round = { aa: state.a, bb: state.b, cc: state.c, dd: state.d };
 
     for (let n = 0; n < 64; n += 1) {
-      const { fn, gIdx, s } = getRoundParams(n, round.bb, round.cc, round.dd);
+      const { fn, gIdx, s } = getRoundParams({ n, bb: round.bb, cc: round.cc, dd: round.dd });
 
       const m = words[block + gIdx] ?? 0;
       const t = add(add(add(round.aa, fn), m), K[n] ?? 0);

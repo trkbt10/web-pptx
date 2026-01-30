@@ -161,6 +161,26 @@ function resolveFontSpec(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function computeRunSvgStyles(
   runProperties: DocxRunProperties | undefined,
   defaultRunProperties: DocxRunProperties | undefined,
@@ -400,6 +420,26 @@ function findWrapIndex(text: string, maxWidth: number, font: FontSpec): number {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function layoutParagraphText(
   paragraph: DocxParagraph,
   bounds: DOMRect,
@@ -523,15 +563,37 @@ function clampRangeToSpan(
 
 
 
-export function computeSelectionRects(
-  ...args: readonly [
-    layout: LayoutResult,
-    selectionStart: number,
-    selectionEnd: number,
-    defaultRunProperties: DocxRunProperties | undefined,
-  ]
-): readonly SelectionRect[] {
-  const [layout, selectionStart, selectionEnd, defaultRunProperties] = args;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export function computeSelectionRects({
+  layout,
+  selectionStart,
+  selectionEnd,
+  defaultRunProperties,
+}: {
+  layout: LayoutResult;
+  selectionStart: number;
+  selectionEnd: number;
+  defaultRunProperties: DocxRunProperties | undefined;
+}): readonly SelectionRect[] {
   const rangeStart = Math.min(selectionStart, selectionEnd);
   const rangeEnd = Math.max(selectionStart, selectionEnd);
   if (rangeStart === rangeEnd) {
@@ -654,15 +716,17 @@ export function getCursorCoordinates(
  * Convert x, y coordinates to a character offset in the layout.
  * Used for click position to cursor position conversion.
  */
-export function coordinatesToOffset(
-  ...args: readonly [
-    layout: LayoutResult,
-    x: number,
-    y: number,
-    defaultRunProperties?: DocxRunProperties,
-  ]
-): number {
-  const [layout, x, y, defaultRunProperties] = args;
+export function coordinatesToOffset({
+  layout,
+  x,
+  y,
+  defaultRunProperties,
+}: {
+  layout: LayoutResult;
+  x: number;
+  y: number;
+  defaultRunProperties?: DocxRunProperties;
+}): number {
   if (layout.lines.length === 0) {
     return 0;
   }
@@ -781,6 +845,26 @@ function findCharOffsetInSpan(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function DocxTextOverlay({
   paragraph,
   bounds,
@@ -795,7 +879,7 @@ export function DocxTextOverlay({
 
   const defaultRunProperties = styles?.docDefaults?.rPrDefault?.rPr;
   const selectionRects = useMemo(
-    () => computeSelectionRects(layout, selectionStart, selectionEnd, defaultRunProperties),
+    () => computeSelectionRects({ layout, selectionStart, selectionEnd, defaultRunProperties }),
     [layout, selectionStart, selectionEnd, defaultRunProperties],
   );
 

@@ -18,9 +18,49 @@ import { parseTextBody } from "../text/text-parser";
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseDiagramDataModel(doc: XmlDocument) {
   return parseDiagramDataModelBase(doc, { parseShapeProperties, parseTextBody });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -94,6 +94,26 @@ function buildChartChanges(spec: ChartUpdateSpec): readonly ChartChange[] {
   return changes;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function applyChartUpdates(
   slideDoc: XmlDocument,
   ctx: UpdateContext,

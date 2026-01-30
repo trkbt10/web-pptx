@@ -58,8 +58,7 @@ function intersectBBoxes(a: PdfBBox, b: PdfBBox): PdfBBox | null {
 type Poly = readonly PdfPoint[];
 type FlattenedSubpath = Readonly<{ readonly points: Poly; readonly closed: boolean }>;
 
-function cubicAt(...args: readonly [p0: number, p1: number, p2: number, p3: number, t: number]): number {
-  const [p0, p1, p2, p3, t] = args;
+function cubicAt({ p0, p1, p2, p3, t }: { readonly p0: number; readonly p1: number; readonly p2: number; readonly p3: number; readonly t: number }): number {
   const mt = 1 - t;
   return (
     mt * mt * mt * p0 +
@@ -101,8 +100,8 @@ function flattenSubpaths(ops: ParsedPath["operations"], ctm: PdfMatrix): readonl
     for (let i = 1; i <= steps; i += 1) {
       const t = i / steps;
       lineTo({
-        x: cubicAt(p0.x, cp1.x, cp2.x, end.x, t),
-        y: cubicAt(p0.y, cp1.y, cp2.y, end.y, t),
+        x: cubicAt({ p0: p0.x, p1: cp1.x, p2: cp2.x, p3: end.x, t }),
+        y: cubicAt({ p0: p0.y, p1: cp1.y, p2: cp2.y, p3: end.y, t }),
       });
     }
     current = end;
@@ -187,10 +186,21 @@ function pointInSubpathsEvenOdd(x: number, y: number, subpaths: readonly Flatten
   return inside;
 }
 
-function isLeft(
-  ...args: readonly [ax: number, ay: number, bx: number, by: number, px: number, py: number]
-): number {
-  const [ax, ay, bx, by, px, py] = args;
+function isLeft({
+  ax,
+  ay,
+  bx,
+  by,
+  px,
+  py,
+}: {
+  readonly ax: number;
+  readonly ay: number;
+  readonly bx: number;
+  readonly by: number;
+  readonly px: number;
+  readonly py: number;
+}): number {
   return (bx - ax) * (py - ay) - (px - ax) * (by - ay);
 }
 
@@ -203,11 +213,11 @@ function windingNumber(x: number, y: number, poly: Poly): number {
     const b = poly[(i + 1) % poly.length]!;
 
     if (a.y <= y) {
-      if (b.y > y && isLeft(a.x, a.y, b.x, b.y, x, y) > 0) {
+      if (b.y > y && isLeft({ ax: a.x, ay: a.y, bx: b.x, by: b.y, px: x, py: y }) > 0) {
         winding += 1;
       }
     } else {
-      if (b.y <= y && isLeft(a.x, a.y, b.x, b.y, x, y) < 0) {
+      if (b.y <= y && isLeft({ ax: a.x, ay: a.y, bx: b.x, by: b.y, px: x, py: y }) < 0) {
         winding -= 1;
       }
     }
@@ -224,15 +234,17 @@ function pointInSubpathsNonZero(x: number, y: number, subpaths: readonly Flatten
   return winding !== 0;
 }
 
-function pointInSubpaths(
-  ...args: readonly [
-    x: number,
-    y: number,
-    subpaths: readonly FlattenedSubpath[],
-    fillRule: ParsedPath["fillRule"],
-  ]
-): boolean {
-  const [x, y, subpaths, fillRule] = args;
+function pointInSubpaths({
+  x,
+  y,
+  subpaths,
+  fillRule,
+}: {
+  readonly x: number;
+  readonly y: number;
+  readonly subpaths: readonly FlattenedSubpath[];
+  readonly fillRule: ParsedPath["fillRule"];
+}): boolean {
   if (fillRule === "evenodd") {
     return pointInSubpathsEvenOdd(x, y, subpaths);
   }
@@ -256,6 +268,26 @@ function computePathBBox(subpaths: readonly FlattenedSubpath[]): PdfBBox | null 
   if (maxX <= minX || maxY <= minY) {return null;}
   return [minX, minY, maxX, maxY];
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -336,7 +368,7 @@ export function rasterizeShadingPatternFillPath(
       const pageX = llx + ((col + 0.5) / width) * bw;
       const idx = row * width + col;
 
-      if (!pointInSubpaths(pageX, pageY, subpaths, fillRule)) {
+      if (!pointInSubpaths({ x: pageX, y: pageY, subpaths, fillRule })) {
         alpha[idx] = 0;
         continue;
       }

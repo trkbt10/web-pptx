@@ -232,16 +232,19 @@ function lineStyleToSvgAttrs(lineStyle: ReturnType<typeof renderLineToStyle>): s
   return attrs.join(" ");
 }
 
-function renderAxisAlignedLineAsRect(
-  ...args: [
-    x1: number,
-    y1: number,
-    x2: number,
-    y2: number,
-    lineStyle: ReturnType<typeof renderLineToStyle>,
-  ]
-): string | null {
-  const [x1, y1, x2, y2, lineStyle] = args;
+function renderAxisAlignedLineAsRect({
+  x1,
+  y1,
+  x2,
+  y2,
+  lineStyle,
+}: {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  lineStyle: ReturnType<typeof renderLineToStyle>;
+}): string | null {
   // Only for solid, axis-aligned lines. Dashes and diagonals must remain strokes.
   if (lineStyle.stroke === "none") {return null;}
   if (lineStyle.strokeDasharray !== undefined) {return null;}
@@ -326,18 +329,23 @@ function pickPreferredBorderSegment(a: BorderSegment, b: BorderSegment): BorderS
  * @see ECMA-376 Part 1, Section 21.1.3.5 (a:gridCol)
  * @see ECMA-376 Part 1, Section 21.1.3.16 (a:tr)
  */
-export function renderTableSvg(
-  ...args: [
-    table: Table,
-    frameWidth: Pixels,
-    frameHeight: Pixels,
-    ctx: CoreRenderContext,
-    defsCollector: SvgDefsCollector,
-    options?: RenderOptions,
-    tableStyles?: TableStyleList,
-  ]
-): string {
-  const [table, frameWidth, frameHeight, ctx, defsCollector, options, tableStyles] = args;
+export function renderTableSvg({
+  table,
+  frameWidth,
+  frameHeight,
+  ctx,
+  defsCollector,
+  options,
+  tableStyles,
+}: {
+  table: Table;
+  frameWidth: Pixels;
+  frameHeight: Pixels;
+  ctx: CoreRenderContext;
+  defsCollector: SvgDefsCollector;
+  options?: RenderOptions;
+  tableStyles?: TableStyleList;
+}): string {
   const { properties, grid, rows } = table;
 
   const columnWidths = grid.columns.map((c) => c.width as number);
@@ -429,14 +437,19 @@ export function renderTableSvg(
       const isNotFirstRow = rowIdx > 0;
       const isNotFirstCol = colIdx > 0;
 
-      const addBorder = (...args: [
-        x1: number,
-        y1: number,
-        x2: number,
-        y2: number,
-        lineStyle: ReturnType<typeof renderLineToStyle>,
-      ]) => {
-        const [x1, y1, x2, y2, lineStyle] = args;
+      const addBorder = ({
+        x1,
+        y1,
+        x2,
+        y2,
+        lineStyle,
+      }: {
+        x1: number;
+        y1: number;
+        x2: number;
+        y2: number;
+        lineStyle: ReturnType<typeof renderLineToStyle>;
+      }) => {
         if (lineStyle.stroke === "none") {return;}
         const seg: BorderSegment = { x1, y1, x2, y2, style: lineStyle };
         const key = borderSegmentKey(seg);
@@ -453,78 +466,78 @@ export function renderTableSvg(
 
         if (top) {
           const lineStyle = renderLineToStyle(top, ctx.colorContext);
-          addBorder(cursor.x, cursor.y, cursor.x + spanWidth, cursor.y, lineStyle);
+          addBorder({ x1: cursor.x, y1: cursor.y, x2: cursor.x + spanWidth, y2: cursor.y, lineStyle });
         }
         if (bottom) {
           const lineStyle = renderLineToStyle(bottom, ctx.colorContext);
           const y = cursor.y + spanHeight;
-          addBorder(cursor.x, y, cursor.x + spanWidth, y, lineStyle);
+          addBorder({ x1: cursor.x, y1: y, x2: cursor.x + spanWidth, y2: y, lineStyle });
         }
         if (left) {
           const lineStyle = renderLineToStyle(left, ctx.colorContext);
-          addBorder(cursor.x, cursor.y, cursor.x, cursor.y + spanHeight, lineStyle);
+          addBorder({ x1: cursor.x, y1: cursor.y, x2: cursor.x, y2: cursor.y + spanHeight, lineStyle });
         }
         if (right) {
           const lineStyle = renderLineToStyle(right, ctx.colorContext);
           const x = cursor.x + spanWidth;
-          addBorder(x, cursor.y, x, cursor.y + spanHeight, lineStyle);
+          addBorder({ x1: x, y1: cursor.y, x2: x, y2: cursor.y + spanHeight, lineStyle });
         }
 
         // Diagonal borders
         // tlToBr: Top-left to bottom-right diagonal
         if (tlToBr) {
           const lineStyle = renderLineToStyle(tlToBr, ctx.colorContext);
-          addBorder(cursor.x, cursor.y, cursor.x + spanWidth, cursor.y + spanHeight, lineStyle);
+          addBorder({ x1: cursor.x, y1: cursor.y, x2: cursor.x + spanWidth, y2: cursor.y + spanHeight, lineStyle });
         }
         // blToTr: Bottom-left to top-right diagonal
         if (blToTr) {
           const lineStyle = renderLineToStyle(blToTr, ctx.colorContext);
-          addBorder(cursor.x, cursor.y + spanHeight, cursor.x + spanWidth, cursor.y, lineStyle);
+          addBorder({ x1: cursor.x, y1: cursor.y + spanHeight, x2: cursor.x + spanWidth, y2: cursor.y, lineStyle });
         }
       } else {
         // No explicit cell borders - render inside borders from style if available
         // Top inside border (if not first row and insideH is defined)
         if (isNotFirstRow && styleBorders.insideH) {
           const lineStyle = renderLineToStyle(styleBorders.insideH, ctx.colorContext);
-          addBorder(cursor.x, cursor.y, cursor.x + spanWidth, cursor.y, lineStyle);
+          addBorder({ x1: cursor.x, y1: cursor.y, x2: cursor.x + spanWidth, y2: cursor.y, lineStyle });
         }
 
         // Bottom inside border (if not last row and insideH is defined)
         if (isNotLastRow && styleBorders.insideH) {
           const lineStyle = renderLineToStyle(styleBorders.insideH, ctx.colorContext);
           const y = cursor.y + spanHeight;
-          addBorder(cursor.x, y, cursor.x + spanWidth, y, lineStyle);
+          addBorder({ x1: cursor.x, y1: y, x2: cursor.x + spanWidth, y2: y, lineStyle });
         }
 
         // Left inside border (if not first column and insideV is defined)
         if (isNotFirstCol && styleBorders.insideV) {
           const lineStyle = renderLineToStyle(styleBorders.insideV, ctx.colorContext);
-          addBorder(cursor.x, cursor.y, cursor.x, cursor.y + spanHeight, lineStyle);
+          addBorder({ x1: cursor.x, y1: cursor.y, x2: cursor.x, y2: cursor.y + spanHeight, lineStyle });
         }
 
         // Right inside border (if not last column and insideV is defined)
         if (isNotLastCol && styleBorders.insideV) {
           const lineStyle = renderLineToStyle(styleBorders.insideV, ctx.colorContext);
           const x = cursor.x + spanWidth;
-          addBorder(x, cursor.y, x, cursor.y + spanHeight, lineStyle);
+          addBorder({ x1: x, y1: cursor.y, x2: x, y2: cursor.y + spanHeight, lineStyle });
         }
 
         // Diagonal borders from style
         if (styleBorders.tlToBr) {
           const lineStyle = renderLineToStyle(styleBorders.tlToBr, ctx.colorContext);
-          addBorder(cursor.x, cursor.y, cursor.x + spanWidth, cursor.y + spanHeight, lineStyle);
+          addBorder({ x1: cursor.x, y1: cursor.y, x2: cursor.x + spanWidth, y2: cursor.y + spanHeight, lineStyle });
         }
         if (styleBorders.blToTr) {
           const lineStyle = renderLineToStyle(styleBorders.blToTr, ctx.colorContext);
-          addBorder(cursor.x, cursor.y + spanHeight, cursor.x + spanWidth, cursor.y, lineStyle);
+          addBorder({ x1: cursor.x, y1: cursor.y + spanHeight, x2: cursor.x + spanWidth, y2: cursor.y, lineStyle });
         }
 
         // Fallback: if no style borders are defined and no cell borders, render default
         if (!styleBorders.insideH && !styleBorders.insideV && !styleBorders.tlToBr && !styleBorders.blToTr) {
-          addBorder(cursor.x, cursor.y, cursor.x + spanWidth, cursor.y, { stroke: "#AAAAAA", strokeWidth: 0.5 });
-          addBorder(cursor.x, cursor.y + spanHeight, cursor.x + spanWidth, cursor.y + spanHeight, { stroke: "#AAAAAA", strokeWidth: 0.5 });
-          addBorder(cursor.x, cursor.y, cursor.x, cursor.y + spanHeight, { stroke: "#AAAAAA", strokeWidth: 0.5 });
-          addBorder(cursor.x + spanWidth, cursor.y, cursor.x + spanWidth, cursor.y + spanHeight, { stroke: "#AAAAAA", strokeWidth: 0.5 });
+          addBorder({ x1: cursor.x, y1: cursor.y, x2: cursor.x + spanWidth, y2: cursor.y, lineStyle: { stroke: "#AAAAAA", strokeWidth: 0.5 } });
+          addBorder({ x1: cursor.x, y1: cursor.y + spanHeight, x2: cursor.x + spanWidth, y2: cursor.y + spanHeight, lineStyle: { stroke: "#AAAAAA", strokeWidth: 0.5 } });
+          addBorder({ x1: cursor.x, y1: cursor.y, x2: cursor.x, y2: cursor.y + spanHeight, lineStyle: { stroke: "#AAAAAA", strokeWidth: 0.5 } });
+          addBorder({ x1: cursor.x + spanWidth, y1: cursor.y, x2: cursor.x + spanWidth, y2: cursor.y + spanHeight, lineStyle: { stroke: "#AAAAAA", strokeWidth: 0.5 } });
         }
       }
 
@@ -565,7 +578,7 @@ export function renderTableSvg(
   const borderElements: string[] = [];
   const ordered = [...borderSegments.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   for (const [, seg] of ordered) {
-    const asRect = renderAxisAlignedLineAsRect(seg.x1, seg.y1, seg.x2, seg.y2, seg.style);
+    const asRect = renderAxisAlignedLineAsRect({ x1: seg.x1, y1: seg.y1, x2: seg.x2, y2: seg.y2, lineStyle: seg.style });
     if (asRect) {
       borderElements.push(asRect);
       continue;

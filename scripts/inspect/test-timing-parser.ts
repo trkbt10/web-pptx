@@ -12,7 +12,7 @@ import { loadPptxFile } from "../lib/pptx-loader";
 async function main() {
   const usage = "bun run scripts/inspect/test-timing-parser.ts <pptx-path>";
   const args = process.argv.slice(2);
-  const filePath = requirePositionalArg(args, 0, "pptx-path", usage);
+  const filePath = requirePositionalArg({ args, index: 0, name: "pptx-path", usage });
   requireFileExists(filePath, usage);
 
   console.log(`Testing timing parser with: ${filePath}`);

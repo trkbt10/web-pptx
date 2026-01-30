@@ -37,18 +37,23 @@ import { PT_TO_PX } from "@oxen-office/pptx/domain/unit-conversion";
  * @param resourceResolver - Resource resolver for images
  * @returns Array of text runs for 3D rendering
  */
-export function extractText3DRuns(
-  ...args: [
-    textBody: TextBody,
-    width: number,
-    height: number,
-    colorContext: ColorContext,
-    fontScheme: FontScheme | undefined,
-    options: RenderOptions | undefined,
-    resourceResolver: (resourceId: string) => string | undefined,
-  ]
-): Text3DRunConfig[] {
-  const [textBody, width, height, colorContext, fontScheme, options, resourceResolver] = args;
+export function extractText3DRuns({
+  textBody,
+  width,
+  height,
+  colorContext,
+  fontScheme,
+  options,
+  resourceResolver,
+}: {
+  textBody: TextBody;
+  width: number;
+  height: number;
+  colorContext: ColorContext;
+  fontScheme: FontScheme | undefined;
+  options: RenderOptions | undefined;
+  resourceResolver: (resourceId: string) => string | undefined;
+}): Text3DRunConfig[] {
   // Use the same layout engine as SVG rendering
   const layoutInput = toLayoutInput({
     body: textBody,

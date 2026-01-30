@@ -88,13 +88,13 @@ export function useSlideDragDrop(
 
       const target = e.currentTarget as HTMLElement;
       const rect = target.getBoundingClientRect();
-      const gapIndex = calculateGapIndexFromItemDragOver(
+      const gapIndex = calculateGapIndexFromItemDragOver({
         itemIndex,
         orientation,
-        e.clientX,
-        e.clientY,
-        rect
-      );
+        clientX: e.clientX,
+        clientY: e.clientY,
+        itemRect: rect,
+      });
 
       setDragState((prev) => updateDragOverGap(prev, gapIndex));
     },
@@ -116,13 +116,13 @@ export function useSlideDragDrop(
 
       const target = e.currentTarget as HTMLElement;
       const rect = target.getBoundingClientRect();
-      const gapIndex = calculateGapIndexFromItemDragOver(
+      const gapIndex = calculateGapIndexFromItemDragOver({
         itemIndex,
         orientation,
-        e.clientX,
-        e.clientY,
-        rect
-      );
+        clientX: e.clientX,
+        clientY: e.clientY,
+        itemRect: rect,
+      });
 
       if (!isValidGapDrop(dragState, gapIndex, slides)) {
         setDragState(createIdleDragState());

@@ -126,15 +126,17 @@ function resolveXObjectStreamByName(page: NativePdfPage, xObjects: PdfDict, name
   return asStream(resolve(page, entry));
 }
 
-function remapType3ImageXObjects(
-  ...args: readonly [
-    page: NativePdfPage,
-    elements: readonly ParsedElement[],
-    xObjects: PdfDict | null,
-    registerXObjectStream: (stream: PdfStream) => string,
-  ]
-): ParsedElement[] {
-  const [page, elements, xObjects, registerXObjectStream] = args;
+function remapType3ImageXObjects({
+  page,
+  elements,
+  xObjects,
+  registerXObjectStream,
+}: {
+  readonly page: NativePdfPage;
+  readonly elements: readonly ParsedElement[];
+  readonly xObjects: PdfDict | null;
+  readonly registerXObjectStream: (stream: PdfStream) => string;
+}): ParsedElement[] {
   if (!xObjects) {return [...elements];}
   const out: ParsedElement[] = [];
 
@@ -224,16 +226,27 @@ export function expandType3TextElementsNative(args: {
       const scope = type3Scopes.get(cleanFont);
       const mergedExt = mergeExtGState(args.pageExtGState, scope?.extGState ?? new Map());
       const scopedFonts = scope ? mergeFontMappingsWithOverride(args.fontMappings, scope.fontMappings) : args.fontMappings;
-      const rendered = renderType3TextRun(run, info, type3, scopedFonts, {
-        extGState: mergedExt,
-        shadings: scope?.shadings ?? new Map(),
-        patterns: scope?.patterns ?? new Map(),
-        colorSpaces: scope?.colorSpaces ?? new Map(),
-        shadingMaxSize: args.shadingMaxSize,
-        clipPathMaxSize: args.clipPathMaxSize,
-        pageBBox: args.pageBBox,
+      const rendered = renderType3TextRun({
+        run,
+        fontInfo: info,
+        type3,
+        fontMappings: scopedFonts,
+        options: {
+          extGState: mergedExt,
+          shadings: scope?.shadings ?? new Map(),
+          patterns: scope?.patterns ?? new Map(),
+          colorSpaces: scope?.colorSpaces ?? new Map(),
+          shadingMaxSize: args.shadingMaxSize,
+          clipPathMaxSize: args.clipPathMaxSize,
+          pageBBox: args.pageBBox,
+        },
       });
-      const remapped = remapType3ImageXObjects(args.page, rendered, scope?.xObjects ?? null, args.registerXObjectStream);
+      const remapped = remapType3ImageXObjects({
+        page: args.page,
+        elements: rendered,
+        xObjects: scope?.xObjects ?? null,
+        registerXObjectStream: args.registerXObjectStream,
+      });
       out.push(...tagType3Sources(remapped));
     }
 

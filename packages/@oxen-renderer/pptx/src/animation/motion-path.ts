@@ -518,15 +518,17 @@ export function getPointAtProgress(path: MotionPath, progress: number): Point {
  * @param slideHeight - Slide height in pixels
  * @returns Animation update function (progress: 0-1) => void
  */
-export function createMotionPathFunction(
-  ...args: [
-    behavior: AnimateMotionBehavior,
-    element: HTMLElement | SVGElement,
-    slideWidth?: number,
-    slideHeight?: number,
-  ]
-): (progress: number) => void {
-  const [behavior, element, slideWidth = 960, slideHeight = 540] = args;
+export function createMotionPathFunction({
+  behavior,
+  element,
+  slideWidth = 960,
+  slideHeight = 540,
+}: {
+  behavior: AnimateMotionBehavior;
+  element: HTMLElement | SVGElement;
+  slideWidth?: number;
+  slideHeight?: number;
+}): (progress: number) => void {
   const { path, from, to, by, origin: _origin } = behavior;
 
   // If we have a path string, use path-based animation

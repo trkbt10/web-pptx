@@ -29,16 +29,13 @@ export type UseSheetTabDragDropResult = {
  * Gaps are numbered: 0 (before first tab), 1 (between tab 0 and 1), etc.
  * If the target gap is adjacent to the dragging tab, it's a no-op.
  */
-function calculateFinalPosition(
-  ...args: readonly [
-    draggingIndex: number,
-    targetTabIndex: number,
-    clientX: number,
-    rectLeft: number,
-    rectWidth: number,
-  ]
-): { position: number; gapIndex: number } | undefined {
-  const [draggingIndex, targetTabIndex, clientX, rectLeft, rectWidth] = args;
+function calculateFinalPosition({ draggingIndex, targetTabIndex, clientX, rectLeft, rectWidth }: {
+  readonly draggingIndex: number;
+  readonly targetTabIndex: number;
+  readonly clientX: number;
+  readonly rectLeft: number;
+  readonly rectWidth: number;
+}): { position: number; gapIndex: number } | undefined {
   // Can't drop on self
   if (draggingIndex === targetTabIndex) {
     return undefined;
@@ -103,13 +100,13 @@ export function useSheetTabDragDrop(
           return prev;
         }
 
-        const result = calculateFinalPosition(
-          prev.draggingIndex,
-          itemIndex,
+        const result = calculateFinalPosition({
+          draggingIndex: prev.draggingIndex,
+          targetTabIndex: itemIndex,
           clientX,
-          rect.left,
-          rect.width,
-        );
+          rectLeft: rect.left,
+          rectWidth: rect.width,
+        });
 
         if (!result) {
           if (prev.targetGapIndex === undefined) {

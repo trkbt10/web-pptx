@@ -34,6 +34,26 @@ export type DecodeImageXObjectStreamNativeArgs = {
   readonly options?: Readonly<Pick<ImageExtractorOptions, "maxDimension" | "jpxDecode">>;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function decodeImageXObjectStreamNative(
   args: DecodeImageXObjectStreamNativeArgs
 ): PdfImage | null {
@@ -1756,12 +1776,12 @@ function expandImageMaskToRgbAlpha(args: {
       case "DeviceRGB":
         return rgbToRgbBytes(fillColor.components[0] ?? 0, fillColor.components[1] ?? 0, fillColor.components[2] ?? 0);
       case "DeviceCMYK":
-        return cmykToRgb(
-          fillColor.components[0] ?? 0,
-          fillColor.components[1] ?? 0,
-          fillColor.components[2] ?? 0,
-          fillColor.components[3] ?? 0,
-        );
+        return cmykToRgb({
+          c: fillColor.components[0] ?? 0,
+          m: fillColor.components[1] ?? 0,
+          y: fillColor.components[2] ?? 0,
+          k: fillColor.components[3] ?? 0,
+        });
       default:
         return [0, 0, 0] as const;
     }

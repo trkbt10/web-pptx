@@ -52,7 +52,7 @@ describe("glyph-cache", () => {
     });
 
     it("should cache and retrieve glyph", () => {
-      setCachedGlyph("Arial", "A", testStyle, testGlyph);
+      setCachedGlyph({ fontFamily: "Arial", char: "A", style: testStyle, glyph: testGlyph });
       const result = getCachedGlyph("Arial", "A", testStyle);
 
       expect(result).toEqual(testGlyph);
@@ -62,8 +62,8 @@ describe("glyph-cache", () => {
       const boldStyle: GlyphStyleKey = { ...testStyle, fontWeight: 700 };
       const boldGlyph: GlyphContour = { ...testGlyph, char: "A-bold" };
 
-      setCachedGlyph("Arial", "A", testStyle, testGlyph);
-      setCachedGlyph("Arial", "A", boldStyle, boldGlyph);
+      setCachedGlyph({ fontFamily: "Arial", char: "A", style: testStyle, glyph: testGlyph });
+      setCachedGlyph({ fontFamily: "Arial", char: "A", style: boldStyle, glyph: boldGlyph });
 
       expect(getCachedGlyph("Arial", "A", testStyle)).toEqual(testGlyph);
       expect(getCachedGlyph("Arial", "A", boldStyle)).toEqual(boldGlyph);
@@ -72,8 +72,8 @@ describe("glyph-cache", () => {
     it("should cache different fonts separately", () => {
       const timesGlyph: GlyphContour = { ...testGlyph, char: "A-times" };
 
-      setCachedGlyph("Arial", "A", testStyle, testGlyph);
-      setCachedGlyph("Times New Roman", "A", testStyle, timesGlyph);
+      setCachedGlyph({ fontFamily: "Arial", char: "A", style: testStyle, glyph: testGlyph });
+      setCachedGlyph({ fontFamily: "Times New Roman", char: "A", style: testStyle, glyph: timesGlyph });
 
       expect(getCachedGlyph("Arial", "A", testStyle)).toEqual(testGlyph);
       expect(getCachedGlyph("Times New Roman", "A", testStyle)).toEqual(timesGlyph);
@@ -82,8 +82,8 @@ describe("glyph-cache", () => {
     it("should cache different characters separately", () => {
       const glyphB: GlyphContour = { ...testGlyph, char: "B" };
 
-      setCachedGlyph("Arial", "A", testStyle, testGlyph);
-      setCachedGlyph("Arial", "B", testStyle, glyphB);
+      setCachedGlyph({ fontFamily: "Arial", char: "A", style: testStyle, glyph: testGlyph });
+      setCachedGlyph({ fontFamily: "Arial", char: "B", style: testStyle, glyph: glyphB });
 
       expect(getCachedGlyph("Arial", "A", testStyle)).toEqual(testGlyph);
       expect(getCachedGlyph("Arial", "B", testStyle)).toEqual(glyphB);
@@ -96,15 +96,15 @@ describe("glyph-cache", () => {
     });
 
     it("should return true for cached glyph", () => {
-      setCachedGlyph("Arial", "A", testStyle, testGlyph);
+      setCachedGlyph({ fontFamily: "Arial", char: "A", style: testStyle, glyph: testGlyph });
       expect(hasGlyphCache("Arial", "A", testStyle)).toBe(true);
     });
   });
 
   describe("clearFontGlyphCache", () => {
     it("should clear cache for specific font only", () => {
-      setCachedGlyph("Arial", "A", testStyle, testGlyph);
-      setCachedGlyph("Times New Roman", "A", testStyle, testGlyph);
+      setCachedGlyph({ fontFamily: "Arial", char: "A", style: testStyle, glyph: testGlyph });
+      setCachedGlyph({ fontFamily: "Times New Roman", char: "A", style: testStyle, glyph: testGlyph });
 
       clearFontGlyphCache("Arial");
 
@@ -115,8 +115,8 @@ describe("glyph-cache", () => {
 
   describe("clearGlyphCache", () => {
     it("should clear all caches", () => {
-      setCachedGlyph("Arial", "A", testStyle, testGlyph);
-      setCachedGlyph("Times New Roman", "B", testStyle, testGlyph);
+      setCachedGlyph({ fontFamily: "Arial", char: "A", style: testStyle, glyph: testGlyph });
+      setCachedGlyph({ fontFamily: "Times New Roman", char: "B", style: testStyle, glyph: testGlyph });
 
       clearGlyphCache();
 
@@ -135,13 +135,13 @@ describe("glyph-cache", () => {
 
     it("should count fonts, characters, and glyphs correctly", () => {
       // 2 fonts
-      setCachedGlyph("Arial", "A", testStyle, testGlyph);
-      setCachedGlyph("Arial", "B", testStyle, testGlyph);
-      setCachedGlyph("Times", "A", testStyle, testGlyph);
+      setCachedGlyph({ fontFamily: "Arial", char: "A", style: testStyle, glyph: testGlyph });
+      setCachedGlyph({ fontFamily: "Arial", char: "B", style: testStyle, glyph: testGlyph });
+      setCachedGlyph({ fontFamily: "Times", char: "A", style: testStyle, glyph: testGlyph });
 
       // Add bold variant for Arial A
       const boldStyle: GlyphStyleKey = { ...testStyle, fontWeight: 700 };
-      setCachedGlyph("Arial", "A", boldStyle, testGlyph);
+      setCachedGlyph({ fontFamily: "Arial", char: "A", style: boldStyle, glyph: testGlyph });
 
       const stats = getGlyphCacheStats();
       expect(stats.fonts).toBe(2);

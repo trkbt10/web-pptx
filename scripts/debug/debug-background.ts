@@ -74,7 +74,7 @@ function buildSlideContextFromSlide(slide: Slide): SlideContext {
 async function main() {
   const usage = "bun run scripts/debug/debug-background.ts <pptx-path> <slide-number>";
   const args = process.argv.slice(2);
-  const pptxPath = requirePositionalArg(args, 0, "pptx-path", usage);
+  const pptxPath = requirePositionalArg({ args, index: 0, name: "pptx-path", usage });
   const slideNumber = requireIntArg(args[1], "slide-number", usage);
   requireFileExists(pptxPath, usage);
 

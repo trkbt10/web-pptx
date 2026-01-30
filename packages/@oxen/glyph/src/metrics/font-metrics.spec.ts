@@ -67,22 +67,22 @@ describe("getFontMetrics", () => {
 
 describe("getCharWidth", () => {
   it("should return narrow width for i", () => {
-    const width = getCharWidth("i", "Arial", false);
+    const width = getCharWidth({ char: "i", fontFamily: "Arial", isCjk: false });
     expect(width).toBeLessThan(0.3);
   });
 
   it("should return wide width for W", () => {
-    const width = getCharWidth("W", "Arial", false);
+    const width = getCharWidth({ char: "W", fontFamily: "Arial", isCjk: false });
     expect(width).toBeGreaterThan(0.8);
   });
 
   it("should return full width for CJK", () => {
-    const width = getCharWidth("\u4e2d", "Arial", true);
+    const width = getCharWidth({ char: "\u4e2d", fontFamily: "Arial", isCjk: true });
     expect(width).toBe(1.0);
   });
 
   it("should return space width", () => {
-    const width = getCharWidth(" ", "Arial", false);
+    const width = getCharWidth({ char: " ", fontFamily: "Arial", isCjk: false });
     expect(width).toBeCloseTo(0.25, 2); // Default space width for sans-serif
   });
 });

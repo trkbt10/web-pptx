@@ -204,6 +204,26 @@ function truncateText(value: string, maxLength: number): string {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createDefaultDiagramConnection(
   modelId?: string,
   sourceId?: string,

@@ -24,21 +24,24 @@ const DEFAULT_BOLD_WIDTH_SCALE = 1.05;
 /**
  * Get character width for a specific character and font.
  *
- * @param char - Single character
- * @param fontFamily - Font family name
- * @param isCjk - Whether the character is CJK
- * @param fontWeight - Font weight (default: 400)
+ * @param options - Options for character width calculation
+ * @param options.char - Single character
+ * @param options.fontFamily - Font family name
+ * @param options.isCjk - Whether the character is CJK
+ * @param options.fontWeight - Font weight (default: 400)
  * @returns Width ratio relative to font size
  */
-export function getCharWidth(
-  ...args: readonly [
-    char: string,
-    fontFamily: string | undefined,
-    isCjk: boolean,
-    fontWeight?: number,
-  ]
-): number {
-  const [char, fontFamily, isCjk, fontWeight = 400] = args;
+export function getCharWidth({
+  char,
+  fontFamily,
+  isCjk,
+  fontWeight = 400,
+}: {
+  readonly char: string;
+  readonly fontFamily: string | undefined;
+  readonly isCjk: boolean;
+  readonly fontWeight?: number;
+}): number {
   const metrics = getFontMetrics(fontFamily);
   const scale = metrics.widthScale ?? 1.0;
   const isBold = fontWeight >= 700;

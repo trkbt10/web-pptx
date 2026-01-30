@@ -31,6 +31,26 @@ function getEffectColor(element: XmlElement, overrideColor?: Color): Color | und
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseOuterShadowEffect(element: XmlElement, overrideColor?: Color): ShadowEffect | undefined {
   const color = getEffectColor(element, overrideColor);
   if (!color) {return undefined;}
@@ -55,6 +75,26 @@ export function parseOuterShadowEffect(element: XmlElement, overrideColor?: Colo
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseInnerShadowEffect(element: XmlElement, overrideColor?: Color): ShadowEffect | undefined {
   const color = getEffectColor(element, overrideColor);
   if (!color) {return undefined;}
@@ -73,6 +113,26 @@ export function parseInnerShadowEffect(element: XmlElement, overrideColor?: Colo
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseGlowEffect(element: XmlElement, overrideColor?: Color): GlowEffect | undefined {
   const color = getEffectColor(element, overrideColor);
   if (!color) {return undefined;}
@@ -82,6 +142,26 @@ export function parseGlowEffect(element: XmlElement, overrideColor?: Color): Glo
     radius: getEmuAttr(element, "rad") ?? px(0),
   };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -112,12 +192,52 @@ export function parseReflectionEffect(element: XmlElement): ReflectionEffect | u
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseSoftEdgeEffect(element: XmlElement): SoftEdgeEffect | undefined {
   const radius = getEmuAttr(element, "rad");
   if (radius === undefined) {return undefined;}
 
   return { radius };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

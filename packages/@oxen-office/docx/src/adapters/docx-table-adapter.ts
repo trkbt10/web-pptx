@@ -257,15 +257,13 @@ function convertCellMargins(
 /**
  * Convert a DOCX table cell to layout input.
  */
-function convertTableCell(
-  ...args: readonly [
-    cell: DocxTableCell,
-    cellProps: DocxTableCellProperties | undefined,
-    tableProps: DocxTableProperties | undefined,
-    context: TableConversionContext,
-  ]
-): LayoutTableCellInput {
-  const [cell, cellProps, tableProps, context] = args;
+function convertTableCell(params: {
+  readonly cell: DocxTableCell;
+  readonly cellProps: DocxTableCellProperties | undefined;
+  readonly tableProps: DocxTableProperties | undefined;
+  readonly context: TableConversionContext;
+}): LayoutTableCellInput {
+  const { cell, cellProps, tableProps, context } = params;
   const props = cellProps ?? {};
 
   // Convert paragraphs within the cell
@@ -326,7 +324,7 @@ function convertTableRow(
 
   // Convert cells
   const cells: LayoutTableCellInput[] = row.cells.map((cell) =>
-    convertTableCell(cell, cell.properties, tableProps, context),
+    convertTableCell({ cell, cellProps: cell.properties, tableProps, context }),
   );
 
   // Get row height
@@ -369,15 +367,13 @@ type TableConversionContext = {
  * @param numbering Optional numbering definitions for lists in cells
  * @param styles Optional style definitions for text formatting
  */
-export function tableToLayoutInput(
-  ...args: readonly [
-    table: DocxTable,
-    containerWidth: Pixels,
-    numbering?: DocxNumbering,
-    styles?: DocxStyles,
-  ]
-): LayoutTableInput {
-  const [table, containerWidth, numbering, styles] = args;
+export function tableToLayoutInput(params: {
+  readonly table: DocxTable;
+  readonly containerWidth: Pixels;
+  readonly numbering?: DocxNumbering;
+  readonly styles?: DocxStyles;
+}): LayoutTableInput {
+  const { table, containerWidth, numbering, styles } = params;
   const props = table.properties;
 
   // Create paragraph context for cell content

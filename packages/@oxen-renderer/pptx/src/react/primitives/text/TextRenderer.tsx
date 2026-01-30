@@ -195,7 +195,7 @@ export function TextRenderer({ textBody, width, height }: TextRendererProps) {
   const useWebGL3D = options?.enable3DText !== false && shouldRender3DText(scene3d, shape3d);
 
   if (useWebGL3D) {
-    return renderWebGL3DText(textBody, width, height, colorContext, fontScheme, options, resources, scene3d, shape3d);
+    return renderWebGL3DText({ textBody, width, height, colorContext, fontScheme, options, resources, scene3d, shape3d });
   }
 
   // Convert TextBody to layout input
@@ -237,22 +237,31 @@ export function TextRenderer({ textBody, width, height }: TextRendererProps) {
 /**
  * Render text using WebGL 3D renderer.
  */
-type RenderWebGL3DTextArgs = [
-  textBody: TextBody,
-  width: number,
-  height: number,
-  colorContext: Parameters<typeof extractText3DRuns>[3],
-  fontScheme: Parameters<typeof extractText3DRuns>[4],
-  options: Parameters<typeof extractText3DRuns>[5],
-  resources: { resolve: (id: string) => string | undefined },
-  scene3d: TextBody["bodyProperties"]["scene3d"],
-  shape3d: TextBody["bodyProperties"]["shape3d"],
-];
+type RenderWebGL3DTextArgs = {
+  textBody: TextBody;
+  width: number;
+  height: number;
+  colorContext: Parameters<typeof extractText3DRuns>[0]["colorContext"];
+  fontScheme: Parameters<typeof extractText3DRuns>[0]["fontScheme"];
+  options: Parameters<typeof extractText3DRuns>[0]["options"];
+  resources: { resolve: (id: string) => string | undefined };
+  scene3d: TextBody["bodyProperties"]["scene3d"];
+  shape3d: TextBody["bodyProperties"]["shape3d"];
+};
 
-function renderWebGL3DText(...args: RenderWebGL3DTextArgs): React.ReactNode {
-  const [textBody, width, height, colorContext, fontScheme, options, resources, scene3d, shape3d] = args;
+function renderWebGL3DText({
+  textBody,
+  width,
+  height,
+  colorContext,
+  fontScheme,
+  options,
+  resources,
+  scene3d,
+  shape3d,
+}: RenderWebGL3DTextArgs): React.ReactNode {
   const resourceResolver = (resourceId: string) => resources.resolve(resourceId);
-  const runs = extractText3DRuns(
+  const runs = extractText3DRuns({
     textBody,
     width,
     height,
@@ -260,7 +269,7 @@ function renderWebGL3DText(...args: RenderWebGL3DTextArgs): React.ReactNode {
     fontScheme,
     options,
     resourceResolver,
-  );
+  });
 
   return (
     <foreignObject x={0} y={0} width={width} height={height}>

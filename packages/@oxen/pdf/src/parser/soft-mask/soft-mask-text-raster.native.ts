@@ -55,12 +55,12 @@ function colorToRgbBytes(color: PdfColor): readonly [number, number, number] {
     case "DeviceRGB":
       return [toByte(color.components[0] ?? 0), toByte(color.components[1] ?? 0), toByte(color.components[2] ?? 0)];
     case "DeviceCMYK": {
-      const [r, g, b] = cmykToRgb(
-        color.components[0] ?? 0,
-        color.components[1] ?? 0,
-        color.components[2] ?? 0,
-        color.components[3] ?? 0,
-      );
+      const [r, g, b] = cmykToRgb({
+        c: color.components[0] ?? 0,
+        m: color.components[1] ?? 0,
+        y: color.components[2] ?? 0,
+        k: color.components[3] ?? 0,
+      });
       return [r, g, b];
     }
     case "ICCBased": {
@@ -73,12 +73,12 @@ function colorToRgbBytes(color: PdfColor): readonly [number, number, number] {
         return [toByte(color.components[0] ?? 0), toByte(color.components[1] ?? 0), toByte(color.components[2] ?? 0)];
       }
       if (alt === "DeviceCMYK") {
-        const [r, g, b] = cmykToRgb(
-          color.components[0] ?? 0,
-          color.components[1] ?? 0,
-          color.components[2] ?? 0,
-          color.components[3] ?? 0,
-        );
+        const [r, g, b] = cmykToRgb({
+          c: color.components[0] ?? 0,
+          m: color.components[1] ?? 0,
+          y: color.components[2] ?? 0,
+          k: color.components[3] ?? 0,
+        });
         return [r, g, b];
       }
       return [0, 0, 0];
@@ -123,16 +123,15 @@ type OrientedBox = Readonly<{
   readonly aabb: PdfBBox;
 }>;
 
-function dot(...args: [ax: number, ay: number, bx: number, by: number]): number {
-  const [ax, ay, bx, by] = args;
+function dot({ ax, ay, bx, by }: { readonly ax: number; readonly ay: number; readonly bx: number; readonly by: number }): number {
   return ax * bx + ay * by;
 }
 
 function pointInOrientedBox(p: Readonly<{ x: number; y: number }>, box: OrientedBox, pad: number): boolean {
   const dx = p.x - box.origin.x;
   const dy = p.y - box.origin.y;
-  const t = dot(dx, dy, box.u.x, box.u.y);
-  const s = dot(dx, dy, box.n.x, box.n.y);
+  const t = dot({ ax: dx, ay: dy, bx: box.u.x, by: box.u.y });
+  const s = dot({ ax: dx, ay: dy, bx: box.n.x, by: box.n.y });
   return (
     t >= -pad &&
     t <= box.length + pad &&
@@ -230,6 +229,26 @@ function getFontInfo(fontKey: string, fontMappings: FontMappings) {
 
   return undefined;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

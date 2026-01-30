@@ -536,7 +536,7 @@ describe("applyBrowserEffect - Effect Dispatcher", () => {
 
   it("dispatches fade effect", async () => {
     const el = createMockElement();
-    const promise = applyBrowserEffect(el, "fade", 500, "in");
+    const promise = applyBrowserEffect({ el, type: "fade", duration: 500, direction: "in" });
 
     mockTime.tick(0);
     expect(el.style.visibility).toBe("visible");
@@ -566,7 +566,7 @@ describe("applyBrowserEffect - Effect Dispatcher", () => {
 
     for (const effect of effects) {
       const el = createMockElement();
-      const promise = applyBrowserEffect(el, effect, 100, "in");
+      const promise = applyBrowserEffect({ el, type: effect, duration: 100, direction: "in" });
 
       mockTime.tick(0);
       expect(el.style.visibility).toBe("visible");

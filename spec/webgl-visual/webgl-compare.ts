@@ -291,6 +291,26 @@ export type CompareToBaselineArgs = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export async function compareToBaseline({
   actualBuffer,
   snapshotName,

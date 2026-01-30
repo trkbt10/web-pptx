@@ -104,12 +104,12 @@ type ShapeItemProps = {
   readonly onToggleLock: (shapeId: ShapeId) => void;
   readonly onContextMenu: (shapeId: ShapeId, event: MouseEvent) => void;
   readonly onDragStart: (shapeId: ShapeId, event: DragEvent) => void;
-  readonly onDragOver: (
-    shape: Shape,
-    parentId: ShapeId | null,
-    displayIndex: number,
-    event: DragEvent
-  ) => void;
+  readonly onDragOver: (args: {
+    shape: Shape;
+    parentId: ShapeId | null;
+    displayIndex: number;
+    event: DragEvent;
+  }) => void;
   readonly onDrop: (event: DragEvent) => void;
   readonly onDragEnd: () => void;
   readonly expandedGroups: ReadonlySet<string>;
@@ -470,7 +470,7 @@ function ShapeItem({
     if (!shapeId) {
       return;
     }
-    onDragOver(shape, parentId, displayIndex, e);
+    onDragOver({ shape, parentId, displayIndex, event: e });
   };
 
   const handleDrop = (e: DragEvent) => {
@@ -692,12 +692,12 @@ type ShapeListProps = {
   readonly onToggleLock: (shapeId: ShapeId) => void;
   readonly onContextMenu: (shapeId: ShapeId, event: MouseEvent) => void;
   readonly onDragStart: (shapeId: ShapeId, event: DragEvent) => void;
-  readonly onDragOver: (
-    shape: Shape,
-    parentId: ShapeId | null,
-    displayIndex: number,
-    event: DragEvent
-  ) => void;
+  readonly onDragOver: (args: {
+    shape: Shape;
+    parentId: ShapeId | null;
+    displayIndex: number;
+    event: DragEvent;
+  }) => void;
   readonly onDrop: (event: DragEvent) => void;
   readonly onDragEnd: () => void;
   readonly onListDragOver: (event: DragEvent) => void;
@@ -1102,8 +1102,17 @@ export function LayerPanel({
   );
 
   const handleDragOver = useCallback(
-    (...args: readonly [shape: Shape, parentId: ShapeId | null, displayIndex: number, event: DragEvent]) => {
-      const [shape, parentId, displayIndex, event] = args;
+    ({
+      shape,
+      parentId,
+      displayIndex,
+      event,
+    }: {
+      shape: Shape;
+      parentId: ShapeId | null;
+      displayIndex: number;
+      event: DragEvent;
+    }) => {
       event.stopPropagation();
       event.preventDefault();
       if (!draggingId) {

@@ -602,15 +602,17 @@ export function animateCheckerboard(
  * Apply effect by type.
  * @see MS-OE376 Part 4 Section 4.6.3
  */
-export function applyBrowserEffect(
-  ...args: [
-    el: HTMLElement | SVGElement,
-    type: BrowserEffectType,
-    duration: number,
-    direction: string,
-  ]
-): Promise<void> {
-  const [el, type, duration, direction] = args;
+export function applyBrowserEffect({
+  el,
+  type,
+  duration,
+  direction,
+}: {
+  el: HTMLElement | SVGElement;
+  type: BrowserEffectType;
+  duration: number;
+  direction: string;
+}): Promise<void> {
   const effectMap: Record<BrowserEffectType, (el: HTMLElement | SVGElement, d: number, dir: string) => Promise<void>> = {
     fade: animateFade,
     slide: animateSlide,

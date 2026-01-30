@@ -90,15 +90,17 @@ export function renderGeometryPathData(geomPath: GeometryPath): string {
 /**
  * Render a geometry path to SVG path element
  */
-export function renderGeometryPath(
-  ...args: [
-    geomPath: GeometryPath,
-    fill: Fill | undefined,
-    line: Line | undefined,
-    transform?: Transform,
-  ]
-): HtmlString {
-  const [geomPath, fill, line, transform] = args;
+export function renderGeometryPath({
+  geomPath,
+  fill,
+  line,
+  transform,
+}: {
+  geomPath: GeometryPath;
+  fill: Fill | undefined;
+  line: Line | undefined;
+  transform?: Transform;
+}): HtmlString {
   const d = renderGeometryPathData(geomPath);
 
   const fillStyle = fill ? renderFillToStyle(fill) : undefined;
@@ -2752,16 +2754,16 @@ const PRESET_SHAPES: Record<string, (w: number, h: number, adj: Map<string, numb
     return `M ${offset} 0 L ${w - offset} 0 L ${w} ${offset} L ${w} ${h - offset} L ${w - offset} ${h} L ${offset} ${h} L 0 ${h - offset} L 0 ${offset} Z`;
   },
 
-  star4: (w, h) => generateStar(w, h, 4, 0.382),
-  star5: (w, h) => generateStar(w, h, 5, 0.382),
-  star6: (w, h) => generateStar(w, h, 6, 0.5),
-  star7: (w, h) => generateStar(w, h, 7, 0.382),
-  star8: (w, h) => generateStar(w, h, 8, 0.382),
-  star10: (w, h) => generateStar(w, h, 10, 0.382),
-  star12: (w, h) => generateStar(w, h, 12, 0.382),
-  star16: (w, h) => generateStar(w, h, 16, 0.382),
-  star24: (w, h) => generateStar(w, h, 24, 0.382),
-  star32: (w, h) => generateStar(w, h, 32, 0.382),
+  star4: (w, h) => generateStar({ w, h, points: 4, innerRatio: 0.382 }),
+  star5: (w, h) => generateStar({ w, h, points: 5, innerRatio: 0.382 }),
+  star6: (w, h) => generateStar({ w, h, points: 6, innerRatio: 0.5 }),
+  star7: (w, h) => generateStar({ w, h, points: 7, innerRatio: 0.382 }),
+  star8: (w, h) => generateStar({ w, h, points: 8, innerRatio: 0.382 }),
+  star10: (w, h) => generateStar({ w, h, points: 10, innerRatio: 0.382 }),
+  star12: (w, h) => generateStar({ w, h, points: 12, innerRatio: 0.382 }),
+  star16: (w, h) => generateStar({ w, h, points: 16, innerRatio: 0.382 }),
+  star24: (w, h) => generateStar({ w, h, points: 24, innerRatio: 0.382 }),
+  star32: (w, h) => generateStar({ w, h, points: 32, innerRatio: 0.382 }),
 
   plus: (w, h, adj) => {
     const arm = (adj.get("adj") ?? 25000) / 100000;
@@ -4955,7 +4957,7 @@ const PRESET_SHAPES: Record<string, (w: number, h: number, adj: Map<string, numb
    * @see ECMA-376 Part 1, Section 20.1.10.56
    */
   chartStar: (w, h) => {
-    return generateStar(w, h, 6, 0.5);
+    return generateStar({ w, h, points: 6, innerRatio: 0.5 });
   },
 
   /**
@@ -5239,10 +5241,17 @@ const PRESET_SHAPES: Record<string, (w: number, h: number, adj: Map<string, numb
 /**
  * Generate a star polygon path
  */
-function generateStar(
-  ...args: [w: number, h: number, points: number, innerRatio: number]
-): string {
-  const [w, h, points, innerRatio] = args;
+function generateStar({
+  w,
+  h,
+  points,
+  innerRatio,
+}: {
+  w: number;
+  h: number;
+  points: number;
+  innerRatio: number;
+}): string {
   const cx = w / 2;
   const cy = h / 2;
   const outerR = Math.min(w, h) / 2;
@@ -5502,16 +5511,19 @@ export type GeometryPathWithMarkersResult = {
  * @see ECMA-376 Part 1, Section 20.1.8.37 (headEnd)
  * @see ECMA-376 Part 1, Section 20.1.8.57 (tailEnd)
  */
-export function renderGeometryPathWithMarkers(
-  ...args: [
-    geomPath: GeometryPath,
-    fill: Fill | undefined,
-    line: Line | undefined,
-    colorContext?: ColorContext,
-    transform?: Transform,
-  ]
-): GeometryPathWithMarkersResult {
-  const [geomPath, fill, line, colorContext, transform] = args;
+export function renderGeometryPathWithMarkers({
+  geomPath,
+  fill,
+  line,
+  colorContext,
+  transform,
+}: {
+  geomPath: GeometryPath;
+  fill: Fill | undefined;
+  line: Line | undefined;
+  colorContext?: ColorContext;
+  transform?: Transform;
+}): GeometryPathWithMarkersResult {
   const d = renderGeometryPathData(geomPath);
 
   const fillStyle = fill ? renderFillToStyle(fill) : undefined;

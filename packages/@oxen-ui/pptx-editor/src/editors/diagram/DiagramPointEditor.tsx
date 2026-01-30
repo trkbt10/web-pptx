@@ -21,6 +21,26 @@ export type DiagramPointEditorProps = EditorProps<DiagramPoint> & {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function DiagramPointEditor(props: DiagramPointEditorProps) {
   return <CoreDiagramPointEditor {...props} adapters={pptxDiagramEditorAdapters} />;
 }

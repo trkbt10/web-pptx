@@ -19,6 +19,26 @@ import { parseShapeStyle } from "../shape-parser/style";
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseDiagramStyleDefinition(doc: XmlDocument) {
   return parseDiagramStyleDefinitionBase(doc, { parseTextBody, parseShapeStyle });
 }
@@ -28,9 +48,49 @@ export function parseDiagramStyleDefinition(doc: XmlDocument) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseDiagramStyleDefinitionHeader(...args: Parameters<typeof parseDiagramStyleDefinitionHeaderBase>) {
   return parseDiagramStyleDefinitionHeaderBase(...args);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

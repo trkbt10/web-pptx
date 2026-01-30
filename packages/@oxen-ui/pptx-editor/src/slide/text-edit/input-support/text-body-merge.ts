@@ -46,13 +46,13 @@ export function mergeTextIntoBody(
 
   const defaultProps = Object.keys(defaultRunProperties).length > 0 ? defaultRunProperties : undefined;
   const originalEntries = flattenTextBody(originalBody);
-  const mergedEntries = applySingleReplaceEdit(
+  const mergedEntries = applySingleReplaceEdit({
     originalEntries,
     newText,
     defaultProps,
-    originalBody.paragraphs[0]?.properties ?? {},
-    originalBody.paragraphs[0]?.endProperties,
-  );
+    fallbackParagraphProperties: originalBody.paragraphs[0]?.properties ?? {},
+    fallbackParagraphEndProperties: originalBody.paragraphs[0]?.endProperties,
+  });
   const paragraphs = buildParagraphsFromEntries(mergedEntries, originalBody);
 
   const fallbackParagraph: TextBody["paragraphs"][number] = {
@@ -149,22 +149,17 @@ function flattenTextBody(textBody: TextBody): TextCharEntry[] {
   return entries;
 }
 
-function applySingleReplaceEdit(
-  ...args: readonly [
-    originalEntries: TextCharEntry[],
-    newText: string,
-    defaultProps: RunProperties | undefined,
-    fallbackParagraphProperties: ParagraphProperties,
-    fallbackParagraphEndProperties?: RunProperties,
-  ]
-): TextCharEntry[] {
-  const [
-    originalEntries,
-    newText,
-    defaultProps,
-    fallbackParagraphProperties,
-    fallbackParagraphEndProperties,
-  ] = args;
+type ApplySingleReplaceEditInput = {
+  readonly originalEntries: TextCharEntry[];
+  readonly newText: string;
+  readonly defaultProps: RunProperties | undefined;
+  readonly fallbackParagraphProperties: ParagraphProperties;
+  readonly fallbackParagraphEndProperties?: RunProperties;
+};
+
+function applySingleReplaceEdit({
+  originalEntries, newText, defaultProps, fallbackParagraphProperties, fallbackParagraphEndProperties,
+}: ApplySingleReplaceEditInput): TextCharEntry[] {
   const oldText = originalEntries.map((entry) => entry.char).join("");
   const oldLength = oldText.length;
   const newLength = newText.length;

@@ -65,15 +65,14 @@ function getAvailableSpaces(
   };
 }
 
-function canFit(
-  ...args: readonly [
-    side: PopoverSide,
-    contentSize: PopoverSize,
-    spaces: Record<PopoverSide, number>,
-    gap: number,
-  ]
-): boolean {
-  const [side, contentSize, spaces, gap] = args;
+type CanFitInput = {
+  readonly side: PopoverSide;
+  readonly contentSize: PopoverSize;
+  readonly spaces: Record<PopoverSide, number>;
+  readonly gap: number;
+};
+
+function canFit({ side, contentSize, spaces, gap }: CanFitInput): boolean {
   if (side === "top" || side === "bottom") {
     return spaces[side] >= contentSize.height + gap;
   }
@@ -85,10 +84,10 @@ function resolveSide(input: PopoverPositionInput): PopoverSide {
   const spaces = getAvailableSpaces(triggerRect, viewport, padding);
   const oppositeSide = getOppositeSide(preferredSide);
 
-  if (canFit(preferredSide, contentSize, spaces, gap)) {
+  if (canFit({ side: preferredSide, contentSize, spaces, gap })) {
     return preferredSide;
   }
-  if (canFit(oppositeSide, contentSize, spaces, gap)) {
+  if (canFit({ side: oppositeSide, contentSize, spaces, gap })) {
     return oppositeSide;
   }
 
@@ -134,16 +133,17 @@ function getAlignedTop(
   return triggerRect.top;
 }
 
-function getAlignedPosition(
-  ...args: readonly [
-    triggerRect: DOMRect,
-    contentSize: PopoverSize,
-    side: PopoverSide,
-    align: PopoverAlign,
-    gap: number,
-  ]
-): { top: number; left: number } {
-  const [triggerRect, contentSize, side, align, gap] = args;
+type AlignedPositionInput = {
+  readonly triggerRect: DOMRect;
+  readonly contentSize: PopoverSize;
+  readonly side: PopoverSide;
+  readonly align: PopoverAlign;
+  readonly gap: number;
+};
+
+function getAlignedPosition({
+  triggerRect, contentSize, side, align, gap,
+}: AlignedPositionInput): { top: number; left: number } {
   if (side === "top" || side === "bottom") {
     const left = getAlignedLeft(triggerRect, contentSize, align);
     if (side === "bottom") {
@@ -159,16 +159,17 @@ function getAlignedPosition(
   return { top, left: triggerRect.left - contentSize.width - gap };
 }
 
-function getArrowOffset(
-  ...args: readonly [
-    side: PopoverSide,
-    triggerRect: DOMRect,
-    contentPosition: { top: number; left: number },
-    contentSize: PopoverSize,
-    arrowInset: number,
-  ]
-): number {
-  const [side, triggerRect, contentPosition, contentSize, arrowInset] = args;
+type ArrowOffsetInput = {
+  readonly side: PopoverSide;
+  readonly triggerRect: DOMRect;
+  readonly contentPosition: { top: number; left: number };
+  readonly contentSize: PopoverSize;
+  readonly arrowInset: number;
+};
+
+function getArrowOffset({
+  side, triggerRect, contentPosition, contentSize, arrowInset,
+}: ArrowOffsetInput): number {
   const triggerCenterX = triggerRect.left + triggerRect.width / 2;
   const triggerCenterY = triggerRect.top + triggerRect.height / 2;
   if (side === "top" || side === "bottom") {
@@ -193,7 +194,7 @@ export function calculatePopoverPosition(
 ): PopoverPositionResult {
   const { triggerRect, contentSize, viewport, align, gap, padding, arrowInset } = input;
   const side = resolveSide(input);
-  const aligned = getAlignedPosition(triggerRect, contentSize, side, align, gap);
+  const aligned = getAlignedPosition({ triggerRect, contentSize, side, align, gap });
 
   const left = clamp(
     aligned.left,
@@ -206,13 +207,13 @@ export function calculatePopoverPosition(
     Math.max(padding, viewport.height - contentSize.height - padding)
   );
 
-  const arrowOffset = getArrowOffset(
+  const arrowOffset = getArrowOffset({
     side,
     triggerRect,
-    { top, left },
+    contentPosition: { top, left },
     contentSize,
-    arrowInset
-  );
+    arrowInset,
+  });
 
   return { top, left, side, arrowOffset };
 }

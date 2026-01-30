@@ -76,8 +76,8 @@ function extractGlyphInWorker(
 ): GlyphContour {
   // Handle whitespace
   if (char === " " || char === "\t" || char === "\n") {
-    return createWhitespaceGlyphCore(char, fontFamily, style, createWorkerCanvas);
+    return createWhitespaceGlyphCore({ char, fontFamily, style, createCanvas: createWorkerCanvas });
   }
 
-  return extractGlyphCore(char, fontFamily, style, createWorkerCanvas);
+  return extractGlyphCore({ char, fontFamily, style, createCanvas: createWorkerCanvas });
 }

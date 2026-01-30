@@ -97,6 +97,26 @@ export type UpdateEmbeddedXlsxOptions = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export async function updateEmbeddedXlsx(
   { getFileContent, setFileContent, chartPath, chartData }: UpdateEmbeddedXlsxOptions,
 ): Promise<void> {

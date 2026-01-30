@@ -163,7 +163,7 @@ export function calculateCharWidth(
   const isCjk = isCjkCodePoint(charCode);
 
   // Get base character width from font metrics (with bold adjustment)
-  const widthRatio = getCharWidth(char, fontFamily, isCjk, fontWeight);
+  const widthRatio = getCharWidth({ char, fontFamily, isCjk, fontWeight });
   const width = fontSizePx * widthRatio;
 
   // Calculate kerning adjustment

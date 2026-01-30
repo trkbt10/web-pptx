@@ -44,13 +44,33 @@ export type CalculateCharWidthOptions = {
   readonly fontFamily: string;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function calculateCharWidth({ char, prevChar, fontSize, fontFamily }: CalculateCharWidthOptions): CharWidthResult {
   const charCode = char.charCodeAt(0);
   const fontSizePx = (fontSize as number) * PT_TO_PX;
   const isCjk = isCjkCodePoint(charCode);
 
   // Get base character width from font metrics
-  const widthRatio = getCharWidth(char, fontFamily, isCjk);
+  const widthRatio = getCharWidth({ char, fontFamily, isCjk });
   const width = fontSizePx * widthRatio;
 
   // Calculate kerning adjustment
@@ -82,6 +102,26 @@ export type EstimateTextWidthOptions = {
   readonly letterSpacing: Pixels;
   readonly fontFamily: string;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export function estimateTextWidth({ text, fontSize, letterSpacing, fontFamily }: EstimateTextWidthOptions): Pixels {
   const chars = Array.from(text);
@@ -199,6 +239,26 @@ export type MeasureTextDetailedOptions = {
   readonly letterSpacing: Pixels;
   readonly fontFamily: string;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export function measureTextDetailed({ text, fontSize, letterSpacing, fontFamily }: MeasureTextDetailedOptions): DetailedMeasurement {
   const chars = Array.from(text);

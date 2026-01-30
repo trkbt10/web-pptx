@@ -29,15 +29,13 @@ function requireWarningSink(opts: { readonly strict: boolean; readonly onWarning
   return opts.onWarning;
 }
 
-function readFatChainOrFallback(
-  ...args: [
-    fat: Uint32Array,
-    startSector: number,
-    requiredSectors: number,
-    opts: { readonly strict: boolean; readonly onWarning?: CfbWarningSink },
-  ]
-): readonly number[] {
-  const [fat, startSector, requiredSectors, opts] = args;
+function readFatChainOrFallback(params: {
+  readonly fat: Uint32Array;
+  readonly startSector: number;
+  readonly requiredSectors: number;
+  readonly opts: { readonly strict: boolean; readonly onWarning?: CfbWarningSink };
+}): readonly number[] {
+  const { fat, startSector, requiredSectors, opts } = params;
   try {
     return walkFatChain(fat, startSector, { maxSteps: requiredSectors + 10_000 });
   } catch (err) {
@@ -55,15 +53,13 @@ function readFatChainOrFallback(
   }
 }
 
-function readMiniFatChainOrFallback(
-  ...args: [
-    miniFat: Uint32Array,
-    startMiniSector: number,
-    requiredSectors: number,
-    opts: { readonly strict: boolean; readonly onWarning?: CfbWarningSink },
-  ]
-): readonly number[] {
-  const [miniFat, startMiniSector, requiredSectors, opts] = args;
+function readMiniFatChainOrFallback(params: {
+  readonly miniFat: Uint32Array;
+  readonly startMiniSector: number;
+  readonly requiredSectors: number;
+  readonly opts: { readonly strict: boolean; readonly onWarning?: CfbWarningSink };
+}): readonly number[] {
+  const { miniFat, startMiniSector, requiredSectors, opts } = params;
   try {
     return walkMiniFatChain(miniFat, startMiniSector, { maxSteps: requiredSectors + 10_000 });
   } catch (err) {
@@ -87,17 +83,15 @@ function readMiniFatChainOrFallback(
  * In strict mode, format errors throw. In non-strict mode, problems emit warnings (via `onWarning`) and return a
  * zero-filled/truncated stream to allow higher layers to attempt recovery.
  */
-export function readStreamFromFat(
-  ...args: [
-    bytes: Uint8Array,
-    header: CfbHeader,
-    fat: Uint32Array,
-    startSector: number,
-    streamSize: bigint,
-    opts: { readonly strict: boolean; readonly onWarning?: CfbWarningSink },
-  ]
-): Uint8Array {
-  const [bytes, header, fat, startSector, streamSize, opts] = args;
+export function readStreamFromFat(params: {
+  readonly bytes: Uint8Array;
+  readonly header: CfbHeader;
+  readonly fat: Uint32Array;
+  readonly startSector: number;
+  readonly streamSize: bigint;
+  readonly opts: { readonly strict: boolean; readonly onWarning?: CfbWarningSink };
+}): Uint8Array {
+  const { bytes, header, fat, startSector, streamSize, opts } = params;
   const size = assertSafeSize(streamSize, "readStreamFromFat");
   if (size === 0) {
     return new Uint8Array();
@@ -109,7 +103,7 @@ export function readStreamFromFat(
   const requiredSectors = Math.ceil(size / header.sectorSize);
   const out = new Uint8Array(requiredSectors * header.sectorSize);
 
-  const chain = readFatChainOrFallback(fat, startSector, requiredSectors, opts);
+  const chain = readFatChainOrFallback({ fat, startSector, requiredSectors, opts });
 
   if (chain.length < requiredSectors) {
     try {
@@ -189,17 +183,15 @@ export function readDirectoryStreamBytes(bytes: Uint8Array, header: CfbHeader, f
  * In strict mode, format errors throw. In non-strict mode, problems emit warnings (via `onWarning`) and return a
  * zero-filled/truncated stream to allow higher layers to attempt recovery.
  */
-export function readStreamFromMiniFat(
-  ...args: [
-    miniFat: Uint32Array,
-    miniStreamBytes: Uint8Array,
-    header: CfbHeader,
-    startMiniSector: number,
-    streamSize: bigint,
-    opts: { readonly strict: boolean; readonly onWarning?: CfbWarningSink },
-  ]
-): Uint8Array {
-  const [miniFat, miniStreamBytes, header, startMiniSector, streamSize, opts] = args;
+export function readStreamFromMiniFat(params: {
+  readonly miniFat: Uint32Array;
+  readonly miniStreamBytes: Uint8Array;
+  readonly header: CfbHeader;
+  readonly startMiniSector: number;
+  readonly streamSize: bigint;
+  readonly opts: { readonly strict: boolean; readonly onWarning?: CfbWarningSink };
+}): Uint8Array {
+  const { miniFat, miniStreamBytes, header, startMiniSector, streamSize, opts } = params;
   const size = assertSafeSize(streamSize, "readStreamFromMiniFat");
   if (size === 0) {
     return new Uint8Array();
@@ -208,7 +200,7 @@ export function readStreamFromMiniFat(
   const requiredSectors = Math.ceil(size / header.miniSectorSize);
   const out = new Uint8Array(requiredSectors * header.miniSectorSize);
 
-  const chain = readMiniFatChainOrFallback(miniFat, startMiniSector, requiredSectors, opts);
+  const chain = readMiniFatChainOrFallback({ miniFat, startMiniSector, requiredSectors, opts });
 
   if (chain.length < requiredSectors) {
     try {

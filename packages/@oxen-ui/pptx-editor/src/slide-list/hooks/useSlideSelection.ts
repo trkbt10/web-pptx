@@ -104,14 +104,14 @@ export function useSlideSelection(
   const handleClick = useCallback(
     (slideId: SlideId, index: number, event: React.MouseEvent | React.KeyboardEvent) => {
       const isMetaOrCtrl = event.metaKey || event.ctrlKey;
-      const newSelection = handleSelectionClick(
+      const newSelection = handleSelectionClick({
         slides,
-        selection,
+        currentSelection: selection,
         slideId,
         index,
-        event.shiftKey,
-        isMetaOrCtrl
-      );
+        shiftKey: event.shiftKey,
+        metaOrCtrlKey: isMetaOrCtrl,
+      });
       setSelection(newSelection);
     },
     [slides, selection, setSelection]

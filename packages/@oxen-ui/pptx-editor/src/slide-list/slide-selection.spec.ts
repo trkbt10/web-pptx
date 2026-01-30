@@ -232,42 +232,42 @@ describe("handleSelectionClick", () => {
 
   it("single click selects only clicked slide", () => {
     const initial = createSingleSlideSelection("slide-1", 0);
-    const result = handleSelectionClick(
+    const result = handleSelectionClick({
       slides,
-      initial,
-      "slide-3",
-      2,
-      false, // shiftKey
-      false  // metaOrCtrlKey
-    );
+      currentSelection: initial,
+      slideId: "slide-3",
+      index: 2,
+      shiftKey: false,
+      metaOrCtrlKey: false,
+    });
 
     expect(result.selectedIds).toEqual(["slide-3"]);
   });
 
   it("Shift+click selects range from anchor", () => {
     const initial = createSingleSlideSelection("slide-2", 1);
-    const result = handleSelectionClick(
+    const result = handleSelectionClick({
       slides,
-      initial,
-      "slide-4",
-      3,
-      true,  // shiftKey
-      false  // metaOrCtrlKey
-    );
+      currentSelection: initial,
+      slideId: "slide-4",
+      index: 3,
+      shiftKey: true,
+      metaOrCtrlKey: false,
+    });
 
     expect(result.selectedIds).toEqual(["slide-2", "slide-3", "slide-4"]);
   });
 
   it("Ctrl/Cmd+click toggles selection", () => {
     const initial = createSingleSlideSelection("slide-1", 0);
-    const result = handleSelectionClick(
+    const result = handleSelectionClick({
       slides,
-      initial,
-      "slide-3",
-      2,
-      false, // shiftKey
-      true   // metaOrCtrlKey
-    );
+      currentSelection: initial,
+      slideId: "slide-3",
+      index: 2,
+      shiftKey: false,
+      metaOrCtrlKey: true,
+    });
 
     expect(result.selectedIds).toContain("slide-1");
     expect(result.selectedIds).toContain("slide-3");
@@ -279,14 +279,14 @@ describe("handleSelectionClick", () => {
       primaryId: "slide-3",
       anchorIndex: 2,
     };
-    const result = handleSelectionClick(
+    const result = handleSelectionClick({
       slides,
-      initial,
-      "slide-3",
-      2,
-      false, // shiftKey
-      true   // metaOrCtrlKey
-    );
+      currentSelection: initial,
+      slideId: "slide-3",
+      index: 2,
+      shiftKey: false,
+      metaOrCtrlKey: true,
+    });
 
     expect(result.selectedIds).toEqual(["slide-1"]);
     expect(result.selectedIds).not.toContain("slide-3");

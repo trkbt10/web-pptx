@@ -36,12 +36,12 @@ export function useDiagramSvg(
       return { svg: null, hasContent: false };
     }
 
-    const svg = renderDiagramShapesSvg(
-      diagramData,
-      width,
-      height,
+    const svg = renderDiagramShapesSvg({
+      diagramRef: diagramData,
+      w: width,
+      h: height,
       ctx,
-    );
+    });
 
     return { svg: svg ?? null, hasContent: svg !== undefined };
   }, [diagramData, width, height, ctx]);

@@ -62,6 +62,26 @@ function toTextBody(result: LayoutShapeResult): TextBody | undefined {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function convertLayoutResultToSpShape(result: LayoutShapeResult): SpShape {
   const geometry = toPresetGeometry(result.geometry);
 

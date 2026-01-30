@@ -231,7 +231,7 @@ const handleStartMovePoints: ActionHandler<Extract<PresentationEditorAction, { t
 
   return {
     ...state,
-    pathEdit: startMovingPoints(state.pathEdit, pointIndices, action.x, action.y),
+    pathEdit: startMovingPoints({ state: state.pathEdit, pointIndices, startX: action.x, startY: action.y }),
   };
 };
 
@@ -286,14 +286,14 @@ const handleStartMoveHandle: ActionHandler<Extract<PresentationEditorAction, { t
 
   return {
     ...state,
-    pathEdit: startMovingHandle(
-      state.pathEdit,
-      action.pointIndex,
-      action.handleSide,
-      action.x,
-      action.y,
-      action.mirrorHandle
-    ),
+    pathEdit: startMovingHandle({
+      state: state.pathEdit,
+      pointIndex: action.pointIndex,
+      handleSide: action.handleSide,
+      startX: action.x,
+      startY: action.y,
+      mirrorHandle: action.mirrorHandle,
+    }),
   };
 };
 

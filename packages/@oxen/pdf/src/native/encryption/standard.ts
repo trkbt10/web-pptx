@@ -13,15 +13,15 @@ import { computeR6HardenedHash } from "./r6-hash";
 import { saslprep } from "./saslprep";
 
 export type PdfDecrypter = Readonly<{
-  decryptBytes: (
-    objNum: number,
-    gen: number,
-    bytes: Uint8Array,
-    options: Readonly<{ kind: "string" | "stream" | "embeddedFile"; cryptFilterName?: string }> | null,
-  ) => Uint8Array;
+  decryptBytes: (args: {
+    objNum: number;
+    gen: number;
+    bytes: Uint8Array;
+    options: Readonly<{ kind: "string" | "stream" | "embeddedFile"; cryptFilterName?: string }> | null;
+  }) => Uint8Array;
 }>;
 
-type DecryptBytesOptions = Parameters<PdfDecrypter["decryptBytes"]>[3];
+type DecryptBytesOptions = Parameters<PdfDecrypter["decryptBytes"]>[0]["options"];
 
 const PASSWORD_PADDING = new Uint8Array([
   0x28, 0xbf, 0x4e, 0x5e, 0x4e, 0x75, 0x8a, 0x41,
@@ -390,7 +390,7 @@ export function createStandardDecrypter(args: {
     }
 
     return {
-      decryptBytes: (objNum, gen, bytes) => rc4(deriveObjectKeyRc4(fileKey, objNum, gen), bytes),
+      decryptBytes: ({ objNum, gen, bytes }) => rc4(deriveObjectKeyRc4(fileKey, objNum, gen), bytes),
     };
   }
 
@@ -429,7 +429,7 @@ export function createStandardDecrypter(args: {
     }
 
     return {
-      decryptBytes: (objNum, gen, bytes) => rc4(deriveObjectKeyRc4(fileKey, objNum, gen), bytes),
+      decryptBytes: ({ objNum, gen, bytes }) => rc4(deriveObjectKeyRc4(fileKey, objNum, gen), bytes),
     };
   }
 
@@ -475,10 +475,11 @@ export function createStandardDecrypter(args: {
       throw new Error(`Invalid password for encrypted PDF (U starts with ${JSON.stringify(preview)})`);
     }
 
-	    return {
-	      decryptBytes: (...args: [objNum: number, gen: number, bytes: Uint8Array, options: DecryptBytesOptions]) => {
-	        const [objNum, gen, bytes, options] = args;
-	        if (!options) {throw new Error("decrypt options are required for V=4/R=4");}
+    return {
+      decryptBytes: ({ objNum, gen, bytes, options }: { objNum: number; gen: number; bytes: Uint8Array; options: DecryptBytesOptions }) => {
+        if (!options) {throw new Error("decrypt options are required for V=4/R=4");}
+        void objNum;
+        void gen;
 
         const kind = options.kind;
         if (kind !== "string" && kind !== "stream" && kind !== "embeddedFile") {throw new Error("Invalid decrypt kind");}
@@ -572,10 +573,9 @@ export function createStandardDecrypter(args: {
       throw new Error(`Invalid password for encrypted PDF (U starts with ${JSON.stringify(preview)})`);
     }
 
-	    return {
-	      decryptBytes: (...args: [objNum: number, gen: number, bytes: Uint8Array, options: DecryptBytesOptions]) => {
-	        const [objNum, gen, bytes, options] = args;
-	        if (!options) {throw new Error("decrypt options are required for V=5/R=5");}
+    return {
+      decryptBytes: ({ objNum, gen, bytes, options }: { objNum: number; gen: number; bytes: Uint8Array; options: DecryptBytesOptions }) => {
+        if (!options) {throw new Error("decrypt options are required for V=5/R=5");}
         void objNum;
         void gen;
 
@@ -666,10 +666,9 @@ export function createStandardDecrypter(args: {
       throw new Error(`Invalid password for encrypted PDF (U starts with ${JSON.stringify(preview)})`);
     }
 
-	    return {
-	      decryptBytes: (...args: [objNum: number, gen: number, bytes: Uint8Array, options: DecryptBytesOptions]) => {
-	        const [objNum, gen, bytes, options] = args;
-	        if (!options) {throw new Error("decrypt options are required for V=5/R=6");}
+    return {
+      decryptBytes: ({ objNum, gen, bytes, options }: { objNum: number; gen: number; bytes: Uint8Array; options: DecryptBytesOptions }) => {
+        if (!options) {throw new Error("decrypt options are required for V=5/R=6");}
         void objNum;
         void gen;
 

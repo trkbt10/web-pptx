@@ -163,15 +163,17 @@ const handleRectangle: OperatorHandler = (ctx) => {
  *
  * Creates a ParsedPath element if path has operations, clears current path.
  */
-function finishPath(
-  ...args: readonly [
-    ctx: ParserContext,
-    gfxOps: GraphicsStateOps,
-    paintOp: PdfPaintOp,
-    fillRule?: ParsedPath["fillRule"],
-  ]
-): ParserStateUpdate {
-  const [ctx, gfxOps, paintOp, fillRule] = args;
+function finishPath({
+  ctx,
+  gfxOps,
+  paintOp,
+  fillRule,
+}: {
+  readonly ctx: ParserContext;
+  readonly gfxOps: GraphicsStateOps;
+  readonly paintOp: PdfPaintOp;
+  readonly fillRule?: ParsedPath["fillRule"];
+}): ParserStateUpdate {
   if (ctx.currentPath.length === 0) {
     return {};
   }
@@ -218,15 +220,17 @@ function finishPath(
 /**
  * Close path then finish with paint operation.
  */
-function closeAndFinishPath(
-  ...args: readonly [
-    ctx: ParserContext,
-    gfxOps: GraphicsStateOps,
-    paintOp: PdfPaintOp,
-    fillRule?: ParsedPath["fillRule"],
-  ]
-): ParserStateUpdate {
-  const [ctx, gfxOps, paintOp, fillRule] = args;
+function closeAndFinishPath({
+  ctx,
+  gfxOps,
+  paintOp,
+  fillRule,
+}: {
+  readonly ctx: ParserContext;
+  readonly gfxOps: GraphicsStateOps;
+  readonly paintOp: PdfPaintOp;
+  readonly fillRule?: ParsedPath["fillRule"];
+}): ParserStateUpdate {
   const closeOp: PdfPathOp = { type: "closePath" };
   const closedPath = [...ctx.currentPath, closeOp];
 
@@ -275,31 +279,31 @@ function closeAndFinishPath(
 // =============================================================================
 
 /** S operator: Stroke path */
-const handleStroke: OperatorHandler = (ctx, gfxOps) => finishPath(ctx, gfxOps, "stroke");
+const handleStroke: OperatorHandler = (ctx, gfxOps) => finishPath({ ctx, gfxOps, paintOp: "stroke" });
 
 /** s operator: Close and stroke path */
-const handleCloseStroke: OperatorHandler = (ctx, gfxOps) => closeAndFinishPath(ctx, gfxOps, "stroke");
+const handleCloseStroke: OperatorHandler = (ctx, gfxOps) => closeAndFinishPath({ ctx, gfxOps, paintOp: "stroke" });
 
 /** f operator: Fill path (nonzero winding rule) */
-const handleFill: OperatorHandler = (ctx, gfxOps) => finishPath(ctx, gfxOps, "fill", "nonzero");
+const handleFill: OperatorHandler = (ctx, gfxOps) => finishPath({ ctx, gfxOps, paintOp: "fill", fillRule: "nonzero" });
 
 /** f* operator: Fill path (even-odd rule) */
-const handleFillEvenOdd: OperatorHandler = (ctx, gfxOps) => finishPath(ctx, gfxOps, "fill", "evenodd");
+const handleFillEvenOdd: OperatorHandler = (ctx, gfxOps) => finishPath({ ctx, gfxOps, paintOp: "fill", fillRule: "evenodd" });
 
 /** B operator: Fill and stroke path (nonzero) */
-const handleFillStroke: OperatorHandler = (ctx, gfxOps) => finishPath(ctx, gfxOps, "fillStroke", "nonzero");
+const handleFillStroke: OperatorHandler = (ctx, gfxOps) => finishPath({ ctx, gfxOps, paintOp: "fillStroke", fillRule: "nonzero" });
 
 /** B* operator: Fill and stroke path (even-odd) */
-const handleFillStrokeEvenOdd: OperatorHandler = (ctx, gfxOps) => finishPath(ctx, gfxOps, "fillStroke", "evenodd");
+const handleFillStrokeEvenOdd: OperatorHandler = (ctx, gfxOps) => finishPath({ ctx, gfxOps, paintOp: "fillStroke", fillRule: "evenodd" });
 
 /** b operator: Close, fill and stroke (nonzero) */
-const handleCloseFillStroke: OperatorHandler = (ctx, gfxOps) => closeAndFinishPath(ctx, gfxOps, "fillStroke", "nonzero");
+const handleCloseFillStroke: OperatorHandler = (ctx, gfxOps) => closeAndFinishPath({ ctx, gfxOps, paintOp: "fillStroke", fillRule: "nonzero" });
 
 /** b* operator: Close, fill and stroke (even-odd) */
-const handleCloseFillStrokeEvenOdd: OperatorHandler = (ctx, gfxOps) => closeAndFinishPath(ctx, gfxOps, "fillStroke", "evenodd");
+const handleCloseFillStrokeEvenOdd: OperatorHandler = (ctx, gfxOps) => closeAndFinishPath({ ctx, gfxOps, paintOp: "fillStroke", fillRule: "evenodd" });
 
 /** n operator: End path without filling or stroking */
-const handleEndPath: OperatorHandler = (ctx, gfxOps) => finishPath(ctx, gfxOps, "none");
+const handleEndPath: OperatorHandler = (ctx, gfxOps) => finishPath({ ctx, gfxOps, paintOp: "none" });
 
 function computeClipBBoxFromPath(ops: readonly PdfPathOp[], ctm: PdfMatrix): PdfBBox | null {
   if (ops.length === 0) {
@@ -405,15 +409,17 @@ function sampleMaskAlpha(mask: PdfSoftMask, x: number, y: number): number {
   return mask.alpha[row * mask.width + col] ?? 0;
 }
 
-function rasterizeClipPathToMask(
-  ...args: readonly [
-    ctx: ParserContext,
-    gfxOps: GraphicsStateOps,
-    fillRule: "nonzero" | "evenodd",
-    bbox: PdfBBox,
-  ]
-): PdfSoftMask | null {
-  const [ctx, gfxOps, fillRule, bbox] = args;
+function rasterizeClipPathToMask({
+  ctx,
+  gfxOps,
+  fillRule,
+  bbox,
+}: {
+  readonly ctx: ParserContext;
+  readonly gfxOps: GraphicsStateOps;
+  readonly fillRule: "nonzero" | "evenodd";
+  readonly bbox: PdfBBox;
+}): PdfSoftMask | null {
   const maxSize = ctx.clipPathMaxSize;
   if (!(maxSize > 0)) {return null;}
   if (!Number.isFinite(maxSize) || maxSize <= 0) {throw new Error(`clipPathMaxSize must be > 0 (got ${maxSize})`);}
@@ -501,7 +507,7 @@ function handleClipInternal(
     const merged = intersectBBoxes(gs.clipBBox, bbox);
     gfxOps.setClipBBox(bbox);
     if (ctx.clipPathMaxSize > 0) {
-      const mask = rasterizeClipPathToMask(ctx, gfxOps, fillRule, merged);
+      const mask = rasterizeClipPathToMask({ ctx, gfxOps, fillRule, bbox: merged });
       gfxOps.setClipMask(mask ?? undefined);
     }
   }

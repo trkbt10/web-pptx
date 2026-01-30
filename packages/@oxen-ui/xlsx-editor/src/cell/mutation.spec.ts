@@ -23,8 +23,17 @@ function addr(col: number, row: number): CellAddress {
   };
 }
 
-function range(...args: readonly [startCol: number, startRow: number, endCol: number, endRow: number]): CellRange {
-  const [startCol, startRow, endCol, endRow] = args;
+function range({
+  startCol,
+  startRow,
+  endCol,
+  endRow,
+}: {
+  startCol: number;
+  startRow: number;
+  endCol: number;
+  endRow: number;
+}): CellRange {
   return {
     start: addr(startCol, startRow),
     end: addr(endCol, endRow),
@@ -60,15 +69,17 @@ function createWorksheet(cells: readonly Cell[]): XlsxWorksheet {
   };
 }
 
-function cellAt(
-  ...args: readonly [
-    col: number,
-    row: number,
-    value: CellValue,
-    opts?: { readonly styleId?: number; readonly formula?: string },
-  ]
-): Cell {
-  const [col, row, value, opts] = args;
+function cellAt({
+  col,
+  row,
+  value,
+  opts,
+}: {
+  col: number;
+  row: number;
+  value: CellValue;
+  opts?: { readonly styleId?: number; readonly formula?: string };
+}): Cell {
   return {
     address: addr(col, row),
     value,
@@ -88,8 +99,8 @@ describe("xlsx-editor/cell/mutation", () => {
 
   it("updateCell updates an existing cell and preserves style", () => {
     const worksheet = createWorksheet([
-      cellAt(1, 1, { type: "string", value: "old" }, { styleId: 10, formula: "SUM(1,2)" }),
-      cellAt(1, 2, { type: "string", value: "keep" }),
+      cellAt({ col: 1, row: 1, value: { type: "string", value: "old" }, opts: { styleId: 10, formula: "SUM(1,2)" } }),
+      cellAt({ col: 1, row: 2, value: { type: "string", value: "keep" } }),
     ]);
 
     const updated = updateCell(worksheet, addr(1, 1), { type: "string", value: "new" });
@@ -107,15 +118,15 @@ describe("xlsx-editor/cell/mutation", () => {
 
   it("deleteCellRange deletes cells within a range", () => {
     const worksheet = createWorksheet([
-      cellAt(1, 1, { type: "string", value: "A1" }),
-      cellAt(2, 1, { type: "string", value: "B1" }),
-      cellAt(3, 1, { type: "string", value: "C1" }),
-      cellAt(1, 2, { type: "string", value: "A2" }),
-      cellAt(2, 2, { type: "string", value: "B2" }),
-      cellAt(3, 2, { type: "string", value: "C2" }),
+      cellAt({ col: 1, row: 1, value: { type: "string", value: "A1" } }),
+      cellAt({ col: 2, row: 1, value: { type: "string", value: "B1" } }),
+      cellAt({ col: 3, row: 1, value: { type: "string", value: "C1" } }),
+      cellAt({ col: 1, row: 2, value: { type: "string", value: "A2" } }),
+      cellAt({ col: 2, row: 2, value: { type: "string", value: "B2" } }),
+      cellAt({ col: 3, row: 2, value: { type: "string", value: "C2" } }),
     ]);
 
-    const updated = deleteCellRange(worksheet, range(2, 1, 3, 2));
+    const updated = deleteCellRange(worksheet, range({ startCol: 2, startRow: 1, endCol: 3, endRow: 2 }));
 
     expect(hasCell(updated, addr(1, 1))).toBe(true);
     expect(hasCell(updated, addr(1, 2))).toBe(true);
@@ -127,22 +138,22 @@ describe("xlsx-editor/cell/mutation", () => {
 
   it("deleteCellRange returns the same worksheet when no cells are in the range", () => {
     const worksheet = createWorksheet([
-      cellAt(1, 1, { type: "string", value: "A1" }),
-      cellAt(1, 2, { type: "string", value: "A2" }),
+      cellAt({ col: 1, row: 1, value: { type: "string", value: "A1" } }),
+      cellAt({ col: 1, row: 2, value: { type: "string", value: "A2" } }),
     ]);
 
-    const updated = deleteCellRange(worksheet, range(10, 10, 11, 11));
+    const updated = deleteCellRange(worksheet, range({ startCol: 10, startRow: 10, endCol: 11, endRow: 11 }));
     expect(updated).toBe(worksheet);
     expect(updated.rows).toBe(worksheet.rows);
   });
 
   it("clearCellContents clears value and formula but keeps style", () => {
     const worksheet = createWorksheet([
-      cellAt(1, 1, { type: "number", value: 1 }),
-      cellAt(2, 2, { type: "string", value: "keep-style" }, { styleId: 5, formula: "A1" }),
+      cellAt({ col: 1, row: 1, value: { type: "number", value: 1 } }),
+      cellAt({ col: 2, row: 2, value: { type: "string", value: "keep-style" }, opts: { styleId: 5, formula: "A1" } }),
     ]);
 
-    const updated = clearCellContents(worksheet, range(2, 2, 2, 2));
+    const updated = clearCellContents(worksheet, range({ startCol: 2, startRow: 2, endCol: 2, endRow: 2 }));
     expect(getCell(updated, addr(2, 2))).toEqual({
       address: addr(2, 2),
       value: { type: "empty" },
@@ -152,21 +163,21 @@ describe("xlsx-editor/cell/mutation", () => {
 
   it("clearCellContents returns the same worksheet when nothing changes", () => {
     const worksheet = createWorksheet([
-      cellAt(1, 1, { type: "string", value: "A1" }),
-      cellAt(2, 1, { type: "string", value: "B1" }),
+      cellAt({ col: 1, row: 1, value: { type: "string", value: "A1" } }),
+      cellAt({ col: 2, row: 1, value: { type: "string", value: "B1" } }),
     ]);
 
-    const updated = clearCellContents(worksheet, range(5, 5, 6, 6));
+    const updated = clearCellContents(worksheet, range({ startCol: 5, startRow: 5, endCol: 6, endRow: 6 }));
     expect(updated).toBe(worksheet);
     expect(updated.rows).toBe(worksheet.rows);
   });
 
   it("clearCellFormats clears style but keeps value", () => {
     const worksheet = createWorksheet([
-      cellAt(3, 3, { type: "string", value: "keep-value" }, { styleId: 7 }),
+      cellAt({ col: 3, row: 3, value: { type: "string", value: "keep-value" }, opts: { styleId: 7 } }),
     ]);
 
-    const updated = clearCellFormats(worksheet, range(3, 3, 3, 3));
+    const updated = clearCellFormats(worksheet, range({ startCol: 3, startRow: 3, endCol: 3, endRow: 3 }));
     expect(getCell(updated, addr(3, 3))).toEqual({
       address: addr(3, 3),
       value: { type: "string", value: "keep-value" },
@@ -175,11 +186,11 @@ describe("xlsx-editor/cell/mutation", () => {
 
   it("clearCellFormats returns the same worksheet when no cells have styles", () => {
     const worksheet = createWorksheet([
-      cellAt(1, 1, { type: "string", value: "A1" }),
-      cellAt(2, 2, { type: "string", value: "B2" }),
+      cellAt({ col: 1, row: 1, value: { type: "string", value: "A1" } }),
+      cellAt({ col: 2, row: 2, value: { type: "string", value: "B2" } }),
     ]);
 
-    const updated = clearCellFormats(worksheet, range(1, 1, 2, 2));
+    const updated = clearCellFormats(worksheet, range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 }));
     expect(updated).toBe(worksheet);
     expect(updated.rows).toBe(worksheet.rows);
   });

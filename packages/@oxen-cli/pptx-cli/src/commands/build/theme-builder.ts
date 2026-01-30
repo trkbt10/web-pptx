@@ -61,6 +61,26 @@ function mergeFontScheme(base: FontScheme, patch: ThemeEditSpec["fontScheme"]): 
   };
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function applyThemeEditsToThemeXml(themeXmlText: string, theme: ThemeEditSpec): string {
   const hasColorScheme = theme.colorScheme && Object.keys(theme.colorScheme).length > 0;
   const hasFontScheme = theme.fontScheme && (theme.fontScheme.majorFont || theme.fontScheme.minorFont);
@@ -94,6 +114,26 @@ export function applyThemeEditsToThemeXml(themeXmlText: string, theme: ThemeEdit
   const updated = patchTheme(themeXml, changes);
   return serializeDocument(updated, { declaration: true, standalone: true });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export function applyThemeEditsToPackage(zipPackage: ZipPackage, theme: ThemeEditSpec): void {
   const themePath = requireThemePath(theme);

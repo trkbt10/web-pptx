@@ -46,10 +46,12 @@ function getActiveWorksheet(state: XlsxEditorState): XlsxWorksheet | undefined {
   return state.workbookHistory.present.sheets[sheetIndex];
 }
 
-function getDestinationRange(
-  ...args: readonly [startCol: number, startRow: number, height: number, width: number]
-): CellRange {
-  const [startCol, startRow, height, width] = args;
+function getDestinationRange({ startCol, startRow, height, width }: {
+  readonly startCol: number;
+  readonly startRow: number;
+  readonly height: number;
+  readonly width: number;
+}): CellRange {
   return {
     start: {
       col: colIdx(startCol),
@@ -66,14 +68,11 @@ function getDestinationRange(
   };
 }
 
-function buildClipboardContent(
-  ...args: readonly [
-    worksheet: XlsxWorksheet,
-    range: CellRange,
-    isCut: boolean,
-  ]
-): XlsxClipboardContent {
-  const [worksheet, range, isCut] = args;
+function buildClipboardContent({ worksheet, range, isCut }: {
+  readonly worksheet: XlsxWorksheet;
+  readonly range: CellRange;
+  readonly isCut: boolean;
+}): XlsxClipboardContent {
   const { minRow, maxRow, minCol, maxCol } = getRangeBounds(range);
   const normalizedRange: CellRange = {
     start: { col: colIdx(minCol), row: rowIdx(minRow), colAbsolute: false, rowAbsolute: false },
@@ -215,27 +214,24 @@ function collectPastePatches(
   });
 }
 
-function pasteClipboardContent(
-  ...args: readonly [
-    worksheet: XlsxWorksheet,
-    destinationStartCol: number,
-    destinationStartRow: number,
-    clipboard: XlsxClipboardContent,
-  ]
-): XlsxWorksheet {
-  const [worksheet, destinationStartCol, destinationStartRow, clipboard] = args;
+function pasteClipboardContent({ worksheet, destinationStartCol, destinationStartRow, clipboard }: {
+  readonly worksheet: XlsxWorksheet;
+  readonly destinationStartCol: number;
+  readonly destinationStartRow: number;
+  readonly clipboard: XlsxClipboardContent;
+}): XlsxWorksheet {
   const height = clipboard.values.length;
   const width = clipboard.values[0]?.length ?? 0;
   if (height === 0 || width === 0) {
     return worksheet;
   }
 
-  const destinationRange = getDestinationRange(
-    destinationStartCol,
-    destinationStartRow,
+  const destinationRange = getDestinationRange({
+    startCol: destinationStartCol,
+    startRow: destinationStartRow,
     height,
     width,
-  );
+  });
 
   const clearedDestination = deleteCellRange(worksheet, destinationRange);
   const patches = collectPastePatches(clipboard, destinationStartCol, destinationStartRow);
@@ -262,7 +258,7 @@ export const clipboardHandlers: HandlerMap = {
 
     return {
       ...state,
-      clipboard: buildClipboardContent(worksheet, range, false),
+      clipboard: buildClipboardContent({ worksheet, range, isCut: false }),
     };
   },
   CUT: (state) => {
@@ -273,7 +269,7 @@ export const clipboardHandlers: HandlerMap = {
       return state;
     }
 
-    const clipboard = buildClipboardContent(worksheet, range, true);
+    const clipboard = buildClipboardContent({ worksheet, range, isCut: true });
     const updatedWorksheet = deleteCellRange(worksheet, range);
     const updatedWorkbook = replaceWorksheetInWorkbook(
       state.workbookHistory.present,
@@ -301,12 +297,12 @@ export const clipboardHandlers: HandlerMap = {
 
     const clearedSource = clearSourceIfCut(worksheet, clipboard);
 
-    const updatedWorksheet = pasteClipboardContent(
-      clearedSource,
-      startCol,
-      startRow,
+    const updatedWorksheet = pasteClipboardContent({
+      worksheet: clearedSource,
+      destinationStartCol: startCol,
+      destinationStartRow: startRow,
       clipboard,
-    );
+    });
 
     const updatedWorkbook = replaceWorksheetInWorkbook(
       state.workbookHistory.present,

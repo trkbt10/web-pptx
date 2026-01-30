@@ -117,20 +117,21 @@ export function isGapDragTarget(
   return dragState.isDragging && dragState.targetGapIndex === gapIndex;
 }
 
+type CalculateGapIndexInput = {
+  readonly itemIndex: number;
+  readonly orientation: "vertical" | "horizontal";
+  readonly clientX: number;
+  readonly clientY: number;
+  readonly itemRect: DOMRect;
+};
+
 /**
  * Calculate gap index from cursor position over a slide item.
  * Uses cursor position relative to item center to determine before/after.
  */
-export function calculateGapIndexFromItemDragOver(
-  ...args: readonly [
-    itemIndex: number,
-    orientation: "vertical" | "horizontal",
-    clientX: number,
-    clientY: number,
-    itemRect: DOMRect,
-  ]
-): number {
-  const [itemIndex, orientation, clientX, clientY, itemRect] = args;
+export function calculateGapIndexFromItemDragOver({
+  itemIndex, orientation, clientX, clientY, itemRect,
+}: CalculateGapIndexInput): number {
   if (orientation === "vertical") {
     const mid = itemRect.top + itemRect.height / 2;
     return clientY < mid ? itemIndex : itemIndex + 1;
@@ -156,6 +157,26 @@ export function calculateGapIndexFromItemDragOver(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function getVerticalDropPosition(
   clientY: number,
   rectTop: number,
@@ -164,6 +185,26 @@ export function getVerticalDropPosition(
   const mid = rectTop + rectHeight / 2;
   return clientY < mid ? "before" : "after";
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -204,18 +245,59 @@ export function getHorizontalDropPosition(
 
 
 
-export function calculateTargetIndex(
-  ...args: readonly [
-    slides: readonly SlideWithId[],
-    draggingIds: readonly SlideId[],
-    dropIndex: number,
-    position: "before" | "after",
-  ]
-): number {
-  const [slides, draggingIds, dropIndex, position] = args;
+
+
+
+
+
+type CalculateTargetIndexInput = {
+  readonly slides: readonly SlideWithId[];
+  readonly draggingIds: readonly SlideId[];
+  readonly dropIndex: number;
+  readonly position: "before" | "after";
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export function calculateTargetIndex({
+  slides, draggingIds, dropIndex, position,
+}: CalculateTargetIndexInput): number {
   const gapIndex = position === "after" ? dropIndex + 1 : dropIndex;
   return calculateTargetIndexFromGap(slides, draggingIds, gapIndex);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -238,6 +320,26 @@ export function isValidDrop(
 ): boolean {
   return dragState.isDragging && dragState.draggingIds.length > 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -277,12 +379,52 @@ export function updateDragOverState(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function isDragTarget(
   _dragState: SlideDragState,
   _slideId: SlideId
 ): boolean {
   return false;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

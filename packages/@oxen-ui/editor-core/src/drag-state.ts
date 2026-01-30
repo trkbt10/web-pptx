@@ -13,9 +13,49 @@ export type IdleDragState = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createIdleDragState(): IdleDragState {
   return { type: "idle" };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

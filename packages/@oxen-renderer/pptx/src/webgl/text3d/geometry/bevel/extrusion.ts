@@ -499,7 +499,7 @@ export function generateExtrusion(
   }
 
   // Generate side walls
-  const sideResult = generateSideWalls(outerPoints, holes, depth, vertexOffset);
+  const sideResult = generateSideWalls({ outer: outerPoints, holes, depth, vertexOffset });
   positions.push(...sideResult.positions);
   normals.push(...sideResult.normals);
   uvs.push(...sideResult.uvs);
@@ -516,20 +516,22 @@ export function generateExtrusion(
 /**
  * Generate side walls for extrusion.
  */
-function generateSideWalls(
-  ...args: [
-    outer: readonly Vector2[],
-    holes: readonly (readonly Vector2[])[],
-    depth: number,
-    vertexOffset: number,
-  ]
-): {
+function generateSideWalls({
+  outer,
+  holes,
+  depth,
+  vertexOffset,
+}: {
+  outer: readonly Vector2[];
+  holes: readonly (readonly Vector2[])[];
+  depth: number;
+  vertexOffset: number;
+}): {
   positions: number[];
   normals: number[];
   uvs: number[];
   indices: number[];
 } {
-  const [outer, holes, depth, vertexOffset] = args;
   const positions: number[] = [];
   const normals: number[] = [];
   const uvs: number[] = [];

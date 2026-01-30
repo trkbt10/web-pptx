@@ -681,7 +681,7 @@ const animationSlides: SlideConfig[] = [
 
 async function main() {
   const usage = "bun run scripts/generate/generate-animation-tests.ts <output-dir>";
-  const outputDir = requirePositionalArg(process.argv.slice(2), 0, "output-dir", usage);
+  const outputDir = requirePositionalArg({ args: process.argv.slice(2), index: 0, name: "output-dir", usage });
 
   // Generate transition demo
   await generatePptx(transitionSlides, path.join(outputDir, "transitions-demo.pptx"));

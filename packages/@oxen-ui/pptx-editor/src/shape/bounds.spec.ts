@@ -17,8 +17,7 @@ import {
 // Test Fixtures
 // =============================================================================
 
-const createTestShape = (...args: [id: string, x: number, y: number, width: number, height: number]): SpShape => {
-  const [id, x, y, width, height] = args;
+const createTestShape = ({ id, x, y, width, height }: { id: string; x: number; y: number; width: number; height: number }): SpShape => {
   const shape = {
     type: "sp",
     nonVisual: { id, name: `Shape ${id}` },
@@ -60,7 +59,7 @@ const createContentPartShape = (resourceId: string): Shape => {
 
 describe("getShapeBounds", () => {
   it("returns bounds from shape with transform", () => {
-    const shape = createTestShape("1", 10, 20, 100, 50);
+    const shape = createTestShape({ id: "1", x: 10, y: 20, width: 100, height: 50 });
     const bounds = getShapeBounds(shape);
 
     expect(bounds).toBeDefined();
@@ -94,7 +93,7 @@ describe("getCombinedBounds", () => {
   });
 
   it("returns bounds of single shape", () => {
-    const shapes = [createTestShape("1", 10, 20, 100, 50)];
+    const shapes = [createTestShape({ id: "1", x: 10, y: 20, width: 100, height: 50 })];
     const bounds = getCombinedBounds(shapes);
 
     expect(bounds).toBeDefined();
@@ -106,8 +105,8 @@ describe("getCombinedBounds", () => {
 
   it("calculates combined bounds for multiple shapes", () => {
     const shapes = [
-      createTestShape("1", 10, 20, 100, 50), // x: 10-110, y: 20-70
-      createTestShape("2", 50, 60, 80, 40), // x: 50-130, y: 60-100
+      createTestShape({ id: "1", x: 10, y: 20, width: 100, height: 50 }), // x: 10-110, y: 20-70
+      createTestShape({ id: "2", x: 50, y: 60, width: 80, height: 40 }), // x: 50-130, y: 60-100
     ];
     const bounds = getCombinedBounds(shapes);
 
@@ -120,8 +119,8 @@ describe("getCombinedBounds", () => {
 
   it("handles shapes with negative coordinates", () => {
     const shapes = [
-      createTestShape("1", -50, -30, 100, 50),
-      createTestShape("2", 20, 10, 60, 40),
+      createTestShape({ id: "1", x: -50, y: -30, width: 100, height: 50 }),
+      createTestShape({ id: "2", x: 20, y: 10, width: 60, height: 40 }),
     ];
     const bounds = getCombinedBounds(shapes);
 
@@ -133,7 +132,7 @@ describe("getCombinedBounds", () => {
   });
 
   it("skips shapes without valid bounds", () => {
-    const validShape = createTestShape("1", 10, 20, 100, 50);
+    const validShape = createTestShape({ id: "1", x: 10, y: 20, width: 100, height: 50 });
     const invalidShape = createShapeWithoutTransform("2");
 
     const bounds = getCombinedBounds([validShape, invalidShape]);
@@ -159,7 +158,7 @@ describe("getCombinedBounds", () => {
 
 describe("collectBoundsForIds", () => {
   it("returns empty map for empty ID array", () => {
-    const shapes = [createTestShape("1", 10, 20, 100, 50)];
+    const shapes = [createTestShape({ id: "1", x: 10, y: 20, width: 100, height: 50 })];
     const boundsMap = collectBoundsForIds(shapes, []);
 
     expect(boundsMap.size).toBe(0);
@@ -167,9 +166,9 @@ describe("collectBoundsForIds", () => {
 
   it("collects bounds for specified IDs", () => {
     const shapes = [
-      createTestShape("1", 10, 20, 100, 50),
-      createTestShape("2", 50, 60, 80, 40),
-      createTestShape("3", 100, 100, 60, 60),
+      createTestShape({ id: "1", x: 10, y: 20, width: 100, height: 50 }),
+      createTestShape({ id: "2", x: 50, y: 60, width: 80, height: 40 }),
+      createTestShape({ id: "3", x: 100, y: 100, width: 60, height: 60 }),
     ];
     const boundsMap = collectBoundsForIds(shapes, ["1", "3"]);
 
@@ -184,7 +183,7 @@ describe("collectBoundsForIds", () => {
   });
 
   it("skips IDs that do not exist in shapes", () => {
-    const shapes = [createTestShape("1", 10, 20, 100, 50)];
+    const shapes = [createTestShape({ id: "1", x: 10, y: 20, width: 100, height: 50 })];
     const boundsMap = collectBoundsForIds(shapes, ["1", "nonexistent"]);
 
     expect(boundsMap.size).toBe(1);
@@ -193,7 +192,7 @@ describe("collectBoundsForIds", () => {
   });
 
   it("skips shapes without valid bounds", () => {
-    const validShape = createTestShape("1", 10, 20, 100, 50);
+    const validShape = createTestShape({ id: "1", x: 10, y: 20, width: 100, height: 50 });
     const invalidShape = createShapeWithoutTransform("2");
 
     const boundsMap = collectBoundsForIds(

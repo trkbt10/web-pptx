@@ -53,7 +53,7 @@ export const dCountFunction: FormulaFunctionEagerDefinition = {
     const database = parseDatabaseArgument(databaseArg, "DCOUNT");
     const fieldValue = helpers.coerceScalar(fieldArg, "DCOUNT field");
     const fieldIndex = resolveFieldIndex(fieldValue, database, "DCOUNT");
-    const matchingRows = filterDatabaseRows(database, criteriaArg, helpers, "DCOUNT");
+    const matchingRows = filterDatabaseRows({ database, criteriaArg, helpers, functionName: "DCOUNT" });
     const numericValues = collectNumericFieldValues(matchingRows, fieldIndex);
     return numericValues.length;
   },

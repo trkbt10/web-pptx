@@ -19,6 +19,26 @@ export type DataLabelsEditorProps = CoreDataLabelsEditorProps;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function DataLabelsEditor(props: DataLabelsEditorProps) {
   return (
     <ChartEditorAdaptersBoundary adapters={pptxChartEditorAdapters}>
@@ -26,6 +46,26 @@ export function DataLabelsEditor(props: DataLabelsEditorProps) {
     </ChartEditorAdaptersBoundary>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

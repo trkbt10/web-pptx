@@ -28,12 +28,52 @@ export type TextareaSelectionLike = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function isPrimaryPointerAction(event: PrimaryPointerEventLike): boolean {
   if (event.pointerType === "mouse") {
     return event.button === 0;
   }
   return event.button === 0 || (event.buttons & 1) === 1;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -49,12 +89,52 @@ export function isPrimaryMouseAction(event: PrimaryMouseEventLike): boolean {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function getSelectionAnchor(textarea: TextareaSelectionLike): number {
   if (textarea.selectionDirection === "backward") {
     return textarea.selectionEnd ?? 0;
   }
   return textarea.selectionStart ?? 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

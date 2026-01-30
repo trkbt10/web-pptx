@@ -261,7 +261,7 @@ export function createPlayer(options: PlayerOptions): AnimationPlayerInstance {
     const duration = parseDuration(node.duration);
     log(`Animate: shape ${shapeId}, attr: ${node.attribute}, duration: ${duration}ms`);
 
-    const updateFn = createAnimateFunction(node, el);
+    const updateFn = createAnimateFunction({ behavior: node, element: el });
     await runAnimation({ duration, easing: "ease-out", updateFn });
   }
 
@@ -310,14 +310,14 @@ export function createPlayer(options: PlayerOptions): AnimationPlayerInstance {
     if (node.path) {
       const motionPath = parseMotionPath(node.path);
       if (motionPath.totalLength > 0) {
-        const updateFn = createMotionPathFunction(node, el);
+        const updateFn = createMotionPathFunction({ behavior: node, element: el });
         await runAnimation({ duration, easing: "ease-in-out", updateFn });
         return;
       }
     }
 
     if (node.from || node.to || node.by) {
-      const updateFn = createMotionPathFunction(node, el);
+      const updateFn = createMotionPathFunction({ behavior: node, element: el });
       await runAnimation({ duration, easing: "ease-in-out", updateFn });
       return;
     }

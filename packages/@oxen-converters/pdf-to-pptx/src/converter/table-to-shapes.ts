@@ -50,8 +50,7 @@ function intersects(a: BBox, b: BBox): boolean {
   return a.x1 > b.x0 && a.x0 < b.x1 && a.y1 > b.y0 && a.y0 < b.y1;
 }
 
-function overlap1D(...args: [a0: number, a1: number, b0: number, b1: number]): number {
-  const [a0, a1, b0, b1] = args;
+function overlap1D({ a0, a1, b0, b1 }: { a0: number; a1: number; b0: number; b1: number }): number {
   const lo = Math.max(Math.min(a0, a1), Math.min(b0, b1));
   const hi = Math.min(Math.max(a0, a1), Math.max(b0, b1));
   return Math.max(0, hi - lo);
@@ -507,14 +506,14 @@ export function analyzeTableDecorationFromPaths(
         for (let r = 0; r < rowCount; r++) {
           const yTop = yBounds[r]!;
           const yBottom = yBounds[r + 1]!;
-          const rowOv = overlap1D(yBottom, yTop, bb.y0, bb.y1);
+          const rowOv = overlap1D({ a0: yBottom, a1: yTop, b0: bb.y0, b1: bb.y1 });
           const rowH = Math.max(1e-6, yTop - yBottom);
           if (rowOv / rowH < 0.65) {continue;}
 
           for (let c = 0; c < colCount; c++) {
             const x0 = xBounds[c]!;
             const x1 = xBounds[c + 1]!;
-            const colOv = overlap1D(x0, x1, bb.x0, bb.x1);
+            const colOv = overlap1D({ a0: x0, a1: x1, b0: bb.x0, b1: bb.x1 });
             const colW = Math.max(1e-6, x1 - x0);
             if (colOv / colW < 0.65) {continue;}
 
@@ -905,8 +904,7 @@ function buildTableFromInference(
     }
   }
 
-  const resolveMergedCellFill = (...args: [ri: number, ci: number, rowSpan: number, colSpan: number]): Fill => {
-    const [ri, ci, rowSpan, colSpan] = args;
+  const resolveMergedCellFill = ({ ri, ci, rowSpan, colSpan }: { ri: number; ci: number; rowSpan: number; colSpan: number }): Fill => {
     if (!decoration) {return noFill();}
     const direct = decoration.cellFills.get(`${ri},${ci}`);
     if (direct && !isNearWhiteFill(direct)) {return direct;}
@@ -976,7 +974,7 @@ function buildTableFromInference(
 
       let fill: Fill;
       if (seg) {
-        fill = resolveMergedCellFill(ri, ci, rowSpan, colSpan);
+        fill = resolveMergedCellFill({ ri, ci, rowSpan, colSpan });
       } else {
         fill = decoration?.cellFills.get(`${ri},${ci}`) ?? noFill();
       }
@@ -1087,6 +1085,26 @@ export type ConvertGroupedTextToTableShapeArgs = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function convertGroupedTextToTableShape({
   group,
   pagePaths,
@@ -1119,6 +1137,26 @@ export type ConvertInferredTableToShapeArgs = {
   readonly context: ConversionContext;
   readonly shapeId: string;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

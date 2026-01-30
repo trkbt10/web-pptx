@@ -35,16 +35,22 @@ export type FormulaFunctionHelpers = {
   pow1p: (rate: number, periods: number) => number;
   computeNPV: (rate: number, cashflows: number[], initial?: number) => number;
   discountSeries: (rate: number, cashflows: number[]) => number;
-  calculatePayment: (rate: number, periods: number, presentValue: number, futureValue: number, type: number) => number;
-  calculateInterestPayment: (
-    rate: number,
-    periods: number,
-    payment: number,
-    presentValue: number,
-    futureValue: number,
-    type: number,
-    targetPeriod: number,
-  ) => number;
+  calculatePayment: (params: {
+    readonly rate: number;
+    readonly periods: number;
+    readonly presentValue: number;
+    readonly futureValue: number;
+    readonly type: number;
+  }) => number;
+  calculateInterestPayment: (params: {
+    readonly rate: number;
+    readonly periods: number;
+    readonly payment: number;
+    readonly presentValue: number;
+    readonly futureValue: number;
+    readonly type: number;
+    readonly targetPeriod: number;
+  }) => number;
   computeXNPV: (rate: number, cashflows: number[], dayDifferences: number[]) => number;
   createFormulaError: (code: FormulaErrorCode, message?: string) => Error;
   getErrorCode: (error: unknown) => FormulaErrorCode;

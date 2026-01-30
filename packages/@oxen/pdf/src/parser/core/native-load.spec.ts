@@ -58,21 +58,24 @@ function buildPdfWithEncryptTrailer(options: { readonly includeRoot: boolean }):
   const includeRoot = options.includeRoot;
   const size = includeRoot ? 4 : 1;
   const xrefOffset = includeRoot ? offset3 + obj3.length : header.length;
-  const xref = buildEncryptTrailerXref(includeRoot, size, offset1, offset2, offset3);
+  const xref = buildEncryptTrailerXref({ includeRoot, size, offset1, offset2, offset3 });
   const trailer = buildEncryptTrailerTrailer(includeRoot, size, xrefOffset);
-  return buildEncryptTrailerBytes(includeRoot, header, obj1, obj2, obj3, xref, trailer);
+  return buildEncryptTrailerBytes({ includeRoot, header, obj1, obj2, obj3, xref, trailer });
 }
 
-function buildEncryptTrailerXref(
-  ...args: readonly [
-    includeRoot: boolean,
-    size: number,
-    offset1: number,
-    offset2: number,
-    offset3: number,
-  ]
-): string {
-  const [includeRoot, size, offset1, offset2, offset3] = args;
+function buildEncryptTrailerXref({
+  includeRoot,
+  size,
+  offset1,
+  offset2,
+  offset3,
+}: {
+  readonly includeRoot: boolean;
+  readonly size: number;
+  readonly offset1: number;
+  readonly offset2: number;
+  readonly offset3: number;
+}): string {
   if (!includeRoot) {
     return "xref\n0 1\n0000000000 65535 f \n";
   }
@@ -93,18 +96,23 @@ function buildEncryptTrailerTrailer(includeRoot: boolean, size: number, xrefOffs
   return `trailer\n<< /Size ${size} /Encrypt 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
 }
 
-function buildEncryptTrailerBytes(
-  ...args: readonly [
-    includeRoot: boolean,
-    header: string,
-    obj1: string,
-    obj2: string,
-    obj3: string,
-    xref: string,
-    trailer: string,
-  ]
-): Uint8Array {
-  const [includeRoot, header, obj1, obj2, obj3, xref, trailer] = args;
+function buildEncryptTrailerBytes({
+  includeRoot,
+  header,
+  obj1,
+  obj2,
+  obj3,
+  xref,
+  trailer,
+}: {
+  readonly includeRoot: boolean;
+  readonly header: string;
+  readonly obj1: string;
+  readonly obj2: string;
+  readonly obj3: string;
+  readonly xref: string;
+  readonly trailer: string;
+}): Uint8Array {
   const encoder = new TextEncoder();
   if (includeRoot) {
     return new Uint8Array([

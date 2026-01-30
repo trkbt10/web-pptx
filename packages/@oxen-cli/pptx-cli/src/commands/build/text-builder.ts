@@ -84,8 +84,8 @@ function buildRunProperties(spec: TextRunSpec): RunProperties | undefined {
       spec.hyperlink !== undefined) {
     const properties: RunProperties = {};
 
-    if (spec.bold !== undefined) (properties as { bold?: boolean }).bold = spec.bold;
-    if (spec.italic !== undefined) (properties as { italic?: boolean }).italic = spec.italic;
+    if (spec.bold !== undefined) {(properties as { bold?: boolean }).bold = spec.bold;}
+    if (spec.italic !== undefined) {(properties as { italic?: boolean }).italic = spec.italic;}
     if (spec.underline && spec.underline !== "none") {
       (properties as { underline?: string }).underline = UNDERLINE_MAP[spec.underline] ?? spec.underline;
     }
@@ -101,8 +101,8 @@ function buildRunProperties(spec: TextRunSpec): RunProperties | undefined {
     if (spec.letterSpacing !== undefined) {
       (properties as { spacing?: Pixels }).spacing = spec.letterSpacing as Pixels;
     }
-    if (spec.fontSize !== undefined) (properties as { fontSize?: number }).fontSize = spec.fontSize;
-    if (spec.fontFamily !== undefined) (properties as { fontFamily?: string }).fontFamily = spec.fontFamily;
+    if (spec.fontSize !== undefined) {(properties as { fontSize?: number }).fontSize = spec.fontSize;}
+    if (spec.fontFamily !== undefined) {(properties as { fontFamily?: string }).fontFamily = spec.fontFamily;}
     if (spec.color !== undefined) {
       (properties as { solidFill?: Fill }).solidFill = buildSolidFill(spec.color);
     }
@@ -142,7 +142,7 @@ export function buildParagraph(spec: TextParagraphSpec): Paragraph {
 
   const properties: Paragraph["properties"] = {};
 
-  if (spec.level !== undefined) (properties as { level?: number }).level = spec.level;
+  if (spec.level !== undefined) {(properties as { level?: number }).level = spec.level;}
   if (spec.alignment !== undefined) {
     // Domain type uses full names, not OOXML short forms
     (properties as { alignment?: string }).alignment = spec.alignment;
@@ -210,7 +210,7 @@ function isRichText(text: TextSpec): text is RichTextSpec {
  * Build body properties from spec
  */
 function buildBodyProperties(spec?: TextBodyPropertiesSpec): BodyProperties {
-  if (!spec) return {};
+  if (!spec) {return {};}
 
   const props: BodyProperties = {};
 

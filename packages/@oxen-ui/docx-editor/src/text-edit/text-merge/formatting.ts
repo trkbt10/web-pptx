@@ -27,15 +27,17 @@ import { getRunPropertiesAtPosition } from "./run-properties";
  * @param properties - The properties to apply
  * @returns A new paragraph with the formatting applied
  */
-export function applyFormatToRange(
-  ...args: readonly [
-    paragraph: DocxParagraph,
-    start: number,
-    end: number,
-    properties: Partial<DocxRunProperties>,
-  ]
-): DocxParagraph {
-  const [paragraph, start, end, properties] = args;
+export function applyFormatToRange({
+  paragraph,
+  start,
+  end,
+  properties,
+}: {
+  paragraph: DocxParagraph;
+  start: number;
+  end: number;
+  properties: Partial<DocxRunProperties>;
+}): DocxParagraph {
   const text = getParagraphPlainText(paragraph);
   const beforeText = text.slice(0, start);
   const selectedText = text.slice(start, end);
@@ -91,22 +93,24 @@ export function applyFormatToRange(
  * @param property - The property key to toggle (e.g., 'b', 'i', 'strike')
  * @returns A new paragraph with the formatting toggled
  */
-export function toggleFormatOnRange(
-  ...args: readonly [
-    paragraph: DocxParagraph,
-    start: number,
-    end: number,
-    property: "b" | "i" | "strike" | "caps" | "smallCaps",
-  ]
-): DocxParagraph {
-  const [paragraph, start, end, property] = args;
+export function toggleFormatOnRange({
+  paragraph,
+  start,
+  end,
+  property,
+}: {
+  paragraph: DocxParagraph;
+  start: number;
+  end: number;
+  property: "b" | "i" | "strike" | "caps" | "smallCaps";
+}): DocxParagraph {
   const currentProps = getRunPropertiesAtPosition(paragraph, start);
   const currentValue = currentProps?.[property];
 
   // Toggle: if currently true, set to undefined; if undefined/false, set to true
   const newValue = currentValue ? undefined : true;
 
-  return applyFormatToRange(paragraph, start, end, { [property]: newValue });
+  return applyFormatToRange({ paragraph, start, end, properties: { [property]: newValue } });
 }
 
 // =============================================================================

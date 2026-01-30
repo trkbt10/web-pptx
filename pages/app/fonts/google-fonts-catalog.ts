@@ -167,15 +167,17 @@ function setCache(key: string, value: CachedFamilies): void {
   }
 }
 
-function buildGoogleFontsCssUrl(
-  ...args: readonly [
-    cssBaseUrl: string,
-    family: string,
-    weights: readonly number[],
-    display: GoogleFontsCatalogConfig["display"],
-  ]
-): string {
-  const [cssBaseUrl, family, weights, display] = args;
+function buildGoogleFontsCssUrl({
+  cssBaseUrl,
+  family,
+  weights,
+  display,
+}: {
+  cssBaseUrl: string;
+  family: string;
+  weights: readonly number[];
+  display: GoogleFontsCatalogConfig["display"];
+}): string {
   const normalizedFamily = normalizeFamilyName(family);
   const familyParam = encodeURIComponent(normalizedFamily).replaceAll("%20", "+");
 
@@ -353,7 +355,7 @@ export function createGoogleFontsCatalog(config: GoogleFontsCatalogConfig): Font
       return true;
     }
 
-    const href = buildGoogleFontsCssUrl(cssBaseUrl, normalized, weights, display);
+    const href = buildGoogleFontsCssUrl({ cssBaseUrl, family: normalized, weights, display });
     const link = getOrCreateStylesheetLink(href, `google-fonts:${normalized}`);
 
     await withTimeout(waitForLinkLoad(link), timeoutMs, `load stylesheet for "${normalized}"`);

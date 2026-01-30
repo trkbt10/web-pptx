@@ -26,10 +26,17 @@ function addr(col: number, row: number): CellAddress {
   };
 }
 
-function range(
-  ...args: readonly [startCol: number, startRow: number, endCol: number, endRow: number]
-): CellRange {
-  const [startCol, startRow, endCol, endRow] = args;
+function range({
+  startCol,
+  startRow,
+  endCol,
+  endRow,
+}: {
+  startCol: number;
+  startRow: number;
+  endCol: number;
+  endRow: number;
+}): CellRange {
   return { start: addr(startCol, startRow), end: addr(endCol, endRow) };
 }
 
@@ -48,7 +55,7 @@ describe("createSingleCellSelection", () => {
 
 describe("createRangeSelection", () => {
   it("creates selection for range with default active cell", () => {
-    const r = range(1, 1, 2, 3);
+    const r = range({ startCol: 1, startRow: 1, endCol: 2, endRow: 3 });
     const selection = createRangeSelection(r);
     expect(selection).toEqual({
       selectedRange: r,
@@ -58,7 +65,7 @@ describe("createRangeSelection", () => {
   });
 
   it("uses provided active cell", () => {
-    const r = range(1, 1, 2, 3);
+    const r = range({ startCol: 1, startRow: 1, endCol: 2, endRow: 3 });
     const active = addr(2, 2);
     const selection = createRangeSelection(r, active);
     expect(selection).toEqual({
@@ -86,9 +93,9 @@ describe("extendSelection", () => {
   });
 
   it("preserves multiRanges without mutation", () => {
-    const extra = range(5, 5, 6, 6);
+    const extra = range({ startCol: 5, startRow: 5, endCol: 6, endRow: 6 });
     const original: CellSelectionState = {
-      selectedRange: range(1, 1, 1, 1),
+      selectedRange: range({ startCol: 1, startRow: 1, endCol: 1, endRow: 1 }),
       activeCell: addr(2, 2),
       multiRanges: [extra] as const,
     };
@@ -96,12 +103,12 @@ describe("extendSelection", () => {
 
     expect(extended).not.toBe(original);
     expect(extended.multiRanges).toBe(original.multiRanges);
-    expect(original.selectedRange).toEqual(range(1, 1, 1, 1));
+    expect(original.selectedRange).toEqual(range({ startCol: 1, startRow: 1, endCol: 1, endRow: 1 }));
   });
 
   it("creates new selection if no active cell", () => {
     const original: CellSelectionState = {
-      selectedRange: range(1, 1, 3, 3),
+      selectedRange: range({ startCol: 1, startRow: 1, endCol: 3, endRow: 3 }),
       activeCell: undefined,
       multiRanges: undefined,
     };
@@ -109,7 +116,7 @@ describe("extendSelection", () => {
 
     expect(extended).toEqual(createSingleCellSelection(addr(9, 9)));
     expect(original).toEqual({
-      selectedRange: range(1, 1, 3, 3),
+      selectedRange: range({ startCol: 1, startRow: 1, endCol: 3, endRow: 3 }),
       activeCell: undefined,
       multiRanges: undefined,
     });
@@ -118,21 +125,21 @@ describe("extendSelection", () => {
 
 describe("addRangeToSelection", () => {
   it("creates new selection and stores previous range in multiRanges", () => {
-    const original = createRangeSelection(range(1, 1, 2, 2));
-    const added = addRangeToSelection(original, range(3, 3, 4, 4));
+    const original = createRangeSelection(range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 }));
+    const added = addRangeToSelection(original, range({ startCol: 3, startRow: 3, endCol: 4, endRow: 4 }));
 
     expect(added).not.toBe(original);
-    expect(added.selectedRange).toEqual(range(3, 3, 4, 4));
+    expect(added.selectedRange).toEqual(range({ startCol: 3, startRow: 3, endCol: 4, endRow: 4 }));
     expect(added.activeCell).toEqual(addr(3, 3));
-    expect(added.multiRanges).toEqual([range(1, 1, 2, 2)]);
+    expect(added.multiRanges).toEqual([range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 })]);
     expect(original.multiRanges).toBeUndefined();
   });
 
   it("does not create multiRanges when starting from empty selection", () => {
     const original = clearSelection();
-    const added = addRangeToSelection(original, range(1, 1, 1, 1));
+    const added = addRangeToSelection(original, range({ startCol: 1, startRow: 1, endCol: 1, endRow: 1 }));
 
-    expect(added.selectedRange).toEqual(range(1, 1, 1, 1));
+    expect(added.selectedRange).toEqual(range({ startCol: 1, startRow: 1, endCol: 1, endRow: 1 }));
     expect(added.activeCell).toEqual(addr(1, 1));
     expect(added.multiRanges).toBeUndefined();
     expect(original).toEqual(clearSelection());
@@ -145,13 +152,13 @@ describe("getAllSelectedRanges", () => {
   });
 
   it("returns selectedRange when multiRanges is missing", () => {
-    const selection = createRangeSelection(range(1, 1, 2, 2));
-    expect(getAllSelectedRanges(selection)).toEqual([range(1, 1, 2, 2)]);
+    const selection = createRangeSelection(range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 }));
+    expect(getAllSelectedRanges(selection)).toEqual([range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 })]);
   });
 
   it("returns multiRanges and selectedRange (in order)", () => {
-    const r1 = range(1, 1, 1, 1);
-    const r2 = range(2, 2, 2, 2);
+    const r1 = range({ startCol: 1, startRow: 1, endCol: 1, endRow: 1 });
+    const r2 = range({ startCol: 2, startRow: 2, endCol: 2, endRow: 2 });
     const selection: CellSelectionState = {
       selectedRange: r2,
       activeCell: r2.start,
@@ -165,17 +172,17 @@ describe("getAllSelectedRanges", () => {
 
 describe("isCellSelected", () => {
   it("returns true for cell in range", () => {
-    const selection = createRangeSelection(range(2, 2, 4, 4));
+    const selection = createRangeSelection(range({ startCol: 2, startRow: 2, endCol: 4, endRow: 4 }));
     expect(isCellSelected(selection, addr(3, 3))).toBe(true);
   });
 
   it("returns true even when range is reversed (normalizes bounds)", () => {
-    const selection = createRangeSelection(range(4, 4, 2, 2));
+    const selection = createRangeSelection(range({ startCol: 4, startRow: 4, endCol: 2, endRow: 2 }));
     expect(isCellSelected(selection, addr(3, 3))).toBe(true);
   });
 
   it("returns false for cell outside range", () => {
-    const selection = createRangeSelection(range(2, 2, 4, 4));
+    const selection = createRangeSelection(range({ startCol: 2, startRow: 2, endCol: 4, endRow: 4 }));
     expect(isCellSelected(selection, addr(1, 1))).toBe(false);
   });
 
@@ -200,11 +207,11 @@ describe("isSingleCellSelection", () => {
   });
 
   it("returns false for range selection", () => {
-    expect(isSingleCellSelection(createRangeSelection(range(1, 1, 2, 2)))).toBe(false);
+    expect(isSingleCellSelection(createRangeSelection(range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 })))).toBe(false);
   });
 
   it("returns false when multiRanges exist", () => {
-    const selection = addRangeToSelection(createSingleCellSelection(addr(1, 1)), range(2, 2, 2, 2));
+    const selection = addRangeToSelection(createSingleCellSelection(addr(1, 1)), range({ startCol: 2, startRow: 2, endCol: 2, endRow: 2 }));
     expect(isSingleCellSelection(selection)).toBe(false);
   });
 });

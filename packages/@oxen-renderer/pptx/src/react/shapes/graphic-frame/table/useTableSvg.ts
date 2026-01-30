@@ -42,15 +42,15 @@ export function useTableSvg(
     }
 
     const defsCollector = createDefsCollector();
-    const svg = renderTableSvg(
+    const svg = renderTableSvg({
       table,
-      px(width),
-      px(height),
-      renderCtx,
+      frameWidth: px(width),
+      frameHeight: px(height),
+      ctx: renderCtx,
       defsCollector,
-      renderCtx.options,
-      renderCtx.tableStyles,
-    );
+      options: renderCtx.options,
+      tableStyles: renderCtx.tableStyles,
+    });
 
     return { svg: defsCollector.toDefsElement() + svg, hasContent: true };
   }, [

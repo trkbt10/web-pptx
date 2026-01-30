@@ -25,6 +25,26 @@ const containerStyle: CSSProperties = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function ChartShapePropertiesEditor({
   value,
   onChange,
@@ -75,6 +95,26 @@ export function ChartShapePropertiesEditor({
     </ChartEditorAdaptersBoundary>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -313,16 +313,19 @@ export function mapAttributeToCSS(attribute: string): string {
  * @param slideWidth - Slide width in pixels (for coordinate conversion)
  * @param slideHeight - Slide height in pixels (for coordinate conversion)
  */
-export function applyAnimatedValue(
-  ...args: [
-    element: HTMLElement | SVGElement,
-    attribute: string,
-    value: AnimateValue,
-    slideWidth?: number,
-    slideHeight?: number,
-  ]
-): void {
-  const [element, attribute, value, slideWidth = 960, slideHeight = 540] = args;
+export function applyAnimatedValue({
+  element,
+  attribute,
+  value,
+  slideWidth = 960,
+  slideHeight = 540,
+}: {
+  element: HTMLElement | SVGElement;
+  attribute: string;
+  value: AnimateValue;
+  slideWidth?: number;
+  slideHeight?: number;
+}): void {
   const cssProperty = mapAttributeToCSS(attribute);
   const parsed = parseAnimateValue(value);
 
@@ -438,15 +441,17 @@ function updateTransform(
  * @param slideHeight - Slide height in pixels
  * @returns Animation update function (progress: 0-1) => void
  */
-export function createAnimateFunction(
-  ...args: [
-    behavior: AnimateBehavior,
-    element: HTMLElement | SVGElement,
-    slideWidth?: number,
-    slideHeight?: number,
-  ]
-): (progress: number) => void {
-  const [behavior, element, slideWidth = 960, slideHeight = 540] = args;
+export function createAnimateFunction({
+  behavior,
+  element,
+  slideWidth = 960,
+  slideHeight = 540,
+}: {
+  behavior: AnimateBehavior;
+  element: HTMLElement | SVGElement;
+  slideWidth?: number;
+  slideHeight?: number;
+}): (progress: number) => void {
   const { attribute, from, to, by, keyframes, calcMode } = behavior;
 
   // Keyframe animation
@@ -454,7 +459,7 @@ export function createAnimateFunction(
     return (progress: number) => {
       const value = interpolateKeyframes(keyframes, progress, calcMode);
       if (value !== undefined) {
-        applyAnimatedValue(element, attribute, value, slideWidth, slideHeight);
+        applyAnimatedValue({ element, attribute, value, slideWidth, slideHeight });
       }
     };
   }
@@ -463,7 +468,7 @@ export function createAnimateFunction(
   if (from !== undefined && to !== undefined) {
     return (progress: number) => {
       const value = interpolateValues(from, to, progress);
-      applyAnimatedValue(element, attribute, value, slideWidth, slideHeight);
+      applyAnimatedValue({ element, attribute, value, slideWidth, slideHeight });
     };
   }
 
@@ -479,7 +484,7 @@ export function createAnimateFunction(
       return (progress: number) => {
         const value = lerp(fromParsed.value, toValue, progress);
         const formatted = unit ? `${value}${unit}` : value;
-        applyAnimatedValue(element, attribute, formatted, slideWidth, slideHeight);
+        applyAnimatedValue({ element, attribute, value: formatted, slideWidth, slideHeight });
       };
     }
   }
@@ -496,7 +501,7 @@ export function createAnimateFunction(
 
     return (progress: number) => {
       const value = interpolateValues(fromValue, to, progress);
-      applyAnimatedValue(element, attribute, value, slideWidth, slideHeight);
+      applyAnimatedValue({ element, attribute, value, slideWidth, slideHeight });
     };
   }
 

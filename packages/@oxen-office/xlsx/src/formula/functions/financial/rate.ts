@@ -5,10 +5,15 @@
 import type { FormulaFunctionEagerDefinition } from "../../functionRegistry";
 import { FINANCE_EPSILON, FINANCE_MAX_ITERATIONS } from "../helpers";
 
-const evaluateBalance = (
-  ...args: readonly [rate: number, periods: number, payment: number, pv: number, fv: number, type: number]
-): number => {
-  const [rate, periods, payment, pv, fv, type] = args;
+const evaluateBalance = (params: {
+  readonly rate: number;
+  readonly periods: number;
+  readonly payment: number;
+  readonly pv: number;
+  readonly fv: number;
+  readonly type: number;
+}): number => {
+  const { rate, periods, payment, pv, fv, type } = params;
   if (rate === 0) {
     return pv + payment * periods + fv;
   }
@@ -77,13 +82,13 @@ export const rateFunction: FormulaFunctionEagerDefinition = {
     const delta = 1e-6;
 
     for (let iteration = 0; iteration < FINANCE_MAX_ITERATIONS; iteration += 1) {
-      const value = evaluateBalance(rateState.rate, periods, payment, pv, fv, type);
+      const value = evaluateBalance({ rate: rateState.rate, periods, payment, pv, fv, type });
       if (Math.abs(value) <= FINANCE_EPSILON) {
         return rateState.rate;
       }
 
-      const forward = evaluateBalance(rateState.rate + delta, periods, payment, pv, fv, type);
-      const backward = evaluateBalance(rateState.rate - delta, periods, payment, pv, fv, type);
+      const forward = evaluateBalance({ rate: rateState.rate + delta, periods, payment, pv, fv, type });
+      const backward = evaluateBalance({ rate: rateState.rate - delta, periods, payment, pv, fv, type });
       const derivative = (forward - backward) / (2 * delta);
 
       if (!Number.isFinite(derivative) || Math.abs(derivative) <= FINANCE_EPSILON) {

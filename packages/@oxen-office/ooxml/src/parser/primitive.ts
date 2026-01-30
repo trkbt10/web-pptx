@@ -50,11 +50,51 @@ const PERCENT_100000 = 100000;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseInt32(value: string | undefined): number | undefined {
   if (value === undefined) {return undefined;}
   const num = parseInt(value, 10);
   return Number.isNaN(num) ? undefined : num;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -74,12 +114,52 @@ export function parseInt64(value: string | undefined): number | undefined {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseUnsignedInt(value: string | undefined): number | undefined {
   const num = parseInt64(value);
   if (num === undefined) {return undefined;}
   if (num < 0 || num > 4294967295) {return undefined;}
   return num;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -95,9 +175,49 @@ export function parseIndex(value: string | undefined): number | undefined {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseInt32Or(value: string | undefined, defaultValue: number): number {
   return parseInt32(value) ?? defaultValue;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -127,6 +247,26 @@ export function parseBoolean(value: string | undefined): boolean | undefined {
   if (lower === "0" || lower === "false" || lower === "off") {return false;}
   return undefined;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -210,11 +350,51 @@ export function parsePercentage100k(value: string | undefined): Percent | undefi
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parsePositivePercentage(value: string | undefined): Percent | undefined {
   const p = parsePercentage(value);
   if (p === undefined || p < 0) {return undefined;}
   return p;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -270,6 +450,26 @@ export function parseSchemeColorValue(value: string | undefined): SchemeColorVal
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function getEmuAttr(element: XmlElement, name: string): Pixels | undefined {
   return parseEmu(getAttr(element, name));
 }
@@ -279,9 +479,49 @@ export function getEmuAttr(element: XmlElement, name: string): Pixels | undefine
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function getAngleAttr(element: XmlElement, name: string): Degrees | undefined {
   return parseAngle(getAttr(element, name));
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -298,9 +538,49 @@ export function getBoolAttr(element: XmlElement | undefined, name: string): bool
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function getBoolAttrOr(element: XmlElement, name: string, defaultValue: boolean): boolean {
   return parseBooleanOr(getAttr(element, name), defaultValue);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -317,9 +597,49 @@ export function getIntAttr(element: XmlElement | undefined, name: string): numbe
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function getIntAttrOr(element: XmlElement, name: string, defaultValue: number): number {
   return parseInt32Or(getAttr(element, name), defaultValue);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -336,9 +656,49 @@ export function getFloatAttr(element: XmlElement | undefined, name: string): num
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function getPercentAttr(element: XmlElement, name: string): Percent | undefined {
   return parsePercentage(getAttr(element, name));
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

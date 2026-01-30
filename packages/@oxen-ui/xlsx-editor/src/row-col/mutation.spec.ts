@@ -28,10 +28,17 @@ function addr(col: number, row: number): CellAddress {
   };
 }
 
-function range(
-  ...args: readonly [startCol: number, startRow: number, endCol: number, endRow: number]
-): CellRange {
-  const [startCol, startRow, endCol, endRow] = args;
+function range({
+  startCol,
+  startRow,
+  endCol,
+  endRow,
+}: {
+  startCol: number;
+  startRow: number;
+  endCol: number;
+  endRow: number;
+}): CellRange {
   return {
     start: addr(startCol, startRow),
     end: addr(endCol, endRow),
@@ -85,11 +92,11 @@ describe("xlsx-editor/row-col/mutation", () => {
   it("insertRows shifts worksheet dimension when present", () => {
     const worksheet = createWorksheet(
       new Map([[1, [cellAt(1, 1, { type: "string", value: "A1" })]]]),
-      { dimension: range(1, 1, 3, 3) },
+      { dimension: range({ startCol: 1, startRow: 1, endCol: 3, endRow: 3 }) },
     );
 
     const next = insertRows(worksheet, rowIdx(2), 2);
-    expect(next.dimension).toEqual(range(1, 1, 3, 5));
+    expect(next.dimension).toEqual(range({ startCol: 1, startRow: 1, endCol: 3, endRow: 5 }));
   });
 
   it("insertRows throws when startRow or count is invalid", () => {
@@ -116,10 +123,10 @@ describe("xlsx-editor/row-col/mutation", () => {
   });
 
   it("deleteRows shifts worksheet dimension when present", () => {
-    const worksheet = createWorksheet(new Map(), { dimension: range(1, 1, 3, 5) });
+    const worksheet = createWorksheet(new Map(), { dimension: range({ startCol: 1, startRow: 1, endCol: 3, endRow: 5 }) });
 
     const next = deleteRows(worksheet, rowIdx(2), 2);
-    expect(next.dimension).toEqual(range(1, 1, 3, 3));
+    expect(next.dimension).toEqual(range({ startCol: 1, startRow: 1, endCol: 3, endRow: 3 }));
   });
 
   it("insertColumns shifts cell addresses", () => {
@@ -142,10 +149,10 @@ describe("xlsx-editor/row-col/mutation", () => {
   });
 
   it("insertColumns shifts worksheet dimension when present", () => {
-    const worksheet = createWorksheet(new Map(), { dimension: range(1, 1, 5, 3) });
+    const worksheet = createWorksheet(new Map(), { dimension: range({ startCol: 1, startRow: 1, endCol: 5, endRow: 3 }) });
 
     const next = insertColumns(worksheet, colIdx(2), 2);
-    expect(next.dimension).toEqual(range(1, 1, 7, 3));
+    expect(next.dimension).toEqual(range({ startCol: 1, startRow: 1, endCol: 7, endRow: 3 }));
   });
 
   it("setRowHeight sets height and customHeight on an existing row", () => {
@@ -196,10 +203,10 @@ describe("xlsx-editor/row-col/mutation", () => {
   });
 
   it("deleteColumns shifts worksheet dimension when present", () => {
-    const worksheet = createWorksheet(new Map(), { dimension: range(1, 1, 7, 3) });
+    const worksheet = createWorksheet(new Map(), { dimension: range({ startCol: 1, startRow: 1, endCol: 7, endRow: 3 }) });
 
     const next = deleteColumns(worksheet, colIdx(2), 2);
-    expect(next.dimension).toEqual(range(1, 1, 5, 3));
+    expect(next.dimension).toEqual(range({ startCol: 1, startRow: 1, endCol: 5, endRow: 3 }));
   });
 
   it("deleteColumns throws when startCol or count is invalid", () => {

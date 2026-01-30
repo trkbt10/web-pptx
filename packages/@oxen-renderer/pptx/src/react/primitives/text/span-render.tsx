@@ -166,17 +166,21 @@ function applyTextOutline(props: TextProps, span: PositionedSpan): void {
 /**
  * Render highlight background for span.
  */
-function renderHighlight(
-  ...args: [
-    x: number,
-    lineY: number,
-    fontSizePx: number,
-    spanWidth: number,
-    highlightColor: string,
-    key: number,
-  ]
-): ReactNode {
-  const [x, lineY, fontSizePx, spanWidth, highlightColor, key] = args;
+function renderHighlight({
+  x,
+  lineY,
+  fontSizePx,
+  spanWidth,
+  highlightColor,
+  key,
+}: {
+  x: number;
+  lineY: number;
+  fontSizePx: number;
+  spanWidth: number;
+  highlightColor: string;
+  key: number;
+}): ReactNode {
   return (
     <rect
       key={`highlight-${key}`}
@@ -224,24 +228,28 @@ function wrapWithLink(
  * @param defs - SVG defs manager
  * @returns React elements for the span
  */
-export function renderSpan(
-  ...args: [
-    span: PositionedSpan,
-    x: number,
-    lineY: number,
-    dominantBaseline: string | undefined,
-    key: number,
-    defs: DefsManager,
-  ]
-): ReactNode {
-  const [span, x, lineY, dominantBaseline, key, defs] = args;
+export function renderSpan({
+  span,
+  x,
+  lineY,
+  dominantBaseline,
+  key,
+  defs,
+}: {
+  span: PositionedSpan;
+  x: number;
+  lineY: number;
+  dominantBaseline: string | undefined;
+  key: number;
+  defs: DefsManager;
+}): ReactNode {
   const fontSizePx = (span.fontSize as number) * PT_TO_PX;
   const elements: ReactNode[] = [];
 
   // Handle highlight background
   if (span.highlightColor !== undefined) {
     elements.push(
-      renderHighlight(x, lineY, fontSizePx, span.width as number, span.highlightColor, key),
+      renderHighlight({ x, lineY, fontSizePx, spanWidth: span.width as number, highlightColor: span.highlightColor, key }),
     );
   }
 
@@ -313,15 +321,17 @@ function getEffectsFilterUrl(span: PositionedSpan, defs: DefsManager): string | 
  * @param defs - SVG defs manager
  * @returns Array of React elements for the line
  */
-export function renderLine(
-  ...args: [
-    line: LayoutLine,
-    fontAlignment: "auto" | "top" | "center" | "base" | "bottom",
-    startKey: number,
-    defs: DefsManager,
-  ]
-): ReactNode[] {
-  const [line, fontAlignment, startKey, defs] = args;
+export function renderLine({
+  line,
+  fontAlignment,
+  startKey,
+  defs,
+}: {
+  line: LayoutLine;
+  fontAlignment: "auto" | "top" | "center" | "base" | "bottom";
+  startKey: number;
+  defs: DefsManager;
+}): ReactNode[] {
   const elements: ReactNode[] = [];
   const dominantBaseline = toSvgDominantBaseline(fontAlignment);
 
@@ -335,7 +345,7 @@ export function renderLine(
       }
 
       const key = startKey + index;
-      const spanElement = renderSpan(span, cursorX, lineY, dominantBaseline, key, defs);
+      const spanElement = renderSpan({ span, x: cursorX, lineY, dominantBaseline, key, defs });
       elements.push(spanElement);
 
       return cursorX + (span.width as number) + (span.dx as number);

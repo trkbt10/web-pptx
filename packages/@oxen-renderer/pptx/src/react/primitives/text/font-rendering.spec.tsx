@@ -204,7 +204,7 @@ describe("PDF to SVG font rendering", () => {
       cidOrdering: "Japan1" as const,
     };
 
-    const context = createFitContext(100, 100, px(200), px(200), "contain");
+    const context = createFitContext({ pdfWidth: 100, pdfHeight: 100, slideWidth: px(200), slideHeight: px(200), fit: "contain" });
 
     // PDF → SpShape
     const shape = convertTextToShape(pdfText, context, "1");
@@ -257,7 +257,7 @@ describe("PDF to SVG font rendering", () => {
       cidOrdering: "GB1" as const,
     };
 
-    const context = createFitContext(100, 100, px(200), px(200), "contain");
+    const context = createFitContext({ pdfWidth: 100, pdfHeight: 100, slideWidth: px(200), slideHeight: px(200), fit: "contain" });
 
     const shape = convertTextToShape(pdfText, context, "1");
     const slide: Slide = { shapes: [shape] };

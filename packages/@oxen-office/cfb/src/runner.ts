@@ -145,7 +145,7 @@ export function createCfbRunner(args: {
 
     const isMini = entry.streamSize < BigInt(args.header.miniStreamCutoffSize);
     if (!isMini) {
-      return readStreamFromFat(args.bytes, args.header, args.fat, entry.startingSector, entry.streamSize, { strict: args.strict, ...(args.onWarning ? { onWarning: args.onWarning } : {}) });
+      return readStreamFromFat({ bytes: args.bytes, header: args.header, fat: args.fat, startSector: entry.startingSector, streamSize: entry.streamSize, opts: { strict: args.strict, ...(args.onWarning ? { onWarning: args.onWarning } : {}) } });
     }
 
     if (!args.miniFat || !args.miniStreamBytes) {
@@ -154,7 +154,7 @@ export function createCfbRunner(args: {
     if (entry.startingSector === ENDOFCHAIN && entry.streamSize !== 0n) {
       throw new CfbFormatError("readStream: non-empty mini stream has ENDOFCHAIN as starting sector");
     }
-    return readStreamFromMiniFat(args.miniFat, args.miniStreamBytes, args.header, entry.startingSector, entry.streamSize, { strict: args.strict, ...(args.onWarning ? { onWarning: args.onWarning } : {}) });
+    return readStreamFromMiniFat({ miniFat: args.miniFat, miniStreamBytes: args.miniStreamBytes, header: args.header, startMiniSector: entry.startingSector, streamSize: entry.streamSize, opts: { strict: args.strict, ...(args.onWarning ? { onWarning: args.onWarning } : {}) } });
   }
 
   function readStream(path: readonly string[]): Uint8Array {

@@ -99,14 +99,14 @@ describe("effects3d - ECMA-376 compliance", () => {
   describe("renderBevelEffect (ECMA-376 20.1.5.1)", () => {
     it("returns empty string for zero-size bevel", () => {
       const bevel: Bevel3d = { width: px(0), height: px(0), preset: "circle" };
-      const result = renderBevelEffect(bevel, 100, 100);
+      const result = renderBevelEffect({ bevel, width: 100, height: 100 });
 
       expect(result).toBe("");
     });
 
     it("creates bevel paths for valid dimensions", () => {
       const bevel: Bevel3d = { width: px(10), height: px(10), preset: "circle" };
-      const result = renderBevelEffect(bevel, 100, 100);
+      const result = renderBevelEffect({ bevel, width: 100, height: 100 });
 
       expect(result).toContain("bevel-effect");
       expect(result).toContain("<path");
@@ -115,7 +115,7 @@ describe("effects3d - ECMA-376 compliance", () => {
 
     it("limits bevel size to quarter of shape", () => {
       const bevel: Bevel3d = { width: px(100), height: px(100), preset: "circle" };
-      const result = renderBevelEffect(bevel, 40, 40);
+      const result = renderBevelEffect({ bevel, width: 40, height: 40 });
 
       // Should be clamped to 10 (40 / 4)
       expect(result).toContain("<path");
@@ -124,10 +124,10 @@ describe("effects3d - ECMA-376 compliance", () => {
     it("applies highlight based on light direction", () => {
       const bevel: Bevel3d = { width: px(10), height: px(10), preset: "circle" };
 
-      const tlResult = renderBevelEffect(bevel, 100, 100, "tl");
+      const tlResult = renderBevelEffect({ bevel, width: 100, height: 100, lightDirection: "tl" });
       expect(tlResult).toContain("255,255,255"); // White highlight
 
-      const brResult = renderBevelEffect(bevel, 100, 100, "br");
+      const brResult = renderBevelEffect({ bevel, width: 100, height: 100, lightDirection: "br" });
       expect(brResult).toContain("255,255,255"); // Highlight on different sides
     });
   });
@@ -136,17 +136,17 @@ describe("effects3d - ECMA-376 compliance", () => {
     const testPath = "M 0,0 L 100,0 L 100,100 L 0,100 Z";
 
     it("returns empty string for zero height", () => {
-      const result = renderExtrusionEffect(testPath, 0);
+      const result = renderExtrusionEffect({ shapePath: testPath, extrusionHeight: 0 });
       expect(result).toBe("");
     });
 
     it("returns empty string for negative height", () => {
-      const result = renderExtrusionEffect(testPath, -10);
+      const result = renderExtrusionEffect({ shapePath: testPath, extrusionHeight: -10 });
       expect(result).toBe("");
     });
 
     it("creates extrusion layers for valid height", () => {
-      const result = renderExtrusionEffect(testPath, 20);
+      const result = renderExtrusionEffect({ shapePath: testPath, extrusionHeight: 20 });
 
       expect(result).toContain("extrusion-effect");
       expect(result).toContain("<path");
@@ -154,14 +154,14 @@ describe("effects3d - ECMA-376 compliance", () => {
     });
 
     it("uses specified extrusion color", () => {
-      const result = renderExtrusionEffect(testPath, 20, "#ff0000");
+      const result = renderExtrusionEffect({ shapePath: testPath, extrusionHeight: 20, extrusionColor: "#ff0000" });
 
       expect(result).toContain('fill="#ff0000"');
     });
 
     it("adjusts offset based on camera preset", () => {
-      const obliqueResult = renderExtrusionEffect(testPath, 20, "#666666", "obliqueTopRight");
-      const frontResult = renderExtrusionEffect(testPath, 20, "#666666", "orthographicFront");
+      const obliqueResult = renderExtrusionEffect({ shapePath: testPath, extrusionHeight: 20, extrusionColor: "#666666", camera: "obliqueTopRight" });
+      const frontResult = renderExtrusionEffect({ shapePath: testPath, extrusionHeight: 20, extrusionColor: "#666666", camera: "orthographicFront" });
 
       // Different camera angles should produce different offsets
       expect(obliqueResult).not.toBe(frontResult);
@@ -172,7 +172,7 @@ describe("effects3d - ECMA-376 compliance", () => {
     const testPath = "M 0,0 L 100,0 L 100,100 L 0,100 Z";
 
     it("returns empty result when no 3D properties", () => {
-      const result = render3dEffects(undefined, undefined, testPath, 100, 100, "test");
+      const result = render3dEffects({ scene3d: undefined, shape3d: undefined, shapePath: testPath, width: 100, height: 100, shapeId: "test" });
 
       expect(result.extrusionElements).toBe("");
       expect(result.bevelElements).toBe("");
@@ -184,7 +184,7 @@ describe("effects3d - ECMA-376 compliance", () => {
       const shape3d: Shape3d = {
         extrusionHeight: px(20),
       };
-      const result = render3dEffects(undefined, shape3d, testPath, 100, 100, "test");
+      const result = render3dEffects({ scene3d: undefined, shape3d, shapePath: testPath, width: 100, height: 100, shapeId: "test" });
 
       expect(result.extrusionElements).toContain("extrusion-effect");
     });
@@ -193,7 +193,7 @@ describe("effects3d - ECMA-376 compliance", () => {
       const shape3d: Shape3d = {
         bevelTop: { width: px(10), height: px(10), preset: "circle" },
       };
-      const result = render3dEffects(undefined, shape3d, testPath, 100, 100, "test");
+      const result = render3dEffects({ scene3d: undefined, shape3d, shapePath: testPath, width: 100, height: 100, shapeId: "test" });
 
       expect(result.bevelElements).toContain("bevel-effect");
     });
@@ -203,7 +203,7 @@ describe("effects3d - ECMA-376 compliance", () => {
         camera: { preset: "orthographicFront" },
         lightRig: { rig: "threePt", direction: "tl" },
       };
-      const result = render3dEffects(scene3d, undefined, testPath, 100, 100, "test");
+      const result = render3dEffects({ scene3d, shape3d: undefined, shapePath: testPath, width: 100, height: 100, shapeId: "test" });
 
       expect(result.gradientDefs).toContain("linearGradient");
       expect(result.gradientDefs).toContain("lighting-test");
@@ -214,7 +214,7 @@ describe("effects3d - ECMA-376 compliance", () => {
         camera: { preset: "isometricTopUp" },
         lightRig: { rig: "threePt", direction: "tl" },
       };
-      const result = render3dEffects(scene3d, undefined, testPath, 100, 100, "test");
+      const result = render3dEffects({ scene3d, shape3d: undefined, shapePath: testPath, width: 100, height: 100, shapeId: "test" });
 
       expect(result.transform.skewX).toBe(-30);
       expect(result.transform.skewY).toBe(30);
@@ -229,7 +229,7 @@ describe("effects3d - ECMA-376 compliance", () => {
         extrusionHeight: px(15),
         bevelTop: { width: px(5), height: px(5), preset: "softRound" },
       };
-      const result = render3dEffects(scene3d, shape3d, testPath, 100, 100, "test");
+      const result = render3dEffects({ scene3d, shape3d, shapePath: testPath, width: 100, height: 100, shapeId: "test" });
 
       expect(result.extrusionElements).toContain("extrusion-effect");
       expect(result.bevelElements).toContain("bevel-effect");

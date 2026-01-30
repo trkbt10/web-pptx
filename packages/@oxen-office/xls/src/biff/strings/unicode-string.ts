@@ -24,30 +24,39 @@ function decodeUtf16Le(bytes: Uint8Array): string {
 
 type OffsetCursor = { offset: number };
 
-function requireAvailable(
-  ...args: readonly [data: Uint8Array, offset: number, byteLength: number, where: string]
-): void {
-  const [data, offset, byteLength, where] = args;
+function requireAvailable(params: {
+  readonly data: Uint8Array;
+  readonly offset: number;
+  readonly byteLength: number;
+  readonly where: string;
+}): void {
+  const { data, offset, byteLength, where } = params;
   if (data.length < offset + byteLength) {
     throw new Error(`Unicode string payload is too short (${where})`);
   }
 }
 
-function readUint16LEAt(
-  ...args: readonly [view: DataView, cursor: OffsetCursor, data: Uint8Array, where: string]
-): number {
-  const [view, cursor, data, where] = args;
-  requireAvailable(data, cursor.offset, 2, where);
+function readUint16LEAt(params: {
+  readonly view: DataView;
+  readonly cursor: OffsetCursor;
+  readonly data: Uint8Array;
+  readonly where: string;
+}): number {
+  const { view, cursor, data, where } = params;
+  requireAvailable({ data, offset: cursor.offset, byteLength: 2, where });
   const value = view.getUint16(cursor.offset, true);
   cursor.offset += 2;
   return value;
 }
 
-function readUint32LEAt(
-  ...args: readonly [view: DataView, cursor: OffsetCursor, data: Uint8Array, where: string]
-): number {
-  const [view, cursor, data, where] = args;
-  requireAvailable(data, cursor.offset, 4, where);
+function readUint32LEAt(params: {
+  readonly view: DataView;
+  readonly cursor: OffsetCursor;
+  readonly data: Uint8Array;
+  readonly where: string;
+}): number {
+  const { view, cursor, data, where } = params;
+  requireAvailable({ data, offset: cursor.offset, byteLength: 4, where });
   const value = view.getUint32(cursor.offset, true);
   cursor.offset += 4;
   return value;
@@ -79,18 +88,18 @@ export function parseUnicodeString(data: Uint8Array): UnicodeString {
   const hasRich = (grbit & 0x08) !== 0;
 
   const cursor: OffsetCursor = { offset: 3 };
-  const cRun = hasRich ? readUint16LEAt(view, cursor, data, "missing cRun") : 0;
-  const cbExtRst = hasExt ? readUint32LEAt(view, cursor, data, "missing cbExtRst") : 0;
+  const cRun = hasRich ? readUint16LEAt({ view, cursor, data, where: "missing cRun" }) : 0;
+  const cbExtRst = hasExt ? readUint32LEAt({ view, cursor, data, where: "missing cbExtRst" }) : 0;
 
   const charByteLength = highByte ? cch * 2 : cch;
-  requireAvailable(data, cursor.offset, charByteLength, "missing character data");
+  requireAvailable({ data, offset: cursor.offset, byteLength: charByteLength, where: "missing character data" });
 
   const charBytes = data.subarray(cursor.offset, cursor.offset + charByteLength);
   const text = highByte ? decodeUtf16Le(charBytes) : decodeCompressedAscii(charBytes);
   cursor.offset += charByteLength;
 
   const runByteLength = cRun * 4;
-  requireAvailable(data, cursor.offset, runByteLength + cbExtRst, "missing rich/ext data");
+  requireAvailable({ data, offset: cursor.offset, byteLength: runByteLength + cbExtRst, where: "missing rich/ext data" });
   cursor.offset += runByteLength + cbExtRst;
 
   return { text, byteLength: cursor.offset, highByte };

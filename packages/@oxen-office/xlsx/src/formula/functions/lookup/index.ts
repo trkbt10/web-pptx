@@ -53,7 +53,7 @@ export const indexFunction: FormulaFunctionEagerDefinition = {
       throw new Error("INDEX column index is out of bounds");
     }
 
-    return readTableCell(table, rowIndex - 1, columnIndex - 1, "INDEX");
+    return readTableCell({ table, rowIndex: rowIndex - 1, columnIndex: columnIndex - 1, description: "INDEX" });
   },
 };
 

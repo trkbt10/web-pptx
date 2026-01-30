@@ -23,7 +23,7 @@ const prepareNumericValues = (
   const database = parseDatabaseArgument(databaseArg, functionName);
   const fieldValue = helpers.coerceScalar(fieldArg, `${functionName} field`);
   const fieldIndex = resolveFieldIndex(fieldValue, database, functionName);
-  const matchingRows = filterDatabaseRows(database, criteriaArg, helpers, functionName);
+  const matchingRows = filterDatabaseRows({ database, criteriaArg, helpers, functionName });
   return collectNumericFieldValues(matchingRows, fieldIndex);
 };
 

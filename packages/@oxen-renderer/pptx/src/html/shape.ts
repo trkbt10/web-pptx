@@ -82,7 +82,7 @@ function buildShapeFill(...args: BuildShapeFillArgs): SvgPaintStyle {
   const resolvedImageFill = getResolvedImageFill(fill, ctx.colorContext, ctx.resources.resolve);
   if (resolvedImageFill) {
     const patternId = defsCollector.getNextId("shape-img");
-    defsCollector.addDef(renderImageFillToSvgDef(resolvedImageFill, patternId, width, height));
+    defsCollector.addDef(renderImageFillToSvgDef({ imageFill: resolvedImageFill, patternId, width, height }));
     return { fill: `url(#${patternId})` };
   }
 
@@ -557,15 +557,22 @@ function renderConnectorSvg(
  * Uses chart data from ResourceStore if available (populated by integration layer).
  * This allows render to render charts without directly calling parser.
  */
-function renderChartContent(
-  ...args: [chartRef: ChartReference, width: number, height: number, ctx: CoreRenderContext]
-): HtmlString {
-  const [chartRef, width, height, ctx] = args;
+function renderChartContent({
+  chartRef,
+  width,
+  height,
+  ctx,
+}: {
+  chartRef: ChartReference;
+  width: number;
+  height: number;
+  ctx: CoreRenderContext;
+}): HtmlString {
   // Get chart data from ResourceStore
   const entry = ctx.resourceStore?.get<import("@oxen-office/chart/domain").Chart>(chartRef.resourceId);
   const parsedChart = entry?.parsed;
   if (parsedChart !== undefined) {
-    return renderChart(parsedChart, width, height, ctx);
+    return renderChart({ chart: parsedChart, width, height, ctx });
   }
 
   // Chart not in ResourceStore
@@ -585,10 +592,17 @@ function renderChartContent(
  * Uses diagram data from ResourceStore if available (populated by integration layer).
  * This allows render to render diagrams without directly calling parser.
  */
-function renderDiagramContent(
-  ...args: [diagramRef: DiagramReference, width: number, height: number, ctx: CoreRenderContext]
-): HtmlString {
-  const [diagramRef, width, height, ctx] = args;
+function renderDiagramContent({
+  diagramRef,
+  width,
+  height,
+  ctx,
+}: {
+  diagramRef: DiagramReference;
+  width: number;
+  height: number;
+  ctx: CoreRenderContext;
+}): HtmlString {
   // Get diagram content from ResourceStore
   if (diagramRef.dataResourceId !== undefined) {
     const entry = ctx.resourceStore?.get<{ readonly shapes: readonly import("@oxen-office/pptx/domain").Shape[] }>(diagramRef.dataResourceId);
@@ -616,7 +630,7 @@ export function renderGraphicFrame(frame: GraphicFrame, ctx: CoreRenderContext):
       return renderTable(frame.content.data.table, frame.transform, ctx);
 
     case "chart": {
-      const chartHtml = renderChartContent(frame.content.data, transform.width, transform.height, ctx);
+      const chartHtml = renderChartContent({ chartRef: frame.content.data, width: transform.width, height: transform.height, ctx });
       return div(
         {
           class: "shape graphicFrame chart-frame",
@@ -629,7 +643,7 @@ export function renderGraphicFrame(frame: GraphicFrame, ctx: CoreRenderContext):
     }
 
     case "diagram": {
-      const diagramHtml = renderDiagramContent(frame.content.data, transform.width, transform.height, ctx);
+      const diagramHtml = renderDiagramContent({ diagramRef: frame.content.data, width: transform.width, height: transform.height, ctx });
       return div(
         {
           class: "shape graphicFrame diagram-frame",

@@ -115,8 +115,8 @@ async function analyzeVisualRegression(pptxPath: string, snapshotName: string) {
 // Main
 const usage = "bun run scripts/analyze/analyze-visual-regression.ts <pptx-path> <snapshot-name>";
 const args = process.argv.slice(2);
-const pptxPath = requirePositionalArg(args, 0, "pptx-path", usage);
-const snapshotName = requirePositionalArg(args, 1, "snapshot-name", usage);
+const pptxPath = requirePositionalArg({ args, index: 0, name: "pptx-path", usage });
+const snapshotName = requirePositionalArg({ args, index: 1, name: "snapshot-name", usage });
 requireFileExists(pptxPath, usage);
 
 analyzeVisualRegression(pptxPath, snapshotName).catch((err) => {

@@ -245,6 +245,26 @@ function insertRowAt(table: XmlElement, newRow: XmlElement, position: number): X
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function addTableRow(table: XmlElement, row: TableRow, position?: number): XmlElement {
   requireTable(table);
 
@@ -259,6 +279,26 @@ export function addTableRow(table: XmlElement, row: TableRow, position?: number)
   const insertAt = position ?? getTableRows(table).length;
   return insertRowAt(table, newRow, insertAt);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

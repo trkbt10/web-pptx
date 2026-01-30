@@ -527,15 +527,13 @@ function startNextColumn(
  * - At least `widowLines` go to the next page when splitting
  * - If these constraints can't be met, the entire paragraph moves to the next page
  */
-function addParagraphToPage(
-  ...args: readonly [
-    state: FlowState,
-    paragraph: LayoutParagraphResult,
-    config: PageFlowConfig,
-    hint?: PageBreakHint,
-  ]
-): void {
-  const [state, paragraph, config, hint] = args;
+function addParagraphToPage(params: {
+  readonly state: FlowState;
+  readonly paragraph: LayoutParagraphResult;
+  readonly config: PageFlowConfig;
+  readonly hint?: PageBreakHint;
+}): void {
+  const { state, paragraph, config, hint } = params;
   const contentHeight = getContentHeight(config);
   const paragraphHeight = getParagraphHeight(paragraph);
 
@@ -1014,7 +1012,7 @@ export function flowIntoPages(input: PageFlowInput): PagedLayoutResult {
     }
 
     // Add paragraph to page (with hint for widow/orphan control)
-    addParagraphToPage(state, paragraph, config, hint);
+    addParagraphToPage({ state, paragraph, config, hint });
 
     // Handle inline page breaks (w:br type="page")
     // Check if any line in the paragraph has pageBreakAfter
@@ -1100,15 +1098,13 @@ function transformPagesForWritingMode(
  * @param totalHeight - Total height in pixels
  * @param config - Optional page config for vertical text transformation
  */
-export function createSinglePageLayout(
-  ...args: readonly [
-    paragraphs: readonly LayoutParagraphResult[],
-    pageWidth: Pixels,
-    totalHeight: Pixels,
-    config?: PageFlowConfig,
-  ]
-): PagedLayoutResult {
-  const [paragraphs, pageWidth, totalHeight, config] = args;
+export function createSinglePageLayout(params: {
+  readonly paragraphs: readonly LayoutParagraphResult[];
+  readonly pageWidth: Pixels;
+  readonly totalHeight: Pixels;
+  readonly config?: PageFlowConfig;
+}): PagedLayoutResult {
+  const { paragraphs, pageWidth, totalHeight, config } = params;
   const writingMode = config?.writingMode ?? "horizontal-tb";
 
   // For vertical mode, transform coordinates and swap dimensions

@@ -20,7 +20,7 @@ import {
 import { requirePositionalArg } from "../lib/cli";
 
 const usage = "bun run scripts/generate/generate-text-adjustment-tests.ts <output-dir>";
-const BASE_DIR = requirePositionalArg(process.argv.slice(2), 0, "output-dir", usage);
+const BASE_DIR = requirePositionalArg({ args: process.argv.slice(2), index: 0, name: "output-dir", usage });
 
 // =============================================================================
 // 1. Space Handling Tests (half-width/full-width)

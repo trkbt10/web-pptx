@@ -48,15 +48,15 @@ export function extractGlyphContour(
 
   // Handle whitespace
   if (char === " " || char === "\t" || char === "\n") {
-    const spaceGlyph = createWhitespaceGlyphCore(char, fontFamily, style, createMainThreadCanvas);
-    setCachedGlyph(fontFamily, char, style, spaceGlyph);
+    const spaceGlyph = createWhitespaceGlyphCore({ char, fontFamily, style, createCanvas: createMainThreadCanvas });
+    setCachedGlyph({ fontFamily, char, style, glyph: spaceGlyph });
     return spaceGlyph;
   }
 
   try {
     // Render and extract using shared core
-    const glyph = extractGlyphCore(char, fontFamily, style, createMainThreadCanvas);
-    setCachedGlyph(fontFamily, char, style, glyph);
+    const glyph = extractGlyphCore({ char, fontFamily, style, createCanvas: createMainThreadCanvas });
+    setCachedGlyph({ fontFamily, char, style, glyph });
     return glyph;
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

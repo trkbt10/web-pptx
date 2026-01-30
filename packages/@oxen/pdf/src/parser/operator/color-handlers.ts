@@ -91,7 +91,7 @@ const handleFillCmyk: OperatorHandler = (ctx, gfxOps) => {
   const [m, stack3] = popNumber(stack2);
   const [c, stack4] = popNumber(stack3);
   gfxOps.setFillColorSpaceName("DeviceCMYK");
-  gfxOps.setFillCmyk(c, m, y, k);
+  gfxOps.setFillCmyk({ c, m, y, k });
 
   return { operandStack: stack4 };
 };
@@ -105,7 +105,7 @@ const handleStrokeCmyk: OperatorHandler = (ctx, gfxOps) => {
   const [m, stack3] = popNumber(stack2);
   const [c, stack4] = popNumber(stack3);
   gfxOps.setStrokeColorSpaceName("DeviceCMYK");
-  gfxOps.setStrokeCmyk(c, m, y, k);
+  gfxOps.setStrokeCmyk({ c, m, y, k });
 
   return { operandStack: stack4 };
 };
@@ -186,7 +186,7 @@ function applyFillColorN(components: readonly number[], gfxOps: GraphicsStateOps
       gfxOps.setFillRgb(components[0], components[1], components[2]);
       break;
     case 4:
-      gfxOps.setFillCmyk(components[0], components[1], components[2], components[3]);
+      gfxOps.setFillCmyk({ c: components[0], m: components[1], y: components[2], k: components[3] });
       break;
     default:
       // Unknown color space, fallback to RGB if 3+ or gray if 1+
@@ -210,7 +210,7 @@ function applyStrokeColorN(components: readonly number[], gfxOps: GraphicsStateO
       gfxOps.setStrokeRgb(components[0], components[1], components[2]);
       break;
     case 4:
-      gfxOps.setStrokeCmyk(components[0], components[1], components[2], components[3]);
+      gfxOps.setStrokeCmyk({ c: components[0], m: components[1], y: components[2], k: components[3] });
       break;
     default:
       if (components.length >= 3) {

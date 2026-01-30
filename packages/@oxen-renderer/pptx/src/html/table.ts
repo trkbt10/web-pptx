@@ -47,14 +47,14 @@ export function renderTable(
   const dir = properties.rtl ? "rtl" : "ltr";
 
   const rowElements = rows.map((row, rowIdx) =>
-    renderTableRow(
+    renderTableRow({
       row,
       rowIdx,
-      rows.length,
-      grid.columns.map((c) => c.width as number),
-      properties,
+      totalRows: rows.length,
+      columnWidths: grid.columns.map((c) => c.width as number),
+      tableProperties: properties,
       ctx,
-    ),
+    }),
   );
 
   return createElement(
@@ -71,17 +71,21 @@ export function renderTable(
 /**
  * Render a table row to HTML
  */
-function renderTableRow(
-  ...args: [
-    row: TableRow,
-    rowIdx: number,
-    _totalRows: number,
-    columnWidths: number[],
-    tableProperties: Table["properties"],
-    ctx: HtmlRenderContext,
-  ]
-): HtmlString {
-  const [row, rowIdx, _totalRows, columnWidths, tableProperties, ctx] = args;
+function renderTableRow({
+  row,
+  rowIdx,
+  totalRows: _totalRows,
+  columnWidths,
+  tableProperties,
+  ctx,
+}: {
+  row: TableRow;
+  rowIdx: number;
+  totalRows: number;
+  columnWidths: number[];
+  tableProperties: Table["properties"];
+  ctx: HtmlRenderContext;
+}): HtmlString {
   const rowStyles: Record<string, string> = {};
 
   if (row.height !== undefined && (row.height as number) > 0) {
@@ -100,16 +104,16 @@ function renderTableRow(
 
   const rowHeight = resolveRowHeight(row);
   const cellElements = row.cells.map((cell, colIdx) =>
-    renderTableCell(
+    renderTableCell({
       cell,
       rowIdx,
       colIdx,
-      row.cells.length,
-      columnWidths[colIdx] ?? 0,
+      totalCols: row.cells.length,
+      width: columnWidths[colIdx] ?? 0,
       rowHeight,
       tableProperties,
       ctx,
-    ),
+    }),
   );
 
   return createElement("tr", { style: buildStyle(rowStyles) }, ...cellElements);
@@ -118,19 +122,25 @@ function renderTableRow(
 /**
  * Render a table cell to HTML
  */
-function renderTableCell(
-  ...args: [
-    cell: TableCell,
-    rowIdx: number,
-    colIdx: number,
-    _totalCols: number,
-    width: number,
-    rowHeight: number | undefined,
-    tableProperties: Table["properties"],
-    ctx: HtmlRenderContext,
-  ]
-): HtmlString {
-  const [cell, rowIdx, colIdx, _totalCols, width, rowHeight, tableProperties, ctx] = args;
+function renderTableCell({
+  cell,
+  rowIdx,
+  colIdx,
+  totalCols: _totalCols,
+  width,
+  rowHeight,
+  tableProperties,
+  ctx,
+}: {
+  cell: TableCell;
+  rowIdx: number;
+  colIdx: number;
+  totalCols: number;
+  width: number;
+  rowHeight: number | undefined;
+  tableProperties: Table["properties"];
+  ctx: HtmlRenderContext;
+}): HtmlString {
   const { properties, textBody } = cell;
 
   if (properties.horizontalMerge || properties.verticalMerge) {
@@ -210,20 +220,22 @@ function renderTableCell(
     cellAttrs.colspan = properties.colSpan;
   }
 
-  const content = textBody ? renderTableCellContent(textBody, width, rowHeight, ctx) : EMPTY_HTML;
+  const content = textBody ? renderTableCellContent({ textBody, width, rowHeight, ctx }) : EMPTY_HTML;
 
   return createElement("td", cellAttrs, content);
 }
 
-function renderTableCellContent(
-  ...args: [
-    textBody: TableCell["textBody"],
-    width: number,
-    rowHeight: number | undefined,
-    ctx: HtmlRenderContext,
-  ]
-): HtmlString {
-  const [textBody, width, rowHeight, ctx] = args;
+function renderTableCellContent({
+  textBody,
+  width,
+  rowHeight,
+  ctx,
+}: {
+  textBody: TableCell["textBody"];
+  width: number;
+  rowHeight: number | undefined;
+  ctx: HtmlRenderContext;
+}): HtmlString {
   if (!textBody) {
     return EMPTY_HTML;
   }

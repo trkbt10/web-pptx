@@ -478,7 +478,7 @@ export function SlideEditorTest() {
       }
 
       const rect = container.getBoundingClientRect();
-      const coords = clientToSlideCoords(e.clientX, e.clientY, rect, SLIDE_WIDTH, SLIDE_HEIGHT);
+      const coords = clientToSlideCoords({ clientX: e.clientX, clientY: e.clientY, containerRect: rect, slideWidth: SLIDE_WIDTH, slideHeight: SLIDE_HEIGHT });
 
       if (drag.type === "move") {
         const deltaX = coords.x - (drag.startX as number);

@@ -40,15 +40,17 @@ function getTextEditOnSelect(currentTextEdit: TextEditState, elementId: ElementI
 /**
  * Compute new element selection based on action flags.
  */
-function computeElementSelection(
-  ...args: readonly [
-    current: ElementSelectionState,
-    elementId: ElementId,
-    toggle?: boolean,
-    addToSelection?: boolean,
-  ]
-): ElementSelectionState {
-  const [current, elementId, toggle, addToSelection] = args;
+function computeElementSelection({
+  current,
+  elementId,
+  toggle,
+  addToSelection,
+}: {
+  current: ElementSelectionState;
+  elementId: ElementId;
+  toggle?: boolean;
+  addToSelection?: boolean;
+}): ElementSelectionState {
   if (toggle) {
     return toggleElementSelection(current, elementId);
   }
@@ -70,12 +72,12 @@ export const selectionHandlers: HandlerMap = {
   SELECT_ELEMENT: (state, action) => {
     const { elementId, addToSelection, toggle } = action;
     const textEdit = getTextEditOnSelect(state.textEdit, elementId);
-    const newElementSelection = computeElementSelection(
-      state.selection.element,
+    const newElementSelection = computeElementSelection({
+      current: state.selection.element,
       elementId,
       toggle,
       addToSelection,
-    );
+    });
 
     return {
       ...state,

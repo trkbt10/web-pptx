@@ -223,19 +223,19 @@ describe("deleteTextRange", () => {
 describe("replaceTextRange", () => {
   it("replaces text in middle", () => {
     const paragraph = createParagraphWithRuns([{ text: "Hello World" }]);
-    const result = replaceTextRange(paragraph, 6, 11, "Universe");
+    const result = replaceTextRange({ paragraph, start: 6, end: 11, replacement: "Universe" });
     expect(getTextFromParagraph(result)).toBe("Hello Universe");
   });
 
   it("replaces text at start", () => {
     const paragraph = createParagraphWithRuns([{ text: "Hello World" }]);
-    const result = replaceTextRange(paragraph, 0, 5, "Hi");
+    const result = replaceTextRange({ paragraph, start: 0, end: 5, replacement: "Hi" });
     expect(getTextFromParagraph(result)).toBe("Hi World");
   });
 
   it("replaces entire text", () => {
     const paragraph = createParagraphWithRuns([{ text: "Hello" }]);
-    const result = replaceTextRange(paragraph, 0, 5, "World");
+    const result = replaceTextRange({ paragraph, start: 0, end: 5, replacement: "World" });
     expect(getTextFromParagraph(result)).toBe("World");
   });
 
@@ -246,7 +246,7 @@ describe("replaceTextRange", () => {
       { text: "End", properties: { strike: true } },
     ]);
     // Replace "OLD" with "NEW"
-    const result = replaceTextRange(paragraph, 5, 8, "NEW");
+    const result = replaceTextRange({ paragraph, start: 5, end: 8, replacement: "NEW" });
     expect(getTextFromParagraph(result)).toBe("StartNEWEnd");
 
     const runs = result.content.filter((c): c is DocxRun => c.type === "run");

@@ -136,24 +136,24 @@ describe("parseCellValue", () => {
   });
 
   it("should parse shared string reference", () => {
-    const context = createParseContext(
-      ["First", "Second", "Third"],
-      createDefaultStyleSheet(),
-      { sheets: [], dateSystem: "1900" },
-      new Map(),
-    );
+    const context = createParseContext({
+      sharedStrings: ["First", "Second", "Third"],
+      styleSheet: createDefaultStyleSheet(),
+      workbookInfo: { sheets: [], dateSystem: "1900" },
+      relationships: new Map(),
+    });
     const xml = `<c r="A1"><v>1</v></c>`;
     const result = parseCellValue(parseRoot(xml), "s", context);
     expect(result).toEqual({ type: "string", value: "Second" });
   });
 
   it("should handle missing shared string gracefully", () => {
-    const context = createParseContext(
-      ["Only one"],
-      createDefaultStyleSheet(),
-      { sheets: [], dateSystem: "1900" },
-      new Map(),
-    );
+    const context = createParseContext({
+      sharedStrings: ["Only one"],
+      styleSheet: createDefaultStyleSheet(),
+      workbookInfo: { sheets: [], dateSystem: "1900" },
+      relationships: new Map(),
+    });
     const xml = `<c r="A1"><v>99</v></c>`;
     const result = parseCellValue(parseRoot(xml), "s", context);
     expect(result).toEqual({ type: "string", value: "" });
@@ -226,12 +226,12 @@ describe("parseCell", () => {
   });
 
   it("should parse cell with shared string type", () => {
-    const context = createParseContext(
-      ["Hello", "World"],
-      createDefaultStyleSheet(),
-      { sheets: [], dateSystem: "1900" },
-      new Map(),
-    );
+    const context = createParseContext({
+      sharedStrings: ["Hello", "World"],
+      styleSheet: createDefaultStyleSheet(),
+      workbookInfo: { sheets: [], dateSystem: "1900" },
+      relationships: new Map(),
+    });
     const xml = `<c r="D4" t="s"><v>0</v></c>`;
     const result = parseCell(parseRoot(xml), context);
     expect(result.value).toEqual({ type: "string", value: "Hello" });
@@ -264,12 +264,12 @@ describe("parseCell", () => {
   });
 
   it("should parse cell with all attributes", () => {
-    const context = createParseContext(
-      ["Test Value"],
-      createDefaultStyleSheet(),
-      { sheets: [], dateSystem: "1900" },
-      new Map(),
-    );
+    const context = createParseContext({
+      sharedStrings: ["Test Value"],
+      styleSheet: createDefaultStyleSheet(),
+      workbookInfo: { sheets: [], dateSystem: "1900" },
+      relationships: new Map(),
+    });
     const xml = `<c r="Z100" t="s" s="10"><f>A1</f><v>0</v></c>`;
     const result = parseCell(parseRoot(xml), context);
     expect(result.address.col).toBe(26);

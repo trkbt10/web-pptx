@@ -141,6 +141,26 @@ function PointGrid({ points, selectedIndex, disabled, onSelect }: PointGridProps
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function DiagramEditor<TTextBody, TShapeProperties>({
   value,
   onChange,
@@ -282,6 +302,26 @@ function getPointDisplayText(point: DiagramPoint): string {
   }
   return point.type ?? "node";
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

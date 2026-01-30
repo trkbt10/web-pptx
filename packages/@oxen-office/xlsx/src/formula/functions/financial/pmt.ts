@@ -50,6 +50,6 @@ export const pmtFunction: FormulaFunctionEagerDefinition = {
     const typeValue = typeArg ? helpers.requireNumber(typeArg, "PMT type") : 0;
     const periods = helpers.requireInteger(periodsRaw, "PMT nper must be integer");
     const type = helpers.requireInteger(typeValue, "PMT type must be integer");
-    return helpers.calculatePayment(rate, periods, pv, fv, type);
+    return helpers.calculatePayment({ rate, periods, presentValue: pv, futureValue: fv, type });
   },
 };

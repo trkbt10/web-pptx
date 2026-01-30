@@ -13,10 +13,17 @@ function addr(col: number, row: number): CellAddress {
   return { col: colIdx(col), row: rowIdx(row), colAbsolute: false, rowAbsolute: false };
 }
 
-function range(
-  ...args: readonly [startCol: number, startRow: number, endCol: number, endRow: number]
-): CellRange {
-  const [startCol, startRow, endCol, endRow] = args;
+function range({
+  startCol,
+  startRow,
+  endCol,
+  endRow,
+}: {
+  startCol: number;
+  startRow: number;
+  endCol: number;
+  endRow: number;
+}): CellRange {
   return { start: addr(startCol, startRow), end: addr(endCol, endRow) };
 }
 
@@ -60,9 +67,9 @@ describe("xlsx-editor/sheet/merge-mutation", () => {
       { address: addr(1, 2), value: { type: "empty" }, formula: { type: "normal", expression: "1+1" } },
     ]);
 
-    const merged = mergeCells(worksheet, range(2, 2, 1, 1));
+    const merged = mergeCells(worksheet, range({ startCol: 2, startRow: 2, endCol: 1, endRow: 1 }));
 
-    expect(merged.mergeCells).toEqual([range(1, 1, 2, 2)]);
+    expect(merged.mergeCells).toEqual([range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 })]);
     expect(getCell(merged, addr(1, 1))?.value).toEqual({ type: "string", value: "A1" });
     expect(getCell(merged, addr(2, 1))?.value).toEqual({ type: "empty" });
     expect(getCell(merged, addr(1, 2))?.value).toEqual({ type: "empty" });
@@ -71,21 +78,21 @@ describe("xlsx-editor/sheet/merge-mutation", () => {
 
   it("mergeCells removes intersecting existing merges before adding the new one", () => {
     const worksheet = createWorksheet([], {
-      mergeCells: [range(1, 1, 2, 2), range(5, 5, 6, 6)],
+      mergeCells: [range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 }), range({ startCol: 5, startRow: 5, endCol: 6, endRow: 6 })],
     });
 
-    const merged = mergeCells(worksheet, range(2, 2, 3, 3));
+    const merged = mergeCells(worksheet, range({ startCol: 2, startRow: 2, endCol: 3, endRow: 3 }));
 
-    expect(merged.mergeCells).toEqual([range(5, 5, 6, 6), range(2, 2, 3, 3)]);
+    expect(merged.mergeCells).toEqual([range({ startCol: 5, startRow: 5, endCol: 6, endRow: 6 }), range({ startCol: 2, startRow: 2, endCol: 3, endRow: 3 })]);
   });
 
   it("unmergeCells removes merges that intersect the target range", () => {
     const worksheet = createWorksheet([], {
-      mergeCells: [range(1, 1, 2, 2), range(5, 5, 6, 6)],
+      mergeCells: [range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 }), range({ startCol: 5, startRow: 5, endCol: 6, endRow: 6 })],
     });
 
-    const unmerged = unmergeCells(worksheet, range(2, 2, 3, 3));
+    const unmerged = unmergeCells(worksheet, range({ startCol: 2, startRow: 2, endCol: 3, endRow: 3 }));
 
-    expect(unmerged.mergeCells).toEqual([range(5, 5, 6, 6)]);
+    expect(unmerged.mergeCells).toEqual([range({ startCol: 5, startRow: 5, endCol: 6, endRow: 6 })]);
   });
 });

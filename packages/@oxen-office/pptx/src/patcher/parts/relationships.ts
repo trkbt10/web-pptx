@@ -21,6 +21,26 @@ export type RelationshipDefinition = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function createRelationshipsDocument(
   relationships: readonly RelationshipDefinition[] = [],
 ): XmlDocument {

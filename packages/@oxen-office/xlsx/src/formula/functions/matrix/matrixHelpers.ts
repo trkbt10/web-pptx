@@ -7,10 +7,13 @@ import { toLookupTable } from "../lookup/table";
 
 export type NumericMatrix = number[][];
 
-const ensureNumericEntry = (
-  ...args: readonly [value: unknown, description: string, rowIndex: number, columnIndex: number]
-): number => {
-  const [value, description, rowIndex, columnIndex] = args;
+const ensureNumericEntry = (params: {
+  readonly value: unknown;
+  readonly description: string;
+  readonly rowIndex: number;
+  readonly columnIndex: number;
+}): number => {
+  const { value, description, rowIndex, columnIndex } = params;
   if (typeof value !== "number" || Number.isNaN(value)) {
     throw new Error(`${description} requires numeric values (row ${rowIndex + 1}, column ${columnIndex + 1})`);
   }
@@ -23,7 +26,7 @@ export const normalizeNumericMatrix = (range: EvalResult, description: string): 
     throw new Error(`${description} requires a non-empty matrix`);
   }
   return table.map((row, rowIndex) => {
-    return row.map((value, columnIndex) => ensureNumericEntry(value, description, rowIndex, columnIndex));
+    return row.map((value, columnIndex) => ensureNumericEntry({ value, description, rowIndex, columnIndex }));
   });
 };
 

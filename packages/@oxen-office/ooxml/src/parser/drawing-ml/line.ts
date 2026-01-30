@@ -131,6 +131,26 @@ function resolveLineJoin(element: XmlElement): BaseLine["join"] {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function parseLine(element: XmlElement | undefined): BaseLine | undefined {
   if (!element) {return undefined;}
 
@@ -155,6 +175,26 @@ export function parseLine(element: XmlElement | undefined): BaseLine | undefined
     miterLimit,
   };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

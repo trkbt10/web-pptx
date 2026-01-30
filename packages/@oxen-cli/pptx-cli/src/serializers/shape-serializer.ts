@@ -392,6 +392,20 @@ function serializeParagraph(paragraph: Paragraph): ParagraphJson {
   };
 }
 
+function serializeMedia(
+  media: Shape["media"],
+): ShapeJson["media"] | undefined {
+  if (!media) {
+    return undefined;
+  }
+  return {
+    audioFile: media.audioFile,
+    quickTimeFile: media.quickTimeFile,
+    videoFile: media.videoFile,
+    wavAudioFile: media.wavAudioFile,
+  };
+}
+
 function serializeGeometry(geometry: Geometry | undefined): GeometryJson | undefined {
   if (!geometry) {
     return undefined;
@@ -763,14 +777,7 @@ export function serializeShape(shape: Shape): ShapeJson {
         resourceId: shape.blipFill.resourceId,
         blipEffects: serializeBlipEffects(shape.blipFill.blipEffects),
         mediaType: shape.mediaType,
-        media: shape.media
-          ? {
-              audioFile: shape.media.audioFile,
-              quickTimeFile: shape.media.quickTimeFile,
-              videoFile: shape.media.videoFile,
-              wavAudioFile: shape.media.wavAudioFile,
-            }
-          : undefined,
+        media: serializeMedia(shape.media),
         fill,
         line,
         style: serializeStyle(shape.style),

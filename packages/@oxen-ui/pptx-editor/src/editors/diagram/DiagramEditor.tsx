@@ -21,6 +21,26 @@ export type DiagramEditorProps = EditorProps<DiagramDataModel> & {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function DiagramEditor(props: DiagramEditorProps) {
   return <CoreDiagramEditor {...props} adapters={pptxDiagramEditorAdapters} />;
 }

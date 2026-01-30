@@ -10,8 +10,8 @@ import { requireFileExists, requirePositionalArg } from "../lib/cli";
 
 const usage = "bun run scripts/analyze/analyze-text-diff.ts <baseline-png> <output-png>";
 const args = process.argv.slice(2);
-const baselinePath = requirePositionalArg(args, 0, "baseline-png", usage);
-const outputPath = requirePositionalArg(args, 1, "output-png", usage);
+const baselinePath = requirePositionalArg({ args, index: 0, name: "baseline-png", usage });
+const outputPath = requirePositionalArg({ args, index: 1, name: "output-png", usage });
 requireFileExists(baselinePath, usage);
 requireFileExists(outputPath, usage);
 

@@ -151,6 +151,26 @@ function resolvePaintBBox(gs: PdfGraphicsState, pageBBox: PdfBBox): PdfBBox | nu
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function rasterizeShadingFill(
   shading: PdfShading,
   gs: PdfGraphicsState,

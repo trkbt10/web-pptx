@@ -68,15 +68,13 @@ export type LineBreakResult = {
 /**
  * Break spans into lines with word wrapping.
  */
-export function breakIntoLines(
-  ...args: readonly [
-    spans: readonly MeasuredSpan[],
-    firstLineWidth: Pixels,
-    nextLineWidth: Pixels,
-    wrapMode: TextWrapping | "wrap",
-  ]
-): LineBreakResult {
-  const [spans, firstLineWidth, nextLineWidth, wrapMode] = args;
+export function breakIntoLines(params: {
+  readonly spans: readonly MeasuredSpan[];
+  readonly firstLineWidth: Pixels;
+  readonly nextLineWidth: Pixels;
+  readonly wrapMode: TextWrapping | "wrap";
+}): LineBreakResult {
+  const { spans, firstLineWidth, nextLineWidth, wrapMode } = params;
   if (spans.length === 0) {
     return { lines: [[]], lineHeights: [pt(0)], pageBreaksAfter: [false] };
   }
@@ -93,12 +91,12 @@ export function breakIntoLines(
   }
 
   // Call the generic line breaker
-  const result = glyphBreakIntoLines(
-    glyphSpans,
-    firstLineWidth as number,
-    nextLineWidth as number,
+  const result = glyphBreakIntoLines({
+    spans: glyphSpans,
+    firstLineWidth: firstLineWidth as number,
+    nextLineWidth: nextLineWidth as number,
     wrapMode,
-  );
+  });
 
   // Convert back to MeasuredSpan with proper types
   const lines: MeasuredSpan[][] = result.lines.map((line) =>

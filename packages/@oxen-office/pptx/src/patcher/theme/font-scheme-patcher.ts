@@ -88,6 +88,26 @@ function patchFont(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function patchMajorFont(fontScheme: XmlElement, fontFamily: FontSpec): XmlElement {
   if (!fontScheme) {
     throw new Error("patchMajorFont requires fontScheme.");
@@ -97,6 +117,26 @@ export function patchMajorFont(fontScheme: XmlElement, fontFamily: FontSpec): Xm
   }
   return patchFont(fontScheme, "a:majorFont", fontFamily);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -136,21 +136,24 @@ export function applyTileRect(texture: THREE.Texture, tileRect: TileRect): void 
  * @param textureWidth - Original texture width
  * @param textureHeight - Original texture height
  */
-export function calculateTileFillTransform(
-  ...args: [
-    config: TileFill,
-    geometryWidth: number,
-    geometryHeight: number,
-    textureWidth: number,
-    textureHeight: number,
-  ]
-): {
+export function calculateTileFillTransform({
+  config,
+  geometryWidth,
+  geometryHeight,
+  textureWidth,
+  textureHeight,
+}: {
+  config: TileFill;
+  geometryWidth: number;
+  geometryHeight: number;
+  textureWidth: number;
+  textureHeight: number;
+}): {
   repeatX: number;
   repeatY: number;
   offsetX: number;
   offsetY: number;
 } {
-  const [config, geometryWidth, geometryHeight, textureWidth, textureHeight] = args;
   // Scale factors (Percent to decimal)
   const scaleX = (config.sx as number) / 100;
   const scaleY = (config.sy as number) / 100;
@@ -164,13 +167,13 @@ export function calculateTileFillTransform(
   const repeatY = tileHeight > 0 ? geometryHeight / tileHeight : 1;
 
   // Calculate offset based on alignment and tx/ty
-  const { alignOffsetX, alignOffsetY } = getAlignmentOffset(
-    config.alignment,
-    geometryWidth,
-    geometryHeight,
+  const { alignOffsetX, alignOffsetY } = getAlignmentOffset({
+    alignment: config.alignment,
+    geoWidth: geometryWidth,
+    geoHeight: geometryHeight,
     tileWidth,
     tileHeight,
-  );
+  });
 
   const offsetX = ((config.tx as number) + alignOffsetX) / geometryWidth;
   const offsetY = ((config.ty as number) + alignOffsetY) / geometryHeight;
@@ -181,16 +184,19 @@ export function calculateTileFillTransform(
 /**
  * Get alignment offset based on RectAlignment.
  */
-function getAlignmentOffset(
-  ...args: [
-    alignment: TileFill["alignment"],
-    geoWidth: number,
-    geoHeight: number,
-    tileWidth: number,
-    tileHeight: number,
-  ]
-): { alignOffsetX: number; alignOffsetY: number } {
-  const [alignment, geoWidth, geoHeight, tileWidth, tileHeight] = args;
+function getAlignmentOffset({
+  alignment,
+  geoWidth,
+  geoHeight,
+  tileWidth,
+  tileHeight,
+}: {
+  alignment: TileFill["alignment"];
+  geoWidth: number;
+  geoHeight: number;
+  tileWidth: number;
+  tileHeight: number;
+}): { alignOffsetX: number; alignOffsetY: number } {
   const alignmentOffsets: Record<TileFill["alignment"], { x: number; y: number }> = {
     tl: { x: 0, y: 0 },
     t: { x: (geoWidth - tileWidth) / 2, y: 0 },
@@ -217,28 +223,32 @@ function getAlignmentOffset(
  * @param textureWidth - Original texture width
  * @param textureHeight - Original texture height
  */
-export function applyTileFillConfig(
-  ...args: [
-    texture: THREE.Texture,
-    config: TileFill,
-    geometryWidth: number,
-    geometryHeight: number,
-    textureWidth: number,
-    textureHeight: number,
-  ]
-): void {
-  const [texture, config, geometryWidth, geometryHeight, textureWidth, textureHeight] = args;
+export function applyTileFillConfig({
+  texture,
+  config,
+  geometryWidth,
+  geometryHeight,
+  textureWidth,
+  textureHeight,
+}: {
+  texture: THREE.Texture;
+  config: TileFill;
+  geometryWidth: number;
+  geometryHeight: number;
+  textureWidth: number;
+  textureHeight: number;
+}): void {
   // Apply flip mode
   applyTileFlipMode(texture, config.flip);
 
   // Calculate and apply transform
-  const { repeatX, repeatY, offsetX, offsetY } = calculateTileFillTransform(
+  const { repeatX, repeatY, offsetX, offsetY } = calculateTileFillTransform({
     config,
     geometryWidth,
     geometryHeight,
     textureWidth,
     textureHeight,
-  );
+  });
 
   texture.repeat.set(repeatX, repeatY);
   texture.offset.set(offsetX, offsetY);

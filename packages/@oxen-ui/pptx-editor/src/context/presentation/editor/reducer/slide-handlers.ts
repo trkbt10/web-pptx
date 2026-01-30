@@ -28,15 +28,17 @@ type AddSlideAction = Extract<PresentationEditorAction, { type: "ADD_SLIDE" }>;
 /**
  * Get new active slide ID after deletion
  */
-function getActiveSlideAfterDelete(
-  ...args: readonly [
-    currentActiveId: SlideId | undefined,
-    deletedSlideId: SlideId,
-    deletedIndex: number,
-    newDoc: PresentationDocument,
-  ]
-): SlideId | undefined {
-  const [currentActiveId, deletedSlideId, deletedIndex, newDoc] = args;
+function getActiveSlideAfterDelete({
+  currentActiveId,
+  deletedSlideId,
+  deletedIndex,
+  newDoc,
+}: {
+  currentActiveId: SlideId | undefined;
+  deletedSlideId: SlideId;
+  deletedIndex: number;
+  newDoc: PresentationDocument;
+}): SlideId | undefined {
   if (currentActiveId !== deletedSlideId) {
     return currentActiveId;
   }
@@ -71,12 +73,12 @@ function handleAddSlide(
   state: PresentationEditorState,
   action: AddSlideAction
 ): PresentationEditorState {
-  const { document: newDoc, newSlideId } = addSlide(
-    state.documentHistory.present,
-    action.slide,
-    action.afterSlideId,
-    action.atIndex
-  );
+  const { document: newDoc, newSlideId } = addSlide({
+    document: state.documentHistory.present,
+    slide: action.slide,
+    afterSlideId: action.afterSlideId,
+    atIndex: action.atIndex,
+  });
   return {
     ...state,
     documentHistory: pushHistory(state.documentHistory, newDoc),
@@ -103,12 +105,12 @@ function handleDeleteSlide(
   return {
     ...state,
     documentHistory: pushHistory(state.documentHistory, newDoc),
-    activeSlideId: getActiveSlideAfterDelete(
-      state.activeSlideId,
-      action.slideId,
+    activeSlideId: getActiveSlideAfterDelete({
+      currentActiveId: state.activeSlideId,
+      deletedSlideId: action.slideId,
       deletedIndex,
-      newDoc
-    ),
+      newDoc,
+    }),
     shapeSelection: getSelectionAfterDelete(
       wasActiveSlideDeleted,
       state.shapeSelection

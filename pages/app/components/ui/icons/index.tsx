@@ -29,6 +29,26 @@ type IconProps = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function ChevronLeftIcon({ size = 16, className }: IconProps) {
   return (
     <svg
@@ -60,6 +80,26 @@ export function ChevronLeftIcon({ size = 16, className }: IconProps) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function ChevronRightIcon({ size = 16, className }: IconProps) {
   return (
     <svg
@@ -75,6 +115,26 @@ export function ChevronRightIcon({ size = 16, className }: IconProps) {
     </svg>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -129,6 +189,26 @@ export function ArrowRightIcon({ size = 16, className }: IconProps) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function CloseIcon({ size = 16, className }: IconProps) {
   return (
     <svg
@@ -161,6 +241,26 @@ export function CloseIcon({ size = 16, className }: IconProps) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function PlayIcon({ size = 16, className }: IconProps) {
   return (
     <svg
@@ -174,6 +274,26 @@ export function PlayIcon({ size = 16, className }: IconProps) {
     </svg>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -226,6 +346,26 @@ export function EditIcon({ size = 16, className }: IconProps) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function EnterFullscreenIcon({ size = 16, className }: IconProps) {
   return (
     <svg
@@ -244,6 +384,26 @@ export function EnterFullscreenIcon({ size = 16, className }: IconProps) {
     </svg>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -298,6 +458,26 @@ export function ExitFullscreenIcon({ size = 16, className }: IconProps) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function UploadIcon({ size = 16, className }: IconProps) {
   return (
     <svg
@@ -317,6 +497,26 @@ export function UploadIcon({ size = 16, className }: IconProps) {
     </svg>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -365,6 +565,26 @@ export function SidebarIcon({ size = 16, className }: IconProps) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function GridIcon({ size = 16, className }: IconProps) {
   return (
     <svg
@@ -382,6 +602,26 @@ export function GridIcon({ size = 16, className }: IconProps) {
     </svg>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -433,6 +673,26 @@ export function ShieldIcon({ size = 16, className }: IconProps) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function GitHubIcon({ size = 16, className }: IconProps) {
   return (
     <svg
@@ -446,6 +706,26 @@ export function GitHubIcon({ size = 16, className }: IconProps) {
     </svg>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

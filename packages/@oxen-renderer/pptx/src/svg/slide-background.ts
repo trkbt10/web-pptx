@@ -87,15 +87,17 @@ export function renderResolvedBackgroundSvg(
  * @param ctx - Render context for color resolution
  * @param defsCollector - SVG defs collector for gradients
  */
-export function renderBackgroundSvg(
-  ...args: [
-    background: Background | undefined,
-    slideSize: SlideSize,
-    ctx: CoreRenderContext,
-    defsCollector: SvgDefsCollector,
-  ]
-): string {
-  const [background, slideSize, ctx, defsCollector] = args;
+export function renderBackgroundSvg({
+  background,
+  slideSize,
+  ctx,
+  defsCollector,
+}: {
+  background: Background | undefined;
+  slideSize: SlideSize;
+  ctx: CoreRenderContext;
+  defsCollector: SvgDefsCollector;
+}): string {
   const { width, height } = slideSize;
 
   if (background === undefined || background.fill === undefined) {

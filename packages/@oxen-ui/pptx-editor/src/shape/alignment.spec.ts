@@ -16,10 +16,19 @@ import {
 // Test Fixtures
 // =============================================================================
 
-const createBounds = (
-  ...args: readonly [id: string, x: number, y: number, width: number, height: number]
-): ShapeBoundsWithId => {
-  const [id, x, y, width, height] = args;
+const createBounds = ({
+  id,
+  x,
+  y,
+  width,
+  height,
+}: {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}): ShapeBoundsWithId => {
   return {
     id,
     bounds: {

@@ -74,7 +74,7 @@ function extractSvgElements(svg: string): ElementInfo[] {
 async function main() {
   const usage = "bun run scripts/compare/compare-slide-details.ts <pptx-path> <slide-number>";
   const args = process.argv.slice(2);
-  const pptxPath = requirePositionalArg(args, 0, "pptx-path", usage);
+  const pptxPath = requirePositionalArg({ args, index: 0, name: "pptx-path", usage });
   const slideNum = requireIntArg(args[1], "slide-number", usage);
   requireFileExists(pptxPath, usage);
 

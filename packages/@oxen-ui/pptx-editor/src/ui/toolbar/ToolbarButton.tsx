@@ -43,15 +43,16 @@ const SIZE_MAP = {
   lg: { button: 32, icon: iconTokens.size.lg },
 } as const;
 
-function getButtonStyle(
-  ...args: readonly [
-    size: "tiny" | "sm" | "md" | "lg",
-    active: boolean,
-    disabled: boolean,
-    hovered: boolean,
-  ]
-): CSSProperties {
-  const [size, active, disabled, hovered] = args;
+type ButtonStyleInput = {
+  readonly size: "tiny" | "sm" | "md" | "lg";
+  readonly active: boolean;
+  readonly disabled: boolean;
+  readonly hovered: boolean;
+};
+
+function getButtonStyle({
+  size, active, disabled, hovered,
+}: ButtonStyleInput): CSSProperties {
   const sizeConfig = SIZE_MAP[size];
 
   const base: CSSProperties = {
@@ -137,7 +138,7 @@ export function ToolbarButton({
   );
 
   const sizeConfig = SIZE_MAP[size];
-  const buttonStyle = getButtonStyle(size, active, disabled, hovered);
+  const buttonStyle = getButtonStyle({ size, active, disabled, hovered });
 
   return (
     <button

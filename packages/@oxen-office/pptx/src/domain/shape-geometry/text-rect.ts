@@ -385,6 +385,26 @@ export type ApplyTextInsetsOptions = {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function applyTextInsets(
   {
     textRect,

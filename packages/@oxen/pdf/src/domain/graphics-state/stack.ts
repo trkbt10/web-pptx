@@ -51,8 +51,8 @@ export type GraphicsStateStack = Readonly<{
   setStrokeGray(gray: number): void;
   setFillRgb(r: number, g: number, b: number): void;
   setStrokeRgb(r: number, g: number, b: number): void;
-  setFillCmyk(c: number, m: number, y: number, k: number): void;
-  setStrokeCmyk(c: number, m: number, y: number, k: number): void;
+  setFillCmyk(args: { readonly c: number; readonly m: number; readonly y: number; readonly k: number }): void;
+  setStrokeCmyk(args: { readonly c: number; readonly m: number; readonly y: number; readonly k: number }): void;
   setLineWidth(width: number): void;
   setLineCap(cap: PdfLineCap): void;
   setLineJoin(join: PdfLineJoin): void;
@@ -116,7 +116,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     const maxY = Math.max(y1, y2);
 
     const prev = current.value.clipBBox;
-    const next = intersectBBoxOrDefault(prev, minX, minY, maxX, maxY);
+    const next = intersectBBoxOrDefault({ prev, minX, minY, maxX, maxY });
 
     current.value = {
       ...current.value,
@@ -260,8 +260,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     };
   };
 
-  const setFillCmyk = (...args: readonly [c: number, m: number, y: number, k: number]): void => {
-    const [c, m, y, k] = args;
+  const setFillCmyk = ({ c, m, y, k }: { readonly c: number; readonly m: number; readonly y: number; readonly k: number }): void => {
     current.value = {
       ...current.value,
       fillPatternName: undefined,
@@ -273,8 +272,7 @@ export function createGraphicsStateStack(initial?: PdfGraphicsState): GraphicsSt
     };
   };
 
-  const setStrokeCmyk = (...args: readonly [c: number, m: number, y: number, k: number]): void => {
-    const [c, m, y, k] = args;
+  const setStrokeCmyk = ({ c, m, y, k }: { readonly c: number; readonly m: number; readonly y: number; readonly k: number }): void => {
     current.value = {
       ...current.value,
       strokePatternName: undefined,
@@ -459,16 +457,19 @@ function cloneBBox(bbox: PdfBBox): PdfBBox {
   return [x1, y1, x2, y2];
 }
 
-function intersectBBoxOrDefault(
-  ...args: readonly [
-    prev: PdfBBox | undefined,
-    minX: number,
-    minY: number,
-    maxX: number,
-    maxY: number,
-  ]
-): PdfBBox {
-  const [prev, minX, minY, maxX, maxY] = args;
+function intersectBBoxOrDefault({
+  prev,
+  minX,
+  minY,
+  maxX,
+  maxY,
+}: {
+  readonly prev: PdfBBox | undefined;
+  readonly minX: number;
+  readonly minY: number;
+  readonly maxX: number;
+  readonly maxY: number;
+}): PdfBBox {
   if (!prev) {
     return [minX, minY, maxX, maxY];
   }

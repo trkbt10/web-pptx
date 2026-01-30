@@ -132,10 +132,10 @@ function registerHyperlinks(
 ): Map<string, string> {
   const urlToRid = new Map<string, string>();
 
-  if (!text) return urlToRid;
+  if (!text) {return urlToRid;}
 
   const hyperlinks = collectHyperlinks(text);
-  if (hyperlinks.length === 0) return urlToRid;
+  if (hyperlinks.length === 0) {return urlToRid;}
 
   // Get the relationships file path
   const relsPath = ctx.slidePath.replace(/\/([^/]+)\.xml$/, "/_rels/$1.xml.rels");
@@ -147,7 +147,7 @@ function registerHyperlinks(
 
   // Add each unique hyperlink
   for (const hlink of hyperlinks) {
-    if (urlToRid.has(hlink.url)) continue;
+    if (urlToRid.has(hlink.url)) {continue;}
 
     const { updatedXml, rId } = addRelationship(
       relsDoc,
@@ -169,7 +169,7 @@ function registerHyperlinks(
  * Replace hyperlink URLs with rIds in XML element tree
  */
 function replaceHyperlinkUrls(element: XmlElement, urlToRid: Map<string, string>): XmlElement {
-  if (urlToRid.size === 0) return element;
+  if (urlToRid.size === 0) {return element;}
 
   // Check if this element is a hlinkClick with r:id that matches a URL
   if (element.name === "a:hlinkClick" && element.attrs["r:id"]) {
@@ -230,14 +230,19 @@ function detectMimeType(filePath: string): "image/png" | "image/jpeg" | "image/g
   }
 }
 
-function buildPicShape(
-  spec: ImageSpec,
-  id: string,
-  resourceId: string,
+function buildPicShape({
+  spec,
+  id,
+  resourceId,
+  media,
+}: {
+  spec: ImageSpec;
+  id: string;
+  resourceId: string;
   media:
     | { readonly mediaType: "video" | "audio"; readonly media: PicShape["media"] }
-    | undefined,
-): PicShape {
+    | undefined;
+}): PicShape {
   return {
     type: "pic",
     nonVisual: { id, name: `Picture ${id}` },
@@ -262,6 +267,35 @@ function buildPicShape(
   };
 }
 
+async function buildEmbeddedMedia(
+  spec: ImageSpec,
+  ctx: BuildContext,
+): Promise<
+  | { readonly mediaType: "video" | "audio"; readonly media: PicShape["media"] }
+  | undefined
+> {
+  if (!spec.media) {
+    return undefined;
+  }
+
+  const mediaPath = path.resolve(ctx.specDir, spec.media.path);
+  const mediaBuffer = await fs.readFile(mediaPath);
+  const mediaType = detectEmbeddedMediaType(spec.media);
+
+  const mediaArrayBuffer = new ArrayBuffer(mediaBuffer.length);
+  const mediaView = new Uint8Array(mediaArrayBuffer);
+  mediaView.set(mediaBuffer);
+
+  const { rId: mediaRId } = addMedia({
+    pkg: ctx.zipPackage,
+    mediaData: mediaArrayBuffer,
+    mediaType,
+    referringPart: ctx.slidePath,
+  });
+
+  return buildMediaReferenceFromSpec(spec.media, mediaRId, mediaType);
+}
+
 export const imageBuilder: AsyncBuilder<ImageSpec> = async (spec, id, ctx) => {
   const imagePath = path.resolve(ctx.specDir, spec.path);
   const imageBuffer = await fs.readFile(imagePath);
@@ -279,30 +313,9 @@ export const imageBuilder: AsyncBuilder<ImageSpec> = async (spec, id, ctx) => {
     referringPart: ctx.slidePath,
   });
 
-  const media = await (async () => {
-    if (!spec.media) {
-      return undefined;
-    }
+  const media = await buildEmbeddedMedia(spec, ctx);
 
-    const mediaPath = path.resolve(ctx.specDir, spec.media.path);
-    const mediaBuffer = await fs.readFile(mediaPath);
-    const mediaType = detectEmbeddedMediaType(spec.media);
-
-    const mediaArrayBuffer = new ArrayBuffer(mediaBuffer.length);
-    const mediaView = new Uint8Array(mediaArrayBuffer);
-    mediaView.set(mediaBuffer);
-
-    const { rId: mediaRId } = addMedia({
-      pkg: ctx.zipPackage,
-      mediaData: mediaArrayBuffer,
-      mediaType,
-      referringPart: ctx.slidePath,
-    });
-
-    return buildMediaReferenceFromSpec(spec.media, mediaRId, mediaType);
-  })();
-
-  return { xml: domainToXml(buildPicShape(spec, id, rId, media)) };
+  return { xml: domainToXml(buildPicShape({ spec, id, resourceId: rId, media })) };
 };
 
 // =============================================================================
@@ -462,6 +475,26 @@ export type AddElementsSyncOptions<TSpec> = {
   readonly builder: SyncBuilder<TSpec>;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function addElementsSync<TSpec>({
   slideDoc,
   specs,
@@ -493,6 +526,26 @@ export type AddElementsAsyncOptions<TSpec> = {
   readonly ctx: BuildContext;
   readonly builder: AsyncBuilder<TSpec>;
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export async function addElementsAsync<TSpec>({
   slideDoc,

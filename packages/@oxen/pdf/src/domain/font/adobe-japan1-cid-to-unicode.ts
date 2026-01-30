@@ -1080,6 +1080,26 @@ function getTable(): Uint32Array {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function decodeAdobeJapan1CidToUnicode(cid: number): string | null {
   if (!Number.isFinite(cid)) {return null;}
   const idx = Math.trunc(cid);

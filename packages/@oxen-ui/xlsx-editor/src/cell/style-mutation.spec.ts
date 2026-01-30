@@ -14,8 +14,17 @@ function addr(col: number, row: number): CellAddress {
   return { col: colIdx(col), row: rowIdx(row), colAbsolute: false, rowAbsolute: false };
 }
 
-function range(...args: readonly [startCol: number, startRow: number, endCol: number, endRow: number]): CellRange {
-  const [startCol, startRow, endCol, endRow] = args;
+function range({
+  startCol,
+  startRow,
+  endCol,
+  endRow,
+}: {
+  startCol: number;
+  startRow: number;
+  endCol: number;
+  endRow: number;
+}): CellRange {
   return { start: addr(startCol, startRow), end: addr(endCol, endRow) };
 }
 
@@ -51,15 +60,17 @@ function createWorksheet(cells: readonly Cell[], opts?: Partial<XlsxWorksheet>):
   };
 }
 
-function cellAt(
-  ...args: readonly [
-    col: number,
-    row: number,
-    value: CellValue,
-    opts?: { readonly styleId?: number },
-  ]
-): Cell {
-  const [col, row, value, opts] = args;
+function cellAt({
+  col,
+  row,
+  value,
+  opts,
+}: {
+  col: number;
+  row: number;
+  value: CellValue;
+  opts?: { readonly styleId?: number };
+}): Cell {
   return {
     address: addr(col, row),
     value,
@@ -70,10 +81,10 @@ function cellAt(
 describe("xlsx-editor/cell/style-mutation", () => {
   it("materializes missing cells and applies styleId in a normal range", () => {
     const worksheet = createWorksheet([
-      cellAt(1, 1, { type: "string", value: "A1" }),
+      cellAt({ col: 1, row: 1, value: { type: "string", value: "A1" } }),
     ]);
 
-    const updated = applyStyleToRange(worksheet, range(1, 1, 2, 2), styleId(7));
+    const updated = applyStyleToRange(worksheet, range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 }), styleId(7));
 
     expect(getCell(updated, addr(1, 1))).toEqual({
       address: addr(1, 1),
@@ -99,10 +110,10 @@ describe("xlsx-editor/cell/style-mutation", () => {
 
   it("treats styleId(0) as clearing cell styles without materializing missing cells", () => {
     const worksheet = createWorksheet([
-      cellAt(1, 1, { type: "string", value: "A1" }, { styleId: 3 }),
+      cellAt({ col: 1, row: 1, value: { type: "string", value: "A1" }, opts: { styleId: 3 } }),
     ]);
 
-    const updated = applyStyleToRange(worksheet, range(1, 1, 2, 2), styleId(0));
+    const updated = applyStyleToRange(worksheet, range({ startCol: 1, startRow: 1, endCol: 2, endRow: 2 }), styleId(0));
 
     expect(getCell(updated, addr(1, 1))).toEqual({
       address: addr(1, 1),
@@ -121,7 +132,7 @@ describe("xlsx-editor/cell/style-mutation", () => {
 
     const updated = applyStyleToRange(
       worksheet,
-      range(2, 1, 3, EXCEL_MAX_ROWS),
+      range({ startCol: 2, startRow: 1, endCol: 3, endRow: EXCEL_MAX_ROWS }),
       styleId(5),
     );
 
@@ -137,7 +148,7 @@ describe("xlsx-editor/cell/style-mutation", () => {
 
     const updated = applyStyleToRange(
       worksheet,
-      range(1, 10, EXCEL_MAX_COLS, 10),
+      range({ startCol: 1, startRow: 10, endCol: EXCEL_MAX_COLS, endRow: 10 }),
       styleId(9),
     );
 

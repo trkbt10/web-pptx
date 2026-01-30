@@ -56,12 +56,12 @@ export function renderLayoutResult(
 
     // Render each line
     for (const line of para.lines) {
-      const lineElements = renderLine(
+      const lineElements = renderLine({
         line,
-        para.fontAlignment,
-        keyCounter.value,
+        fontAlignment: para.fontAlignment,
+        startKey: keyCounter.value,
         defs,
-      );
+      });
       elements.push(...lineElements);
       keyCounter.value += line.spans.length + 1;
     }

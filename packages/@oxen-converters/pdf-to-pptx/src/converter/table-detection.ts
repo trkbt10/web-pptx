@@ -72,15 +72,17 @@ function cluster1D(values: readonly number[], eps: number): number[] {
   return out;
 }
 
-function computeRegionMeta(
-  ...args: readonly [
-    boxIndices: readonly number[],
-    boxes: readonly BBox[],
-    spanMin: number,
-    thicknessMax: number,
-  ]
-): { bbox: BBox; ruleCount: number; xLines: number[]; yLines: number[]; colCountHint: number | null; rowCountHint: number | null } | null {
-  const [boxIndices, boxes, spanMin, thicknessMax] = args;
+function computeRegionMeta({
+  boxIndices,
+  boxes,
+  spanMin,
+  thicknessMax,
+}: {
+  readonly boxIndices: readonly number[];
+  readonly boxes: readonly BBox[];
+  readonly spanMin: number;
+  readonly thicknessMax: number;
+}): { bbox: BBox; ruleCount: number; xLines: number[]; yLines: number[]; colCountHint: number | null; rowCountHint: number | null } | null {
   if (boxIndices.length === 0) {return null;}
   let bb = boxes[boxIndices[0]!]!;
   const vertCenters: number[] = [];
@@ -195,6 +197,26 @@ function splitByHorizontalWhitespace(
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function detectTableRegionsFromPaths(
   paths: readonly PdfPath[],
   page: { readonly width: number; readonly height: number },
@@ -212,8 +234,7 @@ export function detectTableRegionsFromPaths(
     const half = lineWidth / 2;
 
     let cur: { x: number; y: number } | null = null;
-    const pushRect = (...args: readonly [x0: number, y0: number, x1: number, y1: number, thickness: number, span: number]): void => {
-      const [x0, y0, x1, y1, thickness, span] = args;
+    const pushRect = ({ x0, y0, x1, y1, thickness, span }: { x0: number; y0: number; x1: number; y1: number; thickness: number; span: number }): void => {
       if (span < spanMin) {return;}
       const aspect = span / Math.max(0.1, thickness);
       if (aspect < 10) {return;}
@@ -239,10 +260,10 @@ export function detectTableRegionsFromPaths(
         // Only axis-aligned rules are relevant for table regions.
         if (x0 === x1 && y0 !== y1) {
           const span = y1 - y0;
-          pushRect(x0 - half, y0, x1 + half, y1, lineWidth, span);
+          pushRect({ x0: x0 - half, y0, x1: x1 + half, y1, thickness: lineWidth, span });
         } else if (y0 === y1 && x0 !== x1) {
           const span = x1 - x0;
-          pushRect(x0, y0 - half, x1, y1 + half, lineWidth, span);
+          pushRect({ x0, y0: y0 - half, x1, y1: y1 + half, thickness: lineWidth, span });
         }
 
         cur = { x: op.point.x, y: op.point.y };
@@ -258,7 +279,7 @@ export function detectTableRegionsFromPaths(
         if (!(w > 0 && h > 0)) {continue;}
         const thickness = Math.min(w, h);
         const span = Math.max(w, h);
-        pushRect(Math.min(x0, x1), Math.min(y0, y1), Math.max(x0, x1), Math.max(y0, y1), thickness, span);
+        pushRect({ x0: Math.min(x0, x1), y0: Math.min(y0, y1), x1: Math.max(x0, x1), y1: Math.max(y0, y1), thickness, span });
         continue;
       }
 
@@ -321,13 +342,13 @@ export function detectTableRegionsFromPaths(
     // Some PDFs draw adjacent tables as two independent grids separated by a wide whitespace band,
     // but the central divider rules can still connect the path clusters, making the region appear
     // as one component. Split such regions into multiple candidates using vertical whitespace.
-    const meta0 = computeRegionMeta(indices, boxes, spanMin, thicknessMax);
+    const meta0 = computeRegionMeta({ boxIndices: indices, boxes, spanMin, thicknessMax });
     if (!meta0) {continue;}
 
     const splitV = splitByVerticalWhitespace(meta0, indices, boxes);
     if (splitV) {
-      const metaL = computeRegionMeta(splitV.left, boxes, spanMin, thicknessMax);
-      const metaR = computeRegionMeta(splitV.right, boxes, spanMin, thicknessMax);
+      const metaL = computeRegionMeta({ boxIndices: splitV.left, boxes, spanMin, thicknessMax });
+      const metaR = computeRegionMeta({ boxIndices: splitV.right, boxes, spanMin, thicknessMax });
       if (metaL && metaR) {
         regions.push({
           ...metaL.bbox,
@@ -347,8 +368,8 @@ export function detectTableRegionsFromPaths(
 
     const splitH = splitByHorizontalWhitespace(meta0, indices, boxes);
     if (splitH) {
-      const metaT = computeRegionMeta(splitH.top, boxes, spanMin, thicknessMax);
-      const metaB = computeRegionMeta(splitH.bottom, boxes, spanMin, thicknessMax);
+      const metaT = computeRegionMeta({ boxIndices: splitH.top, boxes, spanMin, thicknessMax });
+      const metaB = computeRegionMeta({ boxIndices: splitH.bottom, boxes, spanMin, thicknessMax });
       if (metaT && metaB) {
         regions.push({
           ...metaT.bbox,

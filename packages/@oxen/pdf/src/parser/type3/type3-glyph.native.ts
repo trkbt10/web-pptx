@@ -17,16 +17,19 @@ import type { PdfShading } from "../shading/shading.types";
 
 type Type3Info = NonNullable<FontInfo["type3"]>;
 
-function computeType3GlyphToUserMatrix(
-  ...args: readonly [
-    textMatrix: PdfMatrix,
-    type3: Type3Info,
-    fontSize: number,
-    horizontalScaling: number,
-    textRise: number,
-  ]
-): PdfMatrix {
-  const [textMatrix, type3, fontSize, horizontalScaling, textRise] = args;
+function computeType3GlyphToUserMatrix({
+  textMatrix,
+  type3,
+  fontSize,
+  horizontalScaling,
+  textRise,
+}: {
+  readonly textMatrix: PdfMatrix;
+  readonly type3: Type3Info;
+  readonly fontSize: number;
+  readonly horizontalScaling: number;
+  readonly textRise: number;
+}): PdfMatrix {
   const Th = horizontalScaling / 100;
   const scale: PdfMatrix = [fontSize * Th, 0, 0, fontSize, 0, 0];
   const rise: PdfMatrix = [1, 0, 0, 1, 0, textRise];
@@ -38,18 +41,21 @@ function advanceTextMatrixX(textMatrix: PdfMatrix, dx: number): PdfMatrix {
   return [a, b, c, d, e + dx, f];
 }
 
-function computeGlyphDx(
-  ...args: readonly [
-    charCode: number,
-    fontInfo: FontInfo,
-    fontSize: number,
-    charSpacing: number,
-    wordSpacing: number,
-    horizontalScaling: number,
-  ]
-): number {
-  const [charCode, fontInfo, fontSize, charSpacing, wordSpacing, horizontalScaling] =
-    args;
+function computeGlyphDx({
+  charCode,
+  fontInfo,
+  fontSize,
+  charSpacing,
+  wordSpacing,
+  horizontalScaling,
+}: {
+  readonly charCode: number;
+  readonly fontInfo: FontInfo;
+  readonly fontSize: number;
+  readonly charSpacing: number;
+  readonly wordSpacing: number;
+  readonly horizontalScaling: number;
+}): number {
   const Th = horizontalScaling / 100;
   const w0 = fontInfo.metrics.widths.get(charCode) ?? fontInfo.metrics.defaultWidth;
   const glyphWidth = (w0 * fontSize) / 1000;
@@ -68,24 +74,27 @@ function decodeCharProcBytes(bytes: Uint8Array): string {
  * The caller is responsible for applying any page-level filtering (clip, complexity)
  * and for mapping `/Do` names to the correct `/Resources` scope.
  */
-export function renderType3TextRun(
-  ...args: readonly [
-    run: TextRun,
-    fontInfo: FontInfo,
-    type3: Type3Info,
-    fontMappings: FontMappings,
-    options: Readonly<{
-      readonly extGState: ReadonlyMap<string, ExtGStateParams>;
-      readonly shadings: ReadonlyMap<string, PdfShading>;
-      readonly patterns: ReadonlyMap<string, PdfPattern>;
-      readonly colorSpaces: ReadonlyMap<string, import("../color/color-space.native").ParsedNamedColorSpace>;
-      readonly shadingMaxSize: number;
-      readonly clipPathMaxSize: number;
-      readonly pageBBox: PdfBBox;
-    }>,
-  ]
-): readonly ParsedElement[] {
-  const [run, fontInfo, type3, fontMappings, options] = args;
+export function renderType3TextRun({
+  run,
+  fontInfo,
+  type3,
+  fontMappings,
+  options,
+}: {
+  readonly run: TextRun;
+  readonly fontInfo: FontInfo;
+  readonly type3: Type3Info;
+  readonly fontMappings: FontMappings;
+  readonly options: Readonly<{
+    readonly extGState: ReadonlyMap<string, ExtGStateParams>;
+    readonly shadings: ReadonlyMap<string, PdfShading>;
+    readonly patterns: ReadonlyMap<string, PdfPattern>;
+    readonly colorSpaces: ReadonlyMap<string, import("../color/color-space.native").ParsedNamedColorSpace>;
+    readonly shadingMaxSize: number;
+    readonly clipPathMaxSize: number;
+    readonly pageBBox: PdfBBox;
+  }>;
+}): readonly ParsedElement[] {
   if (fontInfo.codeByteWidth !== 1) {return [];}
 
   const out: ParsedElement[] = [];
@@ -98,13 +107,13 @@ export function renderType3TextRun(
     if (glyphName) {
       const procBytes = type3.charProcs.get(glyphName);
       if (procBytes) {
-        const glyphToUser = computeType3GlyphToUserMatrix(
+        const glyphToUser = computeType3GlyphToUserMatrix({
           textMatrix,
           type3,
-          run.fontSize,
-          run.horizontalScaling,
-          run.textRise,
-        );
+          fontSize: run.fontSize,
+          horizontalScaling: run.horizontalScaling,
+          textRise: run.textRise,
+        });
 
         const stack = createGraphicsStateStack(run.graphicsState);
         stack.concatMatrix(glyphToUser);
@@ -124,14 +133,14 @@ export function renderType3TextRun(
       }
     }
 
-    const dx = computeGlyphDx(
+    const dx = computeGlyphDx({
       charCode,
       fontInfo,
-      run.fontSize,
-      run.charSpacing,
-      run.wordSpacing,
-      run.horizontalScaling,
-    );
+      fontSize: run.fontSize,
+      charSpacing: run.charSpacing,
+      wordSpacing: run.wordSpacing,
+      horizontalScaling: run.horizontalScaling,
+    });
     textMatrix = advanceTextMatrixX(textMatrix, dx);
   }
 

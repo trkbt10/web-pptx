@@ -54,12 +54,12 @@ function colorToRgbBytes(color: PdfColor): readonly [number, number, number] {
     case "DeviceRGB":
       return [toByte(color.components[0] ?? 0), toByte(color.components[1] ?? 0), toByte(color.components[2] ?? 0)];
     case "DeviceCMYK": {
-      const [r, g, b] = cmykToRgb(
-        color.components[0] ?? 0,
-        color.components[1] ?? 0,
-        color.components[2] ?? 0,
-        color.components[3] ?? 0,
-      );
+      const [r, g, b] = cmykToRgb({
+        c: color.components[0] ?? 0,
+        m: color.components[1] ?? 0,
+        y: color.components[2] ?? 0,
+        k: color.components[3] ?? 0,
+      });
       return [r, g, b];
     }
     case "ICCBased": {
@@ -72,12 +72,12 @@ function colorToRgbBytes(color: PdfColor): readonly [number, number, number] {
         return [toByte(color.components[0] ?? 0), toByte(color.components[1] ?? 0), toByte(color.components[2] ?? 0)];
       }
       if (alt === "DeviceCMYK") {
-        const [r, g, b] = cmykToRgb(
-          color.components[0] ?? 0,
-          color.components[1] ?? 0,
-          color.components[2] ?? 0,
-          color.components[3] ?? 0,
-        );
+        const [r, g, b] = cmykToRgb({
+          c: color.components[0] ?? 0,
+          m: color.components[1] ?? 0,
+          y: color.components[2] ?? 0,
+          k: color.components[3] ?? 0,
+        });
         return [r, g, b];
       }
       return [0, 0, 0];
@@ -522,6 +522,26 @@ function parsePatternCellShapes(pattern: PdfTilingPattern): readonly CellShape[]
 
   return out;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

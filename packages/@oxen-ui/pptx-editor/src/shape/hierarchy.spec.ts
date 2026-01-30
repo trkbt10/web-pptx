@@ -6,7 +6,7 @@ import type { Shape, GrpShape, SpShape } from "@oxen-office/pptx/domain";
 import { px, deg } from "@oxen-office/ooxml/domain/units";
 import { moveShapeInHierarchy } from "./hierarchy";
 
-const createShape = (id: string, x: number, y: number): SpShape => ({
+const createShape = ({ id, x, y }: { id: string; x: number; y: number }): SpShape => ({
   type: "sp",
   nonVisual: { id, name: `Shape ${id}` },
   properties: {
@@ -22,10 +22,17 @@ const createShape = (id: string, x: number, y: number): SpShape => ({
   },
 });
 
-const createGroup = (
-  ...args: readonly [id: string, x: number, y: number, children: Shape[]]
-): GrpShape => {
-  const [id, x, y, children] = args;
+const createGroup = ({
+  id,
+  x,
+  y,
+  children,
+}: {
+  id: string;
+  x: number;
+  y: number;
+  children: Shape[];
+}): GrpShape => {
   return {
     type: "grpSp",
     nonVisual: { id, name: `Group ${id}` },
@@ -50,8 +57,8 @@ const createGroup = (
 
 describe("moveShapeInHierarchy", () => {
   it("moves a top-level shape into a group and adjusts coordinates", () => {
-    const shapeA = createShape("1", 150, 160);
-    const group = createGroup("g1", 100, 100, []);
+    const shapeA = createShape({ id: "1", x: 150, y: 160 });
+    const group = createGroup({ id: "g1", x: 100, y: 100, children: [] });
     const shapes: Shape[] = [shapeA, group];
 
     const result = moveShapeInHierarchy(shapes, "1", { parentId: "g1", index: 0 });
@@ -66,8 +73,8 @@ describe("moveShapeInHierarchy", () => {
   });
 
   it("moves a group child to top-level and restores slide coordinates", () => {
-    const child = createShape("2", 50, 60);
-    const group = createGroup("g1", 100, 100, [child]);
+    const child = createShape({ id: "2", x: 50, y: 60 });
+    const group = createGroup({ id: "g1", x: 100, y: 100, children: [child] });
     const shapes: Shape[] = [group];
 
     const result = moveShapeInHierarchy(shapes, "2", { parentId: null, index: 0 });

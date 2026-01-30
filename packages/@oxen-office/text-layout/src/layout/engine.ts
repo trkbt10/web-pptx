@@ -131,18 +131,16 @@ function calculateLineHeight(baseFontSize: Points, lineSpacing: LineSpacing | un
 /**
  * Layout a single paragraph.
  */
-function layoutParagraph(
-  ...args: readonly [
-    para: LayoutParagraphInput,
-    contentWidth: Pixels,
-    startY: number,
-    measureParagraphFn: (paragraph: LayoutParagraphInput) => {
-      readonly spans: readonly MeasuredSpan[];
-      readonly bulletWidth?: Pixels;
-    },
-  ]
-): { paragraph: LayoutParagraphResult; endY: number } {
-  const [para, contentWidth, startY, measureParagraphFn] = args;
+function layoutParagraph(params: {
+  readonly para: LayoutParagraphInput;
+  readonly contentWidth: Pixels;
+  readonly startY: number;
+  readonly measureParagraphFn: (paragraph: LayoutParagraphInput) => {
+    readonly spans: readonly MeasuredSpan[];
+    readonly bulletWidth?: Pixels;
+  };
+}): { paragraph: LayoutParagraphResult; endY: number } {
+  const { para, contentWidth, startY, measureParagraphFn } = params;
   // Calculate margins
   const marginLeft = para.marginLeft as number;
   const marginRight = para.marginRight as number;
@@ -165,7 +163,7 @@ function layoutParagraph(
   const wrapMode = measuredSpans.length === 0 ? "none" : "wrap";
 
   // Break into lines
-  const { lines: spanLines, lineHeights, pageBreaksAfter } = breakIntoLines(measuredSpans, firstLineWidth, nextLineWidth, wrapMode);
+  const { lines: spanLines, lineHeights, pageBreaksAfter } = breakIntoLines({ spans: measuredSpans, firstLineWidth, nextLineWidth, wrapMode });
 
   // Add space before
   const layoutState = { currentY: startY + (para.spaceBefore as number) * PT_TO_PX };
@@ -187,24 +185,24 @@ function layoutParagraph(
     const availableWidth = index === 0 ? firstLineWidth : nextLineWidth;
     const lineIndent = index === 0 ? indent : 0;
     const lineBulletWidth = index === 0 ? (bulletWidth as number) : 0;
-    const x = calculateLineX(
-      para.alignment,
+    const x = calculateLineX({
+      alignment: para.alignment,
       marginLeft,
-      lineWidth as number,
-      availableWidth as number,
-      lineIndent,
-      lineBulletWidth,
-    );
+      lineWidth: lineWidth as number,
+      availableWidth: availableWidth as number,
+      indent: lineIndent,
+      bulletWidth: lineBulletWidth,
+    });
 
     // Convert spans to positioned spans (with justification if needed)
     const isLastLine = index === spanLines.length - 1;
-    const positionedSpans = positionSpans(
-      lineSpans,
-      para.alignment,
-      lineWidth as number,
-      availableWidth as number,
+    const positionedSpans = positionSpans({
+      spans: lineSpans,
+      alignment: para.alignment,
+      lineWidth: lineWidth as number,
+      availableWidth: availableWidth as number,
       isLastLine,
-    );
+    });
 
     const hasPageBreakAfter = pageBreaksAfter[index] ?? false;
     lines.push({
@@ -237,18 +235,16 @@ function layoutParagraph(
 /**
  * Calculate line X position based on alignment.
  */
-function calculateLineX(
-  ...args: readonly [
-    alignment: TextAlign,
-    marginLeft: number,
-    lineWidth: number,
-    availableWidth: number,
-    indent: number,
-    bulletWidth: number,
-  ]
-): number {
-  const [alignment, marginLeft, lineWidth, availableWidth, indent, bulletWidth] =
-    args;
+function calculateLineX(params: {
+  readonly alignment: TextAlign;
+  readonly marginLeft: number;
+  readonly lineWidth: number;
+  readonly availableWidth: number;
+  readonly indent: number;
+  readonly bulletWidth: number;
+}): number {
+  const { alignment, marginLeft, lineWidth, availableWidth, indent, bulletWidth } =
+    params;
   // First line starts at marL + indent + bulletWidth
   const baseX = marginLeft + indent + bulletWidth;
 
@@ -315,16 +311,14 @@ function findWordBoundaries(
  * @param availableWidth - Available width to fill
  * @param isLastLine - Whether this is the last line of the paragraph
  */
-function positionSpans(
-  ...args: readonly [
-    spans: readonly MeasuredSpan[],
-    alignment: TextAlign,
-    lineWidth: number,
-    availableWidth: number,
-    isLastLine: boolean,
-  ]
-): PositionedSpan[] {
-  const [spans, alignment, lineWidth, availableWidth, isLastLine] = args;
+function positionSpans(params: {
+  readonly spans: readonly MeasuredSpan[];
+  readonly alignment: TextAlign;
+  readonly lineWidth: number;
+  readonly availableWidth: number;
+  readonly isLastLine: boolean;
+}): PositionedSpan[] {
+  const { spans, alignment, lineWidth, availableWidth, isLastLine } = params;
   // Apply justification for justify alignment on non-last lines
   // For distributed alignment, also justify the last line
   // @see ECMA-376-1:2016 Section 17.3.1.13 (jc - distribute)
@@ -402,20 +396,18 @@ function calculateYOffset(totalHeight: number, textBox: TextBoxConfig): number {
   const contentHeight = getContentHeight(textBox) as number;
   const insetTop = textBox.insetTop as number;
 
-  const rawOffset = getAnchorYOffset(textBox.anchor, insetTop, contentHeight, totalHeight);
+  const rawOffset = getAnchorYOffset({ anchor: textBox.anchor, insetTop, contentHeight, totalHeight });
 
   return Math.max(insetTop, rawOffset);
 }
 
-function getAnchorYOffset(
-  ...args: readonly [
-    anchor: TextBoxConfig["anchor"],
-    insetTop: number,
-    contentHeight: number,
-    totalHeight: number,
-  ]
-): number {
-  const [anchor, insetTop, contentHeight, totalHeight] = args;
+function getAnchorYOffset(params: {
+  readonly anchor: TextBoxConfig["anchor"];
+  readonly insetTop: number;
+  readonly contentHeight: number;
+  readonly totalHeight: number;
+}): number {
+  const { anchor, insetTop, contentHeight, totalHeight } = params;
   switch (anchor) {
     case "center":
       return insetTop + (contentHeight - totalHeight) / 2;
@@ -594,7 +586,7 @@ export function layoutTextBody(input: LayoutInput): LayoutResult {
   const layoutedParagraphs: LayoutParagraphResult[] = [];
 
   adjustedParagraphs.forEach((para) => {
-    const { paragraph, endY } = layoutParagraph(para, inlineSize, layoutState.currentY, measureParagraphFn);
+    const { paragraph, endY } = layoutParagraph({ para, contentWidth: inlineSize, startY: layoutState.currentY, measureParagraphFn });
     layoutedParagraphs.push(paragraph);
     layoutState.currentY = endY;
   });
@@ -652,7 +644,7 @@ export function layoutDocument(
   const layoutedParagraphs: LayoutParagraphResult[] = [];
 
   paragraphs.forEach((para) => {
-    const { paragraph, endY } = layoutParagraph(para, contentWidth, layoutState.currentY, measureFn);
+    const { paragraph, endY } = layoutParagraph({ para, contentWidth, startY: layoutState.currentY, measureParagraphFn: measureFn });
     layoutedParagraphs.push(paragraph);
     layoutState.currentY = endY;
   });

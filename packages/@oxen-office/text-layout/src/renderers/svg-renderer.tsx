@@ -175,10 +175,13 @@ function getTextColor(span: PositionedSpan): string {
 /**
  * Render an inline image span.
  */
-function renderInlineImage(
-  ...args: readonly [span: PositionedSpan, x: number, lineY: number, key: string]
-): ReactNode {
-  const [span, x, lineY, key] = args;
+function renderInlineImage(params: {
+  readonly span: PositionedSpan;
+  readonly x: number;
+  readonly lineY: number;
+  readonly key: string;
+}): ReactNode {
+  const { span, x, lineY, key } = params;
   const image = span.inlineImage;
   if (image === undefined) {
     return null;
@@ -212,21 +215,19 @@ function renderInlineImage(
  * - Apply CSS writing-mode for proper character orientation
  * - CJK characters remain upright, Latin characters rotate
  */
-function renderSpan(
-  ...args: readonly [
-    span: PositionedSpan,
-    x: number,
-    lineY: number,
-    dominantBaseline: string | undefined,
-    key: string,
-    writingMode?: WritingMode,
-  ]
-): ReactNode {
-  const [span, x, lineY, dominantBaseline, key, writingMode = "horizontal-tb"] =
-    args;
+function renderSpan(params: {
+  readonly span: PositionedSpan;
+  readonly x: number;
+  readonly lineY: number;
+  readonly dominantBaseline: string | undefined;
+  readonly key: string;
+  readonly writingMode?: WritingMode;
+}): ReactNode {
+  const { span, x, lineY, dominantBaseline, key, writingMode = "horizontal-tb" } =
+    params;
   // Handle inline images
   if (span.inlineImage !== undefined) {
-    return renderInlineImage(span, x, lineY, key);
+    return renderInlineImage({ span, x, lineY, key });
   }
 
   const fontSizePx = fontSizeToPixels(span.fontSize);
@@ -356,22 +357,20 @@ function renderSpan(
  * - line.y = inline start Y position
  * - Spans advance along Y axis (inline direction)
  */
-function renderLine(
-  ...args: readonly [
-    line: LayoutLine,
-    fontAlignment: FontAlignment,
-    paragraphIndex: number,
-    lineIndex: number,
-    writingMode?: WritingMode,
-  ]
-): ReactNode[] {
-  const [
+function renderLine(params: {
+  readonly line: LayoutLine;
+  readonly fontAlignment: FontAlignment;
+  readonly paragraphIndex: number;
+  readonly lineIndex: number;
+  readonly writingMode?: WritingMode;
+}): ReactNode[] {
+  const {
     line,
     fontAlignment,
     paragraphIndex,
     lineIndex,
     writingMode = "horizontal-tb",
-  ] = args;
+  } = params;
   const dominantBaseline = toSvgDominantBaseline(fontAlignment);
   const isVerticalMode = isVertical(writingMode);
 
@@ -388,7 +387,7 @@ function renderLine(
       const key = `p${paragraphIndex}-l${lineIndex}-s${spanIndex}`;
       const x = isVerticalMode ? fixedPos : acc.cursor;
       const y = isVerticalMode ? acc.cursor : fixedPos;
-      acc.elements.push(renderSpan(span, x, y, dominantBaseline, key, writingMode));
+      acc.elements.push(renderSpan({ span, x, lineY: y, dominantBaseline, key, writingMode }));
       // In vertical mode, span.width is the inline extent (height in physical space)
       acc.cursor += (span.width as number) + (span.dx as number);
       return acc;
@@ -406,16 +405,14 @@ function renderLine(
 /**
  * Render a bullet (text or image) for a paragraph.
  */
-function renderBullet(
-  ...args: readonly [
-    bullet: BulletConfig,
-    bulletX: number,
-    bulletY: number,
-    key: string,
-    writingMode?: WritingMode,
-  ]
-): ReactNode {
-  const [bullet, bulletX, bulletY, key, writingMode = "horizontal-tb"] = args;
+function renderBullet(params: {
+  readonly bullet: BulletConfig;
+  readonly bulletX: number;
+  readonly bulletY: number;
+  readonly key: string;
+  readonly writingMode?: WritingMode;
+}): ReactNode {
+  const { bullet, bulletX, bulletY, key, writingMode = "horizontal-tb" } = params;
   const bulletFontSizePx = fontSizeToPixels(bullet.fontSize);
   const bulletBounds = getTextVisualBounds(bulletY as Pixels, bullet.fontSize, bullet.fontFamily);
   const isVerticalMode = isVertical(writingMode);
@@ -613,12 +610,12 @@ export function TextOverlay({
       // - Vertical: bullet is ABOVE the line (Y - bulletWidth)
       const { bulletX, bulletY } = getBulletPosition(firstLine, para.bulletWidth, isVerticalMode);
 
-      elements.push(renderBullet(para.bullet, bulletX, bulletY, `p${paragraphIndex}`, writingMode));
+      elements.push(renderBullet({ bullet: para.bullet, bulletX, bulletY, key: `p${paragraphIndex}`, writingMode }));
     }
 
     // Render lines
     para.lines.forEach((line, lineIndex) => {
-      const lineElements = renderLine(line, para.fontAlignment, paragraphIndex, lineIndex, writingMode);
+      const lineElements = renderLine({ line, fontAlignment: para.fontAlignment, paragraphIndex, lineIndex, writingMode });
       elements.push(...lineElements);
     });
   });

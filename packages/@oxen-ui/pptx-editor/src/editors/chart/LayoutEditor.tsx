@@ -19,6 +19,26 @@ export type LayoutEditorProps = CoreLayoutEditorProps;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 export function LayoutEditor(props: LayoutEditorProps) {
   return (
     <ChartEditorAdaptersBoundary adapters={pptxChartEditorAdapters}>
@@ -26,6 +46,26 @@ export function LayoutEditor(props: LayoutEditorProps) {
     </ChartEditorAdaptersBoundary>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

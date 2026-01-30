@@ -111,14 +111,14 @@ describe("parseRow", () => {
 
   it("should parse row number", () => {
     const el = parseElement('<row r="5" />');
-    const row = parseRow(el, context, undefined);
+    const row = parseRow({ rowElement: el, context, options: undefined });
 
     expect(row.rowNumber).toBe(5);
   });
 
   it("should parse row height and custom height", () => {
     const el = parseElement('<row r="1" ht="20.5" customHeight="1" />');
-    const row = parseRow(el, context, undefined);
+    const row = parseRow({ rowElement: el, context, options: undefined });
 
     expect(row.height).toBe(20.5);
     expect(row.customHeight).toBe(true);
@@ -126,14 +126,14 @@ describe("parseRow", () => {
 
   it("should parse hidden attribute", () => {
     const el = parseElement('<row r="1" hidden="1" />');
-    const row = parseRow(el, context, undefined);
+    const row = parseRow({ rowElement: el, context, options: undefined });
 
     expect(row.hidden).toBe(true);
   });
 
   it("should parse row style", () => {
     const el = parseElement('<row r="1" s="3" />');
-    const row = parseRow(el, context, undefined);
+    const row = parseRow({ rowElement: el, context, options: undefined });
 
     expect(row.styleId).toBe(3);
   });
@@ -145,7 +145,7 @@ describe("parseRow", () => {
         <c r="B1" t="n"><v>100</v></c>
       </row>
     `);
-    const row = parseRow(el, context, undefined);
+    const row = parseRow({ rowElement: el, context, options: undefined });
 
     expect(row.cells).toHaveLength(2);
     expect(row.cells[0].address.col).toBe(1);
@@ -156,7 +156,7 @@ describe("parseRow", () => {
 
   it("should default row number to 1 when missing", () => {
     const el = parseElement("<row />");
-    const row = parseRow(el, context, undefined);
+    const row = parseRow({ rowElement: el, context, options: undefined });
 
     expect(row.rowNumber).toBe(1);
   });
@@ -417,7 +417,7 @@ describe("parseWorksheet", () => {
         </mergeCells>
       </worksheet>
     `);
-    const ws = parseWorksheet(el, context, undefined, sheetInfo);
+    const ws = parseWorksheet({ worksheetElement: el, context, options: undefined, sheetInfo });
 
     expect(ws.name).toBe("Sheet1");
     expect(ws.sheetId).toBe(1);
@@ -454,7 +454,7 @@ describe("parseWorksheet", () => {
         <sheetData />
       </worksheet>
     `);
-    const ws = parseWorksheet(el, context, undefined, sheetInfo);
+    const ws = parseWorksheet({ worksheetElement: el, context, options: undefined, sheetInfo });
 
     expect(ws.name).toBe("Sheet1");
     expect(ws.dimension).toBeUndefined();
@@ -466,7 +466,7 @@ describe("parseWorksheet", () => {
 
   it("should handle worksheet without sheetData", () => {
     const el = parseElement("<worksheet />");
-    const ws = parseWorksheet(el, context, undefined, sheetInfo);
+    const ws = parseWorksheet({ worksheetElement: el, context, options: undefined, sheetInfo });
 
     expect(ws.rows).toEqual([]);
   });
@@ -477,7 +477,7 @@ describe("parseWorksheet", () => {
       state: "hidden" as const,
     };
     const el = parseElement("<worksheet><sheetData /></worksheet>");
-    const ws = parseWorksheet(el, context, undefined, hiddenSheetInfo);
+    const ws = parseWorksheet({ worksheetElement: el, context, options: undefined, sheetInfo: hiddenSheetInfo });
 
     expect(ws.state).toBe("hidden");
   });
@@ -489,7 +489,7 @@ describe("parseWorksheet", () => {
         <sheetData />
       </worksheet>
     `);
-    const ws = parseWorksheet(el, context, undefined, sheetInfo);
+    const ws = parseWorksheet({ worksheetElement: el, context, options: undefined, sheetInfo });
 
     // When ref is missing, defaults to "A1"
     expect(ws.dimension).toBeDefined();
