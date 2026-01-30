@@ -122,16 +122,20 @@ export {
   type BackgroundResult,
 } from "@oxen-renderer/drawing-ml";
 
-// Shape
+// Shape (format-agnostic components from drawing-ml)
 export {
-  useShapeStyle,
   StyledShape,
   StyledShapeWithStyle,
-  type ShapeStyleInput,
   type ShapeStyleResult,
   type ShapeSvgProps,
   type ShapeType,
 } from "@oxen-renderer/drawing-ml";
+
+// Shape (PPTX-specific hook that accepts PPTX Fill/Line types)
+export {
+  useShapeStyle,
+  type PptxShapeStyleInput as ShapeStyleInput,
+} from "../hooks/useShapeStylePptx";
 
 // Text Fill
 export {

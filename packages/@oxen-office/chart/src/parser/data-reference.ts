@@ -178,11 +178,15 @@ export function parseDataReference(element: XmlElement | undefined): DataReferen
 
   const numRef = getChild(element, "c:numRef");
   const strRef = getChild(element, "c:strRef");
+  const numLit = getChild(element, "c:numLit");
+  const strLit = getChild(element, "c:strLit");
   const multiLvlStrRef = getChild(element, "c:multiLvlStrRef");
 
   return {
     numRef: numRef ? parseNumericReference(numRef) : undefined,
     strRef: strRef ? parseStringReference(strRef) : undefined,
+    numLit: numLit ? parseNumericCache(numLit) : undefined,
+    strLit: strLit ? parseStringCache(strLit) : undefined,
     multiLvlStrRef: multiLvlStrRef ? parseMultiLevelStringReference(multiLvlStrRef) : undefined,
   };
 }

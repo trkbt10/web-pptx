@@ -123,5 +123,8 @@ export { addTableColumn, addTableRow, patchTable, patchTableCell, patchTableStyl
 export type { DiagramChange, DiagramFiles } from "./diagram";
 export { patchDiagram, patchDiagramNodeText } from "./diagram";
 
+export type { ChartChange, ChartPatchTarget, ChartStyle } from "./chart/chart-patcher";
+export { patchChart, patchChartElement, patchChartTransform } from "./chart/chart-patcher";
+
 export type { OleChange } from "./ole";
 export { patchOleObject } from "./ole";
