@@ -17,7 +17,28 @@ export {
   type DrawingMLRenderContext,
   type SvgDefsManager,
   type WarningCollector,
+  type RenderSize,
 } from "./context";
+
+// Background
+export {
+  useBackground,
+  resolveBackgroundForReact,
+  BackgroundFill,
+  BackgroundFillWithDefs,
+  type BackgroundResult,
+} from "./background";
+
+// Shape
+export {
+  useShapeStyle,
+  StyledShape,
+  StyledShapeWithStyle,
+  type ShapeStyleInput,
+  type ShapeStyleResult,
+  type ShapeSvgProps,
+  type ShapeType,
+} from "./shape";
 
 // Hooks
 export {
@@ -29,6 +50,21 @@ export {
   PatternDef as SvgPatternDef,
   ClipPathDef,
 } from "./hooks";
+
+// Primitives
+export {
+  useFillWithDefs,
+  resolveFillForReact,
+  resolvedFillToResult,
+  useStroke,
+  resolveStrokeForReact,
+  resolvedLineToProps,
+  combineShapeProps,
+  type SvgFillProps,
+  type FillResult,
+  type FillWithDefsResult,
+  type SvgStrokeProps,
+} from "./primitives";
 
 // Color
 export {
@@ -82,12 +118,16 @@ export {
   type ShadowAlignment,
   type ResolvedShadowProps,
   type ResolvedGlowProps,
-  type Effects,
-  type ShadowEffect,
-  type GlowEffect,
-  type SoftEdgeEffect,
-  type ReflectionEffect,
 } from "./effects";
+
+// Re-export effect types from ooxml
+export type {
+  Effects,
+  ShadowEffect,
+  GlowEffect,
+  SoftEdgeEffect,
+  ReflectionEffect,
+} from "@oxen-office/ooxml/domain/effects";
 
 // Text Fill
 export {

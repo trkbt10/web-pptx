@@ -2,14 +2,14 @@
  * @file Styled Shape Component
  *
  * A React component that renders a shape with complete DrawingML styling.
- * Supports fill, stroke, effects, and common shape types.
+ * Format-agnostic version that accepts resolved fill/line types.
  *
  * @see ECMA-376 Part 1, Section 19.3.1.44 (spPr)
  */
 
 import type { ReactNode } from "react";
-import type { Fill, Line } from "@oxen-office/pptx/domain";
-import type { Effects } from "@oxen-office/pptx/domain/effects";
+import type { ResolvedFill, ResolvedLine } from "@oxen-office/ooxml/domain/resolved-fill";
+import type { Effects } from "@oxen-office/ooxml/domain/effects";
 import { useShapeStyle, type ShapeStyleInput } from "./useShapeStyle";
 
 // =============================================================================
@@ -35,10 +35,10 @@ type StyledShapeProps = {
   readonly width: number;
   /** Height */
   readonly height: number;
-  /** Fill definition */
-  readonly fill?: Fill;
-  /** Line/stroke definition */
-  readonly line?: Line;
+  /** Resolved fill (after color/resource resolution) */
+  readonly resolvedFill?: ResolvedFill;
+  /** Resolved line/stroke (after color resolution) */
+  readonly resolvedLine?: ResolvedLine;
   /** Effects definition */
   readonly effects?: Effects;
   /** Corner radius for roundRect (percentage 0-100) */
@@ -67,7 +67,7 @@ type StyledShapeWithStyleProps = {
   readonly width: number;
   /** Height */
   readonly height: number;
-  /** Style input (fill, line, effects) */
+  /** Style input (resolvedFill, resolvedLine, effects) */
   readonly style: ShapeStyleInput;
   /** Corner radius for roundRect (percentage 0-100) */
   readonly cornerRadius?: number;
@@ -88,17 +88,24 @@ type StyledShapeWithStyleProps = {
 /**
  * Renders a shape with complete DrawingML styling.
  *
+ * Accepts format-agnostic resolved types. The caller is responsible for
+ * resolving format-specific Fill/Line types using their resolver functions.
+ *
  * @example
  * ```tsx
+ * // PPTX usage
+ * const resolvedFill = resolveFill(pptxFill, colorContext);
+ * const resolvedLine = resolveLine(pptxLine, colorContext);
+ *
  * <svg viewBox="0 0 200 100">
  *   <StyledShape
  *     type="roundRect"
  *     x={10} y={10}
  *     width={180} height={80}
  *     cornerRadius={10}
- *     fill={{ type: "solidFill", color: { spec: { type: "srgb", value: "4F81BD" } } }}
- *     line={{ fill: { type: "solidFill", color: { spec: { type: "srgb", value: "1F497D" } } }, width: px(2), ... }}
- *     effects={{ shadow: { ... } }}
+ *     resolvedFill={toResolvedFill(resolvedFill)}
+ *     resolvedLine={toResolvedLine(resolvedLine)}
+ *     effects={effects}
  *   />
  * </svg>
  * ```
@@ -109,8 +116,8 @@ export function StyledShape({
   y,
   width,
   height,
-  fill,
-  line,
+  resolvedFill,
+  resolvedLine,
   effects,
   cornerRadius,
   pathData,
@@ -118,11 +125,11 @@ export function StyledShape({
   transform,
   children,
 }: StyledShapeProps): ReactNode {
-  const style = useShapeStyle({ fill, line, effects, width, height });
+  const style = useShapeStyle({ resolvedFill, resolvedLine, effects, width, height });
 
   return (
     <>
-      {style.defs && <defs>{style.defs}</defs>}
+      {style.defs !== null && <defs>{style.defs}</defs>}
       <g className={className} transform={transform}>
         <ShapeElement
           type={type}
@@ -161,7 +168,7 @@ export function StyledShapeWithStyle({
 
   return (
     <>
-      {style.defs && <defs>{style.defs}</defs>}
+      {style.defs !== null && <defs>{style.defs}</defs>}
       <g className={className} transform={transform}>
         <ShapeElement
           type={type}

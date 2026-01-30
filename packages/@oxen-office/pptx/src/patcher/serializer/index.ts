@@ -4,7 +4,7 @@
 
 // Phase 4: Fill / Line / Effects
 export { serializeColor } from "./color";
-export { serializeFill, serializeGradientFill, serializePatternFill, serializeBlipFill } from "./fill";
+export { serializeFill, serializeGradientFill, serializePatternFill, serializeBlipFill, serializeBlipEffects } from "./fill";
 export { serializeLine } from "./line";
 export { serializeEffects } from "./effects";
 export { serializeTransform, patchTransformElement } from "./transform";

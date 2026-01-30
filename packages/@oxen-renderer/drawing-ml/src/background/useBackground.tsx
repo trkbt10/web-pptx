@@ -1,7 +1,7 @@
 /**
  * @file Background rendering hook for React
  *
- * Provides background fill data and SVG elements from RenderContext.
+ * Provides background fill data and SVG elements from DrawingML context.
  * Supports solid, gradient, pattern, and image backgrounds.
  *
  * @see ECMA-376 Part 1, Section 19.3.1.2 (p:bg)
@@ -9,10 +9,10 @@
  */
 
 import { useMemo, type ReactNode } from "react";
-import type { ResolvedBackgroundFill } from "../../../background-fill";
-import { useRenderContext } from "../../context";
-import { useSvgDefs } from "../../hooks/useSvgDefs";
-import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../../../svg/gradient-utils";
+import type { ResolvedBackgroundFill } from "@oxen-office/ooxml/domain/background-fill";
+import { useDrawingMLContext } from "../context";
+import { useSvgDefs } from "../hooks/useSvgDefs";
+import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../gradient/gradient-utils";
 
 // =============================================================================
 // Types
@@ -47,15 +47,17 @@ export type BackgroundResult = {
 // =============================================================================
 
 /**
- * Hook to access resolved background from render context.
+ * Hook to access resolved background from DrawingML context.
  *
  * @returns Background result with SVG-ready data
  *
  * @example
  * ```tsx
  * function SlideBackground() {
- *   const { width, height } = useRenderContext().slideSize;
+ *   const { renderSize } = useDrawingMLContext();
  *   const bg = useBackground();
+ *   const width = renderSize?.width ?? 960;
+ *   const height = renderSize?.height ?? 540;
  *
  *   if (!bg.hasBackground) {
  *     return <rect width={width} height={height} fill="#ffffff" />;
@@ -75,7 +77,7 @@ export type BackgroundResult = {
  * ```
  */
 export function useBackground(): BackgroundResult {
-  const { resolvedBackground } = useRenderContext();
+  const { resolvedBackground } = useDrawingMLContext();
   const { getNextId } = useSvgDefs();
 
   return useMemo(() => {

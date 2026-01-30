@@ -1,7 +1,7 @@
 /**
  * @file Background module exports
  *
- * Background rendering components and hooks for DrawingML.
+ * Components and hooks for rendering backgrounds.
  */
 
 export {
@@ -10,4 +10,7 @@ export {
   type BackgroundResult,
 } from "./useBackground";
 
-export { BackgroundFill, BackgroundFillWithDefs } from "./BackgroundFill";
+export {
+  BackgroundFill,
+  BackgroundFillWithDefs,
+} from "./BackgroundFill";

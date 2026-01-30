@@ -70,6 +70,11 @@ export function createDrawingMLContext(
     resolveResource,
     getNextId,
     warnings,
+    // Add resolved background and render size for background/shape rendering
+    resolvedBackground: pptxContext.resolvedBackground,
+    renderSize: pptxContext.slideSize
+      ? { width: pptxContext.slideSize.width as number, height: pptxContext.slideSize.height as number }
+      : undefined,
   };
 }
 
@@ -86,5 +91,7 @@ export function getDrawingMLProviderProps(pptxContext: ReactRenderContext) {
     resolveResource: ctx.resolveResource,
     getNextId: ctx.getNextId,
     warnings: ctx.warnings,
+    resolvedBackground: ctx.resolvedBackground,
+    renderSize: ctx.renderSize,
   };
 }

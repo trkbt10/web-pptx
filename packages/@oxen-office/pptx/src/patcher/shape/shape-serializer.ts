@@ -3,7 +3,7 @@ import type { Shape, SpShape, GrpShape, PicShape, CxnShape, GraphicFrame, NonVis
 import type { Transform, GroupTransform } from "../../domain/geometry";
 import type { Table } from "../../domain/table/types";
 import { serializeTransform } from "../serializer/transform";
-import { serializeColor, serializeDrawingTable, serializeEffects, serializeFill, serializeLine, serializeTextBody, serializeShape3d } from "../serializer";
+import { serializeColor, serializeDrawingTable, serializeEffects, serializeFill, serializeLine, serializeTextBody, serializeShape3d, serializeBlipEffects } from "../serializer";
 import { ooxmlAngleUnits, ooxmlBool, ooxmlEmu, ooxmlPercent100k } from "@oxen-office/ooxml/serializer/units";
 
 /**
@@ -298,7 +298,10 @@ function serializePictureBlipFill(blipFill: PicShape["blipFill"]): XmlElement {
     blipAttrs.cstate = blipFill.compressionState;
   }
 
-  const children: XmlElement[] = [createElement("a:blip", blipAttrs)];
+  // Serialize blip effects as child elements of a:blip
+  const blipChildren = blipFill.blipEffects ? serializeBlipEffects(blipFill.blipEffects) : [];
+
+  const children: XmlElement[] = [createElement("a:blip", blipAttrs, blipChildren)];
 
   if (blipFill.sourceRect) {
     children.push(

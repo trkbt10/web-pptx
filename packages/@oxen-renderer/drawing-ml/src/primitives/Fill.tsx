@@ -1,25 +1,22 @@
 /**
  * @file Fill Primitives for React SVG Renderer
  *
- * Provides utilities and components for rendering fill styles
- * including solid colors, gradients, and image patterns.
+ * Format-agnostic fill rendering utilities.
+ * Receives resolved fill types and produces SVG fill attributes.
+ *
+ * @see ECMA-376 Part 1, Section 20.1.8 (Fill Properties)
  */
 
-import type { ReactNode } from "react";
-import type { Fill } from "@oxen-office/pptx/domain";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
-import {
-  resolveFill,
-  type ResolvedFill,
-  type ResolvedGradientFill,
-  type ResolvedImageFill,
-  type ResolvedPatternFill,
-} from "@oxen-office/pptx/domain/color/fill";
-import type { ResourceResolverFn } from "@oxen-office/pptx/domain/resource-resolver";
-import { PatternDef } from "@oxen-renderer/drawing-ml";
-import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../../svg/gradient-utils";
-import { useSvgDefs } from "../hooks/useSvgDefs";
-import { useRenderContext, useRenderResources, useRenderResourceStore } from "../context";
+import { useMemo, type ReactNode } from "react";
+import type {
+  ResolvedFill,
+  ResolvedGradientFill,
+  ResolvedImageFill,
+  ResolvedPatternFill,
+} from "@oxen-office/ooxml/domain/resolved-fill";
+import { PatternDef } from "../fill/PatternDef";
+import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../gradient/gradient-utils";
+import { useDrawingMLContext } from "../context";
 
 // =============================================================================
 // Types
@@ -51,23 +48,25 @@ export type FillResult = {
 
 /**
  * Convert resolved fill to SVG fill props and optional def element.
+ *
+ * @param fill - Resolved fill
+ * @param getNextId - ID generator function
+ * @param width - Shape width (for image patterns)
+ * @param height - Shape height (for image patterns)
  */
-function resolvedFillToResult(
-  ...args: [
-    fill: ResolvedFill,
-    getNextId: (prefix: string) => string,
-    width?: number,
-    height?: number,
-  ]
+export function resolvedFillToResult(
+  fill: ResolvedFill,
+  getNextId: (prefix: string) => string,
+  width?: number,
+  height?: number,
 ): FillResult {
-  const [fill, getNextId, width, height] = args;
   switch (fill.type) {
     case "none":
     case "unresolved":
       return { props: { fill: "none" } };
 
     case "solid": {
-      const props: SvgFillProps = buildSolidFillProps(fill.color);
+      const props = buildSolidFillProps(fill.color);
       return { props };
     }
 
@@ -129,7 +128,7 @@ function createGradientDef(fill: ResolvedGradientFill, id: string): ReactNode {
     />
   ));
 
-  if (fill.isRadial) {
+  if (fill.isRadial === true) {
     const { cx, cy, r } = getRadialGradientCoords(fill.radialCenter);
     return (
       <radialGradient id={id} cx={`${cx}%`} cy={`${cy}%`} r={`${r}%`}>
@@ -158,14 +157,11 @@ function createGradientDef(fill: ResolvedGradientFill, id: string): ReactNode {
  * Create image pattern definition element
  */
 function createImagePatternDef(
-  ...args: [
-    fill: ResolvedImageFill,
-    id: string,
-    width: number,
-    height: number,
-  ]
+  fill: ResolvedImageFill,
+  id: string,
+  width: number,
+  height: number,
 ): ReactNode {
-  const [fill, id, width, height] = args;
   return (
     <pattern
       id={id}
@@ -188,10 +184,12 @@ function createImagePatternDef(
  * @see ECMA-376 Part 1, Section 20.1.10.50 (ST_PresetPatternVal)
  */
 function createPatternDef(fill: ResolvedPatternFill, id: string): ReactNode {
+  // Cast preset to PatternType - the pattern preset should be a valid ECMA-376 value
+  // If invalid, PatternDef will render a solid fallback
   return (
     <PatternDef
       id={id}
-      preset={fill.preset}
+      preset={fill.preset as import("@oxen-office/ooxml/domain/fill").PatternType}
       fgColor={fill.fgColor}
       bgColor={fill.bgColor}
     />
@@ -199,7 +197,7 @@ function createPatternDef(fill: ResolvedPatternFill, id: string): ReactNode {
 }
 
 // =============================================================================
-// Hook
+// Hooks
 // =============================================================================
 
 /**
@@ -213,119 +211,52 @@ export type FillWithDefsResult = {
 };
 
 /**
- * Hook to resolve fill and return both props and def element.
+ * Hook to convert resolved fill to SVG props and def element.
  * The caller is responsible for rendering the defElement in a <defs> block.
  *
- * @param fill - Domain fill object
+ * @param resolvedFill - Resolved fill (after color/resource resolution)
  * @param width - Shape width (needed for image patterns)
  * @param height - Shape height (needed for image patterns)
  * @returns SVG fill props and optional def element
  */
 export function useFillWithDefs(
-  fill: Fill | undefined,
+  resolvedFill: ResolvedFill | undefined,
   width?: number,
   height?: number,
 ): FillWithDefsResult {
-  const { colorContext } = useRenderContext();
-  const resources = useRenderResources();
-  const resourceStore = useRenderResourceStore();
-  const { getNextId } = useSvgDefs();
+  const { getNextId } = useDrawingMLContext();
 
-  if (fill === undefined || fill.type === "noFill") {
-    return { props: { fill: "none" } };
-  }
-
-  // Create composite resolver: ResourceStore > legacy resolver
-  const compositeResolver: ResourceResolverFn = (resourceId) => {
-    // 1. Check ResourceStore first
-    if (resourceStore !== undefined) {
-      const url = resourceStore.toDataUrl(resourceId);
-      if (url !== undefined) {return url;}
+  return useMemo(() => {
+    if (resolvedFill === undefined) {
+      return { props: { fill: "none" } };
     }
-    // 2. Fall back to legacy resolver
-    return resources.resolve(resourceId);
-  };
 
-  const resolved = resolveFill(fill, colorContext, compositeResolver);
-  const result = resolvedFillToResult(resolved, getNextId, width, height);
-
-  return {
-    props: result.props,
-    defElement: result.defElement,
-  };
+    const result = resolvedFillToResult(resolvedFill, getNextId, width, height);
+    return {
+      props: result.props,
+      defElement: result.defElement,
+    };
+  }, [resolvedFill, getNextId, width, height]);
 }
 
 /**
- * Hook to resolve fill and register defs if needed.
- *
- * @param fill - Domain fill object
- * @param width - Shape width (needed for image patterns)
- * @param height - Shape height (needed for image patterns)
- * @returns SVG fill props
- * @deprecated Use useFillWithDefs instead and render defElement directly
- */
-export function useFill(
-  fill: Fill | undefined,
-  width?: number,
-  height?: number,
-): SvgFillProps {
-  const { colorContext } = useRenderContext();
-  const resources = useRenderResources();
-  const resourceStore = useRenderResourceStore();
-  const { getNextId, addDef, hasDef } = useSvgDefs();
-
-  if (fill === undefined || fill.type === "noFill") {
-    return { fill: "none" };
-  }
-
-  // Create composite resolver: ResourceStore > legacy resolver
-  const compositeResolver: ResourceResolverFn = (resourceId) => {
-    // 1. Check ResourceStore first
-    if (resourceStore !== undefined) {
-      const url = resourceStore.toDataUrl(resourceId);
-      if (url !== undefined) {return url;}
-    }
-    // 2. Fall back to legacy resolver
-    return resources.resolve(resourceId);
-  };
-
-  const resolved = resolveFill(fill, colorContext, compositeResolver);
-  const result = resolvedFillToResult(resolved, getNextId, width, height);
-
-  // Register def if present and not already registered
-  if (result.defId && result.defElement && !hasDef(result.defId)) {
-    addDef(result.defId, result.defElement);
-  }
-
-  return result.props;
-}
-
-/**
- * Resolve fill without registering defs (for external use).
+ * Resolve fill without context (for external use).
  * Returns both props and the def element.
  *
- * @param fill - Domain fill object
- * @param colorContext - Color context for theme/scheme color resolution
- * @param getNextId - Function to generate unique IDs
+ * @param resolvedFill - Resolved fill
+ * @param getNextId - ID generator function
  * @param width - Shape width (needed for image patterns)
  * @param height - Shape height (needed for image patterns)
- * @param resourceResolver - Optional resource resolver for blipFill resolution
  */
 export function resolveFillForReact(
-  ...args: [
-    fill: Fill | undefined,
-    colorContext: ColorContext | undefined,
-    getNextId: (prefix: string) => string,
-    width?: number,
-    height?: number,
-    resourceResolver?: ResourceResolverFn,
-  ]
+  resolvedFill: ResolvedFill | undefined,
+  getNextId: (prefix: string) => string,
+  width?: number,
+  height?: number,
 ): FillResult {
-  const [fill, colorContext, getNextId, width, height, resourceResolver] = args;
-  if (fill === undefined || fill.type === "noFill") {
+  if (resolvedFill === undefined) {
     return { props: { fill: "none" } };
   }
 
-  const resolved = resolveFill(fill, colorContext, resourceResolver);
-  return resolvedFillToResult(resolved, getNextId, width, height);
+  return resolvedFillToResult(resolvedFill, getNextId, width, height);
 }

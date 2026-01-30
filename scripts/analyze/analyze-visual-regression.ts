@@ -32,9 +32,11 @@ async function analyzeVisualRegression(pptxPath: string, snapshotName: string) {
       const slide = presentation.getSlide(i);
       const { svg } = renderSlideToSvg(slide);
 
-      const result = compareWithDetails(svg, snapshotName, i, {
-        threshold: 0.1,
-        maxDiffPercent: 100, // Don't limit for analysis
+      const result = compareWithDetails({
+        svg,
+        snapshotName,
+        slideNumber: i,
+        options: { threshold: 0.1, maxDiffPercent: 100 },
       });
 
       results.push(result);

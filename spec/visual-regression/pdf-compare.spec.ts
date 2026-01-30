@@ -90,9 +90,11 @@ describe("PDF Screenshot Comparison - Text Layout", () => {
           const slide = presentation.getSlide(slideNum);
           const svg = renderSlideToSvg(slide).svg;
 
-          const result = compareWithDetails(svg, testCase.name, slideNum, {
-            maxDiffPercent: testCase.maxDiffPercent,
-            threshold: 0.1,
+          const result = compareWithDetails({
+            svg,
+            snapshotName: testCase.name,
+            slideNumber: slideNum,
+            options: { maxDiffPercent: testCase.maxDiffPercent, threshold: 0.1 },
           });
 
           if (!result.match) {
@@ -136,7 +138,7 @@ export async function runFullComparison(
   for (const slideNum of slides) {
     const slide = presentation.getSlide(slideNum);
     const svg = renderSlideToSvg(slide).svg;
-    const result = compareWithDetails(svg, snapshotName, slideNum, options);
+    const result = compareWithDetails({ svg, snapshotName, slideNumber: slideNum, options });
     results.push(result);
   }
 
@@ -150,24 +152,28 @@ export async function runFullComparison(
 /**
  * Test a single slide and get detailed comparison result
  */
-export async function testSingleSlide(
-  ...args: readonly [
-    pptxPath: string,
-    snapshotName: string,
-    slideNumber: number,
-    options?: CompareOptions,
-  ]
-): Promise<{
+export type TestSingleSlideOptions = {
+  readonly pptxPath: string;
+  readonly snapshotName: string;
+  readonly slideNumber: number;
+  readonly options?: CompareOptions;
+};
+
+export async function testSingleSlide({
+  pptxPath,
+  snapshotName,
+  slideNumber,
+  options = {},
+}: TestSingleSlideOptions): Promise<{
   svg: string;
   result: DetailedCompareResult;
 }> {
-  const [pptxPath, snapshotName, slideNumber, options = {}] = args;
   const { presentationFile } = await loadPptxFile(pptxPath);
   const presentation = openPresentation(presentationFile);
   const slide = presentation.getSlide(slideNumber);
   const svg = renderSlideToSvg(slide).svg;
 
-  const result = compareWithDetails(svg, snapshotName, slideNumber, options);
+  const result = compareWithDetails({ svg, snapshotName, slideNumber, options });
 
   return { svg, result };
 }

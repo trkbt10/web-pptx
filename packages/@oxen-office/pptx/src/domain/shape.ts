@@ -5,7 +5,7 @@
  * @see ECMA-376 Part 1, Section 20.1.9 - DrawingML Shapes
  */
 
-import type { Fill, Line } from "./color/types";
+import type { Fill, Line, BlipEffects } from "./color/types";
 import type { Table } from "./table/types";
 import type { TextBody } from "./text";
 import type { Degrees, Percent, Pixels } from "@oxen-office/ooxml/domain/units";
@@ -452,6 +452,11 @@ export type BlipFillProperties = {
   };
   readonly rotateWithShape?: boolean;
   readonly dpi?: number;
+  /**
+   * Effects applied to the blip image (color transforms).
+   * @see ECMA-376 Part 1, Section 20.1.8.13 (CT_Blip)
+   */
+  readonly blipEffects?: BlipEffects;
 };
 
 /**

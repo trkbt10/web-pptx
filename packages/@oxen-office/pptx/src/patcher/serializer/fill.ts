@@ -213,7 +213,7 @@ function serializeTileFill(tile: TileFill): XmlElement {
  * Serialize blip effects (color transform effects) to a:blip child elements
  * @see ECMA-376 Part 1, Section 20.1.8.13 (CT_Blip)
  */
-function serializeBlipEffects(effects: BlipEffects): XmlElement[] {
+export function serializeBlipEffects(effects: BlipEffects): XmlElement[] {
   const children: XmlElement[] = [];
 
   if (effects.alphaBiLevel) {

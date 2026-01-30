@@ -6,6 +6,7 @@
  */
 
 import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { ResolvedBackgroundFill } from "@oxen-office/ooxml/domain/background-fill";
 import type { ReactNode } from "react";
 
 // =============================================================================
@@ -20,6 +21,14 @@ export type WarningCollector = {
    * Add a warning message.
    */
   readonly warn: (message: string, context?: Record<string, unknown>) => void;
+};
+
+/**
+ * Size of the rendering area (slide, page, etc.)
+ */
+export type RenderSize = {
+  readonly width: number;
+  readonly height: number;
 };
 
 /**
@@ -60,6 +69,18 @@ export type DrawingMLRenderContext = {
    * Warning collector for non-fatal issues during rendering.
    */
   readonly warnings: WarningCollector;
+
+  /**
+   * Resolved background fill for the rendering area (slide, page, etc.).
+   * Optional - not all contexts have a background.
+   */
+  readonly resolvedBackground?: ResolvedBackgroundFill;
+
+  /**
+   * Size of the rendering area (slide, page, etc.).
+   * Optional - used for background rendering and aspect ratio calculations.
+   */
+  readonly renderSize?: RenderSize;
 };
 
 /**

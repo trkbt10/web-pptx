@@ -8,6 +8,7 @@ export type {
   DrawingMLRenderContext,
   SvgDefsManager,
   WarningCollector,
+  RenderSize,
 } from "./types";
 
 export {

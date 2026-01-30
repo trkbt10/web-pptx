@@ -66,6 +66,29 @@ export type {
   BreakClear,
 } from "./domain/text";
 
+// Domain types - Background Fill
+export type {
+  GradientStop,
+  RadialCenter,
+  SolidBackgroundFill,
+  GradientBackgroundFill,
+  ImageBackgroundFill,
+  ResolvedBackgroundFill,
+} from "./domain/background-fill";
+
+// Domain types - Resolved Fill (for rendering)
+export type {
+  ResolvedColor,
+  ResolvedNoFill,
+  ResolvedSolidFill,
+  ResolvedGradientStop,
+  ResolvedGradientFill,
+  ResolvedImageFill,
+  ResolvedPatternFill,
+  ResolvedFill,
+  ResolvedLine,
+} from "./domain/resolved-fill";
+
 // Serializer utilities
 export {
   ooxmlBool,

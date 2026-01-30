@@ -4,14 +4,16 @@
  * Brings together fill, stroke, and effects into a single hook
  * for rendering complete shape styles.
  *
+ * Format-agnostic version that accepts resolved fill/line/effects.
+ *
  * @see ECMA-376 Part 1, Section 19.3.1.44 (spPr)
  */
 
 import { useMemo, type ReactNode } from "react";
-import type { Fill, Line } from "@oxen-office/pptx/domain";
-import type { Effects } from "@oxen-office/pptx/domain/effects";
-import { useFillWithDefs, type FillResult } from "../../primitives/Fill";
-import { useStroke, type SvgStrokeProps } from "../../primitives/Stroke";
+import type { ResolvedFill, ResolvedLine } from "@oxen-office/ooxml/domain/resolved-fill";
+import type { Effects } from "@oxen-office/ooxml/domain/effects";
+import { useFillWithDefs, type FillWithDefsResult } from "../primitives/Fill";
+import { useStroke, type SvgStrokeProps } from "../primitives/Stroke";
 import { useEffects, type EffectsResult } from "../effects";
 
 // =============================================================================
@@ -19,14 +21,17 @@ import { useEffects, type EffectsResult } from "../effects";
 // =============================================================================
 
 /**
- * Shape style input properties
+ * Shape style input properties (format-agnostic)
+ *
+ * Accepts resolved fill and line types that have already been processed
+ * by format-specific resolvers (PPTX resolveFill, etc.)
  */
 export type ShapeStyleInput = {
-  /** Fill definition */
-  readonly fill?: Fill;
-  /** Line/stroke definition */
-  readonly line?: Line;
-  /** Effects definition */
+  /** Resolved fill (after color/resource resolution) */
+  readonly resolvedFill?: ResolvedFill;
+  /** Resolved line/stroke (after color resolution) */
+  readonly resolvedLine?: ResolvedLine;
+  /** Effects definition (uses OOXML Effects type) */
   readonly effects?: Effects;
   /** Shape width in pixels (for pattern fills) */
   readonly width?: number;
@@ -39,7 +44,7 @@ export type ShapeStyleInput = {
  */
 export type ShapeStyleResult = {
   /** Fill result with SVG props */
-  readonly fill: FillResult;
+  readonly fill: FillWithDefsResult;
   /** Stroke result with SVG props */
   readonly stroke: SvgStrokeProps | undefined;
   /** Effects result with filter */
@@ -73,14 +78,15 @@ export type ShapeSvgProps = {
  * Combined hook for shape styling.
  *
  * Resolves fill, stroke, and effects into SVG-ready props and defs.
+ * Accepts format-agnostic resolved types.
  *
  * @example
  * ```tsx
- * function StyledShape({ shape }: { shape: Shape }) {
+ * function StyledShape({ resolvedFill, resolvedLine, effects }: Props) {
  *   const style = useShapeStyle({
- *     fill: shape.properties.fill,
- *     line: shape.properties.line,
- *     effects: shape.properties.effects,
+ *     resolvedFill,
+ *     resolvedLine,
+ *     effects,
  *     width: 100,
  *     height: 50,
  *   });
@@ -95,8 +101,8 @@ export type ShapeSvgProps = {
  * ```
  */
 export function useShapeStyle(input: ShapeStyleInput): ShapeStyleResult {
-  const fillResult = useFillWithDefs(input.fill, input.width, input.height);
-  const strokeResult = useStroke(input.line);
+  const fillResult = useFillWithDefs(input.resolvedFill, input.width, input.height);
+  const strokeResult = useStroke(input.resolvedLine);
   const effectsResult = useEffects(input.effects);
 
   return useMemo(() => {
@@ -143,7 +149,7 @@ function buildDefs(
  * Build combined SVG props
  */
 function buildSvgProps(
-  fill: FillResult,
+  fill: FillWithDefsResult,
   stroke: SvgStrokeProps | undefined,
   effects: EffectsResult,
 ): ShapeSvgProps {

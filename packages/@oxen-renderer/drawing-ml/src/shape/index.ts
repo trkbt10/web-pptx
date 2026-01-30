@@ -1,7 +1,7 @@
 /**
  * @file Shape module exports
  *
- * Combined shape style components and hooks.
+ * Components and hooks for rendering shapes with DrawingML styling.
  */
 
 export {

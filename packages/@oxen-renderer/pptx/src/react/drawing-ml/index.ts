@@ -1,12 +1,41 @@
 /**
  * @file DrawingML React rendering module
  *
- * React components and hooks for rendering DrawingML elements.
+ * Re-exports format-agnostic components from @oxen-renderer/drawing-ml
+ * for backwards compatibility.
  *
  * @see ECMA-376 Part 1, Section 20.1 - DrawingML
  */
 
-// Color module
+// =============================================================================
+// Re-export from @oxen-renderer/drawing-ml
+// =============================================================================
+
+// Context
+export {
+  DrawingMLProvider,
+  DrawingMLContext,
+  useDrawingMLContext,
+  useOptionalDrawingMLContext,
+  type DrawingMLProviderProps,
+  type DrawingMLRenderContext,
+  type SvgDefsManager,
+  type WarningCollector,
+  type RenderSize,
+} from "@oxen-renderer/drawing-ml";
+
+// Hooks
+export {
+  useSvgDefs,
+  SvgDefsProvider,
+  SvgDefsCollector,
+  LinearGradientDef,
+  RadialGradientDef,
+  SvgPatternDef,
+  ClipPathDef,
+} from "@oxen-renderer/drawing-ml";
+
+// Color
 export {
   useColor,
   resolveColorForReact,
@@ -15,51 +44,85 @@ export {
   type ResolvedColorResult,
   type ColorSwatchProps,
   type ColorSwatchRowProps,
-} from "./color";
+} from "@oxen-renderer/drawing-ml";
 
-// Fill module
+// Fill
 export {
+  PatternDef,
   usePatternFill,
   resolvePatternFillForReact,
-  PatternDef,
   getPatternGeometry,
   isPatternSupported,
   getSupportedPatterns,
-  type PatternFillResult,
   type PatternDefProps,
-} from "./fill";
+  type PatternFillResult,
+} from "@oxen-renderer/drawing-ml";
 
-// Background module
+// Primitives
 export {
-  useBackground,
-  resolveBackgroundForReact,
-  BackgroundFill,
-  BackgroundFillWithDefs,
-  type BackgroundResult,
-} from "./background";
+  useFillWithDefs,
+  resolveFillForReact,
+  resolvedFillToResult,
+  useStroke,
+  resolveStrokeForReact,
+  resolvedLineToProps,
+  combineShapeProps,
+  type SvgFillProps,
+  type FillResult,
+  type FillWithDefsResult,
+  type SvgStrokeProps,
+} from "@oxen-renderer/drawing-ml";
 
-// Effects module
+// Gradient
 export {
-  useEffects,
-  resolveEffectsForReact,
+  ooxmlAngleToSvgLinearGradient,
+  fillToRectToRadialCenter,
+  getRadialGradientCoords,
+  type LinearGradientCoords,
+  type RadialGradientCoords,
+} from "@oxen-renderer/drawing-ml";
+
+// Effects
+export {
   ShadowFilterDef,
   GlowFilterDef,
   SoftEdgeFilterDef,
   EffectsFilter,
   EffectsWrapper,
   EffectsFilterDef,
-  directionToOffset,
+  useEffects,
+  resolveEffectsForReact,
   resolveShadowProps,
   resolveGlowProps,
-  type EffectsResult,
+  directionToOffset,
   type ShadowFilterDefProps,
   type GlowFilterDefProps,
   type SoftEdgeFilterDefProps,
+  type EffectsResult,
+  type ShadowAlignment,
   type ResolvedShadowProps,
   type ResolvedGlowProps,
-} from "./effects";
+} from "@oxen-renderer/drawing-ml";
 
-// Shape module
+// Re-export effect types from ooxml via drawing-ml
+export type {
+  Effects,
+  ShadowEffect,
+  GlowEffect,
+  SoftEdgeEffect,
+  ReflectionEffect,
+} from "@oxen-renderer/drawing-ml";
+
+// Background
+export {
+  useBackground,
+  resolveBackgroundForReact,
+  BackgroundFill,
+  BackgroundFillWithDefs,
+  type BackgroundResult,
+} from "@oxen-renderer/drawing-ml";
+
+// Shape
 export {
   useShapeStyle,
   StyledShape,
@@ -68,9 +131,9 @@ export {
   type ShapeStyleResult,
   type ShapeSvgProps,
   type ShapeType,
-} from "./shape";
+} from "@oxen-renderer/drawing-ml";
 
-// Text Fill module (ECMA-376 20.1.8 - Text Fill)
+// Text Fill
 export {
   createTextGradientDef,
   createTextPatternDef,
@@ -78,17 +141,31 @@ export {
   getTextPatternSize,
   renderTextPatternContent,
   type TextGradientDefProps,
-} from "./text-fill";
+  type TextFillConfig,
+  type TextGradientFillConfig,
+  type TextGradientStop,
+  type TextSolidFillConfig,
+  type TextNoFillConfig,
+  type TextPatternFillConfig,
+  type TextImageFillConfig,
+} from "@oxen-renderer/drawing-ml";
 
-// Text Effects module (ECMA-376 20.1.8 - Text Effects)
-export { createTextEffectsFilterDef } from "./text-effects";
+// Text Effects
+export {
+  createTextEffectsFilterDef,
+  type TextEffectsConfig,
+  type TextShadowConfig,
+  type TextGlowConfig,
+  type TextSoftEdgeConfig,
+  type TextReflectionConfig,
+} from "@oxen-renderer/drawing-ml";
 
-// Text 3D module (ECMA-376 20.1.5 - 3D Properties)
+// Text 3D - includes PPTX-specific render3dTextEffects
 export {
   render3dTextEffects,
   renderTextExtrusion,
-  getExtrusionOffset,
   createTextBevelFilterDef,
+  getExtrusionOffset,
   getBevelOffsets,
   type BevelConfig,
 } from "./text-3d";

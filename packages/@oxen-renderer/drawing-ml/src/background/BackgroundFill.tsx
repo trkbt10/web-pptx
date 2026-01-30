@@ -1,14 +1,14 @@
 /**
  * @file Background Fill Component
  *
- * Renders slide background using resolved background data.
+ * Renders slide/page background using resolved background data.
  * Supports solid, gradient, and image backgrounds.
  *
  * @see ECMA-376 Part 1, Section 19.3.1.2 (p:bg)
  */
 
 import type { ReactNode } from "react";
-import { useRenderContext } from "../../context";
+import { useDrawingMLContext } from "../context";
 import { useBackground } from "./useBackground";
 
 // =============================================================================
@@ -16,9 +16,9 @@ import { useBackground } from "./useBackground";
 // =============================================================================
 
 type BackgroundFillProps = {
-  /** Optional width override (defaults to slide width) */
+  /** Optional width override (defaults to renderSize.width or 960) */
   readonly width?: number;
-  /** Optional height override (defaults to slide height) */
+  /** Optional height override (defaults to renderSize.height or 540) */
   readonly height?: number;
   /** Optional fallback color when no background (defaults to white) */
   readonly fallbackColor?: string;
@@ -31,14 +31,16 @@ type BackgroundFillProps = {
 // =============================================================================
 
 /**
- * Renders a slide background as SVG elements.
+ * Renders a background as SVG elements.
+ *
+ * Uses the renderSize from DrawingML context or defaults to 960x540.
  *
  * @example
  * ```tsx
  * // In an SVG context
  * <svg viewBox="0 0 960 540">
  *   <BackgroundFill />
- *   {/* other slide content *\/}
+ *   {/* other content *\/}
  * </svg>
  * ```
  */
@@ -48,11 +50,11 @@ export function BackgroundFill({
   fallbackColor = "#ffffff",
   className,
 }: BackgroundFillProps): ReactNode {
-  const { slideSize } = useRenderContext();
+  const { renderSize } = useDrawingMLContext();
   const bg = useBackground();
 
-  const width = widthOverride ?? slideSize.width;
-  const height = heightOverride ?? slideSize.height;
+  const width = widthOverride ?? renderSize?.width ?? 960;
+  const height = heightOverride ?? renderSize?.height ?? 540;
 
   // No background - render fallback
   if (!bg.hasBackground) {
@@ -60,7 +62,7 @@ export function BackgroundFill({
   }
 
   // Image background - render as <image> element
-  if (bg.type === "image" && bg.imageUrl) {
+  if (bg.type === "image" && bg.imageUrl !== undefined) {
     return (
       <image
         href={bg.imageUrl}
@@ -91,11 +93,11 @@ export function BackgroundFillWithDefs({
   fallbackColor = "#ffffff",
   className,
 }: BackgroundFillProps): ReactNode {
-  const { slideSize } = useRenderContext();
+  const { renderSize } = useDrawingMLContext();
   const bg = useBackground();
 
-  const width = widthOverride ?? slideSize.width;
-  const height = heightOverride ?? slideSize.height;
+  const width = widthOverride ?? renderSize?.width ?? 960;
+  const height = heightOverride ?? renderSize?.height ?? 540;
 
   // No background - render fallback
   if (!bg.hasBackground) {
@@ -103,7 +105,7 @@ export function BackgroundFillWithDefs({
   }
 
   // Image background
-  if (bg.type === "image" && bg.imageUrl) {
+  if (bg.type === "image" && bg.imageUrl !== undefined) {
     return (
       <image
         href={bg.imageUrl}
@@ -118,7 +120,7 @@ export function BackgroundFillWithDefs({
   // Solid or gradient with defs
   return (
     <>
-      {bg.defElement && <defs>{bg.defElement}</defs>}
+      {bg.defElement !== undefined && <defs>{bg.defElement}</defs>}
       <rect width={width} height={height} fill={bg.fill} className={className} />
     </>
   );

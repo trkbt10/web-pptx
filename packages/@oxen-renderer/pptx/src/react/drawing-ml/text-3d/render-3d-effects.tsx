@@ -9,8 +9,7 @@
 import type { ReactNode } from "react";
 import type { Scene3d, Shape3d } from "@oxen-office/pptx/domain/three-d";
 import { calculateCameraTransform } from "../../../svg/effects3d";
-import { renderTextExtrusion } from "./extrusion";
-import { createTextBevelFilterDef } from "./bevel-filter";
+import { renderTextExtrusion, createTextBevelFilterDef } from "@oxen-renderer/drawing-ml";
 
 // =============================================================================
 // Types
