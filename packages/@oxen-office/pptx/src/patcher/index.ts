@@ -74,7 +74,7 @@ export { addShapeToTree, batchUpdateShapeTree, getSpTree, hasShapes, patchSlideX
 
 // Shape - Shape addition/serialization helpers
 export { extractShapeIds, generateShapeId, generateShapeName } from "./shape";
-export { serializeConnectionShape, serializeGroupShape, serializePicture, serializeShape } from "./shape";
+export { serializeConnectionShape, serializeGraphicFrame, serializeGroupShape, serializePicture, serializeShape } from "./shape";
 
 // Resources - media/relationships/content-types helpers (Phase 7)
 export type { MediaType } from "./resources/media-manager";

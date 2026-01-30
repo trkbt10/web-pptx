@@ -57,9 +57,15 @@ function getStrokeOpacity(fill: ResolvedFill): number | undefined {
  * Convert line cap to SVG stroke-linecap value
  */
 function lineCapToSvgLinecap(cap: string | undefined): "butt" | "round" | "square" | undefined {
-  if (cap === "flat") return "butt";
-  if (cap === "round") return "round";
-  if (cap === "square") return "square";
+  if (cap === "flat") {
+    return "butt";
+  }
+  if (cap === "round") {
+    return "round";
+  }
+  if (cap === "square") {
+    return "square";
+  }
   return undefined;
 }
 

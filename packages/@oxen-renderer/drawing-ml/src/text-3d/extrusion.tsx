@@ -125,11 +125,10 @@ type RenderTextExtrusionArgs = {
   readonly centerY: number;
 };
 
-
-
-
-
-
+/**
+ * Render text extrusion layers for 3D text effect.
+ * Creates multiple offset layers behind the text to simulate depth.
+ */
 export function renderTextExtrusion(args: RenderTextExtrusionArgs): ReactNode {
   const { content, extrusionHeight, cameraPreset, centerX, centerY } = args;
   const { offsetX, offsetY } = getExtrusionOffset(cameraPreset, extrusionHeight);

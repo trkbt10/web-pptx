@@ -213,11 +213,9 @@ type LinearGradientDefProps = {
   readonly children: ReactNode;
 };
 
-
-
-
-
-
+/**
+ * Register a linear gradient definition in SVG defs.
+ */
 export function LinearGradientDef({
   id,
   x1 = "0%",
@@ -265,11 +263,9 @@ type RadialGradientDefProps = {
   readonly children: ReactNode;
 };
 
-
-
-
-
-
+/**
+ * Register a radial gradient definition in SVG defs.
+ */
 export function RadialGradientDef({
   id,
   cx = "50%",
@@ -319,11 +315,9 @@ type PatternDefProps = {
   readonly children: ReactNode;
 };
 
-
-
-
-
-
+/**
+ * Register a pattern definition in SVG defs.
+ */
 export function PatternDef({
   id,
   x,
@@ -367,11 +361,9 @@ type ClipPathDefProps = {
   readonly children: ReactNode;
 };
 
-
-
-
-
-
+/**
+ * Register a clipPath definition in SVG defs.
+ */
 export function ClipPathDef({ id, clipPathUnits, children }: ClipPathDefProps) {
   const { addDef, hasDef } = useSvgDefs();
 

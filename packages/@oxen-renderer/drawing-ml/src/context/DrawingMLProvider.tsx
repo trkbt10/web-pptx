@@ -66,6 +66,7 @@ function createDefaultWarnings(): WarningCollector {
  * Create default ID generator.
  */
 function createDefaultIdGenerator(): (prefix: string) => string {
+  // eslint-disable-next-line no-restricted-syntax -- closure requires mutable counter
   let counter = 0;
   return (prefix: string) => `${prefix}-${counter++}`;
 }

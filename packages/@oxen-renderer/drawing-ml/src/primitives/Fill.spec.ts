@@ -12,7 +12,7 @@ describe("resolvedFillToResult", () => {
   describe("none fill", () => {
     it("returns fill: none for type none", () => {
       const fill: ResolvedFill = { type: "none" };
-      const result = resolvedFillToResult(fill, mockGetNextId);
+      const result = resolvedFillToResult({ fill, getNextId: mockGetNextId });
 
       expect(result.props.fill).toBe("none");
       expect(result.defElement).toBeUndefined();
@@ -21,7 +21,7 @@ describe("resolvedFillToResult", () => {
 
     it("returns fill: none for type unresolved", () => {
       const fill: ResolvedFill = { type: "unresolved" };
-      const result = resolvedFillToResult(fill, mockGetNextId);
+      const result = resolvedFillToResult({ fill, getNextId: mockGetNextId });
 
       expect(result.props.fill).toBe("none");
     });
@@ -33,7 +33,7 @@ describe("resolvedFillToResult", () => {
         type: "solid",
         color: { hex: "ff0000", alpha: 1 },
       };
-      const result = resolvedFillToResult(fill, mockGetNextId);
+      const result = resolvedFillToResult({ fill, getNextId: mockGetNextId });
 
       expect(result.props.fill).toBe("#ff0000");
       expect(result.props.fillOpacity).toBeUndefined();
@@ -45,7 +45,7 @@ describe("resolvedFillToResult", () => {
         type: "solid",
         color: { hex: "00ff00", alpha: 0.5 },
       };
-      const result = resolvedFillToResult(fill, mockGetNextId);
+      const result = resolvedFillToResult({ fill, getNextId: mockGetNextId });
 
       expect(result.props.fill).toBe("#00ff00");
       expect(result.props.fillOpacity).toBe(0.5);
@@ -62,7 +62,7 @@ describe("resolvedFillToResult", () => {
           { position: 100, color: { hex: "0000ff", alpha: 1 } },
         ],
       };
-      const result = resolvedFillToResult(fill, mockGetNextId);
+      const result = resolvedFillToResult({ fill, getNextId: mockGetNextId });
 
       expect(result.props.fill).toBe("url(#grad-1)");
       expect(result.defId).toBe("grad-1");
@@ -80,7 +80,7 @@ describe("resolvedFillToResult", () => {
           { position: 100, color: { hex: "000000", alpha: 1 } },
         ],
       };
-      const result = resolvedFillToResult(fill, mockGetNextId);
+      const result = resolvedFillToResult({ fill, getNextId: mockGetNextId });
 
       expect(result.props.fill).toBe("url(#grad-1)");
       expect(result.defElement).toBeDefined();
@@ -94,7 +94,7 @@ describe("resolvedFillToResult", () => {
         src: "data:image/png;base64,abc123",
         mode: "stretch",
       };
-      const result = resolvedFillToResult(fill, mockGetNextId);
+      const result = resolvedFillToResult({ fill, getNextId: mockGetNextId });
 
       expect(result.props.fill).toBe("none");
     });
@@ -105,7 +105,7 @@ describe("resolvedFillToResult", () => {
         src: "data:image/png;base64,abc123",
         mode: "stretch",
       };
-      const result = resolvedFillToResult(fill, mockGetNextId, 100, 50);
+      const result = resolvedFillToResult({ fill, getNextId: mockGetNextId, width: 100, height: 50 });
 
       expect(result.props.fill).toBe("url(#img-pattern-1)");
       expect(result.defId).toBe("img-pattern-1");
@@ -121,7 +121,7 @@ describe("resolvedFillToResult", () => {
         fgColor: "#000000",
         bgColor: "#ffffff",
       };
-      const result = resolvedFillToResult(fill, mockGetNextId);
+      const result = resolvedFillToResult({ fill, getNextId: mockGetNextId });
 
       expect(result.props.fill).toBe("url(#pattern-1)");
       expect(result.defId).toBe("pattern-1");
@@ -134,7 +134,7 @@ describe("resolveFillForReact", () => {
   const mockGetNextId = (prefix: string) => `${prefix}-test`;
 
   it("returns none for undefined fill", () => {
-    const result = resolveFillForReact(undefined, mockGetNextId);
+    const result = resolveFillForReact({ resolvedFill: undefined, getNextId: mockGetNextId });
 
     expect(result.props.fill).toBe("none");
   });
@@ -144,7 +144,7 @@ describe("resolveFillForReact", () => {
       type: "solid",
       color: { hex: "abcdef", alpha: 1 },
     };
-    const result = resolveFillForReact(fill, mockGetNextId);
+    const result = resolveFillForReact({ resolvedFill: fill, getNextId: mockGetNextId });
 
     expect(result.props.fill).toBe("#abcdef");
   });

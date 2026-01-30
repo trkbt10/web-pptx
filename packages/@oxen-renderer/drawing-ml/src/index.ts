@@ -120,14 +120,8 @@ export {
   type ResolvedGlowProps,
 } from "./effects";
 
-// Re-export effect types from ooxml
-export type {
-  Effects,
-  ShadowEffect,
-  GlowEffect,
-  SoftEdgeEffect,
-  ReflectionEffect,
-} from "@oxen-office/ooxml/domain/effects";
+// Note: Effect types (Effects, ShadowEffect, etc.) should be imported directly
+// from "@oxen-office/ooxml/domain/effects" by consumers
 
 // Text Fill
 export {

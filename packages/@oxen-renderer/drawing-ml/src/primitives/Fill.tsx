@@ -14,6 +14,7 @@ import type {
   ResolvedImageFill,
   ResolvedPatternFill,
 } from "@oxen-office/ooxml/domain/resolved-fill";
+import type { PatternType } from "@oxen-office/ooxml/domain/fill";
 import { PatternDef } from "../fill/PatternDef";
 import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../gradient/gradient-utils";
 import { useDrawingMLContext } from "../context";
@@ -43,23 +44,39 @@ export type FillResult = {
 };
 
 // =============================================================================
+// Types for Function Parameters
+// =============================================================================
+
+/**
+ * Options for resolvedFillToResult
+ */
+type ResolvedFillToResultOptions = {
+  readonly fill: ResolvedFill;
+  readonly getNextId: (prefix: string) => string;
+  readonly width?: number;
+  readonly height?: number;
+};
+
+/**
+ * Options for createImagePatternDef
+ */
+type ImagePatternDefOptions = {
+  readonly fill: ResolvedImageFill;
+  readonly id: string;
+  readonly width: number;
+  readonly height: number;
+};
+
+// =============================================================================
 // Fill Resolution
 // =============================================================================
 
 /**
  * Convert resolved fill to SVG fill props and optional def element.
- *
- * @param fill - Resolved fill
- * @param getNextId - ID generator function
- * @param width - Shape width (for image patterns)
- * @param height - Shape height (for image patterns)
  */
-export function resolvedFillToResult(
-  fill: ResolvedFill,
-  getNextId: (prefix: string) => string,
-  width?: number,
-  height?: number,
-): FillResult {
+export function resolvedFillToResult(options: ResolvedFillToResultOptions): FillResult {
+  const { fill, getNextId, width, height } = options;
+
   switch (fill.type) {
     case "none":
     case "unresolved":
@@ -85,7 +102,7 @@ export function resolvedFillToResult(
         return { props: { fill: "none" } };
       }
       const patternId = getNextId("img-pattern");
-      const defElement = createImagePatternDef(fill, patternId, width, height);
+      const defElement = createImagePatternDef({ fill, id: patternId, width, height });
       return {
         props: { fill: `url(#${patternId})` },
         defElement,
@@ -156,12 +173,8 @@ function createGradientDef(fill: ResolvedGradientFill, id: string): ReactNode {
 /**
  * Create image pattern definition element
  */
-function createImagePatternDef(
-  fill: ResolvedImageFill,
-  id: string,
-  width: number,
-  height: number,
-): ReactNode {
+function createImagePatternDef(options: ImagePatternDefOptions): ReactNode {
+  const { fill, id, width, height } = options;
   return (
     <pattern
       id={id}
@@ -189,7 +202,7 @@ function createPatternDef(fill: ResolvedPatternFill, id: string): ReactNode {
   return (
     <PatternDef
       id={id}
-      preset={fill.preset as import("@oxen-office/ooxml/domain/fill").PatternType}
+      preset={fill.preset as PatternType}
       fgColor={fill.fgColor}
       bgColor={fill.bgColor}
     />
@@ -231,7 +244,7 @@ export function useFillWithDefs(
       return { props: { fill: "none" } };
     }
 
-    const result = resolvedFillToResult(resolvedFill, getNextId, width, height);
+    const result = resolvedFillToResult({ fill: resolvedFill, getNextId, width, height });
     return {
       props: result.props,
       defElement: result.defElement,
@@ -240,23 +253,25 @@ export function useFillWithDefs(
 }
 
 /**
+ * Options for resolveFillForReact
+ */
+export type ResolveFillForReactOptions = {
+  readonly resolvedFill: ResolvedFill | undefined;
+  readonly getNextId: (prefix: string) => string;
+  readonly width?: number;
+  readonly height?: number;
+};
+
+/**
  * Resolve fill without context (for external use).
  * Returns both props and the def element.
- *
- * @param resolvedFill - Resolved fill
- * @param getNextId - ID generator function
- * @param width - Shape width (needed for image patterns)
- * @param height - Shape height (needed for image patterns)
  */
-export function resolveFillForReact(
-  resolvedFill: ResolvedFill | undefined,
-  getNextId: (prefix: string) => string,
-  width?: number,
-  height?: number,
-): FillResult {
+export function resolveFillForReact(options: ResolveFillForReactOptions): FillResult {
+  const { resolvedFill, getNextId, width, height } = options;
+
   if (resolvedFill === undefined) {
     return { props: { fill: "none" } };
   }
 
-  return resolvedFillToResult(resolvedFill, getNextId, width, height);
+  return resolvedFillToResult({ fill: resolvedFill, getNextId, width, height });
 }

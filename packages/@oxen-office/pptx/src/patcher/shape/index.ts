@@ -4,5 +4,5 @@ export {
   serializeGroupShape,
   serializePicture,
   serializeConnectionShape,
+  serializeGraphicFrame,
 } from "./shape-serializer";
-
