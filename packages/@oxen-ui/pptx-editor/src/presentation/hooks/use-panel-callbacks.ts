@@ -27,12 +27,12 @@ export type CanvasCallbacks = {
   readonly handleSelectMultiple: (shapeIds: readonly ShapeId[], primaryId?: ShapeId) => void;
   readonly handleClearSelection: () => void;
   readonly handleStartMove: (startX: number, startY: number) => void;
-  readonly handleStartResize: (
-    handle: ResizeHandlePosition,
-    startX: number,
-    startY: number,
-    aspectLocked: boolean,
-  ) => void;
+  readonly handleStartResize: (args: {
+    readonly handle: ResizeHandlePosition;
+    readonly startX: number;
+    readonly startY: number;
+    readonly aspectLocked: boolean;
+  }) => void;
   readonly handleStartRotate: (startX: number, startY: number) => void;
 };
 
@@ -91,15 +91,7 @@ export function usePanelCallbacks({ dispatch, document }: UsePanelCallbacksParam
   );
 
   const handleStartResize = useCallback(
-    (
-      ...args: readonly [
-        handle: ResizeHandlePosition,
-        startX: number,
-        startY: number,
-        aspectLocked: boolean,
-      ]
-    ): void => {
-      const [handle, startX, startY, aspectLocked] = args;
+    ({ handle, startX, startY, aspectLocked }: { handle: ResizeHandlePosition; startX: number; startY: number; aspectLocked: boolean }): void => {
       dispatch({ type: "START_RESIZE", handle, startX: px(startX), startY: px(startY), aspectLocked });
     },
     [dispatch],

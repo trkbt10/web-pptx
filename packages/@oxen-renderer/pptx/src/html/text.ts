@@ -317,7 +317,7 @@ export function renderTextBody(
   }
 
   const defsCollector = createDefsCollector();
-  const textSvg = renderTextSvg(textBody, ctx, width, height, defsCollector);
+  const textSvg = renderTextSvg({ textBody, ctx, boxWidth: width, boxHeight: height, defsCollector });
   if (!textSvg) {
     return EMPTY_HTML;
   }

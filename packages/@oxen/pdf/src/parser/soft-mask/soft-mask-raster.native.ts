@@ -91,8 +91,8 @@ function buildSolidRgbData(width: number, height: number, rgb: readonly [number,
 type Poly = readonly PdfPoint[];
 type FlattenedSubpath = Readonly<{ readonly points: Poly; readonly closed: boolean }>;
 
-function cubicAt(...args: [p0: number, p1: number, p2: number, p3: number, t: number]): number {
-  const [p0, p1, p2, p3, t] = args;
+function cubicAt(points: readonly [number, number, number, number], t: number): number {
+  const [p0, p1, p2, p3] = points;
   const mt = 1 - t;
   return (
     mt * mt * mt * p0 +
@@ -135,8 +135,8 @@ function flattenSubpaths(ops: ParsedPath["operations"], ctm: PdfMatrix): readonl
     for (let i = 1; i <= steps; i += 1) {
       const t = i / steps;
       lineTo({
-        x: cubicAt(p0.x, cp1.x, cp2.x, end.x, t),
-        y: cubicAt(p0.y, cp1.y, cp2.y, end.y, t),
+        x: cubicAt([p0.x, cp1.x, cp2.x, end.x], t),
+        y: cubicAt([p0.y, cp1.y, cp2.y, end.y], t),
       });
     }
     current = end;
@@ -223,13 +223,13 @@ function pointInSubpathsEvenOdd(x: number, y: number, subpaths: readonly Flatten
   return inside;
 }
 
-function isLeft(...args: [ax: number, ay: number, bx: number, by: number, px: number, py: number]): number {
-  const [ax, ay, bx, by, px, py] = args;
-  return (bx - ax) * (py - ay) - (px - ax) * (by - ay);
+function isLeft(a: PdfPoint, b: PdfPoint, p: PdfPoint): number {
+  return (b.x - a.x) * (p.y - a.y) - (p.x - a.x) * (b.y - a.y);
 }
 
 function windingNumber(x: number, y: number, poly: Poly): number {
   if (poly.length < 2) {return 0;}
+  const p: PdfPoint = { x, y };
   let winding = 0;
 
   for (let i = 0; i < poly.length; i += 1) {
@@ -237,11 +237,11 @@ function windingNumber(x: number, y: number, poly: Poly): number {
     const b = poly[(i + 1) % poly.length]!;
 
     if (a.y <= y) {
-      if (b.y > y && isLeft(a.x, a.y, b.x, b.y, x, y) > 0) {
+      if (b.y > y && isLeft(a, b, p) > 0) {
         winding += 1;
       }
     } else {
-      if (b.y <= y && isLeft(a.x, a.y, b.x, b.y, x, y) < 0) {
+      if (b.y <= y && isLeft(a, b, p) < 0) {
         winding -= 1;
       }
     }
@@ -258,10 +258,8 @@ function pointInSubpathsNonZero(x: number, y: number, subpaths: readonly Flatten
   return winding !== 0;
 }
 
-function pointInSubpaths(
-  ...args: [x: number, y: number, subpaths: readonly FlattenedSubpath[], fillRule: ParsedPath["fillRule"]]
-): boolean {
-  const [x, y, subpaths, fillRule] = args;
+function pointInSubpaths(p: PdfPoint, subpaths: readonly FlattenedSubpath[], fillRule: ParsedPath["fillRule"]): boolean {
+  const { x, y } = p;
   if (fillRule === "evenodd") {
     return pointInSubpathsEvenOdd(x, y, subpaths);
   }
@@ -308,32 +306,30 @@ function distancePointToSegmentButt(p: PdfPoint, a: PdfPoint, b: PdfPoint): numb
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-function distancePointToSegment(
-  ...args: [p: PdfPoint, a: PdfPoint, b: PdfPoint, cap: 0 | 1 | 2, halfW: number]
-): number {
-  const [p, a, b, cap, halfW] = args;
-  if (cap === 1) {
-    return distancePointToSegmentRound(p, a, b);
-  }
-  if (cap === 2) {
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const len = Math.sqrt(dx * dx + dy * dy);
-    if (len === 0) {return distancePointToSegmentRound(p, a, b);}
-    const ux = dx / len;
-    const uy = dy / len;
-    const a2 = { x: a.x - ux * halfW, y: a.y - uy * halfW };
-    const b2 = { x: b.x + ux * halfW, y: b.y + uy * halfW };
-    return distancePointToSegmentButt(p, a2, b2);
-  }
-  return distancePointToSegmentButt(p, a, b);
-}
+type StrokeStyle = Readonly<{ readonly cap: 0 | 1 | 2; readonly halfW: number }>;
 
-function pointInStroke(
-  ...args: [p: PdfPoint, subpaths: readonly FlattenedSubpath[], halfW: number, cap: 0 | 1 | 2]
-): boolean {
-  const [p, subpaths, halfW, cap] = args;
+function pointInStroke(p: PdfPoint, subpaths: readonly FlattenedSubpath[], stroke: StrokeStyle): boolean {
+  const { cap, halfW } = stroke;
   if (!(halfW > 0)) {return false;}
+
+  const distancePointToSegment = (p: PdfPoint, a: PdfPoint, b: PdfPoint): number => {
+    if (cap === 1) {
+      return distancePointToSegmentRound(p, a, b);
+    }
+    if (cap === 2) {
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len === 0) {return distancePointToSegmentRound(p, a, b);}
+      const ux = dx / len;
+      const uy = dy / len;
+      const a2 = { x: a.x - ux * halfW, y: a.y - uy * halfW };
+      const b2 = { x: b.x + ux * halfW, y: b.y + uy * halfW };
+      return distancePointToSegmentButt(p, a2, b2);
+    }
+    return distancePointToSegmentButt(p, a, b);
+  };
+
   let minDist = Infinity;
   for (const s of subpaths) {
     const pts = s.points;
@@ -341,13 +337,13 @@ function pointInStroke(
     for (let i = 1; i < pts.length; i += 1) {
       const a = pts[i - 1]!;
       const b = pts[i]!;
-      minDist = Math.min(minDist, distancePointToSegment(p, a, b, cap, halfW));
+      minDist = Math.min(minDist, distancePointToSegment(p, a, b));
       if (minDist <= halfW) {return true;}
     }
     if (s.closed) {
       const a = pts[pts.length - 1]!;
       const b = pts[0]!;
-      minDist = Math.min(minDist, distancePointToSegment(p, a, b, cap, halfW));
+      minDist = Math.min(minDist, distancePointToSegment(p, a, b));
       if (minDist <= halfW) {return true;}
     }
   }
@@ -390,7 +386,7 @@ function rasterizeSoftMaskedFillPathInternal(parsed: ParsedPath): PdfImage | nul
   const scale = getMatrixScale(gs.ctm);
   const lineWidth = gs.lineWidth * ((scale.scaleX + scale.scaleY) / 2);
   const halfW = lineWidth / 2;
-  const cap: 0 | 1 | 2 = gs.lineCap;
+  const strokeStyle: StrokeStyle = { cap: gs.lineCap, halfW };
 
   // Output alpha is stored in top-to-bottom row order (compatible with PNG encoding).
   for (let row = 0; row < softMask.height; row += 1) {
@@ -409,8 +405,8 @@ function rasterizeSoftMaskedFillPathInternal(parsed: ParsedPath): PdfImage | nul
       const fillRule = parsed.fillRule ?? "nonzero";
       const shouldFill = parsed.paintOp === "fill" || parsed.paintOp === "fillStroke";
       const shouldStroke = parsed.paintOp === "stroke" || parsed.paintOp === "fillStroke";
-      const fillCov = shouldFill && pointInSubpaths(pagePoint.x, pagePoint.y, subpaths, fillRule);
-      const strokeCov = shouldStroke && pointInStroke(pagePoint, subpaths, halfW, cap);
+      const fillCov = shouldFill && pointInSubpaths(pagePoint, subpaths, fillRule);
+      const strokeCov = shouldStroke && pointInStroke(pagePoint, subpaths, strokeStyle);
 
       const fillA = fillCov ? Math.round(maskByte * fillMul) : 0;
       const strokeA = strokeCov ? Math.round(maskByte * strokeMul) : 0;

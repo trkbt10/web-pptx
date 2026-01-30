@@ -71,11 +71,11 @@ export function extractContours(imageData: ImageDataLike): RawContour[] {
   }
 
   // Extract outer contours from filled image
-  const outerContours = marchingSquares(filledGray, width, height, THRESHOLD);
+  const outerContours = marchingSquares({ gray: filledGray, width, height, threshold: THRESHOLD });
 
   // Extract hole contours from hole mask
   // Reverse point order so holes wind opposite to outers
-  const holeContours = marchingSquares(holeGray, width, height, THRESHOLD).map((contour) =>
+  const holeContours = marchingSquares({ gray: holeGray, width, height, threshold: THRESHOLD }).map((contour) =>
     contour.slice().reverse(),
   );
 
@@ -246,15 +246,15 @@ const EDGE_INTERPOLATORS: readonly EdgeInterpolator[] = [
  * Extract contours using Marching Squares with linear interpolation.
  */
 function marchingSquares(
-  ...args: [gray: Float32Array, width: number, height: number, threshold: number]
+  args: { readonly gray: Float32Array; readonly width: number; readonly height: number; readonly threshold: number }
 ): RawContour[] {
-  const [gray, width, height, threshold] = args;
+  const { gray, width, height, threshold } = args;
   const visitedEdges = new Set<string>();
   const contours: RawContour[] = [];
 
   for (let cy = 0; cy < height - 1 && contours.length < MAX_CONTOURS; cy++) {
     for (let cx = 0; cx < width - 1 && contours.length < MAX_CONTOURS; cx++) {
-      const caseIndex = getCellCase(gray, width, cx, cy, threshold);
+      const caseIndex = getCellCase({ gray, width, cx, cy, threshold });
       const edges = MARCHING_SQUARES_TABLE[caseIndex];
 
       if (edges.length === 0) {continue;}
@@ -270,16 +270,16 @@ function marchingSquares(
         // Start from edge2 to get correct winding direction
         const startEdge = edge2;
 
-        const contour = traceContour(
+        const contour = traceContour({
           gray,
           width,
           height,
           threshold,
-          cx,
-          cy,
+          startCx: cx,
+          startCy: cy,
           startEdge,
           visitedEdges,
-        );
+        });
 
         if (contour.length >= MIN_CONTOUR_POINTS) {
           contours.push(contour);
@@ -296,9 +296,9 @@ function marchingSquares(
  * Corners: 0=TL, 1=TR, 2=BR, 3=BL
  */
 function getCellCase(
-  ...args: [gray: Float32Array, width: number, cx: number, cy: number, threshold: number]
+  args: { readonly gray: Float32Array; readonly width: number; readonly cx: number; readonly cy: number; readonly threshold: number }
 ): number {
-  const [gray, width, cx, cy, threshold] = args;
+  const { gray, width, cx, cy, threshold } = args;
   const tl = gray[cy * width + cx] >= threshold ? 1 : 0;
   const tr = gray[cy * width + cx + 1] >= threshold ? 1 : 0;
   const br = gray[(cy + 1) * width + cx + 1] >= threshold ? 1 : 0;
@@ -311,9 +311,9 @@ function getCellCase(
  * Get corner values for a cell.
  */
 function getCellCorners(
-  ...args: [gray: Float32Array, width: number, cx: number, cy: number]
+  args: { readonly gray: Float32Array; readonly width: number; readonly cx: number; readonly cy: number }
 ): [number, number, number, number] {
-  const [gray, width, cx, cy] = args;
+  const { gray, width, cx, cy } = args;
   return [
     gray[cy * width + cx],
     gray[cy * width + cx + 1],
@@ -326,9 +326,9 @@ function getCellCorners(
  * Interpolate edge crossing point with subpixel precision.
  */
 function interpolateEdge(
-  ...args: [cx: number, cy: number, edge: number, corners: readonly number[], threshold: number]
+  args: { readonly cx: number; readonly cy: number; readonly edge: number; readonly corners: readonly number[]; readonly threshold: number }
 ): Point {
-  const [cx, cy, edge, corners, threshold] = args;
+  const { cx, cy, edge, corners, threshold } = args;
   const e = EDGE_INTERPOLATORS[edge];
   const v1 = corners[e.corner1];
   const v2 = corners[e.corner2];
@@ -379,18 +379,18 @@ function getNextCell(
  * Trace a single contour starting from a given cell and edge.
  */
 function traceContour(
-  ...args: [
-    gray: Float32Array,
-    width: number,
-    height: number,
-    threshold: number,
-    startCx: number,
-    startCy: number,
-    startEdge: number,
-    visitedEdges: Set<string>,
-  ]
+  args: {
+    readonly gray: Float32Array;
+    readonly width: number;
+    readonly height: number;
+    readonly threshold: number;
+    readonly startCx: number;
+    readonly startCy: number;
+    readonly startEdge: number;
+    readonly visitedEdges: Set<string>;
+  }
 ): RawContour {
-  const [gray, width, height, threshold, startCx, startCy, startEdge, visitedEdges] = args;
+  const { gray, width, height, threshold, startCx, startCy, startEdge, visitedEdges } = args;
   const contour: RawContour = [];
   const maxIterations = (width + height) * 4;
 
@@ -407,7 +407,7 @@ function traceContour(
     if (++iterations > maxIterations) {break;}
     if (cx < 0 || cx >= width - 1 || cy < 0 || cy >= height - 1) {break;}
 
-    const caseIndex = getCellCase(gray, width, cx, cy, threshold);
+    const caseIndex = getCellCase({ gray, width, cx, cy, threshold });
     if (caseIndex === 0 || caseIndex === 15) {break;}
 
     const exitEdge = getExitEdge(caseIndex, entryEdge);
@@ -416,8 +416,8 @@ function traceContour(
     const edgeKey = `${cx},${cy},${Math.min(entryEdge, exitEdge)}`;
     visitedEdges.add(edgeKey);
 
-    const corners = getCellCorners(gray, width, cx, cy);
-    const point = interpolateEdge(cx, cy, entryEdge, corners, threshold);
+    const corners = getCellCorners({ gray, width, cx, cy });
+    const point = interpolateEdge({ cx, cy, edge: entryEdge, corners, threshold });
     contour.push(point);
 
     const next = getNextCell(cx, cy, exitEdge);

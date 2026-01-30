@@ -95,11 +95,11 @@ describe("PDF import visual regression (panel2.pdf)", () => {
 
     const svg = await renderImportedPdfPageToSvg(1);
 
-    const result = compareSvgToPdfBaseline(
+    const result = compareSvgToPdfBaseline({
       svg,
-      "pdf-import-panel2",
-      1,
-      {
+      snapshotName: "pdf-import-panel2",
+      slideNumber: 1,
+      baseline: {
         pdfPath: PDF_PATH,
         pageNumber: 1,
         dpi: 144,
@@ -109,8 +109,8 @@ describe("PDF import visual regression (panel2.pdf)", () => {
         fit: "contain",
         background: { r: 255, g: 255, b: 255, a: 255 },
       },
-      { maxDiffPercent: 5, threshold: 0.1 },
-    );
+      options: { maxDiffPercent: 5, threshold: 0.1 },
+    });
 
     if (!result.match) {
       console.log(`\n--- PDF baseline diff: panel2.pdf page 1 ---`);
@@ -134,11 +134,11 @@ describe("PDF import visual regression (panel2.pdf)", () => {
 
     const svg = await renderImportedPdfPageToSvg(2);
 
-    const result = compareSvgToPdfBaseline(
+    const result = compareSvgToPdfBaseline({
       svg,
-      "pdf-import-panel2",
-      2,
-      {
+      snapshotName: "pdf-import-panel2",
+      slideNumber: 2,
+      baseline: {
         pdfPath: PDF_PATH,
         pageNumber: 2,
         dpi: 144,
@@ -148,8 +148,8 @@ describe("PDF import visual regression (panel2.pdf)", () => {
         fit: "contain",
         background: { r: 255, g: 255, b: 255, a: 255 },
       },
-      { maxDiffPercent: 7, threshold: 0.1 },
-    );
+      options: { maxDiffPercent: 7, threshold: 0.1 },
+    });
 
     if (!result.match) {
       console.log(`\n--- PDF baseline diff: panel2.pdf page 2 ---`);

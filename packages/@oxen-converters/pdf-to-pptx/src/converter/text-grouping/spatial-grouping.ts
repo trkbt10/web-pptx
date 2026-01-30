@@ -196,8 +196,8 @@ function getBaselineY(text: PdfText): number {
   return text.y - (descender * text.fontSize) / 1000;
 }
 
-function overlap1D(...args: [a0: number, a1: number, b0: number, b1: number]): number {
-  const [a0, a1, b0, b1] = args;
+function overlap1D(args: { readonly a0: number; readonly a1: number; readonly b0: number; readonly b1: number }): number {
+  const { a0, a1, b0, b1 } = args;
   const lo = Math.max(Math.min(a0, a1), Math.min(b0, b1));
   const hi = Math.min(Math.max(a0, a1), Math.max(b0, b1));
   return Math.max(0, hi - lo);
@@ -311,15 +311,15 @@ function buildColumnIntervals(pageWidth: number, gutters: readonly Gutter[]): { 
 }
 
 function assignXRangeToColumn(
-  ...args: [
-    x0: number,
-    x1: number,
-    intervals: readonly { x0: number; x1: number }[],
-    pageWidth: number,
-    options: Required<SpatialGroupingOptions>,
-  ]
+  args: {
+    readonly x0: number;
+    readonly x1: number;
+    readonly intervals: readonly { x0: number; x1: number }[];
+    readonly pageWidth: number;
+    readonly options: Required<SpatialGroupingOptions>;
+  }
 ): number {
-  const [x0, x1, intervals, pageWidth, options] = args;
+  const { x0, x1, intervals, pageWidth, options } = args;
   const w = x1 - x0;
   if (w >= pageWidth * options.fullWidthRatio) {return -1;}
 
@@ -327,7 +327,8 @@ function assignXRangeToColumn(
   let bestOv = -1;
   for (let i = 0; i < intervals.length; i++) {
     const iv = intervals[i]!;
-    const ov = overlap1D(x0, x1, iv.x0, iv.x1) / Math.max(1e-6, Math.min(w, iv.x1 - iv.x0));
+    const ov =
+      overlap1D({ a0: x0, a1: x1, b0: iv.x0, b1: iv.x1 }) / Math.max(1e-6, Math.min(w, iv.x1 - iv.x0));
     if (ov > bestOv) {bestOv = ov; best = i;}
   }
   return best;
@@ -725,7 +726,7 @@ function clusterIntoLines(
     // especially in diagrams where multiple text blocks share similar font sizes.
     // This overlap check prevents catastrophic "interleaving" (e.g. Latin letters
     // alternating with CJK text) when two separate lines are clustered as one.
-    const overlap = overlap1D(bottom, top, current.meanBottom, current.meanTop);
+    const overlap = overlap1D({ a0: bottom, a1: top, b0: current.meanBottom, b1: current.meanTop });
     const denom = Math.min(
       Math.max(1e-6, top - bottom),
       Math.max(1e-6, current.meanTop - current.meanBottom),
@@ -894,14 +895,14 @@ function splitIntoColumnGroups(
  * Group texts into lines with column separation.
  */
 function groupIntoLinesWithColumns(
-  ...args: [
-    texts: readonly PdfText[],
-    options: Required<SpatialGroupingOptions>,
-    blockingZones: readonly BlockingZone[] | undefined,
-    pageWidth: number | undefined,
-  ]
+  args: {
+    readonly texts: readonly PdfText[];
+    readonly options: Required<SpatialGroupingOptions>;
+    readonly blockingZones: readonly BlockingZone[] | undefined;
+    readonly pageWidth: number | undefined;
+  }
 ): GroupedParagraph[] {
-  const [texts, options, blockingZones, pageWidth] = args;
+  const { texts, options, blockingZones, pageWidth } = args;
   const lineClusters = clusterIntoLines(texts, options);
   const paragraphs: GroupedParagraph[] = [];
 
@@ -945,7 +946,7 @@ function groupIntoLinesWithColumns(
     for (const t of lineTexts) {
       const x0 = t.x;
       const x1 = t.x + t.width;
-      const c = assignXRangeToColumn(x0, x1, intervals, pageWidth!, options);
+      const c = assignXRangeToColumn({ x0, x1, intervals, pageWidth: pageWidth!, options });
       const arr = byCol.get(c) ?? [];
       arr.push(t);
       byCol.set(c, arr);
@@ -1024,7 +1025,7 @@ function shouldMergeLines(
 
     const w1 = Math.max(1e-6, maxX1 - minX1);
     const w2 = Math.max(1e-6, maxX2 - minX2);
-    const ov = overlap1D(minX1, maxX1, minX2, maxX2);
+    const ov = overlap1D({ a0: minX1, a1: maxX1, b0: minX2, b1: maxX2 });
     const ovRatio = ov / Math.min(w1, w2);
 
     // No meaningful horizontal overlap → likely different column / unrelated block.
@@ -1080,14 +1081,14 @@ function mergeAdjacentLines(
  * Merge adjacent lines into blocks, respecting column boundaries.
  */
 function mergeAdjacentLinesWithColumns(
-  ...args: [
-    paragraphs: readonly GroupedParagraph[],
-    options: Required<SpatialGroupingOptions>,
-    blockingZones: readonly BlockingZone[] | undefined,
-    pageWidthFromContext: number | undefined,
-  ]
+  args: {
+    readonly paragraphs: readonly GroupedParagraph[];
+    readonly options: Required<SpatialGroupingOptions>;
+    readonly blockingZones: readonly BlockingZone[] | undefined;
+    readonly pageWidthFromContext: number | undefined;
+  }
 ): GroupedText[] {
-  const [paragraphs, options, blockingZones, pageWidthFromContext] = args;
+  const { paragraphs, options, blockingZones, pageWidthFromContext } = args;
   if (paragraphs.length === 0) {return [];}
 
   const getParagraphBounds = (p: GroupedParagraph): { minX: number; maxX: number; minY: number; maxY: number } => {
@@ -1141,7 +1142,7 @@ function mergeAdjacentLinesWithColumns(
 
   const withColumn = paragraphs.map((p) => {
     const b = getParagraphBounds(p);
-    const column = assignXRangeToColumn(b.minX, b.maxX, intervals, pageWidth, options);
+    const column = assignXRangeToColumn({ x0: b.minX, x1: b.maxX, intervals, pageWidth, options });
     return { p, column, b };
   });
   const columns = new Map<number, { p: GroupedParagraph; b: { minX: number; maxX: number; minY: number; maxY: number } }[]>();
@@ -1207,16 +1208,16 @@ function mergeAdjacentLinesWithColumns(
  * Group texts into lines based on options.
  */
 function groupTextsIntoLines(
-  ...args: [
-    sorted: readonly PdfText[],
-    options: Required<SpatialGroupingOptions>,
-    blockingZones: readonly BlockingZone[] | undefined,
-    pageWidth: number | undefined,
-  ]
+  args: {
+    readonly sorted: readonly PdfText[];
+    readonly options: Required<SpatialGroupingOptions>;
+    readonly blockingZones: readonly BlockingZone[] | undefined;
+    readonly pageWidth: number | undefined;
+  }
 ): GroupedParagraph[] {
-  const [sorted, options, blockingZones, pageWidth] = args;
+  const { sorted, options, blockingZones, pageWidth } = args;
   if (options.enableColumnSeparation) {
-    return groupIntoLinesWithColumns(sorted, options, blockingZones, pageWidth);
+    return groupIntoLinesWithColumns({ texts: sorted, options, blockingZones, pageWidth });
   }
   return groupIntoLines(sorted, options, blockingZones);
 }
@@ -1225,16 +1226,16 @@ function groupTextsIntoLines(
  * Merge lines into blocks based on options.
  */
 function mergeLinesToBlocks(
-  ...args: [
-    lines: readonly GroupedParagraph[],
-    options: Required<SpatialGroupingOptions>,
-    blockingZones: readonly BlockingZone[] | undefined,
-    pageWidth: number | undefined,
-  ]
+  args: {
+    readonly lines: readonly GroupedParagraph[];
+    readonly options: Required<SpatialGroupingOptions>;
+    readonly blockingZones: readonly BlockingZone[] | undefined;
+    readonly pageWidth: number | undefined;
+  }
 ): GroupedText[] {
-  const [lines, options, blockingZones, pageWidth] = args;
+  const { lines, options, blockingZones, pageWidth } = args;
   if (options.enableColumnSeparation) {
-    return mergeAdjacentLinesWithColumns(lines, options, blockingZones, pageWidth);
+    return mergeAdjacentLinesWithColumns({ paragraphs: lines, options, blockingZones, pageWidthFromContext: pageWidth });
   }
   return mergeAdjacentLines(lines, options, blockingZones);
 }
@@ -1269,10 +1270,10 @@ export function createSpatialGrouping(userOptions: SpatialGroupingOptions = {}):
     const pageWidth = context?.pageWidth;
 
     // Step 2: Group into lines, with column separation if enabled
-    const lines = groupTextsIntoLines(sorted, options, blockingZones, pageWidth);
+    const lines = groupTextsIntoLines({ sorted, options, blockingZones, pageWidth });
 
     // Step 3: Merge adjacent lines into blocks
-    const blocks = mergeLinesToBlocks(lines, options, blockingZones, pageWidth);
+    const blocks = mergeLinesToBlocks({ lines, options, blockingZones, pageWidth });
 
     return blocks;
   };

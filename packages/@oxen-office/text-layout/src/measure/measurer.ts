@@ -43,16 +43,22 @@ export type CharWidthResult = {
  * @returns Character width result with kerning adjustment
  */
 export function calculateCharWidth(
-  ...args: [
-    char: string,
-    prevChar: string | undefined,
-    fontSize: Points,
-    fontFamily: string,
-    fontWeight?: number,
-  ]
+  args: {
+    readonly char: string;
+    readonly prevChar: string | undefined;
+    readonly fontSize: Points;
+    readonly fontFamily: string;
+    readonly fontWeight?: number;
+  }
 ): CharWidthResult {
-  const [char, prevChar, fontSize, fontFamily, fontWeight = 400] = args;
-  const result = glyphCalculateCharWidth(char, prevChar, fontSize as number, fontFamily, fontWeight);
+  const { char, prevChar, fontSize, fontFamily, fontWeight = 400 } = args;
+  const result = glyphCalculateCharWidth({
+    char,
+    prevChar,
+    fontSizePt: fontSize as number,
+    fontFamily,
+    fontWeight,
+  });
   return {
     width: px(result.width),
     kerningAdjust: px(result.kerningAdjust),
@@ -78,24 +84,24 @@ export function calculateCharWidth(
  * @returns Width in pixels
  */
 export function measureTextWidth(
-  ...args: [
-    text: string,
-    fontSize: Points,
-    letterSpacing: Pixels,
-    fontFamily: string,
-    fontWeight?: number,
-    fontStyle?: "normal" | "italic",
-  ]
+  args: {
+    readonly text: string;
+    readonly fontSize: Points;
+    readonly letterSpacing: Pixels;
+    readonly fontFamily: string;
+    readonly fontWeight?: number;
+    readonly fontStyle?: "normal" | "italic";
+  }
 ): Pixels {
-  const [text, fontSize, letterSpacing, fontFamily, fontWeight = 400, fontStyle = "normal"] = args;
-  const width = glyphMeasureTextWidth(
+  const { text, fontSize, letterSpacing, fontFamily, fontWeight = 400, fontStyle = "normal" } = args;
+  const width = glyphMeasureTextWidth({
     text,
-    fontSize as number,
-    letterSpacing as number,
+    fontSizePt: fontSize as number,
+    letterSpacingPx: letterSpacing as number,
     fontFamily,
     fontWeight,
     fontStyle,
-  );
+  });
   return px(width);
 }
 
@@ -103,10 +109,16 @@ export function measureTextWidth(
  * @deprecated Use measureTextWidth instead
  */
 export function estimateTextWidth(
-  ...args: [text: string, fontSize: Points, letterSpacing: Pixels, fontFamily: string, fontWeight?: number]
+  args: {
+    readonly text: string;
+    readonly fontSize: Points;
+    readonly letterSpacing: Pixels;
+    readonly fontFamily: string;
+    readonly fontWeight?: number;
+  }
 ): Pixels {
-  const [text, fontSize, letterSpacing, fontFamily, fontWeight = 400] = args;
-  return measureTextWidth(text, fontSize, letterSpacing, fontFamily, fontWeight);
+  const { text, fontSize, letterSpacing, fontFamily, fontWeight = 400 } = args;
+  return measureTextWidth({ text, fontSize, letterSpacing, fontFamily, fontWeight });
 }
 
 // =============================================================================
@@ -160,14 +172,14 @@ function measureSpanWidth(span: LayoutSpan): Pixels {
 
   // Apply text transform before measuring (matches rendering)
   const transformedText = applyTextTransform(span.text, span.textTransform);
-  return measureTextWidth(
-    transformedText,
-    span.fontSize,
-    span.letterSpacing,
-    span.fontFamily,
-    span.fontWeight,
-    span.fontStyle,
-  );
+  return measureTextWidth({
+    text: transformedText,
+    fontSize: span.fontSize,
+    letterSpacing: span.letterSpacing,
+    fontFamily: span.fontFamily,
+    fontWeight: span.fontWeight,
+    fontStyle: span.fontStyle,
+  });
 }
 
 /**
@@ -189,7 +201,7 @@ export function measureSpans(spans: readonly LayoutSpan[]): MeasuredSpan[] {
  * by the indent attribute, not by adding extra space to the bullet width.
  */
 export function estimateBulletWidth(bulletChar: string, fontSize: Points, fontFamily: string): Pixels {
-  return measureTextWidth(bulletChar, fontSize, px(0), fontFamily);
+  return measureTextWidth({ text: bulletChar, fontSize, letterSpacing: px(0), fontFamily });
 }
 
 // =============================================================================
@@ -213,7 +225,14 @@ export function measureSpanTextWidth(span: LayoutSpan, charCount: number): Pixel
   // Apply text transform before measuring (matches rendering)
   const transformedText = applyTextTransform(span.text, span.textTransform);
   const text = transformedText.slice(0, Math.min(charCount, transformedText.length));
-  return measureTextWidth(text, span.fontSize, span.letterSpacing, span.fontFamily, span.fontWeight, span.fontStyle);
+  return measureTextWidth({
+    text,
+    fontSize: span.fontSize,
+    letterSpacing: span.letterSpacing,
+    fontFamily: span.fontFamily,
+    fontWeight: span.fontWeight,
+    fontStyle: span.fontStyle,
+  });
 }
 
 /**
@@ -235,25 +254,25 @@ export function getCharIndexAtOffset(span: LayoutSpan, targetX: number): number 
   const chars = Array.from(transformedText);
 
   // Use binary search with Canvas measurement for efficiency
-  const index = findCharIndexAtOffset(chars, span, targetX, 0, chars.length);
+  const index = findCharIndexAtOffset({ chars, span, targetX, low: 0, high: chars.length });
   return Math.min(index, chars.length);
 }
 
 function measureTextWidthAsNumber(text: string, span: LayoutSpan): number {
-  return measureTextWidth(
+  return measureTextWidth({
     text,
-    span.fontSize,
-    span.letterSpacing,
-    span.fontFamily,
-    span.fontWeight,
-    span.fontStyle,
-  ) as number;
+    fontSize: span.fontSize,
+    letterSpacing: span.letterSpacing,
+    fontFamily: span.fontFamily,
+    fontWeight: span.fontWeight,
+    fontStyle: span.fontStyle,
+  }) as number;
 }
 
 function findCharIndexAtOffset(
-  ...args: [chars: readonly string[], span: LayoutSpan, targetX: number, low: number, high: number]
+  args: { readonly chars: readonly string[]; readonly span: LayoutSpan; readonly targetX: number; readonly low: number; readonly high: number }
 ): number {
-  const [chars, span, targetX, low, high] = args;
+  const { chars, span, targetX, low, high } = args;
   if (low >= high) {
     return low;
   }
@@ -266,9 +285,9 @@ function findCharIndexAtOffset(
 
   const charMidpoint = (widthUpToPrev + widthUpToMid) / 2;
   if (targetX < charMidpoint) {
-    return findCharIndexAtOffset(chars, span, targetX, low, mid);
+    return findCharIndexAtOffset({ chars, span, targetX, low, high: mid });
   }
-  return findCharIndexAtOffset(chars, span, targetX, mid + 1, high);
+  return findCharIndexAtOffset({ chars, span, targetX, low: mid + 1, high });
 }
 
 function getWidthUpToPreviousChar(chars: readonly string[], mid: number, span: LayoutSpan): number {
@@ -307,16 +326,22 @@ export type DetailedMeasurement = {
  * @returns Detailed measurement with per-character data
  */
 export function measureTextDetailed(
-  ...args: [text: string, fontSize: Points, letterSpacing: Pixels, fontFamily: string, fontWeight?: number]
+  args: {
+    readonly text: string;
+    readonly fontSize: Points;
+    readonly letterSpacing: Pixels;
+    readonly fontFamily: string;
+    readonly fontWeight?: number;
+  }
 ): DetailedMeasurement {
-  const [text, fontSize, letterSpacing, fontFamily, fontWeight = 400] = args;
-  const result = glyphMeasureTextDetailed(
+  const { text, fontSize, letterSpacing, fontFamily, fontWeight = 400 } = args;
+  const result = glyphMeasureTextDetailed({
     text,
-    fontSize as number,
-    letterSpacing as number,
+    fontSizePt: fontSize as number,
+    letterSpacingPx: letterSpacing as number,
     fontFamily,
     fontWeight,
-  );
+  });
   return {
     totalWidth: px(result.totalWidth),
     charWidths: result.charWidths.map((cw) => ({

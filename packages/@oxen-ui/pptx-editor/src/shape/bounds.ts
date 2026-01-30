@@ -102,7 +102,7 @@ export function getCombinedBounds(shapes: readonly Shape[]): Bounds | undefined 
 
 function getPointsForBounds(b: RotatedBoundsInput): readonly { x: number; y: number }[] {
   if (b.rotation !== 0) {
-    return getRotatedCorners(b.x, b.y, b.width, b.height, b.rotation);
+    return getRotatedCorners({ x: b.x, y: b.y, width: b.width, height: b.height, rotation: b.rotation });
   }
   return [
     { x: b.x, y: b.y },

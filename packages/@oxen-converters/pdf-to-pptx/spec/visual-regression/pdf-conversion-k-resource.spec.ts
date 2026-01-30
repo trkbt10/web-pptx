@@ -96,11 +96,11 @@ describe("PDF→PPTX visual regression: k-resource-dl.pdf", () => {
 
     let compare: ReturnType<typeof compareSvgToPdfBaseline>;
     try {
-      compare = compareSvgToPdfBaseline(
+      compare = compareSvgToPdfBaseline({
         svg,
         snapshotName,
-        1,
-        {
+        slideNumber: 1,
+        baseline: {
           pdfPath,
           pageNumber: 2,
           targetWidth: 960,
@@ -109,8 +109,8 @@ describe("PDF→PPTX visual regression: k-resource-dl.pdf", () => {
           renderScale: 4,
           background: { r: 255, g: 255, b: 255, a: 255 },
         },
-        { threshold: 0.25, maxDiffPercent: 2.0, resvgFontFiles: fontFiles },
-      );
+        options: { threshold: 0.25, maxDiffPercent: 2.0, resvgFontFiles: fontFiles },
+      });
     } catch (e) {
       cleanupFonts();
       const msg = (e as Error)?.message ?? String(e);
@@ -144,11 +144,11 @@ describe("PDF→PPTX visual regression: k-resource-dl.pdf", () => {
 
     let compare: ReturnType<typeof compareSvgToPdfBaseline>;
     try {
-      compare = compareSvgToPdfBaseline(
+      compare = compareSvgToPdfBaseline({
         svg,
         snapshotName,
-        1,
-        {
+        slideNumber: 1,
+        baseline: {
           pdfPath,
           pageNumber: 4,
           targetWidth: 960,
@@ -157,8 +157,8 @@ describe("PDF→PPTX visual regression: k-resource-dl.pdf", () => {
           renderScale: 4,
           background: { r: 255, g: 255, b: 255, a: 255 },
         },
-        { threshold: 0.25, maxDiffPercent: 2.0, resvgFontFiles: fontFiles },
-      );
+        options: { threshold: 0.25, maxDiffPercent: 2.0, resvgFontFiles: fontFiles },
+      });
     } catch (e) {
       cleanupFonts();
       const msg = (e as Error)?.message ?? String(e);
@@ -192,11 +192,11 @@ describe("PDF→PPTX visual regression: k-resource-dl.pdf", () => {
 
     let compare: ReturnType<typeof compareSvgToPdfBaseline>;
     try {
-      compare = compareSvgToPdfBaseline(
+      compare = compareSvgToPdfBaseline({
         svg,
         snapshotName,
-        1,
-        {
+        slideNumber: 1,
+        baseline: {
           pdfPath,
           pageNumber: 5,
           targetWidth: 960,
@@ -205,8 +205,8 @@ describe("PDF→PPTX visual regression: k-resource-dl.pdf", () => {
           renderScale: 4,
           background: { r: 255, g: 255, b: 255, a: 255 },
         },
-        { threshold: 0.25, maxDiffPercent: 2.0, resvgFontFiles: fontFiles },
-      );
+        options: { threshold: 0.25, maxDiffPercent: 2.0, resvgFontFiles: fontFiles },
+      });
     } catch (e) {
       cleanupFonts();
       const msg = (e as Error)?.message ?? String(e);

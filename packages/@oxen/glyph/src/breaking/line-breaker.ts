@@ -65,7 +65,13 @@ function createOverflowSpan<T extends BreakableSpan>(span: T, overflowText: stri
   return {
     ...span,
     text: overflowText,
-    width: measureTextWidth(transformedText, span.fontSize, span.letterSpacing, span.fontFamily, span.fontWeight),
+    width: measureTextWidth({
+      text: transformedText,
+      fontSizePt: span.fontSize,
+      letterSpacingPx: span.letterSpacing,
+      fontFamily: span.fontFamily,
+      fontWeight: span.fontWeight,
+    }),
   };
 }
 
@@ -96,7 +102,13 @@ function breakSpanAtWidth<T extends BreakableSpan>(
     // Use transformed character for width calculation
     const transformedChar = transformedText[i];
     const charWidth =
-      measureTextWidth(transformedChar, span.fontSize, 0, span.fontFamily, span.fontWeight) +
+      measureTextWidth({
+        text: transformedChar,
+        fontSizePt: span.fontSize,
+        letterSpacingPx: 0,
+        fontFamily: span.fontFamily,
+        fontWeight: span.fontWeight,
+      }) +
       (i > 0 ? span.letterSpacing : 0);
 
     if (state.accumulatedWidth + charWidth > availableWidth && state.breakIndex >= 0) {
@@ -132,7 +144,13 @@ function breakSpanAtWidth<T extends BreakableSpan>(
         // Use transformed character for width calculation
         const transformedChar = transformedText[i];
         const charWidth =
-          measureTextWidth(transformedChar, span.fontSize, 0, span.fontFamily, span.fontWeight) +
+          measureTextWidth({
+            text: transformedChar,
+            fontSizePt: span.fontSize,
+            letterSpacingPx: 0,
+            fontFamily: span.fontFamily,
+            fontWeight: span.fontWeight,
+          }) +
           (i > 0 ? span.letterSpacing : 0);
         if (state.accumulatedWidth + charWidth > availableWidth && i > 0) {
           state.breakIndex = i;
@@ -158,7 +176,13 @@ function breakSpanAtWidth<T extends BreakableSpan>(
   const fitsSpan: T = {
     ...span,
     text: fitsText,
-    width: measureTextWidth(transformedFitsText, span.fontSize, span.letterSpacing, span.fontFamily, span.fontWeight),
+    width: measureTextWidth({
+      text: transformedFitsText,
+      fontSizePt: span.fontSize,
+      letterSpacingPx: span.letterSpacing,
+      fontFamily: span.fontFamily,
+      fontWeight: span.fontWeight,
+    }),
   };
 
   return { fits: fitsSpan, overflow: createOverflowSpan(span, overflowText) };

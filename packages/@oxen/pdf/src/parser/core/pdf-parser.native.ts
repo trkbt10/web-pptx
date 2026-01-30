@@ -160,7 +160,7 @@ export async function parsePdfNative(
   const pages: PdfPage[] = [];
   for (const pageNum of pagesToParse) {
     const nativePage = pdfPages[pageNum - 1]!;
-    const parsedPage = await parsePage(nativePage, pageNum, opts, embeddedFontMetrics);
+    const parsedPage = await parsePage({ page: nativePage, pageNumber: pageNum, opts, embeddedFontMetrics });
     pages.push(parsedPage);
   }
 
@@ -192,15 +192,14 @@ function buildEmbeddedFonts(
   }));
 }
 
-async function parsePage(
-  ...args: [
-    page: NativePdfPage,
-    pageNumber: number,
-    opts: Required<PdfParserOptions>,
-    embeddedFontMetrics: Map<string, { ascender: number; descender: number }>,
-  ]
-): Promise<PdfPage> {
-  const [page, pageNumber, opts, embeddedFontMetrics] = args;
+type ParsePageOptions = {
+  readonly page: NativePdfPage;
+  readonly pageNumber: number;
+  readonly opts: Required<PdfParserOptions>;
+  readonly embeddedFontMetrics: Map<string, { ascender: number; descender: number }>;
+};
+
+async function parsePage({ page, pageNumber, opts, embeddedFontMetrics }: ParsePageOptions): Promise<PdfPage> {
   const { width, height } = page.getSize();
   const pageBBox: PdfBBox = [0, 0, width, height];
 
@@ -279,31 +278,36 @@ async function parsePage(
 
   const mergedXObjects = mergeXObjects(baseXObjects, inlineXObjects);
 
-	  const { elements: expandedElements, imageGroups } = expandFormXObjectsNative(
+	  const { elements: expandedElements, imageGroups } = expandFormXObjectsNative({
 	    page,
-	    parsedWithType3,
+	    parsedElements: parsedWithType3,
 	    fontMappings,
 	    extGState,
 	    shadings,
 	    patterns,
 	    colorSpaces,
-	    opts.shadingMaxSize,
-	    opts.clipPathMaxSize,
-	    opts.softMaskVectorMaxSize,
-	    opts.jpxDecode,
+	    shadingMaxSize: opts.shadingMaxSize,
+	    clipPathMaxSize: opts.clipPathMaxSize,
+	    softMaskVectorMaxSize: opts.softMaskVectorMaxSize,
+	    jpxDecode: opts.jpxDecode,
 	    pageBBox,
 	    embeddedFontMetrics,
-	    mergedXObjects,
+	    xObjectsOverride: mergedXObjects,
 	    nextInlineId,
-	  );
+	  });
 
   const images: PdfImage[] = [];
   for (const [xObjects, group] of imageGroups) {
-    const extracted = await extractImagesNative(page, group, { pageHeight: height, jpxDecode: opts.jpxDecode }, xObjects);
+    const extracted = await extractImagesNative({
+      pdfPage: page,
+      parsedImages: group,
+      options: { pageHeight: height, jpxDecode: opts.jpxDecode },
+      xObjectsOverride: xObjects,
+    });
     images.push(...extracted);
   }
 
-  const elements = convertElements(expandedElements, opts, height, images, fontMappings);
+  const elements = convertElements({ parsed: expandedElements, opts, pageHeight: height, extractedImages: images, fontMappings });
 
   return { pageNumber, width, height, elements };
 }
@@ -426,42 +430,41 @@ function addImageToGroup(groups: ImageGroupMap, xObjects: PdfDict, img: ParsedIm
   groups.set(xObjects, [img]);
 }
 
-function expandFormXObjectsNative(
-  ...args: [
-    page: NativePdfPage,
-    parsedElements: readonly ParsedElement[],
-    fontMappings: FontMappings,
-    extGState: ReadonlyMap<string, ExtGStateParams>,
-    shadings: ReadonlyMap<string, PdfShading>,
-    patterns: ReadonlyMap<string, PdfPattern>,
-    colorSpaces: ReadonlyMap<string, import("../color/color-space.native").ParsedNamedColorSpace>,
-    shadingMaxSize: number,
-    clipPathMaxSize: number,
-    softMaskVectorMaxSize: number,
-    jpxDecode: JpxDecodeFn,
-    pageBBox: PdfBBox,
-    embeddedFontMetrics: Map<string, { ascender: number; descender: number }>,
-    xObjectsOverride: PdfDict | null,
-    nextInlineId: () => number,
-  ]
-): Readonly<{ elements: ParsedElement[]; imageGroups: ImageGroupMap }> {
-  const [
-    page,
-    parsedElements,
-    fontMappings,
-    extGState,
-    shadings,
-    patterns,
-    colorSpaces,
-    shadingMaxSize,
-    clipPathMaxSize,
-    softMaskVectorMaxSize,
-    jpxDecode,
-    pageBBox,
-    embeddedFontMetrics,
-    xObjectsOverride,
-    nextInlineId,
-  ] = args;
+type ExpandFormXObjectsNativeOptions = {
+  readonly page: NativePdfPage;
+  readonly parsedElements: readonly ParsedElement[];
+  readonly fontMappings: FontMappings;
+  readonly extGState: ReadonlyMap<string, ExtGStateParams>;
+  readonly shadings: ReadonlyMap<string, PdfShading>;
+  readonly patterns: ReadonlyMap<string, PdfPattern>;
+  readonly colorSpaces: ReadonlyMap<string, import("../color/color-space.native").ParsedNamedColorSpace>;
+  readonly shadingMaxSize: number;
+  readonly clipPathMaxSize: number;
+  readonly softMaskVectorMaxSize: number;
+  readonly jpxDecode: JpxDecodeFn;
+  readonly pageBBox: PdfBBox;
+  readonly embeddedFontMetrics: Map<string, { ascender: number; descender: number }>;
+  readonly xObjectsOverride: PdfDict | null;
+  readonly nextInlineId: () => number;
+};
+
+function expandFormXObjectsNative({
+  page,
+  parsedElements,
+  fontMappings,
+  extGState,
+  shadings,
+  patterns,
+  colorSpaces,
+  shadingMaxSize,
+  clipPathMaxSize,
+  softMaskVectorMaxSize,
+  jpxDecode,
+  pageBBox,
+  embeddedFontMetrics,
+  xObjectsOverride,
+  nextInlineId,
+}: ExpandFormXObjectsNativeOptions): Readonly<{ elements: ParsedElement[]; imageGroups: ImageGroupMap }> {
   const resources = page.getResourcesDict();
   const xObjects = xObjectsOverride ?? (resources ? resolveDict(page, dictGet(resources, "XObject")) : null);
   const outElements: ParsedElement[] = [];
@@ -491,23 +494,22 @@ function expandFormXObjectsNative(
     return merged;
   };
 
-  const expandInScope = (
-    ...args: [
-      elements: readonly ParsedElement[],
-      scope: Readonly<{
-        readonly resources: PdfDict | null;
-        readonly xObjects: PdfDict | null;
-        readonly fontMappings: FontMappings;
-        readonly extGState: ReadonlyMap<string, ExtGStateParams>;
-        readonly shadings: ReadonlyMap<string, PdfShading>;
-        readonly patterns: ReadonlyMap<string, PdfPattern>;
-        readonly colorSpaces: ReadonlyMap<string, import("../color/color-space.native").ParsedNamedColorSpace>;
-      }>,
-      callStack: Set<string>,
-      depth: number,
-    ]
-  ): void => {
-    const [elements, scope, callStack, depth] = args;
+  type ExpandInScopeOptions = Readonly<{
+    readonly elements: readonly ParsedElement[];
+    readonly scope: Readonly<{
+      readonly resources: PdfDict | null;
+      readonly xObjects: PdfDict | null;
+      readonly fontMappings: FontMappings;
+      readonly extGState: ReadonlyMap<string, ExtGStateParams>;
+      readonly shadings: ReadonlyMap<string, PdfShading>;
+      readonly patterns: ReadonlyMap<string, PdfPattern>;
+      readonly colorSpaces: ReadonlyMap<string, import("../color/color-space.native").ParsedNamedColorSpace>;
+    }>;
+    readonly callStack: Set<string>;
+    readonly depth: number;
+  }>;
+
+  const expandInScope = ({ elements, scope, callStack, depth }: ExpandInScopeOptions): void => {
     if (depth > 16) {return;}
 
     for (const elem of elements) {
@@ -609,9 +611,9 @@ function expandFormXObjectsNative(
       });
       const inner = parse(tokens);
 
-      expandInScope(
-        inner,
-        {
+      expandInScope({
+        elements: inner,
+        scope: {
           resources: formResources,
           xObjects: formXObjects ?? scope.xObjects,
           fontMappings: scopedFonts,
@@ -621,19 +623,19 @@ function expandFormXObjectsNative(
           colorSpaces: mergedColorSpaces,
         },
         callStack,
-        depth + 1,
-      );
+        depth: depth + 1,
+      });
 
       if (stackKey) {callStack.delete(stackKey);}
     }
   };
 
-  expandInScope(
-    parsedElements,
-    { resources, xObjects: xObjects ?? null, fontMappings, extGState, shadings, patterns, colorSpaces },
-    new Set(),
-    0,
-  );
+  expandInScope({
+    elements: parsedElements,
+    scope: { resources, xObjects: xObjects ?? null, fontMappings, extGState, shadings, patterns, colorSpaces },
+    callStack: new Set(),
+    depth: 0,
+  });
 
   return { elements: outElements, imageGroups };
 }
@@ -667,16 +669,15 @@ function normalizeBaseFontForMetricsLookup(baseFont: string): string {
   return plusIndex > 0 ? clean.slice(plusIndex + 1) : clean;
 }
 
-function convertElements(
-  ...args: [
-    parsed: ParsedElement[],
-    opts: Required<PdfParserOptions>,
-    _pageHeight: number,
-    extractedImages: PdfImage[],
-    fontMappings: FontMappings,
-  ]
-): PdfElement[] {
-  const [parsed, opts, _pageHeight, extractedImages, fontMappings] = args;
+type ConvertElementsOptions = {
+  readonly parsed: ParsedElement[];
+  readonly opts: Required<PdfParserOptions>;
+  readonly pageHeight: number;
+  readonly extractedImages: PdfImage[];
+  readonly fontMappings: FontMappings;
+};
+
+function convertElements({ parsed, opts, pageHeight: _pageHeight, extractedImages, fontMappings }: ConvertElementsOptions): PdfElement[] {
   const elements: PdfElement[] = [];
   for (const elem of parsed) {
     switch (elem.type) {

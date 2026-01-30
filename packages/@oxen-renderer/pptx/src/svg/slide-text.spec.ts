@@ -61,7 +61,7 @@ describe("renderTextSvg", () => {
     const ctx = createEmptyCoreRenderContext();
     const defsCollector = createDefsCollector();
 
-    const svg = renderTextSvg(body, ctx, 400, 200, defsCollector);
+    const svg = renderTextSvg({ textBody: body, ctx, boxWidth: 400, boxHeight: 200, defsCollector });
 
     expect(svg).toContain(
       'font-family="LatinFont, EastAsianFont, ComplexFont, SymbolFont"',

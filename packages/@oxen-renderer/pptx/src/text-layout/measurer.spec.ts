@@ -8,30 +8,30 @@ import { px, pt } from "@oxen-office/ooxml/domain/units";
 
 describe("estimateTextWidth", () => {
   test("measures empty string as zero width", () => {
-    const width = estimateTextWidth("", pt(18), px(0), "Arial");
+    const width = estimateTextWidth({ text: "", fontSize: pt(18), letterSpacing: px(0), fontFamily: "Arial" });
     expect(width as number).toBe(0);
   });
 
   test("measures single character", () => {
-    const width = estimateTextWidth("A", pt(18), px(0), "Arial");
+    const width = estimateTextWidth({ text: "A", fontSize: pt(18), letterSpacing: px(0), fontFamily: "Arial" });
     expect(width as number).toBeGreaterThan(0);
   });
 
   test("longer text has greater width", () => {
-    const short = estimateTextWidth("A", pt(18), px(0), "Arial");
-    const long = estimateTextWidth("AAAA", pt(18), px(0), "Arial");
+    const short = estimateTextWidth({ text: "A", fontSize: pt(18), letterSpacing: px(0), fontFamily: "Arial" });
+    const long = estimateTextWidth({ text: "AAAA", fontSize: pt(18), letterSpacing: px(0), fontFamily: "Arial" });
     expect(long as number).toBeGreaterThan(short as number);
   });
 
   test("larger font size produces greater width", () => {
-    const small = estimateTextWidth("Test", pt(12), px(0), "Arial");
-    const large = estimateTextWidth("Test", pt(24), px(0), "Arial");
+    const small = estimateTextWidth({ text: "Test", fontSize: pt(12), letterSpacing: px(0), fontFamily: "Arial" });
+    const large = estimateTextWidth({ text: "Test", fontSize: pt(24), letterSpacing: px(0), fontFamily: "Arial" });
     expect(large as number).toBeGreaterThan(small as number);
   });
 
   test("letter spacing adds to width", () => {
-    const noSpacing = estimateTextWidth("Test", pt(18), px(0), "Arial");
-    const withSpacing = estimateTextWidth("Test", pt(18), px(5), "Arial");
+    const noSpacing = estimateTextWidth({ text: "Test", fontSize: pt(18), letterSpacing: px(0), fontFamily: "Arial" });
+    const withSpacing = estimateTextWidth({ text: "Test", fontSize: pt(18), letterSpacing: px(5), fontFamily: "Arial" });
     expect(withSpacing as number).toBeGreaterThan(noSpacing as number);
   });
 });

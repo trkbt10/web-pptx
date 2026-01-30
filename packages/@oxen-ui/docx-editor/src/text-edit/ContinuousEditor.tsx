@@ -372,12 +372,12 @@ export function ContinuousEditor({
 	        const cursorOffset = resolveSelectionCursorOffset(textarea);
 	        const currentPosition = offsetToCursorPosition(internalParagraphs, cursorOffset);
 
-        const result = moveCursorVertically(
+        const result = moveCursorVertically({
           pagedLayout,
           currentPosition,
           direction,
-          preferredXRef.current ?? undefined,
-        );
+          preferredX: preferredXRef.current ?? undefined,
+        });
 
         if (result !== undefined) {
           event.preventDefault();

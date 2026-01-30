@@ -475,7 +475,7 @@ export function renderCxnShape(shape: CxnShape, ctx: CoreRenderContext): HtmlStr
 
   // Generate markers for line ends (arrows)
   // Per ECMA-376 Part 1, Section 20.1.8.37/57
-  const markers = generateLineMarkers(line?.headEnd, line?.tailEnd, strokeWidth, strokeColor);
+  const markers = generateLineMarkers({ headEnd: line?.headEnd, tailEnd: line?.tailEnd, strokeWidth, colorHex: strokeColor });
 
   // Build path attributes with marker references
   const pathAttrs: Record<string, string | number | undefined> = {

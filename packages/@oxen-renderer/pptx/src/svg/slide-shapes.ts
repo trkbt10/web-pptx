@@ -224,7 +224,7 @@ type RenderShapeTextSvgArgs = [
 function renderShapeTextSvg(...args: RenderShapeTextSvgArgs): string {
   const [shape, ctx, w, h, defsCollector] = args;
   if (shape.textBody !== undefined) {
-    return renderTextSvg(shape.textBody, ctx, w, h, defsCollector);
+    return renderTextSvg({ textBody: shape.textBody, ctx, boxWidth: w, boxHeight: h, defsCollector });
   }
   return "";
 }
@@ -484,7 +484,7 @@ function renderConnectorSvg(...args: RenderConnectorSvgArgs): string {
   // Per ECMA-376 Part 1, Section 20.1.8.37/57
   const markerAttrs: string[] = [];
   if (line?.headEnd !== undefined || line?.tailEnd !== undefined) {
-    const markers = generateLineMarkers(line?.headEnd, line?.tailEnd, strokeWidth, strokeColor);
+    const markers = generateLineMarkers({ headEnd: line?.headEnd, tailEnd: line?.tailEnd, strokeWidth, colorHex: strokeColor });
 
     // Add marker definitions to collector
     for (const def of markers.defs) {

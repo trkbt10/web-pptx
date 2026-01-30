@@ -91,8 +91,8 @@ function colorToRgbBytes(color: PdfColor): readonly [number, number, number] {
 type Poly = readonly PdfPoint[];
 type FlattenedSubpath = Readonly<{ readonly points: Poly; readonly closed: boolean }>;
 
-function cubicAt(...args: readonly [p0: number, p1: number, p2: number, p3: number, t: number]): number {
-  const [p0, p1, p2, p3, t] = args;
+function cubicAt(points: readonly [number, number, number, number], t: number): number {
+  const [p0, p1, p2, p3] = points;
   const mt = 1 - t;
   return (
     mt * mt * mt * p0 +
@@ -134,8 +134,8 @@ function flattenSubpaths(ops: ParsedPath["operations"], ctm: PdfMatrix): readonl
     for (let i = 1; i <= steps; i += 1) {
       const t = i / steps;
       lineTo({
-        x: cubicAt(p0.x, cp1.x, cp2.x, end.x, t),
-        y: cubicAt(p0.y, cp1.y, cp2.y, end.y, t),
+        x: cubicAt([p0.x, cp1.x, cp2.x, end.x], t),
+        y: cubicAt([p0.y, cp1.y, cp2.y, end.y], t),
       });
     }
     current = end;
@@ -220,13 +220,6 @@ function pointInSubpathsEvenOdd(x: number, y: number, subpaths: readonly Flatten
   return inside;
 }
 
-function isLeft(
-  ...args: readonly [ax: number, ay: number, bx: number, by: number, px: number, py: number]
-): number {
-  const [ax, ay, bx, by, px, py] = args;
-  return (bx - ax) * (py - ay) - (px - ax) * (by - ay);
-}
-
 function windingNumber(x: number, y: number, poly: Poly): number {
   if (poly.length < 2) {return 0;}
   let winding = 0;
@@ -236,11 +229,13 @@ function windingNumber(x: number, y: number, poly: Poly): number {
     const b = poly[(i + 1) % poly.length]!;
 
     if (a.y <= y) {
-      if (b.y > y && isLeft(a.x, a.y, b.x, b.y, x, y) > 0) {
+      const left = (b.x - a.x) * (y - a.y) - (x - a.x) * (b.y - a.y);
+      if (b.y > y && left > 0) {
         winding += 1;
       }
     } else {
-      if (b.y <= y && isLeft(a.x, a.y, b.x, b.y, x, y) < 0) {
+      const left = (b.x - a.x) * (y - a.y) - (x - a.x) * (b.y - a.y);
+      if (b.y <= y && left < 0) {
         winding -= 1;
       }
     }
@@ -257,15 +252,13 @@ function pointInSubpathsNonZero(x: number, y: number, subpaths: readonly Flatten
   return winding !== 0;
 }
 
-function pointInSubpaths(
-  ...args: readonly [
-    x: number,
-    y: number,
-    subpaths: readonly FlattenedSubpath[],
-    fillRule: ParsedPath["fillRule"],
-  ]
-): boolean {
-  const [x, y, subpaths, fillRule] = args;
+type SubpathsHitTest = Readonly<{
+  readonly subpaths: readonly FlattenedSubpath[];
+  readonly fillRule: ParsedPath["fillRule"];
+}>;
+
+function pointInSubpaths(x: number, y: number, hitTest: SubpathsHitTest): boolean {
+  const { subpaths, fillRule } = hitTest;
   if (fillRule === "evenodd") {
     return pointInSubpathsEvenOdd(x, y, subpaths);
   }
@@ -350,8 +343,7 @@ function parsePatternCellShapes(pattern: PdfTilingPattern): readonly CellShape[]
   const setFillRgb = (r: number, g: number, b: number): void => {
     gs = { ...gs, fillColor: { colorSpace: "DeviceRGB", components: [r, g, b] } };
   };
-  const setFillCmyk = (...args: readonly [c: number, m: number, y: number, k: number]): void => {
-    const [c, m, y, k] = args;
+  const setFillCmyk = ({ c, m, y, k }: { readonly c: number; readonly m: number; readonly y: number; readonly k: number }): void => {
     gs = { ...gs, fillColor: { colorSpace: "DeviceCMYK", components: [c, m, y, k] } };
   };
 
@@ -435,7 +427,7 @@ function parsePatternCellShapes(pattern: PdfTilingPattern): readonly CellShape[]
         const m = popNumberOperand();
         const c = popNumberOperand();
         if (c == null || m == null || y == null || k == null) {return null;}
-        setFillCmyk(c, m, y, k);
+        setFillCmyk({ c, m, y, k });
         operandStack = [];
         break;
       }
@@ -563,6 +555,7 @@ export function rasterizeTilingPatternFillPath(
 
   const outerSubpaths = flattenSubpaths(parsed.operations, outerGs.ctm);
   if (outerSubpaths.length === 0) {return null;}
+  const outerHitTest: SubpathsHitTest = { subpaths: outerSubpaths, fillRule: outerFillRule };
   const outerBounds = computeBoundsFromSubpaths(outerSubpaths);
   if (!outerBounds) {return null;}
 
@@ -608,7 +601,7 @@ export function rasterizeTilingPatternFillPath(
       const pageX = llx + ((col + 0.5) / width) * bw;
       const idx = row * width + col;
 
-      if (!pointInSubpaths(pageX, pageY, outerSubpaths, outerFillRule)) {
+      if (!pointInSubpaths(pageX, pageY, outerHitTest)) {
         alpha[idx] = 0;
         continue;
       }
@@ -630,7 +623,7 @@ export function rasterizeTilingPatternFillPath(
         if (localX < b[0] || localX > b[2] || localY < b[1] || localY > b[3]) {
           continue;
         }
-        if (pointInSubpaths(localX, localY, shape.subpaths, shape.fillRule)) {
+        if (pointInSubpaths(localX, localY, shape)) {
           hit = shape;
         }
       }

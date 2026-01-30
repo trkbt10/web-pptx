@@ -548,7 +548,7 @@ export function renderTableSvg(
             },
           };
 
-          const svg = renderTextSvg(textBody, ctx, innerW, innerH, defsCollector);
+          const svg = renderTextSvg({ textBody, ctx, boxWidth: innerW, boxHeight: innerH, defsCollector });
           if (svg) {
             const tx = cursor.x + (margins.left as number);
             const ty = cursor.y + (margins.top as number);

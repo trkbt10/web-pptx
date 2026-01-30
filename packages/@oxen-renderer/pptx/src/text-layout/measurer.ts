@@ -37,15 +37,14 @@ export type CharWidthResult = {
  * @param fontFamily - Font family name
  * @returns Character width result with kerning adjustment
  */
-export function calculateCharWidth(
-  ...args: [
-    char: string,
-    prevChar: string | undefined,
-    fontSize: Points,
-    fontFamily: string,
-  ]
-): CharWidthResult {
-  const [char, prevChar, fontSize, fontFamily] = args;
+export type CalculateCharWidthOptions = {
+  readonly char: string;
+  readonly prevChar: string | undefined;
+  readonly fontSize: Points;
+  readonly fontFamily: string;
+};
+
+export function calculateCharWidth({ char, prevChar, fontSize, fontFamily }: CalculateCharWidthOptions): CharWidthResult {
   const charCode = char.charCodeAt(0);
   const fontSizePx = (fontSize as number) * PT_TO_PX;
   const isCjk = isCjkCodePoint(charCode);
@@ -55,7 +54,7 @@ export function calculateCharWidth(
   const width = fontSizePx * widthRatio;
 
   // Calculate kerning adjustment
-  const kerningAdjust = resolveKerningAdjust(prevChar, char, fontSizePx, fontFamily);
+  const kerningAdjust = resolveKerningAdjust({ prevChar, char, fontSizePx, fontFamily });
 
   return {
     width: px(width),
@@ -77,21 +76,20 @@ export function calculateCharWidth(
  * @param fontFamily - Font family for metrics lookup
  * @returns Width in pixels
  */
-export function estimateTextWidth(
-  ...args: [
-    text: string,
-    fontSize: Points,
-    letterSpacing: Pixels,
-    fontFamily: string,
-  ]
-): Pixels {
-  const [text, fontSize, letterSpacing, fontFamily] = args;
+export type EstimateTextWidthOptions = {
+  readonly text: string;
+  readonly fontSize: Points;
+  readonly letterSpacing: Pixels;
+  readonly fontFamily: string;
+};
+
+export function estimateTextWidth({ text, fontSize, letterSpacing, fontFamily }: EstimateTextWidthOptions): Pixels {
   const chars = Array.from(text);
   const letterSpacingNum = letterSpacing as number;
 
   const width = chars.reduce((acc, char, index) => {
     const prevChar = index > 0 ? chars[index - 1] : undefined;
-    const charResult = calculateCharWidth(char, prevChar, fontSize, fontFamily);
+    const charResult = calculateCharWidth({ char, prevChar, fontSize, fontFamily });
     const spacing = index > 0 ? letterSpacingNum : 0;
     return acc + (charResult.totalWidth as number) + spacing;
   }, 0);
@@ -113,7 +111,12 @@ export function measureSpan(span: LayoutSpan): MeasuredSpan {
     if (span.opticalKerning === true) {
       width = measureTextWidthOptical(span);
     } else {
-      width = estimateTextWidth(span.text, span.fontSize, span.letterSpacing, span.fontFamily);
+      width = estimateTextWidth({
+        text: span.text,
+        fontSize: span.fontSize,
+        letterSpacing: span.letterSpacing,
+        fontFamily: span.fontFamily,
+      });
     }
   }
 
@@ -161,7 +164,7 @@ export function measureSpans(spans: readonly LayoutSpan[]): MeasuredSpan[] {
  * by the indent attribute, not by adding extra space to the bullet width.
  */
 export function estimateBulletWidth(bulletChar: string, fontSize: Points, fontFamily: string): Pixels {
-  return estimateTextWidth(bulletChar, fontSize, px(0), fontFamily);
+  return estimateTextWidth({ text: bulletChar, fontSize, letterSpacing: px(0), fontFamily });
 }
 
 // =============================================================================
@@ -190,22 +193,21 @@ export type DetailedMeasurement = {
  * @param fontFamily - Font family for metrics lookup
  * @returns Detailed measurement with per-character data
  */
-export function measureTextDetailed(
-  ...args: [
-    text: string,
-    fontSize: Points,
-    letterSpacing: Pixels,
-    fontFamily: string,
-  ]
-): DetailedMeasurement {
-  const [text, fontSize, letterSpacing, fontFamily] = args;
+export type MeasureTextDetailedOptions = {
+  readonly text: string;
+  readonly fontSize: Points;
+  readonly letterSpacing: Pixels;
+  readonly fontFamily: string;
+};
+
+export function measureTextDetailed({ text, fontSize, letterSpacing, fontFamily }: MeasureTextDetailedOptions): DetailedMeasurement {
   const chars = Array.from(text);
   const letterSpacingNum = letterSpacing as number;
 
   const measurement = chars.reduce(
     (acc, char, index) => {
       const prevChar = index > 0 ? chars[index - 1] : undefined;
-      const charResult = calculateCharWidth(char, prevChar, fontSize, fontFamily);
+      const charResult = calculateCharWidth({ char, prevChar, fontSize, fontFamily });
       const spacing = index > 0 ? letterSpacingNum : 0;
 
       acc.positions.push(px(acc.totalWidth));
@@ -223,15 +225,14 @@ export function measureTextDetailed(
   };
 }
 
-function resolveKerningAdjust(
-  ...args: [
-    prevChar: string | undefined,
-    char: string,
-    fontSizePx: number,
-    fontFamily: string,
-  ]
-): number {
-  const [prevChar, char, fontSizePx, fontFamily] = args;
+type ResolveKerningAdjustOptions = {
+  readonly prevChar: string | undefined;
+  readonly char: string;
+  readonly fontSizePx: number;
+  readonly fontFamily: string;
+};
+
+function resolveKerningAdjust({ prevChar, char, fontSizePx, fontFamily }: ResolveKerningAdjustOptions): number {
   if (prevChar === undefined) {
     return 0;
   }

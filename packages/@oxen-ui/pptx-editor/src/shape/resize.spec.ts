@@ -57,7 +57,7 @@ const wideBounds: ResizeBounds = {
 
 describe("calculateAspectDelta", () => {
   it("returns original deltas when aspect not locked", () => {
-    const result = calculateAspectDelta(50, 30, 2, false);
+    const result = calculateAspectDelta({ dw: 50, dh: 30, aspectRatio: 2, aspectLocked: false });
     expect(result).toEqual({ dw: 50, dh: 30 });
   });
 
@@ -65,7 +65,7 @@ describe("calculateAspectDelta", () => {
     // aspectRatio = 2, dw = 100, dh = 10
     // aspectDw = dh * aspectRatio = 10 * 2 = 20
     // |dw| = 100 > |aspectDw| = 20, so use dw
-    const result = calculateAspectDelta(100, 10, 2, true);
+    const result = calculateAspectDelta({ dw: 100, dh: 10, aspectRatio: 2, aspectLocked: true });
     expect(result.dw).toBe(100);
     expect(result.dh).toBe(50); // 100 / 2
   });
@@ -74,13 +74,13 @@ describe("calculateAspectDelta", () => {
     // aspectRatio = 2, dw = 10, dh = 100
     // aspectDw = dh * aspectRatio = 100 * 2 = 200
     // |dw| = 10 < |aspectDw| = 200, so use dh
-    const result = calculateAspectDelta(10, 100, 2, true);
+    const result = calculateAspectDelta({ dw: 10, dh: 100, aspectRatio: 2, aspectLocked: true });
     expect(result.dw).toBe(200); // 100 * 2
     expect(result.dh).toBe(100);
   });
 
   it("handles negative deltas", () => {
-    const result = calculateAspectDelta(-50, -25, 2, true);
+    const result = calculateAspectDelta({ dw: -50, dh: -25, aspectRatio: 2, aspectLocked: true });
     expect(result.dw).toBe(-50);
     expect(result.dh).toBe(-25);
   });
@@ -92,24 +92,24 @@ describe("calculateAspectDelta", () => {
 
 describe("applyMinConstraints", () => {
   it("returns original dimensions when above minimums", () => {
-    const result = applyMinConstraints(100, 80, 10, 10);
+    const result = applyMinConstraints({ width: 100, height: 80, minWidth: 10, minHeight: 10 });
     expect(result).toEqual({ width: 100, height: 80 });
   });
 
   it("enforces minimum width", () => {
-    const result = applyMinConstraints(5, 80, 10, 10);
+    const result = applyMinConstraints({ width: 5, height: 80, minWidth: 10, minHeight: 10 });
     expect(result.width).toBe(10);
     expect(result.height).toBe(80);
   });
 
   it("enforces minimum height", () => {
-    const result = applyMinConstraints(100, 5, 10, 10);
+    const result = applyMinConstraints({ width: 100, height: 5, minWidth: 10, minHeight: 10 });
     expect(result.width).toBe(100);
     expect(result.height).toBe(10);
   });
 
   it("enforces both minimums", () => {
-    const result = applyMinConstraints(5, 5, 10, 10);
+    const result = applyMinConstraints({ width: 5, height: 5, minWidth: 10, minHeight: 10 });
     expect(result).toEqual({ width: 10, height: 10 });
   });
 });
@@ -120,7 +120,7 @@ describe("applyMinConstraints", () => {
 
 describe("resizeFromNW", () => {
   it("shrinks from top-left when dragging right-down", () => {
-    const result = resizeFromNW(squareBounds, 20, 20, defaultOptions);
+    const result = resizeFromNW({ initial: squareBounds, dx: 20, dy: 20, options: defaultOptions });
     expect(result.x).toBe(120);
     expect(result.y).toBe(120);
     expect(result.width).toBe(80);
@@ -128,7 +128,7 @@ describe("resizeFromNW", () => {
   });
 
   it("expands from top-left when dragging left-up", () => {
-    const result = resizeFromNW(squareBounds, -20, -20, defaultOptions);
+    const result = resizeFromNW({ initial: squareBounds, dx: -20, dy: -20, options: defaultOptions });
     expect(result.x).toBe(80);
     expect(result.y).toBe(80);
     expect(result.width).toBe(120);
@@ -136,13 +136,13 @@ describe("resizeFromNW", () => {
   });
 
   it("enforces minimum size", () => {
-    const result = resizeFromNW(squareBounds, 100, 100, defaultOptions);
+    const result = resizeFromNW({ initial: squareBounds, dx: 100, dy: 100, options: defaultOptions });
     expect(result.width).toBe(10);
     expect(result.height).toBe(10);
   });
 
   it("maintains aspect ratio when locked", () => {
-    const result = resizeFromNW(wideBounds, -50, -25, aspectLockedOptions);
+    const result = resizeFromNW({ initial: wideBounds, dx: -50, dy: -25, options: aspectLockedOptions });
     // Initial aspect ratio is 2:1, should maintain it
     expect(result.width / result.height).toBeCloseTo(2, 5);
   });
@@ -185,7 +185,7 @@ describe("resizeFromN", () => {
 
 describe("resizeFromNE", () => {
   it("expands right and up", () => {
-    const result = resizeFromNE(squareBounds, 20, -20, defaultOptions);
+    const result = resizeFromNE({ initial: squareBounds, dx: 20, dy: -20, options: defaultOptions });
     expect(result.x).toBe(100);
     expect(result.y).toBe(80);
     expect(result.width).toBe(120);
@@ -220,7 +220,7 @@ describe("resizeFromE", () => {
 
 describe("resizeFromSE", () => {
   it("expands right and down", () => {
-    const result = resizeFromSE(squareBounds, 20, 20, defaultOptions);
+    const result = resizeFromSE({ initial: squareBounds, dx: 20, dy: 20, options: defaultOptions });
     expect(result.x).toBe(100);
     expect(result.y).toBe(100);
     expect(result.width).toBe(120);
@@ -228,7 +228,7 @@ describe("resizeFromSE", () => {
   });
 
   it("shrinks left and up", () => {
-    const result = resizeFromSE(squareBounds, -20, -20, defaultOptions);
+    const result = resizeFromSE({ initial: squareBounds, dx: -20, dy: -20, options: defaultOptions });
     expect(result.width).toBe(80);
     expect(result.height).toBe(80);
   });
@@ -261,7 +261,7 @@ describe("resizeFromS", () => {
 
 describe("resizeFromSW", () => {
   it("expands left and down", () => {
-    const result = resizeFromSW(squareBounds, -20, 20, defaultOptions);
+    const result = resizeFromSW({ initial: squareBounds, dx: -20, dy: 20, options: defaultOptions });
     expect(result.x).toBe(80);
     expect(result.y).toBe(100);
     expect(result.width).toBe(120);
@@ -305,7 +305,7 @@ describe("calculateResizeBounds", () => {
     const handles = ["nw", "n", "ne", "e", "se", "s", "sw", "w"] as const;
 
     for (const handle of handles) {
-      const result = calculateResizeBounds(handle, squareBounds, 10, 10, defaultOptions);
+      const result = calculateResizeBounds({ handle, initial: squareBounds, dx: 10, dy: 10, options: defaultOptions });
       expect(result).toBeDefined();
       expect(typeof result.x).toBe("number");
       expect(typeof result.y).toBe("number");

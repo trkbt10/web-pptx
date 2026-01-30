@@ -35,19 +35,18 @@ function createLine(color: string, widthVal = 2): Line {
   };
 }
 
-const createSpShape = (
-  ...args: [
-    id: string,
-    name: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    fillColor: string,
-    rotation?: number,
-  ]
-): SpShape => {
-  const [id, name, x, y, width, height, fillColor, rotation = 0] = args;
+type CreateSpShapeOptions = {
+  readonly id: string;
+  readonly name: string;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly fillColor: string;
+  readonly rotation?: number;
+};
+
+const createSpShape = ({ id, name, x, y, width, height, fillColor, rotation = 0 }: CreateSpShapeOptions): SpShape => {
   return {
   type: "sp",
   nonVisual: { id, name },
@@ -71,19 +70,18 @@ const createSpShape = (
   };
 };
 
-const createTextBox = (
-  ...args: [
-    id: string,
-    name: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    text: string,
-    fontSize?: number,
-  ]
-): SpShape => {
-  const [id, name, x, y, width, height, text, fontSize = 14] = args;
+type CreateTextBoxOptions = {
+  readonly id: string;
+  readonly name: string;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly text: string;
+  readonly fontSize?: number;
+};
+
+const createTextBox = ({ id, name, x, y, width, height, text, fontSize = 14 }: CreateTextBoxOptions): SpShape => {
   return {
   type: "sp",
   nonVisual: { id, name, textBox: true },
@@ -117,10 +115,16 @@ const createTextBox = (
   };
 };
 
-const createTitle = (
-  ...args: [id: string, x: number, y: number, width: number, height: number, text: string]
-): SpShape => {
-  const [id, x, y, width, height, text] = args;
+type CreateTitleOptions = {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly text: string;
+};
+
+const createTitle = ({ id, x, y, width, height, text }: CreateTitleOptions): SpShape => {
   return {
   type: "sp",
   nonVisual: { id, name: "Title" },
@@ -184,10 +188,15 @@ const createTable = (headers: string[], rows: string[][]): Table => ({
   properties: {},
 });
 
-const createTableFrame = (
-  ...args: [id: string, x: number, y: number, headers: string[], rows: string[][]]
-): GraphicFrame => {
-  const [id, x, y, headers, rows] = args;
+type CreateTableFrameOptions = {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+  readonly headers: string[];
+  readonly rows: string[][];
+};
+
+const createTableFrame = ({ id, x, y, headers, rows }: CreateTableFrameOptions): GraphicFrame => {
   return {
   type: "graphicFrame",
   nonVisual: { id, name: "Table" },
@@ -207,10 +216,14 @@ const createTableFrame = (
   };
 };
 
-const createGroup = (
-  ...args: [id: string, x: number, y: number, children: SpShape[]]
-): GrpShape => {
-  const [id, x, y, children] = args;
+type CreateGroupOptions = {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+  readonly children: SpShape[];
+};
+
+const createGroup = ({ id, x, y, children }: CreateGroupOptions): GrpShape => {
   const minX = Math.min(
     ...children.map((c) => (c.properties.transform?.x as number) || 0)
   );
@@ -262,115 +275,116 @@ const createGroup = (
 
 const createSlide1 = (): Slide => ({
   shapes: [
-    createTitle("s1-title", 50, 30, 860, 60, "Welcome to Presentation Editor"),
-    createSpShape("s1-rect1", "Blue Box", 100, 150, 200, 150, "3498DB"),
-    createSpShape("s1-rect2", "Green Box", 380, 150, 200, 150, "2ECC71"),
-    createSpShape("s1-rect3", "Orange Box", 660, 150, 200, 150, "E67E22"),
-    createTextBox(
-      "s1-text1",
-      "Description",
-      100,
-      350,
-      760,
-      100,
-      "This is the first slide demonstrating various shape types and editing capabilities.",
-      16
-    ),
+    createTitle({ id: "s1-title", x: 50, y: 30, width: 860, height: 60, text: "Welcome to Presentation Editor" }),
+    createSpShape({ id: "s1-rect1", name: "Blue Box", x: 100, y: 150, width: 200, height: 150, fillColor: "3498DB" }),
+    createSpShape({ id: "s1-rect2", name: "Green Box", x: 380, y: 150, width: 200, height: 150, fillColor: "2ECC71" }),
+    createSpShape({ id: "s1-rect3", name: "Orange Box", x: 660, y: 150, width: 200, height: 150, fillColor: "E67E22" }),
+    createTextBox({
+      id: "s1-text1",
+      name: "Description",
+      x: 100,
+      y: 350,
+      width: 760,
+      height: 100,
+      text: "This is the first slide demonstrating various shape types and editing capabilities.",
+      fontSize: 16,
+    }),
   ],
 });
 
 const createSlide2 = (): Slide => ({
   shapes: [
-    createTitle("s2-title", 50, 30, 860, 60, "Data Visualization"),
-    createTableFrame(
-      "s2-table",
-      100,
-      120,
-      ["Product", "Q1", "Q2", "Q3", "Q4"],
-      [
+    createTitle({ id: "s2-title", x: 50, y: 30, width: 860, height: 60, text: "Data Visualization" }),
+    createTableFrame({
+      id: "s2-table",
+      x: 100,
+      y: 120,
+      headers: ["Product", "Q1", "Q2", "Q3", "Q4"],
+      rows: [
         ["Widget A", "100", "150", "200", "180"],
         ["Widget B", "80", "120", "140", "160"],
         ["Widget C", "200", "180", "220", "250"],
-      ]
-    ),
-    createSpShape("s2-highlight", "Highlight", 600, 150, 260, 180, "F1C40F", 5),
-    createTextBox(
-      "s2-note",
-      "Note",
-      600,
-      350,
-      260,
-      80,
-      "Sales data for 2024",
-      14
-    ),
+      ],
+    }),
+    createSpShape({ id: "s2-highlight", name: "Highlight", x: 600, y: 150, width: 260, height: 180, fillColor: "F1C40F", rotation: 5 }),
+    createTextBox({ id: "s2-note", name: "Note", x: 600, y: 350, width: 260, height: 80, text: "Sales data for 2024", fontSize: 14 }),
   ],
 });
 
 const createSlide3 = (): Slide => ({
   shapes: [
-    createTitle("s3-title", 50, 30, 860, 60, "Grouped Elements"),
-    createGroup("s3-group1", 100, 150, [
-      createSpShape("s3-g1-1", "Circle 1", 0, 0, 80, 80, "9B59B6"),
-      createSpShape("s3-g1-2", "Circle 2", 100, 0, 80, 80, "8E44AD"),
-      createSpShape("s3-g1-3", "Circle 3", 50, 90, 80, 80, "6C3483"),
-    ]),
-    createGroup("s3-group2", 400, 150, [
-      createSpShape("s3-g2-1", "Square 1", 0, 0, 60, 60, "E74C3C"),
-      createSpShape("s3-g2-2", "Square 2", 80, 0, 60, 60, "C0392B"),
-      createSpShape("s3-g2-3", "Square 3", 160, 0, 60, 60, "A93226"),
-    ]),
-    createTextBox(
-      "s3-instructions",
-      "Instructions",
-      100,
-      350,
-      760,
-      80,
-      "Select a group and use Ctrl+Shift+G to ungroup. Select multiple shapes and use Ctrl+G to group.",
-      14
-    ),
+    createTitle({ id: "s3-title", x: 50, y: 30, width: 860, height: 60, text: "Grouped Elements" }),
+    createGroup({
+      id: "s3-group1",
+      x: 100,
+      y: 150,
+      children: [
+        createSpShape({ id: "s3-g1-1", name: "Circle 1", x: 0, y: 0, width: 80, height: 80, fillColor: "9B59B6" }),
+        createSpShape({ id: "s3-g1-2", name: "Circle 2", x: 100, y: 0, width: 80, height: 80, fillColor: "8E44AD" }),
+        createSpShape({ id: "s3-g1-3", name: "Circle 3", x: 50, y: 90, width: 80, height: 80, fillColor: "6C3483" }),
+      ],
+    }),
+    createGroup({
+      id: "s3-group2",
+      x: 400,
+      y: 150,
+      children: [
+        createSpShape({ id: "s3-g2-1", name: "Square 1", x: 0, y: 0, width: 60, height: 60, fillColor: "E74C3C" }),
+        createSpShape({ id: "s3-g2-2", name: "Square 2", x: 80, y: 0, width: 60, height: 60, fillColor: "C0392B" }),
+        createSpShape({ id: "s3-g2-3", name: "Square 3", x: 160, y: 0, width: 60, height: 60, fillColor: "A93226" }),
+      ],
+    }),
+    createTextBox({
+      id: "s3-instructions",
+      name: "Instructions",
+      x: 100,
+      y: 350,
+      width: 760,
+      height: 80,
+      text: "Select a group and use Ctrl+Shift+G to ungroup. Select multiple shapes and use Ctrl+G to group.",
+      fontSize: 14,
+    }),
   ],
 });
 
 const createSlide4 = (): Slide => ({
   shapes: [
-    createTitle("s4-title", 50, 30, 860, 60, "Alignment & Distribution"),
-    createSpShape("s4-r1", "Rect 1", 100, 150, 100, 60, "1ABC9C"),
-    createSpShape("s4-r2", "Rect 2", 250, 180, 80, 80, "16A085"),
-    createSpShape("s4-r3", "Rect 3", 380, 160, 120, 50, "148F77"),
-    createSpShape("s4-r4", "Rect 4", 550, 140, 90, 100, "117A65"),
-    createSpShape("s4-r5", "Rect 5", 700, 170, 110, 70, "0E6655"),
-    createTextBox(
-      "s4-hint",
-      "Hint",
-      100,
-      300,
-      760,
-      120,
-      "Select multiple shapes and right-click to access alignment options:\n- Align Left/Center/Right\n- Align Top/Middle/Bottom\n- Distribute Horizontally/Vertically",
-      13
-    ),
+    createTitle({ id: "s4-title", x: 50, y: 30, width: 860, height: 60, text: "Alignment & Distribution" }),
+    createSpShape({ id: "s4-r1", name: "Rect 1", x: 100, y: 150, width: 100, height: 60, fillColor: "1ABC9C" }),
+    createSpShape({ id: "s4-r2", name: "Rect 2", x: 250, y: 180, width: 80, height: 80, fillColor: "16A085" }),
+    createSpShape({ id: "s4-r3", name: "Rect 3", x: 380, y: 160, width: 120, height: 50, fillColor: "148F77" }),
+    createSpShape({ id: "s4-r4", name: "Rect 4", x: 550, y: 140, width: 90, height: 100, fillColor: "117A65" }),
+    createSpShape({ id: "s4-r5", name: "Rect 5", x: 700, y: 170, width: 110, height: 70, fillColor: "0E6655" }),
+    createTextBox({
+      id: "s4-hint",
+      name: "Hint",
+      x: 100,
+      y: 300,
+      width: 760,
+      height: 120,
+      text: "Select multiple shapes and right-click to access alignment options:\n- Align Left/Center/Right\n- Align Top/Middle/Bottom\n- Distribute Horizontally/Vertically",
+      fontSize: 13,
+    }),
   ],
 });
 
 const createSlide5 = (): Slide => ({
   shapes: [
-    createTitle("s5-title", 50, 30, 860, 60, "Rotated Shapes"),
-    createSpShape("s5-r1", "Rotated 15", 100, 150, 120, 80, "3498DB", 15),
-    createSpShape("s5-r2", "Rotated 30", 280, 150, 120, 80, "2ECC71", 30),
-    createSpShape("s5-r3", "Rotated 45", 460, 150, 120, 80, "E74C3C", 45),
-    createSpShape("s5-r4", "Rotated -20", 640, 150, 120, 80, "9B59B6", -20),
-    createTextBox(
-      "s5-hint",
-      "Rotation Hint",
-      100,
-      320,
-      760,
-      80,
-      "Use the rotation handle (circle above shape) to rotate. Hold Shift for 15-degree increments.",
-      14
-    ),
+    createTitle({ id: "s5-title", x: 50, y: 30, width: 860, height: 60, text: "Rotated Shapes" }),
+    createSpShape({ id: "s5-r1", name: "Rotated 15", x: 100, y: 150, width: 120, height: 80, fillColor: "3498DB", rotation: 15 }),
+    createSpShape({ id: "s5-r2", name: "Rotated 30", x: 280, y: 150, width: 120, height: 80, fillColor: "2ECC71", rotation: 30 }),
+    createSpShape({ id: "s5-r3", name: "Rotated 45", x: 460, y: 150, width: 120, height: 80, fillColor: "E74C3C", rotation: 45 }),
+    createSpShape({ id: "s5-r4", name: "Rotated -20", x: 640, y: 150, width: 120, height: 80, fillColor: "9B59B6", rotation: -20 }),
+    createTextBox({
+      id: "s5-hint",
+      name: "Rotation Hint",
+      x: 100,
+      y: 320,
+      width: 760,
+      height: 80,
+      text: "Use the rotation handle (circle above shape) to rotate. Hold Shift for 15-degree increments.",
+      fontSize: 14,
+    }),
   ],
 });
 

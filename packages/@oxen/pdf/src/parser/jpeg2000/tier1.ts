@@ -68,31 +68,44 @@ function idxOf(x: number, y: number, width: number): number {
   return y * width + x;
 }
 
-function hasSig(...args: [significant: Uint8Array, x: number, y: number, width: number, height: number]): boolean {
-  const [significant, x, y, width, height] = args;
+type SigGrid = Readonly<{
+  readonly significant: Uint8Array;
+  readonly width: number;
+  readonly height: number;
+}>;
+
+type SignGrid = SigGrid &
+  Readonly<{
+    readonly sign: Uint8Array;
+  }>;
+
+type RlcContext = SigGrid &
+  Readonly<{
+    readonly pi: Uint8Array;
+  }>;
+
+function hasSig(grid: SigGrid, x: number, y: number): boolean {
+  const { significant, width, height } = grid;
   if (x < 0 || y < 0 || x >= width || y >= height) {return false;}
   return (significant[idxOf(x, y, width)] ?? 0) !== 0;
 }
 
-function signNeg(
-  ...args: [significant: Uint8Array, sign: Uint8Array, x: number, y: number, width: number, height: number]
-): boolean {
-  const [significant, sign, x, y, width, height] = args;
-  if (!hasSig(significant, x, y, width, height)) {return false;}
+function signNeg(grid: SignGrid, x: number, y: number): boolean {
+  const { sign, width } = grid;
+  if (!hasSig(grid, x, y)) {return false;}
   return (sign[idxOf(x, y, width)] ?? 0) !== 0;
 }
 
-function zcContext0(...args: [significant: Uint8Array, x: number, y: number, width: number, height: number]): number {
-  const [significant, x, y, width, height] = args;
+function zcContext0(grid: SigGrid, x: number, y: number): number {
   // LUT index uses 9-bit neighborhood (NW..SE with THIS at bit4 = 0), plus orientation offset (0 for LL).
-  const sigNW = hasSig(significant, x - 1, y - 1, width, height) ? 1 : 0;
-  const sigN = hasSig(significant, x, y - 1, width, height) ? 1 : 0;
-  const sigNE = hasSig(significant, x + 1, y - 1, width, height) ? 1 : 0;
-  const sigW = hasSig(significant, x - 1, y, width, height) ? 1 : 0;
-  const sigE = hasSig(significant, x + 1, y, width, height) ? 1 : 0;
-  const sigSW = hasSig(significant, x - 1, y + 1, width, height) ? 1 : 0;
-  const sigS = hasSig(significant, x, y + 1, width, height) ? 1 : 0;
-  const sigSE = hasSig(significant, x + 1, y + 1, width, height) ? 1 : 0;
+  const sigNW = hasSig(grid, x - 1, y - 1) ? 1 : 0;
+  const sigN = hasSig(grid, x, y - 1) ? 1 : 0;
+  const sigNE = hasSig(grid, x + 1, y - 1) ? 1 : 0;
+  const sigW = hasSig(grid, x - 1, y) ? 1 : 0;
+  const sigE = hasSig(grid, x + 1, y) ? 1 : 0;
+  const sigSW = hasSig(grid, x - 1, y + 1) ? 1 : 0;
+  const sigS = hasSig(grid, x, y + 1) ? 1 : 0;
+  const sigSE = hasSig(grid, x + 1, y + 1) ? 1 : 0;
 
   const pattern =
     (sigNW << 0) |
@@ -110,18 +123,19 @@ function zcContext0(...args: [significant: Uint8Array, x: number, y: number, wid
 }
 
 function hasAnySigNeighbor(
-  ...args: [significant: Uint8Array, x: number, y: number, width: number, height: number]
+  grid: SigGrid,
+  x: number,
+  y: number
 ): boolean {
-  const [significant, x, y, width, height] = args;
   return (
-    hasSig(significant, x - 1, y - 1, width, height) ||
-    hasSig(significant, x, y - 1, width, height) ||
-    hasSig(significant, x + 1, y - 1, width, height) ||
-    hasSig(significant, x - 1, y, width, height) ||
-    hasSig(significant, x + 1, y, width, height) ||
-    hasSig(significant, x - 1, y + 1, width, height) ||
-    hasSig(significant, x, y + 1, width, height) ||
-    hasSig(significant, x + 1, y + 1, width, height)
+    hasSig(grid, x - 1, y - 1) ||
+    hasSig(grid, x, y - 1) ||
+    hasSig(grid, x + 1, y - 1) ||
+    hasSig(grid, x - 1, y) ||
+    hasSig(grid, x + 1, y) ||
+    hasSig(grid, x - 1, y + 1) ||
+    hasSig(grid, x, y + 1) ||
+    hasSig(grid, x + 1, y + 1)
   );
 }
 
@@ -131,35 +145,36 @@ function magContext(hasSigNeighbor0: boolean, refinedBefore: boolean): number {
 }
 
 function scIndex(
-  ...args: [significant: Uint8Array, sign: Uint8Array, x: number, y: number, width: number, height: number]
+  grid: SignGrid,
+  x: number,
+  y: number
 ): number {
-  const [significant, sign, x, y, width, height] = args;
   // Bits follow T1_LUT_* from ISO/IEC 15444-1 (OpenJPEG naming):
   // 0: SGN_W, 1: SIG_N, 2: SGN_E, 3: SIG_W, 4: SGN_N, 5: SIG_E, 6: SGN_S, 7: SIG_S
   let idx = 0;
 
-  const sigW = hasSig(significant, x - 1, y, width, height);
+  const sigW = hasSig(grid, x - 1, y);
   if (sigW) {
     idx |= 1 << 3;
-    if (signNeg(significant, sign, x - 1, y, width, height)) {idx |= 1 << 0;}
+    if (signNeg(grid, x - 1, y)) {idx |= 1 << 0;}
   }
 
-  const sigN = hasSig(significant, x, y - 1, width, height);
+  const sigN = hasSig(grid, x, y - 1);
   if (sigN) {
     idx |= 1 << 1;
-    if (signNeg(significant, sign, x, y - 1, width, height)) {idx |= 1 << 4;}
+    if (signNeg(grid, x, y - 1)) {idx |= 1 << 4;}
   }
 
-  const sigE = hasSig(significant, x + 1, y, width, height);
+  const sigE = hasSig(grid, x + 1, y);
   if (sigE) {
     idx |= 1 << 5;
-    if (signNeg(significant, sign, x + 1, y, width, height)) {idx |= 1 << 2;}
+    if (signNeg(grid, x + 1, y)) {idx |= 1 << 2;}
   }
 
-  const sigS = hasSig(significant, x, y + 1, width, height);
+  const sigS = hasSig(grid, x, y + 1);
   if (sigS) {
     idx |= 1 << 7;
-    if (signNeg(significant, sign, x, y + 1, width, height)) {idx |= 1 << 6;}
+    if (signNeg(grid, x, y + 1)) {idx |= 1 << 6;}
   }
 
   return idx >>> 0;
@@ -200,22 +215,22 @@ export function tier1DecodeLlCodeblock(mq: MqDecoder, params: Tier1DecodeParams)
   // MSB bitplane: cleanup pass only.
   let pass = 0;
   let bp = params.startBitplane;
-  decodeCleanupPass(mq, width, height, bp, significant, sign, data, pi);
+  decodeCleanupPass({ mq, width, height, bp, significant, sign, data, pi });
   pass += 1;
   bp -= 1;
 
   while (pass < params.numPasses) {
     if (bp < 0) {throw new Error("Tier1: ran out of bitplanes");}
     pi.fill(0);
-    decodeSigPropPass(mq, width, height, bp, significant, sign, data, pi);
+    decodeSigPropPass({ mq, width, height, bp, significant, sign, data, pi });
     pass += 1;
     if (pass >= params.numPasses) {break;}
 
-    decodeMagRefPass(mq, width, height, bp, significant, data, pi, refined);
+    decodeMagRefPass({ mq, width, height, bp, significant, data, pi, refined });
     pass += 1;
     if (pass >= params.numPasses) {break;}
 
-    decodeCleanupPass(mq, width, height, bp, significant, sign, data, pi);
+    decodeCleanupPass({ mq, width, height, bp, significant, sign, data, pi });
     pass += 1;
     bp -= 1;
   }
@@ -224,18 +239,19 @@ export function tier1DecodeLlCodeblock(mq: MqDecoder, params: Tier1DecodeParams)
 }
 
 function decodeSigPropPass(
-  ...args: [
-    mq: MqDecoder,
-    width: number,
-    height: number,
-    bp: number,
-    significant: Uint8Array,
-    sign: Uint8Array,
-    data: Int32Array,
-    pi: Uint8Array,
-  ]
+  args: {
+    readonly mq: MqDecoder;
+    readonly width: number;
+    readonly height: number;
+    readonly bp: number;
+    readonly significant: Uint8Array;
+    readonly sign: Uint8Array;
+    readonly data: Int32Array;
+    readonly pi: Uint8Array;
+  }
 ): void {
-  const [mq, width, height, bp, significant, sign, data, pi] = args;
+  const { mq, width, height, bp, significant, sign, data, pi } = args;
+  const grid: SignGrid = { significant, sign, width, height };
   const poshalf = 1 << bp;
   const oneplushalf = (poshalf << 1) + poshalf;
   for (let y = 0; y < height; y += 1) {
@@ -243,12 +259,12 @@ function decodeSigPropPass(
       const idx = idxOf(x, y, width);
       if ((significant[idx] ?? 0) !== 0) {continue;}
       if ((pi[idx] ?? 0) !== 0) {continue;}
-      if (!hasAnySigNeighbor(significant, x, y, width, height)) {continue;}
+      if (!hasAnySigNeighbor(grid, x, y)) {continue;}
 
-      const ctx1 = zcContext0(significant, x, y, width, height);
+      const ctx1 = zcContext0(grid, x, y);
       const v = mq.decodeBit(ctx1);
       if (v) {
-        const lu = scIndex(significant, sign, x, y, width, height);
+        const lu = scIndex(grid, x, y);
         const ctx2 = LUT_CTXNO_SC[lu] ?? 9;
         const spb = LUT_SPB[lu] ?? 0;
         const s = mq.decodeBit(ctx2) ^ (spb & 1);
@@ -262,18 +278,19 @@ function decodeSigPropPass(
 }
 
 function decodeMagRefPass(
-  ...args: [
-    mq: MqDecoder,
-    width: number,
-    height: number,
-    bp: number,
-    significant: Uint8Array,
-    data: Int32Array,
-    pi: Uint8Array,
-    refined: Uint8Array,
-  ]
+  args: {
+    readonly mq: MqDecoder;
+    readonly width: number;
+    readonly height: number;
+    readonly bp: number;
+    readonly significant: Uint8Array;
+    readonly data: Int32Array;
+    readonly pi: Uint8Array;
+    readonly refined: Uint8Array;
+  }
 ): void {
-  const [mq, width, height, bp, significant, data, pi, refined] = args;
+  const { mq, width, height, bp, significant, data, pi, refined } = args;
+  const grid: SigGrid = { significant, width, height };
   const poshalf = 1 << bp;
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
@@ -281,7 +298,7 @@ function decodeMagRefPass(
       if ((significant[idx] ?? 0) === 0) {continue;}
       if ((pi[idx] ?? 0) !== 0) {continue;}
 
-      const neigh = hasAnySigNeighbor(significant, x, y, width, height);
+      const neigh = hasAnySigNeighbor(grid, x, y);
       const ctx = magContext(neigh, (refined[idx] ?? 0) !== 0);
       const v = mq.decodeBit(ctx);
       const d = data[idx] ?? 0;
@@ -292,24 +309,26 @@ function decodeMagRefPass(
 }
 
 function decodeCleanupPass(
-  ...args: [
-    mq: MqDecoder,
-    width: number,
-    height: number,
-    bp: number,
-    significant: Uint8Array,
-    sign: Uint8Array,
-    data: Int32Array,
-    pi: Uint8Array,
-  ]
+  args: {
+    readonly mq: MqDecoder;
+    readonly width: number;
+    readonly height: number;
+    readonly bp: number;
+    readonly significant: Uint8Array;
+    readonly sign: Uint8Array;
+    readonly data: Int32Array;
+    readonly pi: Uint8Array;
+  }
 ): void {
-  const [mq, width, height, bp, significant, sign, data, pi] = args;
+  const { mq, width, height, bp, significant, sign, data, pi } = args;
+  const grid: SignGrid = { significant, sign, width, height };
+  const rlcContext: RlcContext = { significant, pi, width, height };
   const poshalf = 1 << bp;
   const oneplushalf = (poshalf << 1) + poshalf;
   for (let stripeY = 0; stripeY < height; stripeY += 4) {
     for (let x = 0; x < width; x += 1) {
       // Try run-length coding when we have 4 full rows.
-      if (stripeY + 3 < height && canUseRlc(significant, pi, width, height, x, stripeY)) {
+      if (stripeY + 3 < height && canUseRlc(rlcContext, x, stripeY)) {
         const agg = mq.decodeBit(T1_CTXNO_AGG);
         if (agg === 0) {continue;}
         const r1 = mq.decodeBit(T1_CTXNO_UNI);
@@ -323,7 +342,7 @@ function decodeCleanupPass(
           if (dy < run) {continue;}
           if ((significant[idx] ?? 0) !== 0 || (pi[idx] ?? 0) !== 0) {continue;}
           if (dy === run) {
-            const lu = scIndex(significant, sign, x, y, width, height);
+            const lu = scIndex(grid, x, y);
             const ctx2 = LUT_CTXNO_SC[lu] ?? 9;
             const spb = LUT_SPB[lu] ?? 0;
             const s = mq.decodeBit(ctx2) ^ (spb & 1);
@@ -333,10 +352,10 @@ function decodeCleanupPass(
             continue;
           }
           // After the first significant sample, decode remaining normally.
-          const ctx1 = zcContext0(significant, x, y, width, height);
+          const ctx1 = zcContext0(grid, x, y);
           const v = mq.decodeBit(ctx1);
           if (!v) {continue;}
-          const lu = scIndex(significant, sign, x, y, width, height);
+          const lu = scIndex(grid, x, y);
           const ctx2 = LUT_CTXNO_SC[lu] ?? 9;
           const spb = LUT_SPB[lu] ?? 0;
           const s = mq.decodeBit(ctx2) ^ (spb & 1);
@@ -355,10 +374,10 @@ function decodeCleanupPass(
         if ((significant[idx] ?? 0) !== 0) {continue;}
         if ((pi[idx] ?? 0) !== 0) {continue;}
 
-        const ctx1 = zcContext0(significant, x, y, width, height);
+        const ctx1 = zcContext0(grid, x, y);
         const v = mq.decodeBit(ctx1);
         if (!v) {continue;}
-        const lu = scIndex(significant, sign, x, y, width, height);
+        const lu = scIndex(grid, x, y);
         const ctx2 = LUT_CTXNO_SC[lu] ?? 9;
         const spb = LUT_SPB[lu] ?? 0;
         const s = mq.decodeBit(ctx2) ^ (spb & 1);
@@ -371,15 +390,17 @@ function decodeCleanupPass(
 }
 
 function canUseRlc(
-  ...args: [significant: Uint8Array, pi: Uint8Array, width: number, height: number, x: number, stripeY: number]
+  context: RlcContext,
+  x: number,
+  stripeY: number
 ): boolean {
-  const [significant, pi, width, height, x, stripeY] = args;
+  const { significant, pi, width } = context;
   for (let dy = 0; dy < 4; dy += 1) {
     const y = stripeY + dy;
     const idx = idxOf(x, y, width);
     if ((significant[idx] ?? 0) !== 0) {return false;}
     if ((pi[idx] ?? 0) !== 0) {return false;}
-    if (hasAnySigNeighbor(significant, x, y, width, height)) {return false;}
+    if (hasAnySigNeighbor(context, x, y)) {return false;}
   }
   return true;
 }

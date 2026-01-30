@@ -272,7 +272,7 @@ export function cursorPositionToCoordinates(
   }
 
   // Find the line containing the cursor
-  return findCursorCoordinatesInParagraph(paragraph, charOffset, pageYOffset, writingMode);
+  return findCursorCoordinatesInParagraph({ paragraph, charOffset, pageYOffset, writingMode });
 }
 
 /**
@@ -284,14 +284,14 @@ export function cursorPositionToCoordinates(
  * @param writingMode - Writing mode for coordinate interpretation
  */
 function findCursorCoordinatesInParagraph(
-  ...args: [
-    paragraph: PagedLayoutResult["pages"][number]["paragraphs"][number],
-    charOffset: number,
-    pageYOffset: number,
-    writingMode: WritingMode,
-  ]
+  args: {
+    readonly paragraph: PagedLayoutResult["pages"][number]["paragraphs"][number];
+    readonly charOffset: number;
+    readonly pageYOffset: number;
+    readonly writingMode: WritingMode;
+  }
 ): CursorCoordinates {
-  const [paragraph, charOffset, pageYOffset, writingMode] = args;
+  const { paragraph, charOffset, pageYOffset, writingMode } = args;
   type AccumulatorState = {
     readonly remainingOffset: number;
     readonly found: CursorCoordinates | undefined;
@@ -306,7 +306,10 @@ function findCursorCoordinatesInParagraph(
       const lineLength = getLineTextLength(line.spans);
 
       if (acc.remainingOffset <= lineLength) {
-        return { remainingOffset: 0, found: lineToCoordinates(line, acc.remainingOffset, pageYOffset, writingMode) };
+        return {
+          remainingOffset: 0,
+          found: lineToCoordinates({ line, offsetInLine: acc.remainingOffset, pageYOffset, writingMode }),
+        };
       }
 
       return { remainingOffset: acc.remainingOffset - lineLength, found: undefined };
@@ -320,7 +323,7 @@ function findCursorCoordinatesInParagraph(
 
   // Past end of paragraph - use end of last line
   const lastLine = paragraph.lines[paragraph.lines.length - 1];
-  return lineToCoordinates(lastLine, getLineTextLength(lastLine.spans), pageYOffset, writingMode);
+  return lineToCoordinates({ line: lastLine, offsetInLine: getLineTextLength(lastLine.spans), pageYOffset, writingMode });
 }
 
 /**
@@ -336,9 +339,9 @@ function findCursorCoordinatesInParagraph(
  * @param writingMode - Writing mode for coordinate interpretation
  */
 function lineToCoordinates(
-  ...args: [line: LayoutLine, offsetInLine: number, pageYOffset: number, writingMode: WritingMode]
+  args: { readonly line: LayoutLine; readonly offsetInLine: number; readonly pageYOffset: number; readonly writingMode: WritingMode }
 ): CursorCoordinates {
-  const [line, offsetInLine, pageYOffset, writingMode] = args;
+  const { line, offsetInLine, pageYOffset, writingMode } = args;
   const { fontSize, fontFamily } = getLineMaxFontInfo(line.spans);
   const fontSizePx = (fontSize as number) * PT_TO_PX;
 
@@ -391,9 +394,9 @@ type LineCandidate = {
  * @param writingMode - Writing mode for coordinate interpretation
  */
 function calculateLineDistance(
-  ...args: [blockCoord: number, line: LayoutLine, pageYOffset: number, writingMode: WritingMode]
+  args: { readonly blockCoord: number; readonly line: LayoutLine; readonly pageYOffset: number; readonly writingMode: WritingMode }
 ): number {
-  const [blockCoord, line, pageYOffset, writingMode] = args;
+  const { blockCoord, line, pageYOffset, writingMode } = args;
   const { fontSize, fontFamily } = getLineMaxFontInfo(line.spans);
 
   if (isVertical(writingMode)) {
@@ -445,7 +448,7 @@ function findClosestLine(
     info.paragraph.lines.map((line, lIdx) => ({
       paragraphIndex: pIdx,
       lineIndex: lIdx,
-      distance: calculateLineDistance(blockCoord, line, info.pageYOffset, writingMode),
+      distance: calculateLineDistance({ blockCoord, line, pageYOffset: info.pageYOffset, writingMode }),
     })),
   );
 
@@ -515,9 +518,15 @@ export function coordinatesToCursorPosition(
  * - Selection rect extends vertically (inline direction)
  */
 function createLineSelectionRect(
-  ...args: [line: LayoutLine, selStart: number, selEnd: number, pageYOffset: number, writingMode?: WritingMode]
+  args: {
+    readonly line: LayoutLine;
+    readonly selStart: number;
+    readonly selEnd: number;
+    readonly pageYOffset: number;
+    readonly writingMode?: WritingMode;
+  }
 ): SelectionRect {
-  const [line, selStart, selEnd, pageYOffset, writingMode = "horizontal-tb"] = args;
+  const { line, selStart, selEnd, pageYOffset, writingMode = "horizontal-tb" } = args;
   const startInline = getXPositionInLine(line, selStart);
   const endInline = getXPositionInLine(line, selEnd);
   const { fontSize, fontFamily } = getLineMaxFontInfo(line.spans);
@@ -557,15 +566,15 @@ function createLineSelectionRect(
  * Get selection rects for a single paragraph.
  */
 function getParagraphSelectionRects(
-  ...args: [
-    paragraph: PagedLayoutResult["pages"][number]["paragraphs"][number],
-    pageYOffset: number,
-    paraStartOffset: number,
-    paraEndOffset: number,
-    writingMode?: WritingMode,
-  ]
+  args: {
+    readonly paragraph: PagedLayoutResult["pages"][number]["paragraphs"][number];
+    readonly pageYOffset: number;
+    readonly paraStartOffset: number;
+    readonly paraEndOffset: number;
+    readonly writingMode?: WritingMode;
+  }
 ): readonly SelectionRect[] {
-  const [paragraph, pageYOffset, paraStartOffset, paraEndOffset, writingMode = "horizontal-tb"] = args;
+  const { paragraph, pageYOffset, paraStartOffset, paraEndOffset, writingMode = "horizontal-tb" } = args;
   type LineAccumulator = {
     readonly lineStartOffset: number;
     readonly rects: readonly SelectionRect[];
@@ -580,7 +589,7 @@ function getParagraphSelectionRects(
       if (paraStartOffset < lineEndOffset && paraEndOffset > acc.lineStartOffset) {
         const selStart = Math.max(paraStartOffset - acc.lineStartOffset, 0);
         const selEnd = Math.min(paraEndOffset - acc.lineStartOffset, lineLength);
-        const rect = createLineSelectionRect(line, selStart, selEnd, pageYOffset, writingMode);
+        const rect = createLineSelectionRect({ line, selStart, selEnd, pageYOffset, writingMode });
         return {
           lineStartOffset: lineEndOffset,
           rects: [...acc.rects, rect],
@@ -621,7 +630,7 @@ export function selectionToRects(
     const paraStartOffset = pIdx === normalizedStart.paragraphIndex ? normalizedStart.charOffset : 0;
     const paraEndOffset = pIdx === normalizedEnd.paragraphIndex ? normalizedEnd.charOffset : paraLength;
 
-    return getParagraphSelectionRects(paragraph, pageYOffset, paraStartOffset, paraEndOffset, writingMode);
+    return getParagraphSelectionRects({ paragraph, pageYOffset, paraStartOffset, paraEndOffset, writingMode });
   });
 }
 
@@ -734,14 +743,14 @@ function findCurrentLineIndex(
  * @returns New cursor position and the X position at that line (for future movements)
  */
 export function moveCursorVertically(
-  ...args: [
-    pagedLayout: PagedLayoutResult,
-    currentPosition: ContinuousCursorPosition,
-    direction: "up" | "down",
-    preferredX?: number,
-  ]
+  args: {
+    readonly pagedLayout: PagedLayoutResult;
+    readonly currentPosition: ContinuousCursorPosition;
+    readonly direction: "up" | "down";
+    readonly preferredX?: number;
+  }
 ): { position: ContinuousCursorPosition; xPosition: number } | undefined {
-  const [pagedLayout, currentPosition, direction, preferredX] = args;
+  const { pagedLayout, currentPosition, direction, preferredX } = args;
   const flatLines = buildFlatLineList(pagedLayout);
   if (flatLines.length === 0) {
     return undefined;

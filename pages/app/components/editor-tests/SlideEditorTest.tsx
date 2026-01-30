@@ -43,127 +43,124 @@ function createLine(color: string, widthVal = 2): Line {
   };
 }
 
-const createSpShape = (
-  ...args: [
-    id: string,
-    name: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    fillColor: string,
-    rotation?: number,
-  ]
-): SpShape => {
-  const [id, name, x, y, width, height, fillColor, rotation = 0] = args;
+const createSpShape = (args: {
+  readonly id: string;
+  readonly name: string;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly fillColor: string;
+  readonly rotation?: number;
+}): SpShape => {
+  const { id, name, x, y, width, height, fillColor, rotation = 0 } = args;
   return {
-  type: "sp",
-  nonVisual: { id, name, description: `Test shape: ${name}` },
-  properties: {
-    transform: {
-      x: px(x),
-      y: px(y),
-      width: px(width),
-      height: px(height),
-      rotation: deg(rotation),
-      flipH: false,
-      flipV: false,
-    },
-    fill: {
-      type: "solidFill",
-      color: { spec: { type: "srgb", value: fillColor } },
-    },
-    line: createLine("333333", 2),
-    geometry: { type: "preset", preset: "rect", adjustValues: [] },
-  },
-  };
-};
-
-const createTextBox = (
-  ...args: [
-    id: string,
-    name: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    text: string,
-    fontSize?: number,
-  ]
-): SpShape => {
-  const [id, name, x, y, width, height, text, fontSize = 14] = args;
-  return {
-  type: "sp",
-  nonVisual: { id, name, textBox: true },
-  properties: {
-    transform: {
-      x: px(x),
-      y: px(y),
-      width: px(width),
-      height: px(height),
-      rotation: deg(0),
-      flipH: false,
-      flipV: false,
-    },
-    fill: {
-      type: "solidFill",
-      color: { spec: { type: "srgb", value: "FFFFFF" } },
-    },
-    line: createLine("888888", 1),
-    geometry: { type: "preset", preset: "rect", adjustValues: [] },
-  },
-  textBody: {
-    bodyProperties: { anchor: "top" },
-    paragraphs: [
-      {
-        runs: [{ type: "text", text, properties: { fontSize: pt(fontSize) } }],
-        properties: {},
-        endProperties: {},
+    type: "sp",
+    nonVisual: { id, name, description: `Test shape: ${name}` },
+    properties: {
+      transform: {
+        x: px(x),
+        y: px(y),
+        width: px(width),
+        height: px(height),
+        rotation: deg(rotation),
+        flipH: false,
+        flipV: false,
       },
-    ],
-  },
-  };
-};
-
-const createTitle = (
-  ...args: [id: string, x: number, y: number, width: number, height: number, text: string]
-): SpShape => {
-  const [id, x, y, width, height, text] = args;
-  return {
-  type: "sp",
-  nonVisual: { id, name: "Title" },
-  placeholder: { type: "title", idx: 0 },
-  properties: {
-    transform: {
-      x: px(x),
-      y: px(y),
-      width: px(width),
-      height: px(height),
-      rotation: deg(0),
-      flipH: false,
-      flipV: false,
-    },
-    geometry: { type: "preset", preset: "rect", adjustValues: [] },
-  },
-  textBody: {
-    bodyProperties: { anchor: "center" },
-    paragraphs: [
-      {
-        runs: [
-          { type: "text", text, properties: { fontSize: pt(28), bold: true } },
-        ],
-        properties: {},
-        endProperties: {},
+      fill: {
+        type: "solidFill",
+        color: { spec: { type: "srgb", value: fillColor } },
       },
-    ],
-  },
+      line: createLine("333333", 2),
+      geometry: { type: "preset", preset: "rect", adjustValues: [] },
+    },
   };
 };
 
-const createGroup = (
-  ...args: [id: string, x: number, y: number, children: SpShape[]]
-): GrpShape => {
-  const [id, x, y, children] = args;
+const createTextBox = (args: {
+  readonly id: string;
+  readonly name: string;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly text: string;
+  readonly fontSize?: number;
+}): SpShape => {
+  const { id, name, x, y, width, height, text, fontSize = 14 } = args;
+  return {
+    type: "sp",
+    nonVisual: { id, name, textBox: true },
+    properties: {
+      transform: {
+        x: px(x),
+        y: px(y),
+        width: px(width),
+        height: px(height),
+        rotation: deg(0),
+        flipH: false,
+        flipV: false,
+      },
+      fill: {
+        type: "solidFill",
+        color: { spec: { type: "srgb", value: "FFFFFF" } },
+      },
+      line: createLine("888888", 1),
+      geometry: { type: "preset", preset: "rect", adjustValues: [] },
+    },
+    textBody: {
+      bodyProperties: { anchor: "top" },
+      paragraphs: [
+        {
+          runs: [{ type: "text", text, properties: { fontSize: pt(fontSize) } }],
+          properties: {},
+          endProperties: {},
+        },
+      ],
+    },
+  };
+};
+
+const createTitle = (args: {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly text: string;
+}): SpShape => {
+  const { id, x, y, width, height, text } = args;
+  return {
+    type: "sp",
+    nonVisual: { id, name: "Title" },
+    placeholder: { type: "title", idx: 0 },
+    properties: {
+      transform: {
+        x: px(x),
+        y: px(y),
+        width: px(width),
+        height: px(height),
+        rotation: deg(0),
+        flipH: false,
+        flipV: false,
+      },
+      geometry: { type: "preset", preset: "rect", adjustValues: [] },
+    },
+    textBody: {
+      bodyProperties: { anchor: "center" },
+      paragraphs: [
+        {
+          runs: [{ type: "text", text, properties: { fontSize: pt(28), bold: true } }],
+          properties: {},
+          endProperties: {},
+        },
+      ],
+    },
+  };
+};
+
+const createGroup = (args: { readonly id: string; readonly x: number; readonly y: number; readonly children: SpShape[] }): GrpShape => {
+  const { id, x, y, children } = args;
   const minX = Math.min(
     ...children.map((c) => (c.properties.transform?.x as number) || 0)
   );
@@ -209,10 +206,8 @@ const createGroup = (
   };
 };
 
-const createCxnShape = (
-  ...args: [id: string, x: number, y: number, width: number]
-): CxnShape => {
-  const [id, x, y, width] = args;
+const createCxnShape = (args: { readonly id: string; readonly x: number; readonly y: number; readonly width: number }): CxnShape => {
+  const { id, x, y, width } = args;
   return {
   type: "cxnSp",
   nonVisual: { id, name: "Connector" },
@@ -291,30 +286,35 @@ const createTableFrame = (
 
 const createTestSlide = (): Slide => ({
   shapes: [
-    createTitle("title1", 50, 10, 400, 40, "Slide Canvas Test"),
-    createSpShape("sp1", "Blue Rectangle", 50, 70, 150, 80, "4A90D9"),
-    createSpShape("sp2", "Red Rectangle", 220, 70, 120, 90, "D94A4A"),
-    createSpShape("sp3", "Rotated Rectangle", 360, 70, 160, 70, "4AD97A", 15),
-    createTextBox(
-      "txt1",
-      "TextBox 1",
-      540,
-      70,
-      180,
-      50,
-      "This is a text box with some content.",
-      12
-    ),
-    createTextBox("txt2", "TextBox 2", 540, 140, 180, 40, "Another text box.", 11),
-    createCxnShape("cxn1", 740, 90, 100),
+    createTitle({ id: "title1", x: 50, y: 10, width: 400, height: 40, text: "Slide Canvas Test" }),
+    createSpShape({ id: "sp1", name: "Blue Rectangle", x: 50, y: 70, width: 150, height: 80, fillColor: "4A90D9" }),
+    createSpShape({ id: "sp2", name: "Red Rectangle", x: 220, y: 70, width: 120, height: 90, fillColor: "D94A4A" }),
+    createSpShape({ id: "sp3", name: "Rotated Rectangle", x: 360, y: 70, width: 160, height: 70, fillColor: "4AD97A", rotation: 15 }),
+    createTextBox({
+      id: "txt1",
+      name: "TextBox 1",
+      x: 540,
+      y: 70,
+      width: 180,
+      height: 50,
+      text: "This is a text box with some content.",
+      fontSize: 12,
+    }),
+    createTextBox({ id: "txt2", name: "TextBox 2", x: 540, y: 140, width: 180, height: 40, text: "Another text box.", fontSize: 11 }),
+    createCxnShape({ id: "cxn1", x: 740, y: 90, width: 100 }),
     createTableFrame("tbl1", 50, 200),
-    createGroup("grp1", 350, 200, [
-      createSpShape("grp1-child1", "Child 1", 0, 0, 80, 60, "9B59B6"),
-      createSpShape("grp1-child2", "Child 2", 100, 0, 80, 60, "3498DB"),
-      createSpShape("grp1-child3", "Child 3", 50, 70, 80, 60, "E74C3C"),
-    ]),
-    createSpShape("sp4", "Yellow Shape", 50, 360, 140, 100, "F1C40F"),
-    createSpShape("sp5", "Purple Shape", 220, 380, 120, 80, "8E44AD", -10),
+    createGroup({
+      id: "grp1",
+      x: 350,
+      y: 200,
+      children: [
+        createSpShape({ id: "grp1-child1", name: "Child 1", x: 0, y: 0, width: 80, height: 60, fillColor: "9B59B6" }),
+        createSpShape({ id: "grp1-child2", name: "Child 2", x: 100, y: 0, width: 80, height: 60, fillColor: "3498DB" }),
+        createSpShape({ id: "grp1-child3", name: "Child 3", x: 50, y: 70, width: 80, height: 60, fillColor: "E74C3C" }),
+      ],
+    }),
+    createSpShape({ id: "sp4", name: "Yellow Shape", x: 50, y: 360, width: 140, height: 100, fillColor: "F1C40F" }),
+    createSpShape({ id: "sp5", name: "Purple Shape", x: 220, y: 380, width: 120, height: 80, fillColor: "8E44AD", rotation: -10 }),
   ],
 });
 
@@ -543,8 +543,7 @@ export function SlideEditorTest() {
   );
 
   const handleStartResize = useCallback(
-    (...args: [handle: ResizeHandlePosition, startX: number, startY: number, aspectLocked: boolean]) => {
-      const [handle, startX, startY, aspectLocked] = args;
+    ({ handle, startX, startY, aspectLocked }: { handle: ResizeHandlePosition; startX: number; startY: number; aspectLocked: boolean }) => {
       dispatch({ type: "START_RESIZE", handle, startX: px(startX), startY: px(startY), aspectLocked });
     },
     []

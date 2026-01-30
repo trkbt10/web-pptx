@@ -141,7 +141,7 @@ export function useSvgViewport({
         e.preventDefault();
 
         const rect = svg.getBoundingClientRect();
-        const cursorPos = screenToCanvasCoords(e.clientX, e.clientY, rect, rulerThickness);
+        const cursorPos = screenToCanvasCoords({ clientX: e.clientX, clientY: e.clientY, svgRect: rect, rulerThickness });
 
         const currentScale = effectiveViewport.scale;
         const direction = e.deltaY < 0 ? "in" : "out";

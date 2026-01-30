@@ -39,16 +39,15 @@ import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "./gradie
  * @param defsCollector - SVG defs collector
  * @returns SVG string for text content
  */
-export function renderTextSvg(
-  ...args: [
-    textBody: TextBody,
-    ctx: CoreRenderContext,
-    boxWidth: number,
-    boxHeight: number,
-    defsCollector: SvgDefsCollector,
-  ]
-): string {
-  const [textBody, ctx, boxWidth, boxHeight, defsCollector] = args;
+export type RenderTextSvgOptions = {
+  readonly textBody: TextBody;
+  readonly ctx: CoreRenderContext;
+  readonly boxWidth: number;
+  readonly boxHeight: number;
+  readonly defsCollector: SvgDefsCollector;
+};
+
+export function renderTextSvg({ textBody, ctx, boxWidth, boxHeight, defsCollector }: RenderTextSvgOptions): string {
   if (textBody.paragraphs.length === 0) {
     return "";
   }
@@ -79,21 +78,20 @@ export function renderTextSvg(
   const layoutResult = layoutTextBody(layoutInput);
 
   const baseTextSvg = renderLayoutResultToSvg(layoutResult, defsCollector);
-  const rotatedTextSvg = applyBodyRotation(baseTextSvg, bodyRotation, boxWidth, boxHeight);
-  const clippedTextSvg = applyOverflowClip(rotatedTextSvg, textBody, defsCollector, boxWidth, boxHeight);
+  const rotatedTextSvg = applyBodyRotation({ textSvg: baseTextSvg, rotation: bodyRotation, boxWidth, boxHeight });
+  const clippedTextSvg = applyOverflowClip({ textSvg: rotatedTextSvg, textBody, defsCollector, boxWidth, boxHeight });
   const antiAliasedSvg = applyForceAntiAlias(clippedTextSvg, textBody);
-  return applyVerticalTextTransform(antiAliasedSvg, textBody, boxWidth, boxHeight);
+  return applyVerticalTextTransform({ textSvg: antiAliasedSvg, textBody, boxWidth, boxHeight });
 }
 
-function applyBodyRotation(
-  ...args: [
-    textSvg: string,
-    rotation: number,
-    boxWidth: number,
-    boxHeight: number,
-  ]
-): string {
-  const [textSvg, rotation, boxWidth, boxHeight] = args;
+type ApplyBodyRotationOptions = {
+  readonly textSvg: string;
+  readonly rotation: number;
+  readonly boxWidth: number;
+  readonly boxHeight: number;
+};
+
+function applyBodyRotation({ textSvg, rotation, boxWidth, boxHeight }: ApplyBodyRotationOptions): string {
   if (rotation === 0) {
     return textSvg;
   }
@@ -102,16 +100,15 @@ function applyBodyRotation(
   return `<g transform="rotate(${rotation}, ${centerX}, ${centerY})">${textSvg}</g>`;
 }
 
-function applyOverflowClip(
-  ...args: [
-    textSvg: string,
-    textBody: TextBody,
-    defsCollector: SvgDefsCollector,
-    boxWidth: number,
-    boxHeight: number,
-  ]
-): string {
-  const [textSvg, textBody, defsCollector, boxWidth, boxHeight] = args;
+type ApplyOverflowClipOptions = {
+  readonly textSvg: string;
+  readonly textBody: TextBody;
+  readonly defsCollector: SvgDefsCollector;
+  readonly boxWidth: number;
+  readonly boxHeight: number;
+};
+
+function applyOverflowClip({ textSvg, textBody, defsCollector, boxWidth, boxHeight }: ApplyOverflowClipOptions): string {
   const horzOverflow = textBody.bodyProperties.overflow;
   const vertOverflow = textBody.bodyProperties.verticalOverflow ?? "overflow";
   if (horzOverflow !== "clip" && vertOverflow !== "clip") {
@@ -155,15 +152,14 @@ function applyForceAntiAlias(textSvg: string, textBody: TextBody): string {
  *
  * @see ECMA-376 Part 1, Section 21.1.2.1.39 (ST_TextVerticalType)
  */
-function applyVerticalTextTransform(
-  ...args: [
-    textSvg: string,
-    textBody: TextBody,
-    boxWidth: number,
-    boxHeight: number,
-  ]
-): string {
-  const [textSvg, textBody, boxWidth, boxHeight] = args;
+type ApplyVerticalTextTransformOptions = {
+  readonly textSvg: string;
+  readonly textBody: TextBody;
+  readonly boxWidth: number;
+  readonly boxHeight: number;
+};
+
+function applyVerticalTextTransform({ textSvg, textBody, boxWidth, boxHeight }: ApplyVerticalTextTransformOptions): string {
   const verticalType = textBody.bodyProperties.verticalType ?? "horz";
 
   if (verticalType === "horz") {

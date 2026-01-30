@@ -32,17 +32,16 @@ export type UseDragHandlersParams = {
 
 type Delta = { readonly dx: number; readonly dy: number };
 
-function calculateMoveDelta(
-  ...args: readonly [
-    dx: number,
-    dy: number,
-    drag: DragState,
-    selection: SelectionState,
-    snapEnabled: boolean,
-    snapStep: number,
-  ]
-): Delta {
-  const [dx, dy, drag, selection, snapEnabled, snapStep] = args;
+type CalculateMoveDeltaOptions = {
+  readonly dx: number;
+  readonly dy: number;
+  readonly drag: DragState;
+  readonly selection: SelectionState;
+  readonly snapEnabled: boolean;
+  readonly snapStep: number;
+};
+
+function calculateMoveDelta({ dx, dy, drag, selection, snapEnabled, snapStep }: CalculateMoveDeltaOptions): Delta {
   if (!snapEnabled || snapStep <= 0 || drag.type !== "move") {
     return { dx, dy };
   }
@@ -61,16 +60,15 @@ function calculateMoveDelta(
   return { dx: snappedX - (initial.x as number), dy: snappedY - (initial.y as number) };
 }
 
-function calculateResizeDelta(
-  ...args: readonly [
-    dx: number,
-    dy: number,
-    drag: DragState,
-    snapEnabled: boolean,
-    snapStep: number,
-  ]
-): Delta {
-  const [dx, dy, drag, snapEnabled, snapStep] = args;
+type CalculateResizeDeltaOptions = {
+  readonly dx: number;
+  readonly dy: number;
+  readonly drag: DragState;
+  readonly snapEnabled: boolean;
+  readonly snapStep: number;
+};
+
+function calculateResizeDelta({ dx, dy, drag, snapEnabled, snapStep }: CalculateResizeDeltaOptions): Delta {
   if (!snapEnabled || snapStep <= 0 || drag.type !== "resize") {
     return { dx, dy };
   }
@@ -91,23 +89,22 @@ function calculateResizeDelta(
   const southEdge = handle.includes("s") ? snapValue(baseY + baseHeight + dy, snapStep) : baseY + baseHeight + dy;
   const northEdge = handle.includes("n") ? snapValue(baseY + dy, snapStep) : baseY + dy;
 
-  const snappedDx = calculateSnappedDx(handle, westEdge, eastEdge, baseX, baseWidth, dx);
-  const snappedDy = calculateSnappedDy(handle, northEdge, southEdge, baseY, baseHeight, dy);
+  const snappedDx = calculateSnappedDx({ handle, westEdge, eastEdge, baseX, baseWidth, dx });
+  const snappedDy = calculateSnappedDy({ handle, northEdge, southEdge, baseY, baseHeight, dy });
 
   return { dx: snappedDx, dy: snappedDy };
 }
 
-function calculateSnappedDx(
-  ...args: readonly [
-    handle: string,
-    westEdge: number,
-    eastEdge: number,
-    baseX: number,
-    baseWidth: number,
-    dx: number,
-  ]
-): number {
-  const [handle, westEdge, eastEdge, baseX, baseWidth, dx] = args;
+type CalculateSnappedDxOptions = {
+  readonly handle: string;
+  readonly westEdge: number;
+  readonly eastEdge: number;
+  readonly baseX: number;
+  readonly baseWidth: number;
+  readonly dx: number;
+};
+
+function calculateSnappedDx({ handle, westEdge, eastEdge, baseX, baseWidth, dx }: CalculateSnappedDxOptions): number {
   if (handle.includes("w")) {
     return westEdge - baseX;
   }
@@ -117,17 +114,16 @@ function calculateSnappedDx(
   return dx;
 }
 
-function calculateSnappedDy(
-  ...args: readonly [
-    handle: string,
-    northEdge: number,
-    southEdge: number,
-    baseY: number,
-    baseHeight: number,
-    dy: number,
-  ]
-): number {
-  const [handle, northEdge, southEdge, baseY, baseHeight, dy] = args;
+type CalculateSnappedDyOptions = {
+  readonly handle: string;
+  readonly northEdge: number;
+  readonly southEdge: number;
+  readonly baseY: number;
+  readonly baseHeight: number;
+  readonly dy: number;
+};
+
+function calculateSnappedDy({ handle, northEdge, southEdge, baseY, baseHeight, dy }: CalculateSnappedDyOptions): number {
   if (handle.includes("n")) {
     return northEdge - baseY;
   }
@@ -154,12 +150,12 @@ export function useDragHandlers({
   rulerThickness = 0,
 }: UseDragHandlersParams): void {
   const getMoveDelta = useCallback(
-    (dx: number, dy: number): Delta => calculateMoveDelta(dx, dy, drag, selection, snapEnabled, snapStep),
+    (dx: number, dy: number): Delta => calculateMoveDelta({ dx, dy, drag, selection, snapEnabled, snapStep }),
     [drag, selection, snapEnabled, snapStep],
   );
 
   const getResizeDelta = useCallback(
-    (dx: number, dy: number): Delta => calculateResizeDelta(dx, dy, drag, snapEnabled, snapStep),
+    (dx: number, dy: number): Delta => calculateResizeDelta({ dx, dy, drag, snapEnabled, snapStep }),
     [drag, snapEnabled, snapStep],
   );
 
@@ -176,7 +172,7 @@ export function useDragHandlers({
 
       const rect = container.getBoundingClientRect();
       const vp = viewport ?? { translateX: 0, translateY: 0, scale: 1 };
-      const coords = screenToSlideCoords(e.clientX, e.clientY, rect, vp, rulerThickness);
+      const coords = screenToSlideCoords({ clientX: e.clientX, clientY: e.clientY, svgRect: rect, viewport: vp, rulerThickness });
 
       if (drag.type === "move") {
         const deltaX = coords.x - (drag.startX as number);

@@ -89,11 +89,11 @@ describe("PDF→PPTX visual regression: k-namingrule-dl.pdf", () => {
 
     let compare: ReturnType<typeof compareSvgToPdfBaseline>;
     try {
-      compare = compareSvgToPdfBaseline(
+      compare = compareSvgToPdfBaseline({
         svg,
         snapshotName,
         slideNumber,
-        {
+        baseline: {
           pdfPath,
           pageNumber,
           targetWidth: 960,
@@ -102,8 +102,8 @@ describe("PDF→PPTX visual regression: k-namingrule-dl.pdf", () => {
           renderScale: 4,
           background: { r: 255, g: 255, b: 255, a: 255 },
         },
-        { threshold: 0.25, maxDiffPercent: 2.0, resvgFontFiles: fontFiles },
-      );
+        options: { threshold: 0.25, maxDiffPercent: 2.0, resvgFontFiles: fontFiles },
+      });
     } catch (e) {
       cleanupFonts();
       const msg = (e as Error)?.message ?? String(e);

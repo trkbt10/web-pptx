@@ -281,15 +281,14 @@ function updateRowCells(
 /**
  * Set a cell at specific coordinates.
  */
-export function setCell(
-  ...args: readonly [
-    table: DocxTable,
-    rowIndex: number,
-    colIndex: number,
-    cell: DocxTableCell,
-  ]
-): DocxTable {
-  const [table, rowIndex, colIndex, cell] = args;
+export type SetCellOptions = {
+  readonly table: DocxTable;
+  readonly rowIndex: number;
+  readonly colIndex: number;
+  readonly cell: DocxTableCell;
+};
+
+export function setCell({ table, rowIndex, colIndex, cell }: SetCellOptions): DocxTable {
   return {
     ...table,
     rows: table.rows.map((row, ri) => {
@@ -436,15 +435,14 @@ export function setTableGrid(table: DocxTable, grid: DocxTableGrid): DocxTable {
  *
  * Merges cells from startCol to endCol (inclusive) in the specified row.
  */
-export function mergeCellsHorizontally(
-  ...args: readonly [
-    table: DocxTable,
-    rowIndex: number,
-    startCol: number,
-    endCol: number,
-  ]
-): DocxTable {
-  const [table, rowIndex, startCol, endCol] = args;
+export type MergeCellsHorizontallyOptions = {
+  readonly table: DocxTable;
+  readonly rowIndex: number;
+  readonly startCol: number;
+  readonly endCol: number;
+};
+
+export function mergeCellsHorizontally({ table, rowIndex, startCol, endCol }: MergeCellsHorizontallyOptions): DocxTable {
   const row = table.rows[rowIndex];
   if (!row || startCol >= endCol || startCol < 0 || endCol >= row.cells.length) {
     return table;
@@ -465,15 +463,14 @@ export function mergeCellsHorizontally(
 /**
  * Start or continue vertical merge.
  */
-export function setCellVerticalMerge(
-  ...args: readonly [
-    table: DocxTable,
-    rowIndex: number,
-    colIndex: number,
-    merge: "restart" | "continue" | undefined,
-  ]
-): DocxTable {
-  const [table, rowIndex, colIndex, merge] = args;
+export type SetCellVerticalMergeOptions = {
+  readonly table: DocxTable;
+  readonly rowIndex: number;
+  readonly colIndex: number;
+  readonly merge: "restart" | "continue" | undefined;
+};
+
+export function setCellVerticalMerge({ table, rowIndex, colIndex, merge }: SetCellVerticalMergeOptions): DocxTable {
   const cell = getCell(table, rowIndex, colIndex);
   if (!cell) {
     return table;
@@ -481,7 +478,7 @@ export function setCellVerticalMerge(
 
   const newCell = getUpdatedCellForVerticalMerge(cell, merge);
 
-  return setCell(table, rowIndex, colIndex, newCell);
+  return setCell({ table, rowIndex, colIndex, cell: newCell });
 }
 
 /**
@@ -502,21 +499,20 @@ function getUpdatedCellForVerticalMerge(
  *
  * Merges cells from startRow to endRow (inclusive) in the specified column.
  */
-export function mergeCellsVertically(
-  ...args: readonly [
-    table: DocxTable,
-    colIndex: number,
-    startRow: number,
-    endRow: number,
-  ]
-): DocxTable {
-  const [table, colIndex, startRow, endRow] = args;
+export type MergeCellsVerticallyOptions = {
+  readonly table: DocxTable;
+  readonly colIndex: number;
+  readonly startRow: number;
+  readonly endRow: number;
+};
+
+export function mergeCellsVertically({ table, colIndex, startRow, endRow }: MergeCellsVerticallyOptions): DocxTable {
   if (startRow >= endRow || startRow < 0 || endRow >= table.rows.length) {
     return table;
   }
 
   // Set restart on first cell
-  const withRestart = setCellVerticalMerge(table, startRow, colIndex, "restart");
+  const withRestart = setCellVerticalMerge({ table, rowIndex: startRow, colIndex, merge: "restart" });
 
   // Set continue on remaining cells
   const rowIndices = Array.from(
@@ -525,7 +521,7 @@ export function mergeCellsVertically(
   );
 
   return rowIndices.reduce(
-    (acc, rowIndex) => setCellVerticalMerge(acc, rowIndex, colIndex, "continue"),
+    (acc, rowIndex) => setCellVerticalMerge({ table: acc, rowIndex, colIndex, merge: "continue" }),
     withRestart,
   );
 }

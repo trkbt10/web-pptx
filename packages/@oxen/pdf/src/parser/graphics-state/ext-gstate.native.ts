@@ -916,7 +916,12 @@ function tryExtractPerPixelSoftMaskFromElements(
       const subtype = asName(dictGet(dict, "Subtype"));
       if (subtype !== "Image") {return null;}
 
-      const decoded = decodeImageXObjectStreamNative(page, stream, img.graphicsState, { jpxDecode: options.jpxDecode });
+      const decoded = decodeImageXObjectStreamNative({
+        pdfPage: page,
+        imageStream: stream,
+        graphicsState: img.graphicsState,
+        options: { jpxDecode: options.jpxDecode },
+      });
       if (!decoded) {return null;}
       const applied = applyGraphicsSoftMaskToPdfImage(decoded);
       const rgba = convertToRgba(applied.data, applied.width, applied.height, applied.colorSpace, applied.bitsPerComponent, {

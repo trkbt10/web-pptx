@@ -407,7 +407,7 @@ describe("toggleRunProperty", () => {
       end: { paragraphIndex: 0, charOffset: 5 },
     };
 
-    const result = toggleRunProperty(textBody, selection, "bold", undefined);
+    const result = toggleRunProperty({ textBody, selection, propertyKey: "bold", currentValue: undefined });
 
     expect(result.paragraphs[0].runs[0].properties).toEqual({ bold: true });
   });
@@ -422,7 +422,7 @@ describe("toggleRunProperty", () => {
       end: { paragraphIndex: 0, charOffset: 5 },
     };
 
-    const result = toggleRunProperty(textBody, selection, "bold", true);
+    const result = toggleRunProperty({ textBody, selection, propertyKey: "bold", currentValue: true });
 
     // Property should be removed (undefined)
     expect(result.paragraphs[0].runs[0].properties?.bold).toBeUndefined();

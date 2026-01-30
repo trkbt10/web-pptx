@@ -49,7 +49,12 @@ function createOverflowSpan(span: MeasuredSpan, overflowText: string): MeasuredS
   return {
     ...span,
     text: overflowText,
-    width: estimateTextWidth(overflowText, span.fontSize, span.letterSpacing, span.fontFamily),
+    width: estimateTextWidth({
+      text: overflowText,
+      fontSize: span.fontSize,
+      letterSpacing: span.letterSpacing,
+      fontFamily: span.fontFamily,
+    }),
   };
 }
 
@@ -74,7 +79,7 @@ function breakSpanAtWidth(
   // Find the best break point
   for (const i of Array.from({ length: text.length }, (_, index) => index)) {
     const char = text[i];
-    const charWidth = (estimateTextWidth(char, span.fontSize, px(0), span.fontFamily) as number) +
+    const charWidth = (estimateTextWidth({ text: char, fontSize: span.fontSize, letterSpacing: px(0), fontFamily: span.fontFamily }) as number) +
       (i > 0 ? (span.letterSpacing as number) : 0);
 
     if (state.accumulatedWidth + charWidth > availableWidth && state.breakIndex >= 0) {
@@ -107,7 +112,7 @@ function breakSpanAtWidth(
       // Force break - find where we exceed the width
       state.accumulatedWidth = 0;
       for (const i of Array.from({ length: text.length }, (_, index) => index)) {
-        const charWidth = (estimateTextWidth(text[i], span.fontSize, px(0), span.fontFamily) as number) +
+        const charWidth = (estimateTextWidth({ text: text[i], fontSize: span.fontSize, letterSpacing: px(0), fontFamily: span.fontFamily }) as number) +
           (i > 0 ? (span.letterSpacing as number) : 0);
         if (state.accumulatedWidth + charWidth > availableWidth && i > 0) {
           state.breakIndex = i;
@@ -131,7 +136,12 @@ function breakSpanAtWidth(
   const fitsSpan: MeasuredSpan = {
     ...span,
     text: fitsText,
-    width: estimateTextWidth(fitsText, span.fontSize, span.letterSpacing, span.fontFamily),
+    width: estimateTextWidth({
+      text: fitsText,
+      fontSize: span.fontSize,
+      letterSpacing: span.letterSpacing,
+      fontFamily: span.fontFamily,
+    }),
   };
 
   return { fits: fitsSpan, overflow: createOverflowSpan(span, overflowText) };

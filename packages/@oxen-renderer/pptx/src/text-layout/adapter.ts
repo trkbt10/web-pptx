@@ -188,29 +188,37 @@ function resolveBulletColor(
   return resolveColor(bulletStyle.color, colorContext) ?? "#000000";
 }
 
-function resolveBulletConfig(
-  ...args: [
-    hasVisibleText: boolean,
-    bulletStyle: BulletStyle | undefined,
-    defaultFontSize: Points,
-    colorContext: ColorContext,
-    fontScheme: FontScheme | undefined,
-    textFontFamily: string,
-    autoNumberIndex: number,
-    resourceResolver?: ResourceResolver,
-  ]
-): BulletConfig | undefined {
-  const [hasVisibleText, bulletStyle, defaultFontSize, colorContext, fontScheme, textFontFamily, autoNumberIndex, resourceResolver] = args;
+type ResolveBulletConfigOptions = {
+  readonly hasVisibleText: boolean;
+  readonly bulletStyle: BulletStyle | undefined;
+  readonly defaultFontSize: Points;
+  readonly colorContext: ColorContext;
+  readonly fontScheme: FontScheme | undefined;
+  readonly textFontFamily: string;
+  readonly autoNumberIndex: number;
+  readonly resourceResolver?: ResourceResolver;
+};
+
+function resolveBulletConfig({
+  hasVisibleText,
+  bulletStyle,
+  defaultFontSize,
+  colorContext,
+  fontScheme,
+  textFontFamily,
+  autoNumberIndex,
+  resourceResolver,
+}: ResolveBulletConfigOptions): BulletConfig | undefined {
   if (hasVisibleText) {
-    return toBulletConfig(
+    return toBulletConfig({
       bulletStyle,
       defaultFontSize,
       colorContext,
       fontScheme,
       textFontFamily,
       autoNumberIndex,
-      resourceResolver
-    );
+      resourceResolver,
+    });
   }
   return undefined;
 }
@@ -566,15 +574,14 @@ function toTextOutlineConfig(
  *
  * @see ECMA-376 Part 1, Section 21.1.2.3.13 (a:r)
  */
-function textRunToSpan(
-  ...args: [
-    run: TextRun,
-    colorContext: ColorContext,
-    fontScheme: FontScheme | undefined,
-    resourceResolver?: ResourceResolver,
-  ]
-): LayoutSpan {
-  const [run, colorContext, fontScheme, resourceResolver] = args;
+type TextRunToSpanOptions = {
+  readonly run: TextRun;
+  readonly colorContext: ColorContext;
+  readonly fontScheme: FontScheme | undefined;
+  readonly resourceResolver?: ResourceResolver;
+};
+
+function textRunToSpan({ run, colorContext, fontScheme, resourceResolver }: TextRunToSpanOptions): LayoutSpan {
   const props = resolveRunProperties(run.properties, colorContext, fontScheme);
 
   // Resolve text outline (a:ln on a:rPr)
@@ -649,18 +656,25 @@ function getAutoNumberChar(bullet: AutoNumberBullet, index: number): string {
  *
  * @see ECMA-376 Part 1, Section 21.1.2.4 (Bullet properties)
  */
-function toBulletConfig(
-  ...args: [
-    bulletStyle: BulletStyle | undefined,
-    defaultFontSize: Points,
-    colorContext: ColorContext,
-    fontScheme: FontScheme | undefined,
-    textFontFamily: string,
-    autoNumberIndex: number,
-    resourceResolver?: ResourceResolver,
-  ]
-): BulletConfig | undefined {
-  const [bulletStyle, defaultFontSize, colorContext, fontScheme, textFontFamily, autoNumberIndex, resourceResolver] = args;
+type ToBulletConfigOptions = {
+  readonly bulletStyle: BulletStyle | undefined;
+  readonly defaultFontSize: Points;
+  readonly colorContext: ColorContext;
+  readonly fontScheme: FontScheme | undefined;
+  readonly textFontFamily: string;
+  readonly autoNumberIndex: number;
+  readonly resourceResolver?: ResourceResolver;
+};
+
+function toBulletConfig({
+  bulletStyle,
+  defaultFontSize,
+  colorContext,
+  fontScheme,
+  textFontFamily,
+  autoNumberIndex,
+  resourceResolver,
+}: ToBulletConfigOptions): BulletConfig | undefined {
   if (bulletStyle === undefined) {
     return undefined;
   }
@@ -729,20 +743,19 @@ function toBulletConfig(
  * @param resourceResolver - Optional function to resolve resource IDs to data URLs (for picture bullets)
  * @returns LayoutParagraphInput for the layout engine
  */
-function paragraphToInput(
-  ...args: [
-    para: Paragraph,
-    colorContext: ColorContext,
-    fontScheme: FontScheme | undefined,
-    autoNumberIndex: number,
-    resourceResolver?: ResourceResolver,
-  ]
-): LayoutParagraphInput {
-  const [para, colorContext, fontScheme, autoNumberIndex, resourceResolver] = args;
+type ParagraphToInputOptions = {
+  readonly para: Paragraph;
+  readonly colorContext: ColorContext;
+  readonly fontScheme: FontScheme | undefined;
+  readonly autoNumberIndex: number;
+  readonly resourceResolver?: ResourceResolver;
+};
+
+function paragraphToInput({ para, colorContext, fontScheme, autoNumberIndex, resourceResolver }: ParagraphToInputOptions): LayoutParagraphInput {
   const { properties } = para;
 
   // Convert runs to spans
-  const spans = para.runs.map((run) => textRunToSpan(run, colorContext, fontScheme, resourceResolver));
+  const spans = para.runs.map((run) => textRunToSpan({ run, colorContext, fontScheme, resourceResolver }));
 
   // Get default font size from first run
   const defaultFontSize = spans[0]?.fontSize ?? pt(DEFAULT_FONT_SIZE_PT);
@@ -781,16 +794,16 @@ function paragraphToInput(
   // Only compute bullet config if paragraph has visible text content
   // Pass first span's font family for fontFollowText bullets
   const textFontFamily = spans[0]?.fontFamily ?? DEFAULT_FONT_FAMILY;
-  const bulletConfig = resolveBulletConfig(
+  const bulletConfig = resolveBulletConfig({
     hasVisibleText,
-    properties.bulletStyle,
+    bulletStyle: properties.bulletStyle,
     defaultFontSize,
     colorContext,
     fontScheme,
     textFontFamily,
     autoNumberIndex,
-    resourceResolver
-  );
+    resourceResolver,
+  });
 
   // Apply bullet color inheritance per ECMA-376 Part 1, Section 21.1.2.4.4-5
   // When a:buClr is not specified and a:buClrTx is not present, bullet color follows text color.
@@ -913,7 +926,13 @@ export function toLayoutInput(options: ToLayoutInputOptions): LayoutInput {
       autoNumberState.index = 0;
     }
 
-    return paragraphToInput(para, colorContext, fontScheme, autoNumberState.index, resourceResolver);
+    return paragraphToInput({
+      para,
+      colorContext,
+      fontScheme: fontScheme ?? undefined,
+      autoNumberIndex: autoNumberState.index,
+      resourceResolver,
+    });
   });
 
   return {

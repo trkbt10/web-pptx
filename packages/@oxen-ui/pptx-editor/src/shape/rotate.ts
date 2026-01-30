@@ -60,9 +60,9 @@ export function radiansToDegrees(radians: number): number {
  * Calculate the angle (in degrees) from a center point to another point.
  */
 export function calculateAngleFromCenter(
-  ...args: [centerX: number, centerY: number, pointX: number, pointY: number]
+  args: { readonly centerX: number; readonly centerY: number; readonly pointX: number; readonly pointY: number }
 ): number {
-  const [centerX, centerY, pointX, pointY] = args;
+  const { centerX, centerY, pointX, pointY } = args;
   return radiansToDegrees(Math.atan2(pointY - centerY, pointX - centerX));
 }
 
@@ -137,9 +137,9 @@ export function rotatePointAroundCenter(
  * Calculate the center point of a shape given its bounds.
  */
 export function calculateShapeCenter(
-  ...args: [x: number, y: number, width: number, height: number]
+  args: { readonly x: number; readonly y: number; readonly width: number; readonly height: number }
 ): Point {
-  const [x, y, width, height] = args;
+  const { x, y, width, height } = args;
   return {
     x: x + width / 2,
     y: y + height / 2,
@@ -153,10 +153,10 @@ export function calculateShapeCenter(
  * after rotation around the rectangle's center.
  */
 export function getRotatedCorners(
-  ...args: [x: number, y: number, width: number, height: number, rotation: number]
+  args: { readonly x: number; readonly y: number; readonly width: number; readonly height: number; readonly rotation: number }
 ): readonly Point[] {
-  const [x, y, width, height, rotation] = args;
-  const center = calculateShapeCenter(x, y, width, height);
+  const { x, y, width, height, rotation } = args;
+  const center = calculateShapeCenter({ x, y, width, height });
   const rad = degreesToRadians(rotation);
 
   const corners: Point[] = [
@@ -193,13 +193,13 @@ export function getSvgRotationTransform(
  * @returns SVG rotate transform string, or undefined if rotation is 0
  */
 export function getSvgRotationTransformForBounds(
-  ...args: [rotation: number, x: number, y: number, width: number, height: number]
+  args: { readonly rotation: number; readonly x: number; readonly y: number; readonly width: number; readonly height: number }
 ): string | undefined {
-  const [rotation, x, y, width, height] = args;
+  const { rotation, x, y, width, height } = args;
   if (rotation === 0) {
     return undefined;
   }
-  const center = calculateShapeCenter(x, y, width, height);
+  const center = calculateShapeCenter({ x, y, width, height });
   return `rotate(${rotation}, ${center.x}, ${center.y})`;
 }
 
@@ -223,29 +223,20 @@ export function getSvgRotationTransformForBounds(
  * @returns New position and rotation for the shape
  */
 export function rotateShapeAroundCenter(
-  ...args: [
-    shapeX: number,
-    shapeY: number,
-    shapeWidth: number,
-    shapeHeight: number,
-    initialRotation: number,
-    combinedCenterX: number,
-    combinedCenterY: number,
-    deltaAngleDeg: number,
-  ]
+  args: {
+    readonly shapeX: number;
+    readonly shapeY: number;
+    readonly shapeWidth: number;
+    readonly shapeHeight: number;
+    readonly initialRotation: number;
+    readonly combinedCenterX: number;
+    readonly combinedCenterY: number;
+    readonly deltaAngleDeg: number;
+  }
 ): RotationResult {
-  const [
-    shapeX,
-    shapeY,
-    shapeWidth,
-    shapeHeight,
-    initialRotation,
-    combinedCenterX,
-    combinedCenterY,
-    deltaAngleDeg,
-  ] = args;
+  const { shapeX, shapeY, shapeWidth, shapeHeight, initialRotation, combinedCenterX, combinedCenterY, deltaAngleDeg } = args;
   // Calculate shape center
-  const shapeCenter = calculateShapeCenter(shapeX, shapeY, shapeWidth, shapeHeight);
+  const shapeCenter = calculateShapeCenter({ x: shapeX, y: shapeY, width: shapeWidth, height: shapeHeight });
 
   // Rotate shape center around combined center
   const deltaRad = degreesToRadians(deltaAngleDeg);
@@ -280,9 +271,9 @@ export function rotateShapeAroundCenter(
  * @returns Delta angle in degrees
  */
 export function calculateRotationDelta(
-  ...args: [centerX: number, centerY: number, currentX: number, currentY: number, startAngle: number]
+  args: { readonly centerX: number; readonly centerY: number; readonly currentX: number; readonly currentY: number; readonly startAngle: number }
 ): number {
-  const [centerX, centerY, currentX, currentY, startAngle] = args;
-  const currentAngle = calculateAngleFromCenter(centerX, centerY, currentX, currentY);
+  const { centerX, centerY, currentX, currentY, startAngle } = args;
+  const currentAngle = calculateAngleFromCenter({ centerX, centerY, pointX: currentX, pointY: currentY });
   return currentAngle - startAngle;
 }

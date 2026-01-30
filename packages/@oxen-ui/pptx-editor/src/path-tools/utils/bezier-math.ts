@@ -71,9 +71,9 @@ export function normalizeVector(x: number, y: number): { x: number; y: number } 
  * @returns Point on curve at t
  */
 export function evaluateCubicBezier(
-  ...args: [p0: Point, p1: Point, p2: Point, p3: Point, t: number]
+  args: { readonly p0: Point; readonly p1: Point; readonly p2: Point; readonly p3: Point; readonly t: number }
 ): Point {
-  const [p0, p1, p2, p3, t] = args;
+  const { p0, p1, p2, p3, t } = args;
   const t2 = t * t;
   const t3 = t2 * t;
   const mt = 1 - t;
@@ -107,9 +107,9 @@ export function evaluateCubicBezier(
  * @returns Tangent vector at t
  */
 export function evaluateCubicBezierDerivative(
-  ...args: [p0: Point, p1: Point, p2: Point, p3: Point, t: number]
+  args: { readonly p0: Point; readonly p1: Point; readonly p2: Point; readonly p3: Point; readonly t: number }
 ): { x: number; y: number } {
-  const [p0, p1, p2, p3, t] = args;
+  const { p0, p1, p2, p3, t } = args;
   const t2 = t * t;
   const mt = 1 - t;
   const mt2 = mt * mt;
@@ -151,9 +151,9 @@ export type CubicBezierSegment = {
  * @returns Two bezier segments
  */
 export function subdivideCubicBezier(
-  ...args: [p0: Point, p1: Point, p2: Point, p3: Point, t: number]
+  args: { readonly p0: Point; readonly p1: Point; readonly p2: Point; readonly p3: Point; readonly t: number }
 ): { left: CubicBezierSegment; right: CubicBezierSegment } {
-  const [p0, p1, p2, p3, t] = args;
+  const { p0, p1, p2, p3, t } = args;
   // First level
   const q0 = lerpPoint(p0, p1, t);
   const q1 = lerpPoint(p1, p2, t);
@@ -196,9 +196,9 @@ export function subdivideCubicBezier(
  * @returns Bounding box
  */
 export function cubicBezierBounds(
-  ...args: [p0: Point, p1: Point, p2: Point, p3: Point]
+  args: { readonly p0: Point; readonly p1: Point; readonly p2: Point; readonly p3: Point }
 ): Bounds {
-  const [p0, p1, p2, p3] = args;
+  const { p0, p1, p2, p3 } = args;
   // Start with endpoints
   let minX = Math.min(p0.x as number, p3.x as number);
   let maxX = Math.max(p0.x as number, p3.x as number);
@@ -219,7 +219,7 @@ export function cubicBezierBounds(
   const txRoots = solveQuadratic(ax, bx, cx);
   for (const t of txRoots) {
     if (t > 0 && t < 1) {
-      const pt = evaluateCubicBezier(p0, p1, p2, p3, t);
+      const pt = evaluateCubicBezier({ p0, p1, p2, p3, t });
       minX = Math.min(minX, pt.x as number);
       maxX = Math.max(maxX, pt.x as number);
     }
@@ -229,7 +229,7 @@ export function cubicBezierBounds(
   const tyRoots = solveQuadratic(ay, by, cy);
   for (const t of tyRoots) {
     if (t > 0 && t < 1) {
-      const pt = evaluateCubicBezier(p0, p1, p2, p3, t);
+      const pt = evaluateCubicBezier({ p0, p1, p2, p3, t });
       minY = Math.min(minY, pt.y as number);
       maxY = Math.max(maxY, pt.y as number);
     }
@@ -283,9 +283,9 @@ function solveQuadratic(a: number, b: number, c: number): number[] {
  * @returns Nearest point info: { t, point, distance }
  */
 export function nearestPointOnCubicBezier(
-  ...args: [p0: Point, p1: Point, p2: Point, p3: Point, target: Point, tolerance?: number]
+  args: { readonly p0: Point; readonly p1: Point; readonly p2: Point; readonly p3: Point; readonly target: Point; readonly tolerance?: number }
 ): { t: number; point: Point; distance: number } {
-  const [p0, p1, p2, p3, target, tolerance = 0.5] = args;
+  const { p0, p1, p2, p3, target, tolerance = 0.5 } = args;
   // Sample the curve at regular intervals
   const samples = 10;
   let bestT = 0;
@@ -294,7 +294,7 @@ export function nearestPointOnCubicBezier(
 
   for (let i = 0; i <= samples; i++) {
     const t = i / samples;
-    const pt = evaluateCubicBezier(p0, p1, p2, p3, t);
+    const pt = evaluateCubicBezier({ p0, p1, p2, p3, t });
     const dist = distance(pt, target);
     if (dist < bestDist) {
       bestDist = dist;
@@ -310,8 +310,8 @@ export function nearestPointOnCubicBezier(
   while (hi - lo > tolerance / 100) {
     const mid1 = lo + (hi - lo) / 3;
     const mid2 = hi - (hi - lo) / 3;
-    const pt1 = evaluateCubicBezier(p0, p1, p2, p3, mid1);
-    const pt2 = evaluateCubicBezier(p0, p1, p2, p3, mid2);
+    const pt1 = evaluateCubicBezier({ p0, p1, p2, p3, t: mid1 });
+    const pt2 = evaluateCubicBezier({ p0, p1, p2, p3, t: mid2 });
     const dist1 = distance(pt1, target);
     const dist2 = distance(pt2, target);
 

@@ -5475,12 +5475,12 @@ function generateMarkersForLine(
   }
 
   const strokeColor = getStrokeColorFromLine(line, colorContext);
-  return generateLineMarkers(
-    line.headEnd,
-    line.tailEnd,
-    strokeStyle.strokeWidth,
-    strokeColor,
-  );
+  return generateLineMarkers({
+    headEnd: line.headEnd,
+    tailEnd: line.tailEnd,
+    strokeWidth: strokeStyle.strokeWidth,
+    colorHex: strokeColor,
+  });
 }
 
 /**

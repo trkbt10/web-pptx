@@ -63,16 +63,16 @@ function getParagraphLength(paragraph: Paragraph): number {
  * Returns up to 3 parts: before, selected, after.
  */
 function splitTextRunAtSelection(
-  ...args: [
-    run: RegularRun,
-    runStart: number,
-    runEnd: number,
-    selStart: number,
-    selEnd: number,
-    propertyUpdate: Partial<RunProperties>,
-  ]
+  args: {
+    readonly run: RegularRun;
+    readonly runStart: number;
+    readonly runEnd: number;
+    readonly selStart: number;
+    readonly selEnd: number;
+    readonly propertyUpdate: Partial<RunProperties>;
+  }
 ): TextRun[] {
-  const [run, runStart, _runEnd, selStart, selEnd, propertyUpdate] = args;
+  const { run, runStart, selStart, selEnd, propertyUpdate } = args;
   const result: TextRun[] = [];
   const text = run.text;
 
@@ -116,16 +116,16 @@ function splitTextRunAtSelection(
  * Apply formatting to a single run based on selection overlap.
  */
 function applyFormatToRun(
-  ...args: [
-    run: TextRun,
-    runStart: number,
-    runEnd: number,
-    selStart: number,
-    selEnd: number,
-    propertyUpdate: Partial<RunProperties>,
-  ]
+  args: {
+    readonly run: TextRun;
+    readonly runStart: number;
+    readonly runEnd: number;
+    readonly selStart: number;
+    readonly selEnd: number;
+    readonly propertyUpdate: Partial<RunProperties>;
+  }
 ): TextRun[] {
-  const [run, runStart, runEnd, selStart, selEnd, propertyUpdate] = args;
+  const { run, runStart, runEnd, selStart, selEnd, propertyUpdate } = args;
   // Case 1: Run entirely before selection
   if (runEnd <= selStart) {
     return [run];
@@ -149,7 +149,7 @@ function applyFormatToRun(
   // Case 5: Partial overlap at start or end (needs splitting)
   switch (run.type) {
     case "text":
-      return splitTextRunAtSelection(run, runStart, runEnd, selStart, selEnd, propertyUpdate);
+      return splitTextRunAtSelection({ run, runStart, runEnd, selStart, selEnd, propertyUpdate });
 
     case "break":
       // Break runs are atomic - if within selection, apply formatting
@@ -231,14 +231,14 @@ export function mergeAdjacentRuns(runs: readonly TextRun[]): TextRun[] {
  * Apply formatting to runs within a paragraph.
  */
 function applyFormatToParagraphRuns(
-  ...args: [
-    paragraph: Paragraph,
-    selStart: number,
-    selEnd: number,
-    propertyUpdate: Partial<RunProperties>,
-  ]
+  args: {
+    readonly paragraph: Paragraph;
+    readonly selStart: number;
+    readonly selEnd: number;
+    readonly propertyUpdate: Partial<RunProperties>;
+  }
 ): Paragraph {
-  const [paragraph, selStart, selEnd, propertyUpdate] = args;
+  const { paragraph, selStart, selEnd, propertyUpdate } = args;
   const newRuns: TextRun[] = [];
   // eslint-disable-next-line no-restricted-syntax -- tracking offset
   let currentOffset = 0;
@@ -248,14 +248,7 @@ function applyFormatToParagraphRuns(
     const runStart = currentOffset;
     const runEnd = currentOffset + runLength;
 
-    const processedRuns = applyFormatToRun(
-      run,
-      runStart,
-      runEnd,
-      selStart,
-      selEnd,
-      propertyUpdate
-    );
+    const processedRuns = applyFormatToRun({ run, runStart, runEnd, selStart, selEnd, propertyUpdate });
     newRuns.push(...processedRuns);
 
     currentOffset += runLength;
@@ -275,14 +268,14 @@ function applyFormatToParagraphRuns(
  * Process a single paragraph for formatting application.
  */
 function processParagraphForFormat(
-  ...args: [
-    paragraph: Paragraph,
-    paragraphIndex: number,
-    selection: TextSelection,
-    propertyUpdate: Partial<RunProperties>,
-  ]
+  args: {
+    readonly paragraph: Paragraph;
+    readonly paragraphIndex: number;
+    readonly selection: TextSelection;
+    readonly propertyUpdate: Partial<RunProperties>;
+  }
 ): Paragraph {
-  const [paragraph, paragraphIndex, selection, propertyUpdate] = args;
+  const { paragraph, paragraphIndex, selection, propertyUpdate } = args;
   const { start, end } = selection;
 
   // Check if paragraph is affected
@@ -304,7 +297,7 @@ function processParagraphForFormat(
     return paragraph;
   }
 
-  return applyFormatToParagraphRuns(paragraph, selStartInPara, selEndInPara, propertyUpdate);
+  return applyFormatToParagraphRuns({ paragraph, selStart: selStartInPara, selEnd: selEndInPara, propertyUpdate });
 }
 
 // =============================================================================
@@ -338,7 +331,7 @@ export function applyRunPropertiesToSelection(
   const normalized = normalizeSelection(selection);
 
   const newParagraphs = textBody.paragraphs.map((paragraph, pIdx) =>
-    processParagraphForFormat(paragraph, pIdx, normalized, propertyUpdate)
+    processParagraphForFormat({ paragraph, paragraphIndex: pIdx, selection: normalized, propertyUpdate })
   );
 
   return {
@@ -413,14 +406,14 @@ export function normalizeTextBody(textBody: TextBody): TextBody {
  * @returns New TextBody with toggled property
  */
 export function toggleRunProperty(
-  ...args: [
-    textBody: TextBody,
-    selection: TextSelection,
-    propertyKey: keyof RunProperties,
-    currentValue: boolean | undefined,
-  ]
+  args: {
+    readonly textBody: TextBody;
+    readonly selection: TextSelection;
+    readonly propertyKey: keyof RunProperties;
+    readonly currentValue: boolean | undefined;
+  }
 ): TextBody {
-  const [textBody, selection, propertyKey, currentValue] = args;
+  const { textBody, selection, propertyKey, currentValue } = args;
   // If current value is true, turn it off; otherwise turn it on
   const newValue = currentValue === true ? undefined : true;
 

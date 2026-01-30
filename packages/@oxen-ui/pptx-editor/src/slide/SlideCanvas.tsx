@@ -91,7 +91,12 @@ export type SlideCanvasProps = {
   readonly onSelectMultiple: (shapeIds: readonly ShapeId[]) => void;
   readonly onClearSelection: () => void;
   readonly onStartMove: (startX: number, startY: number) => void;
-  readonly onStartResize: (handle: ResizeHandlePosition, startX: number, startY: number, aspectLocked: boolean) => void;
+  readonly onStartResize: (args: {
+    readonly handle: ResizeHandlePosition;
+    readonly startX: number;
+    readonly startY: number;
+    readonly aspectLocked: boolean;
+  }) => void;
   readonly onStartRotate: (startX: number, startY: number) => void;
   readonly onDoubleClick?: (shapeId: ShapeId) => void;
 
@@ -734,7 +739,7 @@ export function SlideCanvas({
       }
 
       const coords = clientToSlideCoords(e.clientX, e.clientY, rect, widthNum, heightNum);
-      onStartResize(handle, coords.x, coords.y, e.shiftKey);
+      onStartResize({ handle, startX: coords.x, startY: coords.y, aspectLocked: e.shiftKey });
     },
     [widthNum, heightNum, onStartResize],
   );
@@ -853,7 +858,7 @@ export function SlideCanvas({
           {shapeRenderData.map((shape) => (
             <g
               key={`hit-${shape.id}`}
-              transform={getSvgRotationTransformForBounds(shape.rotation, shape.x, shape.y, shape.width, shape.height)}
+              transform={getSvgRotationTransformForBounds({ rotation: shape.rotation, x: shape.x, y: shape.y, width: shape.width, height: shape.height })}
             >
               <rect
                 x={shape.x}

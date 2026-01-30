@@ -98,9 +98,7 @@ export function serializeConnectionShape(conn: CxnShape): XmlElement {
     createElement("p:nvPr"),
   ]);
 
-  const geometryElement = conn.properties.geometry
-    ? serializeGeometry(conn.properties.geometry)
-    : createElement("a:prstGeom", { prst: "line" }, [createElement("a:avLst")]);
+  const geometryElement = serializeConnectionGeometryOrDefault(conn.properties.geometry);
 
   const spPr = createElement("p:spPr", {}, [
     serializeTransformOrDefault(conn.properties.transform),
@@ -114,6 +112,13 @@ export function serializeConnectionShape(conn: CxnShape): XmlElement {
     children.push(style);
   }
   return createElement("p:cxnSp", {}, children);
+}
+
+function serializeConnectionGeometryOrDefault(geometry: CxnShape["properties"]["geometry"]): XmlElement {
+  if (geometry) {
+    return serializeGeometry(geometry);
+  }
+  return createElement("a:prstGeom", { prst: "line" }, [createElement("a:avLst")]);
 }
 
 function serializeSpShape(shape: SpShape): XmlElement {

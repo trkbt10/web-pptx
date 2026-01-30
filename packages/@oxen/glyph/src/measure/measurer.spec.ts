@@ -8,7 +8,7 @@ import { calculateCharWidth, estimateTextWidthFallback, measureTextDetailed, mea
 
 describe("measurer", () => {
   it("calculateCharWidth returns finite widths", () => {
-    const result = calculateCharWidth("A", undefined, 12, "Arial", 400);
+    const result = calculateCharWidth({ char: "A", prevChar: undefined, fontSizePt: 12, fontFamily: "Arial", fontWeight: 400 });
     expect(Number.isFinite(result.width)).toBe(true);
     expect(Number.isFinite(result.kerningAdjust)).toBe(true);
     expect(Number.isFinite(result.totalWidth)).toBe(true);
@@ -22,8 +22,8 @@ describe("measurer", () => {
     const fontFamily = "Arial";
     const fontWeight = 400;
 
-    const detailed = measureTextDetailed(text, fontSizePt, letterSpacingPx, fontFamily, fontWeight);
-    const estimated = estimateTextWidthFallback(text, fontSizePt, letterSpacingPx, fontFamily, fontWeight);
+    const detailed = measureTextDetailed({ text, fontSizePt, letterSpacingPx, fontFamily, fontWeight });
+    const estimated = estimateTextWidthFallback({ text, fontSizePt, letterSpacingPx, fontFamily, fontWeight });
 
     expect(detailed.totalWidth).toBe(estimated);
     expect(detailed.positions).toHaveLength(Array.from(text).length);
@@ -37,7 +37,7 @@ describe("measurer", () => {
     const letterSpacingPx = 2;
     const fontFamily = "Arial";
 
-    const detailed = measureTextDetailed(text, fontSizePt, letterSpacingPx, fontFamily);
+    const detailed = measureTextDetailed({ text, fontSizePt, letterSpacingPx, fontFamily });
 
     expect(detailed.positions).toEqual([0, detailed.charWidths[0].totalWidth]);
 
@@ -47,8 +47,7 @@ describe("measurer", () => {
   });
 
   it("measureTextWidth returns a finite number", () => {
-    const width = measureTextWidth("Hello", 12, 0, "Arial", 400);
+    const width = measureTextWidth({ text: "Hello", fontSizePt: 12, letterSpacingPx: 0, fontFamily: "Arial", fontWeight: 400 });
     expect(Number.isFinite(width)).toBe(true);
   });
 });
-

@@ -91,7 +91,12 @@ export type SvgEditorCanvasProps = {
   readonly onSelectMultiple: (shapeIds: readonly ShapeId[]) => void;
   readonly onClearSelection: () => void;
   readonly onStartMove: (startX: number, startY: number) => void;
-  readonly onStartResize: (handle: ResizeHandlePosition, startX: number, startY: number, aspectLocked: boolean) => void;
+  readonly onStartResize: (args: {
+    readonly handle: ResizeHandlePosition;
+    readonly startX: number;
+    readonly startY: number;
+    readonly aspectLocked: boolean;
+  }) => void;
   readonly onStartRotate: (startX: number, startY: number) => void;
   readonly onDoubleClick: (shapeId: ShapeId) => void;
   readonly onCreate: (x: number, y: number) => void;
@@ -439,7 +444,7 @@ export const SvgEditorCanvas = forwardRef<HTMLDivElement, SvgEditorCanvasProps>(
       if (!svg) {return;}
 
       const rect = svg.getBoundingClientRect();
-      const coords = screenToSlideCoords(e.clientX, e.clientY, rect, viewport, rulerThickness);
+      const coords = screenToSlideCoords({ clientX: e.clientX, clientY: e.clientY, svgRect: rect, viewport, rulerThickness });
 
       try {
         const parsed = JSON.parse(assetData) as {
@@ -511,7 +516,7 @@ export const SvgEditorCanvas = forwardRef<HTMLDivElement, SvgEditorCanvasProps>(
       const svg = svgRef.current;
       if (!svg) {return { x: 0, y: 0 };}
       const rect = svg.getBoundingClientRect();
-      return screenToSlideCoords(clientX, clientY, rect, viewport, rulerThickness);
+      return screenToSlideCoords({ clientX, clientY, svgRect: rect, viewport, rulerThickness });
     },
     [svgRef, viewport, rulerThickness]
   );
@@ -800,7 +805,7 @@ export const SvgEditorCanvas = forwardRef<HTMLDivElement, SvgEditorCanvasProps>(
   const handleResizeStart = useCallback(
     (handle: ResizeHandlePosition, e: React.PointerEvent) => {
       const coords = clientToSlide(e.clientX, e.clientY);
-      onStartResize(handle, coords.x, coords.y, e.shiftKey);
+      onStartResize({ handle, startX: coords.x, startY: coords.y, aspectLocked: e.shiftKey });
     },
     [onStartResize, clientToSlide]
   );
@@ -906,7 +911,7 @@ export const SvgEditorCanvas = forwardRef<HTMLDivElement, SvgEditorCanvasProps>(
             {shapeRenderData.map((shape) => (
               <g
                 key={`hit-${shape.id}`}
-                transform={getSvgRotationTransformForBounds(shape.rotation, shape.x, shape.y, shape.width, shape.height)}
+                transform={getSvgRotationTransformForBounds({ rotation: shape.rotation, x: shape.x, y: shape.y, width: shape.width, height: shape.height })}
               >
                 <rect
                   x={shape.x}

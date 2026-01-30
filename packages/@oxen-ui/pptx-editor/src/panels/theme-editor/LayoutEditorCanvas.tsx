@@ -178,15 +178,7 @@ export function LayoutEditorCanvas({ slideSize, colorScheme }: LayoutEditorCanva
   );
 
   const handleStartResize = useCallback(
-    (
-      ...args: readonly [
-        handle: ResizeHandlePosition,
-        startX: number,
-        startY: number,
-        aspectLocked: boolean,
-      ]
-    ) => {
-      const [handle, startX, startY, aspectLocked] = args;
+    ({ handle, startX, startY, aspectLocked }: { handle: ResizeHandlePosition; startX: number; startY: number; aspectLocked: boolean }) => {
       dispatch({
         type: "START_LAYOUT_RESIZE",
         handle,
@@ -252,7 +244,7 @@ export function LayoutEditorCanvas({ slideSize, colorScheme }: LayoutEditorCanva
       }
 
       const rect = container.getBoundingClientRect();
-      const coords = screenToSlideCoords(e.clientX, e.clientY, rect, viewport, RULER_THICKNESS);
+      const coords = screenToSlideCoords({ clientX: e.clientX, clientY: e.clientY, svgRect: rect, viewport, rulerThickness: RULER_THICKNESS });
 
       if (drag.type === "move") {
         const deltaX = coords.x - (drag.startX as number);

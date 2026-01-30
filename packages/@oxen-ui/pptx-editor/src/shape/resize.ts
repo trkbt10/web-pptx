@@ -42,9 +42,9 @@ export type ResizeOptions = {
  * Uses the larger delta magnitude to maintain aspect ratio.
  */
 export function calculateAspectDelta(
-  ...args: [dw: number, dh: number, aspectRatio: number, aspectLocked: boolean]
+  args: { readonly dw: number; readonly dh: number; readonly aspectRatio: number; readonly aspectLocked: boolean }
 ): { dw: number; dh: number } {
-  const [dw, dh, aspectRatio, aspectLocked] = args;
+  const { dw, dh, aspectRatio, aspectLocked } = args;
   if (!aspectLocked) {return { dw, dh };}
 
   const aspectDw = dh * aspectRatio;
@@ -59,9 +59,9 @@ export function calculateAspectDelta(
  * Apply minimum size constraints to dimensions.
  */
 export function applyMinConstraints(
-  ...args: [width: number, height: number, minWidth: number, minHeight: number]
+  args: { readonly width: number; readonly height: number; readonly minWidth: number; readonly minHeight: number }
 ): { width: number; height: number } {
-  const [width, height, minWidth, minHeight] = args;
+  const { width, height, minWidth, minHeight } = args;
   return {
     width: Math.max(minWidth, width),
     height: Math.max(minHeight, height),
@@ -76,16 +76,11 @@ export function applyMinConstraints(
  * Calculate new bounds for northwest (top-left) corner resize.
  */
 export function resizeFromNW(
-  ...args: [initial: ResizeBounds, dx: number, dy: number, options: ResizeOptions]
+  args: { readonly initial: ResizeBounds; readonly dx: number; readonly dy: number; readonly options: ResizeOptions }
 ): ResizeBounds {
-  const [initial, dx, dy, options] = args;
+  const { initial, dx, dy, options } = args;
   const aspectRatio = initial.width / initial.height;
-  const { dw, dh } = calculateAspectDelta(
-    -dx,
-    -dy,
-    aspectRatio,
-    options.aspectLocked,
-  );
+  const { dw, dh } = calculateAspectDelta({ dw: -dx, dh: -dy, aspectRatio, aspectLocked: options.aspectLocked });
 
   const newWidth = Math.max(options.minWidth, initial.width + dw);
   const newHeight = Math.max(options.minHeight, initial.height + dh);
@@ -131,11 +126,11 @@ export function resizeFromN(
  * Calculate new bounds for northeast (top-right) corner resize.
  */
 export function resizeFromNE(
-  ...args: [initial: ResizeBounds, dx: number, dy: number, options: ResizeOptions]
+  args: { readonly initial: ResizeBounds; readonly dx: number; readonly dy: number; readonly options: ResizeOptions }
 ): ResizeBounds {
-  const [initial, dx, dy, options] = args;
+  const { initial, dx, dy, options } = args;
   const aspectRatio = initial.width / initial.height;
-  const { dw, dh } = calculateAspectDelta(dx, -dy, aspectRatio, options.aspectLocked);
+  const { dw, dh } = calculateAspectDelta({ dw: dx, dh: -dy, aspectRatio, aspectLocked: options.aspectLocked });
 
   const newWidth = Math.max(options.minWidth, initial.width + dw);
   const newHeight = Math.max(options.minHeight, initial.height + dh);
@@ -181,11 +176,11 @@ export function resizeFromE(
  * Calculate new bounds for southeast (bottom-right) corner resize.
  */
 export function resizeFromSE(
-  ...args: [initial: ResizeBounds, dx: number, dy: number, options: ResizeOptions]
+  args: { readonly initial: ResizeBounds; readonly dx: number; readonly dy: number; readonly options: ResizeOptions }
 ): ResizeBounds {
-  const [initial, dx, dy, options] = args;
+  const { initial, dx, dy, options } = args;
   const aspectRatio = initial.width / initial.height;
-  const { dw, dh } = calculateAspectDelta(dx, dy, aspectRatio, options.aspectLocked);
+  const { dw, dh } = calculateAspectDelta({ dw: dx, dh: dy, aspectRatio, aspectLocked: options.aspectLocked });
 
   return {
     x: initial.x,
@@ -228,11 +223,11 @@ export function resizeFromS(
  * Calculate new bounds for southwest (bottom-left) corner resize.
  */
 export function resizeFromSW(
-  ...args: [initial: ResizeBounds, dx: number, dy: number, options: ResizeOptions]
+  args: { readonly initial: ResizeBounds; readonly dx: number; readonly dy: number; readonly options: ResizeOptions }
 ): ResizeBounds {
-  const [initial, dx, dy, options] = args;
+  const { initial, dx, dy, options } = args;
   const aspectRatio = initial.width / initial.height;
-  const { dw, dh } = calculateAspectDelta(-dx, dy, aspectRatio, options.aspectLocked);
+  const { dw, dh } = calculateAspectDelta({ dw: -dx, dh: dy, aspectRatio, aspectLocked: options.aspectLocked });
 
   const newWidth = Math.max(options.minWidth, initial.width + dw);
   const newHeight = Math.max(options.minHeight, initial.height + dh);
@@ -280,30 +275,30 @@ export function resizeFromW(
  * Dispatches to the appropriate resize function based on handle position.
  */
 export function calculateResizeBounds(
-  ...args: [
-    handle: ResizeHandlePosition,
-    initial: ResizeBounds,
-    dx: number,
-    dy: number,
-    options: ResizeOptions,
-  ]
+  args: {
+    readonly handle: ResizeHandlePosition;
+    readonly initial: ResizeBounds;
+    readonly dx: number;
+    readonly dy: number;
+    readonly options: ResizeOptions;
+  }
 ): ResizeBounds {
-  const [handle, initial, dx, dy, options] = args;
+  const { handle, initial, dx, dy, options } = args;
   switch (handle) {
     case "nw":
-      return resizeFromNW(initial, dx, dy, options);
+      return resizeFromNW({ initial, dx, dy, options });
     case "n":
       return resizeFromN(initial, dy, options);
     case "ne":
-      return resizeFromNE(initial, dx, dy, options);
+      return resizeFromNE({ initial, dx, dy, options });
     case "e":
       return resizeFromE(initial, dx, options);
     case "se":
-      return resizeFromSE(initial, dx, dy, options);
+      return resizeFromSE({ initial, dx, dy, options });
     case "s":
       return resizeFromS(initial, dy, options);
     case "sw":
-      return resizeFromSW(initial, dx, dy, options);
+      return resizeFromSW({ initial, dx, dy, options });
     case "w":
       return resizeFromW(initial, dx, options);
   }
