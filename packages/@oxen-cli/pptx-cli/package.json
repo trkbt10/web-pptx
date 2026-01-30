@@ -9,6 +9,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@oxen-office/chart": "workspace:*",
+    "@oxen-office/opc": "workspace:*",
     "@oxen-office/pptx": "workspace:*",
     "@oxen/zip": "workspace:*",
     "commander": "^12.0.0"

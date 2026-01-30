@@ -4,26 +4,33 @@
 
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { serializeShape as domainToXml, serializeGraphicFrame } from "@oxen-office/pptx/patcher/shape/shape-serializer";
-import { addShapeToTree } from "@oxen-office/pptx/patcher/slide/shape-tree-patcher";
-import { addMedia } from "@oxen-office/pptx/patcher/resources/media-manager";
-import { updateDocumentRoot, updateAtPath } from "@oxen-office/pptx/patcher/core/xml-mutator";
+import {
+  addMedia,
+  addRelationship,
+  addShapeToTree,
+  ensureRelationshipsDocument,
+  serializeGraphicFrame,
+  serializeShape as domainToXml,
+  updateAtPath,
+  updateDocumentRoot,
+} from "@oxen-office/pptx/patcher";
 import type { parseXml } from "@oxen/xml";
 import type { ZipPackage } from "@oxen/zip";
 import type { SpShape, GraphicFrame, PicShape, CxnShape, GrpShape, Shape } from "@oxen-office/pptx/domain/shape";
 import type { Table, TableRow, TableCell } from "@oxen-office/pptx/domain/table/types";
 import type { GroupTransform } from "@oxen-office/pptx/domain/geometry";
-import type { Pixels, Degrees, Percent } from "@oxen-office/ooxml/domain/units";
-import type { ShapeSpec, ImageSpec, ConnectorSpec, GroupSpec, TableSpec, TableCellSpec, TextSpec, BlipEffectSpec } from "./types";
-import type { BlipEffects } from "@oxen-office/pptx/domain/color/types";
+import type { Pixels, Degrees } from "@oxen-office/ooxml/domain/units";
+import type { ShapeSpec, ImageSpec, ConnectorSpec, GroupSpec, TableSpec, TableCellSpec, TextSpec } from "./types";
 import { PRESET_MAP } from "./presets";
 import { generateShapeId } from "./id-generator";
-import { buildFill, buildColor } from "./fill-builder";
+import { buildFill } from "./fill-builder";
 import { buildLine } from "./line-builder";
 import { buildTextBody, collectHyperlinks } from "./text-builder";
 import { buildEffects, buildShape3d } from "./effects-builder";
-import { addRelationship, ensureRelationshipsDocument, listRelationships } from "@oxen-office/pptx/patcher/resources/relationship-manager";
 import { parseXml, serializeDocument, isXmlElement } from "@oxen/xml";
+import { buildBlipEffectsFromSpec } from "./blip-effects-builder";
+import { buildCustomGeometryFromSpec } from "./custom-geometry-builder";
+import { buildMediaReferenceFromSpec, detectEmbeddedMediaType } from "./media-embed-builder";
 
 // =============================================================================
 // Context Types
@@ -95,6 +102,7 @@ function buildSpShape(spec: ShapeSpec, id: string): SpShape {
   return {
     type: "sp",
     nonVisual: { id, name: `Shape ${id}` },
+    placeholder: spec.placeholder ? { type: spec.placeholder.type, idx: spec.placeholder.idx } : undefined,
     properties: {
       transform: {
         x: spec.x as Pixels,
@@ -105,7 +113,7 @@ function buildSpShape(spec: ShapeSpec, id: string): SpShape {
         flipH: spec.flipH ?? false,
         flipV: spec.flipV ?? false,
       },
-      geometry: { type: "preset", preset, adjustValues: [] },
+      geometry: spec.customGeometry ? buildCustomGeometryFromSpec(spec.customGeometry) : { type: "preset", preset, adjustValues: [] },
       fill: spec.fill ? buildFill(spec.fill) : undefined,
       line: buildLineFromShapeSpec(spec),
       effects: spec.effects ? buildEffects(spec.effects) : undefined,
@@ -133,7 +141,7 @@ function registerHyperlinks(
   const relsPath = ctx.slidePath.replace(/\/([^/]+)\.xml$/, "/_rels/$1.xml.rels");
 
   // Read or create relationships document
-  let relsXml = ctx.zipPackage.readText(relsPath);
+  const relsXml = ctx.zipPackage.readText(relsPath);
   let relsDoc = relsXml ? parseXml(relsXml) : null;
   relsDoc = ensureRelationshipsDocument(relsDoc);
 
@@ -222,62 +230,21 @@ function detectMimeType(filePath: string): "image/png" | "image/jpeg" | "image/g
   }
 }
 
-/**
- * Build BlipEffects domain object from BlipEffectSpec
- */
-function buildBlipEffects(spec: BlipEffectSpec): BlipEffects {
-  const effects: BlipEffects = {};
-
-  if (spec.grayscale) {
-    (effects as { grayscale?: boolean }).grayscale = true;
-  }
-  if (spec.duotone) {
-    (effects as { duotone?: { colors: readonly [ReturnType<typeof buildColor>, ReturnType<typeof buildColor>] } }).duotone = {
-      colors: [buildColor(spec.duotone.colors[0]), buildColor(spec.duotone.colors[1])],
-    };
-  }
-  if (spec.tint) {
-    (effects as { tint?: { hue: Degrees; amount: Percent } }).tint = {
-      hue: spec.tint.hue as Degrees,
-      amount: (spec.tint.amount * 1000) as Percent, // Convert 0-100 to 0-100000
-    };
-  }
-  if (spec.luminance) {
-    (effects as { luminance?: { brightness: Percent; contrast: Percent } }).luminance = {
-      brightness: (spec.luminance.brightness * 1000) as Percent,
-      contrast: (spec.luminance.contrast * 1000) as Percent,
-    };
-  }
-  if (spec.hsl) {
-    (effects as { hsl?: { hue: Degrees; saturation: Percent; luminance: Percent } }).hsl = {
-      hue: spec.hsl.hue as Degrees,
-      saturation: (spec.hsl.saturation * 1000) as Percent,
-      luminance: (spec.hsl.luminance * 1000) as Percent,
-    };
-  }
-  if (spec.blur) {
-    (effects as { blur?: { radius: Pixels; grow: boolean } }).blur = {
-      radius: spec.blur.radius as Pixels,
-      grow: false,
-    };
-  }
-  if (spec.alphaModFix !== undefined) {
-    (effects as { alphaModFix?: { amount: Percent } }).alphaModFix = {
-      amount: (spec.alphaModFix * 1000) as Percent,
-    };
-  }
-
-  return effects;
-}
-
-function buildPicShape(spec: ImageSpec, id: string, resourceId: string): PicShape {
+function buildPicShape(
+  spec: ImageSpec,
+  id: string,
+  resourceId: string,
+  media:
+    | { readonly mediaType: "video" | "audio"; readonly media: PicShape["media"] }
+    | undefined,
+): PicShape {
   return {
     type: "pic",
     nonVisual: { id, name: `Picture ${id}` },
     blipFill: {
       resourceId,
       stretch: true,
-      blipEffects: spec.effects ? buildBlipEffects(spec.effects) : undefined,
+      blipEffects: spec.effects ? buildBlipEffectsFromSpec(spec.effects) : undefined,
     },
     properties: {
       transform: {
@@ -290,6 +257,8 @@ function buildPicShape(spec: ImageSpec, id: string, resourceId: string): PicShap
         flipV: false,
       },
     },
+    mediaType: media?.mediaType,
+    media: media?.media,
   };
 }
 
@@ -310,7 +279,30 @@ export const imageBuilder: AsyncBuilder<ImageSpec> = async (spec, id, ctx) => {
     referringPart: ctx.slidePath,
   });
 
-  return { xml: domainToXml(buildPicShape(spec, id, rId)) };
+  const media = await (async () => {
+    if (!spec.media) {
+      return undefined;
+    }
+
+    const mediaPath = path.resolve(ctx.specDir, spec.media.path);
+    const mediaBuffer = await fs.readFile(mediaPath);
+    const mediaType = detectEmbeddedMediaType(spec.media);
+
+    const mediaArrayBuffer = new ArrayBuffer(mediaBuffer.length);
+    const mediaView = new Uint8Array(mediaArrayBuffer);
+    mediaView.set(mediaBuffer);
+
+    const { rId: mediaRId } = addMedia({
+      pkg: ctx.zipPackage,
+      mediaData: mediaArrayBuffer,
+      mediaType,
+      referringPart: ctx.slidePath,
+    });
+
+    return buildMediaReferenceFromSpec(spec.media, mediaRId, mediaType);
+  })();
+
+  return { xml: domainToXml(buildPicShape(spec, id, rId, media)) };
 };
 
 // =============================================================================

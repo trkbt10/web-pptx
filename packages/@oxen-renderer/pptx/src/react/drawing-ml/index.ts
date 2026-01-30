@@ -111,7 +111,7 @@ export type {
   GlowEffect,
   SoftEdgeEffect,
   ReflectionEffect,
-} from "@oxen-renderer/drawing-ml";
+} from "@oxen-office/ooxml/domain/effects";
 
 // Background
 export {
@@ -173,3 +173,4 @@ export {
   getBevelOffsets,
   type BevelConfig,
 } from "./text-3d";
+

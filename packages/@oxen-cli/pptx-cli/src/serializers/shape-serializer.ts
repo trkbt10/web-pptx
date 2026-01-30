@@ -19,6 +19,8 @@ import type { Paragraph, TextRun, ParagraphProperties, RunProperties } from "@ox
 import type { Transform } from "@oxen-office/pptx/domain/geometry";
 import type { TableRow, TableCell } from "@oxen-office/pptx/domain/table/types";
 import type { Fill, Line } from "@oxen-office/pptx/domain/color/types";
+import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { BlipEffects } from "@oxen-office/pptx/domain/color/types";
 import type { Effects } from "@oxen-office/pptx/domain/effects";
 import type { Shape3d } from "@oxen-office/pptx/domain/three-d";
 import { extractTextFromShape, extractTextFromParagraph, extractTextFromBody } from "./text-serializer";
@@ -261,6 +263,14 @@ export type ShapeJson = {
   readonly text?: string;
   readonly paragraphs?: readonly ParagraphJson[];
   readonly resourceId?: string;
+  readonly blipEffects?: BlipEffectsJson;
+  readonly mediaType?: "video" | "audio";
+  readonly media?: {
+    readonly audioFile?: { readonly link?: string; readonly contentType?: string };
+    readonly quickTimeFile?: { readonly link?: string };
+    readonly videoFile?: { readonly link?: string; readonly contentType?: string };
+    readonly wavAudioFile?: { readonly embed?: string; readonly name?: string };
+  };
   readonly children?: readonly ShapeJson[];
   readonly geometry?: GeometryJson;
   readonly fill?: FillJson;
@@ -278,6 +288,25 @@ export type ShapeJson = {
 // =============================================================================
 // Serialization Functions
 // =============================================================================
+
+export type BlipEffectsJson = {
+  readonly alphaBiLevel?: { readonly threshold: number };
+  readonly alphaCeiling?: boolean;
+  readonly alphaFloor?: boolean;
+  readonly alphaInv?: boolean;
+  readonly alphaMod?: boolean;
+  readonly alphaModFix?: number;
+  readonly alphaRepl?: { readonly alpha: number };
+  readonly biLevel?: { readonly threshold: number };
+  readonly blur?: { readonly radius: number; readonly grow?: boolean };
+  readonly colorChange?: { readonly from: string; readonly to: string; readonly useAlpha?: boolean };
+  readonly colorReplace?: { readonly color: string };
+  readonly duotone?: { readonly colors: readonly [string, string] };
+  readonly grayscale?: boolean;
+  readonly hsl?: { readonly hue: number; readonly saturation: number; readonly luminance: number };
+  readonly luminance?: { readonly brightness: number; readonly contrast: number };
+  readonly tint?: { readonly hue: number; readonly amount: number };
+};
 
 function serializeBounds(transform: Transform | undefined): BoundsJson | undefined {
   if (!transform) {
@@ -394,6 +423,97 @@ function getColorValue(color: { spec: { type: string; value?: string } } | undef
     return `scheme:${color.spec.value}`;
   }
   return undefined;
+}
+
+function serializeBlipColor(color: Color | undefined): string | undefined {
+  return getColorValue(color as { spec: { type: string; value?: string } } | undefined);
+}
+
+function serializeBlipEffects(effects: BlipEffects | undefined): BlipEffectsJson | undefined {
+  if (!effects) {
+    return undefined;
+  }
+
+  const result: BlipEffectsJson = {};
+
+  if (effects.alphaBiLevel) {
+    (result as { alphaBiLevel?: { threshold: number } }).alphaBiLevel = { threshold: effects.alphaBiLevel.threshold };
+  }
+  if (effects.alphaCeiling) {
+    (result as { alphaCeiling?: boolean }).alphaCeiling = true;
+  }
+  if (effects.alphaFloor) {
+    (result as { alphaFloor?: boolean }).alphaFloor = true;
+  }
+  if (effects.alphaInv) {
+    (result as { alphaInv?: boolean }).alphaInv = true;
+  }
+  if (effects.alphaMod) {
+    (result as { alphaMod?: boolean }).alphaMod = true;
+  }
+  if (effects.alphaModFix) {
+    (result as { alphaModFix?: number }).alphaModFix = effects.alphaModFix.amount;
+  }
+  if (effects.alphaRepl) {
+    (result as { alphaRepl?: { alpha: number } }).alphaRepl = { alpha: effects.alphaRepl.alpha };
+  }
+  if (effects.biLevel) {
+    (result as { biLevel?: { threshold: number } }).biLevel = { threshold: effects.biLevel.threshold };
+  }
+  if (effects.blur) {
+    (result as { blur?: { radius: number; grow?: boolean } }).blur = {
+      radius: effects.blur.radius,
+      grow: effects.blur.grow || undefined,
+    };
+  }
+  if (effects.colorChange) {
+    const from = serializeBlipColor(effects.colorChange.from);
+    const to = serializeBlipColor(effects.colorChange.to);
+    if (from && to) {
+      (result as { colorChange?: { from: string; to: string; useAlpha?: boolean } }).colorChange = {
+        from,
+        to,
+        useAlpha: effects.colorChange.useAlpha || undefined,
+      };
+    }
+  }
+  if (effects.colorReplace) {
+    const color = serializeBlipColor(effects.colorReplace.color);
+    if (color) {
+      (result as { colorReplace?: { color: string } }).colorReplace = { color };
+    }
+  }
+  if (effects.duotone) {
+    const c1 = serializeBlipColor(effects.duotone.colors[0]);
+    const c2 = serializeBlipColor(effects.duotone.colors[1]);
+    if (c1 && c2) {
+      (result as { duotone?: { colors: readonly [string, string] } }).duotone = { colors: [c1, c2] };
+    }
+  }
+  if (effects.grayscale) {
+    (result as { grayscale?: boolean }).grayscale = true;
+  }
+  if (effects.hsl) {
+    (result as { hsl?: { hue: number; saturation: number; luminance: number } }).hsl = {
+      hue: effects.hsl.hue,
+      saturation: effects.hsl.saturation,
+      luminance: effects.hsl.luminance,
+    };
+  }
+  if (effects.luminance) {
+    (result as { luminance?: { brightness: number; contrast: number } }).luminance = {
+      brightness: effects.luminance.brightness,
+      contrast: effects.luminance.contrast,
+    };
+  }
+  if (effects.tint) {
+    (result as { tint?: { hue: number; amount: number } }).tint = {
+      hue: effects.tint.hue,
+      amount: effects.tint.amount,
+    };
+  }
+
+  return Object.keys(result).length > 0 ? result : undefined;
 }
 
 function serializeFill(fill: Fill | undefined): FillJson | undefined {
@@ -641,6 +761,16 @@ export function serializeShape(shape: Shape): ShapeJson {
         flipH: transform?.flipH || undefined,
         flipV: transform?.flipV || undefined,
         resourceId: shape.blipFill.resourceId,
+        blipEffects: serializeBlipEffects(shape.blipFill.blipEffects),
+        mediaType: shape.mediaType,
+        media: shape.media
+          ? {
+              audioFile: shape.media.audioFile,
+              quickTimeFile: shape.media.quickTimeFile,
+              videoFile: shape.media.videoFile,
+              wavAudioFile: shape.media.wavAudioFile,
+            }
+          : undefined,
         fill,
         line,
         style: serializeStyle(shape.style),

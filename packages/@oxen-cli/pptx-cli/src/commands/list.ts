@@ -18,6 +18,7 @@ export type SlideListItem = {
   readonly hasTable: boolean;
   readonly hasChart: boolean;
   readonly hasImage: boolean;
+  readonly transitionType?: string;
 };
 
 export type ListData = {
@@ -104,6 +105,7 @@ export async function runList(filePath: string): Promise<Result<ListData>> {
         hasTable: hasTable(shapes),
         hasChart: hasChart(shapes),
         hasImage: hasImage(shapes),
+        transitionType: domainSlide?.transition?.type,
       });
     }
 

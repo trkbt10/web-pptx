@@ -4,7 +4,8 @@
 
 import { serializeShape } from "./shape-serializer";
 import type { SpShape, PicShape } from "@oxen-office/pptx/domain/shape";
-import type { Pixels, Degrees } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Degrees, Percent } from "@oxen-office/ooxml/domain/units";
+import type { Color } from "@oxen-office/ooxml/domain/color";
 
 describe("shape-serializer", () => {
   describe("serializeShape", () => {
@@ -57,10 +58,23 @@ describe("shape-serializer", () => {
     });
 
     it("serializes a pic shape", () => {
+      const red: Color = { spec: { type: "srgb", value: "FF0000" } };
+      const accent1: Color = {
+        spec: { type: "scheme", value: "accent1" },
+        transform: { lumMod: 80 as Percent },
+      };
       const shape: PicShape = {
         type: "pic",
         nonVisual: { id: "3", name: "Picture 1" },
-        blipFill: { resourceId: "rId2" },
+        blipFill: {
+          resourceId: "rId2",
+          blipEffects: {
+            grayscale: true,
+            alphaBiLevel: { threshold: 50 as Percent },
+            alphaModFix: { amount: 90 as Percent },
+            colorChange: { from: red, to: accent1, useAlpha: true },
+          },
+        },
         properties: {
           transform: {
             x: 200 as Pixels,
@@ -72,6 +86,8 @@ describe("shape-serializer", () => {
             flipV: false,
           },
         },
+        mediaType: "video",
+        media: { videoFile: { link: "rId10", contentType: "video/mp4" } },
       };
 
       const result = serializeShape(shape);
@@ -80,6 +96,14 @@ describe("shape-serializer", () => {
       expect(result.name).toBe("Picture 1");
       expect(result.type).toBe("pic");
       expect(result.resourceId).toBe("rId2");
+      expect(result.blipEffects).toEqual({
+        grayscale: true,
+        alphaBiLevel: { threshold: 50 },
+        alphaModFix: 90,
+        colorChange: { from: "FF0000", to: "scheme:accent1", useAlpha: true },
+      });
+      expect(result.mediaType).toBe("video");
+      expect(result.media).toEqual({ videoFile: { link: "rId10", contentType: "video/mp4" } });
       expect(result.bounds).toEqual({ x: 200, y: 200, width: 400, height: 300 });
     });
 

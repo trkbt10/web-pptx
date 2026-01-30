@@ -27,6 +27,9 @@ export type {
 
 import type { SlideModSpec, BuildSpec, BuildData } from "./build/types";
 import { applyBackground, applyImageBackground, isImageBackground } from "./build/background-builder";
+import { addChartsToSlide } from "./build/chart-add-builder";
+import { applyChartUpdates } from "./build/chart-builder";
+import { applyThemeEditsToPackage } from "./build/theme-builder";
 import {
   type BuildContext,
   shapeBuilder,
@@ -37,6 +40,7 @@ import {
   addElementsSync,
   addElementsAsync,
 } from "./build/registry";
+import { applySlideTransition } from "./build/transition-builder";
 import type { ZipPackage } from "@oxen/zip";
 
 // =============================================================================
@@ -145,9 +149,23 @@ async function processSlide(ctx: SlideContext, slideMod: SlideModSpec): Promise<
     builder: tableBuilder,
   });
 
+  const { doc: afterChartAdds } = addChartsToSlide({
+    slideDoc: afterTables,
+    specs: slideMod.addCharts ?? [],
+    ctx: { zipPackage: ctx.zipPackage, slidePath, existingIds },
+  });
+
+  const { doc: afterCharts } = applyChartUpdates(
+    afterChartAdds,
+    { zipPackage: ctx.zipPackage, slidePath },
+    slideMod.updateCharts ?? [],
+  );
+
+  const finalDoc = slideMod.transition ? applySlideTransition(afterCharts, slideMod.transition) : afterCharts;
+
   const totalAdded = shapesAdded + imagesAdded + connectorsAdded + groupsAdded + tablesAdded;
 
-  const updatedXml = serializeDocument(afterTables, { declaration: true, standalone: true });
+  const updatedXml = serializeDocument(finalDoc, { declaration: true, standalone: true });
   ctx.zipPackage.writeText(slidePath, updatedXml);
 
   return { success: true, shapesAdded: totalAdded };
@@ -170,6 +188,10 @@ export async function runBuild(specPath: string): Promise<Result<BuildData>> {
     const templateBuffer = await fs.readFile(templatePath);
     const { zipPackage, presentationFile } = await loadPptxBundleFromBuffer(templateBuffer);
     const presentation = openPresentation(presentationFile);
+
+    if (spec.theme) {
+      applyThemeEditsToPackage(zipPackage as ZipPackage, spec.theme);
+    }
 
     const ctx: SlideContext = { zipPackage: zipPackage as ZipPackage, presentation, specDir };
     const slides = spec.slides ?? [];

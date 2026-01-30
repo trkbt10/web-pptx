@@ -5,7 +5,7 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { createElement, type XmlElement, type XmlDocument } from "@oxen/xml";
-import { updateDocumentRoot, getDocumentRoot, updateChildByName, replaceChildByName } from "@oxen-office/pptx/patcher/core/xml-mutator";
+import { updateDocumentRoot, replaceChildByName } from "@oxen-office/pptx/patcher/core/xml-mutator";
 import { getChild, isXmlElement } from "@oxen/xml";
 import { serializeFill } from "@oxen-office/pptx/patcher/serializer/fill";
 import { addMedia } from "@oxen-office/pptx/patcher/resources/media-manager";
@@ -108,6 +108,12 @@ function buildBlipFillBackground(rId: string, mode: "stretch" | "tile" | "cover"
   return createElement("p:bg", {}, [bgPr]);
 }
 
+type XmlChild = XmlElement["children"][number];
+
+function withoutBackground(children: XmlElement["children"]): XmlChild[] {
+  return children.filter((c) => !(isXmlElement(c) && c.name === "p:bg"));
+}
+
 /**
  * Apply background to slide XML document
  */
@@ -124,9 +130,7 @@ export function applyBackground(
 
     // Remove existing background if present
     const existingBg = getChild(cSld, "p:bg");
-    const filteredChildren = existingBg
-      ? cSld.children.filter((c) => !(isXmlElement(c) && c.name === "p:bg"))
-      : cSld.children;
+    const filteredChildren = existingBg ? withoutBackground(cSld.children) : cSld.children;
 
     // p:bg should be the first child of p:cSld
     const newCsld: XmlElement = {
@@ -170,9 +174,7 @@ export async function applyImageBackground(
 
     // Remove existing background if present
     const existingBg = getChild(cSld, "p:bg");
-    const filteredChildren = existingBg
-      ? cSld.children.filter((c) => !(isXmlElement(c) && c.name === "p:bg"))
-      : cSld.children;
+    const filteredChildren = existingBg ? withoutBackground(cSld.children) : cSld.children;
 
     // p:bg should be the first child of p:cSld
     const newCsld: XmlElement = {

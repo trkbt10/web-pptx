@@ -61,7 +61,7 @@ export function serializePicture(picture: PicShape): XmlElement {
   const nvPicPr = createElement("p:nvPicPr", {}, [
     serializeCNvPr(picture.nonVisual),
     serializeCNvPicPr(picture.nonVisual.preferRelativeResize, picture.nonVisual.pictureLocks),
-    createElement("p:nvPr"),
+    serializePictureNvPr(picture),
   ]);
 
   const blipFill = serializePictureBlipFill(picture.blipFill);
@@ -78,6 +78,46 @@ export function serializePicture(picture: PicShape): XmlElement {
     children.push(style);
   }
   return createElement("p:pic", {}, children);
+}
+
+function serializePictureNvPr(picture: PicShape): XmlElement {
+  const children: XmlElement[] = [];
+
+  if (picture.mediaType === "video") {
+    const video = picture.media?.videoFile;
+    if (video?.link) {
+      const attrs: Record<string, string> = { "r:link": video.link };
+      if (video.contentType) {
+        attrs.contentType = video.contentType;
+      }
+      children.push(createElement("a:videoFile", attrs));
+    }
+    const qt = picture.media?.quickTimeFile;
+    if (qt?.link) {
+      children.push(createElement("a:quickTimeFile", { "r:link": qt.link }));
+    }
+  }
+
+  if (picture.mediaType === "audio") {
+    const audio = picture.media?.audioFile;
+    if (audio?.link) {
+      const attrs: Record<string, string> = { "r:link": audio.link };
+      if (audio.contentType) {
+        attrs.contentType = audio.contentType;
+      }
+      children.push(createElement("a:audioFile", attrs));
+    }
+    const wav = picture.media?.wavAudioFile;
+    if (wav?.embed) {
+      const attrs: Record<string, string> = { "r:embed": wav.embed };
+      if (wav.name) {
+        attrs.name = wav.name;
+      }
+      children.push(createElement("a:wavAudioFile", attrs));
+    }
+  }
+
+  return createElement("p:nvPr", {}, children);
 }
 
 /**

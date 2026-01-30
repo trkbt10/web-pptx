@@ -196,6 +196,23 @@ describe("shape-serializer", () => {
     expect(getChild(stretch!, "a:fillRect")).toBeDefined();
   });
 
+  it("serializes picture media references in p:nvPr", () => {
+    const pic: PicShape = {
+      type: "pic",
+      nonVisual: { id: "21", name: "Video 21" },
+      blipFill: { resourceId: "rId2", stretch: true },
+      properties: { transform: createRectShape("x").properties.transform },
+      mediaType: "video",
+      media: { videoFile: { link: "rId10", contentType: "video/mp4" } },
+    };
+    const xml = serializePicture(pic);
+    const nvPicPr = getChild(xml, "p:nvPicPr")!;
+    const nvPr = getChild(nvPicPr, "p:nvPr")!;
+    const videoFile = getChild(nvPr, "a:videoFile")!;
+    expect(videoFile.attrs["r:link"]).toBe("rId10");
+    expect(videoFile.attrs.contentType).toBe("video/mp4");
+  });
+
   it("serializes a connection shape", () => {
     const cxn: CxnShape = {
       type: "cxnSp",

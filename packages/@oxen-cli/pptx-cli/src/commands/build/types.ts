@@ -495,6 +495,32 @@ export type TextBodyPropertiesSpec = {
 // =============================================================================
 
 /**
+ * Placeholder type (subset of ECMA-376 ST_PlaceholderType)
+ */
+export type PlaceholderType =
+  | "title"
+  | "body"
+  | "ctrTitle"
+  | "subTitle"
+  | "dt"
+  | "sldNum"
+  | "ftr"
+  | "hdr"
+  | "obj"
+  | "chart"
+  | "tbl"
+  | "clipArt"
+  | "dgm"
+  | "media"
+  | "sldImg"
+  | "pic";
+
+export type PlaceholderSpec = {
+  readonly type: PlaceholderType;
+  readonly idx?: number;
+};
+
+/**
  * Shape specification for building
  */
 export type ShapeSpec = {
@@ -503,6 +529,12 @@ export type ShapeSpec = {
   readonly y: number;
   readonly width: number;
   readonly height: number;
+  readonly placeholder?: PlaceholderSpec;
+  /**
+   * Custom geometry definition (a:custGeom).
+   * When provided, this overrides the preset geometry.
+   */
+  readonly customGeometry?: CustomGeometrySpec;
   // Text - can be simple string or rich text paragraphs
   readonly text?: TextSpec;
   // Text body properties (vertical alignment, orientation, margins)
@@ -529,6 +561,49 @@ export type ShapeSpec = {
 };
 
 // =============================================================================
+// Custom Geometry Types
+// =============================================================================
+
+export type CustomGeometrySpec = {
+  readonly paths: readonly GeometryPathSpec[];
+};
+
+export type GeometryPathFillMode = "none" | "norm" | "lighten" | "lightenLess" | "darken" | "darkenLess";
+
+export type GeometryPathSpec = {
+  readonly width: number;
+  readonly height: number;
+  readonly fill: GeometryPathFillMode;
+  readonly stroke: boolean;
+  readonly extrusionOk: boolean;
+  readonly commands: readonly PathCommandSpec[];
+};
+
+export type MoveToSpec = { readonly type: "moveTo"; readonly x: number; readonly y: number };
+export type LineToSpec = { readonly type: "lineTo"; readonly x: number; readonly y: number };
+export type ArcToSpec = {
+  readonly type: "arcTo";
+  readonly widthRadius: number;
+  readonly heightRadius: number;
+  readonly startAngle: number;
+  readonly swingAngle: number;
+};
+export type QuadBezierToSpec = {
+  readonly type: "quadBezierTo";
+  readonly control: { readonly x: number; readonly y: number };
+  readonly end: { readonly x: number; readonly y: number };
+};
+export type CubicBezierToSpec = {
+  readonly type: "cubicBezierTo";
+  readonly control1: { readonly x: number; readonly y: number };
+  readonly control2: { readonly x: number; readonly y: number };
+  readonly end: { readonly x: number; readonly y: number };
+};
+export type CloseSpec = { readonly type: "close" };
+
+export type PathCommandSpec = MoveToSpec | LineToSpec | ArcToSpec | QuadBezierToSpec | CubicBezierToSpec | CloseSpec;
+
+// =============================================================================
 // Blip Effects Types
 // =============================================================================
 
@@ -537,10 +612,20 @@ export type ShapeSpec = {
  * Based on ECMA-376 Part 1: §20.1.8.13 CT_Blip
  */
 export type BlipEffectSpec = {
+  /** Alpha bi-level effect (threshold 0-100) */
+  readonly alphaBiLevel?: { readonly threshold: number };
+  /** Alpha ceiling effect */
+  readonly alphaCeiling?: boolean;
+  /** Alpha floor effect */
+  readonly alphaFloor?: boolean;
+  /** Alpha invert effect */
+  readonly alphaInv?: boolean;
+  /** Alpha modulation effect */
+  readonly alphaMod?: boolean;
   /** Convert to grayscale */
   readonly grayscale?: boolean;
   /** Duotone effect with two colors */
-  readonly duotone?: { readonly colors: readonly [string, string] };
+  readonly duotone?: { readonly colors: readonly [ColorSpec, ColorSpec] };
   /** Tint effect (hue in degrees, amount 0-100) */
   readonly tint?: { readonly hue: number; readonly amount: number };
   /** Luminance adjustment (brightness and contrast -100 to 100) */
@@ -551,6 +636,14 @@ export type BlipEffectSpec = {
   readonly blur?: { readonly radius: number };
   /** Alpha modulation (0-100) */
   readonly alphaModFix?: number;
+  /** Alpha replacement (alpha 0-100) */
+  readonly alphaRepl?: { readonly alpha: number };
+  /** Bi-level effect (threshold 0-100) */
+  readonly biLevel?: { readonly threshold: number };
+  /** Color change effect */
+  readonly colorChange?: { readonly from: ColorSpec; readonly to: ColorSpec; readonly useAlpha?: boolean };
+  /** Color replace effect */
+  readonly colorReplace?: { readonly color: ColorSpec };
 };
 
 /**
@@ -565,6 +658,16 @@ export type ImageSpec = {
   readonly height: number;
   /** Image effects (grayscale, tint, etc.) */
   readonly effects?: BlipEffectSpec;
+  /**
+   * Optional embedded media attached to the picture shape (e.g., video).
+   * The image acts as a poster frame.
+   */
+  readonly media?: MediaEmbedSpec;
+};
+
+export type MediaEmbedSpec = {
+  readonly type: "video" | "audio";
+  readonly path: string;
 };
 
 /**
@@ -618,6 +721,50 @@ export type TableSpec = {
 };
 
 // =============================================================================
+// Chart Types (patch existing embedded charts)
+// =============================================================================
+
+export type ChartSeriesSpec = {
+  readonly name: string;
+  readonly values: readonly number[];
+};
+
+export type ChartDataSpec = {
+  readonly categories: readonly string[];
+  readonly series: readonly ChartSeriesSpec[];
+};
+
+export type ChartTransformSpec = {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly rotation?: number;
+  readonly flipH?: boolean;
+  readonly flipV?: boolean;
+};
+
+export type ChartUpdateSpec = {
+  /** Relationship ID referenced from the slide (e.g., "rId2") */
+  readonly resourceId: string;
+  readonly title?: string;
+  readonly data?: ChartDataSpec;
+  readonly styleId?: number;
+  readonly transform?: ChartTransformSpec;
+};
+
+export type ChartAddSpec = {
+  readonly chartType: "barChart" | "lineChart" | "pieChart";
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly title?: string;
+  readonly data: ChartDataSpec;
+  readonly styleId?: number;
+};
+
+// =============================================================================
 // Background Types
 // =============================================================================
 
@@ -657,12 +804,54 @@ export type BackgroundFillSpec =
   | BackgroundGradientSpec
   | BackgroundImageSpec;
 
+// =============================================================================
+// Transition Types
+// =============================================================================
+
+export type TransitionType =
+  | "blinds"
+  | "checker"
+  | "circle"
+  | "comb"
+  | "cover"
+  | "cut"
+  | "diamond"
+  | "dissolve"
+  | "fade"
+  | "newsflash"
+  | "plus"
+  | "pull"
+  | "push"
+  | "random"
+  | "randomBar"
+  | "split"
+  | "strips"
+  | "wedge"
+  | "wheel"
+  | "wipe"
+  | "zoom"
+  | "none";
+
+export type SlideTransitionSpec = {
+  readonly type: TransitionType;
+  readonly duration?: number; // milliseconds
+  readonly advanceOnClick?: boolean;
+  readonly advanceAfter?: number; // milliseconds
+  readonly direction?: "l" | "r" | "u" | "d" | "ld" | "lu" | "rd" | "ru";
+  readonly orientation?: "horz" | "vert";
+  readonly spokes?: 1 | 2 | 3 | 4 | 8;
+  readonly inOutDirection?: "in" | "out";
+};
+
 /**
  * Slide modification specification
  */
 export type SlideModSpec = {
   readonly slideNumber: number;
   readonly background?: BackgroundFillSpec;
+  readonly transition?: SlideTransitionSpec;
+  readonly addCharts?: readonly ChartAddSpec[];
+  readonly updateCharts?: readonly ChartUpdateSpec[];
   readonly addShapes?: readonly ShapeSpec[];
   readonly addImages?: readonly ImageSpec[];
   readonly addConnectors?: readonly ConnectorSpec[];
@@ -676,6 +865,11 @@ export type SlideModSpec = {
 export type BuildSpec = {
   readonly template: string;
   readonly output: string;
+  /**
+   * Theme edits applied to a specific theme XML part (e.g., ppt/theme/theme1.xml).
+   * This is applied before any slide modifications.
+   */
+  readonly theme?: ThemeEditSpec;
   readonly slides?: readonly SlideModSpec[];
 };
 
@@ -686,4 +880,60 @@ export type BuildData = {
   readonly outputPath: string;
   readonly slideCount: number;
   readonly shapesAdded: number;
+};
+
+// =============================================================================
+// Theme Editing Types
+// =============================================================================
+
+/**
+ * Theme color scheme slot names (the 12 entries in a:clrScheme)
+ */
+export type ThemeSchemeColorName =
+  | "dk1"
+  | "lt1"
+  | "dk2"
+  | "lt2"
+  | "accent1"
+  | "accent2"
+  | "accent3"
+  | "accent4"
+  | "accent5"
+  | "accent6"
+  | "hlink"
+  | "folHlink";
+
+/**
+ * Color scheme edit - partial updates to a:clrScheme entries using hex colors.
+ */
+export type ThemeColorSchemeEditSpec = Partial<Record<ThemeSchemeColorName, string>>;
+
+/**
+ * Font spec edit for major/minor fonts
+ */
+export type ThemeFontSpec = {
+  readonly latin?: string;
+  readonly eastAsian?: string;
+  readonly complexScript?: string;
+};
+
+/**
+ * Font scheme edit - partial updates to major/minor fonts
+ */
+export type ThemeFontSchemeEditSpec = {
+  readonly majorFont?: ThemeFontSpec;
+  readonly minorFont?: ThemeFontSpec;
+};
+
+/**
+ * Theme editing specification
+ */
+export type ThemeEditSpec = {
+  /**
+   * Target theme XML part path inside the PPTX zip (e.g., "ppt/theme/theme1.xml").
+   * Required when theme edits are specified.
+   */
+  readonly path?: string;
+  readonly colorScheme?: ThemeColorSchemeEditSpec;
+  readonly fontScheme?: ThemeFontSchemeEditSpec;
 };

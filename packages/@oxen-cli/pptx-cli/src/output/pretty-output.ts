@@ -21,6 +21,9 @@ function getSlideFlags(slide: SlideListItem): string[] {
   if (slide.hasImage) {
     flags.push("image");
   }
+  if (slide.transitionType && slide.transitionType !== "none") {
+    flags.push(`transition:${slide.transitionType}`);
+  }
   return flags;
 }
 
@@ -64,7 +67,14 @@ export function formatListPretty(data: ListData): string {
 export function formatShowPretty(data: ShowData): string {
   const lines: string[] = [];
   lines.push(`Slide ${data.number} (${data.filename})`);
+  if (data.transition && data.transition.type !== "none") {
+    lines.push(`Transition: ${data.transition.type}`);
+  }
   lines.push(`Shapes: ${data.shapes.length}`);
+
+  if (data.charts && data.charts.length > 0) {
+    lines.push(`Charts: ${data.charts.length}`);
+  }
   lines.push("");
 
   for (const shape of data.shapes) {
@@ -73,6 +83,20 @@ export function formatShowPretty(data: ShowData): string {
     if (shape.text) {
       const preview = shape.text.length > 60 ? shape.text.substring(0, 60) + "..." : shape.text;
       lines.push(`      "${preview}"`);
+    }
+  }
+
+  if (data.charts && data.charts.length > 0) {
+    lines.push("");
+    lines.push("Charts:");
+    for (const c of data.charts) {
+      if (c.error) {
+        lines.push(`  ${c.resourceId}: ERROR ${c.error}`);
+        continue;
+      }
+      const types = c.chart?.types ?? [];
+      const typeLabel = types.length ? types.join(", ") : "(unknown)";
+      lines.push(`  ${c.resourceId}: ${typeLabel}${c.partPath ? ` (${c.partPath})` : ""}`);
     }
   }
 
