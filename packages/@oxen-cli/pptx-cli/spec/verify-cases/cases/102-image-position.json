@@ -1,0 +1,61 @@
+{
+  "name": "image-position",
+  "description": "Verify image positioning at different locations",
+  "tags": ["image", "position"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/image-position.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addImages": [
+          {
+            "type": "image",
+            "path": "../assets/sample-blue.png",
+            "x": 50,
+            "y": 50,
+            "width": 160,
+            "height": 120
+          },
+          {
+            "type": "image",
+            "path": "../assets/sample-green.png",
+            "x": 300,
+            "y": 200,
+            "width": 240,
+            "height": 160
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -2,
+            "type": "pic",
+            "bounds": {
+              "x": 50,
+              "y": 50,
+              "width": 160,
+              "height": 120
+            }
+          },
+          {
+            "index": -1,
+            "type": "pic",
+            "bounds": {
+              "x": 300,
+              "y": 200,
+              "width": 240,
+              "height": 160
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

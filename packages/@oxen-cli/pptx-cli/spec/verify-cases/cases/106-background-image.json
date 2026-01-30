@@ -1,0 +1,47 @@
+{
+  "name": "background-image",
+  "description": "Verify image slide background",
+  "tags": ["background", "image", "fill"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/background-image.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "background": {
+          "type": "image",
+          "path": "../assets/sample-blue.png",
+          "mode": "stretch"
+        },
+        "addShapes": [
+          {
+            "type": "roundRect",
+            "x": 100,
+            "y": 100,
+            "width": 300,
+            "height": 150,
+            "fill": "FFFFFF80",
+            "text": "Image Background Test"
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "background": {
+          "type": "image"
+        },
+        "shapes": [
+          {
+            "index": -1,
+            "type": "sp",
+            "text": "Image Background Test"
+          }
+        ]
+      }
+    ]
+  }
+}

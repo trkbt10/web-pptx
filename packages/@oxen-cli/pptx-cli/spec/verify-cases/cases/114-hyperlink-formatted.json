@@ -1,0 +1,130 @@
+{
+  "name": "hyperlink-formatted",
+  "description": "Verify hyperlinks with various text formatting",
+  "tags": ["hyperlink", "text", "formatting"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/hyperlink-formatted.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "roundRect",
+            "x": 50,
+            "y": 50,
+            "width": 300,
+            "height": 60,
+            "fill": "1E40AF",
+            "text": [
+              {
+                "runs": [
+                  {
+                    "text": "BOLD LINK",
+                    "hyperlink": { "url": "https://bold.example.com" },
+                    "color": "FFFFFF",
+                    "bold": true,
+                    "fontSize": 18
+                  }
+                ],
+                "alignment": "center"
+              }
+            ]
+          },
+          {
+            "type": "roundRect",
+            "x": 50,
+            "y": 130,
+            "width": 300,
+            "height": 60,
+            "fill": "059669",
+            "text": [
+              {
+                "runs": [
+                  {
+                    "text": "Italic Link",
+                    "hyperlink": { "url": "https://italic.example.com" },
+                    "color": "FFFFFF",
+                    "italic": true,
+                    "fontSize": 16
+                  }
+                ],
+                "alignment": "center"
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 210,
+            "width": 400,
+            "height": 80,
+            "fill": "FEF3C7",
+            "lineColor": "F59E0B",
+            "text": [
+              {
+                "runs": [
+                  { "text": "Learn more at " },
+                  {
+                    "text": "Documentation",
+                    "hyperlink": {
+                      "url": "https://docs.example.com",
+                      "tooltip": "View the documentation"
+                    },
+                    "color": "B45309",
+                    "underline": "double",
+                    "bold": true
+                  },
+                  { "text": " page." }
+                ],
+                "alignment": "left"
+              }
+            ]
+          },
+          {
+            "type": "ellipse",
+            "x": 50,
+            "y": 310,
+            "width": 200,
+            "height": 80,
+            "fill": {
+              "type": "gradient",
+              "gradientType": "linear",
+              "angle": 90,
+              "stops": [
+                { "position": 0, "color": "6366F1" },
+                { "position": 100, "color": "A855F7" }
+              ]
+            },
+            "text": [
+              {
+                "runs": [
+                  {
+                    "text": "Gradient BG Link",
+                    "hyperlink": { "url": "https://gradient.example.com" },
+                    "color": "FFFFFF",
+                    "fontSize": 12
+                  }
+                ],
+                "alignment": "center"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -4, "type": "sp", "text": "BOLD LINK" },
+          { "index": -3, "type": "sp", "text": "Italic Link" },
+          { "index": -2, "type": "sp", "text": "Learn more at Documentation page." },
+          { "index": -1, "type": "sp", "text": "Gradient BG Link" }
+        ]
+      }
+    ]
+  }
+}

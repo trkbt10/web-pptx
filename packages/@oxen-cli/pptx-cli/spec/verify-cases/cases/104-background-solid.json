@@ -1,0 +1,44 @@
+{
+  "name": "background-solid",
+  "description": "Verify solid color slide background",
+  "tags": ["background", "solid", "fill"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/background-solid.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "background": "1E40AF",
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 100,
+            "y": 100,
+            "width": 300,
+            "height": 200,
+            "fill": "FFFFFF",
+            "text": "White shape on blue background"
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "background": {
+          "type": "solid",
+          "color": "1E40AF"
+        },
+        "shapes": [
+          {
+            "index": -1,
+            "type": "sp",
+            "text": "White shape on blue background"
+          }
+        ]
+      }
+    ]
+  }
+}

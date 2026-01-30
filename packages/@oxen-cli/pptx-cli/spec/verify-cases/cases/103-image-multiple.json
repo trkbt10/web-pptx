@@ -1,0 +1,101 @@
+{
+  "name": "image-multiple",
+  "description": "Verify multiple images with mixed shapes on slide",
+  "tags": ["image", "multiple", "mixed"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/image-multiple.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 20,
+            "y": 20,
+            "width": 100,
+            "height": 80,
+            "fill": "3B82F6",
+            "text": "Shape 1"
+          }
+        ],
+        "addImages": [
+          {
+            "type": "image",
+            "path": "../assets/sample-red.png",
+            "x": 150,
+            "y": 20,
+            "width": 100,
+            "height": 100
+          },
+          {
+            "type": "image",
+            "path": "../assets/sample-blue.png",
+            "x": 280,
+            "y": 20,
+            "width": 80,
+            "height": 60
+          },
+          {
+            "type": "image",
+            "path": "../assets/sample-green.png",
+            "x": 20,
+            "y": 150,
+            "width": 120,
+            "height": 80
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -4,
+            "type": "sp",
+            "text": "Shape 1",
+            "bounds": {
+              "x": 20,
+              "y": 20,
+              "width": 100,
+              "height": 80
+            }
+          },
+          {
+            "index": -3,
+            "type": "pic",
+            "bounds": {
+              "x": 150,
+              "y": 20,
+              "width": 100,
+              "height": 100
+            }
+          },
+          {
+            "index": -2,
+            "type": "pic",
+            "bounds": {
+              "x": 280,
+              "y": 20,
+              "width": 80,
+              "height": 60
+            }
+          },
+          {
+            "index": -1,
+            "type": "pic",
+            "bounds": {
+              "x": 20,
+              "y": 150,
+              "width": 120,
+              "height": 80
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,117 @@
+{
+  "name": "theme-color-fill",
+  "description": "Verify theme color fills on shapes",
+  "tags": ["theme", "color", "fill"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/theme-color-fill.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 50,
+            "width": 150,
+            "height": 100,
+            "fill": { "type": "theme", "theme": "accent1" },
+            "text": "Accent 1"
+          },
+          {
+            "type": "rectangle",
+            "x": 220,
+            "y": 50,
+            "width": 150,
+            "height": 100,
+            "fill": { "type": "theme", "theme": "accent2" },
+            "text": "Accent 2"
+          },
+          {
+            "type": "rectangle",
+            "x": 390,
+            "y": 50,
+            "width": 150,
+            "height": 100,
+            "fill": { "type": "theme", "theme": "accent3" },
+            "text": "Accent 3"
+          },
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 170,
+            "width": 150,
+            "height": 100,
+            "fill": { "type": "theme", "theme": "dk1" },
+            "lineColor": "FFFFFF",
+            "text": [
+              {
+                "runs": [{ "text": "Dark 1", "color": "FFFFFF" }],
+                "alignment": "center"
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 220,
+            "y": 170,
+            "width": 150,
+            "height": 100,
+            "fill": { "type": "theme", "theme": "lt1" },
+            "lineColor": "000000",
+            "text": "Light 1"
+          },
+          {
+            "type": "rectangle",
+            "x": 390,
+            "y": 170,
+            "width": 150,
+            "height": 100,
+            "fill": { "type": "theme", "theme": "accent1", "lumMod": 60 },
+            "text": "Accent 1 60%"
+          },
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 290,
+            "width": 150,
+            "height": 100,
+            "fill": { "type": "theme", "theme": "accent1", "lumMod": 40, "lumOff": 60 },
+            "text": "Accent 1 Lighter"
+          },
+          {
+            "type": "rectangle",
+            "x": 220,
+            "y": 290,
+            "width": 150,
+            "height": 100,
+            "fill": { "type": "theme", "theme": "accent2", "shade": 50 },
+            "text": [
+              {
+                "runs": [{ "text": "Accent 2 Shade", "color": "FFFFFF" }],
+                "alignment": "center"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -8, "type": "sp", "text": "Accent 1" },
+          { "index": -7, "type": "sp", "text": "Accent 2" },
+          { "index": -6, "type": "sp", "text": "Accent 3" },
+          { "index": -5, "type": "sp", "text": "Dark 1" },
+          { "index": -4, "type": "sp", "text": "Light 1" },
+          { "index": -3, "type": "sp", "text": "Accent 1 60%" },
+          { "index": -2, "type": "sp", "text": "Accent 1 Lighter" },
+          { "index": -1, "type": "sp", "text": "Accent 2 Shade" }
+        ]
+      }
+    ]
+  }
+}

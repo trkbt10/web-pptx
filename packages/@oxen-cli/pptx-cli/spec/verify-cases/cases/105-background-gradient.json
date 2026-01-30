@@ -1,0 +1,51 @@
+{
+  "name": "background-gradient",
+  "description": "Verify gradient slide background",
+  "tags": ["background", "gradient", "fill"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/background-gradient.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "background": {
+          "type": "gradient",
+          "stops": [
+            { "position": 0, "color": "1E3A8A" },
+            { "position": 50, "color": "3B82F6" },
+            { "position": 100, "color": "93C5FD" }
+          ],
+          "angle": 90
+        },
+        "addShapes": [
+          {
+            "type": "ellipse",
+            "x": 150,
+            "y": 150,
+            "width": 200,
+            "height": 200,
+            "fill": "FFFFFF",
+            "text": "Gradient BG"
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "background": {
+          "type": "gradient"
+        },
+        "shapes": [
+          {
+            "index": -1,
+            "type": "sp",
+            "text": "Gradient BG"
+          }
+        ]
+      }
+    ]
+  }
+}

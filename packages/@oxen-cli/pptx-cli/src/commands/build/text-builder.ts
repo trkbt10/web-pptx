@@ -1,198 +1,32 @@
 /**
- * @file Common utilities for building PPTX elements
+ * @file Text building utilities for PPTX shapes
  */
 
-import type { SpShape } from "@oxen-office/pptx/domain/shape";
 import type { Fill, Line } from "@oxen-office/pptx/domain/color/types";
-import type { TextBody, Paragraph, TextRun, RunProperties } from "@oxen-office/pptx/domain/text";
+import type { TextBody, Paragraph, TextRun, RunProperties, BodyProperties } from "@oxen-office/pptx/domain/text";
 import type { Effects } from "@oxen-office/pptx/domain/effects";
-import type { GradientFill, PatternFill } from "@oxen-office/ooxml/domain/fill";
-import type { Pixels, Percent, Degrees } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/ooxml/domain/units";
 import type {
-  FillSpec,
-  GradientFillSpec,
-  PatternFillSpec,
-  LineDashStyle,
-  LineCapStyle,
-  LineJoinStyle,
-  LineCompoundStyle,
-  LineEndSpec,
   TextSpec,
   TextRunSpec,
   TextParagraphSpec,
   RichTextSpec,
-  EffectsSpec,
-  Shape3dSpec,
-  BevelSpec,
   TextBodyPropertiesSpec,
+  HyperlinkSpec,
 } from "./types";
-import type { BodyProperties } from "@oxen-office/pptx/domain/text";
-import type { Shape3d, Bevel3d } from "@oxen-office/pptx/domain/three-d";
+import type { Hyperlink } from "@oxen-office/pptx/domain/resource";
+import { buildSolidFill } from "./fill-builder";
+import { buildLine } from "./line-builder";
+import { buildEffects } from "./effects-builder";
 
 /**
- * Generate a unique shape ID
+ * Hyperlink info collected during text building
+ * URL will be replaced with rId after relationship registration
  */
-export function generateShapeId(existingIds: readonly string[]): string {
-  const maxId = existingIds.reduce((max, id) => {
-    const num = parseInt(id, 10);
-    return Number.isNaN(num) ? max : Math.max(max, num);
-  }, 0);
-  return String(maxId + 1);
-}
-
-/**
- * Build a solid fill object
- */
-export function buildSolidFill(hexColor: string): Fill {
-  return {
-    type: "solidFill",
-    color: { spec: { type: "srgb", value: hexColor } },
-  };
-}
-
-/**
- * Build a gradient fill object
- */
-export function buildGradientFill(spec: GradientFillSpec): GradientFill {
-  const stops = spec.stops.map((stop) => ({
-    position: (stop.position * 1000) as Percent, // Convert 0-100 to 0-100000
-    color: { spec: { type: "srgb" as const, value: stop.color } },
-  }));
-
-  if (spec.gradientType === "linear") {
-    return {
-      type: "gradientFill",
-      stops,
-      linear: {
-        angle: (spec.angle ?? 0) as Degrees,
-        scaled: false,
-      },
-      rotWithShape: true,
-    };
-  }
-  if (spec.gradientType === "radial") {
-    return {
-      type: "gradientFill",
-      stops,
-      path: {
-        path: "circle",
-      },
-      rotWithShape: true,
-    };
-  }
-  // path type
-  return {
-    type: "gradientFill",
-    stops,
-    path: {
-      path: "rect",
-    },
-    rotWithShape: true,
-  };
-}
-
-/**
- * Build a pattern fill object
- */
-export function buildPatternFill(spec: PatternFillSpec): PatternFill {
-  return {
-    type: "patternFill",
-    preset: spec.preset,
-    foregroundColor: { spec: { type: "srgb", value: spec.fgColor } },
-    backgroundColor: { spec: { type: "srgb", value: spec.bgColor } },
-  };
-}
-
-/**
- * Build a fill object from FillSpec
- */
-export function buildFill(fillSpec: FillSpec): Fill | undefined {
-  if (typeof fillSpec === "string") {
-    return buildSolidFill(fillSpec);
-  }
-  switch (fillSpec.type) {
-    case "solid":
-      return buildSolidFill(fillSpec.color);
-    case "gradient":
-      return buildGradientFill(fillSpec);
-    case "pattern":
-      return buildPatternFill(fillSpec);
-    default:
-      return undefined;
-  }
-}
-
-/**
- * Line end type mapping
- */
-const LINE_END_TYPE_MAP: Record<string, string> = {
-  none: "none",
-  triangle: "triangle",
-  stealth: "stealth",
-  diamond: "diamond",
-  oval: "oval",
-  arrow: "arrow",
+export type HyperlinkInfo = {
+  readonly url: string;
+  readonly tooltip?: string;
 };
-
-/**
- * Line end size mapping
- */
-const LINE_END_SIZE_MAP: Record<string, string> = {
-  sm: "sm",
-  med: "med",
-  lg: "lg",
-};
-
-/**
- * Build a line end object
- */
-function buildLineEnd(spec: LineEndSpec): Line["headEnd"] {
-  return {
-    type: LINE_END_TYPE_MAP[spec.type] ?? "none",
-    width: LINE_END_SIZE_MAP[spec.width ?? "med"] ?? "med",
-    length: LINE_END_SIZE_MAP[spec.length ?? "med"] ?? "med",
-  } as Line["headEnd"];
-}
-
-/**
- * Map compound style from user-friendly names to OOXML values
- */
-const COMPOUND_MAP: Record<LineCompoundStyle, string> = {
-  single: "sng",
-  double: "dbl",
-  thickThin: "thickThin",
-  thinThick: "thinThick",
-  triple: "tri",
-};
-
-/**
- * Build a line object with extended properties
- */
-export function buildLine(
-  lineColor: string,
-  lineWidth: number,
-  options?: {
-    dash?: LineDashStyle;
-    cap?: LineCapStyle;
-    join?: LineJoinStyle;
-    compound?: LineCompoundStyle;
-    headEnd?: LineEndSpec;
-    tailEnd?: LineEndSpec;
-  },
-): Line {
-  const compound = options?.compound ? COMPOUND_MAP[options.compound] : "sng";
-  return {
-    width: lineWidth as Pixels,
-    cap: (options?.cap ?? "flat") as Line["cap"],
-    compound: compound as Line["compound"],
-    alignment: "ctr",
-    fill: { type: "solidFill", color: { spec: { type: "srgb", value: lineColor } } },
-    dash: (options?.dash ?? "solid") as Line["dash"],
-    join: (options?.join ?? "round") as Line["join"],
-    headEnd: options?.headEnd ? buildLineEnd(options.headEnd) : undefined,
-    tailEnd: options?.tailEnd ? buildLineEnd(options.tailEnd) : undefined,
-  };
-}
 
 /**
  * Map underline style to OOXML values
@@ -228,6 +62,17 @@ const VERTICAL_POSITION_MAP: Record<string, number> = {
 };
 
 /**
+ * Build hyperlink domain object from spec using placeholder ID
+ * The URL is stored as the ID temporarily - will be replaced with real rId later
+ */
+function buildHyperlink(spec: HyperlinkSpec): Hyperlink {
+  return {
+    id: spec.url, // Placeholder - URL stored here, will be replaced with rId
+    tooltip: spec.tooltip,
+  };
+}
+
+/**
  * Build run properties from spec
  */
 function buildRunProperties(spec: TextRunSpec): RunProperties | undefined {
@@ -235,7 +80,8 @@ function buildRunProperties(spec: TextRunSpec): RunProperties | undefined {
   if (spec.bold !== undefined || spec.italic !== undefined || spec.underline !== undefined ||
       spec.strikethrough !== undefined || spec.caps !== undefined || spec.verticalPosition !== undefined ||
       spec.letterSpacing !== undefined || spec.fontSize !== undefined || spec.fontFamily !== undefined ||
-      spec.color !== undefined || spec.outline !== undefined || spec.effects !== undefined) {
+      spec.color !== undefined || spec.outline !== undefined || spec.effects !== undefined ||
+      spec.hyperlink !== undefined) {
     const properties: RunProperties = {};
 
     if (spec.bold !== undefined) (properties as { bold?: boolean }).bold = spec.bold;
@@ -266,6 +112,9 @@ function buildRunProperties(spec: TextRunSpec): RunProperties | undefined {
     if (spec.effects !== undefined) {
       (properties as { effects?: Effects }).effects = buildEffects(spec.effects);
     }
+    if (spec.hyperlink !== undefined) {
+      (properties as { hyperlink?: Hyperlink }).hyperlink = buildHyperlink(spec.hyperlink);
+    }
 
     return properties;
   }
@@ -276,7 +125,7 @@ function buildRunProperties(spec: TextRunSpec): RunProperties | undefined {
 /**
  * Build a text run from spec
  */
-function buildTextRun(spec: TextRunSpec): TextRun {
+export function buildTextRun(spec: TextRunSpec): TextRun {
   const properties = buildRunProperties(spec);
   return {
     type: "text",
@@ -288,7 +137,7 @@ function buildTextRun(spec: TextRunSpec): TextRun {
 /**
  * Build a paragraph from spec
  */
-function buildParagraph(spec: TextParagraphSpec): Paragraph {
+export function buildParagraph(spec: TextParagraphSpec): Paragraph {
   const runs = spec.runs.map(buildTextRun);
 
   const properties: Paragraph["properties"] = {};
@@ -411,69 +260,25 @@ export function buildTextBody(text: TextSpec, bodyPropertiesSpec?: TextBodyPrope
 }
 
 /**
- * Build effects object from spec
+ * Collect all hyperlink URLs from a TextSpec
  */
-export function buildEffects(spec: EffectsSpec): Effects {
-  const effects: Effects = {};
+export function collectHyperlinks(text: TextSpec): HyperlinkInfo[] {
+  const hyperlinks: HyperlinkInfo[] = [];
 
-  if (spec.shadow) {
-    (effects as { shadow?: Effects["shadow"] }).shadow = {
-      type: "outer",
-      color: { spec: { type: "srgb", value: spec.shadow.color } },
-      blurRadius: (spec.shadow.blur ?? 4) as Pixels,
-      distance: (spec.shadow.distance ?? 3) as Pixels,
-      direction: (spec.shadow.direction ?? 45) as Degrees,
-    };
+  if (!isRichText(text)) {
+    return hyperlinks;
   }
 
-  if (spec.glow) {
-    (effects as { glow?: Effects["glow"] }).glow = {
-      color: { spec: { type: "srgb", value: spec.glow.color } },
-      radius: spec.glow.radius as Pixels,
-    };
+  for (const paragraph of text) {
+    for (const run of paragraph.runs) {
+      if (run.hyperlink) {
+        hyperlinks.push({
+          url: run.hyperlink.url,
+          tooltip: run.hyperlink.tooltip,
+        });
+      }
+    }
   }
 
-  if (spec.softEdge) {
-    (effects as { softEdge?: Effects["softEdge"] }).softEdge = {
-      radius: spec.softEdge.radius as Pixels,
-    };
-  }
-
-  return effects;
-}
-
-/**
- * Build 3D bevel from spec
- */
-function buildBevel(spec: BevelSpec): Bevel3d {
-  return {
-    preset: spec.preset ?? "circle",
-    width: (spec.width ?? 8) as Pixels,
-    height: (spec.height ?? 8) as Pixels,
-  };
-}
-
-/**
- * Build 3D shape properties from spec
- */
-export function buildShape3d(spec: Shape3dSpec): Shape3d {
-  const shape3d: Shape3d = {};
-
-  if (spec.bevelTop) {
-    (shape3d as { bevelTop?: Bevel3d }).bevelTop = buildBevel(spec.bevelTop);
-  }
-
-  if (spec.bevelBottom) {
-    (shape3d as { bevelBottom?: Bevel3d }).bevelBottom = buildBevel(spec.bevelBottom);
-  }
-
-  if (spec.material) {
-    (shape3d as { preset?: string }).preset = spec.material;
-  }
-
-  if (spec.extrusionHeight !== undefined) {
-    (shape3d as { extrusionHeight?: Pixels }).extrusionHeight = spec.extrusionHeight as Pixels;
-  }
-
-  return shape3d;
+  return hyperlinks;
 }

@@ -13,16 +13,21 @@ import type { ZipPackage } from "@oxen/zip";
 import type { SpShape, GraphicFrame, PicShape, CxnShape, GrpShape, Shape } from "@oxen-office/pptx/domain/shape";
 import type { Table, TableRow, TableCell } from "@oxen-office/pptx/domain/table/types";
 import type { GroupTransform } from "@oxen-office/pptx/domain/geometry";
-import type { Pixels, Degrees } from "@oxen-office/ooxml/domain/units";
-import type { ShapeSpec, ImageSpec, ConnectorSpec, GroupSpec, TableSpec, TableCellSpec } from "./types";
+import type { Pixels, Degrees, Percent } from "@oxen-office/ooxml/domain/units";
+import type { ShapeSpec, ImageSpec, ConnectorSpec, GroupSpec, TableSpec, TableCellSpec, TextSpec, BlipEffectSpec } from "./types";
+import type { BlipEffects } from "@oxen-office/pptx/domain/color/types";
 import { PRESET_MAP } from "./presets";
-import { generateShapeId, buildFill, buildLine, buildTextBody, buildEffects, buildShape3d } from "./common";
+import { generateShapeId } from "./id-generator";
+import { buildFill, buildColor } from "./fill-builder";
+import { buildLine } from "./line-builder";
+import { buildTextBody, collectHyperlinks } from "./text-builder";
+import { buildEffects, buildShape3d } from "./effects-builder";
+import { addRelationship, ensureRelationshipsDocument, listRelationships } from "@oxen-office/pptx/patcher/resources/relationship-manager";
+import { parseXml, serializeDocument, isXmlElement } from "@oxen/xml";
 
 // =============================================================================
 // Context Types
 // =============================================================================
-
-export type { ZipPackage };
 
 export type BuildContext = {
   readonly existingIds: string[];
@@ -33,6 +38,31 @@ export type BuildContext = {
 
 type XmlDocument = ReturnType<typeof parseXml>;
 type XmlElement = ReturnType<typeof domainToXml>;
+
+function buildLineFromShapeSpec(spec: ShapeSpec): ReturnType<typeof buildLine> | undefined {
+  if (!spec.lineColor) {
+    return undefined;
+  }
+  return buildLine(spec.lineColor, spec.lineWidth ?? 1, {
+    dash: spec.lineDash,
+    cap: spec.lineCap,
+    join: spec.lineJoin,
+    compound: spec.lineCompound,
+    headEnd: spec.lineHeadEnd,
+    tailEnd: spec.lineTailEnd,
+  });
+}
+
+function buildConnectorConnection(
+  shapeId: string | undefined,
+  siteIndex: number | undefined,
+  defaultSiteIndex: number,
+): { readonly shapeId: string; readonly siteIndex: number } | undefined {
+  if (!shapeId) {
+    return undefined;
+  }
+  return { shapeId, siteIndex: siteIndex ?? defaultSiteIndex };
+}
 
 // =============================================================================
 // Element Builder Interface
@@ -77,16 +107,7 @@ function buildSpShape(spec: ShapeSpec, id: string): SpShape {
       },
       geometry: { type: "preset", preset, adjustValues: [] },
       fill: spec.fill ? buildFill(spec.fill) : undefined,
-      line: spec.lineColor
-        ? buildLine(spec.lineColor, spec.lineWidth ?? 1, {
-            dash: spec.lineDash,
-            cap: spec.lineCap,
-            join: spec.lineJoin,
-            compound: spec.lineCompound,
-            headEnd: spec.lineHeadEnd,
-            tailEnd: spec.lineTailEnd,
-          })
-        : undefined,
+      line: buildLineFromShapeSpec(spec),
       effects: spec.effects ? buildEffects(spec.effects) : undefined,
       shape3d: spec.shape3d ? buildShape3d(spec.shape3d) : undefined,
     },
@@ -94,9 +115,91 @@ function buildSpShape(spec: ShapeSpec, id: string): SpShape {
   };
 }
 
-export const shapeBuilder: SyncBuilder<ShapeSpec> = (spec, id) => ({
-  xml: domainToXml(buildSpShape(spec, id)),
-});
+/**
+ * Register hyperlink URLs and get rIds
+ */
+function registerHyperlinks(
+  text: TextSpec | undefined,
+  ctx: BuildContext,
+): Map<string, string> {
+  const urlToRid = new Map<string, string>();
+
+  if (!text) return urlToRid;
+
+  const hyperlinks = collectHyperlinks(text);
+  if (hyperlinks.length === 0) return urlToRid;
+
+  // Get the relationships file path
+  const relsPath = ctx.slidePath.replace(/\/([^/]+)\.xml$/, "/_rels/$1.xml.rels");
+
+  // Read or create relationships document
+  let relsXml = ctx.zipPackage.readText(relsPath);
+  let relsDoc = relsXml ? parseXml(relsXml) : null;
+  relsDoc = ensureRelationshipsDocument(relsDoc);
+
+  // Add each unique hyperlink
+  for (const hlink of hyperlinks) {
+    if (urlToRid.has(hlink.url)) continue;
+
+    const { updatedXml, rId } = addRelationship(
+      relsDoc,
+      hlink.url,
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+    );
+    relsDoc = updatedXml;
+    urlToRid.set(hlink.url, rId);
+  }
+
+  // Write updated relationships
+  const updatedRelsXml = serializeDocument(relsDoc, { declaration: true, standalone: true });
+  ctx.zipPackage.writeText(relsPath, updatedRelsXml);
+
+  return urlToRid;
+}
+
+/**
+ * Replace hyperlink URLs with rIds in XML element tree
+ */
+function replaceHyperlinkUrls(element: XmlElement, urlToRid: Map<string, string>): XmlElement {
+  if (urlToRid.size === 0) return element;
+
+  // Check if this element is a hlinkClick with r:id that matches a URL
+  if (element.name === "a:hlinkClick" && element.attrs["r:id"]) {
+    const url = element.attrs["r:id"];
+    const rId = urlToRid.get(url);
+    if (rId) {
+      return {
+        ...element,
+        attrs: { ...element.attrs, "r:id": rId },
+      };
+    }
+  }
+
+  // Recurse into children
+  const children = element.children.map((child) => {
+    if (isXmlElement(child)) {
+      return replaceHyperlinkUrls(child, urlToRid);
+    }
+    return child;
+  });
+
+  return { ...element, children };
+}
+
+export const shapeBuilder: SyncBuilder<ShapeSpec> = (spec, id, ctx) => {
+  // Register hyperlinks and get URL to rId mapping
+  const urlToRid = registerHyperlinks(spec.text, ctx);
+
+  // Build shape XML
+  let xml = domainToXml(buildSpShape(spec, id));
+
+  // Replace hyperlink URLs with rIds
+  if (urlToRid.size > 0) {
+    xml = replaceHyperlinkUrls(xml, urlToRid);
+  }
+
+  return { xml };
+};
 
 // =============================================================================
 // Image Builder
@@ -119,6 +222,54 @@ function detectMimeType(filePath: string): "image/png" | "image/jpeg" | "image/g
   }
 }
 
+/**
+ * Build BlipEffects domain object from BlipEffectSpec
+ */
+function buildBlipEffects(spec: BlipEffectSpec): BlipEffects {
+  const effects: BlipEffects = {};
+
+  if (spec.grayscale) {
+    (effects as { grayscale?: boolean }).grayscale = true;
+  }
+  if (spec.duotone) {
+    (effects as { duotone?: { colors: readonly [ReturnType<typeof buildColor>, ReturnType<typeof buildColor>] } }).duotone = {
+      colors: [buildColor(spec.duotone.colors[0]), buildColor(spec.duotone.colors[1])],
+    };
+  }
+  if (spec.tint) {
+    (effects as { tint?: { hue: Degrees; amount: Percent } }).tint = {
+      hue: spec.tint.hue as Degrees,
+      amount: (spec.tint.amount * 1000) as Percent, // Convert 0-100 to 0-100000
+    };
+  }
+  if (spec.luminance) {
+    (effects as { luminance?: { brightness: Percent; contrast: Percent } }).luminance = {
+      brightness: (spec.luminance.brightness * 1000) as Percent,
+      contrast: (spec.luminance.contrast * 1000) as Percent,
+    };
+  }
+  if (spec.hsl) {
+    (effects as { hsl?: { hue: Degrees; saturation: Percent; luminance: Percent } }).hsl = {
+      hue: spec.hsl.hue as Degrees,
+      saturation: (spec.hsl.saturation * 1000) as Percent,
+      luminance: (spec.hsl.luminance * 1000) as Percent,
+    };
+  }
+  if (spec.blur) {
+    (effects as { blur?: { radius: Pixels; grow: boolean } }).blur = {
+      radius: spec.blur.radius as Pixels,
+      grow: false,
+    };
+  }
+  if (spec.alphaModFix !== undefined) {
+    (effects as { alphaModFix?: { amount: Percent } }).alphaModFix = {
+      amount: (spec.alphaModFix * 1000) as Percent,
+    };
+  }
+
+  return effects;
+}
+
 function buildPicShape(spec: ImageSpec, id: string, resourceId: string): PicShape {
   return {
     type: "pic",
@@ -126,6 +277,7 @@ function buildPicShape(spec: ImageSpec, id: string, resourceId: string): PicShap
     blipFill: {
       resourceId,
       stretch: true,
+      blipEffects: spec.effects ? buildBlipEffects(spec.effects) : undefined,
     },
     properties: {
       transform: {
@@ -173,12 +325,8 @@ function buildCxnShape(spec: ConnectorSpec, id: string): CxnShape {
     nonVisual: {
       id,
       name: `Connector ${id}`,
-      startConnection: spec.startShapeId
-        ? { shapeId: spec.startShapeId, siteIndex: spec.startSiteIndex ?? 1 }
-        : undefined,
-      endConnection: spec.endShapeId
-        ? { shapeId: spec.endShapeId, siteIndex: spec.endSiteIndex ?? 3 }
-        : undefined,
+      startConnection: buildConnectorConnection(spec.startShapeId, spec.startSiteIndex, 1),
+      endConnection: buildConnectorConnection(spec.endShapeId, spec.endSiteIndex, 3),
     },
     properties: {
       transform: {
@@ -314,13 +462,21 @@ export const tableBuilder: SyncBuilder<TableSpec> = (spec, id) => ({
 /**
  * Add elements to slide document using a sync builder
  */
-export function addElementsSync<TSpec>(
-  slideDoc: XmlDocument,
-  specs: readonly TSpec[],
-  existingIds: string[],
-  ctx: BuildContext,
-  builder: SyncBuilder<TSpec>,
-): { readonly doc: XmlDocument; readonly added: number } {
+export type AddElementsSyncOptions<TSpec> = {
+  readonly slideDoc: XmlDocument;
+  readonly specs: readonly TSpec[];
+  readonly existingIds: string[];
+  readonly ctx: BuildContext;
+  readonly builder: SyncBuilder<TSpec>;
+};
+
+export function addElementsSync<TSpec>({
+  slideDoc,
+  specs,
+  existingIds,
+  ctx,
+  builder,
+}: AddElementsSyncOptions<TSpec>): { readonly doc: XmlDocument; readonly added: number } {
   return specs.reduce(
     (acc, spec) => {
       const newId = generateShapeId(existingIds);
@@ -338,13 +494,21 @@ export function addElementsSync<TSpec>(
 /**
  * Add elements to slide document using an async builder
  */
-export async function addElementsAsync<TSpec>(
-  slideDoc: XmlDocument,
-  specs: readonly TSpec[],
-  existingIds: string[],
-  ctx: BuildContext,
-  builder: AsyncBuilder<TSpec>,
-): Promise<{ readonly doc: XmlDocument; readonly added: number }> {
+export type AddElementsAsyncOptions<TSpec> = {
+  readonly slideDoc: XmlDocument;
+  readonly specs: readonly TSpec[];
+  readonly existingIds: string[];
+  readonly ctx: BuildContext;
+  readonly builder: AsyncBuilder<TSpec>;
+};
+
+export async function addElementsAsync<TSpec>({
+  slideDoc,
+  specs,
+  existingIds,
+  ctx,
+  builder,
+}: AddElementsAsyncOptions<TSpec>): Promise<{ readonly doc: XmlDocument; readonly added: number }> {
   type Acc = { doc: XmlDocument; added: number };
   const initial: Acc = { doc: slideDoc, added: 0 };
 

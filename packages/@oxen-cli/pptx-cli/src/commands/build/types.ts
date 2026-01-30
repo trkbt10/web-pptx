@@ -117,6 +117,43 @@ export type LineEndSpec = {
 };
 
 // =============================================================================
+// Color Types
+// =============================================================================
+
+/**
+ * Theme color type
+ * Based on ECMA-376 Part 1: §20.1.10.54 ST_SchemeColorVal
+ */
+export type ThemeColorType =
+  | "dk1" | "lt1" | "dk2" | "lt2"
+  | "accent1" | "accent2" | "accent3" | "accent4" | "accent5" | "accent6"
+  | "hlink" | "folHlink"
+  | "bg1" | "bg2" | "tx1" | "tx2";
+
+/**
+ * Theme color specification with optional luminance modifiers
+ */
+export type ThemeColorSpec = {
+  readonly theme: ThemeColorType;
+  readonly lumMod?: number; // luminance modulate (0-100, percentage)
+  readonly lumOff?: number; // luminance offset (-100 to 100, percentage)
+  readonly tint?: number;   // tint (0-100, percentage)
+  readonly shade?: number;  // shade (0-100, percentage)
+};
+
+/**
+ * Color specification - can be hex string or theme color reference
+ */
+export type ColorSpec = string | ThemeColorSpec;
+
+/**
+ * Check if a color spec is a theme color
+ */
+export function isThemeColor(color: ColorSpec): color is ThemeColorSpec {
+  return typeof color === "object" && "theme" in color;
+}
+
+// =============================================================================
 // Fill Types
 // =============================================================================
 
@@ -125,7 +162,7 @@ export type LineEndSpec = {
  */
 export type GradientStopSpec = {
   readonly position: number; // 0-100 percentage
-  readonly color: string; // hex color
+  readonly color: ColorSpec; // hex color or theme color
 };
 
 /**
@@ -161,8 +198,8 @@ export type PatternPreset =
 export type PatternFillSpec = {
   readonly type: "pattern";
   readonly preset: PatternPreset;
-  readonly fgColor: string; // foreground hex color
-  readonly bgColor: string; // background hex color
+  readonly fgColor: ColorSpec; // foreground color (hex or theme)
+  readonly bgColor: ColorSpec; // background color (hex or theme)
 };
 
 /**
@@ -170,13 +207,25 @@ export type PatternFillSpec = {
  */
 export type SolidFillSpec = {
   readonly type: "solid";
-  readonly color: string; // hex color
+  readonly color: ColorSpec; // hex color or theme color
+};
+
+/**
+ * Theme fill specification (shorthand for solid theme color fill)
+ */
+export type ThemeFillSpec = {
+  readonly type: "theme";
+  readonly theme: ThemeColorType;
+  readonly lumMod?: number;
+  readonly lumOff?: number;
+  readonly tint?: number;
+  readonly shade?: number;
 };
 
 /**
  * Fill specification union type
  */
-export type FillSpec = string | SolidFillSpec | GradientFillSpec | PatternFillSpec;
+export type FillSpec = string | SolidFillSpec | GradientFillSpec | PatternFillSpec | ThemeFillSpec;
 
 // =============================================================================
 // Effect Types
@@ -211,12 +260,28 @@ export type SoftEdgeEffectSpec = {
 };
 
 /**
+ * Reflection effect specification
+ * Based on ECMA-376 Part 1: §20.1.8.50 (reflection)
+ */
+export type ReflectionEffectSpec = {
+  readonly blurRadius?: number; // blur radius in pixels (default: 0)
+  readonly startOpacity?: number; // start opacity 0-100 (default: 100)
+  readonly endOpacity?: number; // end opacity 0-100 (default: 0)
+  readonly distance?: number; // distance in pixels (default: 0)
+  readonly direction?: number; // direction in degrees (default: 0)
+  readonly fadeDirection?: number; // fade direction in degrees (default: 90)
+  readonly scaleX?: number; // horizontal scale 0-100 (default: 100)
+  readonly scaleY?: number; // vertical scale 0-100 (default: -100 for mirror)
+};
+
+/**
  * Combined effects specification
  */
 export type EffectsSpec = {
   readonly shadow?: ShadowEffectSpec;
   readonly glow?: GlowEffectSpec;
   readonly softEdge?: SoftEdgeEffectSpec;
+  readonly reflection?: ReflectionEffectSpec;
 };
 
 // =============================================================================
@@ -335,6 +400,14 @@ export type TextOutlineSpec = {
 };
 
 /**
+ * Hyperlink specification
+ */
+export type HyperlinkSpec = {
+  readonly url: string;
+  readonly tooltip?: string;
+};
+
+/**
  * Text run specification - a portion of text with specific formatting
  */
 export type TextRunSpec = {
@@ -351,6 +424,7 @@ export type TextRunSpec = {
   readonly color?: string; // hex color
   readonly outline?: TextOutlineSpec; // text stroke
   readonly effects?: TextEffectSpec;
+  readonly hyperlink?: HyperlinkSpec; // clickable hyperlink
 };
 
 /**
@@ -454,6 +528,31 @@ export type ShapeSpec = {
   readonly shape3d?: Shape3dSpec;
 };
 
+// =============================================================================
+// Blip Effects Types
+// =============================================================================
+
+/**
+ * Blip effect specification for image color transforms
+ * Based on ECMA-376 Part 1: §20.1.8.13 CT_Blip
+ */
+export type BlipEffectSpec = {
+  /** Convert to grayscale */
+  readonly grayscale?: boolean;
+  /** Duotone effect with two colors */
+  readonly duotone?: { readonly colors: readonly [string, string] };
+  /** Tint effect (hue in degrees, amount 0-100) */
+  readonly tint?: { readonly hue: number; readonly amount: number };
+  /** Luminance adjustment (brightness and contrast -100 to 100) */
+  readonly luminance?: { readonly brightness: number; readonly contrast: number };
+  /** HSL adjustment (hue in degrees, saturation and luminance 0-100) */
+  readonly hsl?: { readonly hue: number; readonly saturation: number; readonly luminance: number };
+  /** Blur effect (radius in pixels) */
+  readonly blur?: { readonly radius: number };
+  /** Alpha modulation (0-100) */
+  readonly alphaModFix?: number;
+};
+
 /**
  * Image specification for building
  */
@@ -464,6 +563,8 @@ export type ImageSpec = {
   readonly y: number;
   readonly width: number;
   readonly height: number;
+  /** Image effects (grayscale, tint, etc.) */
+  readonly effects?: BlipEffectSpec;
 };
 
 /**
@@ -516,11 +617,52 @@ export type TableSpec = {
   readonly rows: readonly (readonly TableCellSpec[])[];
 };
 
+// =============================================================================
+// Background Types
+// =============================================================================
+
+/**
+ * Solid background fill specification
+ */
+export type BackgroundSolidSpec = {
+  readonly type: "solid";
+  readonly color: string; // hex color
+};
+
+/**
+ * Gradient background fill specification
+ */
+export type BackgroundGradientSpec = {
+  readonly type: "gradient";
+  readonly stops: readonly GradientStopSpec[];
+  readonly angle?: number; // degrees for linear gradient
+};
+
+/**
+ * Image background fill specification
+ */
+export type BackgroundImageSpec = {
+  readonly type: "image";
+  readonly path: string;
+  readonly mode?: "stretch" | "tile" | "cover";
+};
+
+/**
+ * Background fill specification union type
+ * Can be a hex color string for solid fill, or structured spec
+ */
+export type BackgroundFillSpec =
+  | string // hex color for solid fill
+  | BackgroundSolidSpec
+  | BackgroundGradientSpec
+  | BackgroundImageSpec;
+
 /**
  * Slide modification specification
  */
 export type SlideModSpec = {
   readonly slideNumber: number;
+  readonly background?: BackgroundFillSpec;
   readonly addShapes?: readonly ShapeSpec[];
   readonly addImages?: readonly ImageSpec[];
   readonly addConnectors?: readonly ConnectorSpec[];

@@ -1,0 +1,43 @@
+{
+  "name": "image-basic",
+  "description": "Verify basic image placement on slide",
+  "tags": ["image", "basic"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/image-basic.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addImages": [
+          {
+            "type": "image",
+            "path": "../assets/sample-red.png",
+            "x": 100,
+            "y": 100,
+            "width": 200,
+            "height": 200
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          {
+            "index": -1,
+            "type": "pic",
+            "bounds": {
+              "x": 100,
+              "y": 100,
+              "width": 200,
+              "height": 200
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "name": "hyperlink-text",
+  "description": "Verify hyperlinks on text runs",
+  "tags": ["hyperlink", "text", "link"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/hyperlink-text.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 50,
+            "width": 400,
+            "height": 80,
+            "fill": "F8FAFC",
+            "lineColor": "E2E8F0",
+            "text": [
+              {
+                "runs": [
+                  { "text": "Visit our website: " },
+                  {
+                    "text": "example.com",
+                    "hyperlink": { "url": "https://example.com" },
+                    "color": "3B82F6",
+                    "underline": "single"
+                  }
+                ],
+                "alignment": "left"
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 150,
+            "width": 400,
+            "height": 80,
+            "fill": "F8FAFC",
+            "lineColor": "E2E8F0",
+            "text": [
+              {
+                "runs": [
+                  {
+                    "text": "Anthropic",
+                    "hyperlink": {
+                      "url": "https://www.anthropic.com",
+                      "tooltip": "Visit Anthropic website"
+                    },
+                    "color": "7C3AED",
+                    "underline": "single",
+                    "bold": true
+                  },
+                  { "text": " - Building safe AI" }
+                ],
+                "alignment": "left"
+              }
+            ]
+          },
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 250,
+            "width": 400,
+            "height": 100,
+            "fill": "F8FAFC",
+            "lineColor": "E2E8F0",
+            "text": [
+              {
+                "runs": [
+                  { "text": "Multiple links: " },
+                  {
+                    "text": "Link 1",
+                    "hyperlink": { "url": "https://link1.com" },
+                    "color": "EF4444",
+                    "underline": "single"
+                  },
+                  { "text": " and " },
+                  {
+                    "text": "Link 2",
+                    "hyperlink": { "url": "https://link2.com" },
+                    "color": "10B981",
+                    "underline": "single"
+                  }
+                ],
+                "alignment": "left"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -3, "type": "sp", "text": "Visit our website: example.com" },
+          { "index": -2, "type": "sp", "text": "Anthropic - Building safe AI" },
+          { "index": -1, "type": "sp", "text": "Multiple links: Link 1 and Link 2" }
+        ]
+      }
+    ]
+  }
+}

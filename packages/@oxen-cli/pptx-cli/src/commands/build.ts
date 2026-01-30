@@ -22,11 +22,12 @@ export type {
   SlideModSpec,
   BuildSpec,
   BuildData,
+  BackgroundFillSpec,
 } from "./build/types";
 
 import type { SlideModSpec, BuildSpec, BuildData } from "./build/types";
+import { applyBackground, applyImageBackground, isImageBackground } from "./build/background-builder";
 import {
-  type ZipPackage,
   type BuildContext,
   shapeBuilder,
   imageBuilder,
@@ -36,6 +37,7 @@ import {
   addElementsSync,
   addElementsAsync,
 } from "./build/registry";
+import type { ZipPackage } from "@oxen/zip";
 
 // =============================================================================
 // Slide Processing
@@ -92,46 +94,56 @@ async function processSlide(ctx: SlideContext, slideMod: SlideModSpec): Promise<
     slidePath,
   };
 
+  // Apply background if specified
+  let currentDoc = slideDoc;
+  if (slideMod.background) {
+    if (isImageBackground(slideMod.background)) {
+      currentDoc = await applyImageBackground(currentDoc, slideMod.background, buildCtx);
+    } else {
+      currentDoc = applyBackground(currentDoc, slideMod.background);
+    }
+  }
+
   // Process all element types through the registry
-  const { doc: afterShapes, added: shapesAdded } = addElementsSync(
-    slideDoc,
-    slideMod.addShapes ?? [],
+  const { doc: afterShapes, added: shapesAdded } = addElementsSync({
+    slideDoc: currentDoc,
+    specs: slideMod.addShapes ?? [],
     existingIds,
-    buildCtx,
-    shapeBuilder,
-  );
+    ctx: buildCtx,
+    builder: shapeBuilder,
+  });
 
-  const { doc: afterImages, added: imagesAdded } = await addElementsAsync(
-    afterShapes,
-    slideMod.addImages ?? [],
+  const { doc: afterImages, added: imagesAdded } = await addElementsAsync({
+    slideDoc: afterShapes,
+    specs: slideMod.addImages ?? [],
     existingIds,
-    buildCtx,
-    imageBuilder,
-  );
+    ctx: buildCtx,
+    builder: imageBuilder,
+  });
 
-  const { doc: afterConnectors, added: connectorsAdded } = addElementsSync(
-    afterImages,
-    slideMod.addConnectors ?? [],
+  const { doc: afterConnectors, added: connectorsAdded } = addElementsSync({
+    slideDoc: afterImages,
+    specs: slideMod.addConnectors ?? [],
     existingIds,
-    buildCtx,
-    connectorBuilder,
-  );
+    ctx: buildCtx,
+    builder: connectorBuilder,
+  });
 
-  const { doc: afterGroups, added: groupsAdded } = addElementsSync(
-    afterConnectors,
-    slideMod.addGroups ?? [],
+  const { doc: afterGroups, added: groupsAdded } = addElementsSync({
+    slideDoc: afterConnectors,
+    specs: slideMod.addGroups ?? [],
     existingIds,
-    buildCtx,
-    groupBuilder,
-  );
+    ctx: buildCtx,
+    builder: groupBuilder,
+  });
 
-  const { doc: afterTables, added: tablesAdded } = addElementsSync(
-    afterGroups,
-    slideMod.addTables ?? [],
+  const { doc: afterTables, added: tablesAdded } = addElementsSync({
+    slideDoc: afterGroups,
+    specs: slideMod.addTables ?? [],
     existingIds,
-    buildCtx,
-    tableBuilder,
-  );
+    ctx: buildCtx,
+    builder: tableBuilder,
+  });
 
   const totalAdded = shapesAdded + imagesAdded + connectorsAdded + groupsAdded + tablesAdded;
 

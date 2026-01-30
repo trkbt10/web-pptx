@@ -1,0 +1,118 @@
+{
+  "name": "reflection-effect",
+  "description": "Verify reflection effect on shapes",
+  "tags": ["effect", "reflection"],
+  "input": {
+    "template": "../templates/blank.pptx",
+    "output": "../__output__/reflection-effect.pptx",
+    "slides": [
+      {
+        "slideNumber": 1,
+        "addShapes": [
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 50,
+            "width": 150,
+            "height": 80,
+            "fill": "3B82F6",
+            "effects": {
+              "reflection": {}
+            },
+            "text": "Default Reflection"
+          },
+          {
+            "type": "roundRect",
+            "x": 220,
+            "y": 50,
+            "width": 150,
+            "height": 80,
+            "fill": "10B981",
+            "effects": {
+              "reflection": {
+                "blurRadius": 2,
+                "startOpacity": 80,
+                "endOpacity": 0,
+                "distance": 5
+              }
+            },
+            "text": "Blurred Reflection"
+          },
+          {
+            "type": "ellipse",
+            "x": 390,
+            "y": 50,
+            "width": 150,
+            "height": 80,
+            "fill": "EF4444",
+            "effects": {
+              "reflection": {
+                "startOpacity": 50,
+                "endOpacity": 10,
+                "scaleY": -50
+              }
+            },
+            "text": "Partial Reflection"
+          },
+          {
+            "type": "rectangle",
+            "x": 50,
+            "y": 200,
+            "width": 200,
+            "height": 100,
+            "fill": {
+              "type": "gradient",
+              "gradientType": "linear",
+              "angle": 0,
+              "stops": [
+                { "position": 0, "color": "6366F1" },
+                { "position": 100, "color": "A855F7" }
+              ]
+            },
+            "effects": {
+              "reflection": {
+                "blurRadius": 3,
+                "startOpacity": 70,
+                "endOpacity": 0,
+                "distance": 8,
+                "fadeDirection": 90
+              }
+            },
+            "text": "Gradient with Reflection"
+          },
+          {
+            "type": "hexagon",
+            "x": 280,
+            "y": 200,
+            "width": 150,
+            "height": 100,
+            "fill": "F59E0B",
+            "effects": {
+              "shadow": { "color": "000000", "blur": 6, "distance": 4, "direction": 135 },
+              "reflection": {
+                "startOpacity": 60,
+                "endOpacity": 0,
+                "distance": 10
+              }
+            },
+            "text": "Shadow + Reflection"
+          }
+        ]
+      }
+    ]
+  },
+  "expected": {
+    "slides": [
+      {
+        "slideNumber": 1,
+        "shapes": [
+          { "index": -5, "type": "sp", "text": "Default Reflection" },
+          { "index": -4, "type": "sp", "text": "Blurred Reflection" },
+          { "index": -3, "type": "sp", "text": "Partial Reflection" },
+          { "index": -2, "type": "sp", "text": "Gradient with Reflection" },
+          { "index": -1, "type": "sp", "text": "Shadow + Reflection" }
+        ]
+      }
+    ]
+  }
+}
