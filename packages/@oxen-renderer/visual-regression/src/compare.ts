@@ -21,28 +21,6 @@ type CompareSvgToSnapshotArgs = {
 };
 
 /** Converts an SVG string to a PNG buffer using resvg. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function svgToPng(
   svg: string,
   width?: number,
@@ -52,28 +30,6 @@ export function svgToPng(
 }
 
 /** Compares a rendered SVG to a reference snapshot image. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function compareSvgToSnapshot(args: CompareSvgToSnapshotArgs): CompareResult {
   const { svg, snapshotName, slideNumber, options } = args;
   return compareSvgToSnapshotImpl({
@@ -85,55 +41,11 @@ export function compareSvgToSnapshot(args: CompareSvgToSnapshotArgs): CompareRes
 }
 
 /** Checks whether a snapshot exists for the given name and slide number. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function hasSnapshot(snapshotName: string, slideNumber: number): boolean {
   return hasSnapshotImpl(snapshotName, slideNumber);
 }
 
 /** Lists all slide numbers with snapshots for the given snapshot name. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function listSnapshots(snapshotName: string): number[] {
   return listSnapshotsImpl(snapshotName);
 }

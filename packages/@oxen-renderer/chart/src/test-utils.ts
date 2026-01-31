@@ -36,28 +36,6 @@ function resolvedFillToCssColor(fill: ResolvedFill): string | undefined {
 }
 
 /** Creates a fill resolver for testing with optional color context. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function createTestFillResolver(colorContext?: ColorContext): FillResolver {
   return {
     resolve: (fill: BaseFill): ResolvedFill => {
@@ -86,28 +64,6 @@ export function createTestFillResolver(colorContext?: ColorContext): FillResolve
 }
 
 /** Creates a test chart render context with optional configuration. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function createTestChartRenderContext(options?: {
   readonly colorContext?: ColorContext;
   readonly axisColor?: string;

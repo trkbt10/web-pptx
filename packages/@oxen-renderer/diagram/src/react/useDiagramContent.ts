@@ -15,28 +15,6 @@ export type UseDiagramContentOptions = {
 };
 
 /** Hook for extracting diagram shapes from a resource store. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function useDiagramContent<TShape>(options: UseDiagramContentOptions): readonly TShape[] | undefined {
   const { dataResourceId, getResource } = options;
 

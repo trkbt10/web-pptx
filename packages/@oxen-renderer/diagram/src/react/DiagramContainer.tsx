@@ -33,28 +33,6 @@ function DefaultPlaceholder({ width, height }: { readonly width: number; readonl
 }
 
 /** Renders a diagram from a resource store or shows a placeholder. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function DiagramContainer<TShape>(props: DiagramContainerProps<TShape>) {
   const { dataResourceId, width, height, getResource, renderShape, placeholder } = props;
 

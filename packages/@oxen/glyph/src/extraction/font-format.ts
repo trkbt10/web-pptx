@@ -12,38 +12,6 @@ export const GENERIC_FONT_FAMILIES = [
 ] as const;
 
 /** Formats a font family string with proper quoting for CSS. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function formatFontFamily(
   fontFamily: string,
   genericFamilies: readonly string[] = GENERIC_FONT_FAMILIES,

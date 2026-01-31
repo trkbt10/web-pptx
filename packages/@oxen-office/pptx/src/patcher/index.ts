@@ -129,6 +129,18 @@ export { patchChart, patchChartElement, patchChartTransform } from "./chart/char
 export type { OleChange } from "./ole";
 export { patchOleObject } from "./ole";
 
+// Animation
+export type {
+  EntranceEffect,
+  EmphasisEffect,
+  ExitEffect,
+  MotionPathType,
+  AnimationTrigger,
+  AnimationDirection,
+  SimpleAnimationSpec,
+} from "./animation";
+export { addAnimationsToSlide, removeAnimationsFromSlide } from "./animation";
+
 // Serializers
 export {
   serializeColor,

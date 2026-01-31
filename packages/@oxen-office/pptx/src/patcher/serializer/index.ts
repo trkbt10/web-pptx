@@ -28,3 +28,6 @@ export { isTransitionType, serializeSlideTransition, TRANSITION_TYPES } from "./
 
 // Custom Geometry
 export { serializeCustomGeometry, serializeGeometryPath, serializePathCommand } from "./custom-geometry";
+
+// Animation
+export { serializeTiming, serializeTimeNode } from "./animation";

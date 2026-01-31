@@ -97,3 +97,134 @@ describe("buildChartSpaceDocument", () => {
     expect(xml).toContain("</c:chartSpace>");
   });
 });
+
+describe("new chart types", () => {
+  it("builds areaChart with grouping", () => {
+    const el = buildChartSpaceElement("areaChart", { grouping: "stacked" });
+    const chart = getChild(el, "c:chart");
+    const plotArea = getChild(chart!, "c:plotArea");
+    const areaChart = getChild(plotArea!, "c:areaChart");
+    expect(areaChart).toBeDefined();
+    const grouping = getChild(areaChart!, "c:grouping");
+    expect(grouping?.attrs.val).toBe("stacked");
+  });
+
+  it("builds area3DChart", () => {
+    const el = buildChartSpaceElement("area3DChart");
+    const chart = getChild(el, "c:chart");
+    const plotArea = getChild(chart!, "c:plotArea");
+    const area3DChart = getChild(plotArea!, "c:area3DChart");
+    expect(area3DChart).toBeDefined();
+  });
+
+  it("builds bar3DChart with options", () => {
+    const el = buildChartSpaceElement("bar3DChart", { barDirection: "bar", barGrouping: "stacked" });
+    const chart = getChild(el, "c:chart");
+    const plotArea = getChild(chart!, "c:plotArea");
+    const bar3DChart = getChild(plotArea!, "c:bar3DChart");
+    expect(bar3DChart).toBeDefined();
+    const barDir = getChild(bar3DChart!, "c:barDir");
+    expect(barDir?.attrs.val).toBe("bar");
+    const grouping = getChild(bar3DChart!, "c:grouping");
+    expect(grouping?.attrs.val).toBe("stacked");
+  });
+
+  it("builds scatterChart with style", () => {
+    const el = buildChartSpaceElement("scatterChart", { scatterStyle: "smooth" });
+    const chart = getChild(el, "c:chart");
+    const plotArea = getChild(chart!, "c:plotArea");
+    const scatterChart = getChild(plotArea!, "c:scatterChart");
+    expect(scatterChart).toBeDefined();
+    const style = getChild(scatterChart!, "c:scatterStyle");
+    expect(style?.attrs.val).toBe("smooth");
+  });
+
+  it("builds radarChart with style", () => {
+    const el = buildChartSpaceElement("radarChart", { radarStyle: "filled" });
+    const chart = getChild(el, "c:chart");
+    const plotArea = getChild(chart!, "c:plotArea");
+    const radarChart = getChild(plotArea!, "c:radarChart");
+    expect(radarChart).toBeDefined();
+    const style = getChild(radarChart!, "c:radarStyle");
+    expect(style?.attrs.val).toBe("filled");
+  });
+
+  it("builds bubbleChart with options", () => {
+    const el = buildChartSpaceElement("bubbleChart", { bubbleScale: 75, sizeRepresents: "w" });
+    const chart = getChild(el, "c:chart");
+    const plotArea = getChild(chart!, "c:plotArea");
+    const bubbleChart = getChild(plotArea!, "c:bubbleChart");
+    expect(bubbleChart).toBeDefined();
+    const scale = getChild(bubbleChart!, "c:bubbleScale");
+    expect(scale?.attrs.val).toBe("75");
+    const sizeRep = getChild(bubbleChart!, "c:sizeRepresents");
+    expect(sizeRep?.attrs.val).toBe("w");
+  });
+
+  it("builds doughnutChart with holeSize", () => {
+    const el = buildChartSpaceElement("doughnutChart", { holeSize: 70 });
+    const chart = getChild(el, "c:chart");
+    const plotArea = getChild(chart!, "c:plotArea");
+    const doughnutChart = getChild(plotArea!, "c:doughnutChart");
+    expect(doughnutChart).toBeDefined();
+    const holeSize = getChild(doughnutChart!, "c:holeSize");
+    expect(holeSize?.attrs.val).toBe("70");
+  });
+
+  it("builds line3DChart", () => {
+    const el = buildChartSpaceElement("line3DChart");
+    const chart = getChild(el, "c:chart");
+    const plotArea = getChild(chart!, "c:plotArea");
+    const line3DChart = getChild(plotArea!, "c:line3DChart");
+    expect(line3DChart).toBeDefined();
+  });
+
+  it("builds pie3DChart", () => {
+    const el = buildChartSpaceElement("pie3DChart");
+    const chart = getChild(el, "c:chart");
+    const plotArea = getChild(chart!, "c:plotArea");
+    const pie3DChart = getChild(plotArea!, "c:pie3DChart");
+    expect(pie3DChart).toBeDefined();
+  });
+
+  it("builds ofPieChart with type", () => {
+    const el = buildChartSpaceElement("ofPieChart", { ofPieType: "bar" });
+    const chart = getChild(el, "c:chart");
+    const plotArea = getChild(chart!, "c:plotArea");
+    const ofPieChart = getChild(plotArea!, "c:ofPieChart");
+    expect(ofPieChart).toBeDefined();
+    const ofPieType = getChild(ofPieChart!, "c:ofPieType");
+    expect(ofPieType?.attrs.val).toBe("bar");
+  });
+
+  it("builds stockChart with 4 series", () => {
+    const el = buildChartSpaceElement("stockChart");
+    const chart = getChild(el, "c:chart");
+    const plotArea = getChild(chart!, "c:plotArea");
+    const stockChart = getChild(plotArea!, "c:stockChart");
+    expect(stockChart).toBeDefined();
+    // Stock chart should have 4 series (Open, High, Low, Close)
+    const series = stockChart!.children.filter(
+      (c) => typeof c === "object" && "name" in c && c.name === "c:ser"
+    );
+    expect(series.length).toBe(4);
+  });
+
+  it("builds surfaceChart with wireframe", () => {
+    const el = buildChartSpaceElement("surfaceChart", { wireframe: true });
+    const chart = getChild(el, "c:chart");
+    const plotArea = getChild(chart!, "c:plotArea");
+    const surfaceChart = getChild(plotArea!, "c:surfaceChart");
+    expect(surfaceChart).toBeDefined();
+    const wireframe = getChild(surfaceChart!, "c:wireframe");
+    expect(wireframe?.attrs.val).toBe("1");
+  });
+
+  it("builds surface3DChart", () => {
+    const el = buildChartSpaceElement("surface3DChart");
+    const chart = getChild(el, "c:chart");
+    const plotArea = getChild(chart!, "c:plotArea");
+    const surface3DChart = getChild(plotArea!, "c:surface3DChart");
+    expect(surface3DChart).toBeDefined();
+  });
+});

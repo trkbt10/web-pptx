@@ -6,32 +6,6 @@ function escapeAttr(value: string): string {
 }
 
 /** Converts a resolved text style to SVG text attributes. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function toSvgTextAttributes(style: ResolvedTextStyle): string {
   const parts: string[] = [];
 

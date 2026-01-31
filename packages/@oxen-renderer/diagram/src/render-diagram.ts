@@ -14,28 +14,6 @@ export type RenderDiagramOptions<TShape> = {
 };
 
 /** Renders diagram content to an HTML string. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function renderDiagram<TShape>(options: RenderDiagramOptions<TShape>): string {
   const { diagram, width, height, ctx } = options;
 
@@ -60,31 +38,8 @@ export type RenderDiagramPlaceholderOptions = {
 };
 
 /** Renders a placeholder for diagrams that could not be rendered. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function renderDiagramPlaceholder(options: RenderDiagramPlaceholderOptions): string {
   const { width, height, message } = options;
   const label = message ?? "SmartArt Diagram";
   return `<div class="diagram-placeholder" style="width: ${width}px; height: ${height}px; display: flex; align-items: center; justify-content: center; background: #f5f5f5; border: 1px solid #ddd; color: #999; font-size: 14px;"><span>${label}</span></div>`;
 }
-

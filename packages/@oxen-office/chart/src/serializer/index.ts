@@ -4,5 +4,13 @@
  * Provides functions for building chart XML elements programmatically.
  */
 
-export type { BuildableChartType, ChartSpaceOptions } from "./chart-space-builder";
+export type {
+  BuildableChartType,
+  ChartSpaceOptions,
+  Grouping,
+  BarGrouping,
+  ScatterStyle,
+  RadarStyle,
+  OfPieType,
+} from "./chart-space-builder";
 export { buildChartSpaceDocument, buildChartSpaceElement } from "./chart-space-builder";
