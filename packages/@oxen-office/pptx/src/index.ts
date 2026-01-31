@@ -13,6 +13,5 @@ export type { Presentation, Slide, SlideInfo, ListOptions, PresentationOptions }
 export type { IndexTables } from "./parser/slide/shape-tree-indexer";
 export type { SlideSize } from "./domain";
 
-// Render options re-exported from @oxen-renderer/pptx
-export type { RenderOptions, RenderDialect, LineSpacingMode, BaselineMode } from "@oxen-renderer/pptx";
-export { DEFAULT_RENDER_OPTIONS, LIBREOFFICE_RENDER_OPTIONS, createRenderOptions } from "@oxen-renderer/pptx";
+// NOTE: For RenderOptions, DEFAULT_RENDER_OPTIONS, LIBREOFFICE_RENDER_OPTIONS, createRenderOptions,
+// import directly from @oxen-renderer/pptx/render-options

@@ -45,11 +45,9 @@ export {
 
 // =============================================================================
 // Types from warnings
+// NOTE: For RenderWarning, WarningCollector, createWarningCollector,
+// import directly from @oxen-office/ooxml
 // =============================================================================
-
-export type { RenderWarning, WarningCollector } from "./warnings";
-
-export { createWarningCollector } from "./warnings";
 
 // =============================================================================
 // Types from background-fill

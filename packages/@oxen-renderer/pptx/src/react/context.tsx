@@ -19,7 +19,7 @@ import type { ResolvedBackgroundFill } from "../background-fill";
 import type { ResourceResolver } from "@oxen-office/pptx/domain/resource-resolver";
 import { createEmptyResourceResolver } from "@oxen-office/pptx/domain/resource-resolver";
 import type { ResourceStore } from "@oxen-office/pptx/domain/resource-store";
-import { createWarningCollector } from "../warnings";
+import { createWarningCollector } from "@oxen-office/ooxml";
 import type { TableStyleList } from "@oxen-office/pptx/parser/table/style-parser";
 
 // =============================================================================

@@ -52,11 +52,8 @@ import {
   type SelectionChangeEvent,
 } from "../slide/text-edit";
 import { ShapeToolbar } from "../panels/ShapeToolbar";
-import {
-  buildSlideLayoutOptions,
-  createRenderContext,
-  getLayoutNonPlaceholderShapes,
-} from "@oxen-office/pptx/app";
+import { buildSlideLayoutOptions } from "@oxen-office/pptx/app";
+import { createRenderContext, getLayoutNonPlaceholderShapes } from "@oxen-renderer/pptx";
 import { getSlideLayoutAttributes } from "@oxen-office/pptx/parser/slide/layout-parser";
 import { RELATIONSHIP_TYPES, createZipAdapter } from "@oxen-office/pptx/domain";
 import { CanvasControls } from "../slide-canvas/CanvasControls";

@@ -184,5 +184,4 @@ export {
   serializePathCommand,
 } from "./serializer";
 
-// Re-export parseXml from @oxen/xml for convenience
-export { parseXml } from "@oxen/xml";
+// NOTE: For parseXml, import directly from @oxen/xml

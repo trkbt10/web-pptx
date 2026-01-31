@@ -14,8 +14,8 @@ import { px } from "@oxen-office/ooxml/domain/units";
 import type { RenderOptions } from "./render-options";
 import { DEFAULT_RENDER_OPTIONS } from "./render-options";
 import type { ResolvedBackgroundFill } from "./background-fill";
-import type { WarningCollector } from "./warnings";
-import { createWarningCollector } from "./warnings";
+import type { WarningCollector } from "@oxen-office/ooxml";
+import { createWarningCollector } from "@oxen-office/ooxml";
 import type { TableStyleList } from "@oxen-office/pptx/parser/table/style-parser";
 
 // =============================================================================

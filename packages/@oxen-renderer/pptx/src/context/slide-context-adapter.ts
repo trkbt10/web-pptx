@@ -16,7 +16,7 @@ import type { CoreRenderContext } from "../render-context";
 import type { RenderOptions } from "../render-options";
 import { DEFAULT_RENDER_OPTIONS } from "../render-options";
 import type { ResolvedBackgroundFill } from "../background-fill";
-import { createWarningCollector } from "../warnings";
+import { createWarningCollector } from "@oxen-office/ooxml";
 import { getMimeTypeFromPath } from "@oxen/files";
 import { toDataUrl } from "@oxen/buffer";
 

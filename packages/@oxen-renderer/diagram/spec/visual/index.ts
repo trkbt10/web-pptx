@@ -9,7 +9,8 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { openPresentation, LIBREOFFICE_RENDER_OPTIONS } from "@oxen-office/pptx";
+import { openPresentation } from "@oxen-office/pptx";
+import { LIBREOFFICE_RENDER_OPTIONS } from "@oxen-renderer/pptx/render-options";
 import { renderSlideToSvg } from "@oxen-renderer/pptx/svg";
 import { loadPptxFile } from "../../../../../scripts/lib/pptx-loader";
 import { compareSvgToSnapshot, type CompareOptions, type CompareResult } from "../../../../../spec/visual-regression/compare";

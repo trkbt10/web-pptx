@@ -16,7 +16,7 @@
 
 import type { Slide, SlideSize } from "@oxen-office/pptx/domain/index";
 import type { CoreRenderContext } from "../render-context";
-import type { RenderWarning } from "../warnings";
+import type { RenderWarning } from "@oxen-office/ooxml";
 import { createDefsCollector } from "./slide-utils";
 import { renderResolvedBackgroundSvg, renderBackgroundSvg } from "./slide-background";
 import { renderShapesSvg } from "./slide-shapes";

@@ -6,7 +6,7 @@
 
 import type { Background, Slide, SlideSize } from "@oxen-office/pptx/domain/index";
 import type { CoreRenderContext } from "../render-context";
-import type { RenderWarning } from "../warnings";
+import type { RenderWarning } from "@oxen-office/ooxml";
 import type { ResolvedBackgroundFill } from "../background-fill";
 import { buildStyle, div, EMPTY_HTML, type HtmlString, unsafeHtml } from "./index";
 import { fillToBackground } from "./fill";
