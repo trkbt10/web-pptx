@@ -7,8 +7,11 @@
   "workspaces": [
     "packages/@oxen/*",
     "packages/@oxen-office/*",
+    "packages/@oxen-converters/*",
     "packages/@oxen-renderer/*",
-    "packages/@oxen-ui/*"
+    "packages/@oxen-ui/*",
+    "packages/@oxen-cli/*",
+    "packages/@oxen-builder/*"
   ],
   "scripts": {
     "build": "vite build --config pages/vite.config.ts",
@@ -26,7 +29,7 @@
     "test:logic": "vitest --run --exclude 'spec/visual-regression/**' --exclude 'spec/font-spacing/**' --exclude 'spec/vertical-text/**' --exclude 'spec/webgl-visual/**' --exclude 'spec/theme/visual-regression.spec.ts'",
     "test:visual": "vitest --run spec/visual-regression spec/font-spacing spec/vertical-text spec/webgl-visual spec/theme/visual-regression.spec.ts",
     "test:all": "vitest --run",
-    "test:pdf": "vitest --run packages/@oxen/pdf/src spec/pdf-*.spec.ts spec/integration/pdf-fixtures.spec.ts spec/integration/pdfkit-fixtures.spec.ts spec/visual-regression/pdf-import-panel2-pdf-baseline.spec.tsx --exclude packages/@oxen-office/pdf-to-pptx/src/converter/modeling-pdf-analysis.spec.ts --exclude packages/@oxen-office/pdf-to-pptx/src/converter/pdf-to-shapes-real-pdf-table.spec.ts",
+    "test:pdf": "vitest --run packages/@oxen/pdf/src packages/@oxen-converters/pdf-to-pptx/src packages/@oxen-converters/pdf-to-pptx/spec --exclude packages/@oxen-converters/pdf-to-pptx/src/converter/modeling-pdf-analysis.spec.ts --exclude packages/@oxen-converters/pdf-to-pptx/src/converter/pdf-to-shapes-real-pdf-table.spec.ts",
     "test:xlsx-editor": "vitest --run packages/@oxen-ui/xlsx-editor/src packages/@oxen-office/xlsx/src/formula packages/@oxen-office/ooxml/src/opc/ooxml-zip.spec.ts packages/@oxen-ui/ui-components/src/scroll packages/@oxen-ui/ui-components/src/context-menu packages/@oxen-ui/ui-components/src/grid packages/@oxen-ui/pptx-editor/src/ui/context-menu spec/xlsx-editor",
     "dev:api": "bun run demo/api/index.ts",
     "dev:app": "vite --config demo/vite.config.ts",
@@ -34,8 +37,8 @@
     "build:demo": "vite build --config demo/vite.config.ts",
     "dev:pages": "vite --config pages/vite.config.ts",
     "build:pages": "vite build --config pages/vite.config.ts",
-    "generate:pdf-fixtures": "bun run scripts/generate/generate-pdf-fixtures.ts --outputDir spec/fixtures/pdf",
-    "generate:pdfkit-fixtures": "bun run scripts/generate/generate-pdfkit-fixtures.ts --outputDir spec/fixtures/pdfkit"
+    "generate:pdf-fixtures": "bun run scripts/generate/generate-pdf-fixtures.ts --outputDir packages/@oxen-converters/pdf-to-pptx/spec/fixtures/pdf",
+    "generate:pdfkit-fixtures": "bun run scripts/generate/generate-pdfkit-fixtures.ts --outputDir packages/@oxen-converters/pdf-to-pptx/spec/fixtures/pdfkit"
   },
   "devDependencies": {
     "@resvg/resvg-js": "^2.6.2",
@@ -81,9 +84,9 @@
     "@oxen-office/opc": "workspace:*",
     "@oxen-office/pptx": "workspace:*",
     "@oxen/pdf": "workspace:*",
-    "@oxen-office/pdf-to-pptx": "workspace:*",
+    "@oxen-converters/pdf-to-pptx": "workspace:*",
     "@oxen-office/text-layout": "workspace:*",
-    "@oxen-office/pptx-render": "workspace:*",
+    "@oxen-renderer/pptx": "workspace:*",
     "@oxen-ui/ui-components": "workspace:*",
     "@oxen-ui/pptx-editor": "workspace:*",
     "@oxen-ui/docx-editor": "workspace:*",

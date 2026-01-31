@@ -174,7 +174,7 @@ AGENTS.md
 fixtures/
 
 # Visual regression test outputs (generated at runtime)
-spec/visual-regression/__output__/
-spec/visual-regression/__diff__/
+**/__output__/
+**/__diff__/
+spec/webgl-visual/__output__/
 reference
-spec/webgl-visual/__output__
