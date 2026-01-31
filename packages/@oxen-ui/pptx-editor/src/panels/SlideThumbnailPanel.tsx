@@ -6,9 +6,9 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import type { Slide } from "@oxen-office/pptx/domain/index";
 import type { SlideTransition } from "@oxen-office/pptx/domain/transition";
 import type { SlideId, SlideWithId } from "@oxen-office/pptx/app";
+import { RELATIONSHIP_TYPES } from "@oxen-office/pptx/domain";
 import { usePresentationEditor } from "../context/presentation/PresentationEditorContext";
 import { SlideList } from "../slide-list";
 import { colorTokens } from "@oxen-ui/ui-components/design-tokens";
@@ -52,12 +52,32 @@ const panelStyle: CSSProperties = {
  * Uses SlideList in editable mode with vertical orientation.
  * Provides slide add, delete, duplicate, and reorder operations.
  */
+/**
+ * Get layout path from a slide's apiSlide relationships
+ */
+function getLayoutPathFromSlide(slide: SlideWithId): string | undefined {
+  return slide.apiSlide?.relationships.getTargetByType(RELATIONSHIP_TYPES.SLIDE_LAYOUT);
+}
+
+/**
+ * Get default layout path from document (uses first slide's layout)
+ */
+function getDefaultLayoutPath(slides: readonly SlideWithId[]): string | undefined {
+  for (const slide of slides) {
+    const layoutPath = getLayoutPathFromSlide(slide);
+    if (layoutPath) {
+      return layoutPath;
+    }
+  }
+  return undefined;
+}
+
 export function SlideThumbnailPanel({
   slideWidth,
   slideHeight,
   renderThumbnail,
 }: SlideThumbnailPanelProps) {
-  const { document, dispatch, activeSlide } = usePresentationEditor();
+  const { document, dispatch, activeSlide, slideOperations } = usePresentationEditor();
 
   // Handle slide click (select)
   const handleSlideClick = useCallback(
@@ -71,55 +91,42 @@ export function SlideThumbnailPanel({
   // Gap index N = insert at position N (0 = before first slide)
   const handleAddSlide = useCallback(
     (atIndex: number) => {
-      const newSlide: Slide = { shapes: [] };
-      dispatch({
-        type: "ADD_SLIDE",
-        slide: newSlide,
-        atIndex,
-      });
+      const layoutPath = getDefaultLayoutPath(document.slides);
+      if (!layoutPath) {
+        console.warn("SlideThumbnailPanel: No layout path available for new slide");
+        return;
+      }
+      slideOperations.addSlide(layoutPath, atIndex);
     },
-    [dispatch]
+    [document.slides, slideOperations]
   );
 
   // Handle delete slides
   const handleDeleteSlides = useCallback(
     (slideIds: readonly SlideId[]) => {
-      // Delete slides one by one (reducer protects against deleting last slide)
-      // Limit deletions to keep at least one slide
-      const maxDeletions = document.slides.length - 1;
-      const slidesToDelete = slideIds.slice(0, maxDeletions);
-      for (const slideId of slidesToDelete) {
-        dispatch({ type: "DELETE_SLIDE", slideId });
-      }
+      slideOperations.deleteSlides(slideIds);
     },
-    [dispatch, document.slides.length]
+    [slideOperations]
   );
 
   // Handle duplicate slides
   const handleDuplicateSlides = useCallback(
     (slideIds: readonly SlideId[]) => {
-      // Duplicate slides one by one
-      for (const slideId of slideIds) {
-        dispatch({ type: "DUPLICATE_SLIDE", slideId });
-      }
+      slideOperations.duplicateSlides(slideIds);
     },
-    [dispatch]
+    [slideOperations]
   );
 
   // Handle move slides
   const handleMoveSlides = useCallback(
     (slideIds: readonly SlideId[], toIndex: number) => {
       // For now, move the first slide in the selection
-      // TODO: Support batch move in reducer
+      // TODO: Support batch move
       if (slideIds.length > 0) {
-        dispatch({
-          type: "MOVE_SLIDE",
-          slideId: slideIds[0],
-          toIndex,
-        });
+        slideOperations.moveSlide(slideIds[0]!, toIndex);
       }
     },
-    [dispatch]
+    [slideOperations]
   );
 
   const handleSlideTransitionChange = useCallback(

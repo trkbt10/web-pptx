@@ -1,7 +1,10 @@
 /**
  * @file Slide management handlers
  *
- * Handlers for slide-level operations: add, delete, duplicate, move, select.
+ * Handlers for slide-level operations: delete, move, select, update.
+ *
+ * NOTE: ADD_SLIDE and DUPLICATE_SLIDE are async operations and are handled
+ * by useSlideOperations hook instead of the reducer.
  */
 
 import type { SlideId, PresentationDocument } from "@oxen-office/pptx/app";
@@ -13,17 +16,14 @@ import type {
 import type { SelectionState } from "../../../slide/state";
 import type { HandlerMap } from "./handler-types";
 import {
-  addSlide,
   deleteSlide,
-  duplicateSlide,
   moveSlide,
   updateSlide,
   updateSlideEntry,
+  getSlideIndex,
 } from "../slide";
 import { pushHistory } from "@oxen-ui/editor-core/history";
 import { createEmptySelection, createIdleDragState } from "../../../slide/state";
-
-type AddSlideAction = Extract<PresentationEditorAction, { type: "ADD_SLIDE" }>;
 
 /**
  * Get new active slide ID after deletion
@@ -59,7 +59,6 @@ function getSelectionAfterDelete(
   return currentSelection;
 }
 type DeleteSlideAction = Extract<PresentationEditorAction, { type: "DELETE_SLIDE" }>;
-type DuplicateSlideAction = Extract<PresentationEditorAction, { type: "DUPLICATE_SLIDE" }>;
 type MoveSlideAction = Extract<PresentationEditorAction, { type: "MOVE_SLIDE" }>;
 type SelectSlideAction = Extract<PresentationEditorAction, { type: "SELECT_SLIDE" }>;
 type UpdateSlideAction = Extract<PresentationEditorAction, { type: "UPDATE_SLIDE" }>;
@@ -68,24 +67,6 @@ type UpdateActiveSlideEntryAction = Extract<
   { type: "UPDATE_ACTIVE_SLIDE_ENTRY" }
 >;
 type SetSlideSizeAction = Extract<PresentationEditorAction, { type: "SET_SLIDE_SIZE" }>;
-
-function handleAddSlide(
-  state: PresentationEditorState,
-  action: AddSlideAction
-): PresentationEditorState {
-  const { document: newDoc, newSlideId } = addSlide({
-    document: state.documentHistory.present,
-    slide: action.slide,
-    afterSlideId: action.afterSlideId,
-    atIndex: action.atIndex,
-  });
-  return {
-    ...state,
-    documentHistory: pushHistory(state.documentHistory, newDoc),
-    activeSlideId: newSlideId,
-    shapeSelection: createEmptySelection(),
-  };
-}
 
 function handleDeleteSlide(
   state: PresentationEditorState,
@@ -115,22 +96,6 @@ function handleDeleteSlide(
       wasActiveSlideDeleted,
       state.shapeSelection
     ),
-  };
-}
-
-function handleDuplicateSlide(
-  state: PresentationEditorState,
-  action: DuplicateSlideAction
-): PresentationEditorState {
-  const result = duplicateSlide(state.documentHistory.present, action.slideId);
-  if (!result) {
-    return state;
-  }
-  return {
-    ...state,
-    documentHistory: pushHistory(state.documentHistory, result.document),
-    activeSlideId: result.newSlideId,
-    shapeSelection: createEmptySelection(),
   };
 }
 
@@ -232,11 +197,12 @@ function handleSetSlideSize(
 
 /**
  * Slide management handlers
+ *
+ * NOTE: ADD_SLIDE and DUPLICATE_SLIDE are handled by useSlideOperations hook
+ * because they require async file-level operations.
  */
 export const SLIDE_HANDLERS: HandlerMap = {
-  ADD_SLIDE: handleAddSlide,
   DELETE_SLIDE: handleDeleteSlide,
-  DUPLICATE_SLIDE: handleDuplicateSlide,
   MOVE_SLIDE: handleMoveSlide,
   SELECT_SLIDE: handleSelectSlide,
   UPDATE_SLIDE: handleUpdateSlide,

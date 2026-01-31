@@ -35,4 +35,3 @@ export function generateSlideRId(existingRIds: readonly string[]): string {
   const max = numbers.length > 0 ? Math.max(...numbers) : 0;
   return `rId${max + 1}`;
 }
-

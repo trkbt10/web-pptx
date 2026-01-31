@@ -2,10 +2,20 @@
  * @file Slide operations
  *
  * Query and mutation functions for slides within a presentation document.
+ *
+ * NOTE: This module wraps the slide operations from @oxen-builder/pptx/slide-ops
+ * to provide a consistent API for the editor. The underlying implementation
+ * ensures both domain and file-level changes are synchronized.
  */
 
 import type { Slide } from "@oxen-office/pptx/domain";
 import type { PresentationDocument, SlideWithId, SlideId } from "@oxen-office/pptx/app";
+import {
+  addSlide as addSlideToDocument,
+  removeSlide as removeSlideFromDocument,
+  reorderSlide as reorderSlideInDocument,
+  duplicateSlide as duplicateSlideInDocument,
+} from "@oxen-builder/pptx/slide-ops";
 
 // =============================================================================
 // ID Generation
@@ -18,41 +28,6 @@ function findMaxNumericId(slides: readonly SlideWithId[]): number {
   }, 0);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /** Generate a unique slide ID for the document */
 export function generateSlideId(document: PresentationDocument): SlideId {
   return String(findMaxNumericId(document.slides) + 1);
@@ -62,41 +37,6 @@ export function generateSlideId(document: PresentationDocument): SlideId {
 // Query
 // =============================================================================
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /** Find a slide by its ID in the document */
 export function findSlideById(
   document: PresentationDocument,
@@ -104,41 +44,6 @@ export function findSlideById(
 ): SlideWithId | undefined {
   return document.slides.find((s) => s.id === slideId);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /** Get the index of a slide by its ID in the document */
 export function getSlideIndex(
@@ -149,313 +54,89 @@ export function getSlideIndex(
 }
 
 // =============================================================================
-// Mutation
+// Mutation - Using @oxen-builder/pptx/slide-ops for file-level sync
 // =============================================================================
 
-function getInsertIndex(
-  document: PresentationDocument,
-  afterSlideId: SlideId | undefined
-): number {
-  if (afterSlideId === undefined) {
-    return document.slides.length;
-  }
-  const afterIndex = getSlideIndex(document, afterSlideId);
-  return afterIndex === -1 ? document.slides.length : afterIndex + 1;
-}
-
-function insertSlideAt(
-  slides: readonly SlideWithId[],
-  slide: SlideWithId,
-  index: number
-): SlideWithId[] {
-  return [...slides.slice(0, index), slide, ...slides.slice(index)];
-}
-
-
-
-
-
-
-
-
-
-
-
-function getInsertIndexForAddSlide(
-  document: PresentationDocument,
-  afterSlideId: SlideId | undefined,
-  atIndex: number | undefined,
-): number {
-  if (atIndex !== undefined) {
-    return Math.max(0, Math.min(atIndex, document.slides.length));
-  }
-  return getInsertIndex(document, afterSlideId);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/** Add a new slide to the document at the specified position */
-export function addSlide({
+/**
+ * Add a new slide to the document at the specified position.
+ *
+ * This function uses the slide-ops module which updates both the domain model
+ * and the underlying PPTX file structure (presentation.xml, rels, content types).
+ *
+ * @param document - The presentation document
+ * @param layoutPath - Path to the slide layout (e.g., "ppt/slideLayouts/slideLayout1.xml")
+ * @param position - Optional position to insert the slide (0-based index)
+ * @returns Promise with the updated document and new slide ID
+ */
+export async function addSlide({
   document,
-  slide,
-  afterSlideId,
-  atIndex,
+  layoutPath,
+  position,
 }: {
   document: PresentationDocument;
-  slide: Slide;
-  afterSlideId?: SlideId;
-  atIndex?: number;
-}): { document: PresentationDocument; newSlideId: SlideId } {
-  const newSlideId = generateSlideId(document);
-  const newSlideWithId: SlideWithId = { id: newSlideId, slide };
-  // atIndex takes precedence over afterSlideId
-  const insertIndex = getInsertIndexForAddSlide(document, afterSlideId, atIndex);
-  const newSlides = insertSlideAt(document.slides, newSlideWithId, insertIndex);
-
+  layoutPath: string;
+  position?: number;
+}): Promise<{ document: PresentationDocument; newSlideId: SlideId }> {
+  const result = await addSlideToDocument(document, layoutPath, position);
   return {
-    document: { ...document, slides: newSlides },
-    newSlideId,
+    document: result.doc,
+    newSlideId: result.doc.slides[result.slideIndex]!.id,
   };
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/** Delete a slide from the document by its ID */
+/**
+ * Delete a slide from the document by its ID.
+ *
+ * This function uses the slide-ops module which updates both the domain model
+ * and the underlying PPTX file structure.
+ */
 export function deleteSlide(
   document: PresentationDocument,
   slideId: SlideId
 ): PresentationDocument {
-  const newSlides = document.slides.filter((s) => s.id !== slideId);
-  return { ...document, slides: newSlides };
+  const slideIndex = getSlideIndex(document, slideId);
+  if (slideIndex === -1) return document;
+  return removeSlideFromDocument(document, slideIndex).doc;
 }
 
-function createDuplicatedSlide(
-  sourceSlide: SlideWithId,
-  newSlideId: SlideId
-): SlideWithId {
-  const clonedSlide: Slide = JSON.parse(JSON.stringify(sourceSlide.slide));
-  return {
-    id: newSlideId,
-    slide: clonedSlide,
-    apiSlide: sourceSlide.apiSlide,
-    resolvedBackground: sourceSlide.resolvedBackground,
-    layoutPathOverride: sourceSlide.layoutPathOverride,
-  };
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/** Duplicate an existing slide in the document */
-export function duplicateSlide(
-  document: PresentationDocument,
-  slideId: SlideId
-): { document: PresentationDocument; newSlideId: SlideId } | undefined {
-  const sourceSlide = findSlideById(document, slideId);
-  if (!sourceSlide) {
-    return undefined;
-  }
-
-  const newSlideId = generateSlideId(document);
-  const insertIndex = getSlideIndex(document, slideId) + 1;
-  const newSlideWithId = createDuplicatedSlide(sourceSlide, newSlideId);
-  const newSlides = insertSlideAt(document.slides, newSlideWithId, insertIndex);
-
-  return {
-    document: { ...document, slides: newSlides },
-    newSlideId,
-  };
-}
-
-function moveElementInArray<T>(
-  array: readonly T[],
-  fromIndex: number,
-  toIndex: number
-): T[] {
-  const element = array[fromIndex];
-  const withoutElement = [
-    ...array.slice(0, fromIndex),
-    ...array.slice(fromIndex + 1),
-  ];
-  return [
-    ...withoutElement.slice(0, toIndex),
-    element,
-    ...withoutElement.slice(toIndex),
-  ];
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/** Move a slide to a new position in the document */
+/**
+ * Move a slide to a new position in the document.
+ *
+ * This function uses the slide-ops module which updates both the domain model
+ * and the underlying PPTX file structure.
+ */
 export function moveSlide(
   document: PresentationDocument,
   slideId: SlideId,
   toIndex: number
 ): PresentationDocument {
-  const currentIndex = getSlideIndex(document, slideId);
-  if (currentIndex === -1 || currentIndex === toIndex) {
-    return document;
-  }
-
-  const slides = moveElementInArray(document.slides, currentIndex, toIndex);
-  return { ...document, slides };
+  const fromIndex = getSlideIndex(document, slideId);
+  if (fromIndex === -1 || fromIndex === toIndex) return document;
+  return reorderSlideInDocument(document, fromIndex, toIndex).doc;
 }
 
+/**
+ * Duplicate an existing slide in the document.
+ *
+ * This function uses the slide-ops module which updates both the domain model
+ * and the underlying PPTX file structure (including notes slide if present).
+ */
+export async function duplicateSlide(
+  document: PresentationDocument,
+  slideId: SlideId
+): Promise<{ document: PresentationDocument; newSlideId: SlideId } | undefined> {
+  const slideIndex = getSlideIndex(document, slideId);
+  if (slideIndex === -1) return undefined;
+  const result = await duplicateSlideInDocument(document, slideIndex);
+  return {
+    document: result.doc,
+    newSlideId: result.doc.slides[result.slideIndex]!.id,
+  };
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// =============================================================================
+// Mutation - Domain-only operations (no file-level changes)
+// =============================================================================
 
 /** Update a slide in the document using an updater function */
 export function updateSlide(
@@ -468,41 +149,6 @@ export function updateSlide(
   );
   return { ...document, slides: newSlides };
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /** Update a slide entry in the document using an updater function */
 export function updateSlideEntry(

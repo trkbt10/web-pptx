@@ -17,6 +17,7 @@ import type { PresentationEditorContextValue } from "./editor/types";
 import { presentationEditorReducer, createPresentationEditorState } from "./editor/reducer/reducer";
 import { findSlideById } from "./editor/slide";
 import { findShapeById } from "../../shape/query";
+import { useSlideOperations, type SlideOperationsResult } from "./editor/useSlideOperations";
 
 // =============================================================================
 // Context
@@ -82,6 +83,9 @@ export function PresentationEditorProvider({
   const pathEdit = state.pathEdit;
   const editorMode = state.editorMode;
 
+  // Slide operations hook (async operations)
+  const slideOperations = useSlideOperations(state, dispatch);
+
   const value = useMemo<PresentationEditorContextValue>(
     () => ({
       state,
@@ -97,8 +101,9 @@ export function PresentationEditorProvider({
       pathDraw,
       pathEdit,
       editorMode,
+      slideOperations,
     }),
-    [state, document, activeSlide, selectedShapes, primaryShape, canUndo, canRedo, creationMode, textEdit, pathDraw, pathEdit, editorMode]
+    [state, document, activeSlide, selectedShapes, primaryShape, canUndo, canRedo, creationMode, textEdit, pathDraw, pathEdit, editorMode, slideOperations]
   );
 
   return (

@@ -24,6 +24,7 @@ import type {
   PathEditAction,
 } from "../../slide/state";
 import type { TextEditState } from "../../../slide/text-edit";
+import type { SlideOperationsResult } from "./useSlideOperations";
 
 // =============================================================================
 // Editor Mode Types
@@ -175,9 +176,8 @@ export type PresentationEditorAction =
   | { readonly type: "SET_SLIDE_SIZE"; readonly slideSize: SlideSize }
 
   // Slide management
-  | { readonly type: "ADD_SLIDE"; readonly slide: Slide; readonly afterSlideId?: SlideId; readonly atIndex?: number }
+  // NOTE: ADD_SLIDE and DUPLICATE_SLIDE moved to useSlideOperations hook (async operations)
   | { readonly type: "DELETE_SLIDE"; readonly slideId: SlideId }
-  | { readonly type: "DUPLICATE_SLIDE"; readonly slideId: SlideId }
   | { readonly type: "MOVE_SLIDE"; readonly slideId: SlideId; readonly toIndex: number }
   | { readonly type: "SELECT_SLIDE"; readonly slideId: SlideId }
   | {
@@ -455,6 +455,8 @@ export type PresentationEditorContextValue = {
   readonly pathEdit: PathEditState;
   /** Current editor mode (slide or theme) */
   readonly editorMode: EditorMode;
+  /** Slide operations (async file-level operations) */
+  readonly slideOperations: SlideOperationsResult;
 };
 
 // =============================================================================

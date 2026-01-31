@@ -114,11 +114,12 @@ export type { ColorSchemePatch, ThemeChange } from "./theme";
 export { patchMajorFont, patchMinorFont, patchSchemeColor, patchTheme } from "./theme";
 
 // Presentation - slide structure management
-export type { SlideAddResult, SlideDuplicateResult, SlideRemoveResult, SlideReorderResult } from "./presentation";
-export { addSlide, duplicateSlide, generateSlideId, generateSlideRId, removeSlide, reorderSlide } from "./presentation";
+// NOTE: Slide manager functions have been moved to @oxen-builder/pptx/slide-ops
+// Import addSlide, removeSlide, reorderSlide, duplicateSlide, generateSlideId, generateSlideRId from there instead.
 
 // Parts - shared XML part updaters
-export { addSlideToList, removeSlideFromList, reorderSlideInList } from "./parts";
+// NOTE: Slide list manipulation functions have been moved to @oxen-builder/pptx/slide-ops
+// Import addSlideToList, removeSlideFromList, reorderSlideInList from there instead.
 
 // Phase 10: Advanced elements (table/diagram/OLE)
 

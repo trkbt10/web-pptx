@@ -1,5 +1,5 @@
 /**
- * @file Slide manager (Phase 8)
+ * @file Slide manager
  *
  * Supports adding/removing/reordering/duplicating slides by updating:
  * - ppt/presentation.xml (p:sldIdLst)
@@ -8,17 +8,28 @@
  * - slide parts (ppt/slides/slideN.xml + rels)
  */
 
-import type { PresentationDocument, SlideWithId } from "../../app/presentation-document";
-import type { Slide } from "../../domain/slide/types";
-import type { PresentationFile } from "../../domain/opc";
+import type { PresentationDocument, SlideWithId } from "@oxen-office/pptx/app/presentation-document";
+import type { Slide } from "@oxen-office/pptx/domain/slide/types";
+import type { PresentationFile } from "@oxen-office/pptx/domain/opc";
 import { createElement, getByPath, getChildren, isXmlElement, parseXml, serializeDocument, type XmlDocument, type XmlElement } from "@oxen/xml";
-import { CONTENT_TYPES } from "../../domain/content-types";
-import { RELATIONSHIP_TYPES } from "../../domain/relationships";
-import { getRelationshipPath } from "../../parser/relationships";
+import { CONTENT_TYPES, RELATIONSHIP_TYPES } from "@oxen-office/pptx/domain";
 import { createEmptyZipPackage, isBinaryFile, type ZipPackage } from "@oxen/zip";
-import { setChildren, updateDocumentRoot } from "../core/xml-mutator";
-import { addSlideToList, removeSlideFromList, reorderSlideInList } from "../parts/presentation";
+import { addSlideToList, removeSlideFromList, reorderSlideInList } from "./parts/presentation";
 import { generateSlideId, generateSlideRId } from "./slide-id-manager";
+
+/**
+ * Get the relationship file path for a given part path.
+ * e.g., "ppt/slides/slide1.xml" -> "ppt/slides/_rels/slide1.xml.rels"
+ */
+function getRelationshipPath(partPath: string): string {
+  const lastSlash = partPath.lastIndexOf("/");
+  if (lastSlash === -1) {
+    return `_rels/${partPath}.rels`;
+  }
+  const dir = partPath.slice(0, lastSlash);
+  const file = partPath.slice(lastSlash + 1);
+  return `${dir}/_rels/${file}.rels`;
+}
 
 export type SlideAddResult = {
   readonly doc: PresentationDocument;
@@ -68,6 +79,42 @@ const PRESENTATION_RELS_PATH = "ppt/_rels/presentation.xml.rels";
 const CONTENT_TYPES_PATH = "[Content_Types].xml";
 
 const RELS_XMLNS = "http://schemas.openxmlformats.org/package/2006/relationships";
+
+// =============================================================================
+// XML Mutator Helpers (inline to avoid external dependencies)
+// =============================================================================
+
+function setChildren(
+  parent: XmlElement,
+  children: readonly (XmlElement | import("@oxen/xml").XmlNode)[],
+): XmlElement {
+  return {
+    ...parent,
+    children,
+  };
+}
+
+function updateDocumentRoot(
+  doc: XmlDocument,
+  updater: (root: XmlElement) => XmlElement,
+): XmlDocument {
+  const rootIndex = doc.children.findIndex(isXmlElement);
+  if (rootIndex === -1) {
+    return doc;
+  }
+
+  const root = doc.children[rootIndex] as XmlElement;
+  const updatedRoot = updater(root);
+
+  return {
+    ...doc,
+    children: doc.children.map((child, i) => (i === rootIndex ? updatedRoot : child)),
+  };
+}
+
+// =============================================================================
+// Presentation File Helpers
+// =============================================================================
 
 function requirePresentationFile(doc: PresentationDocument): PresentationFile {
   if (!doc.presentationFile) {
@@ -475,35 +522,9 @@ function findNotesSlideToSlideRelationshipId(notesRelsXml: XmlDocument): string 
   throw new Error("SlideManager: notesSlide .rels is missing the slide relationship");
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// =============================================================================
+// Public API
+// =============================================================================
 
 /** Add a new slide to the presentation using the specified layout */
 export async function addSlide(

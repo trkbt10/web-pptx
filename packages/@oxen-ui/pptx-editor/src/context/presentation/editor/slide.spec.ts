@@ -11,13 +11,12 @@ import {
   generateSlideId,
   findSlideById,
   getSlideIndex,
-  addSlide,
-  deleteSlide,
-  duplicateSlide,
-  moveSlide,
   updateSlide,
   updateSlideEntry,
 } from "./slide";
+
+// NOTE: addSlide, duplicateSlide, deleteSlide, moveSlide require presentationFile
+// and are tested in integration tests (spec/integration/export-slide-structure.spec.ts)
 
 function createEmptySlide(): Slide {
   return { shapes: [] };
@@ -103,140 +102,6 @@ describe("getSlideIndex", () => {
   it("should return -1 for non-existent slide", () => {
     const doc = createTestDocument(3);
     expect(getSlideIndex(doc, "999")).toBe(-1);
-  });
-});
-
-describe("addSlide", () => {
-  it("should add slide at end by default", () => {
-    const doc = createTestDocument(2);
-    const newSlide = createEmptySlide();
-    const result = addSlide({ document: doc, slide: newSlide });
-
-    expect(result.document.slides).toHaveLength(3);
-    expect(result.document.slides[2].id).toBe(result.newSlideId);
-  });
-
-  it("should add slide after specified slide", () => {
-    const doc = createTestDocument(3);
-    const newSlide = createEmptySlide();
-    const result = addSlide({ document: doc, slide: newSlide, afterSlideId: "1" });
-
-    expect(result.document.slides).toHaveLength(4);
-    expect(result.document.slides[1].id).toBe(result.newSlideId);
-    expect(result.document.slides[2].id).toBe("2");
-  });
-
-  it("should add at end if afterSlideId not found", () => {
-    const doc = createTestDocument(2);
-    const newSlide = createEmptySlide();
-    const result = addSlide({ document: doc, slide: newSlide, afterSlideId: "999" });
-
-    expect(result.document.slides).toHaveLength(3);
-    expect(result.document.slides[2].id).toBe(result.newSlideId);
-  });
-
-  it("should not mutate original document", () => {
-    const doc = createTestDocument(2);
-    const originalLength = doc.slides.length;
-    addSlide({ document: doc, slide: createEmptySlide() });
-
-    expect(doc.slides).toHaveLength(originalLength);
-  });
-});
-
-describe("deleteSlide", () => {
-  it("should remove specified slide", () => {
-    const doc = createTestDocument(3);
-    const result = deleteSlide(doc, "2");
-
-    expect(result.slides).toHaveLength(2);
-    expect(result.slides.map((s) => s.id)).toEqual(["1", "3"]);
-  });
-
-  it("should return unchanged document if slide not found", () => {
-    const doc = createTestDocument(3);
-    const result = deleteSlide(doc, "999");
-
-    expect(result.slides).toHaveLength(3);
-  });
-
-  it("should not mutate original document", () => {
-    const doc = createTestDocument(3);
-    deleteSlide(doc, "2");
-
-    expect(doc.slides).toHaveLength(3);
-  });
-});
-
-describe("duplicateSlide", () => {
-  it("should duplicate slide after original", () => {
-    const doc = createTestDocument(3);
-    const result = duplicateSlide(doc, "2");
-
-    expect(result).toBeDefined();
-    expect(result?.document.slides).toHaveLength(4);
-    expect(result?.document.slides[2].id).toBe(result?.newSlideId);
-  });
-
-  it("should return undefined for non-existent slide", () => {
-    const doc = createTestDocument(3);
-    const result = duplicateSlide(doc, "999");
-
-    expect(result).toBeUndefined();
-  });
-
-  it("should deep clone the slide data", () => {
-    const baseDoc = createTestDocument(1);
-    // Create doc with initial shape using spread
-    const doc = {
-      ...baseDoc,
-      slides: [
-        {
-          ...baseDoc.slides[0],
-          slide: {
-            ...baseDoc.slides[0].slide,
-            shapes: [{ type: "sp" } as any],
-          },
-        },
-      ],
-    };
-
-    const result = duplicateSlide(doc, "1");
-    expect(result).toBeDefined();
-
-    // Modify original by creating new doc (simulating mutation for test)
-    // The actual test is that the duplicated slide has its own copy
-    expect(result?.document.slides[1].slide.shapes).toHaveLength(1);
-  });
-});
-
-describe("moveSlide", () => {
-  it("should move slide to new position", () => {
-    const doc = createTestDocument(4);
-    const result = moveSlide(doc, "1", 2);
-
-    expect(result.slides.map((s) => s.id)).toEqual(["2", "3", "1", "4"]);
-  });
-
-  it("should return unchanged document if slide not found", () => {
-    const doc = createTestDocument(3);
-    const result = moveSlide(doc, "999", 0);
-
-    expect(result).toBe(doc);
-  });
-
-  it("should return unchanged document if already at position", () => {
-    const doc = createTestDocument(3);
-    const result = moveSlide(doc, "2", 1);
-
-    expect(result).toBe(doc);
-  });
-
-  it("should handle move to end", () => {
-    const doc = createTestDocument(3);
-    const result = moveSlide(doc, "1", 2);
-
-    expect(result.slides.map((s) => s.id)).toEqual(["2", "3", "1"]);
   });
 });
 
