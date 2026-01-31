@@ -162,14 +162,6 @@
       "types": "./src/domain/diagram/format-guards.ts",
       "default": "./src/domain/diagram/format-guards.ts"
     },
-    "./exporter": {
-      "types": "./src/exporter/index.ts",
-      "default": "./src/exporter/index.ts"
-    },
-    "./exporter/*": {
-      "types": "./src/exporter/*.ts",
-      "default": "./src/exporter/*.ts"
-    },
     "./opc": {
       "types": "./src/opc/index.ts",
       "default": "./src/opc/index.ts"

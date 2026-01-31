@@ -9,6 +9,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
+    "@oxen-builder/pptx": "workspace:*",
     "@oxen-office/chart": "workspace:*",
     "@oxen-office/opc": "workspace:*",
     "@oxen-office/pptx": "workspace:*",

@@ -16,7 +16,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { importPdf } from "../../src/importer/pdf-importer";
-import { exportPptx } from "@oxen-office/pptx/exporter";
+import { exportPptx } from "@oxen-builder/pptx/export";
 import { loadPptxFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
 import { px } from "@oxen-office/ooxml/domain/units";
 import { parseXml } from "@oxen/xml";

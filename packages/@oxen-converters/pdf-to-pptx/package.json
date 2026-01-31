@@ -5,6 +5,7 @@
   "type": "module",
   "sideEffects": false,
   "dependencies": {
+    "@oxen-builder/pptx": "workspace:*",
     "@oxen-converters/core": "workspace:*",
     "@oxen/buffer": "workspace:*",
     "@oxen/jpeg": "workspace:*",

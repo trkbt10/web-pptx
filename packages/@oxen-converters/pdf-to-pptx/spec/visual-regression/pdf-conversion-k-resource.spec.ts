@@ -6,7 +6,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
 import { importPdf } from "../../src/importer/pdf-importer";
-import { exportPptxAsBuffer } from "@oxen-office/pptx/exporter";
+import { exportPptxAsBuffer } from "@oxen-builder/pptx/export";
 import { openPresentation } from "@oxen-office/pptx";
 import { loadPptxFile } from "../../../../../scripts/lib/pptx-loader";
 import { compareSvgToPdfBaseline } from "./compare";

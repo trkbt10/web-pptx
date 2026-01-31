@@ -28,24 +28,30 @@ export type {
   BuildSpec,
   BuildData,
   BackgroundFillSpec,
-  SlideAddSpec,
-  SlideRemoveSpec,
-  SlideReorderSpec,
-  SlideDuplicateSpec,
   AnimationSpec,
   AnimationClassSpec,
   CommentSpec,
   NotesSpec,
   SmartArtUpdateSpec,
   DiagramChangeSpec,
-} from "./build/types";
+} from "@oxen-builder/pptx/types";
 
-import type { SlideModSpec, BuildSpec, BuildData } from "./build/types";
-import { applyBackground, applyImageBackground, isImageBackground } from "./build/background-builder";
-import { addChartsToSlide } from "./build/chart-add-builder";
-import { applyChartUpdates } from "./build/chart-builder";
-import { applyThemeEditsToPackage } from "./build/theme-builder";
+// Slide operation types are exported from slide-ops module
+export type {
+  SlideAddSpec,
+  SlideRemoveSpec,
+  SlideReorderSpec,
+  SlideDuplicateSpec,
+} from "@oxen-builder/pptx/slide-ops";
+
+import type { SlideModSpec, BuildSpec, BuildData } from "@oxen-builder/pptx/types";
 import {
+  applyBackground,
+  applyImageBackground,
+  isImageBackground,
+  addChartsToSlide,
+  applyChartUpdates,
+  applyThemeEditsToPackage,
   type BuildContext,
   shapeBuilder,
   imageBuilder,
@@ -54,14 +60,14 @@ import {
   tableBuilder,
   addElementsSync,
   addElementsAsync,
-} from "./build/registry";
-import { applySlideTransition } from "./build/transition-builder";
-import { applySlideOperations } from "./build/slide-operations";
-import { applyTableUpdates } from "./build/table-update-builder";
-import { applyAnimations } from "./build/animation-builder";
-import { applyComments } from "./build/comment-builder";
-import { applyNotes } from "./build/notes-builder";
-import { applySmartArtUpdates } from "./build/smartart-builder";
+  applySlideTransition,
+  applyTableUpdates,
+  applyAnimations,
+  applyComments,
+  applyNotes,
+  applySmartArtUpdates,
+} from "@oxen-builder/pptx/builders";
+import { applySlideOperations } from "@oxen-builder/pptx/slide-ops";
 import type { ZipPackage } from "@oxen/zip";
 
 // =============================================================================
@@ -259,7 +265,7 @@ export async function runBuild(specPath: string): Promise<Result<BuildData>> {
       });
 
       if (!slideOpsResult.success) {
-        return slideOpsResult.error;
+        return error("SLIDE_OPS_FAILED", slideOpsResult.error);
       }
     }
 
