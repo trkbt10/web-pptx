@@ -12,7 +12,7 @@ import path from "node:path";
 import { loadPptxFile } from "../../scripts/lib/pptx-loader";
 import { openPresentation } from "@oxen-office/pptx";
 import { convertToPresentationDocument, loadPptxFromBuffer } from "@oxen-office/pptx/app";
-import { exportPptxAsBuffer } from "@oxen-office/pptx/exporter";
+import { exportPptxAsBuffer } from "@oxen-builder/pptx/export";
 import { detectSlideChanges, patchSlideXml } from "@oxen-office/pptx/patcher";
 import { deg, px } from "@oxen-office/ooxml/domain/units";
 import type { Slide as DomainSlide } from "@oxen-office/pptx/domain/slide/types";

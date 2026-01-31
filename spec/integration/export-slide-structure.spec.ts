@@ -18,7 +18,7 @@ import { loadPptxFile } from "../../scripts/lib/pptx-loader";
 import { convertToPresentationDocument } from "@oxen-office/pptx/app";
 import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
 import { openPresentation } from "@oxen-office/pptx";
-import { exportPptxAsBuffer } from "@oxen-office/pptx/exporter";
+import { exportPptxAsBuffer } from "@oxen-builder/pptx/export";
 import { getBasename, getByPath, getChildren, parseXml } from "@oxen/xml";
 import { CONTENT_TYPES, RELATIONSHIP_TYPES } from "@oxen-office/pptx/domain";
 import { getRelationshipPath } from "@oxen-office/pptx/parser/relationships";

@@ -5,7 +5,7 @@
  */
 import * as fs from "node:fs";
 import { importPdf } from "@oxen-converters/pdf-to-pptx/importer/pdf-importer";
-import { exportPptx } from "@oxen-office/pptx/exporter";
+import { exportPptx } from "@oxen-builder/pptx/export";
 import { px } from "@oxen-office/ooxml/domain/units";
 import { loadZipPackage } from "@oxen/zip";
 import { parsePdf } from "@oxen/pdf";
