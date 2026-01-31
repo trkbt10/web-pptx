@@ -15,7 +15,7 @@ import { useRenderContext } from "../../context";
 import { useSvgDefs } from "../../hooks/useSvgDefs";
 import { has3dEffects } from "../../../svg/effects3d";
 import { Text3DRenderer, shouldRender3DText } from "../../../webgl/text3d";
-import { render3dTextEffects } from "../../drawing-ml/text-3d";
+import { render3dTextEffects } from "@oxen-renderer/drawing-ml";
 import { renderLayoutResult } from "./layout-render";
 import { extractText3DRuns } from "./extract-3d-runs";
 
