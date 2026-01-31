@@ -51,6 +51,6 @@
     "./parser/drawing-ml/*": {
       "types": "./src/parser/drawing-ml/*.ts",
       "default": "./src/parser/drawing-ml/*.ts"
-    },
+    }
   }
 }

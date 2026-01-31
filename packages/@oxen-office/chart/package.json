@@ -50,7 +50,7 @@
     "./patcher/*/*": {
       "types": "./src/patcher/*/*.ts",
       "default": "./src/patcher/*/*.ts"
-    },
+    }
   }
 }
 
