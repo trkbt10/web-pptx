@@ -7,7 +7,7 @@ export { runList, type ListData, type SlideListItem } from "./list";
 export { runShow, type ShowData } from "./show";
 export { runExtract, type ExtractData, type ExtractOptions, type SlideTextItem } from "./extract";
 export { runTheme, type ThemeData, type FontSchemeJson, type ColorSchemeJson, type FormatSchemeJson } from "./theme";
-export { runBuild, type BuildSpec, type BuildData, type ShapeSpec, type SlideModSpec } from "./build";
+export { runBuild } from "./build";
 export {
   runVerify,
   type VerifyData,

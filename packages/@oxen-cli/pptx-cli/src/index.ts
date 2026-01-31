@@ -8,7 +8,7 @@ export { runList, type ListData, type SlideListItem } from "./commands/list";
 export { runShow, type ShowData } from "./commands/show";
 export { runExtract, type ExtractData, type ExtractOptions, type SlideTextItem } from "./commands/extract";
 export { runTheme, type ThemeData, type FontSchemeJson, type ColorSchemeJson, type FormatSchemeJson } from "./commands/theme";
-export { runBuild, type BuildSpec, type BuildData, type ShapeSpec, type SlideModSpec } from "./commands/build";
+export { runBuild } from "./commands/build";
 export {
   runVerify,
   type VerifyData,

@@ -9,42 +9,9 @@ import { openPresentation } from "@oxen-office/pptx/app";
 import { parseSlide } from "@oxen-office/pptx/parser/slide/slide-parser";
 import { parseXml, serializeDocument, getByPath } from "@oxen/xml";
 import { success, error, type Result } from "../output/json-output";
-
-// Re-export CLI-specific types for external consumers
-// NOTE: Domain types (PresetShapeType, AnimationTrigger, AnimationDirection, etc.)
-// should be imported directly from @oxen-office packages by consumers.
-export type {
-  ShapeSpec,
-  ImageSpec,
-  ConnectorSpec,
-  GroupSpec,
-  TableSpec,
-  TableCellSpec,
-  TableUpdateSpec,
-  TableCellUpdateSpec,
-  TableRowAddSpec,
-  TableColumnAddSpec,
-  SlideModSpec,
-  BuildSpec,
-  BuildData,
-  BackgroundFillSpec,
-  AnimationSpec,
-  AnimationClassSpec,
-  CommentSpec,
-  NotesSpec,
-  SmartArtUpdateSpec,
-  DiagramChangeSpec,
-} from "@oxen-builder/pptx/types";
-
-// Slide operation types are exported from slide-ops module
-export type {
-  SlideAddSpec,
-  SlideRemoveSpec,
-  SlideReorderSpec,
-  SlideDuplicateSpec,
-} from "@oxen-builder/pptx/slide-ops";
-
 import type { SlideModSpec, BuildSpec, BuildData } from "@oxen-builder/pptx/types";
+
+// NOTE: BuildSpec and BuildData types should be imported directly from @oxen-builder/pptx/types by consumers
 import {
   applyBackground,
   applyImageBackground,
