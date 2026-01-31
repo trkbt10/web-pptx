@@ -31,3 +31,13 @@ export { serializeCustomGeometry, serializeGeometryPath, serializePathCommand } 
 
 // Animation
 export { serializeTiming, serializeTimeNode } from "./animation";
+
+// Comments
+export {
+  serializeComment,
+  serializeCommentList,
+  serializeCommentAuthor,
+  serializeCommentAuthorList,
+  createCommentListDocument,
+  createCommentAuthorListDocument,
+} from "./comment";

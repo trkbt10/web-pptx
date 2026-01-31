@@ -5,18 +5,20 @@
  * relationships/content types, and inserts a p:graphicFrame on the slide.
  */
 
-import { createElement, parseXml, serializeDocument, type XmlDocument, type XmlElement } from "@oxen/xml";
+import { createElement, serializeDocument, type XmlDocument, type XmlElement } from "@oxen/xml";
 import {
   addShapeToTree,
   addOverride,
   addRelationship,
   ensureRelationshipsDocument,
+  parseXml,
   updateAtPath,
   updateDocumentRoot,
 } from "@oxen-office/pptx/patcher";
 import type { ZipPackage } from "@oxen/zip";
 import type { Degrees, Pixels } from "@oxen-office/ooxml/domain/units";
 import { patchChartData, patchChartStyle, patchChartTitle } from "@oxen-office/chart/patcher";
+import { buildChartSpaceDocument } from "@oxen-office/chart/serializer";
 import type { ChartAddSpec, ChartDataSpec } from "./types";
 import { patchChartTransform } from "@oxen-office/pptx/patcher";
 import type { Transform } from "@oxen-office/pptx/domain/geometry";
@@ -43,50 +45,13 @@ function getSlideRelsPath(slidePath: string): string {
 
 function getNextChartIndex(zipPackage: ZipPackage): number {
   const files = zipPackage.listFiles();
-  let max = 0;
-  for (const f of files) {
-    const match = /^ppt\/charts\/chart(\d+)\.xml$/u.exec(f);
-    if (!match) {
-      continue;
-    }
-    const n = Number(match[1]);
-    if (Number.isFinite(n) && n > max) {
-      max = n;
-    }
-  }
+  const chartNumbers = files
+    .map((f) => /^ppt\/charts\/chart(\d+)\.xml$/u.exec(f))
+    .filter((match): match is RegExpExecArray => match !== null)
+    .map((match) => Number(match[1]))
+    .filter((n) => Number.isFinite(n));
+  const max = chartNumbers.length > 0 ? Math.max(...chartNumbers) : 0;
   return max + 1;
-}
-
-function baseChartXml(chartType: ChartAddSpec["chartType"]): string {
-  const containerAttrs = chartType === "barChart" ? `<c:barDir val="col"/>` : "";
-
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
-  <c:chart>
-    <c:plotArea>
-      <c:${chartType}>
-        ${containerAttrs}
-        <c:ser>
-          <c:idx val="0"/>
-          <c:order val="0"/>
-          <c:tx><c:v>Series 1</c:v></c:tx>
-          <c:cat>
-            <c:strLit>
-              <c:ptCount val="1"/>
-              <c:pt idx="0"><c:v>A</c:v></c:pt>
-            </c:strLit>
-          </c:cat>
-          <c:val>
-            <c:numLit>
-              <c:ptCount val="1"/>
-              <c:pt idx="0"><c:v>1</c:v></c:pt>
-            </c:numLit>
-          </c:val>
-        </c:ser>
-      </c:${chartType}>
-    </c:plotArea>
-  </c:chart>
-</c:chartSpace>`;
 }
 
 function toChartData(data: ChartDataSpec): Parameters<typeof patchChartData>[1] {
@@ -150,26 +115,16 @@ function ensureSlideChartRelationship(zipPackage: ZipPackage, slidePath: string,
   return rId;
 }
 
+function buildChartDocument(spec: ChartAddSpec): XmlDocument {
+  const base = buildChartSpaceDocument(spec.chartType, spec.options);
+  const withData = patchChartData(base, toChartData(spec.data));
+  const withTitle = spec.title !== undefined ? patchChartTitle(withData, spec.title) : withData;
+  return spec.styleId !== undefined ? patchChartStyle(withTitle, spec.styleId) : withTitle;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Add new chart elements to a slide and create corresponding chart parts.
+ */
 export function addChartsToSlide(options: {
   readonly slideDoc: XmlDocument;
   readonly specs: readonly ChartAddSpec[];
@@ -194,15 +149,7 @@ export function addChartsToSlide(options: {
       const chartFilename = `chart${chartIndex}.xml`;
       const chartPath = `ppt/charts/${chartFilename}`;
 
-      // Create chart XML, then patch to requested title/style/data
-      let chartDoc = parseXml(baseChartXml(spec.chartType));
-      chartDoc = patchChartData(chartDoc, toChartData(spec.data));
-      if (spec.title !== undefined) {
-        chartDoc = patchChartTitle(chartDoc, spec.title);
-      }
-      if (spec.styleId !== undefined) {
-        chartDoc = patchChartStyle(chartDoc, spec.styleId);
-      }
+      const chartDoc = buildChartDocument(spec);
 
       ensureChartContentType(options.ctx.zipPackage, chartPath);
 

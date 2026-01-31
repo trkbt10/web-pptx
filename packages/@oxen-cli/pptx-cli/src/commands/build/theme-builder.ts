@@ -81,6 +81,9 @@ function mergeFontScheme(base: FontScheme, patch: ThemeEditSpec["fontScheme"]): 
 
 
 
+/**
+ * Apply theme edits to a theme XML string and return the modified XML.
+ */
 export function applyThemeEditsToThemeXml(themeXmlText: string, theme: ThemeEditSpec): string {
   const hasColorScheme = theme.colorScheme && Object.keys(theme.colorScheme).length > 0;
   const hasFontScheme = theme.fontScheme && (theme.fontScheme.majorFont || theme.fontScheme.minorFont);
@@ -135,6 +138,9 @@ export function applyThemeEditsToThemeXml(themeXmlText: string, theme: ThemeEdit
 
 
 
+/**
+ * Apply theme edits to a PPTX package by modifying the theme XML in-place.
+ */
 export function applyThemeEditsToPackage(zipPackage: ZipPackage, theme: ThemeEditSpec): void {
   const themePath = requireThemePath(theme);
   const themeXmlText = zipPackage.readText(themePath);

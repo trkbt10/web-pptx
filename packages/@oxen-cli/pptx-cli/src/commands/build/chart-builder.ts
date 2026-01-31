@@ -114,6 +114,9 @@ function buildChartChanges(spec: ChartUpdateSpec): readonly ChartChange[] {
 
 
 
+/**
+ * Apply updates to existing chart elements on a slide.
+ */
 export function applyChartUpdates(
   slideDoc: XmlDocument,
   ctx: UpdateContext,

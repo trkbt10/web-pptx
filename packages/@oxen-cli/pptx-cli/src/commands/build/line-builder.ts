@@ -5,10 +5,10 @@
 import type { Line } from "@oxen-office/pptx/domain/color/types";
 import type { Pixels } from "@oxen-office/ooxml/domain/units";
 import type {
-  LineDashStyle,
-  LineCapStyle,
-  LineJoinStyle,
-  LineCompoundStyle,
+  DashStyle,
+  LineCap,
+  LineJoin,
+  CompoundLine,
   LineEndSpec,
   ColorSpec,
 } from "./types";
@@ -47,14 +47,15 @@ export function buildLineEnd(spec: LineEndSpec): Line["headEnd"] {
 }
 
 /**
- * Map compound style from user-friendly names to OOXML values
+ * Map compound style from user-friendly names to OOXML values.
+ * CompoundLine from domain uses OOXML values directly (sng, dbl, etc.)
  */
-const COMPOUND_MAP: Record<LineCompoundStyle, string> = {
-  single: "sng",
-  double: "dbl",
+const COMPOUND_MAP: Record<CompoundLine, string> = {
+  sng: "sng",
+  dbl: "dbl",
   thickThin: "thickThin",
   thinThick: "thinThick",
-  triple: "tri",
+  tri: "tri",
 };
 
 /**
@@ -64,10 +65,10 @@ export function buildLine(
   lineColor: string,
   lineWidth: number,
   options?: {
-    dash?: LineDashStyle;
-    cap?: LineCapStyle;
-    join?: LineJoinStyle;
-    compound?: LineCompoundStyle;
+    dash?: DashStyle;
+    cap?: LineCap;
+    join?: LineJoin;
+    compound?: CompoundLine;
     headEnd?: LineEndSpec;
     tailEnd?: LineEndSpec;
   },
@@ -93,10 +94,10 @@ export function buildLineFromSpec(
   lineColor: ColorSpec,
   lineWidth: number,
   options?: {
-    dash?: LineDashStyle;
-    cap?: LineCapStyle;
-    join?: LineJoinStyle;
-    compound?: LineCompoundStyle;
+    dash?: DashStyle;
+    cap?: LineCap;
+    join?: LineJoin;
+    compound?: CompoundLine;
     headEnd?: LineEndSpec;
     tailEnd?: LineEndSpec;
   },

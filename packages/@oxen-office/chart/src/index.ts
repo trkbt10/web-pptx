@@ -5,5 +5,16 @@
  * providing reusable ChartML logic.
  */
 
-export {};
+// Chart types from serializer
+export type {
+  BuildableChartType,
+  Grouping,
+  BarGrouping,
+  ScatterStyle,
+  RadarStyle,
+  OfPieType,
+  ChartSpaceOptions,
+} from "./serializer/chart-space-builder";
+
+export { buildChartSpaceElement, buildChartSpaceDocument } from "./serializer/chart-space-builder";
 

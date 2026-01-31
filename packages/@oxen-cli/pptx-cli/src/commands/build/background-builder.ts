@@ -79,12 +79,9 @@ function buildBackgroundElement(fill: Fill): XmlElement {
 /**
  * Build blip fill background for images
  */
-function buildBlipFillBackground(rId: string, mode: "stretch" | "tile" | "cover" = "stretch"): XmlElement {
-  const blipElement = createElement("a:blip", { "r:embed": rId });
-
-  let fillMode: XmlElement;
+function buildFillMode(mode: "stretch" | "tile" | "cover"): XmlElement {
   if (mode === "tile") {
-    fillMode = createElement("a:tile", {
+    return createElement("a:tile", {
       tx: "0",
       ty: "0",
       sx: "100000",
@@ -92,12 +89,14 @@ function buildBlipFillBackground(rId: string, mode: "stretch" | "tile" | "cover"
       flip: "none",
       algn: "tl",
     });
-  } else {
-    // stretch or cover - use stretch
-    fillMode = createElement("a:stretch", {}, [
-      createElement("a:fillRect"),
-    ]);
   }
+  // stretch or cover - use stretch
+  return createElement("a:stretch", {}, [createElement("a:fillRect")]);
+}
+
+function buildBlipFillBackground(rId: string, mode: "stretch" | "tile" | "cover" = "stretch"): XmlElement {
+  const blipElement = createElement("a:blip", { "r:embed": rId });
+  const fillMode = buildFillMode(mode);
 
   const blipFill = createElement("a:blipFill", { rotWithShape: "0" }, [
     blipElement,

@@ -10,6 +10,13 @@
 export type { Brand, Pixels, Degrees, Percent, Points, EMU } from "./domain/units";
 export { px, deg, pct, pt, emu } from "./domain/units";
 
+// Domain types - Color
+export type { SchemeColorValue } from "./domain/color";
+
+// Domain types - Fill
+export type { PatternType } from "./domain/fill";
+export { PATTERN_PRESETS } from "./domain/fill";
+
 // Domain types - Border
 export type {
   CoreBorderStyle,

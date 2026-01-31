@@ -27,6 +27,9 @@ import type { MediaEmbedSpec } from "./types";
 
 
 
+/**
+ * Detect the MIME type of embedded media from its file extension.
+ */
 export function detectEmbeddedMediaType(spec: MediaEmbedSpec): MediaType {
   const ext = path.extname(spec.path).toLowerCase();
   if (spec.type === "video") {
@@ -64,6 +67,9 @@ export function detectEmbeddedMediaType(spec: MediaEmbedSpec): MediaType {
 
 
 
+/**
+ * Build a MediaReference object from a media embed spec.
+ */
 export function buildMediaReferenceFromSpec(spec: MediaEmbedSpec, rId: string, contentType: string): {
   readonly mediaType: "video" | "audio";
   readonly media: MediaReference;

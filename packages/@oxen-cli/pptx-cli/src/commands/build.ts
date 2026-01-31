@@ -5,24 +5,39 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
-import { openPresentation } from "@oxen-office/pptx";
+import { openPresentation } from "@oxen-office/pptx/app";
 import { parseSlide } from "@oxen-office/pptx/parser/slide/slide-parser";
 import { parseXml, serializeDocument, getByPath } from "@oxen/xml";
 import { success, error, type Result } from "../output/json-output";
 
-// Re-export types for external consumers
+// Re-export CLI-specific types for external consumers
+// NOTE: Domain types (PresetShapeType, AnimationTrigger, AnimationDirection, etc.)
+// should be imported directly from @oxen-office packages by consumers.
 export type {
-  PresetShapeType,
   ShapeSpec,
   ImageSpec,
   ConnectorSpec,
   GroupSpec,
   TableSpec,
   TableCellSpec,
+  TableUpdateSpec,
+  TableCellUpdateSpec,
+  TableRowAddSpec,
+  TableColumnAddSpec,
   SlideModSpec,
   BuildSpec,
   BuildData,
   BackgroundFillSpec,
+  SlideAddSpec,
+  SlideRemoveSpec,
+  SlideReorderSpec,
+  SlideDuplicateSpec,
+  AnimationSpec,
+  AnimationClassSpec,
+  CommentSpec,
+  NotesSpec,
+  SmartArtUpdateSpec,
+  DiagramChangeSpec,
 } from "./build/types";
 
 import type { SlideModSpec, BuildSpec, BuildData } from "./build/types";
@@ -41,6 +56,12 @@ import {
   addElementsAsync,
 } from "./build/registry";
 import { applySlideTransition } from "./build/transition-builder";
+import { applySlideOperations } from "./build/slide-operations";
+import { applyTableUpdates } from "./build/table-update-builder";
+import { applyAnimations } from "./build/animation-builder";
+import { applyComments } from "./build/comment-builder";
+import { applyNotes } from "./build/notes-builder";
+import { applySmartArtUpdates } from "./build/smartart-builder";
 import type { ZipPackage } from "@oxen/zip";
 
 // =============================================================================
@@ -67,6 +88,22 @@ function getExistingShapeIds(apiSlide: { content: unknown }): string[] {
     return [];
   }
   return domainSlide.shapes.map(getShapeId);
+}
+
+type BackgroundSpec = SlideModSpec["background"];
+
+async function applyBackgroundSpec(
+  slideDoc: ReturnType<typeof parseXml>,
+  spec: BackgroundSpec,
+  ctx: BuildContext,
+): Promise<ReturnType<typeof parseXml>> {
+  if (!spec) {
+    return slideDoc;
+  }
+  if (isImageBackground(spec)) {
+    return applyImageBackground(slideDoc, spec, ctx);
+  }
+  return applyBackground(slideDoc, spec);
 }
 
 async function processSlide(ctx: SlideContext, slideMod: SlideModSpec): Promise<ProcessSlideResult> {
@@ -99,18 +136,11 @@ async function processSlide(ctx: SlideContext, slideMod: SlideModSpec): Promise<
   };
 
   // Apply background if specified
-  let currentDoc = slideDoc;
-  if (slideMod.background) {
-    if (isImageBackground(slideMod.background)) {
-      currentDoc = await applyImageBackground(currentDoc, slideMod.background, buildCtx);
-    } else {
-      currentDoc = applyBackground(currentDoc, slideMod.background);
-    }
-  }
+  const docWithBackground = await applyBackgroundSpec(slideDoc, slideMod.background, buildCtx);
 
   // Process all element types through the registry
   const { doc: afterShapes, added: shapesAdded } = addElementsSync({
-    slideDoc: currentDoc,
+    slideDoc: docWithBackground,
     specs: slideMod.addShapes ?? [],
     existingIds,
     ctx: buildCtx,
@@ -161,7 +191,28 @@ async function processSlide(ctx: SlideContext, slideMod: SlideModSpec): Promise<
     slideMod.updateCharts ?? [],
   );
 
-  const finalDoc = slideMod.transition ? applySlideTransition(afterCharts, slideMod.transition) : afterCharts;
+  // Apply table updates
+  const { doc: afterTableUpdates } = applyTableUpdates(afterCharts, slideMod.updateTables ?? []);
+
+  // Apply animations
+  const { doc: afterAnimations } = applyAnimations(afterTableUpdates, slideMod.addAnimations ?? []);
+
+  // Apply comments (directly to the package, not to XML document)
+  if (slideMod.addComments && slideMod.addComments.length > 0) {
+    applyComments(ctx.zipPackage, slidePath, slideMod.addComments);
+  }
+
+  // Apply speaker notes (directly to the package)
+  if (slideMod.speakerNotes) {
+    applyNotes(ctx.zipPackage, slidePath, slideMod.speakerNotes);
+  }
+
+  // Apply SmartArt updates (directly to the package)
+  if (slideMod.updateSmartArt && slideMod.updateSmartArt.length > 0) {
+    applySmartArtUpdates(ctx.zipPackage, slidePath, slideMod.updateSmartArt);
+  }
+
+  const finalDoc = slideMod.transition ? applySlideTransition(afterAnimations, slideMod.transition) : afterAnimations;
 
   const totalAdded = shapesAdded + imagesAdded + connectorsAdded + groupsAdded + tablesAdded;
 
@@ -187,11 +238,33 @@ export async function runBuild(specPath: string): Promise<Result<BuildData>> {
     const templatePath = path.resolve(specDir, spec.template);
     const templateBuffer = await fs.readFile(templatePath);
     const { zipPackage, presentationFile } = await loadPptxBundleFromBuffer(templateBuffer);
-    const presentation = openPresentation(presentationFile);
 
     if (spec.theme) {
       applyThemeEditsToPackage(zipPackage as ZipPackage, spec.theme);
     }
+
+    // Apply slide structure operations (add/duplicate/reorder/remove) before content modifications
+    const hasSlideOps =
+      (spec.addSlides && spec.addSlides.length > 0) ||
+      (spec.duplicateSlides && spec.duplicateSlides.length > 0) ||
+      (spec.reorderSlides && spec.reorderSlides.length > 0) ||
+      (spec.removeSlides && spec.removeSlides.length > 0);
+
+    if (hasSlideOps) {
+      const slideOpsResult = await applySlideOperations(zipPackage as ZipPackage, {
+        addSlides: spec.addSlides,
+        duplicateSlides: spec.duplicateSlides,
+        reorderSlides: spec.reorderSlides,
+        removeSlides: spec.removeSlides,
+      });
+
+      if (!slideOpsResult.success) {
+        return slideOpsResult.error;
+      }
+    }
+
+    // Re-open presentation after slide operations to get updated slide count
+    const presentation = openPresentation(presentationFile);
 
     const ctx: SlideContext = { zipPackage: zipPackage as ZipPackage, presentation, specDir };
     const slides = spec.slides ?? [];

@@ -142,27 +142,31 @@ function registerHyperlinks(
 
   // Read or create relationships document
   const relsXml = ctx.zipPackage.readText(relsPath);
-  let relsDoc = relsXml ? parseXml(relsXml) : null;
-  relsDoc = ensureRelationshipsDocument(relsDoc);
+  const initialRelsDoc = ensureRelationshipsDocument(relsXml ? parseXml(relsXml) : null);
 
-  // Add each unique hyperlink
-  for (const hlink of hyperlinks) {
-    if (urlToRid.has(hlink.url)) {continue;}
-
-    const { updatedXml, rId } = addRelationship(
-      relsDoc,
-      hlink.url,
-      "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
-    );
-    relsDoc = updatedXml;
-    urlToRid.set(hlink.url, rId);
-  }
+  // Add each unique hyperlink using reduce to avoid mutation
+  const { doc: finalRelsDoc, map: urlToRidMap } = hyperlinks.reduce(
+    (acc, hlink) => {
+      if (acc.map.has(hlink.url)) {
+        return acc;
+      }
+      const { updatedXml, rId } = addRelationship(
+        acc.doc,
+        hlink.url,
+        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+      );
+      const newMap = new Map(acc.map);
+      newMap.set(hlink.url, rId);
+      return { doc: updatedXml, map: newMap };
+    },
+    { doc: initialRelsDoc, map: urlToRid },
+  );
 
   // Write updated relationships
-  const updatedRelsXml = serializeDocument(relsDoc, { declaration: true, standalone: true });
+  const updatedRelsXml = serializeDocument(finalRelsDoc, { declaration: true, standalone: true });
   ctx.zipPackage.writeText(relsPath, updatedRelsXml);
 
-  return urlToRid;
+  return urlToRidMap;
 }
 
 /**
@@ -194,18 +198,14 @@ function replaceHyperlinkUrls(element: XmlElement, urlToRid: Map<string, string>
   return { ...element, children };
 }
 
+function buildShapeXml(spec: ShapeSpec, id: string, urlToRid: Map<string, string>): XmlElement {
+  const baseXml = domainToXml(buildSpShape(spec, id));
+  return urlToRid.size > 0 ? replaceHyperlinkUrls(baseXml, urlToRid) : baseXml;
+}
+
 export const shapeBuilder: SyncBuilder<ShapeSpec> = (spec, id, ctx) => {
-  // Register hyperlinks and get URL to rId mapping
   const urlToRid = registerHyperlinks(spec.text, ctx);
-
-  // Build shape XML
-  let xml = domainToXml(buildSpShape(spec, id));
-
-  // Replace hyperlink URLs with rIds
-  if (urlToRid.size > 0) {
-    xml = replaceHyperlinkUrls(xml, urlToRid);
-  }
-
+  const xml = buildShapeXml(spec, id, urlToRid);
   return { xml };
 };
 
@@ -495,6 +495,9 @@ export type AddElementsSyncOptions<TSpec> = {
 
 
 
+/**
+ * Add elements to a slide document using a synchronous builder function.
+ */
 export function addElementsSync<TSpec>({
   slideDoc,
   specs,
@@ -547,6 +550,9 @@ export type AddElementsAsyncOptions<TSpec> = {
 
 
 
+/**
+ * Add elements to a slide document using an asynchronous builder function.
+ */
 export async function addElementsAsync<TSpec>({
   slideDoc,
   specs,

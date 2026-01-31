@@ -1,5 +1,8 @@
 /**
  * @file Build CustomGeometry domain object from CustomGeometrySpec
+ *
+ * This module converts CLI spec types to domain types.
+ * For XML serialization, use serializeCustomGeometry from @oxen-office/pptx/patcher.
  */
 
 import type { CustomGeometry, GeometryPath, PathCommand } from "@oxen-office/pptx/domain/shape";
@@ -81,26 +84,9 @@ function buildGeometryPath(spec: GeometryPathSpec): GeometryPath {
   };
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Build a CustomGeometry domain object from a CLI spec.
+ */
 export function buildCustomGeometryFromSpec(spec: CustomGeometrySpec): CustomGeometry {
   if (!spec) {
     throw new Error("customGeometry is required");
@@ -113,4 +99,3 @@ export function buildCustomGeometryFromSpec(spec: CustomGeometrySpec): CustomGeo
     paths: spec.paths.map(buildGeometryPath),
   };
 }
-

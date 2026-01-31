@@ -25,26 +25,9 @@ function getSlidePaths(slideFilename: string): { readonly slidePath: string; rea
   return { slidePath, relsPath };
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * Resolve and parse chart parts referenced from a slide.
+ */
 export function resolveChartsForSlide(options: {
   readonly zipPackage: ZipPackageLike;
   readonly slideFilename: string;

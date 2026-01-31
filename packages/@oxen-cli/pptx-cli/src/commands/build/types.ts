@@ -1,111 +1,73 @@
 /**
  * @file Build command type definitions
+ *
+ * This module defines CLI-specific spec types for the build command JSON configuration.
+ * Types are imported from @oxen-office packages and used internally.
+ *
+ * NOTE: This module does NOT re-export types from @oxen-office packages.
+ * Consumers should import domain types directly from:
+ * - @oxen-office/chart: BuildableChartType, Grouping, BarGrouping, ScatterStyle, RadarStyle, OfPieType
+ * - @oxen-office/ooxml: SchemeColorValue, PatternType
+ * - @oxen-office/pptx/domain: LineEndType, LineEndSize, LineCap, LineJoin, CompoundLine, DashStyle,
+ *   TextAlign, TextAnchor, TextVerticalType, UnderlineStyle, StrikeStyle, TextCaps,
+ *   PresetShapeType, PlaceholderType, BevelPresetType, PresetMaterialType, TransitionType
+ * - @oxen-office/pptx/patcher: AnimationTrigger, AnimationDirection, SimpleCommentSpec, SimpleNotesSpec
  */
-
-/**
- * All supported preset shape types
- * Based on ECMA-376 Part 1: §20.1.10.56 ST_ShapeType
- */
-export type PresetShapeType =
-  // Basic shapes
-  | "rectangle" | "ellipse" | "triangle" | "rtTriangle" | "diamond"
-  | "pentagon" | "hexagon" | "heptagon" | "octagon" | "decagon" | "dodecagon"
-  | "parallelogram" | "trapezoid"
-  | "teardrop" | "halfFrame" | "corner" | "diagStripe" | "chord"
-  | "funnel" | "gear6" | "gear9" | "pie" | "pieWedge" | "blockArc"
-  // Rounded/Snipped rectangles
-  | "roundRect" | "round1Rect" | "round2SameRect" | "round2DiagRect"
-  | "snip1Rect" | "snip2SameRect" | "snip2DiagRect" | "snipRoundRect"
-  // Block arrows
-  | "rightArrow" | "leftArrow" | "upArrow" | "downArrow"
-  | "leftRightArrow" | "upDownArrow" | "bentArrow" | "uturnArrow"
-  | "chevron" | "notchedRightArrow" | "stripedRightArrow"
-  | "quadArrow" | "quadArrowCallout" | "leftRightUpArrow" | "leftUpArrow" | "bentUpArrow"
-  | "curvedLeftArrow" | "curvedRightArrow" | "curvedUpArrow" | "curvedDownArrow"
-  | "circularArrow" | "swooshArrow" | "leftCircularArrow" | "leftRightCircularArrow"
-  | "leftArrowCallout" | "rightArrowCallout" | "upArrowCallout" | "downArrowCallout"
-  | "leftRightArrowCallout" | "upDownArrowCallout"
-  // Stars & Banners
-  | "star4" | "star5" | "star6" | "star7" | "star8" | "star10" | "star12" | "star16" | "star24" | "star32"
-  | "ribbon" | "ribbon2" | "ellipseRibbon" | "ellipseRibbon2"
-  | "verticalScroll" | "horizontalScroll" | "wave" | "doubleWave"
-  | "irregularSeal1" | "irregularSeal2"
-  // Callouts
-  | "wedgeRectCallout" | "wedgeRoundRectCallout" | "wedgeEllipseCallout" | "cloudCallout"
-  | "borderCallout1" | "borderCallout2" | "borderCallout3"
-  | "accentCallout1" | "accentCallout2" | "accentCallout3"
-  | "accentBorderCallout1" | "accentBorderCallout2" | "accentBorderCallout3"
-  | "callout1" | "callout2" | "callout3"
-  // Flowchart shapes
-  | "flowChartProcess" | "flowChartDecision" | "flowChartTerminator"
-  | "flowChartDocument" | "flowChartData" | "flowChartConnector"
-  | "flowChartAlternateProcess" | "flowChartSort" | "flowChartExtract" | "flowChartMerge"
-  | "flowChartOnlineStorage" | "flowChartMagneticTape" | "flowChartMagneticDisk" | "flowChartMagneticDrum"
-  | "flowChartDisplay" | "flowChartDelay" | "flowChartPreparation"
-  | "flowChartManualInput" | "flowChartManualOperation"
-  | "flowChartPunchedCard" | "flowChartPunchedTape"
-  | "flowChartSummingJunction" | "flowChartOr" | "flowChartCollate"
-  | "flowChartInternalStorage" | "flowChartMultidocument"
-  | "flowChartOffpageConnector" | "flowChartPredefinedProcess"
-  // Math shapes
-  | "mathPlus" | "mathMinus" | "mathMultiply" | "mathDivide" | "mathEqual" | "mathNotEqual"
-  // Braces & Brackets
-  | "leftBrace" | "rightBrace" | "leftBracket" | "rightBracket" | "bracePair" | "bracketPair"
-  // Action Buttons
-  | "actionButtonBackPrevious" | "actionButtonBeginning" | "actionButtonBlank" | "actionButtonDocument"
-  | "actionButtonEnd" | "actionButtonForwardNext" | "actionButtonHelp" | "actionButtonHome"
-  | "actionButtonInformation" | "actionButtonMovie" | "actionButtonReturn" | "actionButtonSound"
-  // Misc shapes
-  | "heart" | "lightning" | "lightningBolt" | "sun" | "moon" | "cloud" | "arc" | "donut"
-  | "frame" | "cube" | "can" | "foldedCorner" | "smileyFace" | "noSmoking"
-  | "plus" | "cross" | "homePlate" | "plaque" | "bevel" | "rect" | "line";
 
 // =============================================================================
-// Line Types
+// Imports from @oxen-office packages (for internal use)
 // =============================================================================
 
-/**
- * Line dash style
- * Based on ECMA-376 Part 1: §20.1.10.49 ST_PresetLineDashVal
- */
-export type LineDashStyle =
-  | "solid"
-  | "dash"
-  | "dashDot"
-  | "dot"
-  | "lgDash"
-  | "lgDashDot"
-  | "lgDashDotDot"
-  | "sysDash"
-  | "sysDashDot"
-  | "sysDashDotDot"
-  | "sysDot";
+// Chart types from @oxen-office/chart
+import type {
+  BuildableChartType,
+  Grouping,
+  BarGrouping,
+  ScatterStyle,
+  RadarStyle,
+  OfPieType,
+} from "@oxen-office/chart";
 
-/**
- * Line cap style
- */
-export type LineCapStyle = "flat" | "round" | "square";
+// Color/Fill types from @oxen-office/ooxml
+import type { SchemeColorValue, PatternType } from "@oxen-office/ooxml";
 
-/**
- * Line join style
- */
-export type LineJoinStyle = "bevel" | "miter" | "round";
+// Domain types from @oxen-office/pptx/domain
+import type {
+  // Line types
+  LineEndType,
+  LineEndSize,
+  LineCap,
+  LineJoin,
+  CompoundLine,
+  DashStyle,
+  // Text types
+  TextAlign,
+  TextAnchor,
+  TextVerticalType,
+  UnderlineStyle,
+  StrikeStyle,
+  TextCaps,
+  // Shape types
+  PresetShapeType,
+  PlaceholderType,
+  // 3D types
+  BevelPresetType,
+  PresetMaterialType,
+  // Transition types
+  TransitionType,
+} from "@oxen-office/pptx/domain";
 
-/**
- * Compound line style
- * Based on ECMA-376 Part 1: §20.1.10.33 ST_CompoundLine
- */
-export type LineCompoundStyle = "single" | "double" | "thickThin" | "thinThick" | "triple";
+// Animation types from @oxen-office/pptx/patcher
+import type {
+  AnimationTrigger,
+  AnimationDirection,
+  SimpleCommentSpec,
+  SimpleNotesSpec,
+} from "@oxen-office/pptx/patcher";
 
-/**
- * Line end type
- */
-export type LineEndType = "none" | "triangle" | "stealth" | "diamond" | "oval" | "arrow";
-
-/**
- * Line end size
- */
-export type LineEndSize = "sm" | "med" | "lg";
+// =============================================================================
+// Line Spec Types (CLI-specific)
+// =============================================================================
 
 /**
  * Line end specification
@@ -117,24 +79,14 @@ export type LineEndSpec = {
 };
 
 // =============================================================================
-// Color Types
+// Color Types (CLI-specific simplified color specs)
 // =============================================================================
-
-/**
- * Theme color type
- * Based on ECMA-376 Part 1: §20.1.10.54 ST_SchemeColorVal
- */
-export type ThemeColorType =
-  | "dk1" | "lt1" | "dk2" | "lt2"
-  | "accent1" | "accent2" | "accent3" | "accent4" | "accent5" | "accent6"
-  | "hlink" | "folHlink"
-  | "bg1" | "bg2" | "tx1" | "tx2";
 
 /**
  * Theme color specification with optional luminance modifiers
  */
 export type ThemeColorSpec = {
-  readonly theme: ThemeColorType;
+  readonly theme: SchemeColorValue;
   readonly lumMod?: number; // luminance modulate (0-100, percentage)
   readonly lumOff?: number; // luminance offset (-100 to 100, percentage)
   readonly tint?: number;   // tint (0-100, percentage)
@@ -154,7 +106,7 @@ export function isThemeColor(color: ColorSpec): color is ThemeColorSpec {
 }
 
 // =============================================================================
-// Fill Types
+// Fill Types (CLI-specific simplified fill specs)
 // =============================================================================
 
 /**
@@ -176,28 +128,11 @@ export type GradientFillSpec = {
 };
 
 /**
- * Pattern preset type
- * Based on ECMA-376 Part 1: §20.1.10.51 ST_PresetPatternVal
- */
-export type PatternPreset =
-  | "pct5" | "pct10" | "pct20" | "pct25" | "pct30" | "pct40"
-  | "pct50" | "pct60" | "pct70" | "pct75" | "pct80" | "pct90"
-  | "horz" | "vert" | "ltHorz" | "ltVert" | "dkHorz" | "dkVert"
-  | "narHorz" | "narVert" | "dashHorz" | "dashVert"
-  | "cross" | "dnDiag" | "upDiag" | "ltDnDiag" | "ltUpDiag"
-  | "dkDnDiag" | "dkUpDiag" | "wdDnDiag" | "wdUpDiag"
-  | "dashDnDiag" | "dashUpDiag" | "diagCross" | "smCheck"
-  | "lgCheck" | "smGrid" | "lgGrid" | "dotGrid"
-  | "smConfetti" | "lgConfetti" | "horzBrick" | "diagBrick"
-  | "solidDmnd" | "openDmnd" | "dotDmnd" | "plaid" | "sphere"
-  | "weave" | "divot" | "shingle" | "wave" | "trellis" | "zigZag";
-
-/**
  * Pattern fill specification
  */
 export type PatternFillSpec = {
   readonly type: "pattern";
-  readonly preset: PatternPreset;
+  readonly preset: PatternType;
   readonly fgColor: ColorSpec; // foreground color (hex or theme)
   readonly bgColor: ColorSpec; // background color (hex or theme)
 };
@@ -215,7 +150,7 @@ export type SolidFillSpec = {
  */
 export type ThemeFillSpec = {
   readonly type: "theme";
-  readonly theme: ThemeColorType;
+  readonly theme: SchemeColorValue;
   readonly lumMod?: number;
   readonly lumOff?: number;
   readonly tint?: number;
@@ -228,7 +163,7 @@ export type ThemeFillSpec = {
 export type FillSpec = string | SolidFillSpec | GradientFillSpec | PatternFillSpec | ThemeFillSpec;
 
 // =============================================================================
-// Effect Types
+// Effect Types (CLI-specific)
 // =============================================================================
 
 /**
@@ -285,49 +220,17 @@ export type EffectsSpec = {
 };
 
 // =============================================================================
-// 3D Types
+// 3D Types (CLI-specific)
 // =============================================================================
-
-/**
- * Bevel preset type
- * Based on ECMA-376 Part 1: §20.1.10.9 ST_BevelPresetType
- */
-export type BevelPreset =
-  | "angle"
-  | "artDeco"
-  | "circle"
-  | "convex"
-  | "coolSlant"
-  | "cross"
-  | "divot"
-  | "hardEdge"
-  | "relaxedInset"
-  | "riblet"
-  | "slope"
-  | "softRound";
 
 /**
  * Bevel specification
  */
 export type BevelSpec = {
-  readonly preset?: BevelPreset;
+  readonly preset?: BevelPresetType;
   readonly width?: number; // in pixels
   readonly height?: number; // in pixels
 };
-
-/**
- * Material preset type
- * Based on ECMA-376 Part 1: §20.1.10.50 ST_PresetMaterialType
- */
-export type MaterialPreset =
-  | "matte"
-  | "warmMatte"
-  | "plastic"
-  | "metal"
-  | "powder"
-  | "flat"
-  | "softEdge"
-  | "clear";
 
 /**
  * 3D shape properties specification
@@ -335,34 +238,13 @@ export type MaterialPreset =
 export type Shape3dSpec = {
   readonly bevelTop?: BevelSpec;
   readonly bevelBottom?: BevelSpec;
-  readonly material?: MaterialPreset;
+  readonly material?: PresetMaterialType;
   readonly extrusionHeight?: number; // depth in pixels
 };
 
 // =============================================================================
-// Text Types
+// Text Types (CLI-specific)
 // =============================================================================
-
-/**
- * Text alignment
- */
-export type TextAlignment = "left" | "center" | "right" | "justify";
-
-/**
- * Underline style
- */
-export type UnderlineStyle = "none" | "single" | "double" | "heavy" | "dotted" | "dashed" | "wavy";
-
-/**
- * Strikethrough style
- */
-export type StrikeStyle = "none" | "single" | "double";
-
-/**
- * Text capitalization style
- * Based on ECMA-376 Part 1: §21.1.2.1.6 ST_TextCapsType
- */
-export type TextCapsStyle = "none" | "small" | "all";
 
 /**
  * Text vertical position (superscript/subscript)
@@ -416,7 +298,7 @@ export type TextRunSpec = {
   readonly italic?: boolean;
   readonly underline?: UnderlineStyle;
   readonly strikethrough?: StrikeStyle;
-  readonly caps?: TextCapsStyle; // all caps, small caps
+  readonly caps?: TextCaps;
   readonly verticalPosition?: TextVerticalPosition; // superscript, subscript
   readonly letterSpacing?: number; // in pixels (can be negative)
   readonly fontSize?: number; // in points
@@ -439,7 +321,7 @@ export type LineSpacingSpec =
  */
 export type TextParagraphSpec = {
   readonly runs: readonly TextRunSpec[];
-  readonly alignment?: TextAlignment;
+  readonly alignment?: TextAlign;
   readonly bullet?: BulletSpec;
   readonly level?: number; // indent level (0-8)
   readonly lineSpacing?: LineSpacingSpec; // line height
@@ -458,18 +340,6 @@ export type RichTextSpec = readonly TextParagraphSpec[];
  * Text specification - can be simple string or rich text
  */
 export type TextSpec = string | RichTextSpec;
-
-/**
- * Vertical text anchor
- * Based on ECMA-376 Part 1: §21.1.2.1.3 ST_TextAnchoringType
- */
-export type TextAnchor = "top" | "center" | "bottom";
-
-/**
- * Text vertical type (rotation)
- * Based on ECMA-376 Part 1: §21.1.2.1.39 ST_TextVerticalType
- */
-export type TextVerticalType = "horz" | "vert" | "vert270" | "wordArtVert" | "eaVert";
 
 /**
  * Text wrapping mode
@@ -491,29 +361,8 @@ export type TextBodyPropertiesSpec = {
 };
 
 // =============================================================================
-// Shape Specification
+// Shape Specification (CLI-specific)
 // =============================================================================
-
-/**
- * Placeholder type (subset of ECMA-376 ST_PlaceholderType)
- */
-export type PlaceholderType =
-  | "title"
-  | "body"
-  | "ctrTitle"
-  | "subTitle"
-  | "dt"
-  | "sldNum"
-  | "ftr"
-  | "hdr"
-  | "obj"
-  | "chart"
-  | "tbl"
-  | "clipArt"
-  | "dgm"
-  | "media"
-  | "sldImg"
-  | "pic";
 
 export type PlaceholderSpec = {
   readonly type: PlaceholderType;
@@ -548,10 +397,10 @@ export type ShapeSpec = {
   // Line properties
   readonly lineColor?: string;
   readonly lineWidth?: number;
-  readonly lineDash?: LineDashStyle;
-  readonly lineCap?: LineCapStyle;
-  readonly lineJoin?: LineJoinStyle;
-  readonly lineCompound?: LineCompoundStyle;
+  readonly lineDash?: DashStyle;
+  readonly lineCap?: LineCap;
+  readonly lineJoin?: LineJoin;
+  readonly lineCompound?: CompoundLine;
   readonly lineHeadEnd?: LineEndSpec;
   readonly lineTailEnd?: LineEndSpec;
   // Effects
@@ -561,7 +410,7 @@ export type ShapeSpec = {
 };
 
 // =============================================================================
-// Custom Geometry Types
+// Custom Geometry Types (CLI-specific)
 // =============================================================================
 
 export type CustomGeometrySpec = {
@@ -604,7 +453,7 @@ export type CloseSpec = { readonly type: "close" };
 export type PathCommandSpec = MoveToSpec | LineToSpec | ArcToSpec | QuadBezierToSpec | CubicBezierToSpec | CloseSpec;
 
 // =============================================================================
-// Blip Effects Types
+// Blip Effects Types (CLI-specific)
 // =============================================================================
 
 /**
@@ -702,14 +551,14 @@ export type GroupSpec = {
 };
 
 /**
- * Table cell specification
+ * Table cell specification (for new tables)
  */
 export type TableCellSpec = {
   readonly text: string;
 };
 
 /**
- * Table specification
+ * Table specification (for new tables)
  */
 export type TableSpec = {
   readonly type: "table";
@@ -718,6 +567,83 @@ export type TableSpec = {
   readonly width: number;
   readonly height: number;
   readonly rows: readonly (readonly TableCellSpec[])[];
+};
+
+// =============================================================================
+// Table Update Types (for existing tables)
+// =============================================================================
+
+/**
+ * Text run for table cell content
+ */
+export type TableTextRunSpec = {
+  readonly text: string;
+  readonly bold?: boolean;
+  readonly italic?: boolean;
+  readonly fontSize?: number;
+  readonly fontFamily?: string;
+  readonly color?: string;
+};
+
+/**
+ * Paragraph for table cell content
+ */
+export type TableParagraphSpec = {
+  readonly runs: readonly TableTextRunSpec[];
+  readonly alignment?: "left" | "center" | "right" | "justify";
+};
+
+/**
+ * Rich text content for table cells
+ */
+export type TableTextBodySpec = {
+  readonly paragraphs: readonly TableParagraphSpec[];
+};
+
+/**
+ * Cell update specification
+ */
+export type TableCellUpdateSpec = {
+  readonly row: number;
+  readonly col: number;
+  readonly content: string | TableTextBodySpec;
+};
+
+/**
+ * Row to add to a table
+ */
+export type TableRowAddSpec = {
+  readonly height: number;
+  readonly cells: readonly (string | TableTextBodySpec)[];
+  readonly position?: number;
+};
+
+/**
+ * Column to add to a table
+ */
+export type TableColumnAddSpec = {
+  readonly width: number;
+  readonly position?: number;
+};
+
+/**
+ * Table update specification
+ */
+export type TableUpdateSpec = {
+  /** Shape ID of the table (graphicFrame id) */
+  readonly shapeId: string;
+  /** Cell content updates */
+  readonly updateCells?: readonly TableCellUpdateSpec[];
+  /** Rows to add */
+  readonly addRows?: readonly TableRowAddSpec[];
+  /** Row indices to remove (0-indexed) */
+  readonly removeRows?: readonly number[];
+  /** Columns to add */
+  readonly addColumns?: readonly TableColumnAddSpec[];
+  /** Column indices to remove (0-indexed) */
+  readonly removeColumns?: readonly number[];
+  /** Table style ID */
+  readonly styleId?: string;
 };
 
 // =============================================================================
@@ -753,8 +679,34 @@ export type ChartUpdateSpec = {
   readonly transform?: ChartTransformSpec;
 };
 
+/**
+ * Chart type-specific options
+ */
+export type ChartOptionsSpec = {
+  /** Bar direction (column or bar). Applicable for barChart/bar3DChart. */
+  readonly barDirection?: "col" | "bar";
+  /** Grouping style for bar charts. */
+  readonly barGrouping?: BarGrouping;
+  /** Grouping style for line/area charts. */
+  readonly grouping?: Grouping;
+  /** Style for scatter charts. */
+  readonly scatterStyle?: ScatterStyle;
+  /** Style for radar charts. */
+  readonly radarStyle?: RadarStyle;
+  /** Hole size for doughnut charts (0-90 percent). */
+  readonly holeSize?: number;
+  /** Type for of-pie charts (pie-of-pie or bar-of-pie). */
+  readonly ofPieType?: OfPieType;
+  /** Scale for bubble charts (percent). */
+  readonly bubbleScale?: number;
+  /** What bubble size represents. */
+  readonly sizeRepresents?: "area" | "w";
+  /** Whether surface chart is wireframe. */
+  readonly wireframe?: boolean;
+};
+
 export type ChartAddSpec = {
-  readonly chartType: "barChart" | "lineChart" | "pieChart";
+  readonly chartType: BuildableChartType;
   readonly x: number;
   readonly y: number;
   readonly width: number;
@@ -762,6 +714,8 @@ export type ChartAddSpec = {
   readonly title?: string;
   readonly data: ChartDataSpec;
   readonly styleId?: number;
+  /** Chart type-specific options */
+  readonly options?: ChartOptionsSpec;
 };
 
 // =============================================================================
@@ -805,32 +759,8 @@ export type BackgroundFillSpec =
   | BackgroundImageSpec;
 
 // =============================================================================
-// Transition Types
+// Transition Types (CLI-specific)
 // =============================================================================
-
-export type TransitionType =
-  | "blinds"
-  | "checker"
-  | "circle"
-  | "comb"
-  | "cover"
-  | "cut"
-  | "diamond"
-  | "dissolve"
-  | "fade"
-  | "newsflash"
-  | "plus"
-  | "pull"
-  | "push"
-  | "random"
-  | "randomBar"
-  | "split"
-  | "strips"
-  | "wedge"
-  | "wheel"
-  | "wipe"
-  | "zoom"
-  | "none";
 
 export type SlideTransitionSpec = {
   readonly type: TransitionType;
@@ -841,6 +771,128 @@ export type SlideTransitionSpec = {
   readonly orientation?: "horz" | "vert";
   readonly spokes?: 1 | 2 | 3 | 4 | 8;
   readonly inOutDirection?: "in" | "out";
+};
+
+// =============================================================================
+// Animation Types (CLI-specific)
+// =============================================================================
+
+/**
+ * Animation effect class
+ */
+export type AnimationClassSpec = "entrance" | "exit" | "emphasis" | "motion";
+
+/**
+ * Animation specification for adding to slides
+ */
+export type AnimationSpec = {
+  /** Target shape ID */
+  readonly shapeId: string;
+  /** Preset class (entrance, exit, emphasis, motion) */
+  readonly class: AnimationClassSpec;
+  /** Effect type (e.g., "fade", "fly", "wipe", "zoom", "pulse", "spin") */
+  readonly effect: string;
+  /** Trigger type */
+  readonly trigger?: AnimationTrigger;
+  /** Duration in milliseconds */
+  readonly duration?: number;
+  /** Delay before animation starts (milliseconds) */
+  readonly delay?: number;
+  /** Direction for directional effects */
+  readonly direction?: AnimationDirection;
+  /** Repeat count (or "indefinite") */
+  readonly repeat?: number | "indefinite";
+  /** Auto-reverse */
+  readonly autoReverse?: boolean;
+};
+
+// =============================================================================
+// Comment Types (CLI-specific alias)
+// =============================================================================
+
+/**
+ * Comment specification for adding to slides.
+ * Alias for SimpleCommentSpec from @oxen-office/pptx/patcher.
+ */
+export type CommentSpec = SimpleCommentSpec;
+
+// =============================================================================
+// Notes Types (CLI-specific alias)
+// =============================================================================
+
+/**
+ * Speaker notes specification.
+ * Alias for SimpleNotesSpec from @oxen-office/pptx/patcher.
+ */
+export type NotesSpec = SimpleNotesSpec;
+
+// =============================================================================
+// SmartArt/Diagram Types
+// =============================================================================
+
+/**
+ * Update node text in a SmartArt diagram
+ */
+export type DiagramNodeTextUpdateSpec = {
+  readonly type: "nodeText";
+  /** Node model ID */
+  readonly nodeId: string;
+  /** New text content */
+  readonly text: string;
+};
+
+/**
+ * Add a node to a SmartArt diagram
+ */
+export type DiagramNodeAddSpec = {
+  readonly type: "addNode";
+  /** Parent node model ID */
+  readonly parentId: string;
+  /** New node model ID */
+  readonly nodeId: string;
+  /** Node text content */
+  readonly text: string;
+};
+
+/**
+ * Remove a node from a SmartArt diagram
+ */
+export type DiagramNodeRemoveSpec = {
+  readonly type: "removeNode";
+  /** Node model ID to remove */
+  readonly nodeId: string;
+};
+
+/**
+ * Set connection between diagram nodes
+ */
+export type DiagramConnectionSpec = {
+  readonly type: "setConnection";
+  /** Source node ID */
+  readonly srcId: string;
+  /** Destination node ID */
+  readonly destId: string;
+  /** Connection type (e.g., "parOf") */
+  readonly connectionType: string;
+};
+
+/**
+ * Union of all diagram change types
+ */
+export type DiagramChangeSpec =
+  | DiagramNodeTextUpdateSpec
+  | DiagramNodeAddSpec
+  | DiagramNodeRemoveSpec
+  | DiagramConnectionSpec;
+
+/**
+ * SmartArt update specification
+ */
+export type SmartArtUpdateSpec = {
+  /** Relationship ID of the diagram (e.g., "rId3") */
+  readonly resourceId: string;
+  /** Changes to apply to the diagram */
+  readonly changes: readonly DiagramChangeSpec[];
 };
 
 /**
@@ -857,6 +909,57 @@ export type SlideModSpec = {
   readonly addConnectors?: readonly ConnectorSpec[];
   readonly addGroups?: readonly GroupSpec[];
   readonly addTables?: readonly TableSpec[];
+  readonly updateTables?: readonly TableUpdateSpec[];
+  /** Add animations to shapes on this slide */
+  readonly addAnimations?: readonly AnimationSpec[];
+  /** Add comments to this slide */
+  readonly addComments?: readonly CommentSpec[];
+  /** Set speaker notes for this slide */
+  readonly speakerNotes?: NotesSpec;
+  /** Update SmartArt diagrams on this slide */
+  readonly updateSmartArt?: readonly SmartArtUpdateSpec[];
+};
+
+// =============================================================================
+// Slide Operation Types
+// =============================================================================
+
+/**
+ * Specification for adding a new slide
+ */
+export type SlideAddSpec = {
+  /** Layout XML path inside the PPTX (e.g., "ppt/slideLayouts/slideLayout1.xml") */
+  readonly layoutPath: string;
+  /** 0-indexed position to insert the slide (default: at the end) */
+  readonly insertAt?: number;
+};
+
+/**
+ * Specification for removing a slide
+ */
+export type SlideRemoveSpec = {
+  /** 1-indexed slide number to remove */
+  readonly slideNumber: number;
+};
+
+/**
+ * Specification for reordering a slide
+ */
+export type SlideReorderSpec = {
+  /** 0-indexed current position of the slide */
+  readonly from: number;
+  /** 0-indexed target position for the slide */
+  readonly to: number;
+};
+
+/**
+ * Specification for duplicating a slide
+ */
+export type SlideDuplicateSpec = {
+  /** 1-indexed slide number to duplicate */
+  readonly sourceSlideNumber: number;
+  /** 0-indexed position to insert the duplicate (default: after the source) */
+  readonly insertAt?: number;
 };
 
 /**
@@ -870,6 +973,15 @@ export type BuildSpec = {
    * This is applied before any slide modifications.
    */
   readonly theme?: ThemeEditSpec;
+  /**
+   * Slide structure operations (add, remove, reorder, duplicate).
+   * These are applied BEFORE slide content modifications.
+   * The order of operations is: add → duplicate → reorder → remove
+   */
+  readonly addSlides?: readonly SlideAddSpec[];
+  readonly duplicateSlides?: readonly SlideDuplicateSpec[];
+  readonly reorderSlides?: readonly SlideReorderSpec[];
+  readonly removeSlides?: readonly SlideRemoveSpec[];
   readonly slides?: readonly SlideModSpec[];
 };
 

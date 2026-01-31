@@ -141,6 +141,14 @@ export type {
 } from "./animation";
 export { addAnimationsToSlide, removeAnimationsFromSlide } from "./animation";
 
+// Comments
+export type { SimpleCommentSpec } from "./comment";
+export { addCommentToSlide, getSlideComments, getCommentAuthors } from "./comment";
+
+// Notes (Speaker Notes)
+export type { SimpleNotesSpec } from "./notes";
+export { setSlideNotes, getSlideNotes } from "./notes";
+
 // Serializers
 export {
   serializeColor,
