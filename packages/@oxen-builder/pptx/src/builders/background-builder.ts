@@ -16,7 +16,7 @@ import type { Fill } from "@oxen-office/pptx/domain/color/types";
 import type { ZipPackage } from "@oxen/zip";
 import type { Degrees, Percent } from "@oxen-office/ooxml/domain/units";
 import type { BackgroundFillSpec, BackgroundGradientSpec, BackgroundImageSpec } from "../types";
-import { buildColor } from "./fill-builder";
+import { buildColor } from "@oxen-builder/drawing-ml/fill";
 
 /**
  * Build a Fill from BackgroundFillSpec

@@ -13,7 +13,7 @@
  */
 
 import type { XmlElement } from "@oxen/xml";
-import { createElement } from "@oxen/xml";
+import { createElement } from "@oxen-builder/core";
 import type {
   XlsxStyleSheet,
   XlsxCellXf,

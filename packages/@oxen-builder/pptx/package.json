@@ -8,6 +8,7 @@
     "@oxen/buffer": "workspace:*",
     "@oxen/xml": "workspace:*",
     "@oxen/zip": "workspace:*",
+    "@oxen-builder/drawing-ml": "workspace:*",
     "@oxen-office/chart": "workspace:*",
     "@oxen-office/opc": "workspace:*",
     "@oxen-office/ooxml": "workspace:*",

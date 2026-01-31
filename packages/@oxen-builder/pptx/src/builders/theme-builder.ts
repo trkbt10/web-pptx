@@ -72,7 +72,6 @@ export function applyThemeEditsToThemeXml(themeXmlText: string, theme: ThemeEdit
   }
 
   const themeXml = parseXml(themeXmlText);
-  const changes: Parameters<typeof patchTheme>[1] = [];
   const changeList: Parameters<typeof patchTheme>[1][number][] = [];
 
   if (hasColorScheme && theme.colorScheme) {

@@ -18,7 +18,7 @@
 // Imports from @oxen-office packages (for internal use)
 // =============================================================================
 
-// Chart types from @oxen-office/chart
+// Chart types from @oxen-builder/chart
 import type {
   BuildableChartType,
   Grouping,
@@ -26,7 +26,7 @@ import type {
   ScatterStyle,
   RadarStyle,
   OfPieType,
-} from "@oxen-office/chart";
+} from "@oxen-builder/chart";
 
 // Color/Fill types from @oxen-office/ooxml
 import type { SchemeColorValue, PatternType } from "@oxen-office/ooxml";

@@ -13,16 +13,8 @@ export { setChildren } from "./xml-utils";
 // Preset shape mappings
 export { PRESET_MAP } from "./presets";
 
-// Fill builders
-export {
-  buildColor,
-  buildFill,
-  buildGradientFill,
-  buildPatternFill,
-  buildSolidFill,
-  buildSolidFillFromSpec,
-  buildThemeFill,
-} from "./fill-builder";
+// For fill builders (buildColor, buildFill, buildGradientFill, etc.),
+// import directly from @oxen-builder/drawing-ml/fill
 
 // Line builders
 export { buildLine, buildLineEnd, buildLineFromSpec } from "./line-builder";

@@ -7,7 +7,7 @@
  */
 
 import { createElement, type XmlElement, type XmlNode } from "@oxen/xml";
-import { ooxmlAngleUnits, ooxmlEmu } from "@oxen-office/ooxml/serializer";
+import { ooxmlAngleUnits, ooxmlEmu } from "@oxen-builder/core";
 import type {
   CustomGeometry,
   GeometryPath,

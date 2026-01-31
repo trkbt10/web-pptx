@@ -52,13 +52,5 @@
       "types": "./src/parser/drawing-ml/*.ts",
       "default": "./src/parser/drawing-ml/*.ts"
     },
-    "./serializer": {
-      "types": "./src/serializer/index.ts",
-      "default": "./src/serializer/index.ts"
-    },
-    "./serializer/*": {
-      "types": "./src/serializer/*.ts",
-      "default": "./src/serializer/*.ts"
-    }
   }
 }

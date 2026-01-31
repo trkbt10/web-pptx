@@ -25,7 +25,7 @@ import type { Pixels, Degrees } from "@oxen-office/ooxml/domain/units";
 import type { ShapeSpec, ImageSpec, ConnectorSpec, GroupSpec, TableSpec, TableCellSpec, TextSpec } from "../types";
 import { PRESET_MAP } from "./presets";
 import { generateShapeId } from "./id-generator";
-import { buildFill } from "./fill-builder";
+import { buildFill } from "@oxen-builder/drawing-ml/fill";
 import { buildLine } from "./line-builder";
 import { buildTextBody, collectHyperlinks } from "./text-builder";
 import { buildEffects, buildShape3d } from "./effects-builder";

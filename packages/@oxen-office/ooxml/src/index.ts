@@ -100,12 +100,3 @@ export type {
 export type { RenderWarning, WarningCollector } from "./domain/warnings";
 export { createWarningCollector } from "./domain/warnings";
 
-// Serializer utilities
-export {
-  ooxmlBool,
-  ooxmlAngleUnits,
-  ooxmlPercent100k,
-  ooxmlPercent1000,
-  ooxmlEmu,
-  EMU_PER_PIXEL,
-} from "./serializer";

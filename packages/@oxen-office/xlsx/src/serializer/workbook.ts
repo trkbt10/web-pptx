@@ -10,7 +10,7 @@
  */
 
 import type { XmlElement, XmlNode } from "@oxen/xml";
-import { createElement } from "@oxen/xml";
+import { createElement } from "@oxen-builder/core";
 import type { XlsxWorkbook, XlsxWorksheet, XlsxDefinedName } from "../domain/workbook";
 
 // =============================================================================

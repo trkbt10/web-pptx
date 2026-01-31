@@ -5,7 +5,7 @@ import type { Transform, GroupTransform } from "../../domain/geometry";
 import type { Table } from "../../domain/table/types";
 import { serializeTransform } from "../serializer/transform";
 import { serializeColor, serializeDrawingTable, serializeEffects, serializeFill, serializeLine, serializeTextBody, serializeShape3d, serializeBlipEffects } from "../serializer";
-import { ooxmlAngleUnits, ooxmlBool, ooxmlEmu, ooxmlPercent100k } from "@oxen-office/ooxml/serializer/units";
+import { ooxmlAngleUnits, ooxmlBool, ooxmlEmu, ooxmlPercent100k } from "@oxen-builder/core";
 
 /**
  * Domain Shape から完全な p:sp 要素を生成する

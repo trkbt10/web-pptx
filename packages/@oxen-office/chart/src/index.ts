@@ -3,18 +3,25 @@
  *
  * This package is intended to be format-agnostic (PPTX/DOCX/XLSX),
  * providing reusable ChartML logic.
+ *
+ * NOTE: For chart building/serialization, use @oxen-builder/chart package.
  */
 
-// Chart types from serializer
+// Domain types
 export type {
-  BuildableChartType,
-  Grouping,
+  ChartType,
+  BarDirection,
   BarGrouping,
+  Grouping,
   ScatterStyle,
   RadarStyle,
   OfPieType,
-  ChartSpaceOptions,
-} from "./serializer/chart-space-builder";
-
-export { buildChartSpaceElement, buildChartSpaceDocument } from "./serializer/chart-space-builder";
-
+  Chart,
+  ChartTitle,
+  Layout,
+  ManualLayout,
+  PlotArea,
+  ChartSeries,
+  Legend,
+  Axis,
+} from "./domain/types";

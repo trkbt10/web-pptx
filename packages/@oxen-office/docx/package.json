@@ -49,14 +49,6 @@
       "types": "./src/parser/*.ts",
       "default": "./src/parser/*.ts"
     },
-    "./serializer": {
-      "types": "./src/serializer/index.ts",
-      "default": "./src/serializer/index.ts"
-    },
-    "./serializer/*": {
-      "types": "./src/serializer/*.ts",
-      "default": "./src/serializer/*.ts"
-    },
     "./adapters": {
       "types": "./src/adapters/index.ts",
       "default": "./src/adapters/index.ts"

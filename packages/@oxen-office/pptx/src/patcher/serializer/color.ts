@@ -4,7 +4,7 @@
 
 import { createElement, type XmlElement } from "@oxen/xml";
 import type { Color, ColorTransform } from "@oxen-office/ooxml/domain/color";
-import { ooxmlAngleUnits, ooxmlPercent100k } from "@oxen-office/ooxml/serializer/units";
+import { ooxmlAngleUnits, ooxmlPercent100k } from "@oxen-builder/core";
 
 
 

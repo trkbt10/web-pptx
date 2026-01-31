@@ -5,6 +5,7 @@
   "type": "module",
   "sideEffects": false,
   "dependencies": {
+    "@oxen-builder/core": "workspace:*",
     "@oxen-office/opc": "workspace:*",
     "@oxen-office/ooxml": "workspace:*",
     "@oxen/xml": "workspace:*",
@@ -19,10 +20,6 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
-    },
-    "./exporter": {
-      "types": "./src/exporter.ts",
-      "default": "./src/exporter.ts"
     },
     "./domain/types": {
       "types": "./src/domain/types.ts",

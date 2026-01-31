@@ -11,7 +11,7 @@
 
 import type { XlsxFont, XlsxColor } from "../domain/style/font";
 import type { XmlElement } from "@oxen/xml";
-import { createElement } from "@oxen/xml";
+import { createElement } from "@oxen-builder/core";
 
 // =============================================================================
 // Color Serialization

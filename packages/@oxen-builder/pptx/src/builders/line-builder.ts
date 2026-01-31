@@ -6,7 +6,7 @@ import type { Line } from "@oxen-office/pptx/domain/color/types";
 import type { Pixels } from "@oxen-office/ooxml/domain/units";
 import type { DashStyle, LineCap, LineJoin, CompoundLine } from "@oxen-office/pptx/domain";
 import type { LineEndSpec, ColorSpec } from "../types";
-import { buildColor } from "./fill-builder";
+import { buildColor } from "@oxen-builder/drawing-ml/fill";
 
 /**
  * Line end type mapping

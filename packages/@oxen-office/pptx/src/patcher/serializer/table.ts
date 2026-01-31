@@ -1,7 +1,7 @@
 /** @file Table serializer for a:tbl element */
 import { createElement, type XmlElement } from "@oxen/xml";
 import type { Table, TableCell, TableCellProperties, TableProperties, CellBorders } from "../../domain/table/types";
-import { ooxmlBool, ooxmlEmu } from "@oxen-office/ooxml/serializer/units";
+import { ooxmlBool, ooxmlEmu } from "@oxen-builder/core";
 import { serializeFill } from "./fill";
 import { serializeEffects } from "./effects";
 import { serializeDrawingTextBody } from "./text";

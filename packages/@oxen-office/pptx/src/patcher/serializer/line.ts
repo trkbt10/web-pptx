@@ -2,7 +2,7 @@
 import { createElement, type XmlElement } from "@oxen/xml";
 import type { CustomDash, Line, LineEnd } from "../../domain";
 import { serializeFill } from "./fill";
-import { ooxmlEmu, ooxmlPercent100k } from "@oxen-office/ooxml/serializer/units";
+import { ooxmlEmu, ooxmlPercent100k } from "@oxen-builder/core";
 
 
 

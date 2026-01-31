@@ -15,7 +15,7 @@ import type {
   HyperlinkSpec,
 } from "../types";
 import type { Hyperlink } from "@oxen-office/pptx/domain/resource";
-import { buildSolidFill } from "./fill-builder";
+import { buildSolidFill } from "@oxen-builder/drawing-ml/fill";
 import { buildLine } from "./line-builder";
 import { buildEffects } from "./effects-builder";
 

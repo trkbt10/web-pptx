@@ -4,7 +4,7 @@
 
 import type { BlipEffects } from "@oxen-office/pptx/domain/color/types";
 import type { Degrees, Percent, Pixels } from "@oxen-office/ooxml/domain/units";
-import { buildColor } from "./fill-builder";
+import { buildColor } from "@oxen-builder/drawing-ml/fill";
 import type { BlipEffectSpec } from "../types";
 
 /**

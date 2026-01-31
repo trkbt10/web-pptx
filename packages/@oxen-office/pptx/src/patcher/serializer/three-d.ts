@@ -5,7 +5,7 @@
  */
 
 import { createElement, type XmlElement } from "@oxen/xml";
-import { ooxmlEmu } from "@oxen-office/ooxml/serializer/units";
+import { ooxmlEmu } from "@oxen-builder/core";
 import type { Shape3d, Bevel3d } from "../../domain/three-d";
 
 /**

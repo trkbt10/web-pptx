@@ -8,7 +8,7 @@
  */
 
 import type { XmlElement, XmlNode } from "@oxen/xml";
-import { createElement } from "@oxen/xml";
+import { createElement } from "@oxen-builder/core";
 import type { XlsxBorder, XlsxBorderEdge } from "../domain/style/border";
 import type { XlsxColor } from "../domain/style/font";
 

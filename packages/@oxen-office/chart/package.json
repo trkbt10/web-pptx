@@ -51,14 +51,6 @@
       "types": "./src/patcher/*/*.ts",
       "default": "./src/patcher/*/*.ts"
     },
-    "./serializer": {
-      "types": "./src/serializer/index.ts",
-      "default": "./src/serializer/index.ts"
-    },
-    "./serializer/*": {
-      "types": "./src/serializer/*.ts",
-      "default": "./src/serializer/*.ts"
-    }
   }
 }
 

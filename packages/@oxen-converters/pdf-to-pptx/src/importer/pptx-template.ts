@@ -3,7 +3,7 @@
  */
 
 import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { ooxmlEmu } from "@oxen-office/ooxml/serializer/units";
+import { ooxmlEmu } from "@oxen-builder/core";
 import type { PresentationFile } from "@oxen-office/pptx/domain";
 import { CONTENT_TYPES, RELATIONSHIP_TYPES } from "@oxen-office/pptx/domain";
 import { createEmptyZipPackage } from "@oxen/zip";
