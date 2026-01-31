@@ -14,9 +14,7 @@ export type UseDiagramContentOptions = {
   readonly getResource: <TParsed>(resourceId: string) => ResourceEntry<TParsed> | undefined;
 };
 
-
-
-
+/** Hook for extracting diagram shapes from a resource store. */
 
 
 

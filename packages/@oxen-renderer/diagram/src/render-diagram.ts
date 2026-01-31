@@ -13,9 +13,7 @@ export type RenderDiagramOptions<TShape> = {
   readonly ctx: DiagramRenderContext<TShape, string>;
 };
 
-
-
-
+/** Renders diagram content to an HTML string. */
 
 
 
@@ -61,9 +59,7 @@ export type RenderDiagramPlaceholderOptions = {
   readonly message?: string;
 };
 
-
-
-
+/** Renders a placeholder for diagrams that could not be rendered. */
 
 
 

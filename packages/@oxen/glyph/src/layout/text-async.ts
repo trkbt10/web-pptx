@@ -193,9 +193,7 @@ async function extractGlyphsAsync(
   return Promise.all(chars.map((char) => extractGlyphAsync(char, fontFamily, style)));
 }
 
-/**
- * Terminate the worker
- */
+/** Terminates the glyph extraction worker and clears pending requests. */
 export function terminateWorker(): void {
   if (worker) {
     worker.terminate();
@@ -208,9 +206,7 @@ export function terminateWorker(): void {
 // Main API
 // =============================================================================
 
-/**
- * Layout text into positioned glyphs (async - uses Web Worker)
- */
+/** Lays out text into positioned glyphs asynchronously using a Web Worker. */
 export async function layoutTextAsync(
   text: string,
   config: TextLayoutConfig,

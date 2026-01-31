@@ -11,9 +11,7 @@ export const GENERIC_FONT_FAMILIES = [
   "system-ui",
 ] as const;
 
-
-
-
+/** Formats a font family string with proper quoting for CSS. */
 
 
 

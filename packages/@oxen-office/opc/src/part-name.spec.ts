@@ -1,3 +1,4 @@
+/** @file Tests for OPC part name validation */
 import { arePartNamesEquivalent, isValidPartName } from "./part-name";
 
 describe("OPC Part name validation", () => {

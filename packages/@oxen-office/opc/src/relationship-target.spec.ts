@@ -1,3 +1,4 @@
+/** @file Tests for OPC relationship target path resolution */
 import { resolveRelationshipTargetPath } from "./relationship-target";
 
 describe("OPC relationship target path resolution", () => {

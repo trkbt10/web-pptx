@@ -1,3 +1,4 @@
+/** @file Type definitions for chart rendering */
 import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
 import type { Color } from "@oxen-office/ooxml/domain/color";
 import type { Points } from "@oxen-office/ooxml/domain/units";

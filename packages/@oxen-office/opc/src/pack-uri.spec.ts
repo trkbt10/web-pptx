@@ -1,3 +1,4 @@
+/** @file Tests for OPC pack URI utilities */
 import { arePackIrisEquivalent, composePackIri, createPartBaseIri, parsePackIri } from "./pack-uri";
 
 describe("OPC pack IRI", () => {

@@ -1,3 +1,4 @@
+/** @file Test utilities for chart rendering */
 import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
 import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
 import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
@@ -34,9 +35,7 @@ function resolvedFillToCssColor(fill: ResolvedFill): string | undefined {
   return undefined;
 }
 
-
-
-
+/** Creates a fill resolver for testing with optional color context. */
 
 
 
@@ -86,9 +85,7 @@ export function createTestFillResolver(colorContext?: ColorContext): FillResolve
   };
 }
 
-
-
-
+/** Creates a test chart render context with optional configuration. */
 
 
 

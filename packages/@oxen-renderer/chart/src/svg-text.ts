@@ -1,8 +1,11 @@
+/** @file SVG text attribute utilities for chart rendering */
 import type { ResolvedTextStyle } from "./types";
 
 function escapeAttr(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 }
+
+/** Converts a resolved text style to SVG text attributes. */
 
 
 
