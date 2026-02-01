@@ -34,9 +34,11 @@ import { parseDrawing } from "./drawing";
 import { collectChartRelIds, resolveCharts, updateDrawingWithChartPaths } from "./chart-resolver";
 import { parsePivotTable } from "./pivot/pivot-table";
 import { parsePivotCacheDefinition } from "./pivot/pivot-cache";
+import { parseTheme } from "./theme";
 import type { XlsxWorkbookChart } from "../domain/workbook";
 import type { XlsxPivotTable } from "../domain/pivot/types";
 import type { XlsxPivotCacheDefinition } from "../domain/pivot/cache-types";
+import type { XlsxTheme } from "../domain/theme";
 import type { XmlElement, XmlDocument } from "@oxen/xml";
 import { parseXml, getAttr, getChild, getChildren, getTextContent, isXmlElement } from "@oxen/xml";
 import { basenamePosixPath, dirnamePosixPath, joinPosixPath, normalizePosixPath } from "@oxen-office/opc";
@@ -507,6 +509,25 @@ async function loadPivotCaches(
   return pivotCaches;
 }
 
+async function loadTheme(
+  getFileContent: (path: string) => Promise<string | undefined>,
+): Promise<XlsxTheme | undefined> {
+  // Theme is typically at xl/theme/theme1.xml
+  const themePath = "xl/theme/theme1.xml";
+  const themeXml = await getFileContent(themePath);
+  if (!themeXml) {
+    return undefined;
+  }
+
+  try {
+    const themeDoc = parseXml(themeXml);
+    return parseTheme(themeDoc, themePath);
+  } catch {
+    // Theme parsing is optional, skip on error
+    return undefined;
+  }
+}
+
 // =============================================================================
 // Main Workbook Parser
 // =============================================================================
@@ -553,6 +574,9 @@ export async function parseXlsxWorkbook(
   // 3. Parse styles
   const stylesXml = await getFileContent("xl/styles.xml");
   const styleSheet = parseStylesOrDefault(stylesXml);
+
+  // 3.1 Parse theme (optional)
+  const theme = await loadTheme(getFileContent);
 
   // 4. Parse workbook.xml
   const workbookXml = await getFileContent("xl/workbook.xml");
@@ -641,6 +665,7 @@ export async function parseXlsxWorkbook(
     charts: allCharts.length > 0 ? allCharts : undefined,
     pivotTables: allPivotTables.length > 0 ? allPivotTables : undefined,
     pivotCaches: pivotCaches.length > 0 ? pivotCaches : undefined,
+    theme,
   };
 }
 

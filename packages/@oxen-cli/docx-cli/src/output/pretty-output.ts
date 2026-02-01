@@ -12,6 +12,7 @@ import type { StylesData } from "../commands/styles";
 import type { NumberingData } from "../commands/numbering";
 import type { HeadersFootersData } from "../commands/headers-footers";
 import type { TablesData } from "../commands/tables";
+import type { CommentsData } from "../commands/comments";
 
 /**
  * Format document info for pretty display.
@@ -321,6 +322,32 @@ export function formatTablesPretty(data: TablesData): string {
     if (table.firstCellPreview) {
       lines.push(`  First cell: "${table.firstCellPreview}"`);
     }
+  }
+
+  return lines.join("\n").trim();
+}
+
+/**
+ * Format comments for pretty display.
+ */
+export function formatCommentsPretty(data: CommentsData): string {
+  if (data.count === 0) {
+    return "No comments found";
+  }
+
+  const lines = [`Comments: ${data.count}`, ""];
+
+  for (const comment of data.comments) {
+    const dateStr = comment.date ? ` (${comment.date})` : "";
+    const initialsStr = comment.initials ? ` [${comment.initials}]` : "";
+    lines.push(`[${comment.id}] ${comment.author}${initialsStr}${dateStr}`);
+
+    // Show comment text with proper indentation
+    const textLines = comment.text.split("\n");
+    for (const line of textLines) {
+      lines.push(`  ${line}`);
+    }
+    lines.push("");
   }
 
   return lines.join("\n").trim();

@@ -17,6 +17,7 @@ import type { AutofilterData } from "../commands/autofilter";
 import type { ValidationData } from "../commands/validation";
 import type { ConditionalData } from "../commands/conditional";
 import type { HyperlinksData } from "../commands/hyperlinks";
+import type { StylesData, ColorJson } from "../commands/styles";
 
 /**
  * Format workbook info for pretty display.
@@ -448,4 +449,130 @@ export function formatHyperlinksPretty(data: HyperlinksData): string {
   }
 
   return lines.join("\n").trim();
+}
+
+// =============================================================================
+// Styles Formatting Helpers
+// =============================================================================
+
+function formatColorValue(color: ColorJson | undefined): string {
+  if (!color) {
+    return "none";
+  }
+  switch (color.type) {
+    case "rgb":
+      return `#${color.value}`;
+    case "theme":
+      return color.tint !== undefined ? `theme:${color.theme} (tint:${color.tint})` : `theme:${color.theme}`;
+    case "indexed":
+      return `indexed:${color.index}`;
+    case "auto":
+      return "auto";
+    default:
+      return "unknown";
+  }
+}
+
+/**
+ * Format stylesheet definitions for pretty display.
+ */
+export function formatStylesPretty(data: StylesData): string {
+  const lines = [
+    "Stylesheet Summary",
+    "=".repeat(18),
+    `  Fonts: ${data.summary.fontCount}`,
+    `  Fills: ${data.summary.fillCount}`,
+    `  Borders: ${data.summary.borderCount}`,
+    `  Number Formats: ${data.summary.numberFormatCount}`,
+    `  Cell XFs: ${data.summary.cellXfCount}`,
+    `  Cell Styles: ${data.summary.cellStyleCount}`,
+    `  DXFs: ${data.summary.dxfCount}`,
+  ];
+
+  // Fonts
+  if (data.fonts.length > 0) {
+    lines.push("", "Fonts", "-".repeat(5));
+    for (const f of data.fonts) {
+      const props: string[] = [];
+      if (f.bold) props.push("bold");
+      if (f.italic) props.push("italic");
+      if (f.underline) props.push(`underline:${f.underline}`);
+      if (f.strikethrough) props.push("strike");
+      if (f.color) props.push(`color:${formatColorValue(f.color)}`);
+      if (f.scheme) props.push(`scheme:${f.scheme}`);
+      const propsStr = props.length > 0 ? ` [${props.join(", ")}]` : "";
+      lines.push(`  [${f.id}] ${f.name} ${f.size}pt${propsStr}`);
+    }
+  }
+
+  // Fills
+  if (data.fills.length > 0) {
+    lines.push("", "Fills", "-".repeat(5));
+    for (const f of data.fills) {
+      if (f.type === "none") {
+        lines.push(`  [${f.id}] none`);
+      } else if (f.type === "pattern") {
+        const fg = f.fgColor ? ` fg:${formatColorValue(f.fgColor)}` : "";
+        const bg = f.bgColor ? ` bg:${formatColorValue(f.bgColor)}` : "";
+        lines.push(`  [${f.id}] pattern:${f.patternType}${fg}${bg}`);
+      } else if (f.type === "gradient") {
+        const deg = f.degree !== undefined ? ` ${f.degree}deg` : "";
+        lines.push(`  [${f.id}] gradient:${f.gradientType}${deg}`);
+      }
+    }
+  }
+
+  // Borders
+  if (data.borders.length > 0) {
+    lines.push("", "Borders", "-".repeat(7));
+    for (const b of data.borders) {
+      const sides: string[] = [];
+      if (b.left?.style) sides.push(`L:${b.left.style}`);
+      if (b.right?.style) sides.push(`R:${b.right.style}`);
+      if (b.top?.style) sides.push(`T:${b.top.style}`);
+      if (b.bottom?.style) sides.push(`B:${b.bottom.style}`);
+      if (b.diagonal?.style) sides.push(`D:${b.diagonal.style}`);
+      const borderStr = sides.length > 0 ? sides.join(" ") : "none";
+      lines.push(`  [${b.id}] ${borderStr}`);
+    }
+  }
+
+  // Number Formats
+  if (data.numberFormats.length > 0) {
+    lines.push("", "Number Formats (Custom)", "-".repeat(23));
+    for (const nf of data.numberFormats) {
+      lines.push(`  [${nf.id}] ${nf.formatCode}`);
+    }
+  }
+
+  // Cell XFs
+  if (data.cellXfs.length > 0) {
+    lines.push("", "Cell Formats (XFs)", "-".repeat(18));
+    for (const xf of data.cellXfs) {
+      const refs = `font:${xf.fontId} fill:${xf.fillId} border:${xf.borderId} numFmt:${xf.numFmtId}`;
+      lines.push(`  [${xf.id}] ${refs}`);
+      if (xf.alignment) {
+        const align: string[] = [];
+        if (xf.alignment.horizontal) align.push(`h:${xf.alignment.horizontal}`);
+        if (xf.alignment.vertical) align.push(`v:${xf.alignment.vertical}`);
+        if (xf.alignment.wrapText) align.push("wrap");
+        if (xf.alignment.shrinkToFit) align.push("shrink");
+        if (xf.alignment.textRotation !== undefined) align.push(`rot:${xf.alignment.textRotation}`);
+        if (align.length > 0) {
+          lines.push(`    alignment: ${align.join(" ")}`);
+        }
+      }
+    }
+  }
+
+  // Cell Styles
+  if (data.cellStyles.length > 0) {
+    lines.push("", "Cell Styles", "-".repeat(11));
+    for (const s of data.cellStyles) {
+      const builtin = s.builtinId !== undefined ? ` (builtin:${s.builtinId})` : "";
+      lines.push(`  ${s.name} -> xfId:${s.xfId}${builtin}`);
+    }
+  }
+
+  return lines.join("\n");
 }

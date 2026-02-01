@@ -33,6 +33,7 @@ import type { Chart } from "@oxen-office/chart/domain/types";
 import type { XlsxPivotTable } from "./pivot/types";
 import type { XlsxPivotCacheDefinition } from "./pivot/cache-types";
 import type { SharedStringItem } from "../parser/shared-strings";
+import type { XlsxTheme } from "./theme";
 
 // =============================================================================
 // Column Definition
@@ -341,6 +342,14 @@ export type XlsxWorkbook = {
    * @see ECMA-376 Part 4, Section 18.10 (Pivot Tables)
    */
   readonly pivotCaches?: readonly XlsxPivotCacheDefinition[];
+  /**
+   * Theme definition for the workbook.
+   *
+   * Contains color scheme and font scheme for style resolution.
+   *
+   * @see ECMA-376 Part 1, Section 20.1.6 (Theme)
+   */
+  readonly theme?: XlsxTheme;
 };
 
 // =============================================================================

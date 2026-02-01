@@ -27,6 +27,7 @@ import { runAutofilter } from "./commands/autofilter";
 import { runValidation } from "./commands/validation";
 import { runConditional } from "./commands/conditional";
 import { runHyperlinks } from "./commands/hyperlinks";
+import { runStyles } from "./commands/styles";
 import { output, type OutputMode } from "@oxen-cli/cli-core";
 import {
   formatInfoPretty,
@@ -44,6 +45,7 @@ import {
   formatValidationPretty,
   formatConditionalPretty,
   formatHyperlinksPretty,
+  formatStylesPretty,
 } from "./output/pretty-output";
 
 const program = new Command();
@@ -216,6 +218,17 @@ program
     const mode = program.opts().output as OutputMode;
     const result = await runHyperlinks(file, options);
     output(result, mode, formatHyperlinksPretty);
+  });
+
+program
+  .command("styles")
+  .description("Display stylesheet definitions (fonts, fills, borders, formats)")
+  .argument("<file>", "XLSX file path")
+  .option("--section <section>", "Filter by section (fonts, fills, borders, numberformats, cellxfs, cellstyles)")
+  .action(async (file: string, options: { section?: string }) => {
+    const mode = program.opts().output as OutputMode;
+    const result = await runStyles(file, options);
+    output(result, mode, formatStylesPretty);
   });
 
 program.parse();

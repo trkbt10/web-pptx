@@ -22,6 +22,7 @@ import { runStyles } from "./commands/styles";
 import { runNumbering } from "./commands/numbering";
 import { runHeadersFooters } from "./commands/headers-footers";
 import { runTables } from "./commands/tables";
+import { runComments } from "./commands/comments";
 import { output, type OutputMode } from "@oxen-cli/cli-core";
 import {
   formatInfoPretty,
@@ -34,6 +35,7 @@ import {
   formatNumberingPretty,
   formatHeadersFootersPretty,
   formatTablesPretty,
+  formatCommentsPretty,
 } from "./output/pretty-output";
 
 const program = new Command();
@@ -153,6 +155,16 @@ program
     const mode = program.opts().output as OutputMode;
     const result = await runTables(file);
     output(result, mode, formatTablesPretty);
+  });
+
+program
+  .command("comments")
+  .description("Display document comments")
+  .argument("<file>", "DOCX file path")
+  .action(async (file: string) => {
+    const mode = program.opts().output as OutputMode;
+    const result = await runComments(file);
+    output(result, mode, formatCommentsPretty);
   });
 
 program.parse();
