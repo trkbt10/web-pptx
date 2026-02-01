@@ -2,7 +2,7 @@
  * @file Tests for measurer.ts
  */
 
-import { px, pt } from "@oxen-office/ooxml/domain/units";
+import { px, pt } from "@oxen-office/drawing-ml/domain/units";
 import { calculateCharWidth, measureTextDetailed, measureTextWidth } from "./measurer";
 
 describe("text-layout measurer", () => {

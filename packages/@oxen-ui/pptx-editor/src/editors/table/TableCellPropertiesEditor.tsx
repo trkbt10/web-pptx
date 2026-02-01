@@ -11,7 +11,7 @@ import { Accordion, FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
 import { FillEditor, createNoFill } from "../color/FillEditor";
 import { LineEditor, createDefaultLine } from "../../ui/line";
-import { px, type Pixels } from "@oxen-office/ooxml/domain/units";
+import { px, type Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type {
   TableCellProperties,
   CellMargin,

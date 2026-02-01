@@ -6,7 +6,7 @@
 
 import type { XmlElement } from "@oxen/xml";
 import { getChild } from "@oxen/xml";
-import { getIntAttr } from "@oxen-office/ooxml/parser";
+import { getIntAttr } from "@oxen-office/drawing-ml/parser";
 import { parseSeriesText } from "../data-reference";
 import { parseChartShapeProperties } from "../shape-properties";
 

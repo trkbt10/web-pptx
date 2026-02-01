@@ -2,7 +2,7 @@
  * @file Hex color helpers
  */
 
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 
 
 

@@ -5,7 +5,7 @@
  */
 
 import type { Line, LineCap, DashStyle } from "@oxen-office/pptx/domain";
-import { px, pct } from "@oxen-office/ooxml/domain/units";
+import { px, pct } from "@oxen-office/drawing-ml/domain/units";
 import { type CheckItem, TestSubsection, LinePreview } from "../common";
 
 /**

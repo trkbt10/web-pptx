@@ -5,8 +5,8 @@
  */
 
 import type { ChartEditorAdapters } from "@oxen-ui/chart-editor";
-import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
-import type { BaseLine } from "@oxen-office/ooxml/domain/line";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
+import type { BaseLine } from "@oxen-office/drawing-ml/domain/line";
 import type { Fill, Line } from "@oxen-office/pptx/domain/color/types";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
 import { FillEditor, createNoFill } from "../color";

@@ -10,7 +10,7 @@ import { colorTokens } from "@oxen-ui/ui-components/design-tokens";
 import type { Shape } from "@oxen-office/pptx/domain/index";
 import type { Transform } from "@oxen-office/pptx/domain/types";
 import type { Fill, Line } from "@oxen-office/pptx/domain/color/types";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import { type ShapeId } from "@oxen-office/pptx/domain/types";
 import { Accordion } from "@oxen-ui/ui-components/layout";
 import { Input } from "@oxen-ui/ui-components/primitives";

@@ -36,42 +36,15 @@ export type GenerateDiagramShapesOptions = {
   readonly config: ShapeGenerationConfig;
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /** Generate PPTX SpShape array from diagram definitions */
-export function generateDiagramShapes(
-  { dataModel, layoutDefinition, styleDefinition, colorDefinition, config }: GenerateDiagramShapesOptions,
-): ShapeGenerationResult {
-  const result = generateDiagramLayoutResults(
-    dataModel,
-    layoutDefinition,
-    styleDefinition,
-    colorDefinition,
-    config
-  );
+export function generateDiagramShapes({
+  dataModel,
+  layoutDefinition,
+  styleDefinition,
+  colorDefinition,
+  config,
+}: GenerateDiagramShapesOptions): ShapeGenerationResult {
+  const result = generateDiagramLayoutResults(dataModel, layoutDefinition, styleDefinition, colorDefinition, config);
 
   return {
     shapes: result.shapes.map(convertLayoutResultToSpShape),

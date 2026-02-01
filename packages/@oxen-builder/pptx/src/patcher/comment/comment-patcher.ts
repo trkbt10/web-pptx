@@ -17,7 +17,7 @@ import {
   type XmlElement,
 } from "@oxen/xml";
 import type { ZipPackage } from "@oxen/zip";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { Comment, CommentAuthor, CommentList, CommentAuthorList, CommentPosition } from "@oxen-office/pptx/domain/comment";
 import {
   serializeComment,

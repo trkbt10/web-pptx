@@ -10,7 +10,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { MixedRunPropertiesEditor } from "./MixedRunPropertiesEditor";
 import type { MixedRunPropertiesEditorProps } from "./MixedRunPropertiesEditor";
 import type { MixedRunProperties } from "./mixed-properties";
-import type { Points, Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Points, Pixels } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Test Helpers

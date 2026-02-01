@@ -8,7 +8,7 @@
  */
 
 import { getBevelConfig, getAsymmetricBevelConfig } from "./bevel";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { Bevel3d, BevelPresetType, Shape3d } from "@oxen-office/pptx/domain/index";
 
 // =============================================================================

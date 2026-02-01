@@ -4,7 +4,7 @@
  * Shared bounds type for creation flows (click/drag placement).
  */
 
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 
 export type ShapeBounds = {
   readonly x: Pixels;

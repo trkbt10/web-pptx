@@ -15,7 +15,7 @@ import { GridLayout } from "react-panel-layout";
 import type { Shape, RunProperties, ParagraphProperties, TextBody } from "@oxen-office/pptx/domain";
 import type { ZipFile } from "@oxen-office/opc";
 import type { ShapeId } from "@oxen-office/pptx/domain/types";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { PresentationDocument, SlideWithId } from "@oxen-office/pptx/app";
 import { PresentationEditorProvider, usePresentationEditor } from "../context/presentation/PresentationEditorContext";
 import { EditorResourceProvider, useEditorResourceStore } from "../context/editor/EditorResourceContext";
@@ -84,7 +84,7 @@ import { SelectedElementTab, SlideInfoTab, LayersTab } from "../panels/right-pan
 import { AssetPanel, LayoutInfoPanel, ThemeViewerPanel } from "../panels/inspector";
 import { ThemeEditorTabs, ThemeEditorCanvas, extractThemeFromPptx } from "../panels/theme-editor";
 import type { ThemePreset } from "../panels/theme-editor/types";
-import type { SchemeColorName } from "@oxen-office/ooxml/domain/color";
+import type { SchemeColorName } from "@oxen-office/drawing-ml/domain/color";
 import type { FontSpec } from "@oxen-office/ooxml/domain/font-scheme";
 import {
   editorContainerStyle,

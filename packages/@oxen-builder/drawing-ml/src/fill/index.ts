@@ -2,7 +2,7 @@
  * @file Fill builder exports
  */
 
-import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
 import type {
   FillSpec,
   SolidFillSpec,

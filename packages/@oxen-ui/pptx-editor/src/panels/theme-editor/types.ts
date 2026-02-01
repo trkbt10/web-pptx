@@ -30,7 +30,7 @@
  */
 
 import type { FontSpec } from "@oxen-office/ooxml/domain/font-scheme";
-import type { SchemeColorName } from "@oxen-office/ooxml/domain/color";
+import type { SchemeColorName } from "@oxen-office/drawing-ml/domain/color";
 
 // =============================================================================
 // Color Scheme Types

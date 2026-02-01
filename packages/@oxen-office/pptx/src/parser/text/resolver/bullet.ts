@@ -7,10 +7,10 @@
 import type { XmlElement } from "@oxen/xml";
 import { getChild } from "@oxen/xml";
 import type { TextStyleContext, MasterTextStyles } from "../../context";
-import type { Points, Percent } from "@oxen-office/ooxml/domain/units";
-import { pt } from "@oxen-office/ooxml/domain/units";
+import type { Points, Percent } from "@oxen-office/drawing-ml/domain/units";
+import { pt } from "@oxen-office/drawing-ml/domain/units";
 import type { Bullet, BulletStyle } from "../../../domain/text";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import { parseColorFromParent } from "../../graphics/color-parser";
 import { parseTextBulletSize, parseTextBulletStartAt } from "../../primitive";
 import { TYPE_TO_MASTER_STYLE } from "./constants";

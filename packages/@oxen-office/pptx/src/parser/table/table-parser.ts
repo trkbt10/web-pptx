@@ -20,7 +20,7 @@ import type {
   TableProperties,
   TableRow,
 } from "../../domain/table/types";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import {
   getAttr,
   getChild,

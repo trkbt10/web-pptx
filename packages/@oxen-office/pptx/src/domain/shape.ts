@@ -8,7 +8,7 @@
 import type { Fill, Line, BlipEffects } from "./color/types";
 import type { Table } from "./table/types";
 import type { TextBody } from "./text";
-import type { Degrees, Percent, Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Degrees, Percent, Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { Point, Transform, GroupTransform } from "./geometry";
 import type { Effects } from "./effects";
 import type { Hyperlink, ResourceId } from "./resource";

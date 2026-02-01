@@ -5,14 +5,14 @@
  */
 
 import type { ArcToCommand, CubicBezierCommand, CustomGeometry, Geometry, GeometryGuide, GeometryPath, PathCommand, PresetGeometry, QuadBezierCommand, Transform } from "@oxen-office/pptx/domain";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { HtmlString } from "../html/primitives";
 import { path } from "./primitives";
 import { renderFillToStyle, renderLineToStyle } from "./fill";
 import { generateLineMarkers, type MarkerCollection } from "./marker";
 import { resolveFill, formatRgba } from "@oxen-office/pptx/domain/color/fill";
 import type { Fill, Line } from "@oxen-office/pptx/domain";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import { createGuideContext, evaluateGuides } from "@oxen-office/pptx/domain/shape-geometry/guide-engine";
 
 // =============================================================================

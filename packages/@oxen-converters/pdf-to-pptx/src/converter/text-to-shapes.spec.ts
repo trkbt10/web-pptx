@@ -4,7 +4,7 @@
 
 import type { PdfColor, PdfGraphicsState, PdfText } from "@oxen/pdf/domain";
 import { createDefaultGraphicsState } from "@oxen/pdf/domain";
-import { deg, pt, px } from "@oxen-office/ooxml/domain/units";
+import { deg, pt, px } from "@oxen-office/drawing-ml/domain/units";
 import { convertTextToShape, convertGroupedTextToShape } from "./text-to-shapes";
 import type { GroupedText } from "./text-grouping/types";
 import { createFitContext } from "./transform-converter";

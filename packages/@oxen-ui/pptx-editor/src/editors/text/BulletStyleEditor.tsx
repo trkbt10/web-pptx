@@ -17,9 +17,9 @@ import type {
   CharBullet,
 } from "@oxen-office/pptx/domain/text";
 import type { TextTypeface } from "@oxen-office/pptx/domain/types";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
-import { pct, pt, type Percent, type Points } from "@oxen-office/ooxml/domain/units";
+import { pct, pt, type Percent, type Points } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Types

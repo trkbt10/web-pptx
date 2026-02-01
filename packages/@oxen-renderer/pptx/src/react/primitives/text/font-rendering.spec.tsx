@@ -6,7 +6,7 @@
  */
 import { render } from "@testing-library/react";
 import { SlideRendererSvg } from "../../SlideRenderer";
-import { px, pt, deg } from "@oxen-office/ooxml/domain/units";
+import { px, pt, deg } from "@oxen-office/drawing-ml/domain/units";
 import type { Slide } from "@oxen-office/pptx/domain/slide/types";
 import type { SpShape } from "@oxen-office/pptx/domain/shape";
 import { createDefaultGraphicsState } from "@oxen/pdf/domain";

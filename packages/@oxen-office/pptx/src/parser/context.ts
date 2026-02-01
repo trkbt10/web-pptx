@@ -6,8 +6,8 @@
 
 import type { XmlDocument, XmlElement } from "@oxen/xml";
 import type { ResourceMap } from "@oxen-office/opc";
-import type { Color } from "@oxen-office/ooxml/domain/color";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import type { FontScheme } from "@oxen-office/ooxml/domain/font-scheme";
 import type { ResourceRelationshipResolver } from "../domain";
 

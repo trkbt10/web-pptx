@@ -13,7 +13,7 @@ import {
 } from "./text-property-extractor";
 import type { TextBody, TextRun, Paragraph } from "@oxen-office/pptx/domain/text";
 import type { CursorPosition, TextSelection } from "../../slide/text-edit";
-import type { Points } from "@oxen-office/ooxml/domain/units";
+import type { Points } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Test Fixtures

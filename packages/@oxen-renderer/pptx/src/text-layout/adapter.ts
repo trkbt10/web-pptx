@@ -4,19 +4,19 @@
  */
 
 import type { TextBody, Paragraph, TextRun, RunProperties, BulletStyle, AutoNumberBullet } from "@oxen-office/pptx/domain/text";
-import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
 import type { LayoutInput, LayoutParagraphInput, LayoutSpan, TextBoxConfig, BulletConfig, AutoFitConfig, TextOutlineConfig, FontAlignment, LayoutTabStop } from "./types";
 import type { RenderOptions } from "../render-options";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import type { FontScheme } from "@oxen-office/ooxml/domain/font-scheme";
 import { resolveThemeFont } from "@oxen-office/ooxml/domain/font-scheme";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { Line, Fill } from "@oxen-office/pptx/domain/color/types";
 
-import { resolveColor as resolveColorRaw } from "@oxen-office/ooxml/domain/color-resolution";
+import { resolveColor as resolveColorRaw } from "@oxen-office/drawing-ml/domain/color-resolution";
 import { resolveTextFill, resolveTextEffects } from "@oxen-office/pptx/parser/drawing-ml/index";
 import type { ResourceResolver } from "@oxen-office/pptx/parser/drawing-ml/index";
-import { px, pt, pct } from "@oxen-office/ooxml/domain/units";
+import { px, pt, pct } from "@oxen-office/drawing-ml/domain/units";
 import { DEFAULT_FONT_SIZE_PT } from "@oxen-office/pptx/domain/defaults";
 import type { AutoFit } from "@oxen-office/pptx/domain/text";
 import { formatAutoNumber } from "./auto-number";

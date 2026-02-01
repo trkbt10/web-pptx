@@ -2,8 +2,8 @@
  * @file Chart percentage parsing helpers
  */
 
-import type { Percent } from "@oxen-office/ooxml/domain/units";
-import { pct } from "@oxen-office/ooxml/domain/units";
+import type { Percent } from "@oxen-office/drawing-ml/domain/units";
+import { pct } from "@oxen-office/drawing-ml/domain/units";
 import { getAttr, type XmlElement } from "@oxen/xml";
 
 

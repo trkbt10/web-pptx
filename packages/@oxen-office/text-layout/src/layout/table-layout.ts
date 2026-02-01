@@ -14,8 +14,8 @@ import type {
   LayoutParagraphInput,
   LayoutParagraphResult,
 } from "../types";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { px } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { layoutDocument } from "./engine";
 
 // =============================================================================

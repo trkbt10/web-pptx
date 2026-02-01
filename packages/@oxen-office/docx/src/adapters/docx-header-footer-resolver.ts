@@ -14,8 +14,8 @@ import type { DocxRelId, HeaderFooterType } from "../domain/types";
 import type { DocxNumbering } from "../domain/numbering";
 import type { DocxStyles } from "../domain/styles";
 import type { LayoutParagraphInput, HeaderFooterLayout } from "@oxen-office/text-layout";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { px } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { paragraphToLayoutInput, createParagraphLayoutContext } from "./docx-adapter";
 import { layoutDocument } from "@oxen-office/text-layout";
 

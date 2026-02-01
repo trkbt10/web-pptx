@@ -24,7 +24,7 @@ import { resolveFill, formatRgba } from "@oxen-office/pptx/domain/color/fill";
 import { renderTextSvg, getDashArray } from "./slide-text";
 import { renderChart } from "../chart";
 import { renderTableSvg } from "./table";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { extractSvgContent } from "./svg-utils";
 
 // =============================================================================

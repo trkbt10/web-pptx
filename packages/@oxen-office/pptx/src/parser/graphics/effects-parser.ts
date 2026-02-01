@@ -6,16 +6,16 @@
  * @see ECMA-376 Part 1, Section 20.1.8 - Effect Properties
  */
 
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { Effects, EffectContainerKind, AlphaBiLevelEffect, AlphaCeilingEffect, AlphaFloorEffect, AlphaInverseEffect, AlphaModulateEffect, AlphaModulateFixedEffect, AlphaOutsetEffect, AlphaReplaceEffect, BiLevelEffect, BlendEffect, BlendMode, ColorChangeEffect, ColorReplaceEffect, DuotoneEffect, EffectContainer, FillEffectType, FillOverlayEffect, GrayscaleEffect, PresetShadowEffect, PresetShadowValue, RelativeOffsetEffect, GlowEffect, ReflectionEffect, ShadowEffect, SoftEdgeEffect, StyleReference } from "../../domain/index";
-import { px, deg, pct } from "@oxen-office/ooxml/domain/units";
+import { px, deg, pct } from "@oxen-office/drawing-ml/domain/units";
 import {
   parseGlowEffect as parseGlowEffectShared,
   parseInnerShadowEffect as parseInnerShadowEffectShared,
   parseOuterShadowEffect as parseOuterShadowEffectShared,
   parseReflectionEffect as parseReflectionEffectShared,
   parseSoftEdgeEffect as parseSoftEdgeEffectShared,
-} from "@oxen-office/ooxml/parser";
+} from "@oxen-office/drawing-ml/parser";
 import { getAttr, getChild, type XmlElement } from "@oxen/xml";
 import { parseColor, parseColorFromParent } from "./color-parser";
 import { parseFill } from "./fill-parser";

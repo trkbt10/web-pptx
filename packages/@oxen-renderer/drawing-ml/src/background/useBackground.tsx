@@ -9,7 +9,7 @@
  */
 
 import { useMemo, type ReactNode } from "react";
-import type { ResolvedBackgroundFill } from "@oxen-office/ooxml/domain/background-fill";
+import type { ResolvedBackgroundFill } from "@oxen-office/drawing-ml/domain/background-fill";
 import { useDrawingMLContext } from "../context";
 import { useSvgDefs } from "../hooks/useSvgDefs";
 import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../gradient/gradient-utils";

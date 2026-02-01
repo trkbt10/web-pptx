@@ -4,7 +4,7 @@
 
 import type { PdfColor, PdfGraphicsState } from "@oxen/pdf/domain";
 import { createDefaultGraphicsState } from "@oxen/pdf/domain";
-import { pct, px } from "@oxen-office/ooxml/domain/units";
+import { pct, px } from "@oxen-office/drawing-ml/domain/units";
 import { convertColor, convertFill, convertGraphicsStateToStyle, convertLine, noFill } from "./color-converter";
 
 describe("convertColor", () => {

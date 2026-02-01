@@ -8,7 +8,7 @@
  */
 
 import type { ReactNode } from "react";
-import type { Effects } from "@oxen-office/ooxml/domain/effects";
+import type { Effects } from "@oxen-office/drawing-ml/domain/effects";
 import { useEffects } from "./useEffects";
 
 // =============================================================================

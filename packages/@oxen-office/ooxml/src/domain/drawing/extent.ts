@@ -1,6 +1,6 @@
 /** @file Extent (size) types shared across OOXML formats. */
 
-import type { EMU } from "../units";
+import type { EMU } from "@oxen-office/drawing-ml/domain/units";
 
 /**
  * Extent specifies the size of an object in EMUs.

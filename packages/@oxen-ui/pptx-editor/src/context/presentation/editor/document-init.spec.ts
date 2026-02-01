@@ -2,7 +2,7 @@
  * @file Document initialization tests
  */
 
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { Slide } from "@oxen-office/pptx/domain";
 import {
   createDocumentFromPresentation,

@@ -10,8 +10,8 @@
  * @see ECMA-376-1:2016 Section 17.18.93 (ST_TextDirection)
  */
 
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { px } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { EcmaTextDirection } from "@oxen-office/docx/domain/ecma376-defaults";
 
 // =============================================================================

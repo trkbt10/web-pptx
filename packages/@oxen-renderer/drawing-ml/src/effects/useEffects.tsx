@@ -7,8 +7,8 @@
  */
 
 import { useMemo, type ReactNode } from "react";
-import type { Effects } from "@oxen-office/ooxml/domain/effects";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { Effects } from "@oxen-office/drawing-ml/domain/effects";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import { useDrawingMLContext } from "../context";
 import { useSvgDefs } from "../hooks/useSvgDefs";
 import { ShadowFilterDef, resolveShadowProps, type ResolvedShadowProps } from "./ShadowFilter";

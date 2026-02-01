@@ -9,7 +9,7 @@
 import type { LoadedPresentation } from "./pptx-loader";
 import type { PresentationDocument, SlideWithId } from "./presentation-document";
 import type { Presentation as DomainPresentation, PresentationFile } from "../domain";
-import type { ColorContext, ColorScheme, ColorMap } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorContext, ColorScheme, ColorMap } from "@oxen-office/drawing-ml/domain/color-context";
 import type { FontScheme } from "@oxen-office/ooxml/domain/font-scheme";
 import type { ResourceResolver } from "../domain/resource-resolver";
 import type { Slide as ApiSlide } from "./types";

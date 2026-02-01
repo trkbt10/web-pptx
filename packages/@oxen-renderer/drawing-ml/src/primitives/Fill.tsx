@@ -13,8 +13,8 @@ import type {
   ResolvedGradientFill,
   ResolvedImageFill,
   ResolvedPatternFill,
-} from "@oxen-office/ooxml/domain/resolved-fill";
-import type { PatternType } from "@oxen-office/ooxml/domain/fill";
+} from "@oxen-office/drawing-ml/domain/resolved-fill";
+import type { PatternType } from "@oxen-office/drawing-ml/domain/fill";
 import { PatternDef } from "../fill/PatternDef";
 import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "../gradient/gradient-utils";
 import { useDrawingMLContext } from "../context";

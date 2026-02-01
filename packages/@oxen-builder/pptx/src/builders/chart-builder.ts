@@ -13,7 +13,7 @@ import { resolveRelationshipTargetPath } from "@oxen-office/opc";
 import type { ZipPackage } from "@oxen/zip";
 import type { ChartUpdateSpec } from "../types";
 import type { Transform } from "@oxen-office/pptx/domain/geometry";
-import type { Degrees, Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Degrees, Pixels } from "@oxen-office/drawing-ml/domain/units";
 
 type UpdateContext = {
   readonly zipPackage: ZipPackage;

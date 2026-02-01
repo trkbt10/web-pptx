@@ -34,8 +34,8 @@ import {
   resolveRunPropertiesWithStyles,
   type ResolvedRunProperties,
 } from "./docx-style-resolver";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { px, pt, pct } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { px, pt, pct } from "@oxen-office/drawing-ml/domain/units";
 import {
   SPEC_DEFAULT_FONT_SIZE_PT,
   SPEC_DEFAULT_TAB_STOP_TWIPS,

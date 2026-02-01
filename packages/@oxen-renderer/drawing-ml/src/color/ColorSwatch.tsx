@@ -6,7 +6,7 @@
  */
 
 import { memo } from "react";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import { useColor, type ResolvedColorResult } from "./useColor";
 
 /**

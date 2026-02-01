@@ -5,9 +5,9 @@
  */
 
 import type { SpShape, CxnShape, PicShape, Shape, CustomGeometry } from "@oxen-office/pptx/domain";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { ShapeId, ResourceId } from "@oxen-office/pptx/domain/types";
-import { px, deg, pct } from "@oxen-office/ooxml/domain/units";
+import { px, deg, pct } from "@oxen-office/drawing-ml/domain/units";
 import type { CreationPresetShape, CreationMode } from "../context/presentation/editor/types";
 import type { ShapeBounds } from "./creation-bounds";
 import { createTableGraphicFrame, createChartGraphicFrame, createDiagramGraphicFrame } from "../graphic-frame/factory";

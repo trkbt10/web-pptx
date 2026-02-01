@@ -7,7 +7,7 @@
  */
 
 import { memo, type ReactNode } from "react";
-import type { PatternType } from "@oxen-office/ooxml/domain/fill";
+import type { PatternType } from "@oxen-office/drawing-ml/domain/fill";
 
 // =============================================================================
 // Types

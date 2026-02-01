@@ -10,7 +10,7 @@
  * @see ECMA-376 Part 1, Section 20.1.8.53 (softEdge)
  */
 
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { Effects, GlowEffect, ShadowEffect, SoftEdgeEffect } from "@oxen-office/pptx/domain";
 import type { HtmlString } from "../html/primitives";
 import {
@@ -22,8 +22,8 @@ import {
   feMergeNode,
 } from "./primitives";
 import { unsafeHtml } from "../html/primitives";
-import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 
 // =============================================================================
 // Effect ID Generation

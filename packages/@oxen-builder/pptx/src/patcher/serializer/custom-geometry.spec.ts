@@ -1,6 +1,6 @@
 /** @file Unit tests for custom geometry serialization */
 import { getChild, getChildren } from "@oxen/xml";
-import type { Degrees, Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Degrees, Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { CustomGeometry, GeometryPath, PathCommand } from "@oxen-office/pptx/domain/shape";
 import {
   serializeCustomGeometry,

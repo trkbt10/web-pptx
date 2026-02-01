@@ -3,7 +3,7 @@
  */
 
 import type { SpShape, GrpShape, Shape, GroupTransform, Transform } from "@oxen-office/pptx/domain";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import {
   getScaleFactor,
   transformChildToSlideCoords,

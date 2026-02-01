@@ -2,7 +2,7 @@
  * @file Pattern fill builder for DrawingML
  */
 
-import type { PatternFill } from "@oxen-office/ooxml/domain/fill";
+import type { PatternFill } from "@oxen-office/drawing-ml/domain/fill";
 import type { PatternFillSpec } from "../types";
 import { buildColor } from "./solid-fill";
 

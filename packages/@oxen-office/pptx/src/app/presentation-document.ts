@@ -6,8 +6,8 @@
  */
 
 import type { Slide, Presentation, PresentationFile } from "../domain";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import type { FontScheme } from "@oxen-office/ooxml/domain/font-scheme";
 import type { ResourceResolver } from "../domain/resource-resolver";
 import type { ResolvedBackgroundFill } from "@oxen-renderer/pptx";

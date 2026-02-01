@@ -3,8 +3,8 @@
  */
 
 import { getChild } from "@oxen/xml";
-import { deg, pct } from "@oxen-office/ooxml/domain/units";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import { deg, pct } from "@oxen-office/drawing-ml/domain/units";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import { parseColor } from "@oxen-office/pptx/parser/graphics/color-parser";
 import { serializeColor } from "./color";
 

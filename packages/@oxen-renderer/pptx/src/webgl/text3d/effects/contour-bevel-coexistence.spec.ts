@@ -13,7 +13,7 @@ import * as THREE from "three";
 import { createContourMesh, createContourMeshExpanded, createContourFromShapes } from "./contour";
 import { getBevelConfig, type BevelConfig } from "../geometry/bevel";
 import { createExtrudedGeometryWithBevel, type AsymmetricBevelSpec } from "../geometry/bevel/three-adapter";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 
 /**
  * Create a simple square shape for testing

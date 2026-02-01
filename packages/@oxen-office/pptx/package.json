@@ -10,6 +10,7 @@
     "@oxen/files": "workspace:*",
     "@oxen-office/chart": "workspace:*",
     "@oxen-office/diagram": "workspace:*",
+    "@oxen-office/drawing-ml": "workspace:*",
     "@oxen-office/opc": "workspace:*",
     "@oxen-office/ooxml": "workspace:*",
     "@oxen-office/xlsx": "workspace:*",
@@ -150,15 +151,7 @@
       "types": "./src/domain/drawing-ml/background.ts",
       "default": "./src/domain/drawing-ml/background.ts"
     },
-    "./domain/drawing-ml/text-effects": {
-      "types": "./src/domain/drawing-ml/text-effects.ts",
-      "default": "./src/domain/drawing-ml/text-effects.ts"
-    },
-    "./domain/drawing-ml/text-fill": {
-      "types": "./src/domain/drawing-ml/text-fill.ts",
-      "default": "./src/domain/drawing-ml/text-fill.ts"
-    },
-    "./domain/diagram/format-guards": {
+        "./domain/diagram/format-guards": {
       "types": "./src/domain/diagram/format-guards.ts",
       "default": "./src/domain/diagram/format-guards.ts"
     },

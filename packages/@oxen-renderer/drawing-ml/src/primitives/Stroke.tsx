@@ -8,7 +8,7 @@
  */
 
 import { useMemo } from "react";
-import type { ResolvedLine, ResolvedFill } from "@oxen-office/ooxml/domain/resolved-fill";
+import type { ResolvedLine, ResolvedFill } from "@oxen-office/drawing-ml/domain/resolved-fill";
 
 // =============================================================================
 // Types

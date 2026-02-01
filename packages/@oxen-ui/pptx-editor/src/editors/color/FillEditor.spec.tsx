@@ -6,9 +6,9 @@
 
 // @vitest-environment jsdom
 
-import type { SolidFill, GradientFill, NoFill, GradientStop } from "@oxen-office/ooxml/domain/fill";
+import type { SolidFill, GradientFill, NoFill, GradientStop } from "@oxen-office/drawing-ml/domain/fill";
 import type { Fill } from "@oxen-office/pptx/domain/color/types";
-import { pct, deg } from "@oxen-office/ooxml/domain/units";
+import { pct, deg } from "@oxen-office/drawing-ml/domain/units";
 import { render, fireEvent } from "@testing-library/react";
 import { FillEditor } from "./FillEditor";
 

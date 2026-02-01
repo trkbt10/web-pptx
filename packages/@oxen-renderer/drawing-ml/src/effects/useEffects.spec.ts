@@ -4,8 +4,8 @@
 
 // describe, it, expect are provided by the test runner globals
 import { resolveEffectsForReact } from "./useEffects";
-import type { Effects } from "@oxen-office/ooxml/domain/effects";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { Effects } from "@oxen-office/drawing-ml/domain/effects";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 
 const mockColorContext: ColorContext = {
   colorScheme: {

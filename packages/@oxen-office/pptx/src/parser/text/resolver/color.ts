@@ -8,7 +8,7 @@
 import type { XmlElement } from "@oxen/xml";
 import { getChild, getByPath } from "@oxen/xml";
 import type { TextStyleContext, MasterTextStyles } from "../../context";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import { parseColorFromParent } from "../../graphics/color-parser";
 import { TYPE_TO_MASTER_STYLE } from "./constants";
 import { lookupPlaceholder } from "./placeholder";

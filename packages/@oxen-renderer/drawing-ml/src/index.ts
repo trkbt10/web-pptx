@@ -121,7 +121,7 @@ export {
 } from "./effects";
 
 // Note: Effect types (Effects, ShadowEffect, etc.) should be imported directly
-// from "@oxen-office/ooxml/domain/effects" by consumers
+// from "@oxen-office/drawing-ml/domain/effects" by consumers
 
 // Text Fill
 export {

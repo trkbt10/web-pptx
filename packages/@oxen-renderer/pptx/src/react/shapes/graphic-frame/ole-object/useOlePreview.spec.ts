@@ -15,7 +15,7 @@ import { createElement, type ReactNode } from "react";
 import { renderHook } from "@testing-library/react";
 import { useOlePreview } from "./useOlePreview";
 import { RenderProvider, useRenderContext } from "../../../context";
-import { px, type Pixels } from "@oxen-office/ooxml/domain/units";
+import { px, type Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { OleReference } from "@oxen-office/pptx/domain";
 import type { ResourceResolver } from "@oxen-office/pptx/domain/resource-resolver";
 import { createEmptyResourceResolver } from "@oxen-office/pptx/domain/resource-resolver";

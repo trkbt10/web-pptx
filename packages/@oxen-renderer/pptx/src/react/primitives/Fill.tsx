@@ -7,7 +7,7 @@
 
 import type { ReactNode } from "react";
 import type { Fill } from "@oxen-office/pptx/domain";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import {
   resolveFill,
   type ResolvedFill,

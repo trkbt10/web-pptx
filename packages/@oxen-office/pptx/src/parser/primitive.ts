@@ -7,8 +7,8 @@
  * @see ECMA-376 Part 1, Section 20.1.10 - Simple Types
  */
 
-import type { Degrees, Percent, Pixels, Points } from "@oxen-office/ooxml/domain/units";
-import type { SchemeColorValue } from "@oxen-office/ooxml/domain/color";
+import type { Degrees, Percent, Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
+import type { SchemeColorValue } from "@oxen-office/drawing-ml/domain/color";
 import type { BlipCompression } from "@oxen-office/ooxml/domain/drawing";
 import {
   parseAngle as parseAngleShared,
@@ -23,9 +23,9 @@ import {
   parsePercentage100k as parsePercentage100kShared,
   parsePositivePercentage as parsePositivePercentageShared,
   parseUnsignedInt as parseUnsignedIntShared,
-} from "@oxen-office/ooxml/parser";
+} from "@oxen-office/drawing-ml/parser";
 import type { BlackWhiteMode, ColorSchemeIndex, FontCollectionIndex, OnOffStyleType, RectAlignment, ShapeId, StyleMatrixColumnIndex, TextShapeType, AlignH, AlignV, RelFromH, RelFromV, WrapText, EditAs } from "../domain";
-import { px, deg, pct, pt } from "@oxen-office/ooxml/domain/units";
+import { px, deg, pct, pt } from "@oxen-office/drawing-ml/domain/units";
 import { getAttr, getChild, type XmlElement } from "@oxen/xml";
 
 // =============================================================================

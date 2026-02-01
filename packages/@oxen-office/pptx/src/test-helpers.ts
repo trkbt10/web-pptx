@@ -5,7 +5,7 @@
  */
 
 import type { XmlElement } from "@oxen/xml";
-import type { ColorMap, ColorResolveContext, ColorScheme } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorMap, ColorResolveContext, ColorScheme } from "@oxen-office/drawing-ml/domain/color-context";
 import type { SlideContext, ResourceContext } from "./parser/slide/context";
 import type { PlaceholderTable, FormatScheme, RawMasterTextStyles } from "./domain";
 import type { ResourceMap, ZipFile } from "@oxen-office/opc";

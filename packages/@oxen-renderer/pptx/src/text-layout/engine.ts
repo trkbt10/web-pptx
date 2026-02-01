@@ -16,9 +16,9 @@ import type {
   LayoutSpan,
   BulletConfig,
 } from "./types";
-import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
 import type { TextAlign } from "@oxen-office/pptx/domain/types";
-import { px, pt, pct } from "@oxen-office/ooxml/domain/units";
+import { px, pt, pct } from "@oxen-office/drawing-ml/domain/units";
 import { measureSpans, estimateBulletWidth } from "./measurer";
 import { breakIntoLines, getLineWidth } from "./line-breaker";
 import { PT_TO_PX } from "@oxen-office/pptx/domain/unit-conversion";

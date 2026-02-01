@@ -5,9 +5,9 @@
  */
 
 import type { Point, PathCommand, GeometryPath, CustomGeometry, Geometry } from "@oxen-office/pptx/domain";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { Bounds } from "@oxen-office/pptx/domain/types";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { DrawingPath, PathAnchorPoint } from "../types";
 
 // =============================================================================

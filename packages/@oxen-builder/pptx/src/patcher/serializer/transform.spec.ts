@@ -4,7 +4,7 @@
 
 import { createElement, getChild, type XmlElement } from "@oxen/xml";
 import type { Transform } from "@oxen-office/pptx/domain/geometry";
-import { deg, px } from "@oxen-office/ooxml/domain/units";
+import { deg, px } from "@oxen-office/drawing-ml/domain/units";
 import { patchTransformElement, serializeTransform } from "./transform";
 
 function createTransform(overrides: Partial<{

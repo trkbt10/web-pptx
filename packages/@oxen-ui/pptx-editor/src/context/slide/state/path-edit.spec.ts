@@ -2,7 +2,7 @@
  * @file Path editing state tests
  */
 
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { CustomGeometry } from "@oxen-office/pptx/domain";
 import {
   createInactivePathEditState,

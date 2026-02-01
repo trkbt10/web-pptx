@@ -5,10 +5,10 @@
  * The output is compatible with @oxen-office/pptx text domain types.
  */
 
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import type { SolidFill } from "@oxen-office/ooxml/domain/fill";
-import type { BaseLine } from "@oxen-office/ooxml/domain/line";
-import type { Effects } from "@oxen-office/ooxml/domain/effects";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import type { SolidFill } from "@oxen-office/drawing-ml/domain/fill";
+import type { BaseLine } from "@oxen-office/drawing-ml/domain/line";
+import type { Effects } from "@oxen-office/drawing-ml/domain/effects";
 import type {
   TextSpec,
   TextParagraphSpec,

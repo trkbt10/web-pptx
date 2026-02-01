@@ -4,7 +4,7 @@
 
 import type { PdfImage, PdfPage, PdfPath, PdfText } from "@oxen/pdf/domain";
 import { createDefaultGraphicsState } from "@oxen/pdf/domain";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { convertDocumentToSlides, convertPageToShapes } from "./pdf-to-shapes";
 import { createSpatialGrouping, spatialGrouping } from "./text-grouping/spatial-grouping";
 

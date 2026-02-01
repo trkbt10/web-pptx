@@ -14,7 +14,7 @@ import { fillToBackground, lineToBorder } from "./fill";
 import type { HtmlRenderContext } from "./context";
 import { renderTextBody } from "./text";
 import type { Transform } from "@oxen-office/pptx/domain/index";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Table Rendering

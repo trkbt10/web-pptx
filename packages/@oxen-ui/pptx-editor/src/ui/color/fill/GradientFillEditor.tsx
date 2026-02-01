@@ -15,8 +15,8 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from "react";
-import type { GradientFill, LinearGradient } from "@oxen-office/ooxml/domain/fill";
-import { deg, pct } from "@oxen-office/ooxml/domain/units";
+import type { GradientFill, LinearGradient } from "@oxen-office/drawing-ml/domain/fill";
+import { deg, pct } from "@oxen-office/drawing-ml/domain/units";
 import { LabeledSlider } from "../../common";
 import { GradientStopRow } from "./GradientStopRow";
 import { createDefaultColor, getStopHex } from "./fill-utils";

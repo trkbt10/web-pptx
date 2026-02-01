@@ -4,9 +4,9 @@
  * Utilities for creating and inspecting Fill values.
  */
 
-import type { Color } from "@oxen-office/ooxml/domain/color";
-import type { GradientStop } from "@oxen-office/ooxml/domain/fill";
-import { deg, pct } from "@oxen-office/ooxml/domain/units";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
+import type { GradientStop } from "@oxen-office/drawing-ml/domain/fill";
+import { deg, pct } from "@oxen-office/drawing-ml/domain/units";
 import type { Fill } from "@oxen-office/pptx/domain/color/types";
 import type { SelectOption } from "@oxen-ui/ui-components/types";
 

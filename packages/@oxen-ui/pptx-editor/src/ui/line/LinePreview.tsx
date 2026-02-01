@@ -12,7 +12,7 @@
  */
 
 import { useMemo, type CSSProperties } from "react";
-import type { GradientFill } from "@oxen-office/ooxml/domain/fill";
+import type { GradientFill } from "@oxen-office/drawing-ml/domain/fill";
 import type { Line, LineEnd } from "@oxen-office/pptx/domain/color/types";
 
 export type LinePreviewProps = {

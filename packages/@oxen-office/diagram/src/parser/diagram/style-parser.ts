@@ -12,10 +12,10 @@ import type {
   DiagramStyleDefinitionHeaderList,
   DiagramStyleLabel,
 } from "../../domain/types";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { XmlDocument, XmlElement } from "@oxen/xml";
 import { getAttr, getByPath, getChild, getChildren, isXmlElement } from "@oxen/xml";
-import { getAngleAttr, getEmuAttr, getIntAttr, getPercent100kAttr, parseColorFromParent } from "@oxen-office/ooxml/parser";
+import { getAngleAttr, getEmuAttr, getIntAttr, getPercent100kAttr, parseColorFromParent } from "@oxen-office/drawing-ml/parser";
 
 export type DiagramStyleDefinitionParseOptions = {
   readonly parseTextBody: (element: XmlElement | undefined) => unknown;

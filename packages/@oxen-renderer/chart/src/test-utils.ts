@@ -1,7 +1,7 @@
 /** @file Test utilities for chart rendering */
-import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
-import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
+import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import type { GenericTextBody, ChartRenderContext, FillResolver, RenderWarning, ResolvedFill, ResolvedTextStyle, WarningCollector } from "./types";
 
 function createNoopWarnings(): WarningCollector {

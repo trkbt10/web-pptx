@@ -6,7 +6,7 @@
 
 import type { ChartShapeProperties, ChartLines } from "../domain/types";
 import { getChild, type XmlElement } from "@oxen/xml";
-import { getLineFromProperties, parseBaseFillFromParent } from "@oxen-office/ooxml/parser/drawing-ml";
+import { getLineFromProperties, parseBaseFillFromParent } from "@oxen-office/drawing-ml/parser";
 
 /**
  * Parse shape properties (c:spPr)

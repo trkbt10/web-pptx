@@ -3,7 +3,7 @@
  */
 
 import { createElement, getChild } from "@oxen/xml";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import { patchSchemeColor } from "./color-scheme-patcher";
 
 function srgb(value: string): Color {

@@ -6,7 +6,7 @@
  */
 
 import type { ReactNode, CSSProperties } from "react";
-import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
 import type {
   LayoutResult,
   LayoutLine,

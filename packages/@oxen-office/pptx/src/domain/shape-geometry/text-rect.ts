@@ -12,8 +12,8 @@
  */
 
 import type { Geometry, TextRect } from "../shape";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { px } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import {
   createGuideContext,
   evaluateGuides,

@@ -4,8 +4,8 @@
  */
 
 import type { MeasuredSpan, TextBoxConfig } from "./types";
-import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
-import { px, pt } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
+import { px, pt } from "@oxen-office/drawing-ml/domain/units";
 import { estimateTextWidth } from "./measurer";
 import { isCjkCodePoint } from "@oxen/glyph";
 import { DEFAULT_FONT_SIZE_PT } from "@oxen-office/pptx/domain/defaults";

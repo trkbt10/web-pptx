@@ -44,7 +44,7 @@ describe("PPTX domain import conventions", () => {
     const bannedImportPattern =
       /import\s+(?:type\s+)?\{[^}]*\bColor\b[^}]*\}\s+from\s+["'][^"']*color\/types["']\s*;?/g;
     const desiredImportPattern =
-      /from\s+["']@oxen-office\/ooxml\/domain\/color["']\s*;?/g;
+      /from\s+["']@oxen-office\/drawing-ml\/domain\/color["']\s*;?/g;
 
     for (const filePath of tsFiles) {
       const source = await fs.readFile(filePath, "utf8");

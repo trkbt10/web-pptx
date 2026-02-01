@@ -4,7 +4,7 @@
 
 import { createClipboardContent, incrementPasteCount } from "./clipboard";
 import type { Shape } from "@oxen-office/pptx/domain";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 
 const createTestShape = (id: string): Shape => ({
   type: "sp",

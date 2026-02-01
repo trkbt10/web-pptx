@@ -4,7 +4,7 @@
  * State types and utilities for drag operations (move, resize, rotate).
  */
 
-import type { Pixels, Degrees } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Degrees } from "@oxen-office/drawing-ml/domain/units";
 import type { Bounds, ShapeId } from "@oxen-office/pptx/domain/types";
 import type { IdleDragState as CoreIdleDragState } from "@oxen-ui/editor-core/drag-state";
 import {

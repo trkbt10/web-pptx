@@ -34,7 +34,8 @@ import type {
   TableGridColumn,
 } from "@oxen-office/ooxml";
 import type { WordBorderStyle } from "@oxen-office/ooxml/domain/border";
-import { gridSpan, px } from "@oxen-office/ooxml";
+import { gridSpan } from "@oxen-office/ooxml";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { DocxThemeColor } from "../domain/run";
 import {
   parseTwips,

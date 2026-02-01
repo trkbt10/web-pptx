@@ -52,7 +52,7 @@ import {
   type StyleResolverContext,
   type ResolvedDiagramStyle,
 } from "./style-resolver";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 
 // =============================================================================
 // Types

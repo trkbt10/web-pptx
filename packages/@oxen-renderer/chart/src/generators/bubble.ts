@@ -7,7 +7,7 @@
  * @see ECMA-376 Part 1, Section 21.2.2.19 (bubbleSer)
  */
 
-import type { Percent } from "@oxen-office/ooxml/domain/units";
+import type { Percent } from "@oxen-office/drawing-ml/domain/units";
 import type { ChartContent } from "../render-types";
 import { drawAxes } from "../axis";
 import type { ChartRenderContext } from "../types";

@@ -5,7 +5,7 @@
  * @see ECMA-376 Part 1, Section 20.1.8 - Fill Properties
  */
 
-import type { Brand, Degrees, Percent, Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Brand, Degrees, Percent, Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { BlipCompression, TileFlipMode } from "@oxen-office/ooxml/domain/drawing";
 import type { RectAlignment, ResourceId } from "../types";
 
@@ -17,14 +17,14 @@ import type { RectAlignment, ResourceId } from "../types";
 // =============================================================================
 
 // Import OOXML types for internal use in this file only
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type {
   NoFill,
   SolidFill,
   GradientFill,
   PatternFill,
   GroupFill,
-} from "@oxen-office/ooxml/domain/fill";
+} from "@oxen-office/drawing-ml/domain/fill";
 
 // =============================================================================
 // PPTX-specific Color Types

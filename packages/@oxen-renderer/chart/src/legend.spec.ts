@@ -11,7 +11,7 @@ import { renderLegendAtPosition, calculateLegendPosition } from "./legend";
 import type { Legend } from "@oxen-office/chart/domain";
 import type { SeriesData } from "./render-types";
 import type { TextBody } from "@oxen-office/chart/domain/text";
-import { pt } from "@oxen-office/ooxml/domain/units";
+import { pt } from "@oxen-office/drawing-ml/domain/units";
 import { createTestChartRenderContext } from "./test-utils";
 
 const { ctx, fillResolver } = createTestChartRenderContext();

@@ -20,7 +20,7 @@ import type {
   SeriesText,
 } from "../domain/types";
 import { getChild, getChildren, getXmlText, getAttr, type XmlElement } from "@oxen/xml";
-import { getIntAttr } from "@oxen-office/ooxml/parser";
+import { getIntAttr } from "@oxen-office/drawing-ml/parser";
 
 /**
  * Parse numeric point (c:pt)

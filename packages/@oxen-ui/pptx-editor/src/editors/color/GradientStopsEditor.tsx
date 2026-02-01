@@ -10,9 +10,9 @@ import { Button, Popover } from "@oxen-ui/ui-components/primitives";
 import { FillPreview } from "../../ui/color";
 import { GradientStopEditor } from "./GradientStopEditor";
 import { createDefaultColor } from "./ColorEditor";
-import type { Color } from "@oxen-office/ooxml/domain/color";
-import type { GradientStop, SolidFill } from "@oxen-office/ooxml/domain/fill";
-import { pct, type Percent } from "@oxen-office/ooxml/domain/units";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
+import type { GradientStop, SolidFill } from "@oxen-office/drawing-ml/domain/fill";
+import { pct, type Percent } from "@oxen-office/drawing-ml/domain/units";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 
 export type GradientStopsEditorProps = EditorProps<readonly GradientStop[]> & {

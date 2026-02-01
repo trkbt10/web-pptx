@@ -5,7 +5,7 @@
  */
 
 import * as THREE from "three";
-import type { Percent, Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Percent, Pixels } from "@oxen-office/drawing-ml/domain/units";
 import {
   applyTileFlipMode,
   applyTileRect,

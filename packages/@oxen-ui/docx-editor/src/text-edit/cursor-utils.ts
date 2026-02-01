@@ -8,7 +8,7 @@
  */
 
 import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type {
   PagedLayoutResult,
   LayoutLine,

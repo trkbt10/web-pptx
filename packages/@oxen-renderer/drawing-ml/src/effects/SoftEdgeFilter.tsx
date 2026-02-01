@@ -7,7 +7,7 @@
  */
 
 import { memo, type ReactNode } from "react";
-import type { SoftEdgeEffect } from "@oxen-office/ooxml/domain/effects";
+import type { SoftEdgeEffect } from "@oxen-office/drawing-ml/domain/effects";
 
 // =============================================================================
 // Types

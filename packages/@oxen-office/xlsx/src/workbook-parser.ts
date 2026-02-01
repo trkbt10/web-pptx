@@ -7,10 +7,12 @@
  * @see ECMA-376 Part 4 (SpreadsheetML)
  */
 
-import { parseXml, getByPath, getChildren, getChild, getTextContent, type XmlDocument, type XmlElement } from "@oxen/xml";
+import { parseXml, getByPath, getChildren, getChild, getTextContent, type XmlElement } from "@oxen/xml";
 import { loadZipPackage, type ZipPackage } from "@oxen/zip";
 import { indexToColumnLetter, columnLetterToIndex } from "./domain/cell/address";
 import { colIdx } from "./domain/types";
+import { parseSharedStrings as parseSharedStringsFromElement } from "./parser/shared-strings";
+import { parseRelationships } from "./parser/index";
 
 // =============================================================================
 // Types
@@ -80,7 +82,7 @@ export async function parseWorkbook(xlsxBuffer: ArrayBuffer): Promise<Workbook> 
   const pkg = await loadZipPackage(xlsxBuffer);
 
   // Parse shared strings
-  const sharedStrings = parseSharedStrings(pkg);
+  const sharedStrings = parseSharedStringsFromPackage(pkg);
 
   // Parse workbook.xml to get sheet names and paths
   const sheets = await parseSheets(pkg, sharedStrings);
@@ -95,7 +97,7 @@ export async function parseWorkbook(xlsxBuffer: ArrayBuffer): Promise<Workbook> 
 /**
  * Parse shared strings from xl/sharedStrings.xml
  */
-function parseSharedStrings(pkg: ZipPackage): readonly string[] {
+function parseSharedStringsFromPackage(pkg: ZipPackage): readonly string[] {
   const ssText = pkg.readText("xl/sharedStrings.xml");
   if (!ssText) {
     return [];
@@ -107,27 +109,7 @@ function parseSharedStrings(pkg: ZipPackage): readonly string[] {
     return [];
   }
 
-  const siElements = getChildren(sstElement, "si");
-  return siElements.map((si) => {
-    // Simple case: <si><t>value</t></si>
-    const t = getChild(si, "t");
-    if (t) {
-      return getTextContent(t) ?? "";
-    }
-
-    // Rich text case: <si><r><t>part1</t></r><r><t>part2</t></r></si>
-    const rElements = getChildren(si, "r");
-    if (rElements.length > 0) {
-      return rElements
-        .map((r) => {
-          const rt = getChild(r, "t");
-          return rt ? getTextContent(rt) ?? "" : "";
-        })
-        .join("");
-    }
-
-    return "";
-  });
+  return parseSharedStringsFromElement(sstElement);
 }
 
 /**
@@ -152,9 +134,7 @@ async function parseSheets(
   }
 
   // Read workbook relationships
-  const relsText = pkg.readText("xl/_rels/workbook.xml.rels");
-  const relsXml = relsText ? parseXml(relsText) : null;
-  const relsMap = parseRelsToMap(relsXml);
+  const relsMap = parseRelationshipsFromPackage(pkg, "xl/_rels/workbook.xml.rels");
 
   // Parse each sheet
   const sheetElements = getChildren(sheetsElement, "sheet");
@@ -185,29 +165,21 @@ async function parseSheets(
 }
 
 /**
- * Parse relationship elements to map
+ * Parse relationship elements to map from a relationships XML string
  */
-function parseRelsToMap(relsXml: XmlDocument | null): Map<string, string> {
-  const map = new Map<string, string>();
-  if (!relsXml) {
-    return map;
+function parseRelationshipsFromPackage(pkg: ZipPackage, relsPath: string): ReadonlyMap<string, string> {
+  const relsText = pkg.readText(relsPath);
+  if (!relsText) {
+    return new Map();
   }
 
-  const rels = getByPath(relsXml, ["Relationships"]);
-  if (!rels) {
-    return map;
+  const relsXml = parseXml(relsText);
+  const relsElement = getByPath(relsXml, ["Relationships"]);
+  if (!relsElement) {
+    return new Map();
   }
 
-  const relElements = getChildren(rels, "Relationship");
-  for (const rel of relElements) {
-    const id = rel.attrs["Id"];
-    const target = rel.attrs["Target"];
-    if (id && target) {
-      map.set(id, target);
-    }
-  }
-
-  return map;
+  return parseRelationships(relsElement);
 }
 
 /**

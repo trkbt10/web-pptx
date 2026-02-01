@@ -22,7 +22,7 @@ import type { PdfText, PdfPath, PdfImage, PdfElement } from "@oxen/pdf/domain";
 import { spatialGrouping } from "./text-grouping/spatial-grouping";
 import { extractFontInfo, extractFontMappings } from "@oxen/pdf/parser/font/font-decoder";
 import { computePathBBox } from "@oxen/pdf/parser/path/path-builder";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { convertPageToShapes } from "./pdf-to-shapes";
 import { loadNativePdfDocument } from "@oxen/pdf/native";
 import type { NativePdfPage, PdfArray, PdfDict, PdfName, PdfObject } from "@oxen/pdf/native";

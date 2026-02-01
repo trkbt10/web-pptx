@@ -9,10 +9,10 @@
 import { useCallback, useMemo, useState, useRef, useEffect } from "react";
 import type { Slide, Shape } from "@oxen-office/pptx/domain";
 import type { ShapeId } from "@oxen-office/pptx/domain/types";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import type { SlideSize } from "@oxen-office/pptx/domain";
-import type { ColorContext, ColorScheme } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorContext, ColorScheme } from "@oxen-office/drawing-ml/domain/color-context";
 import type { XmlDocument } from "@oxen/xml";
 import { parseTheme } from "@oxen-office/pptx/parser/drawing-ml/index";
 import type { ResizeHandlePosition } from "../../context/slide/state";

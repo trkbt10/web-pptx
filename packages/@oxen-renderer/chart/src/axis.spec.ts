@@ -18,7 +18,7 @@ import {
 import type { ValueAxis, CategoryAxis } from "@oxen-office/chart/domain";
 import type { TextBody } from "@oxen-office/chart/domain/text";
 import type { MultiLevelCategories } from "./data";
-import { pt } from "@oxen-office/ooxml/domain/units";
+import { pt } from "@oxen-office/drawing-ml/domain/units";
 import { createTestChartRenderContext } from "./test-utils";
 
 const { ctx } = createTestChartRenderContext();

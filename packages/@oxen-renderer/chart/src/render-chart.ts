@@ -18,7 +18,7 @@ import type {
   BubbleSeries,
   LineSeries,
 } from "@oxen-office/chart/domain";
-import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
 import type { ChartRenderContext, FillResolver, GenericTextBody, ResolvedFill } from "./types";
 import { escapeHtml } from "./escape-html";
 import { toSvgTextAttributes } from "./svg-text";

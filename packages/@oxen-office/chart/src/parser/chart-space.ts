@@ -21,8 +21,8 @@ import type {
   PrintSettings,
 } from "../domain/types";
 import { getChild, getChildren, getAttr as xmlGetAttr, getXmlText, type XmlElement } from "@oxen/xml";
-import { deg } from "@oxen-office/ooxml/domain/units";
-import { getBoolAttr, getIntAttr, parseBoolean, parseFloat64, parseInt32 } from "@oxen-office/ooxml/parser";
+import { deg } from "@oxen-office/drawing-ml/domain/units";
+import { getBoolAttr, getIntAttr, parseBoolean, parseFloat64, parseInt32 } from "@oxen-office/drawing-ml/parser";
 import { parseChartShapeProperties } from "./shape-properties";
 import { parseTextBody } from "./text-body";
 import { parseMarker, parseDataLabel } from "./components";

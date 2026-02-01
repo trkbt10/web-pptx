@@ -16,7 +16,7 @@ import {
   updateDocumentRoot,
 } from "@oxen-builder/pptx/patcher";
 import type { ZipPackage } from "@oxen/zip";
-import type { Degrees, Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Degrees, Pixels } from "@oxen-office/drawing-ml/domain/units";
 import { patchChartData, patchChartStyle, patchChartTitle } from "@oxen-builder/chart/patcher";
 import { buildChartSpaceDocument } from "@oxen-builder/chart";
 import type { ChartAddSpec, ChartDataSpec } from "../types";

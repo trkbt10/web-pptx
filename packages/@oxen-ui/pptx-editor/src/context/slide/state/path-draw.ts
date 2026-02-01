@@ -4,7 +4,7 @@
  * State types and utilities for pen and pencil drawing operations.
  */
 
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type {
   DrawingPath,
   CapturedPoint,

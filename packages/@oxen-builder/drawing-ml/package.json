@@ -6,6 +6,7 @@
   "sideEffects": false,
   "dependencies": {
     "@oxen-builder/core": "workspace:*",
+    "@oxen-office/drawing-ml": "workspace:*",
     "@oxen-office/ooxml": "workspace:*"
   },
   "scripts": {

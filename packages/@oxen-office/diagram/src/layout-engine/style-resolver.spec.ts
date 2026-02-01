@@ -9,9 +9,9 @@ import type {
   DiagramColorsDefinition,
   DiagramColorList,
 } from "../domain/types";
-import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
-import type { Color } from "@oxen-office/ooxml/domain/color";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import type { DiagramTreeNode } from "./tree-builder";
 import {
   resolveNodeStyle,
@@ -24,7 +24,7 @@ import {
   createEmptyColorContext,
   type StyleResolverContext,
 } from "./style-resolver";
-import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
+import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
 
 // =============================================================================
 // Helper Functions for Testing Fill Types

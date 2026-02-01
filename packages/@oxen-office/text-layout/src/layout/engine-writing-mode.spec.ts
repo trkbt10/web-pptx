@@ -5,7 +5,7 @@
  * and passes it through to layout results.
  */
 
-import { px, pt, pct } from "@oxen-office/ooxml/domain/units";
+import { px, pt, pct } from "@oxen-office/drawing-ml/domain/units";
 import { layoutTextBody, layoutDocument } from "./engine";
 import type { LayoutInput, LayoutParagraphInput, TextBoxConfig } from "../types";
 

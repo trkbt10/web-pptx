@@ -4,8 +4,8 @@
 
 import type { PdfColor, PdfGraphicsState, PdfLineCap, PdfLineJoin, PdfAlternateColorSpace } from "@oxen/pdf/domain";
 import { grayToRgb, cmykToRgb, rgbToHex, clamp01, toByte } from "@oxen/pdf/domain/color";
-import type { Color } from "@oxen-office/ooxml/domain/color";
-import { pct, px } from "@oxen-office/ooxml/domain/units";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
+import { pct, px } from "@oxen-office/drawing-ml/domain/units";
 import type { DashStyle, LineCap, LineJoin } from "@oxen-office/pptx/domain/line";
 import type { Fill, Line } from "@oxen-office/pptx/domain/color/types";
 

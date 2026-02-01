@@ -3,7 +3,7 @@
  */
 
 import type { Paragraph, RunProperties, TextBody } from "@oxen-office/pptx/domain/text";
-import { px, pt } from "@oxen-office/ooxml/domain/units";
+import { px, pt } from "@oxen-office/drawing-ml/domain/units";
 import { createEmptyCoreRenderContext } from "../render-context";
 import { createDefsCollector } from "./slide-utils";
 import { renderTextSvg } from "./slide-text";

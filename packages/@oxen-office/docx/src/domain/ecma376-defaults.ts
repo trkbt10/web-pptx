@@ -157,8 +157,8 @@ export const SPEC_DEFAULT_LINE_SPACING_VALUE = 240; // Single line spacing (100%
 // Conversion Utilities
 // =============================================================================
 
-import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
-import { px, pt } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
+import { px, pt } from "@oxen-office/drawing-ml/domain/units";
 
 /**
  * Convert twips to pixels.

@@ -10,8 +10,8 @@
  */
 
 import { useMemo, type ReactNode } from "react";
-import type { ResolvedFill, ResolvedLine } from "@oxen-office/ooxml/domain/resolved-fill";
-import type { Effects } from "@oxen-office/ooxml/domain/effects";
+import type { ResolvedFill, ResolvedLine } from "@oxen-office/drawing-ml/domain/resolved-fill";
+import type { Effects } from "@oxen-office/drawing-ml/domain/effects";
 import { useFillWithDefs, type FillWithDefsResult } from "../primitives/Fill";
 import { useStroke, type SvgStrokeProps } from "../primitives/Stroke";
 import { useEffects, type EffectsResult } from "../effects";

@@ -5,7 +5,7 @@
  */
 
 import { getChild, isXmlElement } from "@oxen/xml";
-import { pct, pt, px } from "@oxen-office/ooxml/domain/units";
+import { pct, pt, px } from "@oxen-office/drawing-ml/domain/units";
 import type { TextBody } from "@oxen-office/pptx/domain/text";
 import { parseTextBody } from "@oxen-office/pptx/parser/text/text-parser";
 import { serializeTextBody } from "./text";

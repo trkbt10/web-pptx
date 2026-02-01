@@ -2,8 +2,8 @@
  * @file Gradient fill builder for DrawingML
  */
 
-import type { GradientFill } from "@oxen-office/ooxml/domain/fill";
-import type { Degrees, Percent } from "@oxen-office/ooxml/domain/units";
+import type { GradientFill } from "@oxen-office/drawing-ml/domain/fill";
+import type { Degrees, Percent } from "@oxen-office/drawing-ml/domain/units";
 import type { GradientFillSpec } from "../types";
 import { buildColor } from "./solid-fill";
 

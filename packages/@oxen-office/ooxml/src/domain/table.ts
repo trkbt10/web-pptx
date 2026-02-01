@@ -8,7 +8,7 @@
  * @see ECMA-376 Part 4, Section 18.3.1 (Worksheet - SpreadsheetML)
  */
 
-import type { Brand, Pixels } from "./units";
+import type { Brand, Pixels } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Grid Column Types

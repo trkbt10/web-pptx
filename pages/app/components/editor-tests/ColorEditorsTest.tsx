@@ -13,7 +13,7 @@ import {
   createDefaultSolidFill,
   createDefaultLine,
 } from "@oxen-ui/pptx-editor";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { Fill, Line } from "@oxen-office/pptx/domain/color/types";
 
 const cardStyle: CSSProperties = {

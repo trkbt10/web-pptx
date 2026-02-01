@@ -2,7 +2,7 @@
  * @file Path draw handlers tests
  */
 
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { createPresentationEditorState } from "./reducer";
 import { createTestDocument } from "./test-fixtures";
 import { PATH_DRAW_HANDLERS } from "./path-draw-handlers";

@@ -6,7 +6,7 @@
 
 import type { ConvertResult, OnProgress } from "@oxen-converters/core";
 import type { PresentationDocument } from "@oxen-office/pptx/app/presentation-document";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import { importPdf } from "./importer/pdf-importer";
 
 // Re-export all types and functions from importer

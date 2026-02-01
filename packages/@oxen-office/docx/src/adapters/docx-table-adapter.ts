@@ -29,8 +29,8 @@ import type { DocxParagraph } from "../domain/paragraph";
 import type { DocxNumbering } from "../domain/numbering";
 import type { DocxStyles } from "../domain/styles";
 import type { TableWidth, TableCellMargins } from "@oxen-office/ooxml/domain/table";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { px } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { paragraphToLayoutInput, createParagraphLayoutContext } from "./docx-adapter";
 import {
   TWIPS_PER_POINT,

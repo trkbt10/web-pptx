@@ -8,8 +8,8 @@
  */
 
 import type { MeasuredSpan, TextWrapping } from "../types";
-import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
-import { px, pt } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
+import { px, pt } from "@oxen-office/drawing-ml/domain/units";
 import {
   breakIntoLines as glyphBreakIntoLines,
   getLineWidth as glyphGetLineWidth,

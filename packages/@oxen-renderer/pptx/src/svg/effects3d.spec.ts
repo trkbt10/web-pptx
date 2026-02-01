@@ -13,7 +13,7 @@ import {
   has3dEffects,
 } from "./effects3d";
 import type { Scene3d, Shape3d, LightRig, Bevel3d } from "@oxen-office/pptx/domain";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 
 describe("effects3d - ECMA-376 compliance", () => {
   describe("calculateCameraTransform (ECMA-376 20.1.5.2)", () => {

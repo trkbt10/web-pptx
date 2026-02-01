@@ -4,8 +4,8 @@
  * @see ECMA-376 Part 1, Section 19.2 - Presentation
  */
 
-import type { Color } from "@oxen-office/ooxml/domain/color";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { TextStyleLevels } from "../text-style";
 import type { EmbeddedFont } from "../embedded-font";
 import type { PrintProperties } from "../print";

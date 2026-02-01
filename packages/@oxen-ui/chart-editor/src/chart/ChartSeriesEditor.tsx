@@ -15,7 +15,7 @@ import { Accordion, FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { PercentEditor, DegreesEditor } from "../primitives";
 import { DataLabelsEditor, createDefaultDataLabels } from "./DataLabelsEditor";
 import { ChartShapePropertiesEditor } from "./ChartShapePropertiesEditor";
-import { pct, deg } from "@oxen-office/ooxml/domain/units";
+import { pct, deg } from "@oxen-office/drawing-ml/domain/units";
 import type {
   ChartSeries,
   BarChartSeries,

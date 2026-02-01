@@ -7,8 +7,8 @@
  * @see ECMA-376 Part 1, Section 17.18 (Simple Types)
  */
 
-import type { Pixels, Points } from "@oxen-office/ooxml";
-import { px, pt } from "@oxen-office/ooxml";
+import type { Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
+import { px, pt } from "@oxen-office/drawing-ml/domain/units";
 import type { Twips, HalfPoints, DocxStyleId, DocxNumId, DocxAbstractNumId, DocxIlvl, DocxRelId } from "../domain";
 import type { EighthPoints } from "@oxen-office/ooxml/domain/border";
 import { twips, halfPoints, docxStyleId, docxNumId, docxAbstractNumId, docxIlvl, docxRelId } from "../domain";

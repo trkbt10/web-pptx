@@ -3,8 +3,8 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import type { BaseLine } from "@oxen-office/ooxml/domain/line";
-import { px } from "@oxen-office/ooxml/domain/units";
+import type { BaseLine } from "@oxen-office/drawing-ml/domain/line";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { Input, Select } from "@oxen-ui/ui-components/primitives";

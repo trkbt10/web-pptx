@@ -2,7 +2,7 @@
 
 import { render, fireEvent, screen, waitFor } from "@testing-library/react";
 import type { ComponentProps } from "react";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { createEmptyResourceResolver } from "@oxen-office/pptx/domain/resource-resolver";
 import type { PresentationDocument } from "@oxen-office/pptx/app";
 import { PdfImportError, type PdfImportOptions, type PdfImportResult } from "@oxen-converters/pdf-to-pptx/importer/pdf-importer";

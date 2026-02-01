@@ -5,7 +5,7 @@
  */
 
 import { useCallback } from "react";
-import type { SolidFill } from "@oxen-office/ooxml/domain/fill";
+import type { SolidFill } from "@oxen-office/drawing-ml/domain/fill";
 import { HexColorEditor } from "../components";
 import { createDefaultColor, getHexFromColor } from "./fill-utils";
 

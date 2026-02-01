@@ -9,7 +9,7 @@
  */
 
 import type { ChartLines, ChartShapeProperties } from "@oxen-office/chart/domain";
-import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
 import type { FillResolver, ResolvedFill } from "./types";
 
 // =============================================================================

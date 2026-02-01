@@ -8,7 +8,7 @@
 
 import type { XmlElement, XmlDocument } from "@oxen/xml";
 import { getAttr, getChild, getChildren, getByPath } from "@oxen/xml";
-import type { ColorMap, ColorScheme } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorMap, ColorScheme } from "@oxen-office/drawing-ml/domain/color-context";
 import type { FontScheme, FontSpec } from "@oxen-office/ooxml/domain/font-scheme";
 import type {
   CustomColor,

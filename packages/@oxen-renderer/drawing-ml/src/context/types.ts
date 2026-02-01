@@ -5,8 +5,8 @@
  * Each format (PPTX, DOCX, XLSX) provides an adapter to create this context.
  */
 
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
-import type { ResolvedBackgroundFill } from "@oxen-office/ooxml/domain/background-fill";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
+import type { ResolvedBackgroundFill } from "@oxen-office/drawing-ml/domain/background-fill";
 import type { ReactNode } from "react";
 
 // =============================================================================

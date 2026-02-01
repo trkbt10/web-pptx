@@ -7,7 +7,7 @@
  */
 
 import { createElement, getChild, isXmlElement, type XmlDocument, type XmlElement } from "@oxen/xml";
-import type { Color, SchemeColorName } from "@oxen-office/ooxml/domain/color";
+import type { Color, SchemeColorName } from "@oxen-office/drawing-ml/domain/color";
 import type { FontScheme } from "@oxen-office/ooxml/domain/font-scheme";
 import type { FormatScheme } from "@oxen-office/pptx/domain/theme/types";
 import { replaceChildByName, updateDocumentRoot } from "../core/xml-mutator";

@@ -4,7 +4,7 @@
 
 // describe, it, expect are provided by the test runner globals
 import { resolvedFillToResult, resolveFillForReact } from "./Fill";
-import type { ResolvedFill } from "@oxen-office/ooxml/domain/resolved-fill";
+import type { ResolvedFill } from "@oxen-office/drawing-ml/domain/resolved-fill";
 
 describe("resolvedFillToResult", () => {
   const mockGetNextId = (prefix: string) => `${prefix}-1`;

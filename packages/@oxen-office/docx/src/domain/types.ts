@@ -7,7 +7,7 @@
  * @see ECMA-376 Part 1, Section 17 (WordprocessingML)
  */
 
-import type { Brand, Pixels, Points } from "@oxen-office/ooxml";
+import type { Brand, Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Style Identifier Types

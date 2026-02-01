@@ -6,7 +6,7 @@
  */
 
 import type { Slide, SlideSize, Shape } from "@oxen-office/pptx/domain";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import type { FontScheme } from "@oxen-office/ooxml/domain/font-scheme";
 import type { ShapeId } from "@oxen-office/pptx/domain/types";
 import type { RenderOptions } from "../render-options";

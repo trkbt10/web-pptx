@@ -5,7 +5,7 @@
  */
 
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
-import type { ColorScheme, ColorMap } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorScheme, ColorMap } from "@oxen-office/drawing-ml/domain/color-context";
 import type { FontScheme } from "@oxen-office/ooxml/domain/font-scheme";
 import type { FontCatalog } from "../../fonts/types";
 

@@ -16,8 +16,8 @@
 
 import type { DocxRunProperties, DocxHighlightColor } from "../domain/run";
 import type { DocxStyle, DocxStyles, DocxDocDefaults } from "../domain/styles";
-import type { Points, Pixels } from "@oxen-office/ooxml/domain/units";
-import { pt, px } from "@oxen-office/ooxml/domain/units";
+import type { Points, Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { pt, px } from "@oxen-office/drawing-ml/domain/units";
 import {
   SPEC_DEFAULT_FONT_SIZE_PT,
   TWIPS_PER_POINT,

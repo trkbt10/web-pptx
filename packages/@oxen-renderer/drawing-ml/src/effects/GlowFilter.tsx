@@ -7,9 +7,9 @@
  */
 
 import { memo, type ReactNode } from "react";
-import type { GlowEffect } from "@oxen-office/ooxml/domain/effects";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
-import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
+import type { GlowEffect } from "@oxen-office/drawing-ml/domain/effects";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
+import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
 
 // =============================================================================
 // Types

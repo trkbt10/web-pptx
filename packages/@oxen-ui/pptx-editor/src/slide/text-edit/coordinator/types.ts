@@ -5,7 +5,7 @@
  */
 
 import type { TextBody } from "@oxen-office/pptx/domain";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import type { FontScheme } from "@oxen-office/ooxml/domain/font-scheme";
 import type { TextEditBounds } from "../input-support/state";
 import type {

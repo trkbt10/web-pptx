@@ -6,7 +6,7 @@
 
 import { calculateConnectionSites, getConnectionPoint, transformConnectionPoint } from "./connection-site";
 import type { CustomGeometry, PresetGeometry } from "../shape";
-import { deg, px } from "@oxen-office/ooxml/domain/units";
+import { deg, px } from "@oxen-office/drawing-ml/domain/units";
 
 describe("connection-site - ECMA-376 compliance", () => {
   describe("calculateConnectionSites - preset geometry (ECMA-376 20.1.9.18)", () => {

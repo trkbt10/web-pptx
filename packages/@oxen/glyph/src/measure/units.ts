@@ -2,7 +2,7 @@
  * @file Unit conversion constants for text measurement
  *
  * This module provides unit conversion constants.
- * For type-safe branded units (Pixels, Points), use @oxen-office/ooxml/domain/units.
+ * For type-safe branded units (Pixels, Points), use @oxen-office/drawing-ml/domain/units.
  */
 
 /**

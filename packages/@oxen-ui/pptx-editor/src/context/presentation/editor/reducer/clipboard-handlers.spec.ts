@@ -2,7 +2,7 @@
  * @file Clipboard handlers tests
  */
 
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import type { Shape, SpShape } from "@oxen-office/pptx/domain";
 import { createPresentationEditorState } from "./reducer";
 import { createTestDocument } from "./test-fixtures";

@@ -16,7 +16,7 @@
 
 import type { Chart, ChartSeries, PlotArea } from "../domain/types";
 import { getChild, getChildren, getByPath, getAttr as xmlGetAttr, type XmlDocument, type XmlElement } from "@oxen/xml";
-import { getBoolAttr, getIntAttr } from "@oxen-office/ooxml/parser";
+import { getBoolAttr, getIntAttr } from "@oxen-office/drawing-ml/parser";
 
 import { parseChartShapeProperties } from "./shape-properties";
 import { parseLayout } from "./layout";

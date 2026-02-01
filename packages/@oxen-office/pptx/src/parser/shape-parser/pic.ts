@@ -6,7 +6,7 @@
 
 import { getAttr, getChild, type XmlElement } from "@oxen/xml";
 import type { BlipFillProperties, PicShape, PictureLocks, ResolvedBlipResource } from "../../domain";
-import { px, pct } from "@oxen-office/ooxml/domain/units";
+import { px, pct } from "@oxen-office/drawing-ml/domain/units";
 import { getBoolAttr, getIntAttr, parseBlipCompression, parseRectAlignment } from "../primitive";
 import { parseNonVisualMedia, parseNonVisualProperties } from "./non-visual";
 import { parseShapeProperties } from "./properties";

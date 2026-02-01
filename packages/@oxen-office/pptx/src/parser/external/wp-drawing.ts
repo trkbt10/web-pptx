@@ -9,7 +9,7 @@
 import type { XmlElement } from "@oxen/xml";
 import { getAttr, getChild, getChildren, getTextContent } from "@oxen/xml";
 import type { AlignH, AlignV, EffectExtent, GraphicFrameLocks, ConnectionTarget, NonVisualProperties, PositionH, PositionV, Point, WrapPolygon, WrapSquare, WrapThrough, WrapTight, WrapTopAndBottom, GroupLocks, ContentPartLocks, ContentPart, LinkedTextbox, TextboxInfo, ConnectorLocks } from "../../domain/index";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import {
   parseAlignH,
   parseAlignV,

@@ -3,7 +3,7 @@
  */
 
 import { createElement, type XmlElement } from "@oxen/xml";
-import type { Color, ColorTransform } from "@oxen-office/ooxml/domain/color";
+import type { Color, ColorTransform } from "@oxen-office/drawing-ml/domain/color";
 import { ooxmlAngleUnits, ooxmlPercent100k } from "@oxen-builder/core";
 
 

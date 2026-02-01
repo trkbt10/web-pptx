@@ -3,7 +3,7 @@
  */
 
 import { createElement, type XmlElement } from "@oxen/xml";
-import type { GradientFill, GradientStop, PatternFill } from "@oxen-office/ooxml/domain/fill";
+import type { GradientFill, GradientStop, PatternFill } from "@oxen-office/drawing-ml/domain/fill";
 import type { BlipEffects, BlipFill, Fill, StretchFill, TileFill } from "@oxen-office/pptx/domain";
 import { serializeColor } from "./color";
 import { ooxmlBool, ooxmlAngleUnits, ooxmlEmu, ooxmlPercent100k } from "@oxen-builder/core";

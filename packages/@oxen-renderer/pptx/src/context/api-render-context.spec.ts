@@ -14,9 +14,9 @@ import type { Slide as ApiSlide } from "@oxen-office/pptx/app/types";
 import type { XmlElement, XmlDocument } from "@oxen/xml";
 import type { ResourceMap } from "@oxen-office/opc";
 import type { IndexTables } from "@oxen-office/pptx/parser/slide/shape-tree-indexer";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { ZipFile } from "@oxen-office/opc";
-import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
+import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
 import { DEFAULT_RENDER_OPTIONS } from "../render-options";
 
 // =============================================================================

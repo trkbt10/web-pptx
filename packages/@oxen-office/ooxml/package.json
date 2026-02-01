@@ -6,6 +6,7 @@
   "sideEffects": false,
   "dependencies": {
     "@oxen/color": "workspace:*",
+    "@oxen-office/drawing-ml": "workspace:*",
     "@oxen-office/opc": "workspace:*",
     "@oxen/xml": "workspace:*",
     "@oxen/zip": "workspace:*"
@@ -39,18 +40,6 @@
     "./parser/*": {
       "types": "./src/parser/*.ts",
       "default": "./src/parser/*.ts"
-    },
-    "./parser/*/*": {
-      "types": "./src/parser/*/*.ts",
-      "default": "./src/parser/*/*.ts"
-    },
-    "./parser/drawing-ml": {
-      "types": "./src/parser/drawing-ml/index.ts",
-      "default": "./src/parser/drawing-ml/index.ts"
-    },
-    "./parser/drawing-ml/*": {
-      "types": "./src/parser/drawing-ml/*.ts",
-      "default": "./src/parser/drawing-ml/*.ts"
     }
   }
 }

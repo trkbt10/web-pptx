@@ -8,8 +8,8 @@
 /* eslint-disable curly -- parser uses single-line guards consistently */
 
 import type { AdjustValue, AdjustHandle, XYAdjustHandle, PolarAdjustHandle, ArcToCommand, CloseCommand, ConnectionSite, CubicBezierCommand, CustomGeometry, Geometry, GeometryGuide, GeometryPath, LineToCommand, MoveToCommand, PathCommand, Point, PresetGeometry, QuadBezierCommand, TextRect } from "../../domain/index";
-import type { Degrees } from "@oxen-office/ooxml/domain/units";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import type { Degrees } from "@oxen-office/drawing-ml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import {
   getAttr,
   getChild,

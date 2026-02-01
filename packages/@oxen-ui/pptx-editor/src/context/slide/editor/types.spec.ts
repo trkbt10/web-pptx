@@ -17,7 +17,7 @@ import type { Slide } from "@oxen-office/pptx/domain";
 // =============================================================================
 
 import type { Shape, SpShape } from "@oxen-office/pptx/domain";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 
 // Create minimal test slide using type assertion for incomplete shapes
 const createTestSlide = (shapeCount: number = 0): Slide => ({

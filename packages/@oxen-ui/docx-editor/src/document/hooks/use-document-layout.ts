@@ -9,8 +9,8 @@ import { useMemo } from "react";
 import type { DocxParagraph } from "@oxen-office/docx/domain/paragraph";
 import type { DocxSectionProperties } from "@oxen-office/docx/domain/section";
 import type { DocxNumbering } from "@oxen-office/docx/domain/numbering";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { px } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type {
   LayoutParagraphResult,
   LayoutParagraphInput,

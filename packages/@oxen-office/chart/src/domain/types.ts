@@ -7,10 +7,10 @@
  * @see ECMA-376 Part 1, Section 21.2 - DrawingML Charts
  */
 
-import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
-import type { BaseLine } from "@oxen-office/ooxml/domain/line";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
+import type { BaseLine } from "@oxen-office/drawing-ml/domain/line";
 import type { TextBody } from "./text";
-import type { Degrees, Percent, Pixels, Points } from "@oxen-office/ooxml/domain/units";
+import type { Degrees, Percent, Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Chart Type Enumeration

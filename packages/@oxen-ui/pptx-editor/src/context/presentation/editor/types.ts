@@ -7,12 +7,12 @@
 
 import type { Slide, Shape, TextBody, SlideSize } from "@oxen-office/pptx/domain";
 import type { ShapeId } from "@oxen-office/pptx/domain/types";
-import type { Pixels, Degrees } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Degrees } from "@oxen-office/drawing-ml/domain/units";
 import type { PresentationDocument, SlideWithId, SlideId, SlideLayoutBundle } from "@oxen-office/pptx/app";
 import type { ShapeHierarchyTarget } from "../../../shape";
 import type { FontSpec } from "@oxen-office/ooxml/domain/font-scheme";
 import type { ThemePreset } from "../../../panels/theme-editor/types";
-import type { SchemeColorName } from "@oxen-office/ooxml/domain/color";
+import type { SchemeColorName } from "@oxen-office/drawing-ml/domain/color";
 import type { UndoRedoHistory } from "@oxen-ui/editor-core/history";
 import type {
   SelectionState,

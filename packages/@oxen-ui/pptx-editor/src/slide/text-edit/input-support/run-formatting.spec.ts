@@ -17,7 +17,7 @@ import type {
   RegularRun,
 } from "@oxen-office/pptx/domain/text";
 import type { TextSelection } from "./cursor";
-import type { Points } from "@oxen-office/ooxml/domain/units";
+import type { Points } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Test Fixtures

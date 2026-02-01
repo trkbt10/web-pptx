@@ -4,8 +4,8 @@
 
 import type { ChartRenderContext, FillResolver, ResolvedFill, ResolvedTextStyle } from "@oxen-renderer/chart";
 import type { GenericTextBody } from "@oxen-renderer/chart";
-import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
-import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
+import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
 import { resolveThemeFont } from "@oxen-office/ooxml/domain/font-scheme";
 import { resolveFill } from "@oxen-office/pptx/domain/color/fill";
 import type { CoreRenderContext } from "../render-context";

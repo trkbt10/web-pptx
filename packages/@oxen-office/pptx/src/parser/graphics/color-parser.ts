@@ -8,7 +8,7 @@ import {
   findColorElement as findColorElementBase,
   parseColor as parseColorBase,
   parseColorFromParent as parseColorFromParentBase,
-} from "@oxen-office/ooxml/parser";
+} from "@oxen-office/drawing-ml/parser";
 
 
 

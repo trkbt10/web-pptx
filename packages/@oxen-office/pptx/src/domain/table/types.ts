@@ -7,7 +7,7 @@
 import type { Fill, Line } from "../color/types";
 import type { TextBody } from "../text";
 import type { BevelPresetType } from "../three-d";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { Effects, FontCollectionIndex, LightRigDirection, LightRigType, PresetMaterialType, StyleMatrixColumnIndex } from "../types";
 
 // =============================================================================

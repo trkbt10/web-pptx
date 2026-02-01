@@ -5,7 +5,7 @@
  * coordinate systems for different writing modes.
  */
 
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import {
   textDirectionToWritingMode,
   toDirectional,

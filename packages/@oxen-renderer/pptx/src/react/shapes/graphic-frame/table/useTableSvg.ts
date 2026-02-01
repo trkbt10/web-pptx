@@ -10,7 +10,7 @@
 
 import { useMemo } from "react";
 import type { Table } from "@oxen-office/pptx/domain/table/types";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { useRenderContext } from "../../../context";
 import { renderTableSvg } from "../../../../svg/table";
 import { createDefsCollector } from "../../../../svg/slide-utils";

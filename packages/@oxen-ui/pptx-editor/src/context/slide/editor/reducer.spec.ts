@@ -11,7 +11,7 @@
 
 import { slideEditorReducer } from "./reducer";
 import type { Slide, SpShape, Shape } from "@oxen-office/pptx/domain";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import {
   createSlideEditorState,
   type SlideEditorState,

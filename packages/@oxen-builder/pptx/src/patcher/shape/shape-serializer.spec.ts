@@ -4,7 +4,7 @@ import type { SpShape, GrpShape, PicShape, CxnShape, GraphicFrame } from "@oxen-
 import type { TextBody } from "@oxen-office/pptx/domain/text";
 import type { Effects, Line } from "@oxen-office/pptx/domain";
 import { EMU_PER_PIXEL } from "@oxen-office/pptx/domain";
-import { px, deg, pct } from "@oxen-office/ooxml/domain/units";
+import { px, deg, pct } from "@oxen-office/drawing-ml/domain/units";
 import { serializeShape, serializeGroupShape, serializePicture, serializeConnectionShape } from "./shape-serializer";
 
 function createRectShape(id: string, overrides: Partial<SpShape> = {}): SpShape {

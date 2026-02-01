@@ -1,6 +1,6 @@
 /** @file Unit tests for table patching operations */
 import { createElement, createText, getChild, getChildren, getTextByPath, isXmlElement, type XmlElement } from "@oxen/xml";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { TextBody } from "@oxen-office/pptx/domain/text";
 import type { TableRow } from "@oxen-office/pptx/domain/table/types";
 import { patchTable } from "./table-patcher";

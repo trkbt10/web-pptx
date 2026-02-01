@@ -7,7 +7,7 @@
  */
 
 import * as THREE from "three";
-import type { Degrees, Percent } from "@oxen-office/ooxml/domain/units";
+import type { Degrees, Percent } from "@oxen-office/drawing-ml/domain/units";
 import type { PresetCameraType } from "@oxen-office/pptx/domain/index";
 
 // =============================================================================

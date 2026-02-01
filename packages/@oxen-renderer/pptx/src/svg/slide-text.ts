@@ -14,14 +14,14 @@
  */
 
 import type { TextBody } from "@oxen-office/pptx/domain/text";
-import type { Color } from "@oxen-office/ooxml/domain/color";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import type { CoreRenderContext } from "../render-context";
 import type { SvgDefsCollector } from "./slide-utils";
 import type { LayoutResult, LayoutLine, LayoutSpan } from "../text-layout";
 import { layoutTextBody, toLayoutInput } from "../text-layout";
 import { escapeXml } from "@oxen/xml";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import { PT_TO_PX } from "@oxen-office/pptx/domain/unit-conversion";
 import { ooxmlAngleToSvgLinearGradient, getRadialGradientCoords } from "./gradient-utils";
 

@@ -8,7 +8,7 @@
  * @see ./accessor.ts for type definitions
  */
 
-import type { ColorMap } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorMap } from "@oxen-office/drawing-ml/domain/color-context";
 import type { PlaceholderTable } from "../../domain";
 import type { IndexTables } from "./shape-tree-indexer";
 import type { XmlElement } from "@oxen/xml";

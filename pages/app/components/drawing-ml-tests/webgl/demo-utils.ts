@@ -8,10 +8,10 @@
  * This file provides convenience wrappers for demo/preview purposes.
  */
 
-import { pt, px } from "@oxen-office/ooxml/domain/units";
+import { pt, px } from "@oxen-office/drawing-ml/domain/units";
 import type { TextBody, Paragraph, RegularRun, RunProperties } from "@oxen-office/pptx/domain/text";
-import type { SolidFill } from "@oxen-office/ooxml/domain/fill";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { SolidFill } from "@oxen-office/drawing-ml/domain/fill";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import type {
   Shape3d,
   Scene3d,

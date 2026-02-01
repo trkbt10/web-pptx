@@ -7,8 +7,8 @@
 
 import type { Shape } from "@oxen-office/pptx/domain";
 import type { ShapeId } from "@oxen-office/pptx/domain/types";
-import type { Degrees } from "@oxen-office/ooxml/domain/units";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import type { Degrees } from "@oxen-office/drawing-ml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import type {
   PresentationEditorState,
   PresentationEditorAction,

@@ -21,7 +21,7 @@
 // =============================================================================
 
 // Import Brand for defining PPTX-specific types (import is OK, re-export is not)
-import type { Brand } from "@oxen-office/ooxml/domain/units";
+import type { Brand } from "@oxen-office/drawing-ml/domain/units";
 
 /**
  * Relationship ID (rId1, rId2, etc.) used in .rels files

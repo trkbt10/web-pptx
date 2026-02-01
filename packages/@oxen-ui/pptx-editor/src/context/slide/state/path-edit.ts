@@ -4,7 +4,7 @@
  * State types and utilities for editing existing path shapes.
  */
 
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { ShapeId } from "@oxen-office/pptx/domain/types";
 import type { CustomGeometry } from "@oxen-office/pptx/domain";
 import type {

@@ -3,7 +3,7 @@
  */
 
 import type { LayoutParagraphInput, MeasuredSpan } from "../../text-layout/types";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type {
   Paragraph,
   ParagraphProperties,

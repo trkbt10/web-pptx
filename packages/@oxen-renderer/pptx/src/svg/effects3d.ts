@@ -9,7 +9,7 @@
  */
 
 import type { Scene3d, Shape3d, LightRig, Bevel3d } from "@oxen-office/pptx/domain/index";
-import type { Degrees } from "@oxen-office/ooxml/domain/units";
+import type { Degrees } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Types

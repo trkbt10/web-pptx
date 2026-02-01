@@ -6,7 +6,7 @@
 
 import { createElement, createText, type XmlElement } from "@oxen/xml";
 import type { BodyProperties, Bullet, BulletStyle, Hyperlink, HyperlinkMouseOver, LineSpacing, ParagraphProperties, RunProperties, TabStop } from "@oxen-office/pptx/domain";
-import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
 import { serializeColor } from "./color";
 import { serializeEffects } from "./effects";
 import { serializeFill } from "./fill";

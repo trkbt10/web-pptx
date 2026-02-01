@@ -2,8 +2,8 @@
  * @file Line property builders for DrawingML
  */
 
-import type { BaseLine, LineEnd } from "@oxen-office/ooxml/domain/line";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { BaseLine, LineEnd } from "@oxen-office/drawing-ml/domain/line";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type {
   ColorSpec,
   LineEndSpec,

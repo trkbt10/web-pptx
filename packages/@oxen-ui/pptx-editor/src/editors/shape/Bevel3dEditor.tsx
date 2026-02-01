@@ -8,7 +8,7 @@
 import { Select } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { Bevel3d, BevelPresetType } from "@oxen-office/pptx/domain";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
 

@@ -12,7 +12,7 @@ import { renderDiagram, renderDiagramPlaceholder } from "./diagram";
 import type { DiagramContent } from "@oxen-office/pptx/domain/index";
 import { createEmptyCoreRenderContext } from "../render-context";
 import type { SpShape } from "@oxen-office/pptx/domain/shape";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import type { BodyProperties, ParagraphProperties } from "@oxen-office/pptx/domain/text";
 
 /**

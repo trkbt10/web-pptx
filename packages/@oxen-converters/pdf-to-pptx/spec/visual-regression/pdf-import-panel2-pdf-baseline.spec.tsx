@@ -15,7 +15,7 @@
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
 import { execFileSync } from "node:child_process";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { importPdf } from "../../src/importer/pdf-importer";
 import { render } from "@testing-library/react";
 import { SlideRendererSvg } from "@oxen-renderer/pptx/react";

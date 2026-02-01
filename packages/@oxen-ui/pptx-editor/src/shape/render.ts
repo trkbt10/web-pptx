@@ -5,7 +5,7 @@
  */
 
 import type { Shape, SpShape, CxnShape } from "@oxen-office/pptx/domain";
-import type { SolidFill } from "@oxen-office/ooxml/domain/fill";
+import type { SolidFill } from "@oxen-office/drawing-ml/domain/fill";
 
 /**
  * Extract fill color from shape as hex string

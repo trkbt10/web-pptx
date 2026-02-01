@@ -17,8 +17,8 @@ import type {
 } from "../../domain/types";
 import type { XmlDocument, XmlElement } from "@oxen/xml";
 import { getAttr, getByPath, getChild, getChildren, isXmlElement } from "@oxen/xml";
-import { getIntAttr, parseColor } from "@oxen-office/ooxml/parser";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import { getIntAttr, parseColor } from "@oxen-office/drawing-ml/parser";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 
 /**
  * Parse diagram colors definition from XML document.

@@ -7,8 +7,8 @@
  * @see ECMA-376 Part 1, Section 20.1.8.53 (softEdge)
  */
 
-import { px, deg } from "@oxen-office/ooxml/domain/units";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { Effects, ShadowEffect, GlowEffect, SoftEdgeEffect } from "@oxen-office/pptx/domain";
 import {
   generateEffectsFilterId,

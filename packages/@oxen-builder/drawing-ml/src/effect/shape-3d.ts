@@ -2,7 +2,7 @@
  * @file 3D shape property builders for DrawingML
  */
 
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { Shape3dSpec, BevelSpec } from "../types";
 
 /**

@@ -12,7 +12,7 @@ import { PixelsEditor } from "../primitives/PixelsEditor";
 import { Camera3dEditor, createDefaultCamera3d } from "./Camera3dEditor";
 import { LightRigEditor, createDefaultLightRig } from "./LightRigEditor";
 import { Backdrop3dEditor, createDefaultBackdrop3d } from "./Backdrop3dEditor";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { Scene3d } from "@oxen-office/pptx/domain";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 

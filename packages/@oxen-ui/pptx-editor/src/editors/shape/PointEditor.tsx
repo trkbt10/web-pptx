@@ -7,7 +7,7 @@
 
 import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { Point } from "@oxen-office/pptx/domain/types";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 

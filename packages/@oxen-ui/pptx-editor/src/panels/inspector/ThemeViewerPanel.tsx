@@ -6,7 +6,7 @@
  */
 
 import type { CSSProperties } from "react";
-import type { ColorContext, ColorScheme } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorContext, ColorScheme } from "@oxen-office/drawing-ml/domain/color-context";
 import type { FontScheme } from "@oxen-office/ooxml/domain/font-scheme";
 import { InspectorSection, Accordion } from "@oxen-ui/ui-components/layout";
 import { colorTokens, fontTokens, spacingTokens } from "@oxen-ui/ui-components/design-tokens";

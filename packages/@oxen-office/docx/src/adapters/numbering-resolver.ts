@@ -15,8 +15,8 @@ import type {
 } from "../domain/numbering";
 import type { DocxNumberingProperties } from "../domain/paragraph";
 import type { BulletConfig } from "@oxen-office/text-layout";
-import type { Points } from "@oxen-office/ooxml/domain/units";
-import { pt } from "@oxen-office/ooxml/domain/units";
+import type { Points } from "@oxen-office/drawing-ml/domain/units";
+import { pt } from "@oxen-office/drawing-ml/domain/units";
 import { SPEC_DEFAULT_FONT_SIZE_PT } from "../domain/ecma376-defaults";
 
 // =============================================================================

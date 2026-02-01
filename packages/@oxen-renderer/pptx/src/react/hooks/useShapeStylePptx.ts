@@ -9,9 +9,9 @@
 
 import type { Fill, Line } from "@oxen-office/pptx/domain";
 import type { Effects } from "@oxen-office/pptx/domain/effects";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import { resolveFill, resolveLine, type ResolvedLine as PptxResolvedLine } from "@oxen-office/pptx/domain/color/fill";
-import type { ResolvedLine as OoxmlResolvedLine } from "@oxen-office/ooxml/domain/resolved-fill";
+import type { ResolvedLine as OoxmlResolvedLine } from "@oxen-office/drawing-ml/domain/resolved-fill";
 import {
   useShapeStyle as useShapeStyleBase,
   type ShapeStyleResult,

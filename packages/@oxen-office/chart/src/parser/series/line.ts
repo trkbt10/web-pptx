@@ -7,7 +7,7 @@
 
 import type { LineSeries, LineChartSeries, Grouping } from "../../domain/types";
 import { getChild, getChildren, getAttr as xmlGetAttr, type XmlElement } from "@oxen/xml";
-import { getBoolAttr, getIntAttr } from "@oxen-office/ooxml/parser";
+import { getBoolAttr, getIntAttr } from "@oxen-office/drawing-ml/parser";
 import { parseSeriesText, parseDataReference } from "../data-reference";
 import { parseChartShapeProperties } from "../shape-properties";
 import { parseMarker, parseDataPoints, parseDataLabels, parseTrendlines, parseErrorBars } from "../components";

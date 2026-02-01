@@ -6,7 +6,7 @@
 
 import type { Point } from "@oxen-office/pptx/domain";
 import type { Bounds } from "@oxen-office/pptx/domain/types";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Basic Math Utilities

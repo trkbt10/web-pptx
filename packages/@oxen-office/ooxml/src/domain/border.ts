@@ -9,7 +9,7 @@
  * @see ECMA-376 Part 4, Section 18.8.4 (Border - SpreadsheetML)
  */
 
-import type { Brand } from "./units";
+import type { Brand } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Border Style Types (Common across DOCX/XLSX)

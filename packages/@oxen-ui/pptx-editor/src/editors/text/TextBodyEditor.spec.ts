@@ -6,7 +6,7 @@
  */
 
 import type { TextBody, Paragraph, TextRun, ParagraphProperties, BodyProperties } from "@oxen-office/pptx/domain/text";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Helper functions

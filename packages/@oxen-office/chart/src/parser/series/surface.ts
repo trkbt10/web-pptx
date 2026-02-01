@@ -10,7 +10,7 @@
 
 import type { SurfaceSeries, SurfaceChartSeries, BandFormat } from "../../domain/types";
 import { getChild, getChildren, type XmlElement } from "@oxen/xml";
-import { getBoolAttr, getIntAttr } from "@oxen-office/ooxml/parser";
+import { getBoolAttr, getIntAttr } from "@oxen-office/drawing-ml/parser";
 import { parseSeriesText, parseDataReference } from "../data-reference";
 import { parseChartShapeProperties } from "../shape-properties";
 import { parseDataLabels } from "../components";

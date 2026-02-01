@@ -4,7 +4,7 @@
  * Tests for ECMA-376 effect containers and filter rendering.
  */
 
-import { px, deg, pct } from "@oxen-office/ooxml/domain/units";
+import { px, deg, pct } from "@oxen-office/drawing-ml/domain/units";
 import { type CheckItem, TestSubsection, EffectPreview } from "../common";
 
 /**

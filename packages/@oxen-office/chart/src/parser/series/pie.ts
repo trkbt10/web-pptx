@@ -14,8 +14,8 @@ import type {
   OfPieSplitType,
 } from "../../domain/types";
 import { getChild, getChildren, getAttr, type XmlElement } from "@oxen/xml";
-import { getBoolAttr, getFloatAttr, getIntAttr } from "@oxen-office/ooxml/parser";
-import { deg } from "@oxen-office/ooxml/domain/units";
+import { getBoolAttr, getFloatAttr, getIntAttr } from "@oxen-office/drawing-ml/parser";
+import { deg } from "@oxen-office/drawing-ml/domain/units";
 import { parseSeriesText, parseDataReference } from "../data-reference";
 import { parseChartShapeProperties, parseChartLines } from "../shape-properties";
 import { parseDataPoints, parseDataLabels } from "../components";

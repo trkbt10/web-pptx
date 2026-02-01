@@ -10,9 +10,8 @@
  */
 
 import type { Paragraph, ParagraphProperties, RunProperties, TextBody, TextRun } from "../domain/text";
-import { pt } from "@oxen-office/ooxml/domain/units";
-import { parseBoolean, parseInt32 } from "@oxen-office/ooxml/parser";
-import { parseColorFromParent } from "@oxen-office/ooxml/parser/drawing-ml";
+import { pt } from "@oxen-office/drawing-ml/domain/units";
+import { parseBoolean, parseInt32, parseColorFromParent } from "@oxen-office/drawing-ml/parser";
 import {
   getAttr,
   getChild,

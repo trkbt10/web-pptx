@@ -7,9 +7,9 @@
  */
 
 import { useMemo, type ReactNode } from "react";
-import type { PatternFill } from "@oxen-office/ooxml/domain/fill";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
-import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
+import type { PatternFill } from "@oxen-office/drawing-ml/domain/fill";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
+import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
 import { useDrawingMLContext } from "../context";
 import { useSvgDefs } from "../hooks/useSvgDefs";
 import { PatternDef, isPatternSupported } from "./PatternDef";

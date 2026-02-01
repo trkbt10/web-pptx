@@ -42,7 +42,7 @@
  */
 
 import type { XmlElement } from "@oxen/xml";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import { parseEffects } from "./effects-parser";
 
 // Helper to create mock XmlElement

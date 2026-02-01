@@ -2,8 +2,8 @@
  * @file src/pdf/importer/pdf-importer-color-context.spec.ts
  */
 
-import type { Color } from "@oxen-office/ooxml/domain/color";
-import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
+import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
 import {
   createDefaultColorContextForPdf,
   createEmptyColorContext,

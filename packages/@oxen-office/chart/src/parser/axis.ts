@@ -20,7 +20,7 @@ import type {
   ChartTitle,
 } from "../domain/types";
 import { getChild, getChildren, getAttr as xmlGetAttr, type XmlElement } from "@oxen/xml";
-import { getBoolAttr, getFloatAttr, getIntAttr } from "@oxen-office/ooxml/parser";
+import { getBoolAttr, getFloatAttr, getIntAttr } from "@oxen-office/drawing-ml/parser";
 import { parseChartShapeProperties } from "./shape-properties";
 import { parseTextBody } from "./text-body";
 import { parseChartTitle } from "./title-legend";

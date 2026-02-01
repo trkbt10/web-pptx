@@ -29,7 +29,7 @@ import type {
   EmbeddedFontReference,
   EmbeddedFontTypeface,
 } from "../../domain/embedded-font";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { SLIDE_FACTOR } from "../../domain/unit-conversion";
 import { parseTextStyleLevels } from "../text/text-style-levels";
 import { parseSlideId, parseSlideMasterId, parseSlideSizeCoordinate } from "../primitive";

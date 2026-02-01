@@ -5,6 +5,7 @@
   "type": "module",
   "sideEffects": false,
   "dependencies": {
+    "@oxen-office/drawing-ml": "workspace:*",
     "@oxen-office/ooxml": "workspace:*",
     "@oxen-office/xlsx": "workspace:*",
     "@oxen/xml": "workspace:*"

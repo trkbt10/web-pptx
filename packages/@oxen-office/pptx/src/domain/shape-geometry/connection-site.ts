@@ -13,8 +13,8 @@
  */
 
 import type { CustomGeometry, Geometry } from "../shape";
-import type { Degrees, Pixels } from "@oxen-office/ooxml/domain/units";
-import { deg, px } from "@oxen-office/ooxml/domain/units";
+import type { Degrees, Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { deg, px } from "@oxen-office/drawing-ml/domain/units";
 import {
   createGuideContext,
   evaluateGuides,

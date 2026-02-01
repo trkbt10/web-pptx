@@ -8,10 +8,10 @@
 /* eslint-disable jsdoc/require-jsdoc -- helper guards follow spec enums */
 
 import { getAttr, getChild, type XmlElement } from "@oxen/xml";
-import type { Color } from "@oxen-office/ooxml/domain/color";
-import type { SolidFill } from "@oxen-office/ooxml/domain/fill";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
+import type { SolidFill } from "@oxen-office/drawing-ml/domain/fill";
 import type { Scene3d, Shape3d, Rotation3d, Bevel3d, BevelPresetType, LightRigDirection, LightRigType, PresetCameraType, PresetMaterialType } from "../../domain";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { getAngleAttr, getEmuAttr, getPercent100kAttr } from "../primitive";
 import { parseColorFromParent } from "../graphics/color-parser";
 

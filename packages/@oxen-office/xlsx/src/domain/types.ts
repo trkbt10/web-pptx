@@ -7,7 +7,7 @@
  * @see ECMA-376 Part 4, Section 18.18 (Simple Types)
  */
 
-import type { Brand } from "@oxen-office/ooxml/domain/units";
+import type { Brand } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Row/Column Index Types (1-based)

@@ -2,7 +2,7 @@
  * @file Tests for PDF→PPTX coordinate transforms
  */
 
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { ConversionContext } from "./transform-converter";
 import { convertBBox, convertMatrix, convertPoint, convertSize, createFitContext } from "./transform-converter";
 

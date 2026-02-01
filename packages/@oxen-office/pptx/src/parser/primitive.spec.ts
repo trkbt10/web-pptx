@@ -97,7 +97,7 @@ import {
   getChildEmuAttr,
   getChildBoolAttr,
 } from "./primitive";
-import { px, deg, pt } from "@oxen-office/ooxml/domain/units";
+import { px, deg, pt } from "@oxen-office/drawing-ml/domain/units";
 
 // Helper to create mock XmlElement
 function el(name: string, attrs: Record<string, string> = {}, children: XmlElement[] = []): XmlElement {

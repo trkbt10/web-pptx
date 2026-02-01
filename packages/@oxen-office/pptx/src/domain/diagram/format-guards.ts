@@ -6,31 +6,6 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object";
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /** Type guard to check if a value is a valid TextBody */
 export function isTextBody(value: unknown): value is TextBody {
   if (!isObject(value)) {
@@ -41,31 +16,6 @@ export function isTextBody(value: unknown): value is TextBody {
   }
   return "paragraphs" in value && Array.isArray(value.paragraphs);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /** Type guard to check if a value is a valid ShapeStyle */
 export function isShapeStyle(value: unknown): value is ShapeStyle {

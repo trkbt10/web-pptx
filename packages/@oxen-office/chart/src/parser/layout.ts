@@ -7,7 +7,7 @@
 
 import type { Layout, ManualLayout } from "../domain/types";
 import { getChild, getAttr as xmlGetAttr, type XmlElement } from "@oxen/xml";
-import { getFloatAttr } from "@oxen-office/ooxml/parser";
+import { getFloatAttr } from "@oxen-office/drawing-ml/parser";
 
 /**
  * Safe getAttr that handles undefined elements

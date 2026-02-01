@@ -6,12 +6,12 @@
  * @see ECMA-376 Part 1, Section 20.1.8 (Fill Properties)
  */
 
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { Fill } from "../../domain/color/types";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
-import type { TextFillConfig } from "../../domain/drawing-ml/text-fill";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
+import type { TextFillConfig } from "@oxen-office/drawing-ml/domain/text-fill";
 import type { ResourceResolverFn } from "../../domain";
-import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
+import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
 
 // =============================================================================
 // Resource Resolver Type (re-exported from domain)

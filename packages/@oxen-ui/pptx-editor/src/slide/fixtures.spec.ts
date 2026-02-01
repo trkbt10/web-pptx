@@ -16,7 +16,7 @@
 import type { Slide, SpShape, PicShape, CxnShape, GrpShape, GraphicFrame } from "@oxen-office/pptx/domain";
 import type { PresetGeometry } from "@oxen-office/pptx/domain/shape";
 import type { Table, TableRow, TableCell } from "@oxen-office/pptx/domain/table/types";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Test Fixtures (same as SlideEditorTest.tsx)

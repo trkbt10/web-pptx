@@ -4,7 +4,7 @@
 
 import type { PdfImage } from "@oxen/pdf/domain";
 import { createDefaultGraphicsState } from "@oxen/pdf/domain";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { base64ArrayBuffer, base64ToArrayBuffer, parseDataUrl, toDataUrl } from "@oxen/buffer";
 import { convertImageToShape } from "./image-to-shapes";
 import { createFitContext } from "./transform-converter";

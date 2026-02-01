@@ -1,7 +1,7 @@
 /** @file Type definitions for chart rendering */
-import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
-import type { Color } from "@oxen-office/ooxml/domain/color";
-import type { Points } from "@oxen-office/ooxml/domain/units";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
+import type { Points } from "@oxen-office/drawing-ml/domain/units";
 import type { RenderWarning, WarningCollector } from "@oxen-office/ooxml";
 
 export type { RenderWarning, WarningCollector };

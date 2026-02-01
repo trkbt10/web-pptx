@@ -7,9 +7,9 @@
  */
 
 import { useMemo } from "react";
-import type { Color, ColorTransform } from "@oxen-office/ooxml/domain/color";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
-import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
+import type { Color, ColorTransform } from "@oxen-office/drawing-ml/domain/color";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
+import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
 import { useDrawingMLContext } from "../context";
 
 // =============================================================================

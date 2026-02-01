@@ -6,7 +6,7 @@
  */
 
 import type { CustomGeometry, GeometryPath, PathCommand } from "@oxen-office/pptx/domain/shape";
-import type { Degrees, Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Degrees, Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { CustomGeometrySpec, GeometryPathSpec, PathCommandSpec } from "../types";
 
 function requireNumber(name: string, value: number | undefined): number {

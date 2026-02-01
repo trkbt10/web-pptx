@@ -9,7 +9,7 @@
  */
 
 import type { BackgroundFill, GradientData } from "@oxen-office/pptx/domain/drawing-ml/background";
-import type { ResolvedBackgroundFill } from "@oxen-office/ooxml";
+import type { ResolvedBackgroundFill } from "@oxen-office/drawing-ml/domain/background-fill";
 
 export type { ResolvedBackgroundFill };
 

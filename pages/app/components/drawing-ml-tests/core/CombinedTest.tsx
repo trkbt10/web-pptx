@@ -4,8 +4,8 @@
  * Integration tests combining fill + stroke + effects.
  */
 
-import type { PatternType } from "@oxen-office/ooxml/domain/fill";
-import { px, deg, pct } from "@oxen-office/ooxml/domain/units";
+import type { PatternType } from "@oxen-office/drawing-ml/domain/fill";
+import { px, deg, pct } from "@oxen-office/drawing-ml/domain/units";
 import { CombinedPreview, makeGradient } from "../common";
 
 /**

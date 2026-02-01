@@ -10,7 +10,7 @@
 import { renderSpShape, renderPicShape, renderShape } from "./shape";
 import type { SpShape, PicShape, Transform } from "@oxen-office/pptx/domain";
 import { createEmptyHtmlRenderContext } from "./context";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Test Helpers

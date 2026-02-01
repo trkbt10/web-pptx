@@ -9,7 +9,7 @@ import type {
   BulletStyle,
   TabStop,
 } from "@oxen-office/pptx/domain/text";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 
 export type TextMeasureRun = {
   readonly run: TextRun;

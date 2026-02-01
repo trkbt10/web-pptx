@@ -13,7 +13,7 @@ import { LineSpacingEditor } from "./LineSpacingEditor";
 import type { ParagraphProperties, LineSpacing } from "@oxen-office/pptx/domain/text";
 import type { TextAlign } from "@oxen-office/pptx/domain/types";
 import type { SelectOption } from "@oxen-ui/ui-components/types";
-import { px, type Pixels } from "@oxen-office/ooxml/domain/units";
+import { px, type Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { MixedParagraphProperties, PropertyExtraction } from "./mixed-properties";
 import { getExtractionValue, isMixed } from "./mixed-properties";
 

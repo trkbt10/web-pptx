@@ -12,7 +12,7 @@
  * @see ECMA-376 Part 1, WordprocessingML (for DOCX)
  */
 
-import type { Pixels, Points, Percent } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points, Percent } from "@oxen-office/drawing-ml/domain/units";
 import type { WritingMode as WritingModeType } from "./writing-mode";
 
 // Re-export writing mode types for convenience

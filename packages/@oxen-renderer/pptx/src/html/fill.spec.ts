@@ -11,7 +11,7 @@
 import { resolvedFillToBackground, fillToBackground, resolvedLineToBorder, lineToBorder } from "./fill";
 import type { Fill, Line } from "@oxen-office/pptx/domain";
 import type { ResolvedFill, ResolvedLine } from "@oxen-office/pptx/domain/color/fill";
-import { pct, px } from "@oxen-office/ooxml/domain/units";
+import { pct, px } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // resolvedFillToBackground Tests

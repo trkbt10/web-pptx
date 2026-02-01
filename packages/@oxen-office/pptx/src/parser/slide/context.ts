@@ -23,7 +23,7 @@ import type { RenderOptions } from "@oxen-renderer/pptx";
 import type { PlaceholderTable, Theme, RawMasterTextStyles, ResolvedBlipResource } from "../../domain/index";
 import type { ZipFile, ResourceMap } from "@oxen-office/opc";
 import type { TableStyleList } from "../table/style-parser";
-import type { ColorMap, ColorResolveContext } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorMap, ColorResolveContext } from "@oxen-office/drawing-ml/domain/color-context";
 import { getMimeType } from "@oxen/files";
 
 // =============================================================================

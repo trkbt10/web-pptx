@@ -23,7 +23,7 @@ import type {
   BubbleSeries,
 } from "@oxen-office/chart/domain";
 import { createCoreRenderContext } from "../render-context";
-import { pct, deg, px } from "@oxen-office/ooxml/domain/units";
+import { pct, deg, px } from "@oxen-office/drawing-ml/domain/units";
 import { loadPptxFile } from "../../../../../scripts/lib/pptx-loader";
 import { resolveRepoPath } from "../test-utils/repo-paths";
 import { renderSlideToSvg } from "../svg";

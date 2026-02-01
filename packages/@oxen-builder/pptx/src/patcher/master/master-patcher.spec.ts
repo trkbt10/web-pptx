@@ -6,7 +6,7 @@ import { createElement, getChild, type XmlDocument, type XmlElement } from "@oxe
 import type { ShapeChange } from "../core/shape-differ";
 import type { ParagraphProperties } from "@oxen-office/pptx/domain/text";
 import type { Transform } from "@oxen-office/pptx/domain/geometry";
-import { deg, px } from "@oxen-office/ooxml/domain/units";
+import { deg, px } from "@oxen-office/drawing-ml/domain/units";
 import { patchBodyStyle, patchDefaultTextStyle, patchMasterShapes, patchTitleStyle } from "./master-patcher";
 
 function doc(root: XmlElement): XmlDocument {

@@ -2,20 +2,10 @@
  * @file OOXML common utilities
  *
  * Shared types and utilities for all OOXML formats (PPTX, XLSX, DOCX).
+ * DrawingML types have been moved to @oxen-office/drawing-ml.
  *
  * @see ECMA-376 (Office Open XML File Formats)
  */
-
-// Domain types - Units
-export type { Brand, Pixels, Degrees, Percent, Points, EMU } from "./domain/units";
-export { px, deg, pct, pt, emu } from "./domain/units";
-
-// Domain types - Color
-export type { SchemeColorValue } from "./domain/color";
-
-// Domain types - Fill
-export type { PatternType } from "./domain/fill";
-export { PATTERN_PRESETS } from "./domain/fill";
 
 // Domain types - Border
 export type {
@@ -73,28 +63,8 @@ export type {
   BreakClear,
 } from "./domain/text";
 
-// Domain types - Background Fill
-export type {
-  GradientStop,
-  RadialCenter,
-  SolidBackgroundFill,
-  GradientBackgroundFill,
-  ImageBackgroundFill,
-  ResolvedBackgroundFill,
-} from "./domain/background-fill";
-
-// Domain types - Resolved Fill (for rendering)
-export type {
-  ResolvedColor,
-  ResolvedNoFill,
-  ResolvedSolidFill,
-  ResolvedGradientStop,
-  ResolvedGradientFill,
-  ResolvedImageFill,
-  ResolvedPatternFill,
-  ResolvedFill,
-  ResolvedLine,
-} from "./domain/resolved-fill";
+// Domain types - Font
+export type { BaseFontProperties, FontTypefaceProperties, BaseUnderlineStyle } from "./domain/font";
 
 // Domain types - Warnings
 export type { RenderWarning, WarningCollector } from "./domain/warnings";

@@ -4,7 +4,7 @@
 
 import { useCallback, type CSSProperties } from "react";
 import { Input, Slider } from "@oxen-ui/ui-components/primitives";
-import { pct, type Percent } from "@oxen-office/ooxml/domain/units";
+import { pct, type Percent } from "@oxen-office/drawing-ml/domain/units";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 
 export type PercentEditorProps = EditorProps<Percent> & {

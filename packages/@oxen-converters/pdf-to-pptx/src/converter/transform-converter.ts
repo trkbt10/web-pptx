@@ -7,8 +7,8 @@
 
 import type { PdfBBox, PdfMatrix, PdfPoint } from "@oxen/pdf/domain";
 import { decomposeMatrix } from "@oxen/pdf/domain/coordinate/matrix";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { deg, px } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { deg, px } from "@oxen-office/drawing-ml/domain/units";
 import type { Transform } from "@oxen-office/pptx/domain/geometry";
 import { PT_TO_PX } from "@oxen/pdf/domain/constants";
 

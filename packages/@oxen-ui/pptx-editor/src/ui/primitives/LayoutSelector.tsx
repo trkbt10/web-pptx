@@ -6,7 +6,7 @@
 
 import { type CSSProperties, useCallback, useState, useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { SlideSize, PresentationFile, Shape } from "@oxen-office/pptx/domain";
 import type { SlideLayoutOption } from "@oxen-office/pptx/app";
 import { LayoutThumbnail, useLayoutThumbnails } from "../../thumbnail";

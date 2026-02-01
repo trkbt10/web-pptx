@@ -6,9 +6,9 @@
  * results into concrete shapes (such as PPTX SpShape).
  */
 
-import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
-import type { BaseLine } from "@oxen-office/ooxml/domain/line";
-import type { Effects } from "@oxen-office/ooxml/domain/effects";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
+import type { BaseLine } from "@oxen-office/drawing-ml/domain/line";
+import type { Effects } from "@oxen-office/drawing-ml/domain/effects";
 
 export type PresetShapeType = string;
 

@@ -6,7 +6,7 @@
  */
 
 import type { Table, TableRow, TableCell } from "@oxen-office/pptx/domain/table/types";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Helper functions

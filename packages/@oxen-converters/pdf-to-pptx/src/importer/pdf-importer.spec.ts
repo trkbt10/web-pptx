@@ -3,7 +3,7 @@
  */
 
 import { existsSync, readFileSync } from "node:fs";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { importPdf, importPdfFromFile, importPdfFromUrl, PdfImportError } from "./pdf-importer";
 import { buildSimplePdfBytes } from "../test-utils/simple-pdf";
 import { getSampleFixturePath } from "../test-utils/pdf-fixtures";

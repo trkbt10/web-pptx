@@ -9,7 +9,7 @@
 import { presentationEditorReducer, createPresentationEditorState } from "./reducer";
 import type { PresentationEditorState, CreationMode } from "../types";
 import type { SpShape } from "@oxen-office/pptx/domain/shape";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { createShapeFromMode, getDefaultBoundsForMode } from "../../../../shape/factory";
 import { createTestDocument } from "./test-fixtures";
 

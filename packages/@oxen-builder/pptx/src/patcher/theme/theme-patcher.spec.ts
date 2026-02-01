@@ -3,7 +3,7 @@
  */
 
 import { createElement, getChild, type XmlDocument, type XmlElement } from "@oxen/xml";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { FormatScheme } from "@oxen-office/pptx/domain/theme/types";
 import { patchTheme } from "./theme-patcher";
 

@@ -17,8 +17,8 @@ import {
   resolveSpanHeight,
   isFlagEnabled,
 } from "@oxen-office/pptx/domain/table/resolver";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import { renderFillToStyle, renderLineToStyle } from "./fill";
 import type { CoreRenderContext } from "../render-context";
 import type { RenderOptions } from "../render-options";

@@ -13,8 +13,8 @@ import type {
   PathCommand,
   PresetGeometry,
 } from "@oxen-office/pptx/domain/shape";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { px } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { ConversionContext } from "./transform-converter";
 import { convertBBox, convertPoint } from "./transform-converter";
 import { computePathBBox } from "@oxen/pdf/parser/path/path-builder";

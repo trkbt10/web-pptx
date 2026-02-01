@@ -18,7 +18,7 @@ const checks: readonly ImportCheck[] = [
   {
     name: "no-unit-imports-from-pptx-domain-types",
     message:
-      'Avoid importing OOXML unit types/constructors from "@oxen-office/pptx/domain/types"; import from "@oxen-office/ooxml/domain/units" instead.',
+      'Avoid importing OOXML unit types/constructors from "@oxen-office/pptx/domain/types"; import from "@oxen-office/drawing-ml/domain/units" instead.',
     predicate: (source) =>
       !/import\s+(?:type\s+)?\{[^}]*\b(px|pt|pct|deg|emu|Pixels|Points|Percent|Degrees|EMU)\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/domain\/types["']\s*;/.test(
         source,
@@ -27,7 +27,7 @@ const checks: readonly ImportCheck[] = [
   {
     name: "no-color-imports-from-pptx-domain",
     message:
-      'Avoid importing OOXML Color from "@oxen-office/pptx/domain" or "../../domain/index"; import from "@oxen-office/ooxml/domain/color" instead.',
+      'Avoid importing OOXML Color from "@oxen-office/pptx/domain" or "../../domain/index"; import from "@oxen-office/drawing-ml/domain/color" instead.',
     predicate: (source) =>
       !/import\s+(?:type\s+)?\{[^}]*\bColor\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/domain(?:\/index)?["']\s*;/.test(
         source,
@@ -36,7 +36,7 @@ const checks: readonly ImportCheck[] = [
   {
     name: "no-color-imports-from-pptx-color-types",
     message:
-      'Avoid importing OOXML Color from "@oxen-office/pptx/domain/color/types"; import from "@oxen-office/ooxml/domain/color" instead.',
+      'Avoid importing OOXML Color from "@oxen-office/pptx/domain/color/types"; import from "@oxen-office/drawing-ml/domain/color" instead.',
     predicate: (source) =>
       !/import\s+(?:type\s+)?\{[^}]*\bColor\b[^}]*\}\s+from\s+["']\.\.\/\.\.\/domain\/color\/types["']\s*;/.test(
         source,

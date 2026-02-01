@@ -8,7 +8,7 @@
 
 import * as THREE from "three";
 import type { Scene3d, Shape3d, PresetCameraType } from "@oxen-office/pptx/domain/index";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { PositionedSpan } from "../../../text-layout/types";
 import { createCameraConfig, createCamera, type CameraConfig } from "../scene/camera";
 import { createLightingConfig, addLightsToScene } from "../scene/lighting";
@@ -17,7 +17,7 @@ import { createTextGeometryWithShapesAsync, type TextGeometryResult } from "../g
 import { applyTextWarp } from "../geometry/text-warp";
 import type { TextWarp } from "@oxen-office/pptx/domain/text";
 // Color resolution (shared with React renderer)
-import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
+import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
 // Effects imports
 import { applyAllEffects, needsShadowMapping } from "./apply-effects";
 import type { ContourConfig } from "../effects/contour";

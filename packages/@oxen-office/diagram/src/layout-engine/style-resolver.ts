@@ -18,11 +18,11 @@ import type {
   DiagramColorList,
   DiagramClrAppMethod,
 } from "../domain/types";
-import type { BaseFill, SolidFill } from "@oxen-office/ooxml/domain/fill";
-import type { BaseLine } from "@oxen-office/ooxml/domain/line";
+import type { BaseFill, SolidFill } from "@oxen-office/drawing-ml/domain/fill";
+import type { BaseLine } from "@oxen-office/drawing-ml/domain/line";
 import type { DiagramTreeNode } from "./tree-builder";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
-import { px } from "@oxen-office/ooxml/domain/units";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 
 
 // =============================================================================
@@ -71,7 +71,7 @@ export type ResolvedDiagramStyle = {
 /**
  * Context for style resolution
  *
- * Uses ColorContext from @oxen-office/ooxml/domain/color-context for theme color resolution.
+ * Uses ColorContext from @oxen-office/drawing-ml/domain/color-context for theme color resolution.
  * No hardcoded defaults - if colors are not available, they remain undefined.
  */
 export type StyleResolverContext = {

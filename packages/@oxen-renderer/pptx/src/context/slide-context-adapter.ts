@@ -8,7 +8,7 @@
  */
 
 import type { SlideSize, Shape } from "@oxen-office/pptx/domain";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import type { FontScheme } from "@oxen-office/ooxml/domain/font-scheme";
 import type { ResourceResolver } from "@oxen-office/pptx/domain/resource-resolver";
 import type { SlideContext } from "@oxen-office/pptx/parser/slide/context";

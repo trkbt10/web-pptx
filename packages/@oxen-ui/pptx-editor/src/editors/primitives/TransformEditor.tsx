@@ -9,7 +9,7 @@ import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { Toggle } from "@oxen-ui/ui-components/primitives";
 import { PixelsEditor } from "./PixelsEditor";
 import { DegreesEditor } from "./DegreesEditor";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import type { Transform } from "@oxen-office/pptx/domain/types";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 

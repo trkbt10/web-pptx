@@ -2,8 +2,8 @@
  * @file Effects builders for DrawingML
  */
 
-import type { Effects, ReflectionEffect, ShadowEffect, GlowEffect, SoftEdgeEffect } from "@oxen-office/ooxml/domain/effects";
-import type { Pixels, Degrees, Percent } from "@oxen-office/ooxml/domain/units";
+import type { Effects, ReflectionEffect, ShadowEffect, GlowEffect, SoftEdgeEffect } from "@oxen-office/drawing-ml/domain/effects";
+import type { Pixels, Degrees, Percent } from "@oxen-office/drawing-ml/domain/units";
 import type { EffectsSpec, ReflectionEffectSpec } from "../types";
 
 /**

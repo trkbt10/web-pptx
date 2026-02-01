@@ -10,7 +10,7 @@
 
 import { renderGeometryData, renderPresetGeometryData } from "./geometry";
 import type { CustomGeometry, GeometryPath, PresetGeometry } from "@oxen-office/pptx/domain";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 
 /**
  * Helper to create a PresetGeometry object for testing.

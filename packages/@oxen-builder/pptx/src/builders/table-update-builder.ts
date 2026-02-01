@@ -18,7 +18,7 @@ import {
 } from "@oxen-builder/pptx/patcher";
 import type { TextBody, Paragraph, TextRun, ParagraphProperties } from "@oxen-office/pptx/domain/text";
 import type { TableColumn, TableRow, TableCell, TableCellProperties } from "@oxen-office/pptx/domain/table/types";
-import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
 import { setChildren } from "./xml-utils";
 import type {
   TableUpdateSpec,

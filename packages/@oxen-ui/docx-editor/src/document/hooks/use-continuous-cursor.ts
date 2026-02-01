@@ -6,7 +6,7 @@
  */
 
 import { useMemo, useCallback } from "react";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type {
   LayoutParagraphResult,
   LayoutLine,

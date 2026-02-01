@@ -15,8 +15,8 @@ import type {
   UpDownBars,
 } from "../domain/types";
 import { getChild, getChildren, getXmlText, getAttr as xmlGetAttr, type XmlElement } from "@oxen/xml";
-import { getBoolAttr, getFloatAttr, getIntAttr } from "@oxen-office/ooxml/parser";
-import { pt } from "@oxen-office/ooxml/domain/units";
+import { getBoolAttr, getFloatAttr, getIntAttr } from "@oxen-office/drawing-ml/parser";
+import { pt } from "@oxen-office/drawing-ml/domain/units";
 import { parseTextBody } from "./text-body";
 import { parseChartShapeProperties } from "./shape-properties";
 import { parseDataReference } from "./data-reference";

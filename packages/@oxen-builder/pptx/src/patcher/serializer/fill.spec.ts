@@ -3,7 +3,7 @@
  */
 
 import { getChild, getChildren } from "@oxen/xml";
-import { deg, pct, px } from "@oxen-office/ooxml/domain/units";
+import { deg, pct, px } from "@oxen-office/drawing-ml/domain/units";
 import type { Fill } from "@oxen-office/pptx/domain";
 import { parseFill } from "@oxen-office/pptx/parser/graphics/fill-parser";
 import { serializeFill } from "./fill";

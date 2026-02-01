@@ -2,9 +2,9 @@
  * @file Solid fill builder for DrawingML
  */
 
-import type { Color, ColorTransform } from "@oxen-office/ooxml/domain/color";
-import type { SolidFill } from "@oxen-office/ooxml/domain/fill";
-import type { Percent } from "@oxen-office/ooxml/domain/units";
+import type { Color, ColorTransform } from "@oxen-office/drawing-ml/domain/color";
+import type { SolidFill } from "@oxen-office/drawing-ml/domain/fill";
+import type { Percent } from "@oxen-office/drawing-ml/domain/units";
 import type { ColorSpec, ThemeColorSpec } from "../types";
 
 /**

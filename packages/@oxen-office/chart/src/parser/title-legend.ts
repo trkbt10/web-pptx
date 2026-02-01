@@ -7,7 +7,7 @@
 
 import type { ChartTitle, Legend, LegendEntry } from "../domain/types";
 import { getChild, getChildren, getAttr as xmlGetAttr, type XmlElement } from "@oxen/xml";
-import { getBoolAttr, getIntAttr } from "@oxen-office/ooxml/parser";
+import { getBoolAttr, getIntAttr } from "@oxen-office/drawing-ml/parser";
 import { parseChartShapeProperties } from "./shape-properties";
 import { parseLayout } from "./layout";
 import { parseTextBody } from "./text-body";

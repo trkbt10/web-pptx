@@ -3,7 +3,7 @@
  */
 
 import { useCallback, type CSSProperties } from "react";
-import type { BaseFill } from "@oxen-office/ooxml/domain/fill";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
 import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { Input, Select } from "@oxen-ui/ui-components/primitives";

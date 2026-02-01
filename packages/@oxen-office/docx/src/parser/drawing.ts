@@ -8,7 +8,7 @@
  */
 
 import { getTextContent, isXmlElement, type XmlElement } from "@oxen/xml";
-import { emu } from "@oxen-office/ooxml/domain/units";
+import { emu } from "@oxen-office/drawing-ml/domain/units";
 import { docxRelId } from "../domain/types";
 import type {
   DrawingExtent,

@@ -9,7 +9,7 @@ import type { Shape, SlideSize } from "@oxen-office/pptx/domain";
 import type { Background } from "@oxen-office/pptx/domain/slide/types";
 import { applySlideLayoutAttributes, type SlideLayoutAttributes } from "@oxen-office/pptx/parser/slide/layout-parser";
 import type { ShapeId } from "@oxen-office/pptx/domain/types";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { ResizeHandlePosition } from "../../context/slide/state";
 import type { PresentationEditorAction } from "../../context/presentation/editor/types";
 import type { PresentationDocument } from "@oxen-office/pptx/app";

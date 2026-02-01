@@ -9,10 +9,10 @@
  */
 
 import * as THREE from "three";
-import type { GradientFill } from "@oxen-office/ooxml/domain/fill";
+import type { GradientFill } from "@oxen-office/drawing-ml/domain/fill";
 import type { TileFlipMode } from "@oxen-office/ooxml/domain/drawing";
 import type { TileFill } from "@oxen-office/pptx/domain/color/types";
-import type { Percent, Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Percent, Pixels } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Re-export Domain Types for Convenience

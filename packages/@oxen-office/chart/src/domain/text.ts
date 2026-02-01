@@ -12,8 +12,8 @@
  * @see ECMA-376 Part 1, Section 21.2 - DrawingML Charts
  */
 
-import type { Color } from "@oxen-office/ooxml/domain/color";
-import type { Points } from "@oxen-office/ooxml/domain/units";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
+import type { Points } from "@oxen-office/drawing-ml/domain/units";
 
 export type TextAlign =
   | "left"

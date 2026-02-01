@@ -6,8 +6,8 @@ import type { PdfDocument, PdfImage, PdfPage, PdfPath, PdfPathOp, PdfText } from
 import { decomposeMatrix } from "@oxen/pdf/domain";
 import type { Shape, SpShape } from "@oxen-office/pptx/domain/shape";
 import type { Slide } from "@oxen-office/pptx/domain/slide/types";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { deg } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { deg } from "@oxen-office/drawing-ml/domain/units";
 import type { ConversionContext } from "./transform-converter";
 import { convertBBox, createFitContext } from "./transform-converter";
 import {

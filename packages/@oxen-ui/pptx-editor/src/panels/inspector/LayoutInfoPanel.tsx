@@ -7,7 +7,7 @@
 
 import { useMemo, type CSSProperties } from "react";
 import type { SlideSize, PresentationFile } from "@oxen-office/pptx/domain";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { SlideLayoutAttributes } from "@oxen-office/pptx/parser/slide/layout-parser";
 import type { SlideLayoutOption } from "@oxen-office/pptx/app";
 import { InspectorSection, Accordion } from "@oxen-ui/ui-components/layout";

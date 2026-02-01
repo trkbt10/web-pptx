@@ -1,6 +1,6 @@
 /** @file Converts diagram layout results to PPTX shape format */
 import type { LayoutShapeResult } from "@oxen-office/diagram/domain/layout-shape-result";
-import { deg, px } from "@oxen-office/ooxml/domain/units";
+import { deg, px } from "@oxen-office/drawing-ml/domain/units";
 import type { Fill } from "../domain/color/types";
 import type { SpShape, PresetGeometry } from "../domain/shape";
 import type { TextBody } from "../domain/text";

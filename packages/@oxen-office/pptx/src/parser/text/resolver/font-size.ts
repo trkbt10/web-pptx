@@ -8,8 +8,8 @@
 import type { XmlElement } from "@oxen/xml";
 import { getChild, getByPath } from "@oxen/xml";
 import type { TextStyleContext, MasterTextStyles } from "../../context";
-import type { Points } from "@oxen-office/ooxml/domain/units";
-import { pt } from "@oxen-office/ooxml/domain/units";
+import type { Points } from "@oxen-office/drawing-ml/domain/units";
+import { pt } from "@oxen-office/drawing-ml/domain/units";
 import { DEFAULT_FONT_SIZE_PT, FONT_SIZE_CENTIPOINTS_TO_PT } from "../../../domain/defaults";
 import { TYPE_TO_MASTER_STYLE } from "./constants";
 import { lookupPlaceholder } from "./placeholder";

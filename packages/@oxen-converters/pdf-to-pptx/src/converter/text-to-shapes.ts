@@ -5,8 +5,8 @@
 import type { PdfText } from "@oxen/pdf/domain";
 import type { SpShape } from "@oxen-office/pptx/domain/shape";
 import type { Paragraph, TextBody, TextRun } from "@oxen-office/pptx/domain/text";
-import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
-import { deg, pt, px } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
+import { deg, pt, px } from "@oxen-office/drawing-ml/domain/units";
 import type { ConversionContext } from "./transform-converter";
 import { convertPoint, convertSize } from "./transform-converter";
 import { convertFill } from "./color-converter";

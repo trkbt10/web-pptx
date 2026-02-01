@@ -4,7 +4,7 @@
  * @see ECMA-376 Part 1, Section 19.4 - Comments
  */
 
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Comment Types

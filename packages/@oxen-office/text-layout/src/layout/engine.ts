@@ -22,8 +22,8 @@ import type {
   WritingMode,
 } from "../types";
 import { isVertical } from "../writing-mode";
-import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
-import { px, pt, pct } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
+import { px, pt, pct } from "@oxen-office/drawing-ml/domain/units";
 import { measureSpans, estimateBulletWidth } from "../measure/measurer";
 import { breakIntoLines, getLineWidth } from "../measure/line-breaker";
 import { getAscenderRatio, PT_TO_PX } from "@oxen/glyph";

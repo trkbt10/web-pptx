@@ -5,7 +5,7 @@
  * Used by both cursor positioning and text overlay rendering.
  */
 
-import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
 import type { LayoutLine, PositionedSpan } from "@oxen-renderer/pptx/text-layout";
 import { PT_TO_PX } from "@oxen-office/pptx/domain/unit-conversion";
 import { measureLayoutSpanTextWidth } from "@oxen-renderer/pptx/react";

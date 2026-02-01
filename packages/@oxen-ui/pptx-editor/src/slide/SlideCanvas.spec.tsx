@@ -6,7 +6,7 @@
 
 import { render, fireEvent } from "@testing-library/react";
 import type { Slide } from "@oxen-office/pptx/domain";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { createIdleDragState, createEmptySelection } from "../context/slide/state";
 import type { CreationMode } from "../context/presentation/editor/types";
 import type { ShapeBounds } from "../shape/creation-bounds";

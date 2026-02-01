@@ -3,7 +3,7 @@
  */
 
 import { createElement, getChild } from "@oxen/xml";
-import { deg, pct, px } from "@oxen-office/ooxml/domain/units";
+import { deg, pct, px } from "@oxen-office/drawing-ml/domain/units";
 import type { Effects } from "@oxen-office/pptx/domain";
 import { parseEffects } from "@oxen-office/pptx/parser/graphics/effects-parser";
 import { serializeEffects } from "./effects";

@@ -1,6 +1,6 @@
 /** @file Transform types shared across OOXML formats. */
 
-import type { EMU } from "../units";
+import type { EMU } from "@oxen-office/drawing-ml/domain/units";
 
 /**
  * Transform for a shape or picture.

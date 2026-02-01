@@ -8,7 +8,7 @@
 
 import { buildGroupTransformAttr, buildTransformAttr, createDefsCollector } from "./slide-utils";
 import type { GroupTransform, Transform } from "@oxen-office/pptx/domain/types";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 
 describe("buildGroupTransformAttr", () => {
   it("returns empty string for undefined transform", () => {

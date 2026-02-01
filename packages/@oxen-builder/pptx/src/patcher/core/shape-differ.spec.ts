@@ -5,11 +5,11 @@
 import type { Shape, SpShape, PicShape, GrpShape, GroupShapeProperties } from "@oxen-office/pptx/domain/shape";
 import type { Slide } from "@oxen-office/pptx/domain/slide/types";
 import type { Transform, GroupTransform } from "@oxen-office/pptx/domain/geometry";
-import type { Color } from "@oxen-office/ooxml/domain/color";
-import type { SolidFill } from "@oxen-office/ooxml/domain/fill";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
+import type { SolidFill } from "@oxen-office/drawing-ml/domain/fill";
 import type { Fill } from "@oxen-office/pptx/domain/color/types";
 import type { TextBody, Paragraph, TextRun } from "@oxen-office/pptx/domain/text";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import {
   detectSlideChanges,
   detectShapePropertyChanges,

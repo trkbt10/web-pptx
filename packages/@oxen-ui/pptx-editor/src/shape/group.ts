@@ -6,7 +6,7 @@
 
 import type { Shape, GrpShape, GroupTransform, Transform } from "@oxen-office/pptx/domain";
 import type { Bounds, ShapeId } from "@oxen-office/pptx/domain/types";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import { getCombinedBounds } from "./bounds";
 import { generateShapeId } from "./mutation";
 import { hasShapeId } from "./identity";

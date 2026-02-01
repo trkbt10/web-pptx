@@ -23,7 +23,7 @@ import type { Table, TableRow, TableCell } from "@oxen-office/pptx/domain/table/
 import type { GroupTransform } from "@oxen-office/pptx/domain/geometry";
 import type { TextBody } from "@oxen-office/pptx/domain/text";
 import type { Shape3d } from "@oxen-office/pptx/domain/three-d";
-import type { Pixels, Degrees } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Degrees } from "@oxen-office/drawing-ml/domain/units";
 import type { ShapeSpec, ImageSpec, ConnectorSpec, GroupSpec, TableSpec, TableCellSpec } from "../types";
 import type { TextSpec } from "@oxen-builder/drawing-ml";
 import { PRESET_MAP } from "./presets";

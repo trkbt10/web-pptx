@@ -5,7 +5,7 @@
  */
 
 import type { PicShape } from "@oxen-office/pptx/domain/index";
-import type { Percent } from "@oxen-office/ooxml/domain/units";
+import type { Percent } from "@oxen-office/drawing-ml/domain/units";
 import { Accordion } from "@oxen-ui/ui-components/layout";
 import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { Toggle } from "@oxen-ui/ui-components/primitives";

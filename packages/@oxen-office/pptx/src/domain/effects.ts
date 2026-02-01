@@ -4,8 +4,8 @@
  * @see ECMA-376 Part 1, Section 20.1.8 - Effects
  */
 
-import type { Degrees, Percent, Pixels } from "@oxen-office/ooxml/domain/units";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Degrees, Percent, Pixels } from "@oxen-office/drawing-ml/domain/units";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { Fill } from "./color/types";
 import type { FillEffectType } from "./appearance";
 

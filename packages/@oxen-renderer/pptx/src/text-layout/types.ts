@@ -3,12 +3,12 @@
  * Types for text measurement and layout results
  */
 
-import type { Pixels, Points, Percent } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points, Percent } from "@oxen-office/drawing-ml/domain/units";
 import type { TextAlign, TextAnchor } from "@oxen-office/pptx/domain/types";
 import type { LineSpacing, TextWrapping, TextOverflow, TextVerticalOverflow, TextVerticalType } from "@oxen-office/pptx/domain/text";
 import type { RenderOptions } from "../render-options";
-import type { TextFillConfig } from "@oxen-office/pptx/domain/drawing-ml/text-fill";
-import type { TextEffectsConfig } from "@oxen-office/pptx/domain/drawing-ml/text-effects";
+import type { TextFillConfig } from "@oxen-office/drawing-ml/domain/text-fill";
+import type { TextEffectsConfig } from "@oxen-office/drawing-ml/domain/text-effects";
 
 // =============================================================================
 // Auto Fit Configuration

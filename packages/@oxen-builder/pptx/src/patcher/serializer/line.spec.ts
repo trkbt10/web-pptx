@@ -3,7 +3,7 @@
  */
 
 import { getChild } from "@oxen/xml";
-import { pct, px } from "@oxen-office/ooxml/domain/units";
+import { pct, px } from "@oxen-office/drawing-ml/domain/units";
 import type { Line } from "@oxen-office/pptx/domain";
 import { parseLine } from "@oxen-office/pptx/parser/graphics/line-parser";
 import { serializeLine } from "./line";

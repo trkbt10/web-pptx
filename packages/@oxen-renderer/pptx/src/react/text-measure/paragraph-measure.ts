@@ -5,7 +5,7 @@
  */
 
 import { PT_TO_PX } from "@oxen-office/pptx/domain/unit-conversion";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { DEFAULT_FONT_SIZE_PT } from "@oxen-office/pptx/domain/defaults";
 import { applyTextTransform } from "../primitives/text/text-utils";
 import { ensureSvgTextNode, normalizeSpaces, setTextAttributes } from "./svg-text-measure";

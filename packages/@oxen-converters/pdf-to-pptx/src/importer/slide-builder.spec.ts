@@ -5,7 +5,7 @@
 import type { PdfPage, PdfText } from "@oxen/pdf/domain";
 import { createDefaultGraphicsState } from "@oxen/pdf/domain";
 import type { Slide } from "@oxen-office/pptx/domain/slide/types";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { convertPageToShapes } from "../converter/pdf-to-shapes";
 import {
   buildSlideFromPage,

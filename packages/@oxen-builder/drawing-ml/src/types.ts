@@ -9,7 +9,8 @@
  * - @oxen-office/ooxml: SchemeColorValue, PatternType, Color, ColorTransform
  */
 
-import type { SchemeColorValue, PatternType } from "@oxen-office/ooxml";
+import type { SchemeColorValue } from "@oxen-office/drawing-ml/domain/color";
+import type { PatternType } from "@oxen-office/drawing-ml/domain/fill";
 
 // =============================================================================
 // Color Spec Types

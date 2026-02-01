@@ -47,7 +47,7 @@ import type {
 } from "../../domain/types";
 import type { XmlDocument, XmlElement } from "@oxen/xml";
 import { getAttr, getByPath, getChild, getChildren, isXmlElement } from "@oxen/xml";
-import { getBoolAttr, getIntAttr, parsePercentage } from "@oxen-office/ooxml/parser";
+import { getBoolAttr, getIntAttr, parsePercentage } from "@oxen-office/drawing-ml/parser";
 
 export type DiagramDataModelParseOptions = {
   readonly parseShapeProperties: (element: XmlElement | undefined) => unknown;

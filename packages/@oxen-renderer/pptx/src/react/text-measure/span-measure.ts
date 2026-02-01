@@ -6,7 +6,7 @@
  */
 
 import type { LayoutSpan } from "../../text-layout";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { PT_TO_PX } from "@oxen-office/pptx/domain/unit-conversion";
 import { applyTextTransform } from "../primitives/text/text-utils";
 import { ensureSvgTextNode, normalizeSpaces, setTextAttributes } from "./svg-text-measure";

@@ -8,7 +8,7 @@
 
 import type { XmlElement } from "@oxen/xml";
 import { getChild, getTextContent } from "@oxen/xml";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { AbsoluteAnchor, AnchorClientData, AnchorMarker, ContentPart, ConnectorLocks, GraphicFrameLocks, GroupLocks, OneCellAnchor, Point, Size, TwoCellAnchor } from "../../domain/index";
 import {
   getBoolAttr,

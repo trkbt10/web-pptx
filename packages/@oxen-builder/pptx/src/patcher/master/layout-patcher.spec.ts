@@ -3,7 +3,7 @@
  */
 
 import { createElement, getChild, type XmlDocument, type XmlElement } from "@oxen/xml";
-import { deg, px } from "@oxen-office/ooxml/domain/units";
+import { deg, px } from "@oxen-office/drawing-ml/domain/units";
 import type { Transform } from "@oxen-office/pptx/domain/geometry";
 import type { ShapeChange } from "../core/shape-differ";
 import { patchLayoutPlaceholders, patchLayoutShapes } from "./layout-patcher";

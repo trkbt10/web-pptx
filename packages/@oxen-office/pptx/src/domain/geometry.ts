@@ -4,7 +4,7 @@
  * @see ECMA-376 Part 1, Section 20.1.7 - Transform
  */
 
-import type { Degrees, Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Degrees, Pixels } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Geometry Types

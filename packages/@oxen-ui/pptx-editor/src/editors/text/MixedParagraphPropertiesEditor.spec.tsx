@@ -10,7 +10,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { MixedParagraphPropertiesEditor } from "./MixedParagraphPropertiesEditor";
 import type { MixedParagraphPropertiesEditorProps } from "./MixedParagraphPropertiesEditor";
 import type { MixedParagraphProperties } from "./mixed-properties";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Test Helpers

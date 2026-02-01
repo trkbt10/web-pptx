@@ -4,7 +4,7 @@
  * Builds transform (position, size, rotation) structures.
  */
 
-import type { Pixels, Degrees } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Degrees } from "@oxen-office/drawing-ml/domain/units";
 
 /**
  * Transform domain type

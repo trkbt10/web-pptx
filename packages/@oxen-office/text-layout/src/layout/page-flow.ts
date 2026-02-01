@@ -5,8 +5,8 @@
  * Handles page breaks, widow/orphan control, and keep-together rules.
  */
 
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { px } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import {
   SPEC_DEFAULT_PAGE_WIDTH_TWIPS,
   SPEC_DEFAULT_PAGE_HEIGHT_TWIPS,

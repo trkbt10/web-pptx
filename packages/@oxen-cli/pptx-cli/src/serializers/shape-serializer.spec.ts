@@ -4,8 +4,8 @@
 
 import { serializeShape } from "./shape-serializer";
 import type { SpShape, PicShape } from "@oxen-office/pptx/domain/shape";
-import type { Pixels, Degrees, Percent } from "@oxen-office/ooxml/domain/units";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Pixels, Degrees, Percent } from "@oxen-office/drawing-ml/domain/units";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 
 describe("shape-serializer", () => {
   describe("serializeShape", () => {

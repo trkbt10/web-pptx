@@ -7,9 +7,9 @@
  * @see ECMA-376 Part 1, Section 20.1.8 (Fill Properties)
  */
 
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { TileFlipMode } from "@oxen-office/ooxml/domain/drawing";
-import { deg, pct, px } from "@oxen-office/ooxml/domain/units";
+import { deg, pct, px } from "@oxen-office/drawing-ml/domain/units";
 import {
   findFillElement as findOoxmlFillElement,
   parseBaseFill as parseOoxmlBaseFill,
@@ -19,7 +19,7 @@ import {
   getPercent100kAttr,
   parseFixedPercentage,
   parsePositivePercentage,
-} from "@oxen-office/ooxml/parser";
+} from "@oxen-office/drawing-ml/parser";
 import { getAttr, getChild, isXmlElement, type XmlElement } from "@oxen/xml";
 import type { BlipEffects, BlipFill, Fill, StretchFill, StyleReference, TileFill } from "../../domain/index";
 import { parseColor, parseColorFromParent } from "./color-parser";

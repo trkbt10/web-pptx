@@ -2,7 +2,7 @@
  * @file src/pdf/importer/pptx-template.ts
  */
 
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import { ooxmlEmu } from "@oxen-builder/core";
 import type { PresentationFile } from "@oxen-office/pptx/domain";
 import { CONTENT_TYPES, RELATIONSHIP_TYPES } from "@oxen-office/pptx/domain";

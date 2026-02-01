@@ -10,7 +10,7 @@ import { useMemo } from "react";
 import type { TextBody } from "@oxen-office/pptx/domain/text";
 import { layoutTextBody, toLayoutInput } from "../../../text-layout";
 import { createLayoutParagraphMeasurer } from "../../text-measure/layout-bridge";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import { useRenderContext } from "../../context";
 import { useSvgDefs } from "../../hooks/useSvgDefs";
 import { has3dEffects } from "../../../svg/effects3d";

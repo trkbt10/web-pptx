@@ -4,7 +4,7 @@
  * Tests for ECMA-376 color specifications and transforms.
  */
 
-import { pct } from "@oxen-office/ooxml/domain/units";
+import { pct } from "@oxen-office/drawing-ml/domain/units";
 import { ColorSwatch, ColorSwatchRow } from "@oxen-renderer/drawing-ml";
 import { type CheckItem, TestSubsection } from "../common";
 

@@ -10,7 +10,7 @@
 import { generateScatterChart, type ScatterChartConfig } from "./scatter";
 import type { SeriesData } from "../render-types";
 import type { Marker } from "@oxen-office/chart/domain";
-import { pt } from "@oxen-office/ooxml/domain/units";
+import { pt } from "@oxen-office/drawing-ml/domain/units";
 import { createTestChartRenderContext } from "../test-utils";
 
 const { ctx } = createTestChartRenderContext();

@@ -5,7 +5,7 @@
  */
 
 import { useRef, useMemo, useCallback } from "react";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { ZipFile } from "@oxen-office/opc";
 import { renderSlideSvg } from "@oxen-renderer/pptx/svg";
 import { createCoreRenderContext, createRenderContext as createApiRenderContext } from "@oxen-renderer/pptx";

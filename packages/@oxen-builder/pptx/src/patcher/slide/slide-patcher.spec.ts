@@ -6,7 +6,7 @@ import { createElement, isXmlElement, getChild, type XmlDocument, type XmlElemen
 import type { ShapeChange } from "../core/shape-differ";
 import type { Transform } from "@oxen-office/pptx/domain/geometry";
 import { EMU_PER_PIXEL } from "@oxen-office/pptx/domain";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import type { SpShape } from "@oxen-office/pptx/domain/shape";
 import type { TextBody } from "@oxen-office/pptx/domain/text";
 import { parseShapeTree } from "@oxen-office/pptx/parser/shape-parser/index";

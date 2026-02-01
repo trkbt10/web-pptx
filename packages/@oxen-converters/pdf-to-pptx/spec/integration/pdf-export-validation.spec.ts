@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 import { importPdf } from "../../src/importer/pdf-importer";
 import { exportPptx } from "@oxen-builder/pptx/export";
 import { loadPptxFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { parseXml } from "@oxen/xml";
 import { loadZipPackage } from "@oxen/zip";
 

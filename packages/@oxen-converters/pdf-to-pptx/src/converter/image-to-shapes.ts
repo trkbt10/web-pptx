@@ -4,7 +4,7 @@
 
 import type { PdfColorSpace, PdfImage } from "@oxen/pdf/domain";
 import type { PicShape, BlipFillProperties } from "@oxen-office/pptx/domain/shape";
-import { deg, pct } from "@oxen-office/ooxml/domain/units";
+import { deg, pct } from "@oxen-office/drawing-ml/domain/units";
 import type { ConversionContext } from "./transform-converter";
 import { convertBBox, convertMatrix, convertSize } from "./transform-converter";
 import { toDataUrl } from "@oxen/buffer";

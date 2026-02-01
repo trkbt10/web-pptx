@@ -5,7 +5,7 @@
 // @vitest-environment jsdom
 
 import { render, fireEvent } from "@testing-library/react";
-import type { SolidFill } from "@oxen-office/ooxml/domain/fill";
+import type { SolidFill } from "@oxen-office/drawing-ml/domain/fill";
 import { SolidFillEditor } from "./SolidFillEditor";
 
 describe("SolidFillEditor", () => {

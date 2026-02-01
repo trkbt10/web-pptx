@@ -24,7 +24,7 @@ import {
 import { ChartTitleEditor } from "./ChartTitleEditor";
 import { ChartShapePropertiesEditor } from "./ChartShapePropertiesEditor";
 import { LayoutEditor } from "./LayoutEditor";
-import { pct, deg } from "@oxen-office/ooxml/domain/units";
+import { pct, deg } from "@oxen-office/drawing-ml/domain/units";
 import type {
   Chart,
   ChartTitle,

@@ -4,7 +4,7 @@
 
 // describe, it, expect are provided by the test runner globals
 import { resolvedLineToProps, resolveStrokeForReact, combineShapeProps } from "./Stroke";
-import type { ResolvedLine, ResolvedFill } from "@oxen-office/ooxml/domain/resolved-fill";
+import type { ResolvedLine, ResolvedFill } from "@oxen-office/drawing-ml/domain/resolved-fill";
 
 describe("resolvedLineToProps", () => {
   describe("fill type handling", () => {

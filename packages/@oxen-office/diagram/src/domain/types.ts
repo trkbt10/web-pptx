@@ -6,8 +6,8 @@
  * colors1.xml) and are renderer-agnostic.
  */
 
-import type { Percent } from "@oxen-office/ooxml/domain/units";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Percent } from "@oxen-office/drawing-ml/domain/units";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 
 type PresetShapeType = string;
 

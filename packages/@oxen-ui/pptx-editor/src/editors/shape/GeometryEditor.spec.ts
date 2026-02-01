@@ -6,7 +6,7 @@
  */
 
 import type { PresetGeometry, CustomGeometry, Geometry, GeometryPath, ConnectionSite } from "@oxen-office/pptx/domain/shape";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // renderPresetEditor Tests

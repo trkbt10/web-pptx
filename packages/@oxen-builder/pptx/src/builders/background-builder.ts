@@ -14,7 +14,7 @@ import { serializeFill } from "@oxen-builder/pptx/patcher/serializer/fill";
 import { addMedia } from "@oxen-builder/pptx/patcher/resources/media-manager";
 import type { Fill } from "@oxen-office/pptx/domain/color/types";
 import type { ZipPackage } from "@oxen/zip";
-import type { Degrees, Percent } from "@oxen-office/ooxml/domain/units";
+import type { Degrees, Percent } from "@oxen-office/drawing-ml/domain/units";
 import type { BackgroundFillSpec, BackgroundGradientSpec, BackgroundImageSpec } from "../types";
 import { buildColor } from "@oxen-builder/drawing-ml/fill";
 

@@ -86,7 +86,7 @@ import type {
 } from "../../domain/types";
 import type { XmlDocument, XmlElement } from "@oxen/xml";
 import { getAttr, getByPath, getChild, getChildren, isXmlElement } from "@oxen/xml";
-import { getIntAttr, parseBoolean, parseFloat64, parseInt32 } from "@oxen-office/ooxml/parser";
+import { getIntAttr, parseBoolean, parseFloat64, parseInt32 } from "@oxen-office/drawing-ml/parser";
 import { parseDiagramDataModelElement, type DiagramDataModelParseOptions } from "./data-parser";
 
 /**

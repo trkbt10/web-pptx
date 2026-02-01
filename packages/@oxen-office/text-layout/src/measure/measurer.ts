@@ -8,8 +8,8 @@
  */
 
 import type { LayoutSpan, MeasuredSpan } from "../types";
-import type { Pixels, Points } from "@oxen-office/ooxml/domain/units";
-import { px } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Points } from "@oxen-office/drawing-ml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import {
   measureTextWidth as glyphMeasureTextWidth,
   calculateCharWidth as glyphCalculateCharWidth,

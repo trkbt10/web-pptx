@@ -5,11 +5,11 @@
  * adapts the result to PPTX domain types.
  */
 
-import type { BaseLine } from "@oxen-office/ooxml/domain/line";
+import type { BaseLine } from "@oxen-office/drawing-ml/domain/line";
 import {
   parseLine as parseOoxmlLine,
   getLineFromProperties as getOoxmlLineFromProperties,
-} from "@oxen-office/ooxml/parser";
+} from "@oxen-office/drawing-ml/parser";
 import type { Line } from "../../domain/index";
 import type { XmlElement } from "@oxen/xml";
 

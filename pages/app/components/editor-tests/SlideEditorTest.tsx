@@ -22,7 +22,7 @@ import type { SpShape, GrpShape, GraphicFrame, CxnShape } from "@oxen-office/ppt
 import type { Line } from "@oxen-office/pptx/domain/color/types";
 import type { Table, TableRow, TableCell } from "@oxen-office/pptx/domain/table/types";
 import type { ShapeId } from "@oxen-office/pptx/domain";
-import { px, deg, pt } from "@oxen-office/ooxml/domain/units";
+import { px, deg, pt } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Fixture Helpers

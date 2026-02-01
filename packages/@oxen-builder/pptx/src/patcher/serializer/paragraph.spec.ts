@@ -1,6 +1,6 @@
 /** @file Unit tests for paragraph serialization */
 import { getChild, getChildren, getTextContent, isXmlElement } from "@oxen/xml";
-import { pt } from "@oxen-office/ooxml/domain/units";
+import { pt } from "@oxen-office/drawing-ml/domain/units";
 import type { Paragraph } from "@oxen-office/pptx/domain/text";
 import { serializeParagraph } from "./paragraph";
 

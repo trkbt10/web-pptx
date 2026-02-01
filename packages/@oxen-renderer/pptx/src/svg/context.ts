@@ -4,7 +4,7 @@
  * SVG-specific render context extending core context.
  */
 
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { CoreRenderContext, CoreRenderContextConfig } from "../render-context";
 import { createCoreRenderContext } from "../render-context";
 

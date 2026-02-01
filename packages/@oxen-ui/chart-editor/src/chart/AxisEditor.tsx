@@ -16,7 +16,7 @@ import { PercentEditor } from "../primitives";
 import { TextBodyEditor, createDefaultTextBody } from "../text";
 import { ChartShapePropertiesEditor } from "./ChartShapePropertiesEditor";
 import { ChartTitleEditor } from "./ChartTitleEditor";
-import { pct } from "@oxen-office/ooxml/domain/units";
+import { pct } from "@oxen-office/drawing-ml/domain/units";
 import type {
   Axis,
   AxisPosition,

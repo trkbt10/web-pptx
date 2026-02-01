@@ -6,7 +6,7 @@
  */
 
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { Backdrop3d } from "@oxen-office/pptx/domain";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 import { PointEditor, createDefaultPoint } from "./PointEditor";

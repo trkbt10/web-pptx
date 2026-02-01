@@ -11,7 +11,7 @@ import { FieldGroup, FieldRow } from "@oxen-ui/ui-components/layout";
 import { PixelsEditor } from "../primitives/PixelsEditor";
 import { FillEditor, createNoFill } from "../color/FillEditor";
 import { Bevel3dEditor, createDefaultBevel3d } from "./Bevel3dEditor";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { PresetMaterialType } from "@oxen-office/pptx/domain/types";
 import type { Shape3d } from "@oxen-office/pptx/domain";
 import type { Fill } from "@oxen-office/pptx/domain/color/types";

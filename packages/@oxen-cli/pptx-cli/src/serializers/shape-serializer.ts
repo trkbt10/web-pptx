@@ -20,7 +20,7 @@ import type { Paragraph, TextRun, ParagraphProperties, RunProperties } from "@ox
 import type { Transform } from "@oxen-office/pptx/domain/geometry";
 import type { TableRow, TableCell } from "@oxen-office/pptx/domain/table/types";
 import type { Fill, Line } from "@oxen-office/pptx/domain/color/types";
-import type { Color } from "@oxen-office/ooxml/domain/color";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { BlipEffects } from "@oxen-office/pptx/domain/color/types";
 import type { Effects } from "@oxen-office/pptx/domain/effects";
 import type { Shape3d } from "@oxen-office/pptx/domain/three-d";

@@ -9,6 +9,7 @@
     "@oxen/color": "workspace:*",
     "@oxen/glyph": "workspace:*",
     "@oxen-office/chart": "workspace:*",
+    "@oxen-office/drawing-ml": "workspace:*",
     "@oxen-renderer/chart": "workspace:*",
     "@oxen-renderer/diagram": "workspace:*",
     "@oxen-renderer/drawing-ml": "workspace:*",

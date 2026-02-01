@@ -5,7 +5,7 @@
 
 import type { XmlDocument, XmlElement } from "@oxen/xml";
 import { getByPath, getTextByPath } from "@oxen/xml";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { SlideSize } from "../domain";
 import { SLIDE_FACTOR } from "../domain/unit-conversion";
 

@@ -6,8 +6,8 @@
 
 import { useCallback, useEffect, type RefObject } from "react";
 import type { Slide } from "@oxen-office/pptx/domain";
-import type { Pixels } from "@oxen-office/ooxml/domain/units";
-import { px, deg } from "@oxen-office/ooxml/domain/units";
+import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import type { DragState, SelectionState } from "../../context/slide/state";
 import type { PresentationEditorAction } from "../../context/presentation/editor/types";
 import type { ViewportTransform } from "@oxen-renderer/pptx/svg-viewport";

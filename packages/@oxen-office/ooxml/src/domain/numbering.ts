@@ -8,7 +8,7 @@
  * @see ECMA-376 Part 1, Section 21.1.2.4 (Bullet and Numbering - DrawingML)
  */
 
-import type { Brand } from "./units";
+import type { Brand } from "@oxen-office/drawing-ml/domain/units";
 
 // =============================================================================
 // Numbering Format Types

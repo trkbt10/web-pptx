@@ -11,7 +11,7 @@ import type { XmlDocument, XmlElement } from "@oxen/xml";
 import type {
   ColorScheme as ColorSchemeType,
   ColorMap as ColorMapType,
-} from "@oxen-office/ooxml/domain/color-context";
+} from "@oxen-office/drawing-ml/domain/color-context";
 import type { FontScheme as FontSchemeType } from "@oxen-office/ooxml/domain/font-scheme";
 
 export type ColorScheme = ColorSchemeType;

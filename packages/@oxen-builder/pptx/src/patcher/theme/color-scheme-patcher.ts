@@ -7,7 +7,7 @@
  */
 
 import { createElement, isXmlElement, type XmlElement, type XmlNode } from "@oxen/xml";
-import type { Color, SchemeColorName } from "@oxen-office/ooxml/domain/color";
+import type { Color, SchemeColorName } from "@oxen-office/drawing-ml/domain/color";
 import { serializeColor } from "../serializer/color";
 
 // Note: SchemeColorName is defined in ooxml/domain/color.ts (ECMA-376 aligned)

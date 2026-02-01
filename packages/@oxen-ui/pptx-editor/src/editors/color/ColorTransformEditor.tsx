@@ -8,8 +8,8 @@ import { useCallback, type CSSProperties } from "react";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
 import { Toggle } from "@oxen-ui/ui-components/primitives";
 import { PercentEditor, DegreesEditor } from "../primitives";
-import { pct, deg, type Percent, type Degrees } from "@oxen-office/ooxml/domain/units";
-import type { ColorTransform } from "@oxen-office/ooxml/domain/color";
+import { pct, deg, type Percent, type Degrees } from "@oxen-office/drawing-ml/domain/units";
+import type { ColorTransform } from "@oxen-office/drawing-ml/domain/color";
 import type { EditorProps } from "@oxen-ui/ui-components/types";
 
 export type ColorTransformEditorProps = EditorProps<ColorTransform | undefined> & {

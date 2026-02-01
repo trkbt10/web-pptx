@@ -15,8 +15,8 @@ import {
   createDefaultTransform,
 } from "@oxen-ui/pptx-editor";
 import type { Transform } from "@oxen-office/pptx/domain/geometry";
-import type { Pixels, Degrees, Percent, Points } from "@oxen-office/ooxml/domain/units";
-import { px, deg, pct, pt } from "@oxen-office/ooxml/domain/units";
+import type { Pixels, Degrees, Percent, Points } from "@oxen-office/drawing-ml/domain/units";
+import { px, deg, pct, pt } from "@oxen-office/drawing-ml/domain/units";
 
 const cardStyle: CSSProperties = {
   backgroundColor: "var(--bg-secondary)",
