@@ -11,7 +11,7 @@ import { loadPptxFile } from "../../scripts/lib/pptx-loader";
 
 // Import directly from src instead of using @lib alias
 import { openPresentation } from "@oxen-office/pptx";
-import { parseColorScheme, parseFontScheme, parseColorMap } from "@oxen-office/pptx/parser/drawing-ml/index";
+import { parseColorScheme, parseFontScheme, parseColorMap } from "@oxen-office/pptx/parser/slide/theme-parser";
 import { getByPath } from "@oxen/xml";
 import { getMimeTypeFromPath } from "@oxen/files";
 import type { ColorContext, ColorScheme, ColorMap } from "@oxen-office/drawing-ml/domain/color-context";

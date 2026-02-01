@@ -10,11 +10,11 @@ import { openPresentation } from "@oxen-office/pptx";
 import { parseXml, type XmlElement } from "@oxen/xml";
 import { renderSlideToSvg } from "@oxen-renderer/pptx/svg";
 import { createColorMap } from "@oxen-office/pptx/parser/slide/resource-adapters";
-import { parseFormatScheme, parseColorScheme } from "@oxen-office/pptx/parser/drawing-ml/index";
+import { parseFormatScheme, parseColorScheme } from "@oxen-office/pptx/parser/slide/theme-parser";
 import { loadLayoutData, loadMasterData, loadThemeData } from "@oxen-office/pptx/parser/slide/loader";
 import { getRelationships, DEFAULT_MARKUP_COMPATIBILITY_OPTIONS } from "@oxen-office/pptx/parser/slide/xml-reader";
-import { getGradientFill } from "@oxen-office/pptx/parser/drawing-ml/index";
-import { getSolidFill } from "@oxen-office/pptx/parser/drawing-ml/index";
+import { getGradientFill } from "@oxen-office/pptx/parser/graphics/fill-resolver";
+import { getSolidFill } from "@oxen-office/pptx/parser/graphics/color-resolver";
 import { createPresentationFile, THEMES_PPTX_PATH } from "./test-utils";
 
 /**

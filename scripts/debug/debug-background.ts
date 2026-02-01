@@ -5,7 +5,9 @@
  */
 import { DEFAULT_RENDER_OPTIONS, openPresentation } from "@oxen-office/pptx";
 import type { Slide } from "@oxen-office/pptx/app/types";
-import { getBackgroundFillData, getSolidFill, getSchemeColorFromTheme, parseTheme, parseMasterTextStyles } from "@oxen-office/pptx/parser/drawing-ml/index";
+import { getBackgroundFillData } from "@oxen-office/pptx/parser/slide/background-parser";
+import { parseTheme, parseMasterTextStyles } from "@oxen-office/pptx/parser/slide/theme-parser";
+import { getSolidFill } from "@oxen-office/pptx/parser/graphics/color-resolver";
 import { createSlideContext, type SlideContext } from "@oxen-office/pptx/parser/slide/context";
 import { createPlaceholderTable, createColorMap } from "@oxen-office/pptx/parser/slide/resource-adapters";
 import { toResolvedBackgroundFill } from "@oxen-renderer/pptx";
@@ -175,10 +177,7 @@ async function main() {
     }
   }
 
-  // Test getSchemeColorFromTheme directly
-  console.log("\n=== Testing getSchemeColorFromTheme ===");
-  const schemeResult = getSchemeColorFromTheme("a:bg1", undefined, undefined, warpObj);
-  console.log("getSchemeColorFromTheme('a:bg1'):", schemeResult);
+  // NOTE: getSchemeColorFromTheme was removed - use ColorResolveContext instead
 
   // Test getNode on theme content
   console.log("\n=== Testing getNode on theme ===");

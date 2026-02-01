@@ -21,7 +21,7 @@ import {
   createColorMap,
 } from "@oxen-office/pptx/parser/slide/resource-adapters";
 import { createEmptyResourceMap } from "@oxen-office/pptx/domain";
-import { parseTheme, parseColorScheme, parseMasterTextStyles } from "@oxen-office/pptx/parser/drawing-ml/index";
+import { parseTheme, parseColorScheme, parseMasterTextStyles } from "@oxen-office/pptx/parser/slide/theme-parser";
 import { renderSlideSvgIntegrated } from "@oxen-renderer/pptx/slide-render";
 import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
 import type { Color } from "@oxen-office/drawing-ml/domain/color";
