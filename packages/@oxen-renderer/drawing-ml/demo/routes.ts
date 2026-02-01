@@ -1,11 +1,11 @@
 /**
- * @file DrawingML Test Routes Configuration
+ * @file DrawingML Demo Routes Configuration
  *
- * Schema-driven route definitions for DrawingML tests.
+ * Schema-driven route definitions for DrawingML demos.
  * Each category (core/svg/webgl) has its own set of features.
  */
 
-import type { ComponentType } from "react";
+import type { Category, CategoryRoute, FeatureRoute } from "./types";
 import {
   ColorTest,
   FillTest,
@@ -17,31 +17,6 @@ import {
 } from "./core";
 import { SvgTextEffectsTest } from "./svg";
 import { WebglTextEffectsTest } from "./webgl";
-
-// =============================================================================
-// Types
-// =============================================================================
-
-export type Category = "core" | "svg" | "webgl";
-
-export type FeatureRoute = {
-  readonly id: string;
-  readonly label: string;
-  readonly component: ComponentType;
-};
-
-export type CategoryRoute = {
-  readonly id: Category;
-  readonly label: string;
-  readonly description: string;
-  readonly icon: string;
-  readonly color: string;
-  readonly features: readonly FeatureRoute[];
-};
-
-// =============================================================================
-// Route Schema
-// =============================================================================
 
 export const categories: readonly CategoryRoute[] = [
   {
@@ -82,123 +57,14 @@ export const categories: readonly CategoryRoute[] = [
   },
 ];
 
-// =============================================================================
-// Helpers
-// =============================================================================
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export function findCategory(categoryId: string): CategoryRoute | undefined {
   return categories.find((c) => c.id === categoryId);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export function findFeature(categoryId: string, featureId: string): FeatureRoute | undefined {
   const category = findCategory(categoryId);
   return category?.features.find((f) => f.id === featureId);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 export function getDefaultRoute(): { category: Category; feature: string } {
   const category = categories[0];

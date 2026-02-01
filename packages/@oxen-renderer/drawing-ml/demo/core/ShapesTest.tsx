@@ -6,7 +6,8 @@
 
 import type { Fill } from "@oxen-office/pptx/domain";
 import { px } from "@oxen-office/drawing-ml/domain/units";
-import { type CheckItem, TestSubsection, GeometryPreview, PresetShapePreview, TransformPreview } from "../common";
+import type { CheckItem } from "../types";
+import { TestSubsection, GeometryPreview, PresetShapePreview, TransformPreview } from "../components";
 
 // =============================================================================
 // Preset Shape Path Data

@@ -6,7 +6,8 @@
 
 import type { PatternType } from "@oxen-office/drawing-ml/domain/fill";
 import { px, deg, pct } from "@oxen-office/drawing-ml/domain/units";
-import { CombinedPreview, makeGradient } from "../common";
+import { CombinedPreview } from "../components";
+import { makeGradient } from "../fixtures";
 
 /**
  * Combined test section component

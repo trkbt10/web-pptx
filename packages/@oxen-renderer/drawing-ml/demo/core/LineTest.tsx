@@ -6,7 +6,8 @@
 
 import type { Line, LineCap, DashStyle } from "@oxen-office/pptx/domain";
 import { px, pct } from "@oxen-office/drawing-ml/domain/units";
-import { type CheckItem, TestSubsection, LinePreview } from "../common";
+import type { CheckItem } from "../types";
+import { TestSubsection, LinePreview } from "../components";
 
 /**
  * Line test section component

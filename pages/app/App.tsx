@@ -9,7 +9,6 @@ import { FileUploadPage, type FileSelectResult } from "./pages/FileUploadPage";
 import { SlideViewer } from "./pages/SlideViewer";
 import { SlideshowPage } from "./pages/SlideshowPage";
 import { EditorTestPage } from "./pages/EditorTestPage";
-import { DrawingMLTestPage } from "./pages/DrawingMLTestPage";
 import { GlyphTestPage } from "./pages/GlyphTestPage";
 import { TextEditorTestPage } from "./pages/TextEditorTestPage";
 import { DocxEditorTestPage } from "./pages/DocxEditorTestPage";
@@ -95,10 +94,6 @@ export function App() {
     navigate("/editor-test");
   }, [navigate]);
 
-  const handleDrawingMLTest = useCallback(() => {
-    navigate("/drawing-ml");
-  }, [navigate]);
-
   const handleGlyphTest = useCallback(() => {
     navigate("/glyph-test");
   }, [navigate]);
@@ -167,7 +162,6 @@ export function App() {
       onDemoLoad={handleDemoLoad}
       isLoading={status === "loading"}
       onEditorTest={handleEditorTest}
-      onDrawingMLTest={handleDrawingMLTest}
       onGlyphTest={handleGlyphTest}
       onTextEditorTest={handleTextEditorTest}
       onDocxEditorTest={handleDocxEditorTest}
@@ -272,7 +266,6 @@ export function App() {
       <Route path="/slideshow/:slideNumber" element={<SlideshowRoute />} />
       <Route path="/editor" element={<EditorRoute />} />
       <Route path="/editor-test" element={<EditorTestPage onBack={handleGoHome} />} />
-      <Route path="/drawing-ml/*" element={<DrawingMLTestPage onBack={handleGoHome} />} />
       <Route path="/glyph-test" element={<GlyphTestPage onBack={handleGoHome} />} />
       <Route path="/text-editor-test" element={<TextEditorTestPage onBack={handleGoHome} />} />
       <Route path="/docx-editor-test" element={<DocxEditorTestPage onBack={handleGoHome} />} />

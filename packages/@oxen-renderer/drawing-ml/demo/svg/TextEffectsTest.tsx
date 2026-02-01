@@ -8,7 +8,8 @@
  * @see ECMA-376 Part 1, Section 21.1.2.1.28 (prstTxWarp)
  */
 
-import { type CheckItem, TestSubsection } from "../common";
+import type { CheckItem } from "../types";
+import { TestSubsection } from "../components";
 
 // =============================================================================
 // Text Style Preview Component

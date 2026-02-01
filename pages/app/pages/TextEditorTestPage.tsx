@@ -35,8 +35,36 @@ import {
   type TextSelectionContext,
 } from "@oxen-ui/pptx-editor/editors/text/text-property-extractor";
 import { getExtractionValue, isMixed } from "@oxen-ui/pptx-editor/editors/text/mixed-properties";
-import { testSlideSize, testColorContext } from "../components/drawing-ml-tests";
 import "./DrawingMLTestPage.css";
+
+// Local test fixtures for TextEditorTestPage
+const testSlideSize = {
+  width: px(960),
+  height: px(540),
+};
+
+const testColorContext = {
+  colorScheme: {
+    dk1: "000000",
+    lt1: "FFFFFF",
+    dk2: "1F497D",
+    lt2: "EEECE1",
+    accent1: "4F81BD",
+    accent2: "C0504D",
+    accent3: "9BBB59",
+    accent4: "8064A2",
+    accent5: "4BACC6",
+    accent6: "F79646",
+    hlink: "0000FF",
+    folHlink: "800080",
+  },
+  colorMap: {
+    tx1: "dk1" as const,
+    tx2: "dk2" as const,
+    bg1: "lt1" as const,
+    bg2: "lt2" as const,
+  },
+};
 import "@oxen-ui/pptx-editor/preview/SlideshowPlayer.css";
 
 type TextEditorTestPageProps = {

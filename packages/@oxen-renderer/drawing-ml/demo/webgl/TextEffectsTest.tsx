@@ -9,7 +9,8 @@
  */
 
 import { useState, useMemo } from "react";
-import { type CheckItem, TestSubsection } from "../common";
+import type { CheckItem } from "../types";
+import { TestSubsection } from "../components";
 import { Text3DRenderer } from "@oxen-renderer/pptx/webgl/text3d";
 import { extractText3DRuns } from "@oxen-renderer/pptx/react";
 import { WordArtGallery } from "./WordArtGallery";

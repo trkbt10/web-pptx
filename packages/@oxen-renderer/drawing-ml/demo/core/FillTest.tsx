@@ -7,7 +7,9 @@
 import { useMemo } from "react";
 import type { PatternType } from "@oxen-office/drawing-ml/domain/fill";
 import { getSupportedPatterns } from "@oxen-renderer/drawing-ml";
-import { type CheckItem, TestSubsection, ShapePreview, makeGradient } from "../common";
+import type { CheckItem } from "../types";
+import { TestSubsection, ShapePreview } from "../components";
+import { makeGradient } from "../fixtures";
 
 /**
  * Fill test section component

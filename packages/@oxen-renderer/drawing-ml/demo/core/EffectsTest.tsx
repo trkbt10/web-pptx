@@ -5,7 +5,8 @@
  */
 
 import { px, deg, pct } from "@oxen-office/drawing-ml/domain/units";
-import { type CheckItem, TestSubsection, EffectPreview } from "../common";
+import type { CheckItem } from "../types";
+import { TestSubsection, EffectPreview } from "../components";
 
 /**
  * Effects test section component

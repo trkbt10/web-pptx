@@ -6,7 +6,8 @@
 
 import type { Line, LineEnd } from "@oxen-office/pptx/domain";
 import { px } from "@oxen-office/drawing-ml/domain/units";
-import { type CheckItem, TestSubsection, LineMarkerPreview } from "../common";
+import type { CheckItem } from "../types";
+import { TestSubsection, LineMarkerPreview } from "../components";
 
 /**
  * Helper to create a line with specific head/tail ends

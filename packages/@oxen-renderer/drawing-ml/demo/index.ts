@@ -1,18 +1,35 @@
 /**
- * @file DrawingML tests barrel export
+ * @file DrawingML Demo barrel export
  *
+ * Demo components for DrawingML rendering tests.
  * Tests are organized by category:
  * - core/  : Core DrawingML features (mode-agnostic)
  * - svg/   : SVG mode tests (2D rendering)
  * - webgl/ : WebGL mode tests (3D rendering)
  */
 
-// Common utilities
-export { testSlideSize, testColorContext } from "./common";
+// Types
+export type { CheckItem, Category, CategoryRoute, FeatureRoute } from "./types";
+
+// Fixtures
+export { testSlideSize, testColorContext, makeGradient } from "./fixtures";
 
 // Route definitions
-export type { Category, CategoryRoute, FeatureRoute } from "./routes";
 export { categories, findCategory, findFeature, getDefaultRoute } from "./routes";
+
+// Components
+export {
+  CheckBox,
+  TestSubsection,
+  ShapePreview,
+  LinePreview,
+  EffectPreview,
+  CombinedPreview,
+  GeometryPreview,
+  PresetShapePreview,
+  TransformPreview,
+  LineMarkerPreview,
+} from "./components";
 
 // Core DrawingML tests
 export {
