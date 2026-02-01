@@ -6,7 +6,7 @@ import * as fs from "node:fs/promises";
 import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
 import { openPresentation } from "@oxen-office/pptx";
 import { parseTheme } from "@oxen-office/pptx/parser/drawing-ml/theme";
-import { success, error, type Result } from "../output/json-output";
+import { success, error, type Result } from "@oxen-cli/cli-core";
 
 /**
  * Font info for JSON output

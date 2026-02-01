@@ -1,13 +1,14 @@
 #!/usr/bin/env bun
 /**
- * @file CLI entry point for pptx command
+ * @file CLI entry point for xlsx command
  *
  * Usage:
- *   pptx info <file>
- *   pptx list <file>
- *   pptx show <file> <slide>
- *   pptx extract <file> [--slides <range>]
- *   pptx theme <file>
+ *   xlsx info <file>
+ *   xlsx list <file>
+ *   xlsx show <file> <sheet> [--range <range>]
+ *   xlsx extract <file> [--sheet <name>] [--format <csv|json>]
+ *   xlsx build <spec>
+ *   xlsx verify <path> [--tag <tag>]
  */
 
 import { Command } from "commander";
@@ -15,7 +16,6 @@ import { runInfo } from "./commands/info";
 import { runList } from "./commands/list";
 import { runShow } from "./commands/show";
 import { runExtract } from "./commands/extract";
-import { runTheme } from "./commands/theme";
 import { runBuild } from "./commands/build";
 import { runVerify } from "./commands/verify";
 import { output, type OutputMode } from "@oxen-cli/cli-core";
@@ -24,7 +24,6 @@ import {
   formatListPretty,
   formatShowPretty,
   formatExtractPretty,
-  formatThemePretty,
   formatBuildPretty,
   formatVerifyPretty,
 } from "./output/pretty-output";
@@ -32,15 +31,15 @@ import {
 const program = new Command();
 
 program
-  .name("pptx")
-  .description("CLI tool for inspecting PPTX files")
+  .name("xlsx")
+  .description("CLI tool for inspecting XLSX files")
   .version("0.1.0")
   .option("-o, --output <mode>", "Output mode (json|pretty)", "pretty");
 
 program
   .command("info")
-  .description("Display presentation metadata")
-  .argument("<file>", "PPTX file path")
+  .description("Display workbook metadata")
+  .argument("<file>", "XLSX file path")
   .action(async (file: string) => {
     const mode = program.opts().output as OutputMode;
     const result = await runInfo(file);
@@ -49,8 +48,8 @@ program
 
 program
   .command("list")
-  .description("List slides with summary")
-  .argument("<file>", "PPTX file path")
+  .description("List sheets with summary")
+  .argument("<file>", "XLSX file path")
   .action(async (file: string) => {
     const mode = program.opts().output as OutputMode;
     const result = await runList(file);
@@ -59,45 +58,32 @@ program
 
 program
   .command("show")
-  .description("Display slide content")
-  .argument("<file>", "PPTX file path")
-  .argument("<slide>", "Slide number (1-based)")
-  .action(async (file: string, slide: string) => {
+  .description("Display sheet content")
+  .argument("<file>", "XLSX file path")
+  .argument("<sheet>", "Sheet name")
+  .option("--range <range>", "Cell range (e.g., \"A1:C10\")")
+  .action(async (file: string, sheet: string, options: { range?: string }) => {
     const mode = program.opts().output as OutputMode;
-    const slideNumber = parseInt(slide, 10);
-    if (Number.isNaN(slideNumber)) {
-      console.error("Error: Slide number must be a valid integer");
-      process.exitCode = 1;
-      return;
-    }
-    const result = await runShow(file, slideNumber);
+    const result = await runShow(file, sheet, options);
     output(result, mode, formatShowPretty);
   });
 
 program
   .command("extract")
-  .description("Extract text from slides")
-  .argument("<file>", "PPTX file path")
-  .option("--slides <range>", "Slide range (e.g., \"1,3-5\")")
-  .action(async (file: string, options: { slides?: string }) => {
+  .description("Extract data from sheet (CSV or JSON)")
+  .argument("<file>", "XLSX file path")
+  .option("--sheet <name>", "Sheet name (default: first sheet)")
+  .option("--format <format>", "Output format (csv|json)", "csv")
+  .action(async (file: string, options: { sheet?: string; format?: string }) => {
     const mode = program.opts().output as OutputMode;
-    const result = await runExtract(file, options);
+    const format = options.format === "json" ? "json" : "csv";
+    const result = await runExtract(file, { sheet: options.sheet, format });
     output(result, mode, formatExtractPretty);
   });
 
 program
-  .command("theme")
-  .description("Display theme information (fonts, colors, styles)")
-  .argument("<file>", "PPTX file path")
-  .action(async (file: string) => {
-    const mode = program.opts().output as OutputMode;
-    const result = await runTheme(file);
-    output(result, mode, formatThemePretty);
-  });
-
-program
   .command("build")
-  .description("Build PPTX from JSON specification")
+  .description("Build XLSX from JSON specification")
   .argument("<spec>", "JSON spec file path")
   .action(async (spec: string) => {
     const mode = program.opts().output as OutputMode;
@@ -107,7 +93,7 @@ program
 
 program
   .command("verify")
-  .description("Verify PPTX build results against expected values")
+  .description("Verify XLSX build results against expected values")
   .argument("<path>", "Test case file or directory path")
   .option("--tag <tag>", "Filter test cases by tag")
   .action(async (specPath: string, options: { tag?: string }) => {

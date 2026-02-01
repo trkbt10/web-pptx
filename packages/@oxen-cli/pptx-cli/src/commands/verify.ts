@@ -7,7 +7,7 @@ import * as path from "node:path";
 import { runBuild } from "./build";
 import type { BuildSpec } from "@oxen-builder/pptx/types";
 import { runShow } from "./show";
-import { success, error, type Result } from "../output/json-output";
+import { success, error, type Result } from "@oxen-cli/cli-core";
 import type { ShapeJson, BoundsJson, GeometryJson, FillJson, LineJson, EffectsJson, Shape3dJson, GraphicContentJson, TableJson } from "../serializers/shape-serializer";
 
 // =============================================================================

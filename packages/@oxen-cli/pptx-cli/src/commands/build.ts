@@ -8,7 +8,7 @@ import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
 import { openPresentation } from "@oxen-office/pptx/app";
 import { parseSlide } from "@oxen-office/pptx/parser/slide/slide-parser";
 import { parseXml, serializeDocument, getByPath } from "@oxen/xml";
-import { success, error, type Result } from "../output/json-output";
+import { success, error, type Result } from "@oxen-cli/cli-core";
 import type { SlideModSpec, BuildSpec, BuildData } from "@oxen-builder/pptx/types";
 
 // NOTE: BuildSpec and BuildData types should be imported directly from @oxen-builder/pptx/types by consumers

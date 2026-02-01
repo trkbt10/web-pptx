@@ -44,8 +44,7 @@ export {
   type GraphicContentJson,
 } from "./serializers/shape-serializer";
 
-// Output helpers
-export { success, error, formatJson, type Result, type SuccessResult, type ErrorResult } from "./output/json-output";
+// Pretty output formatters
 export {
   formatInfoPretty,
   formatListPretty,

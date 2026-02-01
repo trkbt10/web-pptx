@@ -6,7 +6,7 @@ import * as fs from "node:fs/promises";
 import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
 import { openPresentation } from "@oxen-office/pptx";
 import { parseSlide } from "@oxen-office/pptx/parser/slide/slide-parser";
-import { success, error, type Result } from "../output/json-output";
+import { success, error, type Result } from "@oxen-cli/cli-core";
 import type { Shape } from "@oxen-office/pptx/domain/shape";
 import { extractTextFromShape } from "../serializers/text-serializer";
 
