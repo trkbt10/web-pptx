@@ -14,7 +14,7 @@ import { openPresentation } from "@oxen-office/pptx";
 import { convertToPresentationDocument, loadPptxFromBuffer } from "@oxen-office/pptx/app";
 import { exportPptxAsBuffer } from "@oxen-builder/pptx/export";
 import { detectSlideChanges, patchSlideXml } from "@oxen-builder/pptx/patcher";
-import { deg, px } from "@oxen-office/ooxml/domain/units";
+import { deg, px } from "@oxen-office/drawing-ml/domain/units";
 import type { Slide as DomainSlide } from "@oxen-office/pptx/domain/slide/types";
 import type { Shape } from "@oxen-office/pptx/domain/shape";
 import type { Transform } from "@oxen-office/pptx/domain/geometry";

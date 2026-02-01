@@ -8,9 +8,9 @@
  */
 
 import { openPresentation } from "@oxen-office/pptx";
-import { resolveColor } from "@oxen-office/ooxml/domain/color-resolution";
-import type { Color } from "@oxen-office/ooxml/domain/color";
-import type { ColorContext } from "@oxen-office/ooxml/domain/color-context";
+import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
+import type { Color } from "@oxen-office/drawing-ml/domain/color";
+import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import { createPresentationFile, THEMES_PPTX_PATH } from "./test-utils";
 import { renderSlideToSvg } from "@oxen-renderer/pptx/svg";
 

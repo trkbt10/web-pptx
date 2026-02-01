@@ -20,7 +20,7 @@ import { parseTable, parseGraphicFrame } from "@oxen-office/pptx/parser";
 import { parseDiagramDataModel } from "@oxen-office/diagram/parser/diagram/data-parser";
 import { parseShapeProperties } from "@oxen-office/pptx/parser/shape-parser/properties";
 import { parseTextBody } from "@oxen-office/pptx/parser/text/text-parser";
-import { deg, px } from "@oxen-office/ooxml/domain/units";
+import { deg, px } from "@oxen-office/drawing-ml/domain/units";
 import type { TextBody } from "@oxen-office/pptx/domain/text";
 
 const FIXTURES_DIR = path.resolve(process.cwd(), "fixtures/poi-test-data/test-data/slideshow");

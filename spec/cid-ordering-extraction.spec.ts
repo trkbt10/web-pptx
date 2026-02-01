@@ -18,7 +18,7 @@
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { px } from "@oxen-office/ooxml/domain/units";
+import { px } from "@oxen-office/drawing-ml/domain/units";
 import { parsePdf, createDefaultGraphicsState, type PdfText } from "@oxen/pdf";
 import { convertTextToShape } from "@oxen-converters/pdf-to-pptx/converter/text-to-shapes";
 import { createFitContext } from "@oxen-converters/pdf-to-pptx/converter/transform-converter";
