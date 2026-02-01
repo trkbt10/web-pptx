@@ -7,8 +7,8 @@ import { DEFAULT_RENDER_OPTIONS } from "@oxen-renderer/pptx";
 import type { Theme, RawMasterTextStyles, ColorMap } from "../../domain/theme/types";
 import type { PlaceholderTable } from "../../domain/opc";
 import type { ResourceMap, ZipFile } from "@oxen-office/opc";
-import type { SlideContext } from "../slide/context";
-import { getBackgroundElement, getBgPrFromElement, getBgRefFromElement, resolveBgRefToXmlElement } from "./background";
+import type { SlideContext } from "./context";
+import { getBackgroundElement, getBgPrFromElement, getBgRefFromElement, resolveBgRefToXmlElement } from "./background-parser";
 
 function el(name: string, attrs: Record<string, string> = {}, children: XmlElement[] = []): XmlElement {
   return { type: "element", name, attrs, children };

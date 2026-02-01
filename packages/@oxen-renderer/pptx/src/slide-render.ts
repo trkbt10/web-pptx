@@ -20,7 +20,7 @@ import { renderSlide, createEmptySlideHtml } from "./html/slide";
 import { renderSlideSvg, createEmptySlideSvg } from "./svg/renderer";
 import { createRenderContextFromSlideContext } from "./context/slide-context-adapter";
 import { toResolvedBackgroundFill } from "./background-fill";
-import { getBackgroundFillData } from "@oxen-office/pptx/parser/drawing-ml/index";
+import { getBackgroundFillData } from "@oxen-office/pptx/parser/slide/background-parser";
 import { enrichSlideContent, type FileReader } from "@oxen-office/pptx/parser/slide/external-content-loader";
 
 // =============================================================================

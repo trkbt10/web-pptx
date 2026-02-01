@@ -9,11 +9,11 @@
 
 import type { XmlElement } from "@oxen/xml";
 import { getChild } from "@oxen/xml";
-import type { BackgroundElement, BackgroundParseResult, BackgroundFill } from "../../domain/drawing-ml/background";
-import type { FillType, GradientFill } from "./fill";
-import type { SlideContext } from "../slide/context";
-import { getSolidFill } from "./color";
-import { getGradientFill, getFillType, formatFillResult, getPicFillFromContext, detectImageFillMode } from "./fill";
+import type { BackgroundElement, BackgroundParseResult, BackgroundFill } from "../../domain/slide/background";
+import type { FillType, GradientFill } from "../graphics/fill-resolver";
+import type { SlideContext } from "./context";
+import { getSolidFill } from "../graphics/color-resolver";
+import { getGradientFill, getFillType, formatFillResult, getPicFillFromContext, detectImageFillMode } from "../graphics/fill-resolver";
 
 // =============================================================================
 // Background Element Extraction

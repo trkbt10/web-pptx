@@ -5,7 +5,7 @@
 import * as fs from "node:fs/promises";
 import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
 import { openPresentation } from "@oxen-office/pptx";
-import { parseTheme } from "@oxen-office/pptx/parser/drawing-ml/theme";
+import { parseTheme } from "@oxen-office/pptx/parser/slide/theme-parser";
 import { success, error, type Result } from "@oxen-cli/cli-core";
 
 /**

@@ -7,7 +7,7 @@ import { formatCellRef, columnLetterToIndex, indexToColumnLetter } from "@oxen-o
 import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
 import { loadXlsxWorkbook } from "../utils/xlsx-loader";
 import { getSheetRange } from "../serializers/sheet-serializer";
-import { formatCellValue, serializeCell, type CellJson } from "../serializers/cell-serializer";
+import { serializeCell, type CellJson } from "../serializers/cell-serializer";
 
 // =============================================================================
 // Types
@@ -62,6 +62,16 @@ function parseRange(range: string): ParsedRange | undefined {
   return { startCol, startRow, endCol, endRow };
 }
 
+function sheetRangeToParsedRange(sheetRange: ReturnType<typeof getSheetRange>): ParsedRange | undefined {
+  if (!sheetRange) return undefined;
+  return {
+    startCol: columnLetterToIndex(sheetRange.startCol) as number,
+    startRow: sheetRange.startRow,
+    endCol: columnLetterToIndex(sheetRange.endCol) as number,
+    endRow: sheetRange.endRow,
+  };
+}
+
 // =============================================================================
 // Command Implementation
 // =============================================================================
@@ -84,16 +94,7 @@ export async function runShow(filePath: string, sheetName: string, options: Show
 
     // Determine range to show
     const sheetRange = getSheetRange(sheet);
-    const targetRange = options.range
-      ? parseRange(options.range)
-      : sheetRange
-        ? {
-            startCol: columnLetterToIndex(sheetRange.startCol) as number,
-            startRow: sheetRange.startRow,
-            endCol: columnLetterToIndex(sheetRange.endCol) as number,
-            endRow: sheetRange.endRow,
-          }
-        : undefined;
+    const targetRange = options.range ? parseRange(options.range) : sheetRangeToParsedRange(sheetRange);
 
     if (!targetRange) {
       return success({

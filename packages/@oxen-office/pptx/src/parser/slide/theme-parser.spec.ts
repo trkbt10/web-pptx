@@ -3,7 +3,7 @@
  */
 
 import { parseXml } from "@oxen/xml";
-import { parseCustomColorList, parseExtraColorSchemes, parseObjectDefaults } from "./theme";
+import { parseCustomColorList, parseExtraColorSchemes, parseObjectDefaults } from "./theme-parser";
 
 describe("parseCustomColorList", () => {
   it("parses custom colors from theme", () => {

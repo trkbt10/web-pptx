@@ -14,7 +14,7 @@ import { getByPath } from "@oxen/xml";
 import { renderSlideIntegrated } from "../slide-render";
 import { createSlideContext, type SlideContext } from "@oxen-office/pptx/parser/slide/context";
 import { createPlaceholderTable, createColorMap } from "@oxen-office/pptx/parser/slide/resource-adapters";
-import { parseTheme, parseMasterTextStyles } from "@oxen-office/pptx/parser/drawing-ml/index";
+import { parseTheme, parseMasterTextStyles } from "@oxen-office/pptx/parser/slide/theme-parser";
 import { DEFAULT_RENDER_OPTIONS } from "../render-options";
 
 /**

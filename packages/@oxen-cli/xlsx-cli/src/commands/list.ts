@@ -6,6 +6,11 @@ import { success, error, type Result } from "@oxen-cli/cli-core";
 import { loadXlsxWorkbook } from "../utils/xlsx-loader";
 import { getSheetRange } from "../serializers/sheet-serializer";
 
+function formatRangeString(range: ReturnType<typeof getSheetRange>): string | undefined {
+  if (!range) return undefined;
+  return `${range.startCol}${range.startRow}:${range.endCol}${range.endRow}`;
+}
+
 export type SheetListItem = {
   readonly name: string;
   readonly rowCount: number;
@@ -39,10 +44,7 @@ export async function runList(filePath: string): Promise<Result<ListData>> {
         }
       }
 
-      const range = getSheetRange(sheet);
-      const rangeStr = range
-        ? `${range.startCol}${range.startRow}:${range.endCol}${range.endRow}`
-        : undefined;
+      const rangeStr = formatRangeString(getSheetRange(sheet));
 
       return {
         name: sheet.name,

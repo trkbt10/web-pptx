@@ -3,7 +3,7 @@
  */
 
 import { success, error, type Result } from "@oxen-cli/cli-core";
-import { formatCellRef, columnLetterToIndex, indexToColumnLetter } from "@oxen-office/xlsx/domain/cell/address";
+import { formatCellRef, columnLetterToIndex } from "@oxen-office/xlsx/domain/cell/address";
 import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
 import type { CellValue } from "@oxen-office/xlsx/domain/cell/types";
 import { loadXlsxWorkbook } from "../utils/xlsx-loader";

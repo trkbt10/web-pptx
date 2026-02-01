@@ -5,7 +5,7 @@
 import { parseXml, serializeDocument } from "@oxen/xml";
 import type { ZipPackage } from "@oxen/zip";
 import { patchTheme } from "@oxen-builder/pptx/patcher";
-import { parseFontScheme } from "@oxen-office/pptx/parser/drawing-ml/theme";
+import { parseFontScheme } from "@oxen-office/pptx/parser/slide/theme-parser";
 import type { Color, SchemeColorName } from "@oxen-office/drawing-ml/domain/color";
 import type { FontScheme } from "@oxen-office/ooxml/domain/font-scheme";
 import type { ThemeEditSpec, ThemeFontSpec, ThemeSchemeColorName } from "../types";

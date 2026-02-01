@@ -90,7 +90,7 @@ describe("cell-serializer", () => {
       const cell: Cell = {
         address: { col: colIdx(1), row: rowIdx(1), colAbsolute: false, rowAbsolute: false },
         value: { type: "number", value: 10 },
-        formula: { expression: "A1+B1" },
+        formula: { expression: "A1+B1", type: "normal" },
       };
 
       const result = serializeCell(cell);

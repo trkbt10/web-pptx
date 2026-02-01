@@ -14,7 +14,7 @@ import { px, deg } from "@oxen-office/drawing-ml/domain/units";
 import type { SlideSize } from "@oxen-office/pptx/domain";
 import type { ColorContext, ColorScheme } from "@oxen-office/drawing-ml/domain/color-context";
 import type { XmlDocument } from "@oxen/xml";
-import { parseTheme } from "@oxen-office/pptx/parser/drawing-ml/index";
+import { parseTheme } from "@oxen-office/pptx/parser/slide/theme-parser";
 import type { ResizeHandlePosition } from "../../context/slide/state";
 import { SvgEditorCanvas } from "../../slide-canvas/SvgEditorCanvas";
 import type { ContextMenuActions } from "../../slide/context-menu/SlideContextMenu";

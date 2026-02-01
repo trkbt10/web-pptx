@@ -4,6 +4,7 @@
 
 import { describe, it, expect } from "vitest";
 import type { DocxRun, DocxParagraph, DocxRunContent, DocxParagraphContent } from "@oxen-office/docx";
+import { halfPoints } from "@oxen-office/docx";
 import { serializeParagraph } from "./paragraph-serializer";
 
 describe("paragraph-serializer", () => {
@@ -16,7 +17,7 @@ describe("paragraph-serializer", () => {
           i: true,
           u: { val: "single" },
           strike: true,
-          sz: 24, // 12 points in half-points
+          sz: halfPoints(24), // 12 points in half-points
           rFonts: { ascii: "Arial" },
           color: { val: "FF0000" },
           highlight: "yellow",

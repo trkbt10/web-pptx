@@ -1,14 +1,14 @@
 /**
  * @file Background fill conversion utilities
  *
- * Converts BackgroundFill (from domain/drawing-ml) to ResolvedBackgroundFill
+ * Converts BackgroundFill (from domain/slide) to ResolvedBackgroundFill
  * (used by render layer).
  *
  * @see ECMA-376 Part 1, Section 20.1.8.33 (a:gradFill)
  * @see ECMA-376 Part 1, Section 20.1.8.46 (a:path) for radial/path gradients
  */
 
-import type { BackgroundFill, GradientData } from "@oxen-office/pptx/domain/drawing-ml/background";
+import type { BackgroundFill, GradientData } from "@oxen-office/pptx/domain/slide/background";
 import type { ResolvedBackgroundFill } from "@oxen-office/drawing-ml/domain/background-fill";
 
 export type { ResolvedBackgroundFill };

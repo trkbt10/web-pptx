@@ -147,9 +147,9 @@
       "types": "./src/domain/color/types.ts",
       "default": "./src/domain/color/types.ts"
     },
-    "./domain/drawing-ml/background": {
-      "types": "./src/domain/drawing-ml/background.ts",
-      "default": "./src/domain/drawing-ml/background.ts"
+    "./domain/slide/background": {
+      "types": "./src/domain/slide/background.ts",
+      "default": "./src/domain/slide/background.ts"
     },
         "./domain/diagram/format-guards": {
       "types": "./src/domain/diagram/format-guards.ts",
@@ -187,13 +187,29 @@
       "types": "./src/parser/context.ts",
       "default": "./src/parser/context.ts"
     },
-    "./parser/drawing-ml/index": {
-      "types": "./src/parser/drawing-ml/index.ts",
-      "default": "./src/parser/drawing-ml/index.ts"
+    "./parser/slide/theme-parser": {
+      "types": "./src/parser/slide/theme-parser.ts",
+      "default": "./src/parser/slide/theme-parser.ts"
     },
-    "./parser/drawing-ml/theme": {
-      "types": "./src/parser/drawing-ml/theme.ts",
-      "default": "./src/parser/drawing-ml/theme.ts"
+    "./parser/slide/background-parser": {
+      "types": "./src/parser/slide/background-parser.ts",
+      "default": "./src/parser/slide/background-parser.ts"
+    },
+    "./parser/graphics/color-resolver": {
+      "types": "./src/parser/graphics/color-resolver.ts",
+      "default": "./src/parser/graphics/color-resolver.ts"
+    },
+    "./parser/graphics/fill-resolver": {
+      "types": "./src/parser/graphics/fill-resolver.ts",
+      "default": "./src/parser/graphics/fill-resolver.ts"
+    },
+    "./parser/text/text-fill": {
+      "types": "./src/parser/text/text-fill.ts",
+      "default": "./src/parser/text/text-fill.ts"
+    },
+    "./parser/text/text-effects": {
+      "types": "./src/parser/text/text-effects.ts",
+      "default": "./src/parser/text/text-effects.ts"
     },
     "./parser/slide/context": {
       "types": "./src/parser/slide/context.ts",

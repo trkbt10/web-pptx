@@ -6,7 +6,7 @@
 
 import { loadZipPackage } from "@oxen/zip";
 import { parseXml, getChildren, isXmlElement } from "@oxen/xml";
-import { parseColorScheme, parseFontScheme } from "@oxen-office/pptx/parser/drawing-ml/theme";
+import { parseColorScheme, parseFontScheme } from "@oxen-office/pptx/parser/slide/theme-parser";
 import type { ThemePreset } from "./types";
 import { OFFICE_THEME } from "./presets";
 

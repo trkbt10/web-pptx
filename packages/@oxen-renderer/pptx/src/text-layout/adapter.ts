@@ -14,8 +14,8 @@ import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { Line, Fill } from "@oxen-office/pptx/domain/color/types";
 
 import { resolveColor as resolveColorRaw } from "@oxen-office/drawing-ml/domain/color-resolution";
-import { resolveTextFill, resolveTextEffects } from "@oxen-office/pptx/parser/drawing-ml/index";
-import type { ResourceResolver } from "@oxen-office/pptx/parser/drawing-ml/index";
+import { resolveTextFill, type ResourceResolver } from "@oxen-office/pptx/parser/text/text-fill";
+import { resolveTextEffects } from "@oxen-office/pptx/parser/text/text-effects";
 import { px, pt, pct } from "@oxen-office/drawing-ml/domain/units";
 import { DEFAULT_FONT_SIZE_PT } from "@oxen-office/pptx/domain/defaults";
 import type { AutoFit } from "@oxen-office/pptx/domain/text";

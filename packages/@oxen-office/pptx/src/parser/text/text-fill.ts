@@ -10,7 +10,7 @@ import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { Fill } from "../../domain/color/types";
 import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 import type { TextFillConfig } from "@oxen-office/drawing-ml/domain/text-fill";
-import type { ResourceResolverFn } from "../../domain";
+import type { ResourceResolverFn } from "../../domain/index";
 import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
 
 // =============================================================================

@@ -11,7 +11,7 @@ import type { ResourceContext } from "../slide/context";
 import { angleToDegrees } from "../../domain/unit-conversion";
 import { base64ArrayBuffer } from "@oxen/buffer";
 import { getMimeType } from "@oxen/files";
-import { getSolidFill } from "./color";
+import { getSolidFill } from "./color-resolver";
 
 // =============================================================================
 // Parser-specific Fill Types

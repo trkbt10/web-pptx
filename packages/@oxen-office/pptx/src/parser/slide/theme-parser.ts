@@ -17,7 +17,7 @@ import type {
   ObjectDefaults,
   RawMasterTextStyles,
   Theme,
-} from "../../domain";
+} from "../../domain/index";
 
 // =============================================================================
 // Font Scheme Parsing
