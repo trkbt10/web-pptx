@@ -18,6 +18,7 @@ export type SheetListItem = {
   readonly range?: string;
   readonly mergedCellCount?: number;
   readonly formulaCount?: number;
+  readonly hasAutoFilter?: boolean;
 };
 
 export type ListData = {
@@ -53,6 +54,7 @@ export async function runList(filePath: string): Promise<Result<ListData>> {
         range: rangeStr,
         ...(sheet.mergeCells && sheet.mergeCells.length > 0 && { mergedCellCount: sheet.mergeCells.length }),
         ...(formulaCount > 0 && { formulaCount }),
+        ...(sheet.autoFilter && { hasAutoFilter: true }),
       };
     });
 

@@ -24,6 +24,17 @@ import { parseCellRef, parseRange } from "../domain/cell/address";
 import type { Cell } from "../domain/cell/types";
 import type { XlsxColor } from "../domain/style/font";
 import type { XlsxDataValidation } from "../domain/data-validation";
+import type {
+  XlsxAutoFilter,
+  XlsxFilterColumn,
+  XlsxFilters,
+  XlsxCustomFilters,
+  XlsxCustomFilter,
+  XlsxFilterOperator,
+  XlsxTop10Filter,
+  XlsxDynamicFilter,
+  XlsxDynamicFilterType,
+} from "../domain/auto-filter";
 import { rowIdx, colIdx, styleId } from "../domain/types";
 import type { XlsxParseContext } from "./context";
 import type { XlsxParseOptions } from "./options";
@@ -459,6 +470,180 @@ function parseColorElement(colorElement: XmlElement | undefined): XlsxColor | un
 }
 
 // =============================================================================
+// Auto Filter Parsing
+// =============================================================================
+
+/**
+ * Parse filter operator.
+ */
+function parseFilterOperator(value: string | undefined): XlsxFilterOperator | undefined {
+  switch (value) {
+    case "equal":
+    case "lessThan":
+    case "lessThanOrEqual":
+    case "notEqual":
+    case "greaterThanOrEqual":
+    case "greaterThan":
+      return value;
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Parse dynamic filter type.
+ */
+function parseDynamicFilterType(value: string | undefined): XlsxDynamicFilterType | undefined {
+  const validTypes = [
+    "null", "aboveAverage", "belowAverage", "tomorrow", "today", "yesterday",
+    "nextWeek", "thisWeek", "lastWeek", "nextMonth", "thisMonth", "lastMonth",
+    "nextQuarter", "thisQuarter", "lastQuarter", "nextYear", "thisYear", "lastYear",
+    "yearToDate", "Q1", "Q2", "Q3", "Q4",
+    "M1", "M2", "M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10", "M11", "M12",
+  ];
+  if (value && validTypes.includes(value)) {
+    return value as XlsxDynamicFilterType;
+  }
+  return undefined;
+}
+
+/**
+ * Parse filters element (list of specific values).
+ *
+ * @see ECMA-376 Part 4, Section 18.3.2.8 (filters)
+ */
+function parseFilters(filtersElement: XmlElement): XlsxFilters {
+  const blank = parseBooleanAttr(getAttr(filtersElement, "blank"));
+  const filterElements = getChildren(filtersElement, "filter");
+  const values = filterElements
+    .map((el) => getAttr(el, "val"))
+    .filter((val): val is string => val !== undefined)
+    .map((val) => ({ val }));
+
+  return {
+    type: "filters",
+    ...(blank !== undefined && { blank }),
+    ...(values.length > 0 && { values }),
+  };
+}
+
+/**
+ * Parse custom filters element.
+ *
+ * @see ECMA-376 Part 4, Section 18.3.2.2 (customFilters)
+ */
+function parseCustomFilters(customFiltersElement: XmlElement): XlsxCustomFilters {
+  const and = parseBooleanAttr(getAttr(customFiltersElement, "and"));
+  const customFilterElements = getChildren(customFiltersElement, "customFilter");
+  const conditions: XlsxCustomFilter[] = customFilterElements.map((el) => ({
+    operator: parseFilterOperator(getAttr(el, "operator")),
+    val: getAttr(el, "val") ?? undefined,
+  }));
+
+  return {
+    type: "customFilters",
+    ...(and !== undefined && { and }),
+    conditions,
+  };
+}
+
+/**
+ * Parse top10 filter element.
+ *
+ * @see ECMA-376 Part 4, Section 18.3.2.10 (top10)
+ */
+function parseTop10Filter(top10Element: XmlElement): XlsxTop10Filter {
+  return {
+    type: "top10",
+    top: parseBooleanAttr(getAttr(top10Element, "top")),
+    percent: parseBooleanAttr(getAttr(top10Element, "percent")),
+    val: parseFloatAttr(getAttr(top10Element, "val")),
+    filterVal: parseFloatAttr(getAttr(top10Element, "filterVal")),
+  };
+}
+
+/**
+ * Parse dynamic filter element.
+ *
+ * @see ECMA-376 Part 4, Section 18.3.2.3 (dynamicFilter)
+ */
+function parseDynamicFilter(dynamicFilterElement: XmlElement): XlsxDynamicFilter | undefined {
+  const filterType = parseDynamicFilterType(getAttr(dynamicFilterElement, "type"));
+  if (!filterType) return undefined;
+
+  return {
+    type: "dynamicFilter",
+    filterType,
+    val: parseFloatAttr(getAttr(dynamicFilterElement, "val")),
+    maxVal: parseFloatAttr(getAttr(dynamicFilterElement, "maxVal")),
+  };
+}
+
+/**
+ * Parse a filter column element.
+ *
+ * @see ECMA-376 Part 4, Section 18.3.2.5 (filterColumn)
+ */
+function parseFilterColumn(filterColumnElement: XmlElement): XlsxFilterColumn {
+  const colIdAttr = parseIntAttr(getAttr(filterColumnElement, "colId"));
+  const colId = colIdx(colIdAttr ?? 0);
+  const hiddenButton = parseBooleanAttr(getAttr(filterColumnElement, "hiddenButton"));
+  const showButton = parseBooleanAttr(getAttr(filterColumnElement, "showButton"));
+
+  // Parse filter type - only one should be present
+  const filtersEl = getChild(filterColumnElement, "filters");
+  const customFiltersEl = getChild(filterColumnElement, "customFilters");
+  const top10El = getChild(filterColumnElement, "top10");
+  const dynamicFilterEl = getChild(filterColumnElement, "dynamicFilter");
+
+  let filter: XlsxFilterColumn["filter"];
+  if (filtersEl) {
+    filter = parseFilters(filtersEl);
+  } else if (customFiltersEl) {
+    filter = parseCustomFilters(customFiltersEl);
+  } else if (top10El) {
+    filter = parseTop10Filter(top10El);
+  } else if (dynamicFilterEl) {
+    filter = parseDynamicFilter(dynamicFilterEl);
+  }
+
+  return {
+    colId,
+    ...(hiddenButton !== undefined && { hiddenButton }),
+    ...(showButton !== undefined && { showButton }),
+    ...(filter && { filter }),
+  };
+}
+
+/**
+ * Parse auto filter element.
+ *
+ * @param autoFilterElement - The <autoFilter> element
+ * @returns Parsed auto filter or undefined
+ *
+ * @see ECMA-376 Part 4, Section 18.3.1.2 (autoFilter)
+ */
+function parseAutoFilter(autoFilterElement: XmlElement | undefined): XlsxAutoFilter | undefined {
+  if (!autoFilterElement) {
+    return undefined;
+  }
+
+  const refAttr = getAttr(autoFilterElement, "ref");
+  if (!refAttr) {
+    return undefined;
+  }
+
+  const ref = parseRange(refAttr);
+  const filterColumnElements = getChildren(autoFilterElement, "filterColumn");
+  const filterColumns = filterColumnElements.map(parseFilterColumn);
+
+  return {
+    ref,
+    ...(filterColumns.length > 0 && { filterColumns }),
+  };
+}
+
+// =============================================================================
 // Worksheet Parsing
 // =============================================================================
 
@@ -499,6 +684,8 @@ export function parseWorksheet(params: {
   const conditionalFormattings = parseConditionalFormattings(worksheetElement);
   const dataValidations = parseDataValidations(worksheetElement);
   const hyperlinks = parseHyperlinks(worksheetElement);
+  const autoFilterEl = getChild(worksheetElement, "autoFilter");
+  const autoFilter = parseAutoFilter(autoFilterEl);
 
   return {
     dateSystem: context.workbookInfo.dateSystem,
@@ -514,6 +701,7 @@ export function parseWorksheet(params: {
     conditionalFormattings: conditionalFormattings.length > 0 ? conditionalFormattings : undefined,
     dataValidations: dataValidations.length > 0 ? dataValidations : undefined,
     hyperlinks: hyperlinks.length > 0 ? hyperlinks : undefined,
+    autoFilter,
     xmlPath: sheetInfo.xmlPath,
   };
 }

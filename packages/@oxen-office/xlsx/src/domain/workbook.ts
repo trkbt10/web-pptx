@@ -20,6 +20,8 @@ import type { XlsxHyperlink } from "./hyperlink";
 import type { XlsxDateSystem } from "./date-system";
 import type { XlsxColor } from "./style/font";
 import type { XlsxDataValidation } from "./data-validation";
+import type { XlsxAutoFilter } from "./auto-filter";
+import type { SharedStringItem } from "../parser/shared-strings";
 
 // =============================================================================
 // Column Definition
@@ -194,6 +196,8 @@ export type XlsxWorksheet = {
   readonly comments?: readonly XlsxComment[];
   /** Hyperlinks declared for this sheet */
   readonly hyperlinks?: readonly XlsxHyperlink[];
+  /** Auto filter configuration for this sheet */
+  readonly autoFilter?: XlsxAutoFilter;
   /** Path to the worksheet XML within the package (e.g., "xl/worksheets/sheet1.xml") */
   readonly xmlPath: string;
 };
@@ -252,8 +256,13 @@ export type XlsxWorkbook = {
   readonly sheets: readonly XlsxWorksheet[];
   /** Workbook styles */
   readonly styles: XlsxStyleSheet;
-  /** Shared string table */
+  /** Shared string table (plain text) */
   readonly sharedStrings: readonly string[];
+  /**
+   * Shared string table with rich text formatting.
+   * Only populated when `includeRichText` option is enabled.
+   */
+  readonly sharedStringsRich?: readonly SharedStringItem[];
   /** Named ranges and formulas */
   readonly definedNames?: readonly XlsxDefinedName[];
   /** Workbook tables (ListObjects) */

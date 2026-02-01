@@ -25,6 +25,22 @@ export function formatInfoPretty(data: InfoData): string {
   lines.push(`Headers: ${data.hasHeaders ? "yes" : "no"}`);
   lines.push(`Footers: ${data.hasFooters ? "yes" : "no"}`);
   lines.push(`Comments: ${data.hasComments ? "yes" : "no"}`);
+  lines.push(`Settings: ${data.hasSettings ? "yes" : "no"}`);
+
+  if (data.settings) {
+    if (data.settings.trackRevisions !== undefined) {
+      lines.push(`  Track Revisions: ${data.settings.trackRevisions ? "yes" : "no"}`);
+    }
+    if (data.settings.defaultTabStop !== undefined) {
+      lines.push(`  Default Tab Stop: ${data.settings.defaultTabStop} twips`);
+    }
+    if (data.settings.zoom !== undefined) {
+      lines.push(`  Zoom: ${data.settings.zoom}%`);
+    }
+    if (data.settings.protection) {
+      lines.push(`  Protection: ${data.settings.protection}`);
+    }
+  }
 
   return lines.join("\n");
 }

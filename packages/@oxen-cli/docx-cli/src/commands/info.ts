@@ -6,6 +6,13 @@ import * as fs from "node:fs/promises";
 import { loadDocx, twipsToPoints } from "@oxen-office/docx";
 import { success, error, type Result } from "@oxen-cli/cli-core";
 
+export type SettingsInfo = {
+  readonly trackRevisions?: boolean;
+  readonly defaultTabStop?: number;
+  readonly zoom?: number;
+  readonly protection?: string;
+};
+
 export type InfoData = {
   readonly paragraphCount: number;
   readonly tableCount: number;
@@ -22,6 +29,8 @@ export type InfoData = {
   readonly hasHeaders: boolean;
   readonly hasFooters: boolean;
   readonly hasComments: boolean;
+  readonly hasSettings: boolean;
+  readonly settings?: SettingsInfo;
 };
 
 function countParagraphs(content: readonly { type: string }[]): number {
@@ -57,6 +66,16 @@ export async function runInfo(filePath: string): Promise<Result<InfoData>> {
         }
       : undefined;
 
+    const settings = doc.settings;
+    const settingsInfo: SettingsInfo | undefined = settings
+      ? {
+          ...(settings.trackRevisions !== undefined && { trackRevisions: settings.trackRevisions }),
+          ...(settings.defaultTabStop !== undefined && { defaultTabStop: settings.defaultTabStop }),
+          ...(settings.zoom?.percent !== undefined && { zoom: settings.zoom.percent }),
+          ...(settings.documentProtection?.edit && { protection: settings.documentProtection.edit }),
+        }
+      : undefined;
+
     return success({
       paragraphCount: countParagraphs(doc.body.content),
       tableCount: countTables(doc.body.content),
@@ -67,6 +86,8 @@ export async function runInfo(filePath: string): Promise<Result<InfoData>> {
       hasHeaders: doc.headers !== undefined && doc.headers.size > 0,
       hasFooters: doc.footers !== undefined && doc.footers.size > 0,
       hasComments: doc.comments !== undefined && doc.comments.comment.length > 0,
+      hasSettings: doc.settings !== undefined,
+      ...(settingsInfo && Object.keys(settingsInfo).length > 0 && { settings: settingsInfo }),
     });
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") {

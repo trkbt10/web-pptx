@@ -21,6 +21,8 @@ import { createEmptyResourceResolver } from "@oxen-office/pptx/domain/resource-r
 import type { ResourceStore } from "@oxen-office/pptx/domain/resource-store";
 import { createWarningCollector } from "@oxen-office/ooxml";
 import type { TableStyleList } from "@oxen-office/pptx/parser/table/style-parser";
+import { DrawingMLProvider } from "@oxen-renderer/drawing-ml/context";
+import type { WarningCollector } from "@oxen-renderer/drawing-ml/context";
 
 // =============================================================================
 // Types
@@ -136,9 +138,45 @@ export function RenderProvider({
     ],
   );
 
+  // Create DrawingML warnings adapter
+  const drawingMLWarnings = useMemo<WarningCollector>(
+    () => ({
+      warn: (message, context) => {
+        warnings.add({
+          type: "unsupported",
+          message,
+          details: context ? JSON.stringify(context) : undefined,
+        });
+      },
+    }),
+    [warnings],
+  );
+
+  // Create resource resolver for DrawingML
+  const resolveResource = useMemo(
+    () => (resourceId: string) => resolvedResources.resolve(resourceId),
+    [resolvedResources],
+  );
+
+  // Create ID generator for DrawingML defs
+  const defIdRef = useMemo(() => ({ value: 0 }), []);
+  const getNextId = useMemo(
+    () => (prefix: string) => `${prefix}-${defIdRef.value++}`,
+    [defIdRef],
+  );
+
   return (
     <RenderResourcesContext.Provider value={resolvedResources}>
-      <RenderContext.Provider value={ctx}>{children}</RenderContext.Provider>
+      <RenderContext.Provider value={ctx}>
+        <DrawingMLProvider
+          colorContext={resolvedColorContext}
+          resolveResource={resolveResource}
+          getNextId={getNextId}
+          warnings={drawingMLWarnings}
+        >
+          {children}
+        </DrawingMLProvider>
+      </RenderContext.Provider>
     </RenderResourcesContext.Provider>
   );
 }

@@ -28,6 +28,9 @@ import type {
   DocxBreak,
   DocxSymbol,
   DocxDrawingContent,
+  DocxFieldCharContent,
+  DocxFieldCharType,
+  DocxInstrText,
 } from "../domain/run";
 import { parseDrawing } from "./drawing";
 import type { WordBorderStyle } from "@oxen-office/ooxml/domain/border";
@@ -570,6 +573,54 @@ function parseDrawingContent(element: XmlElement): DocxDrawingContent | undefine
 }
 
 /**
+ * Parse field char type.
+ */
+function parseFieldCharType(value: string | undefined): DocxFieldCharType | undefined {
+  switch (value) {
+    case "begin":
+    case "separate":
+    case "end":
+      return value;
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Parse field character element.
+ *
+ * @see ECMA-376 Part 1, Section 17.16.18 (fldChar)
+ */
+function parseFieldCharContent(element: XmlElement): DocxFieldCharContent | undefined {
+  const fldCharType = parseFieldCharType(getAttr(element, "fldCharType"));
+  if (!fldCharType) return undefined;
+
+  const dirty = parseBoolean(getAttr(element, "dirty"));
+  const fldLock = parseBoolean(getAttr(element, "fldLock"));
+
+  return {
+    type: "fieldChar",
+    fldCharType,
+    ...(dirty !== undefined && { dirty }),
+    ...(fldLock !== undefined && { fldLock }),
+  };
+}
+
+/**
+ * Parse field instruction text element.
+ *
+ * @see ECMA-376 Part 1, Section 17.16.18.5 (instrText)
+ */
+function parseInstrText(element: XmlElement): DocxInstrText {
+  const space = getAttr(element, "xml:space");
+  return {
+    type: "instrText",
+    value: getTextContent(element) ?? "",
+    space: space === "preserve" ? "preserve" : "default",
+  };
+}
+
+/**
  * Parse run content elements.
  */
 function parseRunContent(element: XmlElement): DocxRunContent | undefined {
@@ -586,6 +637,10 @@ function parseRunContent(element: XmlElement): DocxRunContent | undefined {
       return parseSymbol(element);
     case "drawing":
       return parseDrawingContent(element);
+    case "fldChar":
+      return parseFieldCharContent(element);
+    case "instrText":
+      return parseInstrText(element);
     default:
       return undefined;
   }

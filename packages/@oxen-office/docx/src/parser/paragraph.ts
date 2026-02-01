@@ -23,6 +23,7 @@ import type {
   DocxHyperlink,
   DocxBookmarkStart,
   DocxBookmarkEnd,
+  DocxSimpleField,
 } from "../domain/paragraph";
 import type { ParagraphAlignment, TabStopAlignment, TabStopLeader } from "@oxen-office/ooxml/domain/text";
 import type { WordBorderStyle } from "@oxen-office/ooxml/domain/border";
@@ -602,6 +603,28 @@ function parseBookmarkEnd(element: XmlElement): DocxBookmarkEnd | undefined {
 }
 
 /**
+ * Parse simple field element.
+ *
+ * @see ECMA-376 Part 1, Section 17.16.19 (fldSimple)
+ */
+function parseSimpleField(element: XmlElement, context?: DocxParseContext): DocxSimpleField {
+  const instr = getAttr(element, "instr") ?? "";
+  const dirty = parseBoolean(getAttr(element, "dirty"));
+
+  const content = [];
+  for (const child of getChildren(element, "r")) {
+    content.push(parseRun(child, context));
+  }
+
+  return {
+    type: "simpleField",
+    instr,
+    ...(dirty !== undefined && { dirty }),
+    content,
+  };
+}
+
+/**
  * Parse paragraph content element.
  */
 function parseParagraphContent(element: XmlElement, context?: DocxParseContext): DocxParagraphContent | undefined {
@@ -616,6 +639,8 @@ function parseParagraphContent(element: XmlElement, context?: DocxParseContext):
       return parseBookmarkStart(element);
     case "bookmarkEnd":
       return parseBookmarkEnd(element);
+    case "fldSimple":
+      return parseSimpleField(element, context);
     default:
       return undefined;
   }

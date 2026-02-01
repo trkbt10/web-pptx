@@ -14,5 +14,13 @@ export type XlsxParseOptions = {
      */
     readonly allowMissingCellRef?: boolean;
   };
+
+  /**
+   * Include rich text formatting information in shared strings.
+   *
+   * When enabled, `sharedStringsRich` will be populated with full formatting details.
+   * @default false
+   */
+  readonly includeRichText?: boolean;
 };
 

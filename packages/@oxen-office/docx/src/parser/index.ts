@@ -77,3 +77,6 @@ export { parseSectionProperties } from "./section";
 
 // Document parsing
 export { parseBody, parseDocument } from "./document";
+
+// Settings parsing
+export { parseSettings } from "./settings";

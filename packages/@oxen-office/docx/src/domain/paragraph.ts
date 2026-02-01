@@ -417,6 +417,25 @@ export type DocxCommentRangeEnd = {
   readonly id: number;
 };
 
+// =============================================================================
+// Field Codes
+// =============================================================================
+
+/**
+ * Simple field element.
+ *
+ * @see ECMA-376 Part 1, Section 17.16.19 (fldSimple)
+ */
+export type DocxSimpleField = {
+  readonly type: "simpleField";
+  /** Field instruction (e.g., "PAGE", "DATE", "HYPERLINK") */
+  readonly instr: string;
+  /** Field is dirty (needs update) */
+  readonly dirty?: boolean;
+  /** Field content (runs with the field result) */
+  readonly content: readonly DocxRun[];
+};
+
 /**
  * Union of all paragraph content types.
  */
@@ -426,7 +445,8 @@ export type DocxParagraphContent =
   | DocxBookmarkStart
   | DocxBookmarkEnd
   | DocxCommentRangeStart
-  | DocxCommentRangeEnd;
+  | DocxCommentRangeEnd
+  | DocxSimpleField;
 
 // =============================================================================
 // Paragraph Type

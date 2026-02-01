@@ -434,9 +434,51 @@ export type DocxDrawingContent = {
 };
 
 /**
+ * Field character type for complex fields.
+ *
+ * @see ECMA-376 Part 1, Section 17.16.18 (fldChar)
+ */
+export type DocxFieldCharType = "begin" | "separate" | "end";
+
+/**
+ * Field character element for complex fields.
+ *
+ * @see ECMA-376 Part 1, Section 17.16.18 (fldChar)
+ */
+export type DocxFieldCharContent = {
+  readonly type: "fieldChar";
+  /** Field character type */
+  readonly fldCharType: DocxFieldCharType;
+  /** Field is dirty (needs update) - only on begin */
+  readonly dirty?: boolean;
+  /** Field is locked (don't update) - only on begin */
+  readonly fldLock?: boolean;
+};
+
+/**
+ * Field instruction text for complex fields.
+ *
+ * @see ECMA-376 Part 1, Section 17.16.18.5 (instrText)
+ */
+export type DocxInstrText = {
+  readonly type: "instrText";
+  /** Field instruction text */
+  readonly value: string;
+  /** Preserve whitespace */
+  readonly space?: "default" | "preserve";
+};
+
+/**
  * Union of all run content types.
  */
-export type DocxRunContent = DocxText | DocxTab | DocxBreak | DocxSymbol | DocxDrawingContent;
+export type DocxRunContent =
+  | DocxText
+  | DocxTab
+  | DocxBreak
+  | DocxSymbol
+  | DocxDrawingContent
+  | DocxFieldCharContent
+  | DocxInstrText;
 
 // =============================================================================
 // Run Type

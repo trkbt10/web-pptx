@@ -18,6 +18,8 @@ import { runShow } from "./commands/show";
 import { runExtract } from "./commands/extract";
 import { runBuild } from "./commands/build";
 import { runVerify } from "./commands/verify";
+import { runStrings } from "./commands/strings";
+import { runFormulas } from "./commands/formulas";
 import { output, type OutputMode } from "@oxen-cli/cli-core";
 import {
   formatInfoPretty,
@@ -26,6 +28,8 @@ import {
   formatExtractPretty,
   formatBuildPretty,
   formatVerifyPretty,
+  formatStringsPretty,
+  formatFormulasPretty,
 } from "./output/pretty-output";
 
 const program = new Command();
@@ -100,6 +104,29 @@ program
     const mode = program.opts().output as OutputMode;
     const result = await runVerify(specPath, options);
     output(result, mode, formatVerifyPretty);
+  });
+
+program
+  .command("strings")
+  .description("Display shared strings with optional rich text formatting")
+  .argument("<file>", "XLSX file path")
+  .option("--rich-text", "Include rich text formatting details")
+  .action(async (file: string, options: { richText?: boolean }) => {
+    const mode = program.opts().output as OutputMode;
+    const result = await runStrings(file, { richText: options.richText });
+    output(result, mode, formatStringsPretty);
+  });
+
+program
+  .command("formulas")
+  .description("Display formulas with optional evaluation")
+  .argument("<file>", "XLSX file path")
+  .option("--sheet <name>", "Filter by sheet name")
+  .option("--evaluate", "Evaluate formulas and show calculated values")
+  .action(async (file: string, options: { sheet?: string; evaluate?: boolean }) => {
+    const mode = program.opts().output as OutputMode;
+    const result = await runFormulas(file, { sheet: options.sheet, evaluate: options.evaluate });
+    output(result, mode, formatFormulasPretty);
   });
 
 program.parse();

@@ -8,6 +8,8 @@ import type { ShowData } from "../commands/show";
 import type { ExtractData } from "../commands/extract";
 import type { BuildData } from "../commands/build";
 import type { VerifyData } from "../commands/verify";
+import type { StringsData, RichTextRunJson } from "../commands/strings";
+import type { FormulasData } from "../commands/formulas";
 
 export function formatInfoPretty(data: InfoData): string {
   const lines = [
@@ -36,6 +38,15 @@ export function formatListPretty(data: ListData): string {
 
       if (sheet.range) {
         parts.push(`  Range: ${sheet.range}`);
+      }
+      if (sheet.mergedCellCount) {
+        parts.push(`  Merged Cells: ${sheet.mergedCellCount}`);
+      }
+      if (sheet.formulaCount) {
+        parts.push(`  Formulas: ${sheet.formulaCount}`);
+      }
+      if (sheet.hasAutoFilter) {
+        parts.push(`  Auto Filter: yes`);
       }
 
       return parts.join("\n");
@@ -71,6 +82,60 @@ export function formatExtractPretty(data: ExtractData): string {
 
 export function formatBuildPretty(data: BuildData): string {
   return `Built: ${data.outputPath}`;
+}
+
+function formatRunProps(run: RichTextRunJson): string {
+  const props: string[] = [];
+  if (run.bold) props.push("bold");
+  if (run.italic) props.push("italic");
+  if (run.underline) props.push("underline");
+  if (run.strike) props.push("strike");
+  if (run.fontSize) props.push(`size:${run.fontSize}`);
+  if (run.fontName) props.push(`font:${run.fontName}`);
+  if (run.color) props.push(`color:${run.color}`);
+  return props.length > 0 ? ` [${props.join(", ")}]` : "";
+}
+
+export function formatStringsPretty(data: StringsData): string {
+  const lines = [`Shared Strings: ${data.count}`];
+  lines.push("");
+
+  for (const item of data.strings) {
+    if (item.type === "plain") {
+      lines.push(`[${item.index}] "${item.text}"`);
+    } else {
+      lines.push(`[${item.index}] (rich) "${item.text}"`);
+      if (item.runs) {
+        for (const run of item.runs) {
+          const props = formatRunProps(run);
+          lines.push(`    "${run.text}"${props}`);
+        }
+      }
+    }
+  }
+
+  return lines.join("\n");
+}
+
+export function formatFormulasPretty(data: FormulasData): string {
+  const lines = [`Total Formulas: ${data.totalCount}`];
+  lines.push("");
+
+  for (const sheet of data.sheets) {
+    lines.push(`Sheet: ${sheet.sheetName}`);
+    for (const f of sheet.formulas) {
+      const stored = f.storedValue === null ? "(empty)" : String(f.storedValue);
+      if (f.calculatedValue !== undefined) {
+        const calc = f.calculatedValue === null ? "(empty)" : String(f.calculatedValue);
+        lines.push(`  ${f.ref}: =${f.formula} -> ${calc} (stored: ${stored})`);
+      } else {
+        lines.push(`  ${f.ref}: =${f.formula} = ${stored}`);
+      }
+    }
+    lines.push("");
+  }
+
+  return lines.join("\n");
 }
 
 export function formatVerifyPretty(data: VerifyData): string {

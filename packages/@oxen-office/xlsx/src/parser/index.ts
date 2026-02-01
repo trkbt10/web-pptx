@@ -23,7 +23,7 @@ import type { XlsxSheetInfo, XlsxWorkbookInfo } from "./context";
 import { createParseContext } from "./context";
 import type { XlsxParseOptions } from "./options";
 import { resolveXlsxDateSystem } from "../domain/date-system";
-import { parseSharedStrings } from "./shared-strings";
+import { parseSharedStrings, parseSharedStringsRich } from "./shared-strings";
 import { parseStyleSheet } from "./styles/index";
 import { parseComments } from "./comments";
 import { parseTable } from "./table";
@@ -266,6 +266,16 @@ function parseSharedStringsOrEmpty(xml: string | undefined): readonly string[] {
 }
 
 /**
+ * Parse shared strings XML with rich text or return empty array.
+ */
+function parseSharedStringsRichOrEmpty(xml: string | undefined) {
+  if (!xml) {
+    return [];
+  }
+  return parseSharedStringsRich(getDocumentRoot(parseXml(xml)));
+}
+
+/**
  * Parse styles XML or return default stylesheet.
  */
 function parseStylesOrDefault(xml: string | undefined) {
@@ -413,6 +423,7 @@ export async function parseXlsxWorkbook(
   // 2. Parse shared strings (optional)
   const sharedStringsXml = await getFileContent("xl/sharedStrings.xml");
   const sharedStrings = parseSharedStringsOrEmpty(sharedStringsXml);
+  const sharedStringsRich = options?.includeRichText ? parseSharedStringsRichOrEmpty(sharedStringsXml) : undefined;
 
   // 3. Parse styles
   const stylesXml = await getFileContent("xl/styles.xml");
@@ -480,6 +491,7 @@ export async function parseXlsxWorkbook(
     sheets,
     styles: styleSheet,
     sharedStrings,
+    ...(sharedStringsRich && { sharedStringsRich }),
     definedNames: workbookInfo.definedNames,
     tables: tables.length > 0 ? tables : undefined,
   };
@@ -496,6 +508,7 @@ export type { XlsxParseOptions } from "./options";
 
 // Re-export component parsers for granular usage
 export { parseSharedStrings, parseSharedStringsRich } from "./shared-strings";
+export type { SharedStringItem, RichTextRun, RichTextProperties } from "./shared-strings";
 export { parseStyleSheet } from "./styles/index";
 export { parseWorksheet } from "./worksheet";
 export { parseCell } from "./cell";

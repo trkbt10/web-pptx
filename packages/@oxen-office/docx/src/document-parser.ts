@@ -9,7 +9,7 @@
 
 import { parseXml, isXmlElement, type XmlElement, type XmlDocument } from "@oxen/xml";
 import { loadZipPackage, type ZipPackage } from "@oxen/zip";
-import type { DocxDocument, DocxRelationships, DocxRelationship, DocxHeader, DocxFooter } from "./domain/document";
+import type { DocxDocument, DocxRelationships, DocxRelationship, DocxHeader, DocxFooter, DocxSettings } from "./domain/document";
 import type { DocxStyles } from "./domain/styles";
 import type { DocxNumbering } from "./domain/numbering";
 import type { DocxRelId } from "./domain/types";
@@ -17,6 +17,7 @@ import { createParseContext } from "./parser/context";
 import { parseDocument, parseHeader, parseFooter } from "./parser/document";
 import { parseStyles } from "./parser/styles";
 import { parseNumbering } from "./parser/numbering";
+import { parseSettings } from "./parser/settings";
 import { DEFAULT_PART_PATHS, RELATIONSHIP_TYPES } from "./constants";
 import { docxRelId } from "./domain/types";
 
@@ -159,6 +160,25 @@ function loadNumbering(params: {
 }
 
 /**
+ * Load settings from document relationships.
+ */
+function loadSettingsPart(params: {
+  readonly pkg: ZipPackage;
+  readonly documentPath: string;
+  readonly relationships: DocxRelationships;
+  readonly shouldParse: boolean;
+}): DocxSettings | undefined {
+  const { pkg, documentPath, relationships, shouldParse } = params;
+  if (!shouldParse) {return undefined;}
+  const rel = getRelationshipByType(relationships, RELATIONSHIP_TYPES.settings);
+  if (!rel) {return undefined;}
+  const path = resolvePath(documentPath, rel.target);
+  const element = loadXmlPart(pkg, path);
+  if (!element) {return undefined;}
+  return parseSettings(element);
+}
+
+/**
  * Load document relationships.
  */
 function loadDocumentRelationships(pkg: ZipPackage, path: string): DocxRelationships {
@@ -234,6 +254,8 @@ export type LoadDocxOptions = {
   readonly parseNumbering?: boolean;
   /** Whether to parse headers and footers */
   readonly parseHeadersFooters?: boolean;
+  /** Whether to parse settings.xml */
+  readonly parseSettings?: boolean;
 };
 
 /**
@@ -243,6 +265,7 @@ const DEFAULT_OPTIONS: Required<LoadDocxOptions> = {
   parseStyles: true,
   parseNumbering: true,
   parseHeadersFooters: true,
+  parseSettings: true,
 };
 
 /**
@@ -285,9 +308,10 @@ export async function loadDocx(
   const documentRelsPath = resolvePath(documentPath, "_rels/" + documentPath.split("/").pop() + ".rels");
   const documentRelationships = loadDocumentRelationships(pkg, documentRelsPath);
 
-  // 3. Parse styles and numbering
+  // 3. Parse styles, numbering, and settings
   const styles = loadStyles({ pkg, documentPath, relationships: documentRelationships, shouldParse: opts.parseStyles });
   const numbering = loadNumbering({ pkg, documentPath, relationships: documentRelationships, shouldParse: opts.parseNumbering });
+  const settings = loadSettingsPart({ pkg, documentPath, relationships: documentRelationships, shouldParse: opts.parseSettings });
 
   // 4. Create parse context
   const context = createParseContext({
@@ -318,6 +342,7 @@ export async function loadDocx(
     ...document,
     styles,
     numbering,
+    settings,
     relationships: documentRelationships,
     headers: headers?.size ? headers : undefined,
     footers: footers?.size ? footers : undefined,
