@@ -13,6 +13,8 @@ import type { NumberingData } from "../commands/numbering";
 import type { HeadersFootersData } from "../commands/headers-footers";
 import type { TablesData } from "../commands/tables";
 import type { CommentsData } from "../commands/comments";
+import type { ImagesData } from "../commands/images";
+import type { TocData } from "../commands/toc";
 
 /**
  * Format document info for pretty display.
@@ -325,6 +327,74 @@ export function formatTablesPretty(data: TablesData): string {
   }
 
   return lines.join("\n").trim();
+}
+
+/**
+ * Format images for pretty display.
+ */
+export function formatImagesPretty(data: ImagesData): string {
+  if (data.count === 0) {
+    return "No images found";
+  }
+
+  const lines = [`Images: ${data.count}`, ""];
+
+  for (const img of data.images) {
+    const name = img.name || `Image ${img.index + 1}`;
+    lines.push(`[${img.index}] ${name} (${img.type})`);
+
+    if (img.description) {
+      lines.push(`  Description: ${img.description}`);
+    }
+    if (img.width !== undefined && img.height !== undefined) {
+      // Convert EMUs to approximate pixels (914400 EMU = 1 inch, ~96 DPI)
+      const widthPx = Math.round(img.width / 9525);
+      const heightPx = Math.round(img.height / 9525);
+      lines.push(`  Size: ${widthPx}px × ${heightPx}px`);
+    }
+    if (img.embedId) {
+      lines.push(`  Embed ID: ${img.embedId}`);
+    }
+    if (img.linkId) {
+      lines.push(`  Link ID: ${img.linkId}`);
+    }
+    if (img.position) {
+      const posStr = [
+        img.position.horizontal ? `H: ${img.position.horizontal}` : null,
+        img.position.vertical ? `V: ${img.position.vertical}` : null,
+      ]
+        .filter(Boolean)
+        .join(", ");
+      if (posStr) {
+        lines.push(`  Position: ${posStr}`);
+      }
+    }
+    if (img.wrap) {
+      lines.push(`  Wrap: ${img.wrap}`);
+    }
+    lines.push("");
+  }
+
+  return lines.join("\n").trim();
+}
+
+/**
+ * Format TOC for pretty display.
+ */
+export function formatTocPretty(data: TocData): string {
+  if (data.count === 0) {
+    return "No headings found (no paragraphs with outline levels)";
+  }
+
+  const lines = [`Table of Contents: ${data.count} entries (max level: ${data.maxLevel})`, ""];
+
+  for (const entry of data.entries) {
+    const indent = "  ".repeat(entry.level);
+    const styleStr = entry.style ? ` [${entry.style}]` : "";
+    lines.push(`${indent}${entry.level}. ${entry.text}${styleStr}`);
+  }
+
+  return lines.join("\n");
 }
 
 /**

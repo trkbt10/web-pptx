@@ -23,6 +23,8 @@ import { runNumbering } from "./commands/numbering";
 import { runHeadersFooters } from "./commands/headers-footers";
 import { runTables } from "./commands/tables";
 import { runComments } from "./commands/comments";
+import { runImages } from "./commands/images";
+import { runToc } from "./commands/toc";
 import { output, type OutputMode } from "@oxen-cli/cli-core";
 import {
   formatInfoPretty,
@@ -36,6 +38,8 @@ import {
   formatHeadersFootersPretty,
   formatTablesPretty,
   formatCommentsPretty,
+  formatImagesPretty,
+  formatTocPretty,
 } from "./output/pretty-output";
 
 const program = new Command();
@@ -165,6 +169,28 @@ program
     const mode = program.opts().output as OutputMode;
     const result = await runComments(file);
     output(result, mode, formatCommentsPretty);
+  });
+
+program
+  .command("images")
+  .description("Display embedded images")
+  .argument("<file>", "DOCX file path")
+  .action(async (file: string) => {
+    const mode = program.opts().output as OutputMode;
+    const result = await runImages(file);
+    output(result, mode, formatImagesPretty);
+  });
+
+program
+  .command("toc")
+  .description("Display table of contents (based on outline levels)")
+  .argument("<file>", "DOCX file path")
+  .option("--max-level <level>", "Maximum heading level to include (0-9)", "9")
+  .action(async (file: string, options: { maxLevel?: string }) => {
+    const mode = program.opts().output as OutputMode;
+    const maxLevel = options.maxLevel ? parseInt(options.maxLevel, 10) : undefined;
+    const result = await runToc(file, { maxLevel });
+    output(result, mode, formatTocPretty);
   });
 
 program.parse();

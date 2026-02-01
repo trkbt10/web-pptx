@@ -80,6 +80,12 @@ function runContentToText(content: DocxRunContent): string {
     case "drawing":
       // Drawing content is handled separately for inline images
       return "";
+    case "fieldChar":
+      // Field character markers don't produce visible text
+      return "";
+    case "instrText":
+      // Field instructions are not visible in rendered output
+      return "";
   }
 }
 
