@@ -9,9 +9,9 @@ import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
 import type { BaseLine } from "@oxen-office/drawing-ml/domain/line";
 import type { Fill, Line } from "@oxen-office/pptx/domain/color/types";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
-import { FillEditor, createNoFill } from "../color";
-import { TextBodyEditor } from "../text";
-import { LineEditor, createDefaultLine } from "../../ui/line";
+import { FillEditor, createNoFill } from "../editors/color";
+import { TextBodyEditor } from "../editors/text";
+import { LineEditor, createDefaultLine } from "../ui/line";
 
 const baseFillTypes = ["noFill", "solidFill", "gradientFill", "patternFill", "groupFill"] as const;
 

@@ -51,9 +51,13 @@
       "types": "./src/editors/text/mixed-properties.ts",
       "default": "./src/editors/text/mixed-properties.ts"
     },
-    "./editors/chart/data/xlsx-integration": {
-      "types": "./src/editors/chart/data/xlsx-integration.ts",
-      "default": "./src/editors/chart/data/xlsx-integration.ts"
+    "./adapters": {
+      "types": "./src/adapters/index.ts",
+      "default": "./src/adapters/index.ts"
+    },
+    "./chart-data": {
+      "types": "./src/chart-data/index.ts",
+      "default": "./src/chart-data/index.ts"
     },
     "./panels/theme-editor": {
       "types": "./src/panels/theme-editor/index.ts",

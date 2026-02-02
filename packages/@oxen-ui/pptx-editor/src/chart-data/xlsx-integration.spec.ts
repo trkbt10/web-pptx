@@ -97,7 +97,7 @@ function createChartDataWorksheet(): XlsxWorksheet {
 // Tests
 // =============================================================================
 
-describe("pptx-editor/editors/chart/data/xlsx-integration", () => {
+describe("pptx-editor/chart-data/xlsx-integration", () => {
   describe("createChartDataEditor", () => {
     it("creates an editor with the initial workbook", () => {
       const workbook = createWorkbook([createChartDataWorksheet()]);

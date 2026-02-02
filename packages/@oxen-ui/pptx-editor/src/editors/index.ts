@@ -101,36 +101,6 @@ export {
   type TableEditorProps,
 } from "./table";
 
-// Chart editors
-export {
-  DataLabelsEditor,
-  LegendEditor,
-  AxisEditor,
-  ChartSeriesEditor,
-  ChartEditor,
-  createDefaultDataLabels,
-  createDefaultLegend,
-  createDefaultAxis,
-  createDefaultCategoryAxis,
-  createDefaultValueAxis,
-  createDefaultChartSeries,
-  createDefaultBarChartSeries,
-  createDefaultChart,
-  type DataLabelsEditorProps,
-  type LegendEditorProps,
-  type AxisEditorProps,
-  type ChartSeriesEditorProps,
-  type ChartEditorProps,
-} from "./chart";
-
-// Diagram editors
-export {
-  DiagramEditor,
-  DiagramPointEditor,
-  type DiagramEditorProps,
-  type DiagramPointEditorProps,
-} from "./diagram";
-
 // Slide-level editors
 export {
   BackgroundEditor,

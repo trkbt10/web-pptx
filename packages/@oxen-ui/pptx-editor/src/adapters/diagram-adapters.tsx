@@ -7,8 +7,8 @@
 import type { DiagramEditorAdapters } from "@oxen-ui/diagram-editor";
 import type { TextBody } from "@oxen-office/pptx/domain/text";
 import type { ShapeProperties } from "@oxen-office/pptx/domain/shape";
-import { TextBodyEditor } from "../text/TextBodyEditor";
-import { ShapePropertiesEditor, createDefaultShapeProperties } from "../shape/ShapePropertiesEditor";
+import { TextBodyEditor } from "../editors/text/TextBodyEditor";
+import { ShapePropertiesEditor, createDefaultShapeProperties } from "../editors/shape/ShapePropertiesEditor";
 
 export const pptxDiagramEditorAdapters: DiagramEditorAdapters<TextBody, ShapeProperties> = {
   textBody: {

@@ -37,36 +37,6 @@ export type ChartDataLayout = {
 // Helper Functions
 // =============================================================================
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /** Create a cell address from column and row indices */
 export function createAddress(col: number, row: number): CellAddress {
   return {
@@ -76,36 +46,6 @@ export function createAddress(col: number, row: number): CellAddress {
     rowAbsolute: false,
   };
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /** Create a cell range from start and end coordinates */
 export function createCellRange({

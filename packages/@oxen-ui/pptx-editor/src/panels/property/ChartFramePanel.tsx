@@ -7,10 +7,11 @@
 import type { GraphicFrame } from "@oxen-office/pptx/domain/index";
 import type { Chart } from "@oxen-office/chart/domain";
 import { Accordion } from "@oxen-ui/ui-components/layout";
+import { ChartEditor, ChartEditorAdaptersProvider } from "@oxen-ui/chart-editor";
+import { pptxChartEditorAdapters } from "../../adapters";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,
-  ChartEditor,
 } from "../../editors/index";
 
 // =============================================================================
@@ -70,7 +71,9 @@ export function ChartFramePanel({
       </Accordion>
 
       <Accordion title="Chart" defaultExpanded>
-        <ChartEditor value={chart} onChange={handleChartChange} />
+        <ChartEditorAdaptersProvider adapters={pptxChartEditorAdapters}>
+          <ChartEditor value={chart} onChange={handleChartChange} />
+        </ChartEditorAdaptersProvider>
       </Accordion>
     </>
   );

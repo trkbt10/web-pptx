@@ -8,10 +8,11 @@ import type { GraphicFrame } from "@oxen-office/pptx/domain/index";
 import type { DiagramDataModel } from "@oxen-office/diagram/domain";
 import type { Shape } from "@oxen-office/pptx/domain/index";
 import { Accordion } from "@oxen-ui/ui-components/layout";
+import { DiagramEditor } from "@oxen-ui/diagram-editor";
+import { pptxDiagramEditorAdapters } from "../../adapters";
 import {
   NonVisualPropertiesEditor,
   TransformEditor,
-  DiagramEditor,
 } from "../../editors/index";
 
 // =============================================================================
@@ -69,6 +70,7 @@ export function DiagramFramePanel({
         <DiagramEditor
           value={diagramData.dataModel}
           onChange={handleDataModelChange}
+          adapters={pptxDiagramEditorAdapters}
         />
       );
     }
