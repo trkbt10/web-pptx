@@ -4,7 +4,7 @@ import type { CellAddress } from "@oxen-office/xlsx/domain/cell/address";
 import { colIdx, rowIdx } from "@oxen-office/xlsx/domain/types";
 import { createDefaultStyleSheet } from "@oxen-office/xlsx/domain/style/types";
 import { getCellValue } from "@oxen-ui/xlsx-editor/cell/query";
-import { createChartDataEditor } from "@oxen-ui/pptx-editor/editors/chart/data/xlsx-integration";
+import { createChartDataEditor } from "@oxen-ui/pptx-editor/chart-data";
 
 function addr(col: number, row: number): CellAddress {
   return {

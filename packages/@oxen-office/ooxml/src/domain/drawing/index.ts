@@ -33,3 +33,53 @@ export type {
 export type { NonVisualDrawingProps, NonVisualPictureProps } from "./non-visual";
 export type { DrawingPicture } from "./picture";
 
+// Position types (WordprocessingML Drawing - Section 20.4)
+export type {
+  AlignH,
+  AlignV,
+  RelFromH,
+  RelFromV,
+  PositionH,
+  PositionV,
+  Point2D,
+  Size2D,
+} from "./position";
+
+// Anchor types (SpreadsheetML Drawing - Section 20.5)
+export type {
+  CellMarker,
+  AnchorClientData,
+  AbsoluteAnchor,
+  OneCellAnchor,
+  TwoCellAnchor,
+  EditAs,
+} from "./anchor";
+
+// Wrap types (WordprocessingML Drawing - Section 20.4)
+export type {
+  WrapText,
+  WrapPolygon,
+  WrapSquare,
+  WrapThrough,
+  WrapTight,
+  WrapTopAndBottom,
+} from "./wrap";
+
+// Lock types (DrawingML - Section 20.1.2.2)
+export type {
+  GraphicFrameLocks,
+  GroupLocks,
+  ConnectorLocks,
+  ContentPartLocks,
+  PictureLocks,
+  ShapeLocks,
+} from "./locks";
+
+// Content types (WordprocessingML Drawing - Section 20.4)
+export type {
+  BlackWhiteMode,
+  ContentPart,
+  LinkedTextbox,
+  TextboxInfo,
+  ConnectionTarget,
+} from "./content";

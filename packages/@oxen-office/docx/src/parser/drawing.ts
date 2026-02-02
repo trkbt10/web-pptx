@@ -19,6 +19,15 @@ import type {
   NonVisualDrawingProps,
   DrawingShapeProperties,
 } from "@oxen-office/ooxml/domain/drawing";
+import {
+  parseInt32,
+  parseBoolean as parseOoxmlBoolean,
+  parseAlignH,
+  parseAlignV,
+  parseRelFromH,
+  parseRelFromV,
+  parseWrapText,
+} from "@oxen-office/ooxml/parser";
 import type {
   DocxDrawing,
   DocxInlineDrawing,
@@ -60,26 +69,17 @@ function getChildByLocalName(element: XmlElement, localName: string): XmlElement
 }
 
 /**
- * Parse integer attribute.
+ * Parse integer attribute using ooxml primitive.
  */
 function parseIntAttr(element: XmlElement, attrName: string): number | undefined {
-  const value = element.attrs[attrName];
-  if (value === undefined) {
-    return undefined;
-  }
-  const parsed = parseInt(value, 10);
-  return Number.isNaN(parsed) ? undefined : parsed;
+  return parseInt32(element.attrs[attrName]);
 }
 
 /**
- * Parse boolean attribute.
+ * Parse boolean attribute using ooxml primitive.
  */
 function parseBoolAttr(element: XmlElement, attrName: string): boolean | undefined {
-  const value = element.attrs[attrName];
-  if (value === undefined) {
-    return undefined;
-  }
-  return value === "1" || value === "true";
+  return parseOoxmlBoolean(element.attrs[attrName]);
 }
 
 // =============================================================================
@@ -263,39 +263,41 @@ function parsePicture(element: XmlElement | undefined): DrawingPicture | undefin
 
 /**
  * Parse horizontal position element (wp:positionH).
+ * Uses ooxml primitive parsers for type-safe enum parsing.
  */
 function parsePositionH(element: XmlElement | undefined): DocxPositionH | undefined {
   if (element === undefined) {
     return undefined;
   }
 
-  const relativeFrom = element.attrs.relativeFrom as DocxPositionH["relativeFrom"];
+  const relativeFrom = parseRelFromH(element.attrs.relativeFrom);
   const posOffsetEl = getChildByLocalName(element, "posOffset");
   const alignEl = getChildByLocalName(element, "align");
 
   return {
     relativeFrom: relativeFrom ?? "column",
-    posOffset: posOffsetEl !== undefined ? parseInt(getTextContent(posOffsetEl) ?? "0", 10) : undefined,
-    align: alignEl !== undefined ? getTextContent(alignEl) as DocxPositionH["align"] : undefined,
+    posOffset: posOffsetEl !== undefined ? parseInt32(getTextContent(posOffsetEl)) : undefined,
+    align: alignEl !== undefined ? parseAlignH(getTextContent(alignEl).trim()) : undefined,
   };
 }
 
 /**
  * Parse vertical position element (wp:positionV).
+ * Uses ooxml primitive parsers for type-safe enum parsing.
  */
 function parsePositionV(element: XmlElement | undefined): DocxPositionV | undefined {
   if (element === undefined) {
     return undefined;
   }
 
-  const relativeFrom = element.attrs.relativeFrom as DocxPositionV["relativeFrom"];
+  const relativeFrom = parseRelFromV(element.attrs.relativeFrom);
   const posOffsetEl = getChildByLocalName(element, "posOffset");
   const alignEl = getChildByLocalName(element, "align");
 
   return {
     relativeFrom: relativeFrom ?? "paragraph",
-    posOffset: posOffsetEl !== undefined ? parseInt(getTextContent(posOffsetEl) ?? "0", 10) : undefined,
-    align: alignEl !== undefined ? getTextContent(alignEl) as DocxPositionV["align"] : undefined,
+    posOffset: posOffsetEl !== undefined ? parseInt32(getTextContent(posOffsetEl)) : undefined,
+    align: alignEl !== undefined ? parseAlignV(getTextContent(alignEl).trim()) : undefined,
   };
 }
 
@@ -305,6 +307,7 @@ function parsePositionV(element: XmlElement | undefined): DocxPositionV | undefi
 
 /**
  * Parse wrap element.
+ * Uses ooxml parseWrapText for type-safe enum parsing.
  */
 function parseWrap(inlineEl: XmlElement): DocxWrapType | undefined {
   for (const child of inlineEl.children) {
@@ -319,11 +322,11 @@ function parseWrap(inlineEl: XmlElement): DocxWrapType | undefined {
       case "wrapTopAndBottom":
         return { type: "topAndBottom" };
       case "wrapSquare":
-        return { type: "square", wrapText: child.attrs.wrapText as DocxWrapType["type"] extends "square" ? DocxWrapType["type"] : never };
+        return { type: "square", wrapText: parseWrapText(child.attrs.wrapText) };
       case "wrapTight":
-        return { type: "tight", wrapText: child.attrs.wrapText as DocxWrapType["type"] extends "tight" ? DocxWrapType["type"] : never };
+        return { type: "tight", wrapText: parseWrapText(child.attrs.wrapText) };
       case "wrapThrough":
-        return { type: "through", wrapText: child.attrs.wrapText as DocxWrapType["type"] extends "through" ? DocxWrapType["type"] : never };
+        return { type: "through", wrapText: parseWrapText(child.attrs.wrapText) };
     }
   }
   return undefined;

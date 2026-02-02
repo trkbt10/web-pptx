@@ -1,24 +1,42 @@
 /**
  * @file SpreadsheetML Drawing parsing helpers
  *
- * Minimal parsing for xdr:* elements used by DrawingML in SpreadsheetML.
+ * Parsing for xdr:* elements used by DrawingML in SpreadsheetML.
+ * Returns EMU values without conversion.
  *
  * @see ECMA-376 Part 1, Section 20.5 - DrawingML - SpreadsheetML Drawing
  */
 
 import type { XmlElement } from "@oxen/xml";
 import { getChild, getTextContent } from "@oxen/xml";
-import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
-import type { AbsoluteAnchor, AnchorClientData, AnchorMarker, ContentPart, ConnectorLocks, GraphicFrameLocks, GroupLocks, OneCellAnchor, Point, Size, TwoCellAnchor } from "../../domain/index";
+import type { EMU } from "@oxen-office/drawing-ml/domain/units";
+import type { Point2D, Size2D } from "../domain/drawing/position";
+import type {
+  AbsoluteAnchor,
+  AnchorClientData,
+  CellMarker,
+  OneCellAnchor,
+  TwoCellAnchor,
+} from "../domain/drawing/anchor";
+import type {
+  GraphicFrameLocks,
+  GroupLocks,
+  ConnectorLocks,
+} from "../domain/drawing/locks";
+import type { ContentPart } from "../domain/drawing/content";
 import {
   getBoolAttr,
   parseBlackWhiteMode,
   parseCoordinateUnqualified,
   parsePositiveCoordinate,
   parseUnsignedInt,
-} from "../primitive";
+} from "./drawing-primitive";
 
-function parsePoint2D(element: XmlElement | undefined): Point | undefined {
+// =============================================================================
+// Primitive Parsing
+// =============================================================================
+
+function parsePoint2D(element: XmlElement | undefined): Point2D | undefined {
   if (!element) {return undefined;}
   const x = parseCoordinateUnqualified(element.attrs.x);
   const y = parseCoordinateUnqualified(element.attrs.y);
@@ -26,13 +44,17 @@ function parsePoint2D(element: XmlElement | undefined): Point | undefined {
   return { x, y };
 }
 
-function parsePositiveSize2D(element: XmlElement | undefined): Size | undefined {
+function parseSize2D(element: XmlElement | undefined): Size2D | undefined {
   if (!element) {return undefined;}
-  const width = parsePositiveCoordinate(element.attrs.cx);
-  const height = parsePositiveCoordinate(element.attrs.cy);
-  if (width === undefined || height === undefined) {return undefined;}
-  return { width, height };
+  const cx = parsePositiveCoordinate(element.attrs.cx);
+  const cy = parsePositiveCoordinate(element.attrs.cy);
+  if (cx === undefined || cy === undefined) {return undefined;}
+  return { cx, cy };
 }
+
+// =============================================================================
+// Lock Parsing
+// =============================================================================
 
 function parseGraphicFrameLocksElement(
   element: XmlElement | undefined,
@@ -135,6 +157,10 @@ function parseConnectorLocksElement(element: XmlElement | undefined): ConnectorL
   };
 }
 
+// =============================================================================
+// Anchor Parsing
+// =============================================================================
+
 /**
  * Parse xdr:absoluteAnchor element.
  * @see ECMA-376 Part 1, Section 20.5.2.1 (absoluteAnchor)
@@ -146,7 +172,7 @@ export function parseAbsoluteAnchorElement(
   const posElement = getChild(element, "xdr:pos") ?? getChild(element, "a:pos");
   const extElement = getChild(element, "xdr:ext") ?? getChild(element, "a:ext");
   const position = parsePoint2D(posElement);
-  const size = parsePositiveSize2D(extElement);
+  const size = parseSize2D(extElement);
   if (!position || !size) {return undefined;}
   return { position, size };
 }
@@ -215,12 +241,7 @@ export function parseCxnSpLocksElement(
  * Parse xdr:colOff element.
  * @see ECMA-376 Part 1, Section 20.5.2.11 (colOff)
  */
-export function parseColOffElement(element: XmlElement | undefined): Pixels | undefined {
-  if (!element) {return undefined;}
-  return parseCoordinateUnqualified(getTextContent(element).trim());
-}
-
-function parseRowOffElement(element: XmlElement | undefined): Pixels | undefined {
+export function parseColOffElement(element: XmlElement | undefined): EMU | undefined {
   if (!element) {return undefined;}
   return parseCoordinateUnqualified(getTextContent(element).trim());
 }
@@ -229,8 +250,9 @@ function parseRowOffElement(element: XmlElement | undefined): Pixels | undefined
  * Parse xdr:rowOff element.
  * @see ECMA-376 Part 1, Section 20.5.2.28 (rowOff)
  */
-export function parseRowOffElementPublic(element: XmlElement | undefined): Pixels | undefined {
-  return parseRowOffElement(element);
+export function parseRowOffElement(element: XmlElement | undefined): EMU | undefined {
+  if (!element) {return undefined;}
+  return parseCoordinateUnqualified(getTextContent(element).trim());
 }
 
 function parseColElement(element: XmlElement | undefined): number | undefined {
@@ -249,7 +271,7 @@ function parseRowElement(element: XmlElement | undefined): number | undefined {
   return row;
 }
 
-function parseMarkerElement(element: XmlElement | undefined): AnchorMarker | undefined {
+function parseMarkerElement(element: XmlElement | undefined): CellMarker | undefined {
   if (!element) {return undefined;}
   const col = parseColElement(getChild(element, "xdr:col"));
   const row = parseRowElement(getChild(element, "xdr:row"));
@@ -281,7 +303,7 @@ export function parseOneCellAnchorElement(
   if (!element) {return undefined;}
   const from = parseMarkerElement(getChild(element, "xdr:from"));
   const extElement = getChild(element, "xdr:ext");
-  const size = parsePositiveSize2D(extElement);
+  const size = parseSize2D(extElement);
   if (!from || !size) {return undefined;}
   const clientData = parseClientDataElement(getChild(element, "xdr:clientData"));
   return { from, size, clientData };

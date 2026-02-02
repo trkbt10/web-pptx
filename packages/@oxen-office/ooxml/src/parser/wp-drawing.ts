@@ -1,19 +1,46 @@
 /**
  * @file WordprocessingML Drawing parsing helpers
  *
- * Minimal parsing for wp:* elements used by DrawingML in WordprocessingML.
+ * Parsing for wp:* elements used by DrawingML in WordprocessingML.
+ * Returns EMU values without conversion.
  *
  * @see ECMA-376 Part 1, Section 20.4 - DrawingML - WordprocessingML Drawing
  */
 
 import type { XmlElement } from "@oxen/xml";
 import { getAttr, getChild, getChildren, getTextContent } from "@oxen/xml";
-import type { AlignH, AlignV, EffectExtent, GraphicFrameLocks, ConnectionTarget, NonVisualProperties, PositionH, PositionV, Point, WrapPolygon, WrapSquare, WrapThrough, WrapTight, WrapTopAndBottom, GroupLocks, ContentPartLocks, ContentPart, LinkedTextbox, TextboxInfo, ConnectorLocks } from "../../domain/index";
-import type { Pixels } from "@oxen-office/drawing-ml/domain/units";
+import type { EMU } from "@oxen-office/drawing-ml/domain/units";
+import type {
+  AlignH,
+  AlignV,
+  PositionH,
+  PositionV,
+  Point2D,
+} from "../domain/drawing/position";
+import type {
+  WrapPolygon,
+  WrapSquare,
+  WrapThrough,
+  WrapTight,
+  WrapTopAndBottom,
+} from "../domain/drawing/wrap";
+import type {
+  GraphicFrameLocks,
+  GroupLocks,
+  ConnectorLocks,
+  ContentPartLocks,
+} from "../domain/drawing/locks";
+import type {
+  ContentPart,
+  LinkedTextbox,
+  TextboxInfo,
+  ConnectionTarget,
+} from "../domain/drawing/content";
+import type { DrawingEffectExtent } from "../domain/drawing/extent";
 import {
   parseAlignH,
   parseAlignV,
-  parseEmu,
+  parseEmuValue,
   parseBoolean,
   parsePositionOffset,
   parseRelFromH,
@@ -21,10 +48,13 @@ import {
   parseWrapDistance,
   parseWrapText,
   getBoolAttr,
+  getIntAttr,
   parseBlackWhiteMode,
-} from "../primitive";
-import { getIntAttr } from "../primitive";
-import { parseNonVisualProperties } from "../shape-parser/non-visual";
+} from "./drawing-primitive";
+
+// =============================================================================
+// Alignment Parsing
+// =============================================================================
 
 /**
  * Parse wp:align (horizontal) element.
@@ -44,14 +74,9 @@ export function parseAlignVElement(element: XmlElement | undefined): AlignV | un
   return parseAlignV(getTextContent(element).trim());
 }
 
-/**
- * Parse wp:docPr element.
- * @see ECMA-376 Part 1, Section 20.4.2.5 (docPr)
- */
-export function parseDocPrElement(element: XmlElement | undefined): NonVisualProperties | undefined {
-  if (!element) {return undefined;}
-  return parseNonVisualProperties(element);
-}
+// =============================================================================
+// Effect Extent Parsing
+// =============================================================================
 
 /**
  * Parse wp:effectExtent element.
@@ -59,17 +84,21 @@ export function parseDocPrElement(element: XmlElement | undefined): NonVisualPro
  */
 export function parseEffectExtentElement(
   element: XmlElement | undefined,
-): EffectExtent | undefined {
+): DrawingEffectExtent | undefined {
   if (!element) {return undefined;}
-  const left = parseEmu(element.attrs.l);
-  const top = parseEmu(element.attrs.t);
-  const right = parseEmu(element.attrs.r);
-  const bottom = parseEmu(element.attrs.b);
-  if (left === undefined || top === undefined || right === undefined || bottom === undefined) {
+  const l = parseEmuValue(element.attrs.l);
+  const t = parseEmuValue(element.attrs.t);
+  const r = parseEmuValue(element.attrs.r);
+  const b = parseEmuValue(element.attrs.b);
+  if (l === undefined || t === undefined || r === undefined || b === undefined) {
     return undefined;
   }
-  return { left, top, right, bottom };
+  return { l, t, r, b };
 }
+
+// =============================================================================
+// Position Parsing
+// =============================================================================
 
 /**
  * Parse wp:positionH element.
@@ -111,7 +140,7 @@ export function parsePositionVElement(element: XmlElement | undefined): Position
  * Parse wp:posOffset element.
  * @see ECMA-376 Part 1, Section 20.4.2.12 (posOffset)
  */
-export function parsePosOffsetElement(element: XmlElement | undefined): Pixels | undefined {
+export function parsePosOffsetElement(element: XmlElement | undefined): EMU | undefined {
   if (!element) {return undefined;}
   return parsePositionOffset(getTextContent(element).trim());
 }
@@ -120,13 +149,17 @@ export function parsePosOffsetElement(element: XmlElement | undefined): Pixels |
  * Parse wp:simplePos element.
  * @see ECMA-376 Part 1, Section 20.4.2.13 (simplePos)
  */
-export function parseSimplePosElement(element: XmlElement | undefined): Point | undefined {
+export function parseSimplePosElement(element: XmlElement | undefined): Point2D | undefined {
   if (!element) {return undefined;}
-  const x = parseEmu(element.attrs.x);
-  const y = parseEmu(element.attrs.y);
+  const x = parseEmuValue(element.attrs.x);
+  const y = parseEmuValue(element.attrs.y);
   if (x === undefined || y === undefined) {return undefined;}
   return { x, y };
 }
+
+// =============================================================================
+// Wrap Parsing
+// =============================================================================
 
 /**
  * Parse wp:wrapNone element.
@@ -136,10 +169,10 @@ export function parseWrapNoneElement(element: XmlElement | undefined): boolean {
   return Boolean(element);
 }
 
-function parsePoint2DElement(element: XmlElement | undefined): Point | undefined {
+function parsePoint2DElement(element: XmlElement | undefined): Point2D | undefined {
   if (!element) {return undefined;}
-  const x = parseEmu(element.attrs.x);
-  const y = parseEmu(element.attrs.y);
+  const x = parseEmuValue(element.attrs.x);
+  const y = parseEmuValue(element.attrs.y);
   if (x === undefined || y === undefined) {return undefined;}
   return { x, y };
 }
@@ -158,7 +191,7 @@ export function parseWrapPolygonElement(
     parsePoint2DElement(child),
   );
   if (lineTos.some((pt) => !pt)) {return undefined;}
-  const lineTo = lineTos.filter((pt): pt is Point => Boolean(pt));
+  const lineTo = lineTos.filter((pt): pt is Point2D => Boolean(pt));
   if (lineTo.length < 2) {return undefined;}
   return {
     edited: parseBoolean(element.attrs.edited),
@@ -179,17 +212,17 @@ export function parseWrapSquareElement(
   if (!wrapText) {return undefined;}
 
   const effectExtent = parseEffectExtentElement(getChild(element, "wp:effectExtent"));
-  const distTop = parseWrapDistance(element.attrs.distT);
-  const distBottom = parseWrapDistance(element.attrs.distB);
-  const distLeft = parseWrapDistance(element.attrs.distL);
-  const distRight = parseWrapDistance(element.attrs.distR);
+  const distT = parseWrapDistance(element.attrs.distT);
+  const distB = parseWrapDistance(element.attrs.distB);
+  const distL = parseWrapDistance(element.attrs.distL);
+  const distR = parseWrapDistance(element.attrs.distR);
 
   return {
     wrapText,
-    distTop,
-    distBottom,
-    distLeft,
-    distRight,
+    distT,
+    distB,
+    distL,
+    distR,
     effectExtent,
   };
 }
@@ -207,13 +240,13 @@ export function parseWrapThroughElement(
   const polygon = parseWrapPolygonElement(getChild(element, "wp:wrapPolygon"));
   if (!polygon) {return undefined;}
 
-  const distLeft = parseWrapDistance(element.attrs.distL);
-  const distRight = parseWrapDistance(element.attrs.distR);
+  const distL = parseWrapDistance(element.attrs.distL);
+  const distR = parseWrapDistance(element.attrs.distR);
 
   return {
     wrapText,
-    distLeft,
-    distRight,
+    distL,
+    distR,
     polygon,
   };
 }
@@ -229,13 +262,13 @@ export function parseWrapTightElement(element: XmlElement | undefined): WrapTigh
   const polygon = parseWrapPolygonElement(getChild(element, "wp:wrapPolygon"));
   if (!polygon) {return undefined;}
 
-  const distLeft = parseWrapDistance(element.attrs.distL);
-  const distRight = parseWrapDistance(element.attrs.distR);
+  const distL = parseWrapDistance(element.attrs.distL);
+  const distR = parseWrapDistance(element.attrs.distR);
 
   return {
     wrapText,
-    distLeft,
-    distRight,
+    distL,
+    distR,
     polygon,
   };
 }
@@ -248,86 +281,14 @@ export function parseWrapTopAndBottomElement(
   element: XmlElement | undefined,
 ): WrapTopAndBottom | undefined {
   if (!element) {return undefined;}
-  const distTop = parseWrapDistance(element.attrs.distT);
-  const distBottom = parseWrapDistance(element.attrs.distB);
-  return { distTop, distBottom };
+  const distT = parseWrapDistance(element.attrs.distT);
+  const distB = parseWrapDistance(element.attrs.distB);
+  return { distT, distB };
 }
 
-function parseConnectionTarget(element: XmlElement | undefined): ConnectionTarget | undefined {
-  if (!element) {return undefined;}
-  const id = getAttr(element, "id");
-  const idx = getIntAttr(element, "idx");
-  if (!id || idx === undefined) {return undefined;}
-  return { shapeId: id, siteIndex: idx };
-}
-
-/**
- * Parse wp:cNvCnPr element.
- * @see ECMA-376 Part 1, Section 20.4.2.23 (cNvCnPr)
- */
-export function parseCNvCnPrElement(
-  element: XmlElement | undefined,
-): { startConnection?: ConnectionTarget; endConnection?: ConnectionTarget } | undefined {
-  if (!element) {return undefined;}
-  const startConnection = parseConnectionTarget(getChild(element, "a:stCxn"));
-  const endConnection = parseConnectionTarget(getChild(element, "a:endCxn"));
-  if (!startConnection && !endConnection) {return undefined;}
-  return { startConnection, endConnection };
-}
-
-/**
- * Parse wp:cNvContentPartPr element.
- * @see ECMA-376 Part 1, Section 20.4.2.24 (cNvContentPartPr)
- */
-export function parseCNvContentPartPrElement(
-  element: XmlElement | undefined,
-): { isComment?: boolean; locks?: ContentPartLocks } | undefined {
-  if (!element) {return undefined;}
-  const isComment = parseBoolean(element.attrs.isComment);
-  const locks = parseContentPartLocksElement(getChild(element, "a:cpLocks"));
-  if (isComment === undefined && !locks) {return undefined;}
-  return { isComment, locks };
-}
-
-function parseContentPartLocksElement(element: XmlElement | undefined): ContentPartLocks | undefined {
-  if (!element) {return undefined;}
-  const noGrp = getBoolAttr(element, "noGrp");
-  const noSelect = getBoolAttr(element, "noSelect");
-  const noRot = getBoolAttr(element, "noRot");
-  const noChangeAspect = getBoolAttr(element, "noChangeAspect");
-  const noMove = getBoolAttr(element, "noMove");
-  const noResize = getBoolAttr(element, "noResize");
-  const noEditPoints = getBoolAttr(element, "noEditPoints");
-  const noAdjustHandles = getBoolAttr(element, "noAdjustHandles");
-  const noChangeArrowheads = getBoolAttr(element, "noChangeArrowheads");
-  const noChangeShapeType = getBoolAttr(element, "noChangeShapeType");
-  if (
-    noGrp === undefined &&
-    noSelect === undefined &&
-    noRot === undefined &&
-    noChangeAspect === undefined &&
-    noMove === undefined &&
-    noResize === undefined &&
-    noEditPoints === undefined &&
-    noAdjustHandles === undefined &&
-    noChangeArrowheads === undefined &&
-    noChangeShapeType === undefined
-  ) {
-    return undefined;
-  }
-  return {
-    noGrp,
-    noSelect,
-    noRot,
-    noChangeAspect,
-    noMove,
-    noResize,
-    noEditPoints,
-    noAdjustHandles,
-    noChangeArrowheads,
-    noChangeShapeType,
-  };
-}
+// =============================================================================
+// Lock Parsing
+// =============================================================================
 
 function parseGraphicFrameLocksElement(
   element: XmlElement | undefined,
@@ -430,6 +391,82 @@ function parseConnectorLocksElement(element: XmlElement | undefined): ConnectorL
   };
 }
 
+function parseContentPartLocksElement(element: XmlElement | undefined): ContentPartLocks | undefined {
+  if (!element) {return undefined;}
+  const noGrp = getBoolAttr(element, "noGrp");
+  const noSelect = getBoolAttr(element, "noSelect");
+  const noRot = getBoolAttr(element, "noRot");
+  const noChangeAspect = getBoolAttr(element, "noChangeAspect");
+  const noMove = getBoolAttr(element, "noMove");
+  const noResize = getBoolAttr(element, "noResize");
+  const noEditPoints = getBoolAttr(element, "noEditPoints");
+  const noAdjustHandles = getBoolAttr(element, "noAdjustHandles");
+  const noChangeArrowheads = getBoolAttr(element, "noChangeArrowheads");
+  const noChangeShapeType = getBoolAttr(element, "noChangeShapeType");
+  if (
+    noGrp === undefined &&
+    noSelect === undefined &&
+    noRot === undefined &&
+    noChangeAspect === undefined &&
+    noMove === undefined &&
+    noResize === undefined &&
+    noEditPoints === undefined &&
+    noAdjustHandles === undefined &&
+    noChangeArrowheads === undefined &&
+    noChangeShapeType === undefined
+  ) {
+    return undefined;
+  }
+  return {
+    noGrp,
+    noSelect,
+    noRot,
+    noChangeAspect,
+    noMove,
+    noResize,
+    noEditPoints,
+    noAdjustHandles,
+    noChangeArrowheads,
+    noChangeShapeType,
+  };
+}
+
+function parseConnectionTarget(element: XmlElement | undefined): ConnectionTarget | undefined {
+  if (!element) {return undefined;}
+  const id = getAttr(element, "id");
+  const idx = getIntAttr(element, "idx");
+  if (!id || idx === undefined) {return undefined;}
+  return { shapeId: id, siteIndex: idx };
+}
+
+/**
+ * Parse wp:cNvCnPr element.
+ * @see ECMA-376 Part 1, Section 20.4.2.23 (cNvCnPr)
+ */
+export function parseCNvCnPrElement(
+  element: XmlElement | undefined,
+): { startConnection?: ConnectionTarget; endConnection?: ConnectionTarget } | undefined {
+  if (!element) {return undefined;}
+  const startConnection = parseConnectionTarget(getChild(element, "a:stCxn"));
+  const endConnection = parseConnectionTarget(getChild(element, "a:endCxn"));
+  if (!startConnection && !endConnection) {return undefined;}
+  return { startConnection, endConnection };
+}
+
+/**
+ * Parse wp:cNvContentPartPr element.
+ * @see ECMA-376 Part 1, Section 20.4.2.24 (cNvContentPartPr)
+ */
+export function parseCNvContentPartPrElement(
+  element: XmlElement | undefined,
+): { isComment?: boolean; locks?: ContentPartLocks } | undefined {
+  if (!element) {return undefined;}
+  const isComment = parseBoolean(element.attrs.isComment);
+  const locks = parseContentPartLocksElement(getChild(element, "a:cpLocks"));
+  if (isComment === undefined && !locks) {return undefined;}
+  return { isComment, locks };
+}
+
 /**
  * Parse wp:cNvFrPr element.
  * @see ECMA-376 Part 1, Section 20.4.2.25 (cNvFrPr)
@@ -471,6 +508,10 @@ export function parseCNvSpPrElement(element: XmlElement | undefined): { txBox?: 
   if (txBox === undefined) {return undefined;}
   return { txBox };
 }
+
+// =============================================================================
+// Content Parsing
+// =============================================================================
 
 /**
  * Parse wp:contentPart element.
@@ -547,7 +588,3 @@ export function parseWspElement(
   if (normalEastAsianFlow === undefined) {return undefined;}
   return { normalEastAsianFlow };
 }
-/**
- * Parse wp:positionV element.
- * @see ECMA-376 Part 1, Section 20.4.2.11 (positionV)
- */

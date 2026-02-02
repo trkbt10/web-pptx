@@ -9,7 +9,7 @@
 
 import type { XmlElement } from "@oxen/xml";
 import { getAttr, getChild, getChildren, getTextContent } from "@oxen/xml";
-import { parseIntAttr } from "./primitive";
+import { parseInt32, parseEditAs as parseOoxmlEditAs } from "@oxen-office/ooxml/parser";
 import { rowIdx, colIdx } from "../domain/types";
 import type {
   XlsxDrawing,
@@ -42,10 +42,10 @@ function parseCellAnchorOffset(element: XmlElement): XlsxCellAnchorOffset {
   const rowOffEl = getChild(element, "xdr:rowOff") ?? getChild(element, "rowOff");
 
   return {
-    col: colIdx(parseIntAttr(colEl ? getTextContent(colEl) : undefined) ?? 0),
-    colOff: parseIntAttr(colOffEl ? getTextContent(colOffEl) : undefined) ?? 0,
-    row: rowIdx(parseIntAttr(rowEl ? getTextContent(rowEl) : undefined) ?? 0),
-    rowOff: parseIntAttr(rowOffEl ? getTextContent(rowOffEl) : undefined) ?? 0,
+    col: colIdx(parseInt32(colEl ? getTextContent(colEl) : undefined) ?? 0),
+    colOff: parseInt32(colOffEl ? getTextContent(colOffEl) : undefined) ?? 0,
+    row: rowIdx(parseInt32(rowEl ? getTextContent(rowEl) : undefined) ?? 0),
+    rowOff: parseInt32(rowOffEl ? getTextContent(rowOffEl) : undefined) ?? 0,
   };
 }
 
@@ -54,8 +54,8 @@ function parseCellAnchorOffset(element: XmlElement): XlsxCellAnchorOffset {
  */
 function parseAbsolutePosition(element: XmlElement): XlsxAbsolutePosition {
   return {
-    x: parseIntAttr(getAttr(element, "x")) ?? 0,
-    y: parseIntAttr(getAttr(element, "y")) ?? 0,
+    x: parseInt32(getAttr(element, "x")) ?? 0,
+    y: parseInt32(getAttr(element, "y")) ?? 0,
   };
 }
 
@@ -64,8 +64,8 @@ function parseAbsolutePosition(element: XmlElement): XlsxAbsolutePosition {
  */
 function parseExtent(element: XmlElement): XlsxExtent {
   return {
-    cx: parseIntAttr(getAttr(element, "cx")) ?? 0,
-    cy: parseIntAttr(getAttr(element, "cy")) ?? 0,
+    cx: parseInt32(getAttr(element, "cx")) ?? 0,
+    cy: parseInt32(getAttr(element, "cy")) ?? 0,
   };
 }
 
@@ -82,7 +82,7 @@ function parseNonVisualProperties(cNvPrElement: XmlElement | undefined): XlsxNon
   }
 
   return {
-    id: parseIntAttr(getAttr(cNvPrElement, "id")) ?? 0,
+    id: parseInt32(getAttr(cNvPrElement, "id")) ?? 0,
     name: getAttr(cNvPrElement, "name") ?? "",
     descr: getAttr(cNvPrElement, "descr") ?? undefined,
     hidden: getAttr(cNvPrElement, "hidden") === "1" ? true : undefined,
@@ -221,20 +221,6 @@ function parseDrawingContent(anchorElement: XmlElement): XlsxDrawingContent | un
 // =============================================================================
 
 /**
- * Parse editAs attribute.
- */
-function parseEditAs(value: string | undefined): XlsxEditAs | undefined {
-  switch (value) {
-    case "twoCell":
-    case "oneCell":
-    case "absolute":
-      return value;
-    default:
-      return undefined;
-  }
-}
-
-/**
  * Parse a twoCellAnchor element.
  */
 function parseTwoCellAnchor(anchorElement: XmlElement): XlsxTwoCellAnchor {
@@ -245,7 +231,7 @@ function parseTwoCellAnchor(anchorElement: XmlElement): XlsxTwoCellAnchor {
     type: "twoCellAnchor",
     from: fromEl ? parseCellAnchorOffset(fromEl) : { col: colIdx(0), colOff: 0, row: rowIdx(0), rowOff: 0 },
     to: toEl ? parseCellAnchorOffset(toEl) : { col: colIdx(0), colOff: 0, row: rowIdx(0), rowOff: 0 },
-    editAs: parseEditAs(getAttr(anchorElement, "editAs")),
+    editAs: parseOoxmlEditAs(getAttr(anchorElement, "editAs")),
     content: parseDrawingContent(anchorElement),
   };
 }
