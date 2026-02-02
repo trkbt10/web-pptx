@@ -2,22 +2,16 @@
  * @file Kiwi schema and message encoder
  */
 
-import type { KiwiSchema, KiwiDefinition, KiwiField } from "../types";
+import type { KiwiSchema, KiwiDefinition } from "../types";
 import { ByteBuffer } from "./byte-buffer";
-import { KIWI_KIND, KIWI_TYPE } from "./schema";
+import { KIWI_KIND } from "./schema";
 import { FigBuildError } from "../errors";
 
-/** Map from type name to type constant */
-const TYPE_IDS: Record<string, number> = {
-  bool: KIWI_TYPE.BOOL,
-  byte: KIWI_TYPE.BYTE,
-  int: KIWI_TYPE.INT,
-  uint: KIWI_TYPE.UINT,
-  float: KIWI_TYPE.FLOAT,
-  string: KIWI_TYPE.STRING,
-  int64: KIWI_TYPE.INT64,
-  uint64: KIWI_TYPE.UINT64,
-};
+// Import from core
+import { encodePrimitive } from "./core/primitive-codec";
+import { encodeDefinition } from "./core/definition-codec";
+import { TYPE_IDS, getPrimitiveTypeName, isPrimitiveTypeId } from "./core/primitives";
+import type { KiwiFormat, ValueEncoder } from "./core/types";
 
 /** Map from kind name to kind constant */
 const KIND_IDS: Record<string, number> = {
@@ -66,7 +60,8 @@ export function encodeSchema(schema: KiwiSchema): Uint8Array {
     for (const field of def.fields) {
       buffer.writeString(field.name);
       // Use typeId directly if available, otherwise resolve from type name
-      const typeId = field.typeId ?? resolveTypeId(field.type, schema.definitions);
+      const typeId =
+        field.typeId ?? resolveTypeId(field.type, schema.definitions);
       buffer.writeVarInt(typeId);
       buffer.writeByte(field.isArray ? 1 : 0);
       buffer.writeVarUint(field.value);
@@ -76,63 +71,61 @@ export function encodeSchema(schema: KiwiSchema): Uint8Array {
   return buffer.toUint8Array();
 }
 
-/**
- * Check if type is a primitive type.
- */
-function isPrimitiveType(type: string): boolean {
-  return TYPE_IDS[type] !== undefined;
+/** Create value encoder for given format */
+function createValueEncoder(format: KiwiFormat): ValueEncoder {
+  const encodeValueByTypeId: ValueEncoder = (options) => {
+    const { buffer, schema, typeId, value, strict } = options;
+    if (isPrimitiveTypeId(typeId)) {
+      const typeName = getPrimitiveTypeName(typeId)!;
+      encodePrimitive({ buffer, type: typeName, value, format });
+      return;
+    }
+
+    const definition = schema.definitions[typeId];
+    if (!definition) {
+      throw new FigBuildError(`Unknown type index: ${typeId}`);
+    }
+
+    encodeDefinition({
+      buffer,
+      schema,
+      definition,
+      message: value as Record<string, unknown>,
+      format,
+      encodeValue: encodeValueByTypeId,
+      strict,
+    });
+  };
+  return encodeValueByTypeId;
 }
 
-/**
- * Encode a primitive value to buffer.
- */
-function encodePrimitive(
-  buffer: ByteBuffer,
-  type: string,
-  value: unknown
-): void {
-  switch (type) {
-    case "bool":
-      buffer.writeByte(value ? 1 : 0);
-      break;
-    case "byte":
-      buffer.writeByte(value as number);
-      break;
-    case "int":
-      buffer.writeVarInt(value as number);
-      break;
-    case "uint":
-      buffer.writeVarUint(value as number);
-      break;
-    case "float":
-      buffer.writeVarFloat(value as number);
-      break;
-    case "string":
-      buffer.writeString(value as string);
-      break;
-    case "int64":
-      buffer.writeVarInt64(value as bigint);
-      break;
-    case "uint64":
-      buffer.writeVarUint64(value as bigint);
-      break;
-  }
-}
-
-/** Context for encoding operations */
-type EncodeContext = {
+/** Options for internal message encoding */
+type EncodeMessageInternalOptions = {
   readonly schema: KiwiSchema;
   readonly buffer: ByteBuffer;
+  readonly message: Record<string, unknown>;
+  readonly typeName: string;
+  readonly format: KiwiFormat;
 };
 
-/**
- * Extract enum value from message object.
- */
-function extractEnumValue(message: Record<string, unknown>): number {
-  if (typeof message === "object" && message !== null && "value" in message) {
-    return message.value as number;
+/** Internal encode with format parameter */
+function encodeMessageInternal(options: EncodeMessageInternalOptions): void {
+  const { schema, buffer, message, typeName, format } = options;
+  const definition = schema.definitions.find((d) => d.name === typeName);
+  if (!definition) {
+    throw new FigBuildError(`Unknown type: ${typeName}`);
   }
-  return 0;
+
+  const encodeValue = createValueEncoder(format);
+  encodeDefinition({
+    buffer,
+    schema,
+    definition,
+    message,
+    format,
+    encodeValue,
+    strict: false,
+  });
 }
 
 /**
@@ -149,79 +142,8 @@ export function encodeMessage(
   typeName: string
 ): Uint8Array {
   const buffer = new ByteBuffer();
-  const ctx: EncodeContext = { schema, buffer };
-  encodeMessageToBuffer(ctx, message, typeName);
+  encodeMessageInternal({ schema, buffer, message, typeName, format: "standard" });
   return buffer.toUint8Array();
-}
-
-/**
- * Encode a message to buffer.
- */
-function encodeMessageToBuffer(
-  ctx: EncodeContext,
-  message: Record<string, unknown>,
-  typeName: string
-): void {
-  const definition = ctx.schema.definitions.find((d) => d.name === typeName);
-  if (!definition) {
-    throw new FigBuildError(`Unknown type: ${typeName}`);
-  }
-
-  if (definition.kind === "STRUCT") {
-    // Struct: all fields in order
-    for (const field of definition.fields) {
-      const value = message[field.name];
-      encodeField(ctx, field, value);
-    }
-  } else if (definition.kind === "MESSAGE") {
-    // Message: field index then value, for each present field
-    for (const field of definition.fields) {
-      const value = message[field.name];
-      if (value !== undefined && value !== null) {
-        ctx.buffer.writeVarUint(field.value);
-        encodeField(ctx, field, value);
-      }
-    }
-    // End marker
-    ctx.buffer.writeVarUint(0);
-  } else if (definition.kind === "ENUM") {
-    // Enum: write the value
-    const enumValue = extractEnumValue(message);
-    ctx.buffer.writeVarUint(enumValue);
-  }
-}
-
-/**
- * Encode a field value.
- */
-function encodeField(
-  ctx: EncodeContext,
-  field: KiwiField,
-  value: unknown
-): void {
-  if (field.isArray) {
-    const items = value as unknown[];
-    ctx.buffer.writeVarUint(items?.length ?? 0);
-    if (items) {
-      for (const item of items) {
-        encodeValue(ctx, field.type, item);
-      }
-    }
-  } else {
-    encodeValue(ctx, field.type, value);
-  }
-}
-
-/**
- * Encode a single value.
- */
-function encodeValue(ctx: EncodeContext, type: string, value: unknown): void {
-  if (isPrimitiveType(type)) {
-    encodePrimitive(ctx.buffer, type, value);
-  } else {
-    // Custom type
-    encodeMessageToBuffer(ctx, value as Record<string, unknown>, type);
-  }
 }
 
 /**

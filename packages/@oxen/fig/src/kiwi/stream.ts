@@ -5,9 +5,17 @@
  * without loading everything into memory at once.
  */
 
-import type { KiwiSchema, KiwiDefinition, KiwiField } from "../types";
+import type { KiwiSchema } from "../types";
 import { ByteBuffer } from "./byte-buffer";
 import { FigParseError, FigBuildError } from "../errors";
+
+// Import from core
+import { decodePrimitive, encodePrimitiveStrict } from "./core/primitive-codec";
+import { decodeField, encodeField } from "./core/field-codec";
+import { decodeDefinition, encodeDefinition } from "./core/definition-codec";
+import { iterateMessageFields } from "./core/message-iterator";
+import { getPrimitiveTypeName, isPrimitiveTypeId } from "./core/primitives";
+import type { ValueDecoder, ValueEncoder } from "./core/types";
 
 // =============================================================================
 // Streaming Decoder
@@ -33,29 +41,6 @@ export type StreamingDecoderOptions = {
   readonly nodeChangeType?: string;
 };
 
-/** Primitive type names */
-type PrimitiveTypeName =
-  | "bool"
-  | "byte"
-  | "int"
-  | "uint"
-  | "float"
-  | "string"
-  | "int64"
-  | "uint64";
-
-/** Primitive type IDs */
-const PRIMITIVE_TYPES: Record<number, PrimitiveTypeName> = {
-  [-1]: "bool",
-  [-2]: "byte",
-  [-3]: "int",
-  [-4]: "uint",
-  [-5]: "float",
-  [-6]: "string",
-  [-7]: "int64",
-  [-8]: "uint64",
-};
-
 /**
  * Streaming decoder for fig message data.
  * Yields node changes one at a time instead of loading all into memory.
@@ -66,11 +51,13 @@ export class StreamingFigDecoder {
   private readonly rootType: string;
   private readonly nodeChangeType: string;
   private buffer: ByteBuffer | null = null;
+  private readonly valueDecoder: ValueDecoder;
 
   constructor(options: StreamingDecoderOptions) {
     this.schema = options.schema;
     this.rootType = options.rootType ?? "Message";
     this.nodeChangeType = options.nodeChangeType ?? "NodeChange";
+    this.valueDecoder = this.createValueDecoder();
   }
 
   /**
@@ -89,43 +76,45 @@ export class StreamingFigDecoder {
       throw new FigParseError(`Unknown root type: ${this.rootType}`);
     }
 
-    // Parse Message fields until we hit nodeChanges
-    const fieldMap = new Map(rootDef.fields.map((f) => [f.value, f]));
     const nodeChangesField = rootDef.fields.find(
       (f) => f.name === "nodeChanges"
     );
-
     if (!nodeChangesField) {
       throw new FigParseError("No nodeChanges field in Message type");
     }
 
-    // Read message fields until nodeChanges or end
-    // eslint-disable-next-line no-restricted-syntax -- Loop until sentinel
-    let fieldIndex: number;
-    while ((fieldIndex = this.buffer.readVarUint()) !== 0) {
-      const field = fieldMap.get(fieldIndex);
-      if (!field) {
-        // Unknown field - stop
-        break;
-      }
-
+    for (const { field } of iterateMessageFields({
+      buffer: this.buffer,
+      definition: rootDef,
+    })) {
       if (field.name === "nodeChanges") {
         // Found nodeChanges - yield each one
         const count = this.buffer.readVarUint();
+        const nodeChangeDef = this.schema.definitions.find(
+          (d) => d.name === this.nodeChangeType
+        )!;
 
         for (const i of Array(count).keys()) {
-          const node = this.decodeDefinition(
-            this.schema.definitions.find((d) => d.name === this.nodeChangeType)!
-          );
+          const node = decodeDefinition({
+            buffer: this.buffer,
+            schema: this.schema,
+            definition: nodeChangeDef,
+            format: "fig",
+            decodeValue: this.valueDecoder,
+          }) as Record<string, unknown>;
           yield { index: i, total: count, node };
         }
-
-        // Continue reading remaining fields
         continue;
       }
 
-      // Skip other fields
-      this.decodeFieldValue(field);
+      // Decode and discard other fields
+      decodeField({
+        buffer: this.buffer,
+        schema: this.schema,
+        field,
+        format: "fig",
+        decodeValue: this.valueDecoder,
+      });
     }
   }
 
@@ -146,16 +135,11 @@ export class StreamingFigDecoder {
     }
 
     const result: Record<string, unknown> = {};
-    const fieldMap = new Map(rootDef.fields.map((f) => [f.value, f]));
 
-    // eslint-disable-next-line no-restricted-syntax -- Loop until sentinel
-    let fieldIndex: number;
-    while ((fieldIndex = this.buffer.readVarUint()) !== 0) {
-      const field = fieldMap.get(fieldIndex);
-      if (!field) {
-        break;
-      }
-
+    for (const { field } of iterateMessageFields({
+      buffer: this.buffer,
+      definition: rootDef,
+    })) {
       if (field.name === "nodeChanges") {
         // Just read count, don't decode nodes
         const count = this.buffer.readVarUint();
@@ -164,7 +148,13 @@ export class StreamingFigDecoder {
         break;
       }
 
-      result[field.name] = this.decodeFieldValue(field);
+      result[field.name] = decodeField({
+        buffer: this.buffer,
+        schema: this.schema,
+        field,
+        format: "fig",
+        decodeValue: this.valueDecoder,
+      });
     }
 
     return result;
@@ -178,99 +168,28 @@ export class StreamingFigDecoder {
     return this.buffer?.offset ?? 0;
   }
 
-  private decodeFieldValue(field: KiwiField): unknown {
-    if (!this.buffer) {
-      throw new FigParseError("No buffer");
-    }
-
-    if (field.isArray) {
-      const count = this.buffer.readVarUint();
-      const items: unknown[] = [];
-      for (const _ of Array(count).keys()) {
-        items.push(this.decodeValueByTypeId(field.typeId));
+  private createValueDecoder(): ValueDecoder {
+    const decodeValue: ValueDecoder = (options) => {
+      const { buffer, schema, typeId } = options;
+      if (isPrimitiveTypeId(typeId)) {
+        const typeName = getPrimitiveTypeName(typeId)!;
+        return decodePrimitive({ buffer, type: typeName, format: "fig" });
       }
-      return items;
-    }
-    return this.decodeValueByTypeId(field.typeId);
-  }
 
-  private decodeValueByTypeId(typeId: number): unknown {
-    if (!this.buffer) {
-      throw new FigParseError("No buffer");
-    }
-
-    if (typeId < 0) {
-      const primitiveType = PRIMITIVE_TYPES[typeId];
-      if (primitiveType) {
-        return this.decodePrimitive(primitiveType);
+      const definition = schema.definitions[typeId];
+      if (!definition) {
+        throw new FigParseError(`Unknown type index: ${typeId}`);
       }
-      throw new FigParseError(`Unknown primitive type: ${typeId}`);
-    }
 
-    const definition = this.schema.definitions[typeId];
-    if (!definition) {
-      throw new FigParseError(`Unknown type index: ${typeId}`);
-    }
-
-    return this.decodeDefinition(definition);
-  }
-
-  private decodeDefinition(definition: KiwiDefinition): Record<string, unknown> {
-    if (!this.buffer) {
-      throw new FigParseError("No buffer");
-    }
-
-    const result: Record<string, unknown> = {};
-
-    if (definition.kind === "STRUCT") {
-      for (const field of definition.fields) {
-        result[field.name] = this.decodeFieldValue(field);
-      }
-    } else if (definition.kind === "MESSAGE") {
-      const fieldMap = new Map(definition.fields.map((f) => [f.value, f]));
-
-      // eslint-disable-next-line no-restricted-syntax -- Loop until sentinel
-      let fieldIndex: number;
-      while ((fieldIndex = this.buffer.readVarUint()) !== 0) {
-        const field = fieldMap.get(fieldIndex);
-        if (field) {
-          result[field.name] = this.decodeFieldValue(field);
-        } else {
-          break;
-        }
-      }
-    } else if (definition.kind === "ENUM") {
-      const value = this.buffer.readVarUint();
-      const field = definition.fields.find((f) => f.value === value);
-      return { value, name: field?.name ?? `unknown(${value})` };
-    }
-
-    return result;
-  }
-
-  private decodePrimitive(type: PrimitiveTypeName): unknown {
-    if (!this.buffer) {
-      throw new FigParseError("No buffer");
-    }
-
-    switch (type) {
-      case "bool":
-        return this.buffer.readByte() !== 0;
-      case "byte":
-        return this.buffer.readByte();
-      case "int":
-        return this.buffer.readVarInt();
-      case "uint":
-        return this.buffer.readVarUint();
-      case "float":
-        return this.buffer.readFloat32();
-      case "string":
-        return this.buffer.readNullString();
-      case "int64":
-        return this.buffer.readVarInt64();
-      case "uint64":
-        return this.buffer.readVarUint64();
-    }
+      return decodeDefinition({
+        buffer,
+        schema,
+        definition,
+        format: "fig",
+        decodeValue,
+      });
+    };
+    return decodeValue;
   }
 }
 
@@ -313,6 +232,7 @@ export class StreamingFigEncoder {
   private nodeCountOffset: number = -1;
   private nodeCount: number = 0;
   private finalized: boolean = false;
+  private readonly valueEncoder: ValueEncoder;
 
   constructor(options: StreamingEncoderOptions) {
     this.schema = options.schema;
@@ -320,6 +240,7 @@ export class StreamingFigEncoder {
     this.nodeChangeType = options.nodeChangeType ?? "NodeChange";
     // Create buffer in write mode (no initial data)
     this.buffer = new ByteBuffer();
+    this.valueEncoder = this.createValueEncoder();
   }
 
   /**
@@ -351,7 +272,15 @@ export class StreamingFigEncoder {
       const value = header[field.name];
       if (value !== undefined && value !== null) {
         this.buffer.writeVarUint(field.value);
-        this.encodeFieldValue(field, value);
+        encodeField({
+          buffer: this.buffer,
+          schema: this.schema,
+          field,
+          value,
+          format: "fig",
+          encodeValue: this.valueEncoder,
+          strict: true,
+        });
       }
     }
   }
@@ -376,7 +305,15 @@ export class StreamingFigEncoder {
       throw new FigParseError(`Unknown type: ${this.nodeChangeType}`);
     }
 
-    this.encodeDefinition(nodeChangeDef, node);
+    encodeDefinition({
+      buffer: this.buffer,
+      schema: this.schema,
+      definition: nodeChangeDef,
+      message: node,
+      format: "fig",
+      encodeValue: this.valueEncoder,
+      strict: true,
+    });
     this.nodeCount++;
   }
 
@@ -440,171 +377,37 @@ export class StreamingFigEncoder {
     }
   }
 
-  private encodeFieldValue(field: KiwiField, value: unknown): void {
-    if (field.isArray) {
-      if (!Array.isArray(value)) {
+  private createValueEncoder(): ValueEncoder {
+    const encodeValue: ValueEncoder = (options) => {
+      const { buffer, schema, typeId, value, strict } = options;
+      if (isPrimitiveTypeId(typeId)) {
+        const typeName = getPrimitiveTypeName(typeId)!;
+        encodePrimitiveStrict({ buffer, type: typeName, value, format: "fig" });
+        return;
+      }
+
+      const definition = schema.definitions[typeId];
+      if (!definition) {
+        throw new FigBuildError(`Unknown type index: ${typeId}`);
+      }
+
+      if (typeof value !== "object" || value === null) {
         throw new FigBuildError(
-          `Expected array for field "${field.name}", got ${typeof value}`
+          `Expected object for type "${definition.name}", got ${value === null ? "null" : typeof value}`
         );
       }
-      this.buffer.writeVarUint(value.length);
-      for (const item of value) {
-        this.encodeValueByTypeId(field.typeId, item);
-      }
-    } else {
-      this.encodeValueByTypeId(field.typeId, value);
-    }
-  }
 
-  private encodeValueByTypeId(typeId: number, value: unknown): void {
-    if (typeId < 0) {
-      const primitiveType = PRIMITIVE_TYPES[typeId];
-      if (!primitiveType) {
-        throw new FigBuildError(`Unknown primitive type ID: ${typeId}`);
-      }
-      this.encodePrimitive(primitiveType, value);
-      return;
-    }
-
-    const definition = this.schema.definitions[typeId];
-    if (!definition) {
-      throw new FigBuildError(`Unknown type index: ${typeId}`);
-    }
-
-    if (typeof value !== "object" || value === null) {
-      throw new FigBuildError(
-        `Expected object for type "${definition.name}", got ${value === null ? "null" : typeof value}`
-      );
-    }
-
-    this.encodeDefinition(definition, value as Record<string, unknown>);
-  }
-
-  private encodeDefinition(
-    definition: KiwiDefinition,
-    value: Record<string, unknown>
-  ): void {
-    if (definition.kind === "STRUCT") {
-      for (const field of definition.fields) {
-        this.encodeFieldValue(field, value[field.name]);
-      }
-    } else if (definition.kind === "MESSAGE") {
-      for (const field of definition.fields) {
-        const fieldValue = value[field.name];
-        if (fieldValue !== undefined && fieldValue !== null) {
-          this.buffer.writeVarUint(field.value);
-          this.encodeFieldValue(field, fieldValue);
-        }
-      }
-      this.buffer.writeVarUint(0);
-    } else if (definition.kind === "ENUM") {
-      const enumValue = this.extractEnumValue(value);
-      this.buffer.writeVarUint(enumValue);
-    }
-  }
-
-  private extractEnumValue(value: unknown): number {
-    if (typeof value !== "object" || value === null) {
-      throw new FigBuildError(
-        `Expected enum object with "value" property, got ${value === null ? "null" : typeof value}`
-      );
-    }
-    if (!("value" in value)) {
-      throw new FigBuildError(
-        `Expected enum object with "value" property, got object without "value"`
-      );
-    }
-    const enumValue = (value as { value: unknown }).value;
-    if (typeof enumValue !== "number") {
-      throw new FigBuildError(
-        `Expected enum "value" to be number, got ${typeof enumValue}`
-      );
-    }
-    return enumValue;
-  }
-
-  private encodePrimitive(type: PrimitiveTypeName, value: unknown): void {
-    switch (type) {
-      case "bool":
-        if (typeof value !== "boolean" && typeof value !== "number") {
-          throw new FigBuildError(`Expected boolean for type "bool", got ${typeof value}`);
-        }
-        this.buffer.writeByte(value ? 1 : 0);
-        break;
-      case "byte":
-        this.assertNumber(value, "byte");
-        this.buffer.writeByte(value);
-        break;
-      case "int":
-        this.assertNumber(value, "int");
-        this.buffer.writeVarInt(value);
-        break;
-      case "uint":
-        this.assertNumber(value, "uint");
-        this.buffer.writeVarUint(value);
-        break;
-      case "float":
-        this.assertNumber(value, "float");
-        this.writeFloat32(value);
-        break;
-      case "string":
-        if (typeof value !== "string") {
-          throw new FigBuildError(`Expected string for type "string", got ${typeof value}`);
-        }
-        this.writeNullString(value);
-        break;
-      case "int64":
-        this.assertBigint(value, "int64");
-        this.buffer.writeVarInt64(value);
-        break;
-      case "uint64":
-        this.assertBigint(value, "uint64");
-        this.buffer.writeVarUint64(value);
-        break;
-    }
-  }
-
-  private assertNumber(value: unknown, type: string): asserts value is number {
-    if (typeof value !== "number") {
-      throw new FigBuildError(`Expected number for type "${type}", got ${typeof value}`);
-    }
-  }
-
-  private assertBigint(value: unknown, type: string): asserts value is bigint {
-    if (typeof value !== "bigint") {
-      throw new FigBuildError(`Expected bigint for type "${type}", got ${typeof value}`);
-    }
-  }
-
-  private writeFloat32(value: number): void {
-    if (value === 0) {
-      this.buffer.writeByte(0);
-      return;
-    }
-
-    // Convert to IEEE 754 bits
-    const floatBuffer = new ArrayBuffer(4);
-    const floatView = new DataView(floatBuffer);
-    floatView.setFloat32(0, value, true);
-    const bits = floatView.getUint32(0, true);
-
-    // Rotate bits: (bits >> 23) | (bits << 9)
-    const rotated = ((bits >>> 23) | (bits << 9)) >>> 0;
-
-    // Write as 4 bytes LE
-    this.buffer.writeByte(rotated & 0xff);
-    this.buffer.writeByte((rotated >> 8) & 0xff);
-    this.buffer.writeByte((rotated >> 16) & 0xff);
-    this.buffer.writeByte((rotated >> 24) & 0xff);
-  }
-
-  private writeNullString(value: string): void {
-    const encoder = new TextEncoder();
-    const bytes = encoder.encode(value);
-    for (const byte of bytes) {
-      this.buffer.writeByte(byte);
-    }
-    this.buffer.writeByte(0); // null terminator
+      encodeDefinition({
+        buffer,
+        schema,
+        definition,
+        message: value as Record<string, unknown>,
+        format: "fig",
+        encodeValue,
+        strict,
+      });
+    };
+    return encodeValue;
   }
 }
 
