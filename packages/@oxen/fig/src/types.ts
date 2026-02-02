@@ -125,3 +125,189 @@ export type FigBuildInput = {
   readonly document: FigDocument;
   readonly resources?: readonly FigResource[];
 };
+
+// =============================================================================
+// Figma Node Types
+// =============================================================================
+
+/**
+ * Known Figma node types
+ */
+export type FigNodeType =
+  | "DOCUMENT"
+  | "CANVAS"
+  | "FRAME"
+  | "GROUP"
+  | "RECTANGLE"
+  | "ELLIPSE"
+  | "VECTOR"
+  | "TEXT"
+  | "LINE"
+  | "BOOLEAN_OPERATION"
+  | "COMPONENT"
+  | "COMPONENT_SET"
+  | "INSTANCE"
+  | "STAR"
+  | "REGULAR_POLYGON"
+  | "SLICE"
+  | "STICKY"
+  | "CONNECTOR"
+  | "SHAPE_WITH_TEXT"
+  | "CODE_BLOCK"
+  | "STAMP"
+  | "WIDGET"
+  | "EMBED"
+  | "LINK_UNFURL"
+  | "MEDIA"
+  | "SECTION"
+  | "TABLE"
+  | "TABLE_CELL";
+
+// =============================================================================
+// Figma Geometry Types
+// =============================================================================
+
+/**
+ * Figma 2x3 affine transform matrix
+ * Represents a 2D transformation: [a c tx; b d ty]
+ */
+export type FigMatrix = {
+  readonly m00: number; // a (scale x)
+  readonly m01: number; // c (skew x)
+  readonly m02: number; // tx (translate x)
+  readonly m10: number; // b (skew y)
+  readonly m11: number; // d (scale y)
+  readonly m12: number; // ty (translate y)
+};
+
+/**
+ * 2D vector
+ */
+export type FigVector = {
+  readonly x: number;
+  readonly y: number;
+};
+
+// =============================================================================
+// Figma Color Types
+// =============================================================================
+
+/**
+ * RGBA color (0-1 range)
+ */
+export type FigColor = {
+  readonly r: number;
+  readonly g: number;
+  readonly b: number;
+  readonly a: number;
+};
+
+// =============================================================================
+// Figma Paint Types
+// =============================================================================
+
+/**
+ * Paint type enum
+ */
+export type FigPaintType =
+  | "SOLID"
+  | "GRADIENT_LINEAR"
+  | "GRADIENT_RADIAL"
+  | "GRADIENT_ANGULAR"
+  | "GRADIENT_DIAMOND"
+  | "IMAGE"
+  | "EMOJI"
+  | "VIDEO";
+
+/**
+ * Gradient stop
+ */
+export type FigGradientStop = {
+  readonly position: number;
+  readonly color: FigColor;
+};
+
+/**
+ * Base paint interface
+ */
+export type FigPaintBase = {
+  readonly type: FigPaintType;
+  readonly visible?: boolean;
+  readonly opacity?: number;
+  readonly blendMode?: string;
+};
+
+/**
+ * Solid paint
+ */
+export type FigSolidPaint = FigPaintBase & {
+  readonly type: "SOLID";
+  readonly color: FigColor;
+};
+
+/**
+ * Gradient paint
+ */
+export type FigGradientPaint = FigPaintBase & {
+  readonly type:
+    | "GRADIENT_LINEAR"
+    | "GRADIENT_RADIAL"
+    | "GRADIENT_ANGULAR"
+    | "GRADIENT_DIAMOND";
+  readonly gradientHandlePositions: readonly FigVector[];
+  readonly gradientStops: readonly FigGradientStop[];
+};
+
+/**
+ * Image paint
+ */
+export type FigImagePaint = FigPaintBase & {
+  readonly type: "IMAGE";
+  readonly scaleMode?: "FILL" | "FIT" | "CROP" | "TILE";
+  readonly imageRef?: string;
+};
+
+/**
+ * Union of all paint types
+ */
+export type FigPaint =
+  | FigSolidPaint
+  | FigGradientPaint
+  | FigImagePaint
+  | FigPaintBase;
+
+// =============================================================================
+// Figma Stroke Types
+// =============================================================================
+
+/**
+ * Stroke weight type
+ */
+export type FigStrokeWeight =
+  | number
+  | {
+      readonly top: number;
+      readonly right: number;
+      readonly bottom: number;
+      readonly left: number;
+    };
+
+/**
+ * Stroke cap type
+ */
+export type FigStrokeCap =
+  | "NONE"
+  | "ROUND"
+  | "SQUARE"
+  | "LINE_ARROW"
+  | "TRIANGLE_ARROW";
+
+/**
+ * Stroke join type
+ */
+export type FigStrokeJoin = "MITER" | "BEVEL" | "ROUND";
+
+/**
+ * Stroke align type
+ */
+export type FigStrokeAlign = "INSIDE" | "OUTSIDE" | "CENTER";

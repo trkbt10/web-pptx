@@ -52,6 +52,7 @@
     }
   },
   "dependencies": {
+    "@oxen/zip": "workspace:*",
     "pako": "^2.1.0",
     "fzstd": "^0.1.1"
   },
