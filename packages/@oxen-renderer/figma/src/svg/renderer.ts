@@ -29,17 +29,20 @@ function getRootFrameOffset(nodes: readonly FigNode[]): { x: number; y: number }
   }
 
   // Find the minimum x and y from all root node transforms
-  let minX = Infinity;
-  let minY = Infinity;
-
-  for (const node of nodes) {
-    const nodeData = node as Record<string, unknown>;
-    const transform = nodeData.transform as FigMatrix | undefined;
-    if (transform) {
-      minX = Math.min(minX, transform.m02 ?? 0);
-      minY = Math.min(minY, transform.m12 ?? 0);
-    }
-  }
+  const { minX, minY } = nodes.reduce(
+    (acc, node) => {
+      const nodeData = node as Record<string, unknown>;
+      const transform = nodeData.transform as FigMatrix | undefined;
+      if (transform) {
+        return {
+          minX: Math.min(acc.minX, transform.m02 ?? 0),
+          minY: Math.min(acc.minY, transform.m12 ?? 0),
+        };
+      }
+      return acc;
+    },
+    { minX: Infinity, minY: Infinity }
+  );
 
   return {
     x: isFinite(minX) ? minX : 0,
@@ -71,6 +74,17 @@ function normalizeNodeTransform(node: FigNode, offset: { x: number; y: number })
       m12: (transform.m12 ?? 0) - offset.y,
     },
   } as FigNode;
+}
+
+/**
+ * Get nodes to render, optionally normalizing root transforms
+ */
+function getNodesToRender(nodes: readonly FigNode[], normalizeRootTransform?: boolean): readonly FigNode[] {
+  if (!normalizeRootTransform) {
+    return nodes;
+  }
+  const offset = getRootFrameOffset(nodes);
+  return nodes.map((node) => normalizeNodeTransform(node, offset));
 }
 
 // =============================================================================
@@ -122,11 +136,7 @@ export function renderFigToSvg(
   const warnings: string[] = [];
 
   // Normalize root transforms if requested
-  let nodesToRender = nodes;
-  if (options?.normalizeRootTransform) {
-    const offset = getRootFrameOffset(nodes);
-    nodesToRender = nodes.map((node) => normalizeNodeTransform(node, offset));
-  }
+  const nodesToRender = getNodesToRender(nodes, options?.normalizeRootTransform);
 
   // Render all nodes
   const renderedNodes = nodesToRender.map((node) => {
@@ -186,6 +196,71 @@ function isMaskNode(node: FigNode): boolean {
 }
 
 /**
+ * State for mask processing
+ */
+type MaskState = {
+  readonly result: SvgString[];
+  readonly currentMaskId: string | null;
+  readonly maskedContent: SvgString[];
+};
+
+/**
+ * Flush masked content to result
+ */
+function flushMaskedContent(state: MaskState): MaskState {
+  if (state.currentMaskId && state.maskedContent.length > 0) {
+    return {
+      result: [...state.result, g({ mask: `url(#${state.currentMaskId})` }, ...state.maskedContent)],
+      currentMaskId: state.currentMaskId,
+      maskedContent: [],
+    };
+  }
+  return state;
+}
+
+type ProcessNodeParams = {
+  readonly child: FigNode;
+  readonly state: MaskState;
+  readonly ctx: FigSvgRenderContext;
+  readonly warnings: string[];
+};
+
+/**
+ * Process a mask node
+ */
+function processMaskNode(params: ProcessNodeParams): MaskState {
+  const { child, state, ctx, warnings } = params;
+  const flushed = flushMaskedContent(state);
+  const maskContent = renderNode(child, ctx, warnings);
+
+  if (maskContent !== EMPTY_SVG) {
+    const maskId = ctx.defs.generateId("mask");
+    const maskDef = mask(
+      { id: maskId, style: "mask-type:luminance" },
+      g({ fill: "white" }, maskContent)
+    );
+    ctx.defs.add(maskDef);
+    return { ...flushed, currentMaskId: maskId, maskedContent: [] };
+  }
+  return flushed;
+}
+
+/**
+ * Process a regular (non-mask) node
+ */
+function processRegularNode(params: ProcessNodeParams): MaskState {
+  const { child, state, ctx, warnings } = params;
+  const rendered = renderNode(child, ctx, warnings);
+  if (rendered === EMPTY_SVG) {
+    return state;
+  }
+  if (state.currentMaskId) {
+    return { ...state, maskedContent: [...state.maskedContent, rendered] };
+  }
+  return { ...state, result: [...state.result, rendered] };
+}
+
+/**
  * Process children with mask support
  *
  * When a child has mask: true, it becomes a mask for subsequent siblings.
@@ -196,59 +271,22 @@ function renderChildrenWithMasks(
   ctx: FigSvgRenderContext,
   warnings: string[]
 ): readonly SvgString[] {
-  const result: SvgString[] = [];
-  let currentMaskId: string | null = null;
-  let maskedContent: SvgString[] = [];
+  const initialState: MaskState = { result: [], currentMaskId: null, maskedContent: [] };
 
-  for (let i = 0; i < children.length; i++) {
-    const child = children[i];
+  const finalState = children.reduce((state, child) => {
     const nodeData = child as Record<string, unknown>;
-
-    // Skip invisible nodes
     if (nodeData.visible === false) {
-      continue;
+      return state;
     }
-
+    const params: ProcessNodeParams = { child, state, ctx, warnings };
     if (isMaskNode(child)) {
-      // If we have accumulated masked content, flush it
-      if (currentMaskId && maskedContent.length > 0) {
-        result.push(g({ mask: `url(#${currentMaskId})` }, ...maskedContent));
-        maskedContent = [];
-      }
-
-      // Render the mask node content
-      const maskContent = renderNode(child, ctx, warnings);
-      if (maskContent !== EMPTY_SVG) {
-        // Create mask definition
-        currentMaskId = ctx.defs.generateId("mask");
-        const maskDef = mask(
-          { id: currentMaskId, style: "mask-type:luminance" },
-          // Use white fill for luminance mask
-          g({ fill: "white" }, maskContent)
-        );
-        ctx.defs.add(maskDef);
-      }
-    } else {
-      // Regular node
-      const rendered = renderNode(child, ctx, warnings);
-      if (rendered !== EMPTY_SVG) {
-        if (currentMaskId) {
-          // Accumulate content for masking
-          maskedContent.push(rendered);
-        } else {
-          // No mask active, render directly
-          result.push(rendered);
-        }
-      }
+      return processMaskNode(params);
     }
-  }
+    return processRegularNode(params);
+  }, initialState);
 
-  // Flush remaining masked content
-  if (currentMaskId && maskedContent.length > 0) {
-    result.push(g({ mask: `url(#${currentMaskId})` }, ...maskedContent));
-  }
-
-  return result;
+  const flushed = flushMaskedContent(finalState);
+  return flushed.result;
 }
 
 /**

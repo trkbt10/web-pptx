@@ -196,18 +196,20 @@ function getGradientStops(paint: FigGradientPaint): readonly FigGradientStop[] {
  * We then reverse the direction to match SVG's expectation that gradients
  * flow from start (offset 0) to end (offset 1).
  */
+type GradientTransform = { m00?: number; m01?: number; m10?: number; m11?: number; m02?: number; m12?: number };
+
 function getGradientDirectionFromTransform(
-  transform: { m00?: number; m01?: number; m10?: number; m11?: number; m02?: number; m12?: number } | undefined
+  transform: GradientTransform | undefined
 ): { start: { x: number; y: number }; end: { x: number; y: number } } {
   if (!transform) {
     return { start: { x: 0, y: 0 }, end: { x: 0, y: 1 } };
   }
 
   const m00 = transform.m00 ?? 1;
-  const m01 = transform.m01 ?? 0;
+  const _m01 = transform.m01 ?? 0;
   const m02 = transform.m02 ?? 0;
   const m10 = transform.m10 ?? 0;
-  const m11 = transform.m11 ?? 1;
+  const _m11 = transform.m11 ?? 1;
   const m12 = transform.m12 ?? 0;
 
   // Map gradient point (0, 0) - start in gradient space
@@ -233,28 +235,31 @@ function getGradientDirectionFromTransform(
 }
 
 /**
+ * Get gradient direction from paint (handles both API and fig file formats)
+ */
+function getGradientDirection(paint: FigGradientPaint): { start: { x: number; y: number }; end: { x: number; y: number } } {
+  const handles = paint.gradientHandlePositions;
+  if (handles && handles.length >= 2) {
+    // API format with handles
+    return {
+      start: handles[0] ?? { x: 0, y: 0.5 },
+      end: handles[1] ?? { x: 1, y: 0.5 },
+    };
+  }
+  // Fig file format with transform matrix
+  const paintData = paint as Record<string, unknown>;
+  const transform = paintData.transform as GradientTransform | undefined;
+  return getGradientDirectionFromTransform(transform);
+}
+
+/**
  * Create a linear gradient def and return its ID
  */
 function createLinearGradient(paint: FigGradientPaint, ctx: FigSvgRenderContext): string {
   const id = ctx.defs.generateId("lg");
 
   // Get gradient direction
-  let start: { x: number; y: number };
-  let end: { x: number; y: number };
-
-  const handles = paint.gradientHandlePositions;
-  if (handles && handles.length >= 2) {
-    // API format with handles
-    start = handles[0] ?? { x: 0, y: 0.5 };
-    end = handles[1] ?? { x: 1, y: 0.5 };
-  } else {
-    // Fig file format with transform matrix
-    const paintData = paint as Record<string, unknown>;
-    const transform = paintData.transform as { m00?: number; m01?: number; m10?: number; m11?: number; m02?: number; m12?: number } | undefined;
-    const direction = getGradientDirectionFromTransform(transform);
-    start = direction.start;
-    end = direction.end;
-  }
+  const { start, end } = getGradientDirection(paint);
 
   const stops = createGradientStops(getGradientStops(paint));
 
@@ -274,30 +279,34 @@ function createLinearGradient(paint: FigGradientPaint, ctx: FigSvgRenderContext)
 }
 
 /**
+ * Get radial gradient center and radius from paint
+ */
+function getRadialGradientCenterAndRadius(paint: FigGradientPaint): { center: { x: number; y: number }; radius: number } {
+  const handles = paint.gradientHandlePositions;
+  if (handles && handles.length >= 2) {
+    // API format with handles
+    const center = handles[0] ?? { x: 0.5, y: 0.5 };
+    const edge = handles[1] ?? { x: 1, y: 0.5 };
+    const radius = Math.sqrt(
+      Math.pow((edge.x - center.x), 2) + Math.pow((edge.y - center.y), 2)
+    );
+    return { center, radius };
+  }
+  // Fig file format - use transform
+  const paintData = paint as Record<string, unknown>;
+  const transform = paintData.transform as GradientTransform | undefined;
+  return {
+    center: { x: transform?.m02 ?? 0.5, y: transform?.m12 ?? 0.5 },
+    radius: transform?.m00 ?? 0.5,
+  };
+}
+
+/**
  * Create a radial gradient def and return its ID
  */
 function createRadialGradient(paint: FigGradientPaint, ctx: FigSvgRenderContext): string {
   const id = ctx.defs.generateId("rg");
-
-  // Get center and radius
-  let center: { x: number; y: number };
-  let radius: number;
-
-  const handles = paint.gradientHandlePositions;
-  if (handles && handles.length >= 2) {
-    // API format with handles
-    center = handles[0] ?? { x: 0.5, y: 0.5 };
-    const edge = handles[1] ?? { x: 1, y: 0.5 };
-    radius = Math.sqrt(
-      Math.pow((edge.x - center.x), 2) + Math.pow((edge.y - center.y), 2)
-    );
-  } else {
-    // Fig file format - use transform
-    const paintData = paint as Record<string, unknown>;
-    const transform = paintData.transform as { m00?: number; m01?: number; m10?: number; m11?: number; m02?: number; m12?: number } | undefined;
-    center = { x: transform?.m02 ?? 0.5, y: transform?.m12 ?? 0.5 };
-    radius = transform?.m00 ?? 0.5;
-  }
+  const { center, radius } = getRadialGradientCenterAndRadius(paint);
 
   const stops = createGradientStops(getGradientStops(paint));
 
@@ -360,10 +369,7 @@ export function hasVisibleFill(paints: readonly FigPaint[] | undefined): boolean
  * Convert Uint8Array to base64 string
  */
 function uint8ArrayToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
+  const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
   return btoa(binary);
 }
 
@@ -461,21 +467,37 @@ function createPatternFromImage(
   return id;
 }
 
+type ScaleMode = "FILL" | "FIT" | "CROP" | "TILE";
+
+/**
+ * Extract scale mode from imageScaleMode field
+ */
+function extractImageScaleMode(imageScaleMode: { name?: string } | string): ScaleMode | undefined {
+  if (typeof imageScaleMode === "string") {
+    return imageScaleMode as ScaleMode;
+  }
+  return imageScaleMode.name as ScaleMode | undefined;
+}
+
+/**
+ * Get scale mode from paint
+ */
+function getScaleMode(paint: FigImagePaint): ScaleMode | undefined {
+  if (paint.scaleMode) {
+    return paint.scaleMode;
+  }
+  const paintData = paint as Record<string, unknown>;
+  if (paintData.imageScaleMode) {
+    return extractImageScaleMode(paintData.imageScaleMode as { name?: string } | string);
+  }
+  return undefined;
+}
+
 /**
  * Get SVG preserveAspectRatio from Figma scale mode
  */
 function getPreserveAspectRatio(paint: FigImagePaint): string {
-  // Handle both string and enum object formats
-  const paintData = paint as Record<string, unknown>;
-  let scaleMode = paint.scaleMode;
-
-  // .fig files use imageScaleMode as an enum object
-  if (!scaleMode && paintData.imageScaleMode) {
-    const imageScaleMode = paintData.imageScaleMode as { name?: string } | string;
-    scaleMode = typeof imageScaleMode === "string"
-      ? imageScaleMode as "FILL" | "FIT" | "CROP" | "TILE"
-      : imageScaleMode.name as "FILL" | "FIT" | "CROP" | "TILE" | undefined;
-  }
+  const scaleMode = getScaleMode(paint);
 
   switch (scaleMode) {
     case "FIT":

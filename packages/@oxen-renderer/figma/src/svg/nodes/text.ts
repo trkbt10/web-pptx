@@ -54,28 +54,39 @@ type ExtractedTextProps = {
 };
 
 /**
+ * Font weight mapping rules
+ */
+const FONT_WEIGHT_RULES: ReadonlyArray<{ match: (s: string) => boolean; weight: number }> = [
+  { match: (s) => s.includes("thin"), weight: 100 },
+  { match: (s) => s.includes("extralight") || s.includes("extra light"), weight: 200 },
+  { match: (s) => s.includes("light"), weight: 300 },
+  { match: (s) => s.includes("regular") || s.includes("normal"), weight: 400 },
+  { match: (s) => s.includes("medium"), weight: 500 },
+  { match: (s) => s.includes("semibold") || s.includes("semi bold") || s.includes("demi"), weight: 600 },
+  { match: (s) => s.includes("bold") && !s.includes("extra"), weight: 700 },
+  { match: (s) => s.includes("extrabold") || s.includes("extra bold"), weight: 800 },
+  { match: (s) => s.includes("black") || s.includes("heavy"), weight: 900 },
+];
+
+/**
  * Get font weight from font style string
  */
 function getFontWeightFromStyle(style: string | undefined): number | undefined {
-  if (!style) return undefined;
+  if (!style) {
+    return undefined;
+  }
   const styleLower = style.toLowerCase();
-  if (styleLower.includes("thin")) return 100;
-  if (styleLower.includes("extralight") || styleLower.includes("extra light")) return 200;
-  if (styleLower.includes("light")) return 300;
-  if (styleLower.includes("regular") || styleLower.includes("normal")) return 400;
-  if (styleLower.includes("medium")) return 500;
-  if (styleLower.includes("semibold") || styleLower.includes("semi bold") || styleLower.includes("demi")) return 600;
-  if (styleLower.includes("bold") && !styleLower.includes("extra")) return 700;
-  if (styleLower.includes("extrabold") || styleLower.includes("extra bold")) return 800;
-  if (styleLower.includes("black") || styleLower.includes("heavy")) return 900;
-  return undefined;
+  const rule = FONT_WEIGHT_RULES.find((r) => r.match(styleLower));
+  return rule?.weight;
 }
 
 /**
  * Check if font style indicates italic
  */
 function isItalicStyle(style: string | undefined): boolean {
-  if (!style) return false;
+  if (!style) {
+    return false;
+  }
   const styleLower = style.toLowerCase();
   return styleLower.includes("italic") || styleLower.includes("oblique");
 }
@@ -101,17 +112,23 @@ function getValueWithUnits(val: unknown, defaultValue: number, fontSize?: number
 }
 
 /**
+ * Get characters from node data
+ */
+function getCharacters(nodeData: Record<string, unknown>): string | undefined {
+  const characters = nodeData.characters as string | undefined;
+  if (characters) {
+    return characters;
+  }
+  const textData = nodeData.textData as FigTextData | undefined;
+  return textData?.characters;
+}
+
+/**
  * Extract text properties from a Figma node
  */
 function extractTextProps(node: FigNode): ExtractedTextProps {
   const nodeData = node as Record<string, unknown>;
-
-  // Characters can be at node.characters (API) or node.textData.characters (fig file)
-  let characters = nodeData.characters as string | undefined;
-  if (!characters) {
-    const textData = nodeData.textData as FigTextData | undefined;
-    characters = textData?.characters;
-  }
+  const characters = getCharacters(nodeData);
 
   // Font size - directly on node in .fig files
   const fontSize = (nodeData.fontSize as number) ?? 16;

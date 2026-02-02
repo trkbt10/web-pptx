@@ -71,12 +71,17 @@ function extractVectorProps(node: FigNode): {
  * Get winding rule from FigFillGeometry
  */
 function getGeometryWindingRule(geom: FigFillGeometry): "NONZERO" | "EVENODD" | "ODD" | undefined {
-  if (!geom.windingRule) return undefined;
+  if (!geom.windingRule) {
+    return undefined;
+  }
   if (typeof geom.windingRule === "string") {
     return geom.windingRule as "NONZERO" | "EVENODD" | "ODD";
   }
   return geom.windingRule.name as "NONZERO" | "EVENODD" | "ODD";
 }
+
+type WindingRule = "NONZERO" | "EVENODD" | "ODD";
+type PathData = { data: string; windingRule?: WindingRule };
 
 /**
  * Decode path data from fillGeometry using blobs
@@ -84,8 +89,8 @@ function getGeometryWindingRule(geom: FigFillGeometry): "NONZERO" | "EVENODD" | 
 function decodePathsFromGeometry(
   fillGeometry: readonly FigFillGeometry[],
   blobs: readonly FigBlob[]
-): Array<{ data: string; windingRule?: "NONZERO" | "EVENODD" | "ODD" }> {
-  const paths: Array<{ data: string; windingRule?: "NONZERO" | "EVENODD" | "ODD" }> = [];
+): PathData[] {
+  const paths: PathData[] = [];
 
   for (const geom of fillGeometry) {
     if (geom.commandsBlob !== undefined && geom.commandsBlob < blobs.length) {
@@ -105,6 +110,45 @@ function decodePathsFromGeometry(
   return paths;
 }
 
+type PathSources = {
+  readonly vectorPaths: readonly FigVectorPath[] | undefined;
+  readonly fillGeometry: readonly FigFillGeometry[] | undefined;
+  readonly strokeGeometry: readonly FigFillGeometry[] | undefined;
+  readonly blobs: readonly FigBlob[];
+};
+
+/**
+ * Get paths to render from various sources
+ */
+function getPathsToRender(sources: PathSources): PathData[] {
+  const { vectorPaths, fillGeometry, strokeGeometry, blobs } = sources;
+
+  // Try vectorPaths first (if available)
+  if (vectorPaths && vectorPaths.length > 0) {
+    const paths = vectorPaths
+      .filter((vp) => vp.data)
+      .map((vp) => ({ data: vp.data!, windingRule: vp.windingRule }));
+    if (paths.length > 0) {
+      return paths;
+    }
+  }
+
+  // Try fillGeometry with blob decoding
+  if (fillGeometry && fillGeometry.length > 0) {
+    const paths = decodePathsFromGeometry(fillGeometry, blobs);
+    if (paths.length > 0) {
+      return paths;
+    }
+  }
+
+  // For LINE nodes, use strokeGeometry instead of fillGeometry
+  if (strokeGeometry && strokeGeometry.length > 0) {
+    return decodePathsFromGeometry(strokeGeometry, blobs);
+  }
+
+  return [];
+}
+
 /**
  * Render a VECTOR node to SVG
  */
@@ -119,24 +163,8 @@ export function renderVectorNode(
   const fillAttrs = getFillAttrs(fillPaints, ctx);
   const strokeAttrs = getStrokeAttrs({ paints: strokePaints, strokeWeight });
 
-  // Try vectorPaths first (if available)
-  let pathsToRender: Array<{ data: string; windingRule?: "NONZERO" | "EVENODD" | "ODD" }> = [];
-
-  if (vectorPaths && vectorPaths.length > 0) {
-    pathsToRender = vectorPaths
-      .filter((vp) => vp.data)
-      .map((vp) => ({ data: vp.data!, windingRule: vp.windingRule }));
-  }
-
-  // Try fillGeometry with blob decoding
-  if (pathsToRender.length === 0 && fillGeometry && fillGeometry.length > 0) {
-    pathsToRender = decodePathsFromGeometry(fillGeometry, ctx.blobs);
-  }
-
-  // For LINE nodes, use strokeGeometry instead of fillGeometry
-  if (pathsToRender.length === 0 && strokeGeometry && strokeGeometry.length > 0) {
-    pathsToRender = decodePathsFromGeometry(strokeGeometry, ctx.blobs);
-  }
+  // Try vectorPaths first (if available), then fillGeometry, then strokeGeometry
+  const pathsToRender = getPathsToRender({ vectorPaths, fillGeometry, strokeGeometry, blobs: ctx.blobs });
 
   if (pathsToRender.length === 0) {
     return EMPTY_SVG;

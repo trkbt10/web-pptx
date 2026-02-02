@@ -106,16 +106,18 @@ export function createDropShadowFilter(
 
   // Calculate filter region to accommodate all shadows
   // We need to expand the filter region to include the shadow offsets and blur radii
-  let expandX = 0;
-  let expandY = 0;
-
-  for (const shadow of shadows) {
-    const offsetX = Math.abs(shadow.offset?.x ?? 0);
-    const offsetY = Math.abs(shadow.offset?.y ?? 0);
-    const blur = (shadow.radius ?? 0) * 1.5; // stdDeviation is radius/2, but we need extra space
-    expandX = Math.max(expandX, offsetX + blur);
-    expandY = Math.max(expandY, offsetY + blur);
-  }
+  const { expandX, expandY } = shadows.reduce(
+    (acc, shadow) => {
+      const offsetX = Math.abs(shadow.offset?.x ?? 0);
+      const offsetY = Math.abs(shadow.offset?.y ?? 0);
+      const blur = (shadow.radius ?? 0) * 1.5; // stdDeviation is radius/2, but we need extra space
+      return {
+        expandX: Math.max(acc.expandX, offsetX + blur),
+        expandY: Math.max(acc.expandY, offsetY + blur),
+      };
+    },
+    { expandX: 0, expandY: 0 }
+  );
 
   // Build filter primitives
   const primitives: SvgString[] = [];
@@ -126,10 +128,7 @@ export function createDropShadowFilter(
   );
 
   // Generate shadow layers
-  let previousResult = "BackgroundImageFix";
-
-  for (let i = 0; i < shadows.length; i++) {
-    const shadow = shadows[i];
+  const lastShadowResult = shadows.reduce((previousResult, shadow, i) => {
     const effectNum = i + 1;
     const shadowResult = "effect" + effectNum + "_dropShadow_" + id;
 
@@ -176,15 +175,15 @@ export function createDropShadowFilter(
       })
     );
 
-    previousResult = shadowResult;
-  }
+    return shadowResult;
+  }, "BackgroundImageFix");
 
   // Final blend with source graphic
   primitives.push(
     feBlend({
       mode: "normal",
       in: "SourceGraphic",
-      in2: previousResult,
+      in2: lastShadowResult,
       result: "shape",
     })
   );

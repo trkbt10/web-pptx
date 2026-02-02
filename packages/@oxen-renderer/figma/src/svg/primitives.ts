@@ -93,6 +93,7 @@ export function g(
     mask?: string;
     filter?: string;
     opacity?: number | string;
+    fill?: string;
   },
   ...children: readonly SvgString[]
 ): SvgString {
@@ -407,7 +408,7 @@ export function clipPath(
  * Create an SVG mask element
  */
 export function mask(
-  attrs: { id: string; x?: string; y?: string; width?: string; height?: string },
+  attrs: { id: string; x?: string; y?: string; width?: string; height?: string; style?: string },
   ...children: readonly SvgString[]
 ): SvgString {
   const attrStr = buildAttrs(attrs);
