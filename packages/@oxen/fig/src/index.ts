@@ -69,6 +69,18 @@ export {
   createDefinition,
   createSchema,
   findDefinition,
+  // Streaming
+  StreamingFigDecoder,
+  StreamingFigEncoder,
+  streamNodeChanges,
+  processNodeChanges,
+} from "./kiwi";
+
+export type {
+  DecodedNodeChange,
+  StreamingDecoderOptions,
+  StreamingEncoderOptions,
+  MessageHeader,
 } from "./kiwi";
 
 export type { FigChunks } from "./kiwi/decoder";

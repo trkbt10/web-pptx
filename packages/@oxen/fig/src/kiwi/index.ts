@@ -24,3 +24,17 @@ export {
   splitFigChunks,
 } from "./decoder";
 export { encodeSchema, encodeMessage, combineChunks } from "./encoder";
+
+// Streaming
+export {
+  StreamingFigDecoder,
+  StreamingFigEncoder,
+  streamNodeChanges,
+  processNodeChanges,
+} from "./stream";
+export type {
+  DecodedNodeChange,
+  StreamingDecoderOptions,
+  StreamingEncoderOptions,
+  MessageHeader,
+} from "./stream";
