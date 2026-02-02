@@ -8,13 +8,12 @@ import { useState, type CSSProperties } from "react";
 import {
   DiagramEditor,
   DiagramPointEditor,
-} from "@oxen-ui/pptx-editor";
-import {
   DiagramConnectionEditor,
   createDefaultDiagramDataModel,
   createDefaultDiagramPoint,
   createDefaultDiagramConnection,
 } from "@oxen-ui/diagram-editor";
+import { pptxDiagramEditorAdapters } from "@oxen-ui/pptx-editor/adapters";
 import type { DiagramDataModel, DiagramPoint, DiagramConnection } from "@oxen-office/diagram/domain";
 import type { TextBody } from "@oxen-office/pptx/domain/text";
 
@@ -107,7 +106,11 @@ export function DiagramEditorTest() {
       {/* DiagramPoint Editor */}
       <div style={cardStyle}>
         <h2 style={cardTitleStyle}>Diagram Point Editor</h2>
-        <DiagramPointEditor value={diagramPoint} onChange={setDiagramPoint} />
+        <DiagramPointEditor
+          value={diagramPoint}
+          onChange={setDiagramPoint}
+          adapters={pptxDiagramEditorAdapters}
+        />
         <div style={valueDisplayStyle}>{JSON.stringify(diagramPoint, null, 2)}</div>
       </div>
 
@@ -126,7 +129,11 @@ export function DiagramEditorTest() {
       {/* DiagramDataModel Editor (full) */}
       <div style={{ ...cardStyle, gridColumn: "1 / -1" }}>
         <h2 style={cardTitleStyle}>Diagram Editor (Full Data Model)</h2>
-        <DiagramEditor value={diagramDataModel} onChange={setDiagramDataModel} />
+        <DiagramEditor
+          value={diagramDataModel}
+          onChange={setDiagramDataModel}
+          adapters={pptxDiagramEditorAdapters}
+        />
         <div style={valueDisplayStyle}>{JSON.stringify(diagramDataModel, null, 2)}</div>
       </div>
     </div>

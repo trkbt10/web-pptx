@@ -11,12 +11,14 @@ import {
   AxisEditor,
   ChartSeriesEditor,
   ChartEditor,
+  ChartEditorAdaptersProvider,
   createDefaultDataLabels,
   createDefaultLegend,
   createDefaultAxis,
   createDefaultChartSeries,
   createDefaultChart,
-} from "@oxen-ui/pptx-editor";
+} from "@oxen-ui/chart-editor";
+import { pptxChartEditorAdapters } from "@oxen-ui/pptx-editor/adapters";
 import type { DataLabels, Legend, Axis, ChartSeries, Chart } from "@oxen-office/chart/domain";
 
 const cardStyle: CSSProperties = {
@@ -66,41 +68,43 @@ export function ChartEditorsTest() {
   const [chart, setChart] = useState<Chart>(createDefaultChart());
 
   return (
-    <div style={gridStyle}>
-      {/* DataLabels Editor */}
-      <div style={cardStyle}>
-        <h2 style={cardTitleStyle}>Data Labels Editor</h2>
-        <DataLabelsEditor value={dataLabels} onChange={setDataLabels} />
-        <div style={valueDisplayStyle}>{JSON.stringify(dataLabels, null, 2)}</div>
-      </div>
+    <ChartEditorAdaptersProvider adapters={pptxChartEditorAdapters}>
+      <div style={gridStyle}>
+        {/* DataLabels Editor */}
+        <div style={cardStyle}>
+          <h2 style={cardTitleStyle}>Data Labels Editor</h2>
+          <DataLabelsEditor value={dataLabels} onChange={setDataLabels} />
+          <div style={valueDisplayStyle}>{JSON.stringify(dataLabels, null, 2)}</div>
+        </div>
 
-      {/* Legend Editor */}
-      <div style={cardStyle}>
-        <h2 style={cardTitleStyle}>Legend Editor</h2>
-        <LegendEditor value={legend} onChange={setLegend} />
-        <div style={valueDisplayStyle}>{JSON.stringify(legend, null, 2)}</div>
-      </div>
+        {/* Legend Editor */}
+        <div style={cardStyle}>
+          <h2 style={cardTitleStyle}>Legend Editor</h2>
+          <LegendEditor value={legend} onChange={setLegend} />
+          <div style={valueDisplayStyle}>{JSON.stringify(legend, null, 2)}</div>
+        </div>
 
-      {/* Axis Editor */}
-      <div style={cardStyle}>
-        <h2 style={cardTitleStyle}>Axis Editor</h2>
-        <AxisEditor value={axis} onChange={setAxis} />
-        <div style={valueDisplayStyle}>{JSON.stringify(axis, null, 2)}</div>
-      </div>
+        {/* Axis Editor */}
+        <div style={cardStyle}>
+          <h2 style={cardTitleStyle}>Axis Editor</h2>
+          <AxisEditor value={axis} onChange={setAxis} />
+          <div style={valueDisplayStyle}>{JSON.stringify(axis, null, 2)}</div>
+        </div>
 
-      {/* ChartSeries Editor */}
-      <div style={cardStyle}>
-        <h2 style={cardTitleStyle}>Chart Series Editor</h2>
-        <ChartSeriesEditor value={chartSeries} onChange={setChartSeries} />
-        <div style={valueDisplayStyle}>{JSON.stringify(chartSeries, null, 2)}</div>
-      </div>
+        {/* ChartSeries Editor */}
+        <div style={cardStyle}>
+          <h2 style={cardTitleStyle}>Chart Series Editor</h2>
+          <ChartSeriesEditor value={chartSeries} onChange={setChartSeries} />
+          <div style={valueDisplayStyle}>{JSON.stringify(chartSeries, null, 2)}</div>
+        </div>
 
-      {/* Chart Editor */}
-      <div style={cardStyle}>
-        <h2 style={cardTitleStyle}>Chart Editor</h2>
-        <ChartEditor value={chart} onChange={setChart} />
-        <div style={valueDisplayStyle}>{JSON.stringify(chart, null, 2)}</div>
+        {/* Chart Editor */}
+        <div style={cardStyle}>
+          <h2 style={cardTitleStyle}>Chart Editor</h2>
+          <ChartEditor value={chart} onChange={setChart} />
+          <div style={valueDisplayStyle}>{JSON.stringify(chart, null, 2)}</div>
+        </div>
       </div>
-    </div>
+    </ChartEditorAdaptersProvider>
   );
 }
