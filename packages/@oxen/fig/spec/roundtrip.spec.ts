@@ -5,11 +5,14 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { inflateRaw } from "pako";
+import { loadZipPackage } from "@oxen/zip";
 import {
   isFigFile,
   parseFigHeader,
   getPayload,
   decompressDeflateRaw,
+  decompressZstd,
+  detectCompression,
 } from "../src/parser";
 import { buildFigHeader } from "../src/builder";
 import {
@@ -221,37 +224,77 @@ describe("fig roundtrip (encode -> build -> parse -> decode)", () => {
   });
 });
 
-// Optional: Test with real example.canvas.fig if available
-describe("fig file parsing (real file)", () => {
-  const figPath = path.join(__dirname, "../example.canvas.fig");
+// Test with samples/sample-file.fig (ZIP containing canvas.fig)
+describe("fig file parsing (sample-file.fig)", () => {
+  const figPath = path.join(__dirname, "../samples/sample-file.fig");
 
-  it("parses real example file if available", () => {
-    if (!fs.existsSync(figPath)) {
-      console.log("Skipping: example.canvas.fig not found (this is OK)");
-      return;
-    }
+  it("parses canvas.fig from sample-file.fig archive", async () => {
+    const zipData = fs.readFileSync(figPath);
+    const zip = await loadZipPackage(zipData);
 
-    const data = new Uint8Array(fs.readFileSync(figPath));
+    const canvasBinary = zip.readBinary("canvas.fig");
+    expect(canvasBinary).not.toBeNull();
+
+    const data = new Uint8Array(canvasBinary!);
     expect(isFigFile(data)).toBe(true);
 
     const header = parseFigHeader(data);
     expect(header.magic).toBe("fig-kiwi");
+    expect(header.version).toBeDefined();
+    expect(header.payloadSize).toBeGreaterThan(0);
 
     const payload = getPayload(data);
+    expect(payload.length).toBeGreaterThan(header.payloadSize);
+
     const chunks = splitFigChunks(payload, header.payloadSize);
+    expect(chunks.schema.length).toBe(header.payloadSize);
+    expect(chunks.data.length).toBeGreaterThan(0);
+
+    // Schema uses raw deflate, data may use ZSTD or raw deflate
     const schemaData = decompressDeflateRaw(chunks.schema);
-    const msgData = decompressDeflateRaw(chunks.data);
+    const dataCompression = detectCompression(chunks.data);
+    const msgData =
+      dataCompression === "zstd"
+        ? decompressZstd(chunks.data)
+        : decompressDeflateRaw(chunks.data);
+
+    expect(schemaData.length).toBeGreaterThan(0);
+    expect(msgData.length).toBeGreaterThan(0);
 
     const schema = decodeFigSchema(schemaData);
-    expect(schema.definitions.length).toBe(307);
+    expect(schema.definitions.length).toBeGreaterThan(0);
 
-    const message = decodeFigMessage(schema, msgData, "Message") as Record<string, unknown>;
+    const message = decodeFigMessage(schema, msgData, "Message") as Record<
+      string,
+      unknown
+    >;
+    expect(message).toBeDefined();
+    expect(message.type).toBeDefined();
+
     const nodeChanges = message.nodeChanges as Record<string, unknown>[];
-    expect(nodeChanges.length).toBe(6);
+    expect(nodeChanges).toBeDefined();
+    expect(nodeChanges.length).toBeGreaterThan(0);
 
-    console.log("=== Real File Statistics ===");
-    console.log(`File size: ${data.length} bytes`);
+    console.log("=== sample-file.fig/canvas.fig Statistics ===");
+    console.log(`Archive size: ${zipData.length} bytes`);
+    console.log(`canvas.fig size: ${data.length} bytes`);
+    console.log(`Header: ${header.magic} v${header.version}`);
+    console.log(`Schema chunk (compressed): ${chunks.schema.length} bytes`);
+    console.log(`Schema chunk (decompressed): ${schemaData.length} bytes`);
+    console.log(`Data chunk (compressed): ${chunks.data.length} bytes`);
+    console.log(`Data chunk (decompressed): ${msgData.length} bytes`);
     console.log(`Schema definitions: ${schema.definitions.length}`);
     console.log(`Node changes: ${nodeChanges.length}`);
+
+    // Count definition kinds
+    const counts = { ENUM: 0, STRUCT: 0, MESSAGE: 0 };
+    for (const def of schema.definitions) {
+      if (def.kind in counts) {
+        counts[def.kind as keyof typeof counts]++;
+      }
+    }
+    console.log(`  ENUM: ${counts.ENUM}`);
+    console.log(`  STRUCT: ${counts.STRUCT}`);
+    console.log(`  MESSAGE: ${counts.MESSAGE}`);
   });
 });

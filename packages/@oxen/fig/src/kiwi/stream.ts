@@ -33,8 +33,19 @@ export type StreamingDecoderOptions = {
   readonly nodeChangeType?: string;
 };
 
+/** Primitive type names */
+type PrimitiveTypeName =
+  | "bool"
+  | "byte"
+  | "int"
+  | "uint"
+  | "float"
+  | "string"
+  | "int64"
+  | "uint64";
+
 /** Primitive type IDs */
-const PRIMITIVE_TYPES: Record<number, string> = {
+const PRIMITIVE_TYPES: Record<number, PrimitiveTypeName> = {
   [-1]: "bool",
   [-2]: "byte",
   [-3]: "int",
@@ -237,7 +248,7 @@ export class StreamingFigDecoder {
     return result;
   }
 
-  private decodePrimitive(type: string): unknown {
+  private decodePrimitive(type: PrimitiveTypeName): unknown {
     if (!this.buffer) {
       throw new FigParseError("No buffer");
     }
@@ -259,8 +270,6 @@ export class StreamingFigDecoder {
         return this.buffer.readVarInt64();
       case "uint64":
         return this.buffer.readVarUint64();
-      default:
-        return null;
     }
   }
 }
@@ -449,7 +458,11 @@ export class StreamingFigEncoder {
 
   private encodeValueByTypeId(typeId: number, value: unknown): void {
     if (typeId < 0) {
-      this.encodePrimitive(PRIMITIVE_TYPES[typeId], value);
+      const primitiveType = PRIMITIVE_TYPES[typeId];
+      if (!primitiveType) {
+        throw new FigBuildError(`Unknown primitive type ID: ${typeId}`);
+      }
+      this.encodePrimitive(primitiveType, value);
       return;
     }
 
@@ -510,7 +523,7 @@ export class StreamingFigEncoder {
     return enumValue;
   }
 
-  private encodePrimitive(type: string, value: unknown): void {
+  private encodePrimitive(type: PrimitiveTypeName, value: unknown): void {
     switch (type) {
       case "bool":
         if (typeof value !== "boolean" && typeof value !== "number") {
@@ -548,8 +561,6 @@ export class StreamingFigEncoder {
         this.assertBigint(value, "uint64");
         this.buffer.writeVarUint64(value);
         break;
-      default:
-        throw new FigBuildError(`Unknown primitive type: ${type}`);
     }
   }
 
