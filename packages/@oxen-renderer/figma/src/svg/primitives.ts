@@ -361,6 +361,30 @@ export function stop(attrs: {
 }
 
 // =============================================================================
+// Patterns
+// =============================================================================
+
+/**
+ * Create an SVG pattern element
+ */
+export function pattern(
+  attrs: {
+    id: string;
+    x?: string | number;
+    y?: string | number;
+    width: string | number;
+    height: string | number;
+    patternUnits?: "userSpaceOnUse" | "objectBoundingBox";
+    patternContentUnits?: "userSpaceOnUse" | "objectBoundingBox";
+    preserveAspectRatio?: string;
+  },
+  ...children: readonly SvgString[]
+): SvgString {
+  const attrStr = buildAttrs(attrs);
+  return unsafeSvg(`<pattern ${attrStr}>${children.join("")}</pattern>`);
+}
+
+// =============================================================================
 // Clip Paths and Masks
 // =============================================================================
 

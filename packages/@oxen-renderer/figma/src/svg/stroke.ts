@@ -9,7 +9,7 @@ import type {
   FigStrokeJoin,
   FigStrokeWeight,
 } from "@oxen/fig/types";
-import { figColorToHex } from "./fill";
+import { figColorToHex, getPaintType } from "./fill";
 
 // =============================================================================
 // Stroke Attributes
@@ -94,7 +94,7 @@ function getStrokeAttrsImpl(
   const attrs: StrokeAttrs = {};
 
   // Get stroke color
-  if (visiblePaint.type === "SOLID") {
+  if (getPaintType(visiblePaint) === "SOLID") {
     const solidPaint = visiblePaint as FigPaint & { color: FigColor };
     attrs.stroke = figColorToHex(solidPaint.color);
     const opacity = visiblePaint.opacity ?? 1;

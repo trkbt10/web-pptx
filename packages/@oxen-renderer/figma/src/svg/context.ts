@@ -39,6 +39,8 @@ export function createFigSvgRenderContext(
   return {
     defs: createDefsCollector(),
     canvasSize: config?.canvasSize ?? DEFAULT_CANVAS_SIZE,
+    blobs: config?.blobs ?? [],
+    images: config?.images ?? new Map(),
   };
 }
 

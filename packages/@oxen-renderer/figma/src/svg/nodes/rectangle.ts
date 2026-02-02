@@ -48,11 +48,16 @@ function extractRectProps(node: FigNode): {
 
 /**
  * Calculate corner radius from corner radii array or single value
+ * Clamps radius to half of the smallest dimension (SVG behavior)
  */
 function calculateCornerRadius(
   cornerRadii: readonly number[] | undefined,
-  cornerRadius: number | undefined
+  cornerRadius: number | undefined,
+  size: FigVector
 ): { rx: number | undefined; ry: number | undefined } {
+  // Maximum radius is half the smallest dimension
+  const maxRadius = Math.min(size.x, size.y) / 2;
+
   if (cornerRadii && cornerRadii.length === 4) {
     // All corners same? Use rx/ry
     const allSame =
@@ -60,14 +65,17 @@ function calculateCornerRadius(
       cornerRadii[1] === cornerRadii[2] &&
       cornerRadii[2] === cornerRadii[3];
     if (allSame) {
-      return { rx: cornerRadii[0], ry: cornerRadii[0] };
+      const clamped = Math.min(cornerRadii[0], maxRadius);
+      return { rx: clamped, ry: clamped };
     }
     // Different corners - would need path, use average for now
     const avg = (cornerRadii[0] + cornerRadii[1] + cornerRadii[2] + cornerRadii[3]) / 4;
-    return { rx: avg, ry: avg };
+    const clamped = Math.min(avg, maxRadius);
+    return { rx: clamped, ry: clamped };
   }
   if (cornerRadius) {
-    return { rx: cornerRadius, ry: cornerRadius };
+    const clamped = Math.min(cornerRadius, maxRadius);
+    return { rx: clamped, ry: clamped };
   }
   return { rx: undefined, ry: undefined };
 }
@@ -97,7 +105,7 @@ export function renderRectangleNode(
   const strokeAttrs = getStrokeAttrs({ paints: strokePaints, strokeWeight });
 
   // Determine corner radius
-  const { rx, ry } = calculateCornerRadius(cornerRadii, cornerRadius);
+  const { rx, ry } = calculateCornerRadius(cornerRadii, cornerRadius, size);
 
   return rect({
     x: 0,

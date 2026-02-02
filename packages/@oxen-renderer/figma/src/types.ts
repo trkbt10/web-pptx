@@ -2,6 +2,8 @@
  * @file Figma renderer types (renderer-specific only)
  */
 
+import type { FigBlob, FigImage } from "@oxen/fig/parser";
+
 // =============================================================================
 // SVG Render Context
 // =============================================================================
@@ -28,6 +30,10 @@ export type FigSvgRenderContext = {
   readonly defs: DefsCollector;
   /** Canvas size for viewport */
   readonly canvasSize: { width: number; height: number };
+  /** Blobs from parsed .fig file for path decoding */
+  readonly blobs: readonly FigBlob[];
+  /** Images extracted from .fig file (keyed by imageRef) */
+  readonly images: ReadonlyMap<string, FigImage>;
 };
 
 /**
@@ -35,6 +41,8 @@ export type FigSvgRenderContext = {
  */
 export type FigSvgRenderContextConfig = {
   readonly canvasSize?: { width: number; height: number };
+  readonly blobs?: readonly FigBlob[];
+  readonly images?: ReadonlyMap<string, FigImage>;
 };
 
 /**

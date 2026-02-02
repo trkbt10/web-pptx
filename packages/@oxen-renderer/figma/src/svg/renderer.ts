@@ -2,7 +2,8 @@
  * @file Main SVG renderer for Figma nodes
  */
 
-import type { FigNode, FigNodeType } from "@oxen/fig/types";
+import type { FigNode, FigNodeType, FigMatrix } from "@oxen/fig/types";
+import type { FigBlob, FigImage } from "@oxen/fig/parser";
 import type { FigSvgRenderContext, FigSvgRenderResult } from "../types";
 import { createFigSvgRenderContext } from "./context";
 import { svg, defs, g, rect, type SvgString, EMPTY_SVG } from "./primitives";
@@ -14,6 +15,63 @@ import {
   renderVectorNode,
   renderTextNode,
 } from "./nodes";
+
+// =============================================================================
+// Transform Normalization
+// =============================================================================
+
+/**
+ * Get the root frame's transform offset (translation component)
+ */
+function getRootFrameOffset(nodes: readonly FigNode[]): { x: number; y: number } {
+  if (nodes.length === 0) {
+    return { x: 0, y: 0 };
+  }
+
+  // Find the minimum x and y from all root node transforms
+  let minX = Infinity;
+  let minY = Infinity;
+
+  for (const node of nodes) {
+    const nodeData = node as Record<string, unknown>;
+    const transform = nodeData.transform as FigMatrix | undefined;
+    if (transform) {
+      minX = Math.min(minX, transform.m02 ?? 0);
+      minY = Math.min(minY, transform.m12 ?? 0);
+    }
+  }
+
+  return {
+    x: isFinite(minX) ? minX : 0,
+    y: isFinite(minY) ? minY : 0,
+  };
+}
+
+/**
+ * Normalize node transform by removing the root offset
+ */
+function normalizeNodeTransform(node: FigNode, offset: { x: number; y: number }): FigNode {
+  if (offset.x === 0 && offset.y === 0) {
+    return node;
+  }
+
+  const nodeData = node as Record<string, unknown>;
+  const transform = nodeData.transform as FigMatrix | undefined;
+
+  if (!transform) {
+    return node;
+  }
+
+  // Create a new node with normalized transform
+  return {
+    ...node,
+    transform: {
+      ...transform,
+      m02: (transform.m02 ?? 0) - offset.x,
+      m12: (transform.m12 ?? 0) - offset.y,
+    },
+  } as FigNode;
+}
 
 // =============================================================================
 // Render Options
@@ -29,6 +87,12 @@ export type FigSvgRenderOptions = {
   readonly height?: number;
   /** Background color (CSS color string) */
   readonly backgroundColor?: string;
+  /** Blobs from parsed .fig file for path decoding */
+  readonly blobs?: readonly FigBlob[];
+  /** Images from parsed .fig file for image fills */
+  readonly images?: ReadonlyMap<string, FigImage>;
+  /** Normalize root transform to (0, 0) - useful when rendering a single frame */
+  readonly normalizeRootTransform?: boolean;
 };
 
 // =============================================================================
@@ -51,12 +115,21 @@ export function renderFigToSvg(
 
   const ctx = createFigSvgRenderContext({
     canvasSize: { width, height },
+    blobs: options?.blobs ?? [],
+    images: options?.images ?? new Map(),
   });
 
   const warnings: string[] = [];
 
+  // Normalize root transforms if requested
+  let nodesToRender = nodes;
+  if (options?.normalizeRootTransform) {
+    const offset = getRootFrameOffset(nodes);
+    nodesToRender = nodes.map((node) => normalizeNodeTransform(node, offset));
+  }
+
   // Render all nodes
-  const renderedNodes = nodes.map((node) => {
+  const renderedNodes = nodesToRender.map((node) => {
     try {
       return renderNode(node, ctx, warnings);
     } catch (error) {
@@ -142,6 +215,7 @@ function renderNode(
     case "COMPONENT":
     case "COMPONENT_SET":
     case "INSTANCE":
+    case "SYMBOL":
       return renderFrameNode(node, ctx, renderedChildren);
 
     case "GROUP":
@@ -149,6 +223,7 @@ function renderNode(
       return renderGroupNode(node, ctx, renderedChildren);
 
     case "RECTANGLE":
+    case "ROUNDED_RECTANGLE":
       return renderRectangleNode(node, ctx);
 
     case "ELLIPSE":
@@ -244,5 +319,7 @@ export function renderCanvas(
     ...options,
     width: options?.width ?? bounds.width,
     height: options?.height ?? bounds.height,
+    // Normalize root transforms by default when rendering a canvas
+    normalizeRootTransform: options?.normalizeRootTransform ?? true,
   });
 }

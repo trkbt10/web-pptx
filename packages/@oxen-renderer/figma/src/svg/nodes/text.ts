@@ -6,44 +6,137 @@ import type { FigNode, FigMatrix, FigPaint, FigColor } from "@oxen/fig/types";
 import type { FigSvgRenderContext } from "../../types";
 import { text, g, type SvgString, EMPTY_SVG } from "../primitives";
 import { buildTransformAttr } from "../transform";
-import { figColorToHex } from "../fill";
+import { figColorToHex, getPaintType } from "../fill";
 
 // =============================================================================
 // Text Style Types
 // =============================================================================
 
 /**
- * Figma text style
+ * Font name structure from .fig files
  */
-type FigTextStyle = {
-  readonly fontFamily?: string;
-  readonly fontWeight?: number;
-  readonly fontSize?: number;
-  readonly letterSpacing?: number;
-  readonly lineHeight?: number | { unit: string; value: number };
-  readonly italic?: boolean;
+type FigFontName = {
+  readonly family?: string;
+  readonly style?: string;
+  readonly postscript?: string;
 };
 
-// =============================================================================
-// Text Node
-// =============================================================================
+/**
+ * Value with units structure
+ */
+type FigValueWithUnits = {
+  readonly value: number;
+  readonly units?: { value: number; name: string } | string;
+};
+
+/**
+ * Text data structure from .fig files
+ */
+type FigTextData = {
+  readonly characters?: string;
+  readonly lines?: readonly unknown[];
+};
+
+/**
+ * Extracted text properties
+ */
+type ExtractedTextProps = {
+  transform: FigMatrix | undefined;
+  characters: string;
+  fontSize: number;
+  fontFamily: string;
+  fontWeight: number | undefined;
+  fontStyle: string | undefined;
+  letterSpacing: number | undefined;
+  lineHeight: number;
+  fillPaints: readonly FigPaint[] | undefined;
+  opacity: number;
+};
+
+/**
+ * Get font weight from font style string
+ */
+function getFontWeightFromStyle(style: string | undefined): number | undefined {
+  if (!style) return undefined;
+  const styleLower = style.toLowerCase();
+  if (styleLower.includes("thin")) return 100;
+  if (styleLower.includes("extralight") || styleLower.includes("extra light")) return 200;
+  if (styleLower.includes("light")) return 300;
+  if (styleLower.includes("regular") || styleLower.includes("normal")) return 400;
+  if (styleLower.includes("medium")) return 500;
+  if (styleLower.includes("semibold") || styleLower.includes("semi bold") || styleLower.includes("demi")) return 600;
+  if (styleLower.includes("bold") && !styleLower.includes("extra")) return 700;
+  if (styleLower.includes("extrabold") || styleLower.includes("extra bold")) return 800;
+  if (styleLower.includes("black") || styleLower.includes("heavy")) return 900;
+  return undefined;
+}
+
+/**
+ * Check if font style indicates italic
+ */
+function isItalicStyle(style: string | undefined): boolean {
+  if (!style) return false;
+  const styleLower = style.toLowerCase();
+  return styleLower.includes("italic") || styleLower.includes("oblique");
+}
+
+/**
+ * Get numeric value from value-with-units structure
+ */
+function getValueWithUnits(val: unknown, defaultValue: number, fontSize?: number): number {
+  if (typeof val === "number") {
+    return val;
+  }
+  if (val && typeof val === "object" && "value" in val) {
+    const vwu = val as FigValueWithUnits;
+    const units = vwu.units;
+    const unitsName = typeof units === "string" ? units : units?.name;
+
+    if (unitsName === "PERCENT" && fontSize) {
+      return (vwu.value / 100) * fontSize;
+    }
+    return vwu.value;
+  }
+  return defaultValue;
+}
 
 /**
  * Extract text properties from a Figma node
  */
-function extractTextProps(node: FigNode): {
-  transform: FigMatrix | undefined;
-  characters: string;
-  style: FigTextStyle | undefined;
-  fillPaints: readonly FigPaint[] | undefined;
-  opacity: number;
-} {
+function extractTextProps(node: FigNode): ExtractedTextProps {
   const nodeData = node as Record<string, unknown>;
+
+  // Characters can be at node.characters (API) or node.textData.characters (fig file)
+  let characters = nodeData.characters as string | undefined;
+  if (!characters) {
+    const textData = nodeData.textData as FigTextData | undefined;
+    characters = textData?.characters;
+  }
+
+  // Font size - directly on node in .fig files
+  const fontSize = (nodeData.fontSize as number) ?? 16;
+
+  // Font name - has family/style in .fig files
+  const fontName = nodeData.fontName as FigFontName | undefined;
+  const fontFamily = fontName?.family ?? "sans-serif";
+  const fontWeight = getFontWeightFromStyle(fontName?.style);
+  const fontStyle = isItalicStyle(fontName?.style) ? "italic" : undefined;
+
+  // Letter spacing
+  const letterSpacing = getValueWithUnits(nodeData.letterSpacing, 0, fontSize);
+
+  // Line height
+  const lineHeight = getValueWithUnits(nodeData.lineHeight, fontSize * 1.2, fontSize);
 
   return {
     transform: nodeData.transform as FigMatrix | undefined,
-    characters: (nodeData.characters as string) ?? "",
-    style: nodeData.style as FigTextStyle | undefined,
+    characters: characters ?? "",
+    fontSize,
+    fontFamily,
+    fontWeight,
+    fontStyle,
+    letterSpacing: letterSpacing !== 0 ? letterSpacing : undefined,
+    lineHeight,
     fillPaints: nodeData.fillPaints as readonly FigPaint[] | undefined,
     opacity: (nodeData.opacity as number) ?? 1,
   };
@@ -57,7 +150,7 @@ function getFillColor(paints: readonly FigPaint[] | undefined): string {
     return "#000000";
   }
   const firstPaint = paints.find((p) => p.visible !== false);
-  if (firstPaint && firstPaint.type === "SOLID") {
+  if (firstPaint && getPaintType(firstPaint) === "SOLID") {
     const solidPaint = firstPaint as FigPaint & { color: FigColor };
     return figColorToHex(solidPaint.color);
   }
@@ -65,41 +158,21 @@ function getFillColor(paints: readonly FigPaint[] | undefined): string {
 }
 
 /**
- * Get line height from style
- */
-function getLineHeight(style: FigTextStyle | undefined): number {
-  if (!style) {
-    return 20;
-  }
-
-  if (typeof style.lineHeight === "number") {
-    return style.lineHeight;
-  }
-
-  if (style.lineHeight && style.lineHeight.unit === "PIXELS") {
-    return style.lineHeight.value;
-  }
-
-  // Default: 1.2 * fontSize
-  return (style.fontSize ?? 16) * 1.2;
-}
-
-/**
- * Build text attributes
+ * Build text attributes from extracted props
  */
 function buildTextAttrs(
-  style: FigTextStyle | undefined,
+  props: ExtractedTextProps,
   fillColor: string
 ): Parameters<typeof text>[0] {
   return {
     x: 0,
-    y: style?.fontSize ?? 16, // Baseline offset
+    y: props.fontSize, // Baseline offset
     fill: fillColor,
-    "font-family": style?.fontFamily ?? "sans-serif",
-    "font-size": style?.fontSize ?? 16,
-    "font-weight": style?.fontWeight,
-    "font-style": style?.italic ? "italic" : undefined,
-    "letter-spacing": style?.letterSpacing,
+    "font-family": props.fontFamily,
+    "font-size": props.fontSize,
+    "font-weight": props.fontWeight,
+    "font-style": props.fontStyle,
+    "letter-spacing": props.letterSpacing,
   };
 }
 
@@ -110,27 +183,27 @@ export function renderTextNode(
   node: FigNode,
   _ctx: FigSvgRenderContext
 ): SvgString {
-  const { transform, characters, style, fillPaints, opacity } = extractTextProps(node);
+  const props = extractTextProps(node);
 
-  if (!characters) {
+  if (!props.characters) {
     return EMPTY_SVG;
   }
 
-  const transformStr = buildTransformAttr(transform);
-  const fillColor = getFillColor(fillPaints);
-  const textAttrs = buildTextAttrs(style, fillColor);
+  const transformStr = buildTransformAttr(props.transform);
+  const fillColor = getFillColor(props.fillPaints);
+  const textAttrs = buildTextAttrs(props, fillColor);
 
   // Handle multiline text
-  const lines = characters.split("\n");
+  const lines = props.characters.split("\n");
 
   if (lines.length === 1) {
     // Single line
-    const textEl = text(textAttrs, characters);
-    if (transformStr || opacity < 1) {
+    const textEl = text(textAttrs, props.characters);
+    if (transformStr || props.opacity < 1) {
       return g(
         {
           transform: transformStr || undefined,
-          opacity: opacity < 1 ? opacity : undefined,
+          opacity: props.opacity < 1 ? props.opacity : undefined,
         },
         textEl
       );
@@ -139,12 +212,11 @@ export function renderTextNode(
   }
 
   // Multiline - render each line
-  const lineHeight = getLineHeight(style);
   const textElements: SvgString[] = lines.map((lineText, i) =>
     text(
       {
         ...textAttrs,
-        y: (textAttrs.y as number) + i * lineHeight,
+        y: props.fontSize + i * props.lineHeight,
       },
       lineText
     )
@@ -153,7 +225,7 @@ export function renderTextNode(
   return g(
     {
       transform: transformStr || undefined,
-      opacity: opacity < 1 ? opacity : undefined,
+      opacity: props.opacity < 1 ? props.opacity : undefined,
     },
     ...textElements
   );
