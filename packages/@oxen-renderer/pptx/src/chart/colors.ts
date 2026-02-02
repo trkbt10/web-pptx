@@ -52,11 +52,7 @@ export const FALLBACK_CHART_COLORS: readonly string[] = [
  * @see ECMA-376 Part 1, Section 21.2.2.188 (spPr)
  * @see ECMA-376 Part 1, Section 20.1.6.2 (accent colors)
  */
-export function getSeriesColor(
-  index: number,
-  ctx: CoreRenderContext,
-  shapeProperties?: ChartShapeProperties
-): string {
+export function getSeriesColor(index: number, ctx: CoreRenderContext, shapeProperties?: ChartShapeProperties): string {
   // 1. Check for explicit fill in shape properties
   if (shapeProperties?.fill) {
     const resolved = resolveFill(shapeProperties.fill, ctx.colorContext);
@@ -92,9 +88,11 @@ export function getSeriesColor(
  */
 export function getColorFromShapeProperties(
   shapeProperties: ChartShapeProperties | undefined,
-  ctx: CoreRenderContext
+  ctx: CoreRenderContext,
 ): string | undefined {
-  if (!shapeProperties?.fill) {return undefined;}
+  if (!shapeProperties?.fill) {
+    return undefined;
+  }
 
   const resolved = resolveFill(shapeProperties.fill, ctx.colorContext);
   if (resolved.type === "solid") {

@@ -8,6 +8,7 @@
     "@oxen/glyph": "workspace:*",
     "@oxen-builder/pptx": "workspace:*",
     "@oxen-ui/chart-editor": "workspace:*",
+    "@oxen-ui/color-editor": "workspace:*",
     "@oxen-office/chart": "workspace:*",
     "@oxen-office/pptx": "workspace:*",
     "@oxen-renderer/pptx": "workspace:*",

@@ -4,7 +4,7 @@
  * RGB color input with three sliders for Red, Green, Blue values.
  */
 
-import { LabeledSlider } from "../../common";
+import { LabeledSlider } from "../LabeledSlider";
 
 export type RgbSlidersProps = {
   readonly r: number;

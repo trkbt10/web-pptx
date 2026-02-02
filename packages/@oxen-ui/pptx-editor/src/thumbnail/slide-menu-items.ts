@@ -5,7 +5,7 @@
  * Uses the shared context menu types.
  */
 
-import type { MenuEntry } from "../ui/context-menu/types";
+import type { MenuEntry } from "@oxen-ui/ui-components";
 
 /** Action IDs for slide context menu */
 export const SLIDE_MENU_ACTIONS = {

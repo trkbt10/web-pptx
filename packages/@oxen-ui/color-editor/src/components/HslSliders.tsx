@@ -4,7 +4,7 @@
  * HSL color input with three sliders for Hue, Saturation, Lightness values.
  */
 
-import { LabeledSlider } from "../../common";
+import { LabeledSlider } from "../LabeledSlider";
 
 export type HslSlidersProps = {
   readonly h: number;

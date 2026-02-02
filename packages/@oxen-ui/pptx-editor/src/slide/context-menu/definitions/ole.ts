@@ -4,7 +4,7 @@
  * Menu items specific to oleObject elements within graphicFrame.
  */
 
-import type { MenuEntry } from "../../../ui/context-menu";
+import type { MenuEntry } from "@oxen-ui/ui-components";
 
 /**
  * Get OLE object-specific menu items

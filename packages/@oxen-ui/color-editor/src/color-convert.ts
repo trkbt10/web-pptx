@@ -1,7 +1,7 @@
 /**
  * @file Color conversion utilities for UI components
  *
- * Wraps the base color conversion functions from src/color to adapt them
+ * Wraps the base color conversion functions from @oxen/color to adapt them
  * for UI display formats (e.g., s/l values as 0-100 instead of 0-1).
  */
 

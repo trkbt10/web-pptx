@@ -6,7 +6,7 @@
 
 import { render, fireEvent, waitFor } from "@testing-library/react";
 import type { MenuEntry } from "./types";
-import { ContextMenu } from "@oxen-ui/ui-components";
+import { ContextMenu } from "./ContextMenu";
 
 const menuRect = {
   width: 200,

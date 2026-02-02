@@ -7,8 +7,7 @@
  */
 
 import type { CSSProperties } from "react";
-import type { GradientFill } from "@oxen-office/drawing-ml/domain/fill";
-import type { Fill } from "@oxen-office/pptx/domain/color/types";
+import type { BaseFill, GradientFill } from "@oxen-office/drawing-ml/domain/fill";
 import { getHexFromColor, getStopHex } from "./fill/fill-utils";
 import { colorTokens } from "@oxen-ui/ui-components/design-tokens";
 
@@ -71,7 +70,7 @@ function getGradientStyle(fill: GradientFill): CSSProperties {
   };
 }
 
-function getAlphaFromColor(fill: Fill): number {
+function getAlphaFromColor(fill: BaseFill): number {
   if (fill.type !== "solidFill") {
     return 1;
   }
@@ -79,7 +78,7 @@ function getAlphaFromColor(fill: Fill): number {
 }
 
 export type FillPreviewProps = {
-  readonly fill: Fill;
+  readonly fill: BaseFill;
 };
 
 /**
@@ -113,6 +112,6 @@ export function FillPreview({ fill }: FillPreviewProps) {
     return <div style={getGradientStyle(fill)} />;
   }
 
-  // Fallback for unsupported fill types (blipFill, patternFill, groupFill)
+  // Fallback for unsupported fill types (patternFill, groupFill)
   return <div style={noFillStyle} />;
 }

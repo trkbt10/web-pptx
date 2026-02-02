@@ -8,7 +8,7 @@
 import { useCallback, useMemo, type CSSProperties } from "react";
 import { Input, Select } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
-import { FillPreview } from "../../ui/color";
+import { FillPreview } from "@oxen-ui/color-editor";
 import { PercentEditor, DegreesEditor } from "../primitives";
 import { deg, pct } from "@oxen-office/drawing-ml/domain/units";
 import type { ColorSpec, SrgbColor, SchemeColor, SystemColor, PresetColor, HslColor } from "@oxen-office/drawing-ml/domain/color";

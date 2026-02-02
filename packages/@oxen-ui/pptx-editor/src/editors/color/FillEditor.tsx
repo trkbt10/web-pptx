@@ -12,7 +12,8 @@
 import { useCallback, type CSSProperties, type ChangeEvent } from "react";
 import { Select, Toggle } from "@oxen-ui/ui-components/primitives";
 import { FieldRow } from "@oxen-ui/ui-components/layout";
-import { FillPickerPopover, ColorPickerPopover } from "../../ui/color";
+import { FillPickerPopover, ColorPickerPopover, FillPreview } from "@oxen-ui/color-editor";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
 import { createDefaultColor } from "./ColorEditor";
 import { GradientStopsEditor, createDefaultGradientStops } from "./GradientStopsEditor";
 import { DegreesEditor } from "../primitives/DegreesEditor";
@@ -192,11 +193,25 @@ export function FillEditor({
 }: FillEditorProps) {
   const fillTypeOptions = getFilteredFillOptions(allowedTypes);
 
-  // Compact mode: single popover
+  // Compact mode: single popover (only for BaseFill-compatible types)
   if (compact) {
+    // FillPickerPopover only supports BaseFill types (noFill, solidFill, gradientFill, patternFill, groupFill)
+    // BlipFill is PPTX-specific and not supported
+    if (value.type === "blipFill") {
+      // Show a static preview for unsupported types
+      const previewStyle: CSSProperties = {
+        width: "24px",
+        height: "24px",
+        borderRadius: radiusTokens.sm,
+        border: `1px solid var(--border-subtle, ${colorTokens.border.subtle})`,
+        backgroundColor: `var(--bg-tertiary, ${colorTokens.background.tertiary})`,
+        opacity: disabled ? 0.5 : 1,
+      };
+      return <div style={previewStyle} title="Image fill (not editable)" />;
+    }
     return (
       <FillPickerPopover
-        value={value}
+        value={value as BaseFill}
         onChange={onChange}
         disabled={disabled}
       />
@@ -258,7 +273,7 @@ export function FillEditor({
     return (
       <div className={className} style={{ ...containerStyle, ...style }}>
         <div style={rowStyle}>
-          <FillPickerPopover value={value} onChange={onChange} disabled={disabled} />
+          <FillPickerPopover value={value as BaseFill} onChange={onChange} disabled={disabled} />
           <Select
             value={value.type}
             onChange={handleTypeChange}

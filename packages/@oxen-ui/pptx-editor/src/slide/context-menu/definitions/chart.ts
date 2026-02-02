@@ -4,7 +4,7 @@
  * Menu items specific to chart elements.
  */
 
-import type { MenuEntry } from "../../../ui/context-menu";
+import type { MenuEntry } from "@oxen-ui/ui-components";
 
 /**
  * Get chart-specific menu items

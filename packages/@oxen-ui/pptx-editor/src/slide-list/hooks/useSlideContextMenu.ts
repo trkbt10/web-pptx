@@ -7,7 +7,7 @@
 import { useCallback, useState } from "react";
 import type { SlideId, SlideWithId } from "@oxen-office/pptx/app";
 import type { SlideContextMenuState } from "../types";
-import type { MenuEntry } from "../../ui/context-menu/types";
+import type { MenuEntry } from "@oxen-ui/ui-components";
 
 export type UseSlideContextMenuOptions = {
   /** Slides array */

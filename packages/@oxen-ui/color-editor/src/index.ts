@@ -1,5 +1,8 @@
 /**
- * @file Color UI components exports
+ * @file Color editor exports
+ *
+ * Generic color editor components independent of specific document formats.
+ * Uses DrawingML types from @oxen-office/drawing-ml for fill representations.
  */
 
 // Visualization
@@ -8,6 +11,9 @@ export { FillPreview, type FillPreviewProps } from "./FillPreview";
 // Popovers
 export { ColorPickerPopover, type ColorPickerPopoverProps } from "./ColorPickerPopover";
 export { FillPickerPopover, type FillPickerPopoverProps } from "./FillPickerPopover";
+
+// Labeled slider
+export { LabeledSlider, type LabeledSliderProps } from "./LabeledSlider";
 
 // Input components
 export {

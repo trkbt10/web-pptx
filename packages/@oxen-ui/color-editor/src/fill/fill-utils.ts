@@ -5,12 +5,11 @@
  */
 
 import type { Color } from "@oxen-office/drawing-ml/domain/color";
-import type { GradientStop } from "@oxen-office/drawing-ml/domain/fill";
+import type { BaseFill, GradientStop } from "@oxen-office/drawing-ml/domain/fill";
 import { deg, pct } from "@oxen-office/drawing-ml/domain/units";
-import type { Fill } from "@oxen-office/pptx/domain/color/types";
 import type { SelectOption } from "@oxen-ui/ui-components/types";
 
-export type FillType = Fill["type"];
+export type FillType = BaseFill["type"];
 
 export const fillTypeOptions: SelectOption<FillType>[] = [
   { value: "noFill", label: "None" },
@@ -24,7 +23,7 @@ export function createDefaultColor(hex: string): Color {
 }
 
 /** Create a default Fill value for the given type. */
-export function createDefaultFill(type: FillType): Fill {
+export function createDefaultFill(type: FillType): BaseFill {
   switch (type) {
     case "noFill":
       return { type: "noFill" };

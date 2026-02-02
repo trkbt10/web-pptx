@@ -32,11 +32,11 @@ export {
 // Fonts (injectable catalog types)
 export type { FontCatalog, FontCatalogFamilyRecord } from "./fonts/types";
 
-// UI Color
+// UI Color (re-exported from @oxen-ui/color-editor)
 export {
   FillPreview,
   type FillPreviewProps,
-} from "./ui/color";
+} from "@oxen-ui/color-editor";
 
 // UI Line
 export {

@@ -27,8 +27,7 @@ import type { SelectionState } from "../context/slide/state";
 import { getShapeId, hasShapeId } from "../shape/identity";
 import { findShapeById, findShapeByIdWithParents, isTopLevelShape } from "../shape/query";
 import type { ShapeHierarchyTarget } from "../shape/hierarchy";
-import { ContextMenu } from "@oxen-ui/ui-components";
-import type { MenuEntry } from "../ui/context-menu";
+import { ContextMenu, type MenuEntry } from "@oxen-ui/ui-components";
 import {
   RectIcon,
   EllipseIcon,

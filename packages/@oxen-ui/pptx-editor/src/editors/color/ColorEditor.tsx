@@ -8,7 +8,7 @@
 
 import { useCallback, useMemo, useState, type CSSProperties } from "react";
 import { Button, Select } from "@oxen-ui/ui-components/primitives";
-import { ColorPickerPopover } from "../../ui/color";
+import { ColorPickerPopover } from "@oxen-ui/color-editor";
 import { ColorTransformEditor } from "./ColorTransformEditor";
 import { createDefaultSrgbColor } from "./ColorSpecEditor";
 import type { Color, ColorSpec, ColorTransform, SrgbColor, SchemeColor } from "@oxen-office/drawing-ml/domain/color";

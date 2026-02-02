@@ -8,8 +8,8 @@ import { useState, useCallback, type CSSProperties } from "react";
 import { Slider } from "@oxen-ui/ui-components/primitives";
 import { Select } from "@oxen-ui/ui-components/primitives";
 import { LinePreview } from "./LinePreview";
-import { FillPickerPopover } from "../color/FillPickerPopover";
-import { createDefaultFill } from "../color/fill";
+import { FillPickerPopover, createDefaultFill } from "@oxen-ui/color-editor";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
 import { px } from "@oxen-office/drawing-ml/domain/units";
 import type { Line, LineEnd, Fill } from "@oxen-office/pptx/domain/color/types";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
@@ -278,8 +278,9 @@ export function LineEditor({
   );
 
   const handleFillChange = useCallback(
-    (fill: Fill) => {
-      onChange({ ...value, fill });
+    (fill: BaseFill) => {
+      // BaseFill is compatible with Fill for stroke purposes
+      onChange({ ...value, fill: fill as Fill });
     },
     [value, onChange]
   );
@@ -357,7 +358,7 @@ export function LineEditor({
       <div style={sectionStyle}>
         <span style={labelStyle}>Stroke Color</span>
         <FillPickerPopover
-          value={value.fill}
+          value={value.fill as BaseFill}
           onChange={handleFillChange}
           disabled={disabled}
         />

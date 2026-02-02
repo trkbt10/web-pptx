@@ -18,7 +18,7 @@ import type { SlideLayoutOption } from "@oxen-office/pptx/app";
 import type { ThemePreset } from "./types";
 import { THEME_PRESETS, OFFICE_THEME } from "./presets";
 import { LayoutEditor } from "./LayoutEditor";
-import { ColorPickerPopover } from "../../ui/color/ColorPickerPopover";
+import { ColorPickerPopover } from "@oxen-ui/color-editor";
 import { Input } from "@oxen-ui/ui-components/primitives/Input";
 import { Button } from "@oxen-ui/ui-components/primitives/Button";
 import { colorTokens, fontTokens, spacingTokens, radiusTokens, iconTokens } from "@oxen-ui/ui-components/design-tokens";

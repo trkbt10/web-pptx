@@ -44,30 +44,15 @@ export type CalculateCharWidthOptions = {
   readonly fontFamily: string;
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * Calculate the width of a single character with kerning context.
  */
-export function calculateCharWidth({ char, prevChar, fontSize, fontFamily }: CalculateCharWidthOptions): CharWidthResult {
+export function calculateCharWidth({
+  char,
+  prevChar,
+  fontSize,
+  fontFamily,
+}: CalculateCharWidthOptions): CharWidthResult {
   const charCode = char.charCodeAt(0);
   const fontSizePx = (fontSize as number) * PT_TO_PX;
   const isCjk = isCjkCodePoint(charCode);
@@ -105,26 +90,6 @@ export type EstimateTextWidthOptions = {
   readonly letterSpacing: Pixels;
   readonly fontFamily: string;
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * Estimate the width of a text string with font-aware metrics and kerning.
@@ -246,30 +211,15 @@ export type MeasureTextDetailedOptions = {
   readonly fontFamily: string;
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * Calculate detailed character measurements for a text span.
  */
-export function measureTextDetailed({ text, fontSize, letterSpacing, fontFamily }: MeasureTextDetailedOptions): DetailedMeasurement {
+export function measureTextDetailed({
+  text,
+  fontSize,
+  letterSpacing,
+  fontFamily,
+}: MeasureTextDetailedOptions): DetailedMeasurement {
   const chars = Array.from(text);
   const letterSpacingNum = letterSpacing as number;
 
@@ -284,7 +234,7 @@ export function measureTextDetailed({ text, fontSize, letterSpacing, fontFamily 
       acc.totalWidth += (charResult.totalWidth as number) + spacing;
       return acc;
     },
-    { totalWidth: 0, charWidths: [] as CharWidthResult[], positions: [] as Pixels[] }
+    { totalWidth: 0, charWidths: [] as CharWidthResult[], positions: [] as Pixels[] },
   );
 
   return {

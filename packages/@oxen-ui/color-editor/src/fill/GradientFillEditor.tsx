@@ -17,7 +17,7 @@ import {
 } from "react";
 import type { GradientFill, LinearGradient } from "@oxen-office/drawing-ml/domain/fill";
 import { deg, pct } from "@oxen-office/drawing-ml/domain/units";
-import { LabeledSlider } from "../../common";
+import { LabeledSlider } from "../LabeledSlider";
 import { GradientStopRow } from "./GradientStopRow";
 import { createDefaultColor, getStopHex } from "./fill-utils";
 

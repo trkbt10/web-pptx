@@ -5,7 +5,7 @@
 // @vitest-environment jsdom
 
 import { render, fireEvent } from "@testing-library/react";
-import { ContextMenuItem } from "@oxen-ui/ui-components";
+import { ContextMenuItem } from "./ContextMenuItem";
 import type { MenuItem } from "./types";
 
 describe("ContextMenuItem", () => {

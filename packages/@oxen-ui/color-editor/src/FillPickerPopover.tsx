@@ -7,7 +7,7 @@
 import { useCallback, type CSSProperties, type ReactNode } from "react";
 import { Popover } from "@oxen-ui/ui-components/primitives";
 import { Select } from "@oxen-ui/ui-components/primitives";
-import type { Fill } from "@oxen-office/pptx/domain/color/types";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
 import { FillPreview } from "./FillPreview";
 import {
   fillTypeOptions,
@@ -19,9 +19,9 @@ import {
 
 export type FillPickerPopoverProps = {
   /** Current fill value */
-  readonly value: Fill;
+  readonly value: BaseFill;
   /** Called when fill changes */
-  readonly onChange: (fill: Fill) => void;
+  readonly onChange: (fill: BaseFill) => void;
   /** Disable interaction */
   readonly disabled?: boolean;
   /** Custom trigger element (parent controls size and interaction styling) */

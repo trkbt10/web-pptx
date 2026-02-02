@@ -12,42 +12,17 @@ export type CreateDiagramRenderContextOptions<TShape> = {
   readonly renderShape: (shape: TShape) => string;
 };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /**
  * Create a DiagramRenderContext from a PPTX CoreRenderContext.
  */
 export function createDiagramRenderContext<TShape>(
-  options: CreateDiagramRenderContextOptions<TShape>
+  options: CreateDiagramRenderContextOptions<TShape>,
 ): DiagramRenderContext<TShape, string> {
   const { ctx, renderShape } = options;
 
   return {
     renderShape,
-    getResource: <TParsed,>(resourceId: string) => ctx.resourceStore?.get<TParsed>(resourceId),
+    getResource: <TParsed>(resourceId: string) => ctx.resourceStore?.get<TParsed>(resourceId),
     warnings: ctx.warnings,
   };
 }

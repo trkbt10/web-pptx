@@ -4,7 +4,7 @@
  * Menu items specific to pic (picture) elements.
  */
 
-import type { MenuEntry } from "../../../ui/context-menu";
+import type { MenuEntry } from "@oxen-ui/ui-components";
 
 /**
  * Get picture-specific menu items

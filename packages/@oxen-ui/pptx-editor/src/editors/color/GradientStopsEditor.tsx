@@ -7,7 +7,7 @@
 
 import { useState, useCallback, useRef, type CSSProperties, type MouseEvent, type PointerEvent } from "react";
 import { Button, Popover } from "@oxen-ui/ui-components/primitives";
-import { FillPreview } from "../../ui/color";
+import { FillPreview } from "@oxen-ui/color-editor";
 import { GradientStopEditor } from "./GradientStopEditor";
 import { createDefaultColor } from "./ColorEditor";
 import type { Color } from "@oxen-office/drawing-ml/domain/color";

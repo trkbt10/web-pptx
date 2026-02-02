@@ -6,18 +6,18 @@
 
 import { render } from "@testing-library/react";
 import { deg, pct } from "@oxen-office/drawing-ml/domain/units";
-import type { Fill } from "@oxen-office/pptx/domain/color/types";
+import type { BaseFill } from "@oxen-office/drawing-ml/domain/fill";
 import { FillPreview } from "./FillPreview";
 
 describe("FillPreview", () => {
   it("renders noFill", () => {
-    const fill: Fill = { type: "noFill" };
+    const fill: BaseFill = { type: "noFill" };
     const { container } = render(<FillPreview fill={fill} />);
     expect(container.querySelector("div")?.style.border).toContain("dashed");
   });
 
   it("renders solidFill with checkerboard when alpha < 1", () => {
-    const fill: Fill = {
+    const fill: BaseFill = {
       type: "solidFill",
       color: {
         spec: { type: "srgb", value: "FF0000" },
@@ -33,7 +33,7 @@ describe("FillPreview", () => {
   });
 
   it("renders gradientFill", () => {
-    const fill: Fill = {
+    const fill: BaseFill = {
       type: "gradientFill",
       stops: [
         { position: pct(0), color: { spec: { type: "srgb", value: "000000" } } },
@@ -46,4 +46,3 @@ describe("FillPreview", () => {
     expect((container.firstChild as HTMLElement).style.background).toContain("linear-gradient");
   });
 });
-

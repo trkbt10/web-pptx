@@ -10,7 +10,7 @@ import { useCallback, useMemo, type CSSProperties, type ReactNode } from "react"
 import type { SolidFill } from "@oxen-office/drawing-ml/domain/fill";
 import { pct } from "@oxen-office/drawing-ml/domain/units";
 import { Popover } from "@oxen-ui/ui-components/primitives";
-import { LabeledSlider } from "../common";
+import { LabeledSlider } from "./LabeledSlider";
 import { FillPreview } from "./FillPreview";
 import { HexColorEditor } from "./components";
 import { colorTokens, radiusTokens, spacingTokens } from "@oxen-ui/ui-components/design-tokens";

@@ -5,7 +5,7 @@
  * copy, cut, paste, duplicate, delete
  */
 
-import type { MenuEntry } from "../../../ui/context-menu";
+import type { MenuEntry } from "@oxen-ui/ui-components";
 import type { ContextMenuActions } from "../SlideContextMenu";
 
 /**

@@ -4,7 +4,7 @@
  * Menu items specific to cxnSp (connector) elements.
  */
 
-import type { MenuEntry } from "../../../ui/context-menu";
+import type { MenuEntry } from "@oxen-ui/ui-components";
 
 /**
  * Get connector-specific menu items
