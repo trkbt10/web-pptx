@@ -11,10 +11,23 @@ import {
 } from "../kiwi/decoder";
 import { decompressDeflateRaw, decompressZstd, detectCompression } from "./decompress";
 import { loadZipPackage } from "@oxen/zip";
+import type { FigBlob } from "./blob-decoder";
 
 // =============================================================================
 // Parsed Fig File Result
 // =============================================================================
+
+/**
+ * Image data extracted from .fig file
+ */
+export type FigImage = {
+  /** Image filename/ref */
+  readonly ref: string;
+  /** Image data as Uint8Array */
+  readonly data: Uint8Array;
+  /** MIME type */
+  readonly mimeType: string;
+};
 
 /**
  * Result of parsing a .fig file
@@ -24,6 +37,10 @@ export type ParsedFigFile = {
   readonly schema: KiwiSchema;
   /** Node changes from the message */
   readonly nodeChanges: readonly FigNode[];
+  /** Blobs containing path data, images, etc. */
+  readonly blobs: readonly FigBlob[];
+  /** Images extracted from the ZIP (keyed by imageRef) */
+  readonly images: ReadonlyMap<string, FigImage>;
   /** Raw message data */
   readonly message: Record<string, unknown>;
 };
@@ -51,27 +68,108 @@ function isZipFile(data: Uint8Array): boolean {
 }
 
 /**
- * Extract canvas.fig from a Figma ZIP file
+ * Result of extracting from Figma ZIP
  */
-async function extractCanvasFromZip(data: Uint8Array): Promise<Uint8Array> {
-  const zipPackage = await loadZipPackage(data);
+type ZipExtractResult = {
+  readonly canvasData: Uint8Array;
+  readonly images: ReadonlyMap<string, FigImage>;
+};
 
-  // Try common canvas file names
+/**
+ * Detect MIME type from file content (magic bytes)
+ */
+function getMimeTypeFromContent(data: Uint8Array): string {
+  // Check for PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (data.length >= 8 && data[0] === 0x89 && data[1] === 0x50 && data[2] === 0x4E && data[3] === 0x47) {
+    return "image/png";
+  }
+  // Check for JPEG: FF D8 FF
+  if (data.length >= 3 && data[0] === 0xFF && data[1] === 0xD8 && data[2] === 0xFF) {
+    return "image/jpeg";
+  }
+  // Check for GIF: 47 49 46 38
+  if (data.length >= 4 && data[0] === 0x47 && data[1] === 0x49 && data[2] === 0x46 && data[3] === 0x38) {
+    return "image/gif";
+  }
+  // Check for WebP: 52 49 46 46 ... 57 45 42 50
+  if (data.length >= 12 && data[0] === 0x52 && data[1] === 0x49 && data[2] === 0x46 && data[3] === 0x46 &&
+      data[8] === 0x57 && data[9] === 0x45 && data[10] === 0x42 && data[11] === 0x50) {
+    return "image/webp";
+  }
+  return "application/octet-stream";
+}
+
+/**
+ * Get MIME type from file extension (fallback)
+ */
+function getMimeTypeFromExt(filename: string): string {
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+  switch (ext) {
+    case "png":
+      return "image/png";
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "gif":
+      return "image/gif";
+    case "webp":
+      return "image/webp";
+    case "svg":
+      return "image/svg+xml";
+    default:
+      return "application/octet-stream";
+  }
+}
+
+/**
+ * Extract canvas.fig and images from a Figma ZIP file
+ */
+async function extractFromZip(data: Uint8Array): Promise<ZipExtractResult> {
+  const zipPackage = await loadZipPackage(data);
+  const files = zipPackage.listFiles();
+
+  // Find canvas file
   const canvasNames = ["canvas.fig", "thumbnail.fig"];
+  let canvasData: Uint8Array | null = null;
 
   for (const name of canvasNames) {
     const content = zipPackage.readBinary(name);
     if (content) {
-      return new Uint8Array(content);
+      canvasData = new Uint8Array(content);
+      break;
     }
   }
 
-  // List available files for debugging
-  const files = zipPackage.listFiles();
+  if (!canvasData) {
+    throw new Error(
+      `Could not find canvas.fig in ZIP. Available files: ${files.join(", ")}`
+    );
+  }
 
-  throw new Error(
-    `Could not find canvas.fig in ZIP. Available files: ${files.join(", ")}`
-  );
+  // Extract images from images/ directory
+  const images = new Map<string, FigImage>();
+  for (const file of files) {
+    if (file.startsWith("images/") && file.length > 7) {
+      const imageData = zipPackage.readBinary(file);
+      if (imageData) {
+        // Extract the image ref (filename without images/ prefix)
+        const ref = file.substring(7);
+        const data = new Uint8Array(imageData);
+        // Try content-based detection first, then fallback to extension
+        let mimeType = getMimeTypeFromContent(data);
+        if (mimeType === "application/octet-stream") {
+          mimeType = getMimeTypeFromExt(file);
+        }
+        images.set(ref, {
+          ref,
+          data,
+          mimeType,
+        });
+      }
+    }
+  }
+
+  return { canvasData, images };
 }
 
 // =============================================================================
@@ -101,7 +199,10 @@ function decompressFigChunk(data: Uint8Array): Uint8Array {
 /**
  * Parse raw fig-kiwi data (not ZIP wrapped)
  */
-function parseRawFigData(data: Uint8Array): ParsedFigFile {
+function parseRawFigData(
+  data: Uint8Array,
+  images: ReadonlyMap<string, FigImage> = new Map()
+): ParsedFigFile {
   // Validate file
   if (!isFigFile(data)) {
     throw new Error("Invalid fig-kiwi data: missing magic header");
@@ -128,9 +229,14 @@ function parseRawFigData(data: Uint8Array): ParsedFigFile {
   // Extract node changes
   const nodeChanges = (message.nodeChanges ?? []) as readonly FigNode[];
 
+  // Extract blobs
+  const blobs = (message.blobs ?? []) as readonly FigBlob[];
+
   return {
     schema,
     nodeChanges,
+    blobs,
+    images,
     message,
   };
 }
@@ -148,8 +254,8 @@ function parseRawFigData(data: Uint8Array): ParsedFigFile {
 export async function parseFigFile(data: Uint8Array): Promise<ParsedFigFile> {
   // Check if it's a ZIP file (Figma's actual format)
   if (isZipFile(data)) {
-    const canvasData = await extractCanvasFromZip(data);
-    return parseRawFigData(canvasData);
+    const { canvasData, images } = await extractFromZip(data);
+    return parseRawFigData(canvasData, images);
   }
 
   // Otherwise try raw fig-kiwi format
