@@ -10,9 +10,45 @@
     "test": "vitest --run --passWithNoTests --config ../../../vitest.config.ts '../../../packages/@oxen/fig/src'"
   },
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+    "./types": {
+      "types": "./src/types.ts",
+      "default": "./src/types.ts"
+    },
+    "./errors": {
+      "types": "./src/errors.ts",
+      "default": "./src/errors.ts"
+    },
+    "./parser": {
+      "types": "./src/parser/index.ts",
+      "default": "./src/parser/index.ts"
+    },
+    "./builder": {
+      "types": "./src/builder/index.ts",
+      "default": "./src/builder/index.ts"
+    },
+    "./kiwi/byte-buffer": {
+      "types": "./src/kiwi/byte-buffer.ts",
+      "default": "./src/kiwi/byte-buffer.ts"
+    },
+    "./kiwi/schema": {
+      "types": "./src/kiwi/schema.ts",
+      "default": "./src/kiwi/schema.ts"
+    },
+    "./kiwi/decoder": {
+      "types": "./src/kiwi/decoder.ts",
+      "default": "./src/kiwi/decoder.ts"
+    },
+    "./kiwi/encoder": {
+      "types": "./src/kiwi/encoder.ts",
+      "default": "./src/kiwi/encoder.ts"
+    },
+    "./kiwi/stream": {
+      "types": "./src/kiwi/stream.ts",
+      "default": "./src/kiwi/stream.ts"
+    },
+    "./test-helpers": {
+      "types": "./src/kiwi/test-helpers.ts",
+      "default": "./src/kiwi/test-helpers.ts"
     }
   },
   "dependencies": {

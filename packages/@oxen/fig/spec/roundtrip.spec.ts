@@ -10,16 +10,20 @@ import {
   parseFigHeader,
   getPayload,
   decompressDeflateRaw,
-  buildFigHeader,
+} from "../src/parser";
+import { buildFigHeader } from "../src/builder";
+import {
   decodeFigSchema,
   decodeFigMessage,
   splitFigChunks,
+} from "../src/kiwi/decoder";
+import { StreamingFigEncoder } from "../src/kiwi/stream";
+import {
   createTestSchema,
   createTestNode,
   buildTestFigFile,
   createSampleFigFile,
-  StreamingFigEncoder,
-} from "../src";
+} from "../src/kiwi/test-helpers";
 
 describe("fig file parsing (generated data)", () => {
   it("validates header", () => {

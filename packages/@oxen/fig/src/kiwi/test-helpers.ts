@@ -6,6 +6,7 @@ import { deflateRaw } from "pako";
 import type { KiwiSchema, KiwiDefinition } from "../types";
 import { KIWI_TYPE } from "./schema";
 import { ByteBuffer } from "./byte-buffer";
+import { StreamingFigEncoder } from "./stream";
 
 // =============================================================================
 // Minimal Test Schema
@@ -289,7 +290,6 @@ export function createSampleFigFile(): {
   ];
 
   // Encode message using streaming encoder
-  const { StreamingFigEncoder } = require("./stream");
   const encoder = new StreamingFigEncoder({ schema });
 
   encoder.writeHeader({
