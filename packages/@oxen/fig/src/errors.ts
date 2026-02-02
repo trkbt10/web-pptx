@@ -3,7 +3,6 @@
  */
 
 /** Base error for fig operations */
-// eslint-disable-next-line no-restricted-syntax -- Error classes require inheritance
 export class FigError extends Error {
   constructor(message: string) {
     super(message);

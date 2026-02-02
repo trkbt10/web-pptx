@@ -7,7 +7,7 @@
 
 import type { KiwiSchema, KiwiDefinition, KiwiField } from "../types";
 import { ByteBuffer } from "./byte-buffer";
-import { FigParseError } from "../errors";
+import { FigParseError, FigBuildError } from "../errors";
 
 // =============================================================================
 // Streaming Decoder
@@ -141,7 +141,9 @@ export class StreamingFigDecoder {
     let fieldIndex: number;
     while ((fieldIndex = this.buffer.readVarUint()) !== 0) {
       const field = fieldMap.get(fieldIndex);
-      if (!field) break;
+      if (!field) {
+        break;
+      }
 
       if (field.name === "nodeChanges") {
         // Just read count, don't decode nodes
@@ -166,7 +168,9 @@ export class StreamingFigDecoder {
   }
 
   private decodeFieldValue(field: KiwiField): unknown {
-    if (!this.buffer) throw new FigParseError("No buffer");
+    if (!this.buffer) {
+      throw new FigParseError("No buffer");
+    }
 
     if (field.isArray) {
       const count = this.buffer.readVarUint();
@@ -180,7 +184,9 @@ export class StreamingFigDecoder {
   }
 
   private decodeValueByTypeId(typeId: number): unknown {
-    if (!this.buffer) throw new FigParseError("No buffer");
+    if (!this.buffer) {
+      throw new FigParseError("No buffer");
+    }
 
     if (typeId < 0) {
       const primitiveType = PRIMITIVE_TYPES[typeId];
@@ -199,7 +205,9 @@ export class StreamingFigDecoder {
   }
 
   private decodeDefinition(definition: KiwiDefinition): Record<string, unknown> {
-    if (!this.buffer) throw new FigParseError("No buffer");
+    if (!this.buffer) {
+      throw new FigParseError("No buffer");
+    }
 
     const result: Record<string, unknown> = {};
 
@@ -230,7 +238,9 @@ export class StreamingFigDecoder {
   }
 
   private decodePrimitive(type: string): unknown {
-    if (!this.buffer) throw new FigParseError("No buffer");
+    if (!this.buffer) {
+      throw new FigParseError("No buffer");
+    }
 
     switch (type) {
       case "bool":
@@ -423,12 +433,14 @@ export class StreamingFigEncoder {
 
   private encodeFieldValue(field: KiwiField, value: unknown): void {
     if (field.isArray) {
-      const items = value as unknown[];
-      this.buffer.writeVarUint(items?.length ?? 0);
-      if (items) {
-        for (const item of items) {
-          this.encodeValueByTypeId(field.typeId, item);
-        }
+      if (!Array.isArray(value)) {
+        throw new FigBuildError(
+          `Expected array for field "${field.name}", got ${typeof value}`
+        );
+      }
+      this.buffer.writeVarUint(value.length);
+      for (const item of value) {
+        this.encodeValueByTypeId(field.typeId, item);
       }
     } else {
       this.encodeValueByTypeId(field.typeId, value);
@@ -443,7 +455,13 @@ export class StreamingFigEncoder {
 
     const definition = this.schema.definitions[typeId];
     if (!definition) {
-      throw new FigParseError(`Unknown type index: ${typeId}`);
+      throw new FigBuildError(`Unknown type index: ${typeId}`);
+    }
+
+    if (typeof value !== "object" || value === null) {
+      throw new FigBuildError(
+        `Expected object for type "${definition.name}", got ${value === null ? "null" : typeof value}`
+      );
     }
 
     this.encodeDefinition(definition, value as Record<string, unknown>);
@@ -467,40 +485,83 @@ export class StreamingFigEncoder {
       }
       this.buffer.writeVarUint(0);
     } else if (definition.kind === "ENUM") {
-      const enumValue =
-        typeof value === "object" && value !== null && "value" in value
-          ? (value as { value: number }).value
-          : 0;
+      const enumValue = this.extractEnumValue(value);
       this.buffer.writeVarUint(enumValue);
     }
+  }
+
+  private extractEnumValue(value: unknown): number {
+    if (typeof value !== "object" || value === null) {
+      throw new FigBuildError(
+        `Expected enum object with "value" property, got ${value === null ? "null" : typeof value}`
+      );
+    }
+    if (!("value" in value)) {
+      throw new FigBuildError(
+        `Expected enum object with "value" property, got object without "value"`
+      );
+    }
+    const enumValue = (value as { value: unknown }).value;
+    if (typeof enumValue !== "number") {
+      throw new FigBuildError(
+        `Expected enum "value" to be number, got ${typeof enumValue}`
+      );
+    }
+    return enumValue;
   }
 
   private encodePrimitive(type: string, value: unknown): void {
     switch (type) {
       case "bool":
+        if (typeof value !== "boolean" && typeof value !== "number") {
+          throw new FigBuildError(`Expected boolean for type "bool", got ${typeof value}`);
+        }
         this.buffer.writeByte(value ? 1 : 0);
         break;
       case "byte":
-        this.buffer.writeByte(value as number);
+        this.assertNumber(value, "byte");
+        this.buffer.writeByte(value);
         break;
       case "int":
-        this.buffer.writeVarInt(value as number);
+        this.assertNumber(value, "int");
+        this.buffer.writeVarInt(value);
         break;
       case "uint":
-        this.buffer.writeVarUint(value as number);
+        this.assertNumber(value, "uint");
+        this.buffer.writeVarUint(value);
         break;
       case "float":
-        this.writeFloat32(value as number);
+        this.assertNumber(value, "float");
+        this.writeFloat32(value);
         break;
       case "string":
-        this.writeNullString(value as string);
+        if (typeof value !== "string") {
+          throw new FigBuildError(`Expected string for type "string", got ${typeof value}`);
+        }
+        this.writeNullString(value);
         break;
       case "int64":
-        this.buffer.writeVarInt64(value as bigint);
+        this.assertBigint(value, "int64");
+        this.buffer.writeVarInt64(value);
         break;
       case "uint64":
-        this.buffer.writeVarUint64(value as bigint);
+        this.assertBigint(value, "uint64");
+        this.buffer.writeVarUint64(value);
         break;
+      default:
+        throw new FigBuildError(`Unknown primitive type: ${type}`);
+    }
+  }
+
+  private assertNumber(value: unknown, type: string): asserts value is number {
+    if (typeof value !== "number") {
+      throw new FigBuildError(`Expected number for type "${type}", got ${typeof value}`);
+    }
+  }
+
+  private assertBigint(value: unknown, type: string): asserts value is bigint {
+    if (typeof value !== "bigint") {
+      throw new FigBuildError(`Expected bigint for type "${type}", got ${typeof value}`);
     }
   }
 

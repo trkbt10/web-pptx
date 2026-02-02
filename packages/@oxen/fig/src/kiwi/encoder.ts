@@ -66,10 +66,7 @@ export function encodeSchema(schema: KiwiSchema): Uint8Array {
     for (const field of def.fields) {
       buffer.writeString(field.name);
       // Use typeId directly if available, otherwise resolve from type name
-      const typeId =
-        field.typeId !== undefined
-          ? field.typeId
-          : resolveTypeId(field.type, schema.definitions);
+      const typeId = field.typeId ?? resolveTypeId(field.type, schema.definitions);
       buffer.writeVarInt(typeId);
       buffer.writeByte(field.isArray ? 1 : 0);
       buffer.writeVarUint(field.value);
