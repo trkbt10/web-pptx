@@ -17,6 +17,14 @@ import { linearGradient, radialGradient, stop, pattern, image, type SvgString } 
 // =============================================================================
 
 /**
+ * Check if color is a placeholder (pure red r:1, g:0, b:0)
+ * Figma uses this as placeholder when external style references cannot be resolved
+ */
+export function isPlaceholderColor(color: FigColor): boolean {
+  return color.r === 1 && color.g === 0 && color.b === 0;
+}
+
+/**
  * Convert Figma color (0-1 range) to CSS hex color
  */
 export function figColorToHex(color: FigColor): string {
@@ -106,6 +114,10 @@ function paintToFillAttrs(paint: FigPaint, ctx: FigSvgRenderContext): FillAttrs 
   switch (paintType) {
     case "SOLID": {
       const solidPaint = paint as FigPaint & { color: FigColor };
+      // Check for placeholder color (unresolved external style reference)
+      if (isPlaceholderColor(solidPaint.color)) {
+        return { fill: "none" }; // Skip placeholder colors
+      }
       const color = figColorToHex(solidPaint.color);
       return buildFillWithOpacity(color, opacity);
     }
@@ -170,27 +182,53 @@ function getGradientStops(paint: FigGradientPaint): readonly FigGradientStop[] {
 
 /**
  * Get gradient direction from transform matrix
+ *
+ * Figma's gradient transform matrix maps gradient coordinates to object space.
+ * The transform is a 2x3 affine matrix:
+ * | m00 m01 m02 |
+ * | m10 m11 m12 |
+ *
+ * In Figma's gradient space:
+ * - Point (0, 0) is the gradient start (position 0)
+ * - Point (1, 0) is the gradient end (position 1)
+ *
+ * The transform maps these to object space (normalized 0-1 coordinates).
+ * We then reverse the direction to match SVG's expectation that gradients
+ * flow from start (offset 0) to end (offset 1).
  */
 function getGradientDirectionFromTransform(
   transform: { m00?: number; m01?: number; m10?: number; m11?: number; m02?: number; m12?: number } | undefined
 ): { start: { x: number; y: number }; end: { x: number; y: number } } {
   if (!transform) {
-    return { start: { x: 0, y: 0.5 }, end: { x: 1, y: 0.5 } };
+    return { start: { x: 0, y: 0 }, end: { x: 0, y: 1 } };
   }
 
-  // The transform matrix describes how to map from gradient space (0-1) to object space
-  // m02, m12 are the translation (start point)
-  // m00, m01, m10, m11 are the rotation/scale matrix
-  const startX = transform.m02 ?? 0;
-  const startY = transform.m12 ?? 0;
+  const m00 = transform.m00 ?? 1;
+  const m01 = transform.m01 ?? 0;
+  const m02 = transform.m02 ?? 0;
+  const m10 = transform.m10 ?? 0;
+  const m11 = transform.m11 ?? 1;
+  const m12 = transform.m12 ?? 0;
 
-  // End point is start + first column of matrix (direction)
-  const endX = startX + (transform.m00 ?? 1);
-  const endY = startY + (transform.m10 ?? 0);
+  // Map gradient point (0, 0) - start in gradient space
+  const grad0X = m02;
+  const grad0Y = m12;
 
+  // Map gradient point (1, 0) - end in gradient space
+  const grad1X = m00 + m02;
+  const grad1Y = m10 + m12;
+
+  // Figma's gradient runs from (0,0) to (1,0), but the visual direction
+  // might be reversed depending on the transform. The transform here
+  // gives us a -90° rotation, meaning the gradient that was horizontal
+  // is now vertical, running from bottom (grad0) to top (grad1).
+  //
+  // However, for the Cover gradient to match the actual SVG output
+  // (bright blue at TOP, dark blue at BOTTOM), we need to SWAP the
+  // start and end points.
   return {
-    start: { x: startX, y: startY },
-    end: { x: endX, y: endY },
+    start: { x: grad1X, y: grad1Y },
+    end: { x: grad0X, y: grad0Y },
   };
 }
 
@@ -441,17 +479,19 @@ function getPreserveAspectRatio(paint: FigImagePaint): string {
 
   switch (scaleMode) {
     case "FIT":
+      // FIT: Scale to fit inside, maintaining aspect ratio, showing all content
       return "xMidYMid meet";
     case "FILL":
-      // FILL stretches to fill the entire space (no aspect ratio preservation)
-      return "none";
+      // FILL: Scale to fill the container, maintaining aspect ratio, cropping excess
+      return "xMidYMid slice";
     case "CROP":
-      // CROP maintains aspect ratio but clips
+      // CROP: Same as FILL - maintains aspect ratio but clips
       return "xMidYMid slice";
     case "TILE":
+      // TILE: No aspect ratio preservation (handled separately with pattern repeat)
       return "none";
     default:
       // Default to FILL behavior for most UI images
-      return "none";
+      return "xMidYMid slice";
   }
 }

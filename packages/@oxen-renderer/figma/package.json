@@ -16,7 +16,8 @@
     "lint": "eslint src",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest --run --passWithNoTests --config ../../../vitest.config.ts '../../../packages/@oxen-renderer/figma/src'",
-    "dev:demo": "vite --config demo/vite.config.ts"
+    "dev:demo": "vite --config demo/vite.config.ts",
+    "snapshot:generate": "bun run scripts/generate-snapshots.ts"
   },
   "exports": {
     ".": {
@@ -31,5 +32,8 @@
       "types": "./src/react/index.ts",
       "default": "./src/react/index.ts"
     }
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2"
   }
 }

@@ -47,6 +47,7 @@ function extractVectorProps(node: FigNode): {
   transform: FigMatrix | undefined;
   vectorPaths: readonly FigVectorPath[] | undefined;
   fillGeometry: readonly FigFillGeometry[] | undefined;
+  strokeGeometry: readonly FigFillGeometry[] | undefined;
   fillPaints: readonly FigPaint[] | undefined;
   strokePaints: readonly FigPaint[] | undefined;
   strokeWeight: FigStrokeWeight | undefined;
@@ -58,6 +59,7 @@ function extractVectorProps(node: FigNode): {
     transform: nodeData.transform as FigMatrix | undefined,
     vectorPaths: nodeData.vectorPaths as readonly FigVectorPath[] | undefined,
     fillGeometry: nodeData.fillGeometry as readonly FigFillGeometry[] | undefined,
+    strokeGeometry: nodeData.strokeGeometry as readonly FigFillGeometry[] | undefined,
     fillPaints: nodeData.fillPaints as readonly FigPaint[] | undefined,
     strokePaints: nodeData.strokePaints as readonly FigPaint[] | undefined,
     strokeWeight: nodeData.strokeWeight as FigStrokeWeight | undefined,
@@ -110,7 +112,7 @@ export function renderVectorNode(
   node: FigNode,
   ctx: FigSvgRenderContext
 ): SvgString {
-  const { transform, vectorPaths, fillGeometry, fillPaints, strokePaints, strokeWeight, opacity } =
+  const { transform, vectorPaths, fillGeometry, strokeGeometry, fillPaints, strokePaints, strokeWeight, opacity } =
     extractVectorProps(node);
 
   const transformStr = buildTransformAttr(transform);
@@ -126,9 +128,14 @@ export function renderVectorNode(
       .map((vp) => ({ data: vp.data!, windingRule: vp.windingRule }));
   }
 
-  // Otherwise try fillGeometry with blob decoding
+  // Try fillGeometry with blob decoding
   if (pathsToRender.length === 0 && fillGeometry && fillGeometry.length > 0) {
     pathsToRender = decodePathsFromGeometry(fillGeometry, ctx.blobs);
+  }
+
+  // For LINE nodes, use strokeGeometry instead of fillGeometry
+  if (pathsToRender.length === 0 && strokeGeometry && strokeGeometry.length > 0) {
+    pathsToRender = decodePathsFromGeometry(strokeGeometry, ctx.blobs);
   }
 
   if (pathsToRender.length === 0) {

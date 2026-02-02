@@ -90,6 +90,8 @@ export function g(
     style?: string;
     id?: string;
     "clip-path"?: string;
+    mask?: string;
+    filter?: string;
     opacity?: number | string;
   },
   ...children: readonly SvgString[]
@@ -147,6 +149,7 @@ export function rect(attrs: {
   "fill-opacity"?: number | string;
   "stroke-opacity"?: number | string;
   transform?: string;
+  filter?: string;
   class?: string;
   style?: string;
   opacity?: number | string;
@@ -190,6 +193,7 @@ export function ellipse(attrs: {
   "fill-opacity"?: number | string;
   "stroke-opacity"?: number | string;
   transform?: string;
+  filter?: string;
   class?: string;
   style?: string;
   opacity?: number | string;
@@ -408,4 +412,108 @@ export function mask(
 ): SvgString {
   const attrStr = buildAttrs(attrs);
   return unsafeSvg(`<mask ${attrStr}>${children.join("")}</mask>`);
+}
+
+// =============================================================================
+// Filters
+// =============================================================================
+
+/**
+ * Create an SVG filter element
+ */
+export function filter(
+  attrs: {
+    id: string;
+    x?: string | number;
+    y?: string | number;
+    width?: string | number;
+    height?: string | number;
+    filterUnits?: "userSpaceOnUse" | "objectBoundingBox";
+    "color-interpolation-filters"?: "auto" | "sRGB" | "linearRGB";
+  },
+  ...children: readonly SvgString[]
+): SvgString {
+  const attrStr = buildAttrs(attrs);
+  return unsafeSvg(`<filter ${attrStr}>${children.join("")}</filter>`);
+}
+
+/**
+ * Create an feFlood element
+ */
+export function feFlood(attrs: {
+  "flood-color"?: string;
+  "flood-opacity"?: number | string;
+  result?: string;
+}): SvgString {
+  const attrStr = buildAttrs(attrs);
+  return unsafeSvg(`<feFlood ${attrStr}/>`);
+}
+
+/**
+ * Create an feColorMatrix element
+ */
+export function feColorMatrix(attrs: {
+  in?: string;
+  type?: "matrix" | "saturate" | "hueRotate" | "luminanceToAlpha";
+  values?: string;
+  result?: string;
+}): SvgString {
+  const attrStr = buildAttrs(attrs);
+  return unsafeSvg(`<feColorMatrix ${attrStr}/>`);
+}
+
+/**
+ * Create an feOffset element
+ */
+export function feOffset(attrs: {
+  in?: string;
+  dx?: number | string;
+  dy?: number | string;
+  result?: string;
+}): SvgString {
+  const attrStr = buildAttrs(attrs);
+  return unsafeSvg(`<feOffset ${attrStr}/>`);
+}
+
+/**
+ * Create an feGaussianBlur element
+ */
+export function feGaussianBlur(attrs: {
+  in?: string;
+  stdDeviation?: number | string;
+  result?: string;
+}): SvgString {
+  const attrStr = buildAttrs(attrs);
+  return unsafeSvg(`<feGaussianBlur ${attrStr}/>`);
+}
+
+/**
+ * Create an feBlend element
+ */
+export function feBlend(attrs: {
+  in?: string;
+  in2?: string;
+  mode?: "normal" | "multiply" | "screen" | "overlay" | "darken" | "lighten";
+  result?: string;
+}): SvgString {
+  const attrStr = buildAttrs(attrs);
+  return unsafeSvg(`<feBlend ${attrStr}/>`);
+}
+
+/**
+ * Create an feMerge element
+ */
+export function feMerge(
+  attrs: Record<string, never>,
+  ...children: readonly SvgString[]
+): SvgString {
+  return unsafeSvg(`<feMerge>${children.join("")}</feMerge>`);
+}
+
+/**
+ * Create an feMergeNode element
+ */
+export function feMergeNode(attrs: { in?: string }): SvgString {
+  const attrStr = buildAttrs(attrs);
+  return unsafeSvg(`<feMergeNode ${attrStr}/>`);
 }

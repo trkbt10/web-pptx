@@ -6,7 +6,7 @@ import type { FigNode, FigMatrix, FigPaint, FigColor } from "@oxen/fig/types";
 import type { FigSvgRenderContext } from "../../types";
 import { text, g, type SvgString, EMPTY_SVG } from "../primitives";
 import { buildTransformAttr } from "../transform";
-import { figColorToHex, getPaintType } from "../fill";
+import { figColorToHex, getPaintType, isPlaceholderColor } from "../fill";
 
 // =============================================================================
 // Text Style Types
@@ -143,18 +143,25 @@ function extractTextProps(node: FigNode): ExtractedTextProps {
 }
 
 /**
- * Get fill color from paints
+ * Get fill color and opacity from paints
  */
-function getFillColor(paints: readonly FigPaint[] | undefined): string {
+function getFillColorAndOpacity(paints: readonly FigPaint[] | undefined): { color: string; opacity: number } {
   if (!paints || paints.length === 0) {
-    return "#000000";
+    return { color: "#000000", opacity: 1 };
   }
   const firstPaint = paints.find((p) => p.visible !== false);
   if (firstPaint && getPaintType(firstPaint) === "SOLID") {
     const solidPaint = firstPaint as FigPaint & { color: FigColor };
-    return figColorToHex(solidPaint.color);
+    // Check for placeholder color (unresolved external style reference)
+    if (isPlaceholderColor(solidPaint.color)) {
+      return { color: "#000000", opacity: 1 }; // Default to black
+    }
+    return {
+      color: figColorToHex(solidPaint.color),
+      opacity: firstPaint.opacity ?? 1,
+    };
   }
-  return "#000000";
+  return { color: "#000000", opacity: 1 };
 }
 
 /**
@@ -162,12 +169,14 @@ function getFillColor(paints: readonly FigPaint[] | undefined): string {
  */
 function buildTextAttrs(
   props: ExtractedTextProps,
-  fillColor: string
+  fillColor: string,
+  fillOpacity: number
 ): Parameters<typeof text>[0] {
   return {
     x: 0,
     y: props.fontSize, // Baseline offset
     fill: fillColor,
+    "fill-opacity": fillOpacity < 1 ? fillOpacity : undefined,
     "font-family": props.fontFamily,
     "font-size": props.fontSize,
     "font-weight": props.fontWeight,
@@ -190,8 +199,8 @@ export function renderTextNode(
   }
 
   const transformStr = buildTransformAttr(props.transform);
-  const fillColor = getFillColor(props.fillPaints);
-  const textAttrs = buildTextAttrs(props, fillColor);
+  const { color: fillColor, opacity: fillOpacity } = getFillColorAndOpacity(props.fillPaints);
+  const textAttrs = buildTextAttrs(props, fillColor, fillOpacity);
 
   // Handle multiline text
   const lines = props.characters.split("\n");

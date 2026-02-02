@@ -6,7 +6,7 @@ import type { FigNode, FigNodeType, FigMatrix } from "@oxen/fig/types";
 import type { FigBlob, FigImage } from "@oxen/fig/parser";
 import type { FigSvgRenderContext, FigSvgRenderResult } from "../types";
 import { createFigSvgRenderContext } from "./context";
-import { svg, defs, g, rect, type SvgString, EMPTY_SVG } from "./primitives";
+import { svg, defs, g, rect, mask, type SvgString, EMPTY_SVG } from "./primitives";
 import {
   renderFrameNode,
   renderGroupNode,
@@ -178,6 +178,80 @@ export function renderFigToSvg(
 }
 
 /**
+ * Check if a node is a mask layer
+ */
+function isMaskNode(node: FigNode): boolean {
+  const nodeData = node as Record<string, unknown>;
+  return nodeData.mask === true;
+}
+
+/**
+ * Process children with mask support
+ *
+ * When a child has mask: true, it becomes a mask for subsequent siblings.
+ * The mask node itself is not rendered as visible content.
+ */
+function renderChildrenWithMasks(
+  children: readonly FigNode[],
+  ctx: FigSvgRenderContext,
+  warnings: string[]
+): readonly SvgString[] {
+  const result: SvgString[] = [];
+  let currentMaskId: string | null = null;
+  let maskedContent: SvgString[] = [];
+
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i];
+    const nodeData = child as Record<string, unknown>;
+
+    // Skip invisible nodes
+    if (nodeData.visible === false) {
+      continue;
+    }
+
+    if (isMaskNode(child)) {
+      // If we have accumulated masked content, flush it
+      if (currentMaskId && maskedContent.length > 0) {
+        result.push(g({ mask: `url(#${currentMaskId})` }, ...maskedContent));
+        maskedContent = [];
+      }
+
+      // Render the mask node content
+      const maskContent = renderNode(child, ctx, warnings);
+      if (maskContent !== EMPTY_SVG) {
+        // Create mask definition
+        currentMaskId = ctx.defs.generateId("mask");
+        const maskDef = mask(
+          { id: currentMaskId, style: "mask-type:luminance" },
+          // Use white fill for luminance mask
+          g({ fill: "white" }, maskContent)
+        );
+        ctx.defs.add(maskDef);
+      }
+    } else {
+      // Regular node
+      const rendered = renderNode(child, ctx, warnings);
+      if (rendered !== EMPTY_SVG) {
+        if (currentMaskId) {
+          // Accumulate content for masking
+          maskedContent.push(rendered);
+        } else {
+          // No mask active, render directly
+          result.push(rendered);
+        }
+      }
+    }
+  }
+
+  // Flush remaining masked content
+  if (currentMaskId && maskedContent.length > 0) {
+    result.push(g({ mask: `url(#${currentMaskId})` }, ...maskedContent));
+  }
+
+  return result;
+}
+
+/**
  * Render a single Figma node to SVG
  *
  * @param node - The Figma node to render
@@ -198,9 +272,9 @@ function renderNode(
     return EMPTY_SVG;
   }
 
-  // Render children first for container nodes
+  // Render children with mask support for container nodes
   const children = node.children ?? [];
-  const renderedChildren = children.map((child) => renderNode(child, ctx, warnings));
+  const renderedChildren = renderChildrenWithMasks(children, ctx, warnings);
 
   switch (nodeType) {
     case "DOCUMENT":

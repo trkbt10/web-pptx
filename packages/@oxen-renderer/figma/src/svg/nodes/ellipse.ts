@@ -10,10 +10,11 @@ import type {
   FigStrokeWeight,
 } from "@oxen/fig/types";
 import type { FigSvgRenderContext } from "../../types";
-import { ellipse, type SvgString } from "../primitives";
+import { ellipse, g, type SvgString } from "../primitives";
 import { buildTransformAttr } from "../transform";
 import { getFillAttrs } from "../fill";
 import { getStrokeAttrs } from "../stroke";
+import { getFilterAttr, type FigEffect } from "../effects";
 
 // =============================================================================
 // Ellipse Node
@@ -28,6 +29,7 @@ function extractEllipseProps(node: FigNode): {
   fillPaints: readonly FigPaint[] | undefined;
   strokePaints: readonly FigPaint[] | undefined;
   strokeWeight: FigStrokeWeight | undefined;
+  effects: readonly FigEffect[] | undefined;
   opacity: number;
 } {
   const nodeData = node as Record<string, unknown>;
@@ -38,6 +40,7 @@ function extractEllipseProps(node: FigNode): {
     fillPaints: nodeData.fillPaints as readonly FigPaint[] | undefined,
     strokePaints: nodeData.strokePaints as readonly FigPaint[] | undefined,
     strokeWeight: nodeData.strokeWeight as FigStrokeWeight | undefined,
+    effects: nodeData.effects as readonly FigEffect[] | undefined,
     opacity: (nodeData.opacity as number) ?? 1,
   };
 }
@@ -49,7 +52,7 @@ export function renderEllipseNode(
   node: FigNode,
   ctx: FigSvgRenderContext
 ): SvgString {
-  const { size, transform, fillPaints, strokePaints, strokeWeight, opacity } =
+  const { size, transform, fillPaints, strokePaints, strokeWeight, effects, opacity } =
     extractEllipseProps(node);
 
   const transformStr = buildTransformAttr(transform);
@@ -60,7 +63,15 @@ export function renderEllipseNode(
   const cx = size.x / 2;
   const cy = size.y / 2;
 
-  return ellipse({
+  // Calculate bounds for filter region
+  const tx = transform?.m02 ?? 0;
+  const ty = transform?.m12 ?? 0;
+  const bounds = { x: tx, y: ty, width: size.x, height: size.y };
+
+  // Get filter attribute if effects are present
+  const filterAttr = getFilterAttr(effects, ctx, bounds);
+
+  const ellipseElement = ellipse({
     cx,
     cy,
     rx: cx,
@@ -70,4 +81,10 @@ export function renderEllipseNode(
     ...fillAttrs,
     ...strokeAttrs,
   });
+
+  if (filterAttr) {
+    return g({ filter: filterAttr }, ellipseElement);
+  }
+
+  return ellipseElement;
 }

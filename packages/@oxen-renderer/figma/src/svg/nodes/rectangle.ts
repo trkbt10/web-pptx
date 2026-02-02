@@ -10,10 +10,11 @@ import type {
   FigStrokeWeight,
 } from "@oxen/fig/types";
 import type { FigSvgRenderContext } from "../../types";
-import { rect, type SvgString } from "../primitives";
+import { rect, g, type SvgString } from "../primitives";
 import { buildTransformAttr } from "../transform";
 import { getFillAttrs } from "../fill";
 import { getStrokeAttrs } from "../stroke";
+import { getFilterAttr, type FigEffect } from "../effects";
 
 // =============================================================================
 // Rectangle Node
@@ -30,6 +31,7 @@ function extractRectProps(node: FigNode): {
   fillPaints: readonly FigPaint[] | undefined;
   strokePaints: readonly FigPaint[] | undefined;
   strokeWeight: FigStrokeWeight | undefined;
+  effects: readonly FigEffect[] | undefined;
   opacity: number;
 } {
   const nodeData = node as Record<string, unknown>;
@@ -42,6 +44,7 @@ function extractRectProps(node: FigNode): {
     fillPaints: nodeData.fillPaints as readonly FigPaint[] | undefined,
     strokePaints: nodeData.strokePaints as readonly FigPaint[] | undefined,
     strokeWeight: nodeData.strokeWeight as FigStrokeWeight | undefined,
+    effects: nodeData.effects as readonly FigEffect[] | undefined,
     opacity: (nodeData.opacity as number) ?? 1,
   };
 }
@@ -97,7 +100,7 @@ export function renderRectangleNode(
   node: FigNode,
   ctx: FigSvgRenderContext
 ): SvgString {
-  const { size, transform, cornerRadius, cornerRadii, fillPaints, strokePaints, strokeWeight, opacity } =
+  const { size, transform, cornerRadius, cornerRadii, fillPaints, strokePaints, strokeWeight, effects, opacity } =
     extractRectProps(node);
 
   const transformStr = buildTransformAttr(transform);
@@ -107,7 +110,16 @@ export function renderRectangleNode(
   // Determine corner radius
   const { rx, ry } = calculateCornerRadius(cornerRadii, cornerRadius, size);
 
-  return rect({
+  // Calculate bounds for filter region
+  const tx = transform?.m02 ?? 0;
+  const ty = transform?.m12 ?? 0;
+  const bounds = { x: tx, y: ty, width: size.x, height: size.y };
+
+  // Get filter attribute if effects are present
+  const filterAttr = getFilterAttr(effects, ctx, bounds);
+
+  // If we have a filter, wrap in a group with the filter applied
+  const rectElement = rect({
     x: 0,
     y: 0,
     width: size.x,
@@ -119,4 +131,10 @@ export function renderRectangleNode(
     ...fillAttrs,
     ...strokeAttrs,
   });
+
+  if (filterAttr) {
+    return g({ filter: filterAttr }, rectElement);
+  }
+
+  return rectElement;
 }
