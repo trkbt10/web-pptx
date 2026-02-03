@@ -166,6 +166,8 @@ export class StreamingFigEncoder {
   private nodeCount: number = 0;
   private finalized: boolean = false;
   private readonly valueEncoder: ValueEncoder;
+  // Fields to write after nodeChanges (e.g., blobs)
+  private deferredFields: Array<{ field: typeof this.schema.definitions[0]["fields"][0]; value: unknown }> = [];
 
   constructor(options: StreamingEncoderOptions) {
     this.schema = options.schema;
@@ -177,9 +179,14 @@ export class StreamingFigEncoder {
 
   /**
    * Write the message header.
+   * Fields that come after nodeChanges (field value > nodeChanges field value) are deferred.
    */
   writeHeader(header: MessageHeader): void {
     const rootDef = findDefinitionByName(this.schema, this.rootType);
+
+    // Find nodeChanges field value to determine ordering
+    const nodeChangesField = rootDef.fields.find(f => f.name === "nodeChanges");
+    const nodeChangesFieldValue = nodeChangesField?.value ?? 4;
 
     for (const field of rootDef.fields) {
       if (field.name === "nodeChanges") {
@@ -191,16 +198,21 @@ export class StreamingFigEncoder {
 
       const value = header[field.name];
       if (value !== undefined && value !== null) {
-        this.buffer.writeVarUint(field.value);
-        encodeField({
-          buffer: this.buffer,
-          schema: this.schema,
-          field,
-          value,
-          format: "fig",
-          encodeValue: this.valueEncoder,
-          strict: true,
-        });
+        // Fields with higher field value than nodeChanges should be written after nodeChanges
+        if (field.value > nodeChangesFieldValue) {
+          this.deferredFields.push({ field, value });
+        } else {
+          this.buffer.writeVarUint(field.value);
+          encodeField({
+            buffer: this.buffer,
+            schema: this.schema,
+            field,
+            value,
+            format: "fig",
+            encodeValue: this.valueEncoder,
+            strict: true,
+          });
+        }
       }
     }
   }
@@ -239,24 +251,51 @@ export class StreamingFigEncoder {
     }
     this.finalized = true;
 
-    this.buffer.writeVarUint(0);
-    const result = this.buffer.toUint8Array();
+    // Write deferred fields (e.g., blobs) that come after nodeChanges
+    for (const { field, value } of this.deferredFields) {
+      this.buffer.writeVarUint(field.value);
+      encodeField({
+        buffer: this.buffer,
+        schema: this.schema,
+        field,
+        value,
+        format: "fig",
+        encodeValue: this.valueEncoder,
+        strict: true,
+      });
+    }
 
+    // Write terminating 0
+    this.buffer.writeVarUint(0);
+
+    // Get the current buffer content
+    const bufferContent = this.buffer.toUint8Array();
+
+    // If we need to patch the node count
     if (this.nodeCountOffset >= 0) {
       const countBuffer = new ByteBuffer();
       countBuffer.writeVarUint(this.nodeCount);
       const countBytes = countBuffer.toUint8Array();
 
       if (countBytes.length === 1) {
-        result[this.nodeCountOffset] = countBytes[0];
+        // Simple case: count fits in 1 byte
+        bufferContent[this.nodeCountOffset] = countBytes[0];
+        return bufferContent;
       } else {
-        console.warn(
-          "Node count requires multi-byte VarUint, result may be invalid"
-        );
+        // Multi-byte case: need to rebuild the buffer with proper count
+        // This is more complex because VarUint size changes
+        const beforeCount = bufferContent.slice(0, this.nodeCountOffset);
+        const afterCount = bufferContent.slice(this.nodeCountOffset + 1); // Skip the placeholder byte
+
+        const result = new Uint8Array(beforeCount.length + countBytes.length + afterCount.length);
+        result.set(beforeCount, 0);
+        result.set(countBytes, beforeCount.length);
+        result.set(afterCount, beforeCount.length + countBytes.length);
+        return result;
       }
     }
 
-    return result;
+    return bufferContent;
   }
 
   /**

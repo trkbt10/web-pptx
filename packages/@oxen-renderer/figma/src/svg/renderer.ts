@@ -15,6 +15,7 @@ import {
   renderVectorNode,
   renderTextNode,
 } from "./nodes";
+import { resolveSymbol, cloneSymbolChildren, type FigSymbolData } from "./symbol-resolver";
 
 // =============================================================================
 // Transform Normalization
@@ -109,6 +110,8 @@ export type FigSvgRenderOptions = {
   readonly normalizeRootTransform?: boolean;
   /** Show hidden nodes (visible: false) - useful for viewing style definitions */
   readonly showHiddenNodes?: boolean;
+  /** Symbol map for INSTANCE node resolution (from buildNodeTree) */
+  readonly symbolMap?: ReadonlyMap<string, FigNode>;
 };
 
 // =============================================================================
@@ -134,6 +137,7 @@ export function renderFigToSvg(
     blobs: options?.blobs ?? [],
     images: options?.images ?? new Map(),
     showHiddenNodes: options?.showHiddenNodes,
+    symbolMap: options?.symbolMap,
   });
 
   const warnings: string[] = [];
@@ -293,6 +297,52 @@ function renderChildrenWithMasks(
 }
 
 /**
+ * Resolve children for INSTANCE nodes that reference a SYMBOL
+ *
+ * @param node - The node being rendered
+ * @param nodeType - The node's type string
+ * @param nodeData - The node data as a record
+ * @param ctx - Render context with symbolMap
+ * @param warnings - Array to collect warnings
+ * @returns Resolved children (from SYMBOL if INSTANCE, otherwise original)
+ */
+function resolveInstanceChildren(
+  node: FigNode,
+  nodeType: string,
+  nodeData: Record<string, unknown>,
+  ctx: FigSvgRenderContext,
+  warnings: string[]
+): readonly FigNode[] {
+  const directChildren = node.children ?? [];
+
+  // Only resolve for INSTANCE nodes without direct children
+  if (nodeType !== "INSTANCE" || directChildren.length > 0) {
+    return directChildren;
+  }
+
+  // Check if symbolMap is available
+  if (!ctx.symbolMap) {
+    return directChildren;
+  }
+
+  // Get symbolData from the INSTANCE node
+  const symbolData = nodeData.symbolData as FigSymbolData | undefined;
+  if (!symbolData?.symbolID) {
+    return directChildren;
+  }
+
+  // Resolve the SYMBOL node
+  const symbolNode = resolveSymbol(symbolData, ctx.symbolMap);
+  if (!symbolNode) {
+    warnings.push(`Could not resolve SYMBOL for INSTANCE "${node.name ?? "unnamed"}"`);
+    return directChildren;
+  }
+
+  // Clone SYMBOL children with overrides applied
+  return cloneSymbolChildren(symbolNode, symbolData.symbolOverrides);
+}
+
+/**
  * Render a single Figma node to SVG
  *
  * @param node - The Figma node to render
@@ -313,9 +363,11 @@ function renderNode(
     return EMPTY_SVG;
   }
 
+  // Get children, resolving SYMBOL for INSTANCE nodes without direct children
+  const resolvedChildren = resolveInstanceChildren(node, nodeType, nodeData, ctx, warnings);
+
   // Render children with mask support for container nodes
-  const children = node.children ?? [];
-  const renderedChildren = renderChildrenWithMasks(children, ctx, warnings);
+  const renderedChildren = renderChildrenWithMasks(resolvedChildren, ctx, warnings);
 
   switch (nodeType) {
     case "DOCUMENT":

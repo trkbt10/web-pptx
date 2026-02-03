@@ -84,6 +84,9 @@ export type GetFillAttrsOptions = {
 
 /**
  * Get fill attributes from Figma paints
+ *
+ * In Figma, multiple fills are layered bottom-to-top, so we use the last
+ * visible paint (topmost layer) for rendering.
  */
 export function getFillAttrs(
   paints: readonly FigPaint[] | undefined,
@@ -94,13 +97,14 @@ export function getFillAttrs(
     return { fill: "none" };
   }
 
-  // Find the first visible paint
-  const visiblePaint = paints.find((p) => p.visible !== false);
-  if (!visiblePaint) {
+  // Find the last visible paint (topmost layer in Figma's stacking order)
+  const visiblePaints = paints.filter((p) => p.visible !== false);
+  if (visiblePaints.length === 0) {
     return { fill: "none" };
   }
 
-  return paintToFillAttrs(visiblePaint, ctx, options?.elementSize);
+  const topPaint = visiblePaints[visiblePaints.length - 1];
+  return paintToFillAttrs(topPaint, ctx, options?.elementSize);
 }
 
 /**

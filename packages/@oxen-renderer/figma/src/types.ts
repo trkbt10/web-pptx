@@ -3,6 +3,7 @@
  */
 
 import type { FigBlob, FigImage } from "@oxen/fig/parser";
+import type { FigNode } from "@oxen/fig/types";
 
 // =============================================================================
 // SVG Render Context
@@ -36,6 +37,8 @@ export type FigSvgRenderContext = {
   readonly images: ReadonlyMap<string, FigImage>;
   /** Whether to render hidden nodes (visible: false) */
   readonly showHiddenNodes: boolean;
+  /** Symbol map for INSTANCE node resolution (GUID string -> FigNode) */
+  readonly symbolMap?: ReadonlyMap<string, FigNode>;
 };
 
 /**
@@ -47,6 +50,8 @@ export type FigSvgRenderContextConfig = {
   readonly images?: ReadonlyMap<string, FigImage>;
   /** Whether to render hidden nodes (visible: false) */
   readonly showHiddenNodes?: boolean;
+  /** Symbol map for INSTANCE node resolution (GUID string -> FigNode) */
+  readonly symbolMap?: ReadonlyMap<string, FigNode>;
 };
 
 /**
