@@ -120,6 +120,16 @@ export {
 // Fig file builder (from node/)
 export { FigFileBuilder, createFigFile } from "./node";
 
+// Blob encoder (for fillGeometry/strokeGeometry)
+export {
+  BlobBuilder,
+  createRectBlob,
+  createRoundedRectBlob,
+  createEllipseBlob,
+  createFillGeometry,
+  type FigBlob,
+} from "./blob-encoder";
+
 // Note: Constants and enum types should be imported from "@oxen/fig/constants"
 // Examples:
 //   import { PAINT_TYPE_VALUES, type PaintType } from "@oxen/fig/constants";

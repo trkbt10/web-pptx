@@ -32,6 +32,7 @@ import { encodeFigSchema } from "./schema-encoder";
 export class FigFileBuilder {
   private schema: KiwiSchema;
   private nodes: Record<string, unknown>[];
+  private blobs: Array<{ bytes: number[] }>;
   private nextLocalID: number;
   private sessionID: number;
 
@@ -39,8 +40,25 @@ export class FigFileBuilder {
     // Use the actual Figma schema extracted from a working file
     this.schema = figmaSchemaJson as KiwiSchema;
     this.nodes = [];
+    this.blobs = [];
     this.nextLocalID = 0;
     this.sessionID = 0;  // Use 0 for Figma compatibility
+  }
+
+  /**
+   * Add a blob and return its index
+   */
+  addBlob(blob: { bytes: number[] }): number {
+    const index = this.blobs.length;
+    this.blobs.push(blob);
+    return index;
+  }
+
+  /**
+   * Get the blobs array
+   */
+  getBlobs(): ReadonlyArray<{ bytes: number[] }> {
+    return this.blobs;
   }
 
   /**
@@ -85,8 +103,38 @@ export class FigFileBuilder {
     // Add Canvas-specific fields for Figma compatibility
     node.transform = { m00: 1, m01: 0, m02: 0, m10: 0, m11: 1, m12: 0 };
     node.backgroundOpacity = 1;
+    node.strokeWeight = 0;
+    node.strokeAlign = { value: 0, name: "CENTER" };
+    node.strokeJoin = { value: 1, name: "BEVEL" };
     node.backgroundColor = { r: 0.9607843160629272, g: 0.9607843160629272, b: 0.9607843160629272, a: 1 };
     node.backgroundEnabled = true;
+    this.nodes.push(node);
+    return localID;
+  }
+
+  /**
+   * Add an Internal Only Canvas (required for Figma compatibility)
+   * This is a hidden canvas that Figma uses internally.
+   */
+  addInternalCanvas(parentID: number): number {
+    const localID = this.getNextID();
+    const node: Record<string, unknown> = {
+      guid: { sessionID: this.sessionID, localID },
+      phase: { value: 0, name: "CREATED" },
+      parentIndex: {
+        guid: { sessionID: this.sessionID, localID: parentID },
+        position: "~", // Fixed position at end
+      },
+      type: { value: NODE_TYPE_VALUES.CANVAS, name: "CANVAS" },
+      name: "Internal Only Canvas",
+      visible: false,
+      opacity: 1,
+      transform: { m00: 1, m01: 0, m02: 0, m10: 0, m11: 1, m12: 0 },
+      strokeWeight: 0,
+      strokeAlign: { value: 0, name: "CENTER" },
+      strokeJoin: { value: 1, name: "BEVEL" },
+      internalOnly: true,
+    };
     this.nodes.push(node);
     return localID;
   }
@@ -124,6 +172,11 @@ export class FigFileBuilder {
       horizontalConstraint: data.horizontalConstraint,
       verticalConstraint: data.verticalConstraint,
     });
+    // Add required FRAME fields for Figma compatibility
+    node.strokeWeight = 1;
+    node.strokeAlign = { value: 1, name: "INSIDE" };
+    node.strokeJoin = { value: 0, name: "MITER" };
+    node.frameMaskDisabled = false;
     this.nodes.push(node);
     return data.localID;
   }
@@ -501,10 +554,6 @@ export class FigFileBuilder {
       name: data.name,
       visible: data.visible ?? true,
       opacity: data.opacity ?? 1,
-      // Required stroke defaults for Figma compatibility
-      strokeWeight: 0,
-      strokeAlign: { value: 0, name: "CENTER" },
-      strokeJoin: { value: 1, name: "BEVEL" },
     };
 
     // Parent index
@@ -534,10 +583,6 @@ export class FigFileBuilder {
     }
     if (data.cornerRadius !== undefined) {
       node.cornerRadius = data.cornerRadius;
-    }
-    // Add frameMaskDisabled for FRAME type (required by Figma)
-    if (data.type === NODE_TYPE_VALUES.FRAME) {
-      node.frameMaskDisabled = false;
     }
 
     // AutoLayout - frame level (for FRAME and SYMBOL)
@@ -714,6 +759,7 @@ export class FigFileBuilder {
       type: { value: 1 },
       sessionID: this.sessionID,
       ackID: 0,
+      blobs: this.blobs,
     });
 
     for (const node of this.nodes) {
@@ -758,6 +804,7 @@ export class FigFileBuilder {
       type: { value: 1 },
       sessionID: this.sessionID,
       ackID: 0,
+      blobs: this.blobs,
     });
 
     for (const node of this.nodes) {

@@ -7,7 +7,7 @@
  * This is primarily for validation and testing, not for building new files.
  */
 
-import { compressZstd } from "../compression";
+import { compressZstd, compressDeflateRaw } from "../compression";
 import { decompressDeflateRaw, decompressZstd, detectCompression } from "../compression";
 import type { KiwiSchema, FigNode } from "../types";
 import { StreamingFigEncoder } from "../kiwi/stream";
@@ -15,6 +15,7 @@ import { parseFigHeader, getPayload } from "../parser/header";
 import { splitFigChunks, decodeFigSchema, decodeFigMessage } from "../kiwi/decoder";
 import { loadZipPackage, createEmptyZipPackage } from "@oxen/zip";
 import { buildFigHeader } from "../builder/header";
+import { encodeFigSchema } from "../builder/node/schema-encoder";
 
 // =============================================================================
 // Types
@@ -254,6 +255,12 @@ export type SaveFigOptions = {
   readonly thumbnail?: Uint8Array;
   /** Additional images to include */
   readonly images?: ReadonlyMap<string, FigImage>;
+  /**
+   * If true, re-encode the schema instead of using the original compressed bytes.
+   * Use this for verification/testing to ensure full roundtrip works.
+   * Default: false (uses original schema for Figma compatibility)
+   */
+  readonly reencodeSchema?: boolean;
 };
 
 function buildClientMeta(
@@ -318,13 +325,24 @@ export async function saveFigFile(
   dataView.setUint32(0, compressedMessage.length, true);
   dataChunk.set(compressedMessage, 4);
 
-  // Build canvas.fig using ORIGINAL compressed schema for exact compatibility
-  const header = buildFigHeader(loaded.compressedSchema.length, loaded.version);
-  const totalSize = header.length + loaded.compressedSchema.length + dataChunk.length;
+  // Determine which schema bytes to use
+  let schemaBytes: Uint8Array;
+  if (options?.reencodeSchema) {
+    // Re-encode schema for verification/testing
+    const encodedSchema = encodeFigSchema(loaded.schema);
+    schemaBytes = compressDeflateRaw(encodedSchema);
+  } else {
+    // Use original compressed schema for Figma compatibility
+    schemaBytes = loaded.compressedSchema;
+  }
+
+  // Build canvas.fig
+  const header = buildFigHeader(schemaBytes.length, loaded.version);
+  const totalSize = header.length + schemaBytes.length + dataChunk.length;
   const canvasData = new Uint8Array(totalSize);
   canvasData.set(header, 0);
-  canvasData.set(loaded.compressedSchema, header.length);
-  canvasData.set(dataChunk, header.length + loaded.compressedSchema.length);
+  canvasData.set(schemaBytes, header.length);
+  canvasData.set(dataChunk, header.length + schemaBytes.length);
 
   // Create ZIP package
   const zip = createEmptyZipPackage();
