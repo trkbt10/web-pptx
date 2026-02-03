@@ -18,8 +18,8 @@ import {
   type FigBlob,
 } from "@oxen/fig/parser";
 import type { FigNode } from "@oxen/fig/types";
-import { createNodeFontLoaderWithFontsource } from "../src/svg/nodes/text/font/node-loader";
-import { CachingFontLoader } from "../src/svg/nodes/text/font/loader";
+import { createNodeFontLoaderWithFontsource } from "../src/font-drivers/node";
+import { CachingFontLoader } from "../src/font";
 import { renderTextNodeAsPath, type PathRenderContext } from "../src/svg/nodes/text/path-render";
 import { createFigSvgRenderContext } from "../src/svg/context";
 

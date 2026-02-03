@@ -5,7 +5,6 @@
  * This matches Figma's export behavior where text is outlined.
  */
 
-import type { Font } from "opentype.js";
 import type { FigNode } from "@oxen/fig/types";
 import type { FigSvgRenderContext } from "../../../types";
 import { path, g, type SvgString, EMPTY_SVG } from "../../primitives";
@@ -13,8 +12,8 @@ import { buildTransformAttr } from "../../transform";
 import { extractTextProps } from "./props";
 import { getFillColorAndOpacity } from "./fill";
 import { getAlignedX, getAlignedYWithMetrics } from "./alignment";
-import type { FontLoader, LoadedFont } from "./font/loader";
-import { fontHasGlyph, isCJKCharacter } from "./font/loader";
+import type { FontLoader, LoadedFont, AbstractFont } from "../../../font";
+import { fontHasGlyph, isCJKCharacter } from "../../../font";
 import type { ExtractedTextProps } from "./types";
 
 /**
@@ -40,7 +39,7 @@ function needsTextWrapping(props: ExtractedTextProps): boolean {
  */
 function breakTextWithFont(
   text: string,
-  font: Font,
+  font: AbstractFont,
   fontSize: number,
   maxWidth: number,
   letterSpacing?: number
@@ -98,7 +97,7 @@ function breakTextWithFont(
  */
 function getTextLinesForPath(
   props: ExtractedTextProps,
-  font: Font
+  font: AbstractFont
 ): readonly string[] {
   const characters = props.characters;
   const explicitLines = characters.split("\n");
@@ -286,7 +285,7 @@ export async function renderTextNodeAsPath(
  */
 type TextSegment = {
   text: string;
-  font: Font;
+  font: AbstractFont;
   useFallback: boolean;
 };
 
@@ -297,8 +296,8 @@ type TextSegment = {
  */
 function segmentTextByFont(
   text: string,
-  primaryFont: Font,
-  fallbackFont: Font | undefined
+  primaryFont: AbstractFont,
+  fallbackFont: AbstractFont | undefined
 ): readonly TextSegment[] {
   if (!fallbackFont) {
     // No fallback - use primary for everything
@@ -346,7 +345,7 @@ function segmentTextByFont(
 /**
  * Calculate width of a text segment
  */
-function calculateSegmentWidth(text: string, font: Font, fontSize: number, letterSpacing?: number): number {
+function calculateSegmentWidth(text: string, font: AbstractFont, fontSize: number, letterSpacing?: number): number {
   const scale = fontSize / font.unitsPerEm;
   let width = 0;
   for (let i = 0; i < text.length; i++) {
@@ -365,7 +364,7 @@ function calculateSegmentWidth(text: string, font: Font, fontSize: number, lette
  */
 function renderLineAsPath(
   text: string,
-  font: Font,
+  font: AbstractFont,
   fontSize: number,
   x: number,
   y: number,
@@ -409,8 +408,8 @@ function renderLineAsPath(
  */
 function renderLineAsPathWithFallback(
   text: string,
-  primaryFont: Font,
-  fallbackFont: Font | undefined,
+  primaryFont: AbstractFont,
+  fallbackFont: AbstractFont | undefined,
   fontSize: number,
   x: number,
   y: number,
@@ -466,7 +465,7 @@ function renderLineAsPathWithFallback(
  */
 function renderUnderlinePath(
   text: string,
-  font: Font,
+  font: AbstractFont,
   fontSize: number,
   x: number,
   y: number,
@@ -614,7 +613,7 @@ export async function batchRenderTextNodesAsPaths(
 /**
  * Get font metrics from loaded font
  */
-export function getFontMetricsFromFont(font: Font): {
+export function getFontMetricsFromFont(font: AbstractFont): {
   unitsPerEm: number;
   ascender: number;
   descender: number;
@@ -625,7 +624,7 @@ export function getFontMetricsFromFont(font: Font): {
     ascender: font.ascender,
     descender: font.descender,
     // lineGap is not directly available in opentype.js, estimate from hhea table
-    lineGap: (font.tables.hhea?.lineGap as number) ?? 0,
+    lineGap: (font.tables?.hhea?.lineGap as number) ?? 0,
   };
 }
 
@@ -635,7 +634,7 @@ export function getFontMetricsFromFont(font: Font): {
  * Figma uses specific baseline rules that we need to match.
  */
 export function calculateBaselineOffset(
-  font: Font,
+  font: AbstractFont,
   fontSize: number,
   verticalAlign: "TOP" | "CENTER" | "BOTTOM"
 ): number {

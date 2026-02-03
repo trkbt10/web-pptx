@@ -2,7 +2,7 @@
  * @file Measurement provider implementations
  */
 
-import type { FontMetrics } from "../font/types";
+import type { FontMetrics } from "../../../../font";
 import type { MeasurementProvider, FontSpec, TextMeasurement } from "./types";
 
 /**

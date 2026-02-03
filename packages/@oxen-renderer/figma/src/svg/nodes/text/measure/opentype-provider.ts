@@ -5,9 +5,7 @@
  * Requires FontLoader to load font files.
  */
 
-import type { Font } from "opentype.js";
-import type { FontLoader, LoadedFont } from "../font/loader";
-import type { FontMetrics } from "../font/types";
+import type { FontLoader, LoadedFont, FontMetrics, AbstractFont } from "../../../../font";
 import type { MeasurementProvider, FontSpec, TextMeasurement } from "./types";
 
 /**
@@ -51,7 +49,7 @@ export class OpentypeMeasurementProvider implements MeasurementProvider {
   /**
    * Synchronously get cached font (for sync measurement API)
    */
-  private getCachedFont(font: FontSpec): Font | undefined {
+  private getCachedFont(font: FontSpec): AbstractFont | undefined {
     const key = this.getCacheKey(font);
     return this.fontCache.get(key)?.font;
   }
@@ -142,9 +140,9 @@ export class OpentypeMeasurementProvider implements MeasurementProvider {
       unitsPerEm: opentypeFont.unitsPerEm,
       ascender: opentypeFont.ascender,
       descender: opentypeFont.descender,
-      lineGap: (opentypeFont.tables.hhea?.lineGap as number) ?? 0,
-      capHeight: (opentypeFont.tables.os2?.sCapHeight as number) ?? undefined,
-      xHeight: (opentypeFont.tables.os2?.sxHeight as number) ?? undefined,
+      lineGap: (opentypeFont.tables?.hhea?.lineGap as number) ?? 0,
+      capHeight: (opentypeFont.tables?.os2?.sCapHeight as number) ?? undefined,
+      xHeight: (opentypeFont.tables?.os2?.sxHeight as number) ?? undefined,
     };
   }
 

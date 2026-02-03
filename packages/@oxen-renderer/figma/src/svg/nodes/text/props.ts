@@ -13,7 +13,7 @@ import type {
   TextAutoResize,
   TextDecoration,
 } from "./types";
-import { getFontWeightFromStyle, isItalicStyle } from "./font";
+import { detectWeight, isItalic, FONT_WEIGHTS } from "../../../font";
 
 /**
  * Get numeric value from value-with-units structure
@@ -94,8 +94,8 @@ export function extractTextProps(node: FigNode): ExtractedTextProps {
   // Font name - has family/style in .fig files
   const fontName = nodeData.fontName as FigFontName | undefined;
   const fontFamily = fontName?.family ?? "sans-serif";
-  const fontWeight = getFontWeightFromStyle(fontName?.style);
-  const fontStyle = isItalicStyle(fontName?.style) ? "italic" : undefined;
+  const fontWeight = detectWeight(fontName?.style) ?? FONT_WEIGHTS.REGULAR;
+  const fontStyle = isItalic(fontName?.style) ? "italic" : undefined;
 
   // Letter spacing
   const letterSpacing = getValueWithUnits(nodeData.letterSpacing, 0, fontSize);

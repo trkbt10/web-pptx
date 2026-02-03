@@ -12,6 +12,17 @@ import { StreamingFigEncoder } from "../kiwi/stream";
 import { createTextSchema } from "./text-schema";
 import type { TextNodeData, FrameNodeData, StackPadding } from "./text-builder";
 import type { SymbolNodeData, InstanceNodeData } from "./symbol-builder";
+import type {
+  EllipseNodeData,
+  LineNodeData,
+  StarNodeData,
+  PolygonNodeData,
+  VectorNodeData,
+  RoundedRectangleNodeData,
+  Stroke,
+  ArcData,
+} from "./shape-builder";
+import { SHAPE_NODE_TYPES } from "./shape-builder";
 import { buildFigHeader } from "./header";
 import { createEmptyZipPackage } from "@oxen/zip";
 
@@ -23,6 +34,14 @@ export type NodeTypeMap = {
   DOCUMENT: 1;
   CANVAS: 2;
   FRAME: 3;
+  VECTOR: 5;
+  BOOLEAN_OPERATION: 6;
+  STAR: 7;
+  LINE: 8;
+  ELLIPSE: 9;
+  REGULAR_POLYGON: 10;
+  RECTANGLE: 11;
+  ROUNDED_RECTANGLE: 12;
   TEXT: 13;
   SYMBOL: 15;
   INSTANCE: 16;
@@ -32,6 +51,14 @@ const NODE_TYPE_VALUES: NodeTypeMap = {
   DOCUMENT: 1,
   CANVAS: 2,
   FRAME: 3,
+  VECTOR: 5,
+  BOOLEAN_OPERATION: 6,
+  STAR: 7,
+  LINE: 8,
+  ELLIPSE: 9,
+  REGULAR_POLYGON: 10,
+  RECTANGLE: 11,
+  ROUNDED_RECTANGLE: 12,
   TEXT: 13,
   SYMBOL: 15,
   INSTANCE: 16,
@@ -257,6 +284,198 @@ export class FigFileBuilder {
     return data.localID;
   }
 
+  // ===========================================================================
+  // Shape Nodes
+  // ===========================================================================
+
+  /**
+   * Add an ELLIPSE node
+   */
+  addEllipse(data: EllipseNodeData): number {
+    const node = this.createNodeChange({
+      localID: data.localID,
+      parentID: data.parentID,
+      type: SHAPE_NODE_TYPES.ELLIPSE,
+      name: data.name,
+      size: data.size,
+      transform: data.transform,
+      visible: data.visible,
+      opacity: data.opacity,
+      fillPaints: data.fillPaints,
+      strokePaints: data.strokePaints,
+      strokeWeight: data.strokeWeight,
+      strokeCap: data.strokeCap,
+      strokeJoin: data.strokeJoin,
+      strokeAlign: data.strokeAlign,
+      dashPattern: data.dashPattern,
+      arcData: data.arcData,
+      stackPositioning: data.stackPositioning,
+      stackPrimarySizing: data.stackPrimarySizing,
+      stackCounterSizing: data.stackCounterSizing,
+      horizontalConstraint: data.horizontalConstraint,
+      verticalConstraint: data.verticalConstraint,
+    });
+    this.nodes.push(node);
+    return data.localID;
+  }
+
+  /**
+   * Add a LINE node
+   */
+  addLine(data: LineNodeData): number {
+    const node = this.createNodeChange({
+      localID: data.localID,
+      parentID: data.parentID,
+      type: SHAPE_NODE_TYPES.LINE,
+      name: data.name,
+      size: data.size,
+      transform: data.transform,
+      visible: data.visible,
+      opacity: data.opacity,
+      fillPaints: data.fillPaints,
+      strokePaints: data.strokePaints,
+      strokeWeight: data.strokeWeight,
+      strokeCap: data.strokeCap,
+      strokeJoin: data.strokeJoin,
+      strokeAlign: data.strokeAlign,
+      dashPattern: data.dashPattern,
+      stackPositioning: data.stackPositioning,
+      stackPrimarySizing: data.stackPrimarySizing,
+      stackCounterSizing: data.stackCounterSizing,
+      horizontalConstraint: data.horizontalConstraint,
+      verticalConstraint: data.verticalConstraint,
+    });
+    this.nodes.push(node);
+    return data.localID;
+  }
+
+  /**
+   * Add a STAR node
+   */
+  addStar(data: StarNodeData): number {
+    const node = this.createNodeChange({
+      localID: data.localID,
+      parentID: data.parentID,
+      type: SHAPE_NODE_TYPES.STAR,
+      name: data.name,
+      size: data.size,
+      transform: data.transform,
+      visible: data.visible,
+      opacity: data.opacity,
+      fillPaints: data.fillPaints,
+      strokePaints: data.strokePaints,
+      strokeWeight: data.strokeWeight,
+      strokeCap: data.strokeCap,
+      strokeJoin: data.strokeJoin,
+      strokeAlign: data.strokeAlign,
+      dashPattern: data.dashPattern,
+      pointCount: data.pointCount,
+      starInnerRadius: data.starInnerRadius,
+      stackPositioning: data.stackPositioning,
+      stackPrimarySizing: data.stackPrimarySizing,
+      stackCounterSizing: data.stackCounterSizing,
+      horizontalConstraint: data.horizontalConstraint,
+      verticalConstraint: data.verticalConstraint,
+    });
+    this.nodes.push(node);
+    return data.localID;
+  }
+
+  /**
+   * Add a REGULAR_POLYGON node
+   */
+  addPolygon(data: PolygonNodeData): number {
+    const node = this.createNodeChange({
+      localID: data.localID,
+      parentID: data.parentID,
+      type: SHAPE_NODE_TYPES.REGULAR_POLYGON,
+      name: data.name,
+      size: data.size,
+      transform: data.transform,
+      visible: data.visible,
+      opacity: data.opacity,
+      fillPaints: data.fillPaints,
+      strokePaints: data.strokePaints,
+      strokeWeight: data.strokeWeight,
+      strokeCap: data.strokeCap,
+      strokeJoin: data.strokeJoin,
+      strokeAlign: data.strokeAlign,
+      dashPattern: data.dashPattern,
+      pointCount: data.pointCount,
+      stackPositioning: data.stackPositioning,
+      stackPrimarySizing: data.stackPrimarySizing,
+      stackCounterSizing: data.stackCounterSizing,
+      horizontalConstraint: data.horizontalConstraint,
+      verticalConstraint: data.verticalConstraint,
+    });
+    this.nodes.push(node);
+    return data.localID;
+  }
+
+  /**
+   * Add a VECTOR node
+   */
+  addVector(data: VectorNodeData): number {
+    const node = this.createNodeChange({
+      localID: data.localID,
+      parentID: data.parentID,
+      type: SHAPE_NODE_TYPES.VECTOR,
+      name: data.name,
+      size: data.size,
+      transform: data.transform,
+      visible: data.visible,
+      opacity: data.opacity,
+      fillPaints: data.fillPaints,
+      strokePaints: data.strokePaints,
+      strokeWeight: data.strokeWeight,
+      strokeCap: data.strokeCap,
+      strokeJoin: data.strokeJoin,
+      strokeAlign: data.strokeAlign,
+      dashPattern: data.dashPattern,
+      vectorData: data.vectorData,
+      handleMirroring: data.handleMirroring,
+      stackPositioning: data.stackPositioning,
+      stackPrimarySizing: data.stackPrimarySizing,
+      stackCounterSizing: data.stackCounterSizing,
+      horizontalConstraint: data.horizontalConstraint,
+      verticalConstraint: data.verticalConstraint,
+    });
+    this.nodes.push(node);
+    return data.localID;
+  }
+
+  /**
+   * Add a ROUNDED_RECTANGLE node
+   */
+  addRoundedRectangle(data: RoundedRectangleNodeData): number {
+    const node = this.createNodeChange({
+      localID: data.localID,
+      parentID: data.parentID,
+      type: SHAPE_NODE_TYPES.ROUNDED_RECTANGLE,
+      name: data.name,
+      size: data.size,
+      transform: data.transform,
+      visible: data.visible,
+      opacity: data.opacity,
+      fillPaints: data.fillPaints,
+      strokePaints: data.strokePaints,
+      strokeWeight: data.strokeWeight,
+      strokeCap: data.strokeCap,
+      strokeJoin: data.strokeJoin,
+      strokeAlign: data.strokeAlign,
+      dashPattern: data.dashPattern,
+      cornerRadius: data.cornerRadius,
+      rectangleCornerRadii: data.rectangleCornerRadii,
+      stackPositioning: data.stackPositioning,
+      stackPrimarySizing: data.stackPrimarySizing,
+      stackCounterSizing: data.stackCounterSizing,
+      horizontalConstraint: data.horizontalConstraint,
+      verticalConstraint: data.verticalConstraint,
+    });
+    this.nodes.push(node);
+    return data.localID;
+  }
+
   /**
    * Create a NodeChange record
    */
@@ -317,6 +536,26 @@ export class FigFileBuilder {
     // Symbol/Instance fields
     symbolID?: { sessionID: number; localID: number };
     componentPropertyReferences?: readonly string[];
+    // Shape stroke fields
+    strokePaints?: readonly Stroke[];
+    strokeWeight?: number;
+    strokeCap?: { value: number; name: string };
+    strokeJoin?: { value: number; name: string };
+    strokeAlign?: { value: number; name: string };
+    dashPattern?: readonly number[];
+    // Ellipse fields
+    arcData?: ArcData;
+    // Star/Polygon fields
+    pointCount?: number;
+    starInnerRadius?: number;
+    // Vector fields
+    vectorData?: {
+      readonly vectorNetworkBlob?: number;
+      readonly normalizedSize?: { x: number; y: number };
+    };
+    handleMirroring?: { value: number; name: string };
+    // Rectangle fields
+    rectangleCornerRadii?: readonly [number, number, number, number];
   }): Record<string, unknown> {
     const typeName = this.getTypeName(data.type);
 
@@ -447,6 +686,52 @@ export class FigFileBuilder {
       }
     }
 
+    // Shape stroke fields (for all shape types)
+    if (data.strokePaints) {
+      node.strokePaints = data.strokePaints;
+    }
+    if (data.strokeWeight !== undefined) {
+      node.strokeWeight = data.strokeWeight;
+    }
+    if (data.strokeCap) {
+      node.strokeCap = data.strokeCap;
+    }
+    if (data.strokeJoin) {
+      node.strokeJoin = data.strokeJoin;
+    }
+    if (data.strokeAlign) {
+      node.strokeAlign = data.strokeAlign;
+    }
+    if (data.dashPattern) {
+      node.dashPattern = data.dashPattern;
+    }
+
+    // Ellipse-specific fields
+    if (data.arcData) {
+      node.arcData = data.arcData;
+    }
+
+    // Star/Polygon-specific fields
+    if (data.pointCount !== undefined) {
+      node.pointCount = data.pointCount;
+    }
+    if (data.starInnerRadius !== undefined) {
+      node.starInnerRadius = data.starInnerRadius;
+    }
+
+    // Vector-specific fields
+    if (data.vectorData) {
+      node.vectorData = data.vectorData;
+    }
+    if (data.handleMirroring) {
+      node.handleMirroring = data.handleMirroring;
+    }
+
+    // Rectangle-specific fields
+    if (data.rectangleCornerRadii) {
+      node.rectangleCornerRadii = data.rectangleCornerRadii;
+    }
+
     return node;
   }
 
@@ -463,6 +748,14 @@ export class FigFileBuilder {
       1: "DOCUMENT",
       2: "CANVAS",
       3: "FRAME",
+      5: "VECTOR",
+      6: "BOOLEAN_OPERATION",
+      7: "STAR",
+      8: "LINE",
+      9: "ELLIPSE",
+      10: "REGULAR_POLYGON",
+      11: "RECTANGLE",
+      12: "ROUNDED_RECTANGLE",
       13: "TEXT",
       15: "SYMBOL",
       16: "INSTANCE",

@@ -46,8 +46,8 @@ export { getFillColorAndOpacity } from "./fill";
 // Attribute building
 export { buildTextAttrs } from "./attrs";
 
-// Font resolution module
-export * as font from "./font/index";
+// Font resolution module - import from "@oxen-renderer/figma/font" instead
+// export * as font from "../../../font"; // Removed - use direct import
 
 // Text measurement module
 export * as measure from "./measure/index";

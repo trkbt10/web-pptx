@@ -2,7 +2,7 @@
  * @file Text measurement type definitions
  */
 
-import type { FontMetrics } from "../font/types";
+import type { FontMetrics } from "../../../../font";
 
 /**
  * Text measurement result

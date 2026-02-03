@@ -1,8 +1,8 @@
 /**
- * @file Font utilities (re-exports from font/ module)
+ * @file Font utilities (re-exports from font module)
  *
- * @deprecated Import directly from "./font" folder instead
+ * @deprecated Import directly from "../../../font" instead
  */
 
-export { detectWeight as getFontWeightFromStyle } from "./font/weight";
-export { isItalic as isItalicStyle } from "./font/style";
+export { detectWeight as getFontWeightFromStyle } from "../../../font";
+export { isItalic as isItalicStyle } from "../../../font";

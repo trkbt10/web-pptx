@@ -21,8 +21,8 @@ import {
 } from "@oxen/fig/parser";
 import type { FigNode } from "@oxen/fig/types";
 import { renderCanvasAsync } from "../src/svg/renderer";
-import { createNodeFontLoaderWithFontsource } from "../src/svg/nodes/text/font/node-loader";
-import { CachingFontLoader } from "../src/svg/nodes/text/font/loader";
+import { createNodeFontLoaderWithFontsource } from "../src/font-drivers/node";
+import { CachingFontLoader } from "../src/font";
 
 // =============================================================================
 // Paths

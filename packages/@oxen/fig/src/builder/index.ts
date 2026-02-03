@@ -54,6 +54,97 @@ export {
   type InstanceNodeData,
 } from "./symbol-builder";
 
+// Effect builders
+export {
+  // Builders
+  DropShadowBuilder,
+  InnerShadowBuilder,
+  LayerBlurBuilder,
+  BackgroundBlurBuilder,
+  // Factory functions
+  dropShadow,
+  innerShadow,
+  layerBlur,
+  backgroundBlur,
+  effects,
+  // Constants
+  EFFECT_TYPE_VALUES,
+  // Types
+  type EffectType,
+  type EffectData,
+  type ShadowEffectData,
+  type BlurEffectData,
+  type BaseEffectData,
+} from "./effect-builder";
+
+// Paint builders
+export {
+  // Builders
+  SolidPaintBuilder,
+  LinearGradientBuilder,
+  RadialGradientBuilder,
+  AngularGradientBuilder,
+  DiamondGradientBuilder,
+  ImagePaintBuilder,
+  StrokeBuilder,
+  // Factory functions
+  solidPaint,
+  solidPaintHex,
+  linearGradient,
+  radialGradient,
+  angularGradient,
+  diamondGradient,
+  imagePaint,
+  stroke,
+  // Constants
+  PAINT_TYPE_VALUES,
+  BLEND_MODE_VALUES,
+  SCALE_MODE_VALUES,
+  // Types
+  type GradientStop,
+  type GradientHandles,
+  type GradientPaint,
+  type ImagePaint,
+  type StrokeData,
+  type PaintType,
+  type ScaleMode,
+  type BlendMode,
+} from "./paint-builder";
+
+// Shape builders
+export {
+  // Builders
+  EllipseNodeBuilder,
+  LineNodeBuilder,
+  StarNodeBuilder,
+  PolygonNodeBuilder,
+  VectorNodeBuilder,
+  RoundedRectangleNodeBuilder,
+  // Factory functions
+  ellipseNode,
+  lineNode,
+  starNode,
+  polygonNode,
+  vectorNode,
+  roundedRectNode,
+  // Constants
+  SHAPE_NODE_TYPES,
+  // Types
+  type EllipseNodeData,
+  type LineNodeData,
+  type StarNodeData,
+  type PolygonNodeData,
+  type VectorNodeData,
+  type RoundedRectangleNodeData,
+  type BaseShapeNodeData,
+  type ArcData,
+  type Stroke,
+  type StrokeCap,
+  type StrokeJoin,
+  type StrokeAlign,
+  type WindingRule,
+} from "./shape-builder";
+
 export { FigFileBuilder, createFigFile } from "./fig-builder";
 
 // Roundtrip editing (load → modify → save)

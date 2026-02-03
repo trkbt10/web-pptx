@@ -8,8 +8,9 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parse as parseFont, type Font } from "opentype.js";
-import type { FontLoader, FontLoadOptions, LoadedFont } from "./loader";
-import { CJK_FALLBACK_FONTS } from "./loader";
+import type { FontLoader } from "../../font/loader";
+import type { FontLoadOptions, LoadedFont } from "../../font/types";
+import { CJK_FALLBACK_FONTS } from "../../font/helpers";
 
 /**
  * Font file metadata from scanning
@@ -243,7 +244,7 @@ export class NodeFontLoader implements FontLoader {
     // Load the font
     try {
       const data = fs.readFileSync(bestMatch.path);
-      const font = parseFont(data.buffer as ArrayBuffer);
+      const font = parseFont(data.buffer as ArrayBuffer) as unknown as LoadedFont["font"];
 
       return {
         font,

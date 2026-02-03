@@ -18,7 +18,7 @@ import {
 import { renderTextNodeAsPath, type PathRenderContext } from "./nodes/text/path-render";
 import { renderTextNodeFromDerivedData, hasDerivedPathData, type DerivedPathRenderContext } from "./nodes/text/derived-path-render";
 import { resolveSymbol, cloneSymbolChildren, type FigSymbolData, type FigDerivedSymbolData } from "./symbol-resolver";
-import type { FontLoader } from "./nodes/text/font/loader";
+import type { FontLoader } from "../font";
 
 // =============================================================================
 // Transform Normalization

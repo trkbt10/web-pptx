@@ -6,8 +6,8 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { describe, it, expect, beforeAll } from "vitest";
 import { parse as parseFont } from "opentype.js";
-import { createNodeFontLoaderWithFontsource } from "../src/svg/nodes/text/font/node-loader";
-import { CachingFontLoader } from "../src/svg/nodes/text/font/loader";
+import { createNodeFontLoaderWithFontsource } from "../src/font-drivers/node";
+import { CachingFontLoader } from "../src/font";
 
 describe("Font metrics investigation", () => {
   let fontLoader: CachingFontLoader;

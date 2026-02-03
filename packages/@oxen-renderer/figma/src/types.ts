@@ -4,7 +4,7 @@
 
 import type { FigBlob, FigImage } from "@oxen/fig/parser";
 import type { FigNode } from "@oxen/fig/types";
-import type { FontLoader } from "./svg/nodes/text/font/loader";
+import type { FontLoader } from "./font";
 
 // =============================================================================
 // SVG Render Context

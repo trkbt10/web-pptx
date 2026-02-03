@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, beforeAll } from "vitest";
-import { createNodeFontLoader } from "./font/node-loader";
-import { CachingFontLoader } from "./font/loader";
+import { createNodeFontLoader } from "../../../font-drivers/node";
+import { CachingFontLoader } from "../../../font";
 import {
   renderTextNodeAsPath,
   getFontMetricsFromFont,
