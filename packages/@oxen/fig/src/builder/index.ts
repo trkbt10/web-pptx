@@ -5,30 +5,34 @@
  * Note: For constants and types, import from "@oxen/fig/constants"
  */
 
+// Header utilities (from header/)
 export { buildFigHeader, buildFigFile } from "./header";
-export { createTextSchema, TEXT_SCHEMA_INDICES } from "./text-schema";
+// Schema (from schema/)
+export { createTextSchema, TEXT_SCHEMA_INDICES } from "./schema";
+
+// Common types (from types/)
+export type { Color, Paint, StackPadding, ValueWithUnits, FontName } from "./types";
+
+// Text node builder (from text/)
 export {
   TextNodeBuilder,
-  FrameNodeBuilder,
   textNode,
-  frameNode,
-  // Default values (Figma's "Auto")
   DEFAULT_LINE_HEIGHT,
   DEFAULT_LETTER_SPACING,
   DEFAULT_AUTO_RESIZE,
-  DEFAULT_SVG_EXPORT_SETTINGS,
-  // Types defined in text-builder
   type TextNodeData,
-  type FrameNodeData,
-  type ValueWithUnits,
-  type StackPadding,
-  type Color,
-  type Paint,
-  type FontName,
-  type ExportSettings,
-} from "./text-builder";
+} from "./text";
 
-// Symbol and Instance builders
+// Frame node builder (from frame/)
+export {
+  FrameNodeBuilder,
+  frameNode,
+  DEFAULT_SVG_EXPORT_SETTINGS,
+  type FrameNodeData,
+  type ExportSettings,
+} from "./frame";
+
+// Symbol and Instance builders (from symbol/)
 export {
   SymbolNodeBuilder,
   InstanceNodeBuilder,
@@ -36,9 +40,9 @@ export {
   instanceNode,
   type SymbolNodeData,
   type InstanceNodeData,
-} from "./symbol-builder";
+} from "./symbol";
 
-// Effect builders
+// Effect builders (from effect/)
 export {
   // Builders
   DropShadowBuilder,
@@ -56,9 +60,9 @@ export {
   type ShadowEffectData,
   type BlurEffectData,
   type BaseEffectData,
-} from "./effect-builder";
+} from "./effect";
 
-// Paint builders
+// Paint builders (from paint/)
 export {
   // Builders
   SolidPaintBuilder,
@@ -83,9 +87,9 @@ export {
   type GradientPaint,
   type ImagePaint,
   type StrokeData,
-} from "./paint-builder";
+} from "./paint";
 
-// Shape builders
+// Shape builders (from shape/)
 export {
   // Builders
   EllipseNodeBuilder,
@@ -111,9 +115,10 @@ export {
   type BaseShapeNodeData,
   type ArcData,
   type Stroke,
-} from "./shape-builder";
+} from "./shape";
 
-export { FigFileBuilder, createFigFile } from "./fig-builder";
+// Fig file builder (from node/)
+export { FigFileBuilder, createFigFile } from "./node";
 
 // Note: Constants and enum types should be imported from "@oxen/fig/constants"
 // Examples:
