@@ -19,8 +19,7 @@
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0",
-    "three": "^0.182.0"
+    "react-dom": "^18.0.0 || ^19.0.0"
   },
   "scripts": {
     "lint": "eslint src",
@@ -35,10 +34,6 @@
     "./animation": {
       "types": "./src/animation/index.ts",
       "default": "./src/animation/index.ts"
-    },
-    "./html": {
-      "types": "./src/html/index.ts",
-      "default": "./src/html/index.ts"
     },
     "./react": {
       "types": "./src/react/index.ts",
@@ -55,10 +50,6 @@
     "./text-layout": {
       "types": "./src/text-layout/index.ts",
       "default": "./src/text-layout/index.ts"
-    },
-    "./webgl/text3d": {
-      "types": "./src/webgl/text3d/index.ts",
-      "default": "./src/webgl/text3d/index.ts"
     },
     "./render-options": {
       "types": "./src/render-options.ts",
