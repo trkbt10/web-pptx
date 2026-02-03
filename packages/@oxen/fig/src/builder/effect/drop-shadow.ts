@@ -33,9 +33,17 @@ export class DropShadowBuilder {
 
   /**
    * Set shadow color (RGBA, 0-1)
+   * @param rOrColor - Red value (0-1) or Color object
+   * @param g - Green value (0-1)
+   * @param b - Blue value (0-1)
+   * @param a - Alpha value (0-1)
    */
-  color(c: Color): this {
-    this._color = c;
+  color(rOrColor: number | Color, g?: number, b?: number, a?: number): this {
+    if (typeof rOrColor === "number") {
+      this._color = { r: rOrColor, g: g ?? 0, b: b ?? 0, a: a ?? 1 };
+    } else {
+      this._color = rOrColor;
+    }
     return this;
   }
 

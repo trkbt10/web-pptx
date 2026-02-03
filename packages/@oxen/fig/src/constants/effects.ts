@@ -2,11 +2,11 @@
  * @file Effect-related constants for Figma fig format
  */
 
-/** Effect type values */
+/** Effect type values - matches Figma EffectType enum in schema */
 export const EFFECT_TYPE_VALUES = {
-  DROP_SHADOW: 0,
-  INNER_SHADOW: 1,
-  LAYER_BLUR: 2,
+  INNER_SHADOW: 0,
+  DROP_SHADOW: 1,
+  FOREGROUND_BLUR: 2,  // Figma calls it FOREGROUND_BLUR, not LAYER_BLUR
   BACKGROUND_BLUR: 3,
 } as const;
 

@@ -3,6 +3,7 @@
  */
 
 import type { Color, Paint, Stroke } from "../types";
+import type { EffectData } from "../effect/types";
 import type { BaseShapeNodeData } from "./types";
 import {
   STROKE_CAP_VALUES,
@@ -44,6 +45,8 @@ export abstract class BaseShapeBuilder<TData extends BaseShapeNodeData> {
   protected _stackCounterSizing?: StackSizing;
   protected _horizontalConstraint?: ConstraintType;
   protected _verticalConstraint?: ConstraintType;
+  // Effects
+  protected _effects?: readonly EffectData[];
 
   constructor(localID: number, parentID: number) {
     this._localID = localID;
@@ -157,6 +160,14 @@ export abstract class BaseShapeBuilder<TData extends BaseShapeNodeData> {
   }
 
   /**
+   * Add effects (drop shadow, inner shadow, blur, etc.)
+   */
+  effects(effects: readonly EffectData[]): this {
+    this._effects = effects;
+    return this;
+  }
+
+  /**
    * Build the transformation matrix
    */
   protected buildTransform(): {
@@ -239,10 +250,10 @@ export abstract class BaseShapeBuilder<TData extends BaseShapeNodeData> {
       transform: this.buildTransform(),
       fillPaints: this.buildFillPaints(),
       strokePaints: this.buildStrokePaints(),
-      strokeWeight: this._strokeWeight,
+      strokeWeight: this._strokeWeight ?? 0,
       strokeCap: toEnumValue(this._strokeCap, STROKE_CAP_VALUES),
-      strokeJoin: toEnumValue(this._strokeJoin, STROKE_JOIN_VALUES),
-      strokeAlign: toEnumValue(this._strokeAlign, STROKE_ALIGN_VALUES),
+      strokeJoin: toEnumValue(this._strokeJoin, STROKE_JOIN_VALUES) ?? { value: 0, name: "MITER" },
+      strokeAlign: toEnumValue(this._strokeAlign, STROKE_ALIGN_VALUES) ?? { value: 0, name: "CENTER" },
       dashPattern: this._dashPattern,
       visible: this._visible,
       opacity: this._opacity,
@@ -251,6 +262,7 @@ export abstract class BaseShapeBuilder<TData extends BaseShapeNodeData> {
       stackCounterSizing: toEnumValue(this._stackCounterSizing, STACK_SIZING_VALUES),
       horizontalConstraint: toEnumValue(this._horizontalConstraint, CONSTRAINT_TYPE_VALUES),
       verticalConstraint: toEnumValue(this._verticalConstraint, CONSTRAINT_TYPE_VALUES),
+      effects: this._effects,
     };
   }
 

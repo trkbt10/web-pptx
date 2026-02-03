@@ -3,6 +3,7 @@
  */
 
 import { ellipseNode } from "./ellipse";
+import { dropShadow } from "../effect/drop-shadow";
 import { SHAPE_NODE_TYPES } from "../../constants";
 
 describe("EllipseNodeBuilder", () => {
@@ -92,5 +93,21 @@ describe("EllipseNodeBuilder", () => {
     expect(result.stackCounterSizing).toEqual({ value: 0, name: "FIXED" });
     expect(result.horizontalConstraint).toEqual({ value: 3, name: "STRETCH" });
     expect(result.verticalConstraint).toEqual({ value: 1, name: "CENTER" });
+  });
+
+  it("applies effects", () => {
+    const shadow = dropShadow()
+      .color({ r: 0, g: 0, b: 0, a: 0.5 })
+      .offset(4, 4)
+      .blur(8)
+      .build();
+
+    const result = ellipseNode(1, 0).effects([shadow]).build();
+
+    expect(result.effects).toBeDefined();
+    expect(result.effects).toHaveLength(1);
+    expect(result.effects![0].type.name).toBe("DROP_SHADOW");
+    expect((result.effects![0] as typeof shadow).offset).toEqual({ x: 4, y: 4 });
+    expect((result.effects![0] as typeof shadow).radius).toBe(8);
   });
 });

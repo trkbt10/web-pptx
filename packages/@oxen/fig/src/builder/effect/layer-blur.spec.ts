@@ -9,7 +9,7 @@ describe("LayerBlurBuilder", () => {
   it("creates layer blur with defaults", () => {
     const result = layerBlur().build();
 
-    expect(result.type).toEqual({ value: EFFECT_TYPE_VALUES.LAYER_BLUR, name: "LAYER_BLUR" });
+    expect(result.type).toEqual({ value: EFFECT_TYPE_VALUES.FOREGROUND_BLUR, name: "FOREGROUND_BLUR" });
     expect(result.visible).toBe(true);
     expect(result.radius).toBe(4);
   });

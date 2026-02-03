@@ -3,6 +3,7 @@
  */
 
 import type { Paint, Stroke } from "../types";
+import type { EffectData } from "../effect/types";
 import type {
   StrokeCap,
   StrokeJoin,
@@ -46,6 +47,8 @@ export type BaseShapeNodeData = {
   readonly stackCounterSizing?: { value: number; name: StackSizing };
   readonly horizontalConstraint?: { value: number; name: ConstraintType };
   readonly verticalConstraint?: { value: number; name: ConstraintType };
+  // Effects (drop shadow, inner shadow, blur, etc.)
+  readonly effects?: readonly EffectData[];
 };
 
 export type EllipseNodeData = BaseShapeNodeData & {
@@ -75,6 +78,10 @@ export type VectorNodeData = BaseShapeNodeData & {
     readonly normalizedSize?: { x: number; y: number };
   };
   readonly handleMirroring?: { value: number; name: string };
+};
+
+export type RectangleNodeData = BaseShapeNodeData & {
+  readonly nodeType: 10;
 };
 
 export type RoundedRectangleNodeData = BaseShapeNodeData & {

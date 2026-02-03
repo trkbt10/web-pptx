@@ -97,6 +97,7 @@ export {
   StarNodeBuilder,
   PolygonNodeBuilder,
   VectorNodeBuilder,
+  RectangleNodeBuilder,
   RoundedRectangleNodeBuilder,
   // Factory functions
   ellipseNode,
@@ -104,6 +105,7 @@ export {
   starNode,
   polygonNode,
   vectorNode,
+  rectNode,
   roundedRectNode,
   // Types
   type EllipseNodeData,
@@ -111,6 +113,7 @@ export {
   type StarNodeData,
   type PolygonNodeData,
   type VectorNodeData,
+  type RectangleNodeData,
   type RoundedRectangleNodeData,
   type BaseShapeNodeData,
   type ArcData,
@@ -119,6 +122,21 @@ export {
 
 // Fig file builder (from node/)
 export { FigFileBuilder, createFigFile } from "./node";
+
+// Container node builders (from node/)
+export {
+  GroupNodeBuilder,
+  groupNode,
+  SectionNodeBuilder,
+  sectionNode,
+  BooleanOperationNodeBuilder,
+  booleanNode,
+  BOOLEAN_OPERATION_TYPE_VALUES,
+  type GroupNodeData,
+  type SectionNodeData,
+  type BooleanOperationNodeData,
+  type BooleanOperationType,
+} from "./node";
 
 // Blob encoder (for fillGeometry/strokeGeometry)
 export {

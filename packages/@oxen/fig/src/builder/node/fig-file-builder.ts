@@ -20,21 +20,34 @@ import type {
   StarNodeData,
   PolygonNodeData,
   VectorNodeData,
+  RectangleNodeData,
   RoundedRectangleNodeData,
   Stroke,
   ArcData,
 } from "../shape";
+import type { EffectData } from "../effect/types";
+import type { GroupNodeData } from "./group-builder";
+import type { SectionNodeData } from "./section-builder";
+import type { BooleanOperationNodeData } from "./boolean-builder";
 import { SHAPE_NODE_TYPES, NODE_TYPE_VALUES } from "../../constants";
 import { buildFigHeader } from "../header";
 import { createEmptyZipPackage } from "@oxen/zip";
 import { encodeFigSchema } from "./schema-encoder";
+import {
+  encodeRectangleBlob,
+  encodeRoundedRectangleBlob,
+  encodeEllipseBlob,
+} from "../geometry";
 
 export class FigFileBuilder {
   private schema: KiwiSchema;
   private nodes: Record<string, unknown>[];
   private blobs: Array<{ bytes: number[] }>;
   private nextLocalID: number;
-  private sessionID: number;
+  private structuralSessionID: number;  // For DOCUMENT, CANVAS (always 0)
+  private contentSessionID: number;     // For FRAME, shapes, etc. (always 1)
+  private nodeSessionIDs: Map<number, number>;  // Track sessionID for each localID
+  private childCountPerParent: Map<number, number>;  // Track child count per parent for position
 
   constructor() {
     // Use the actual Figma schema extracted from a working file
@@ -42,7 +55,11 @@ export class FigFileBuilder {
     this.nodes = [];
     this.blobs = [];
     this.nextLocalID = 0;
-    this.sessionID = 0;  // Use 0 for Figma compatibility
+    // Figma uses different sessionIDs for structural vs content nodes
+    this.structuralSessionID = 0;  // DOCUMENT, CANVAS
+    this.contentSessionID = 1;     // FRAME, shapes, text, etc.
+    this.nodeSessionIDs = new Map();
+    this.childCountPerParent = new Map();
   }
 
   /**
@@ -73,7 +90,8 @@ export class FigFileBuilder {
    */
   addDocument(name: string = "Document"): number {
     const localID = this.getNextID();
-    const node = this.createNodeChange({
+    this.nodeSessionIDs.set(localID, this.structuralSessionID);
+    const node = this.createStructuralNodeChange({
       localID,
       parentID: -1,
       type: NODE_TYPE_VALUES.DOCUMENT,
@@ -94,7 +112,8 @@ export class FigFileBuilder {
    */
   addCanvas(parentID: number, name: string = "Page 1"): number {
     const localID = this.getNextID();
-    const node = this.createNodeChange({
+    this.nodeSessionIDs.set(localID, this.structuralSessionID);
+    const node = this.createStructuralNodeChange({
       localID,
       parentID,
       type: NODE_TYPE_VALUES.CANVAS,
@@ -118,11 +137,12 @@ export class FigFileBuilder {
    */
   addInternalCanvas(parentID: number): number {
     const localID = this.getNextID();
+    this.nodeSessionIDs.set(localID, this.structuralSessionID);
     const node: Record<string, unknown> = {
-      guid: { sessionID: this.sessionID, localID },
+      guid: { sessionID: this.structuralSessionID, localID },
       phase: { value: 0, name: "CREATED" },
       parentIndex: {
-        guid: { sessionID: this.sessionID, localID: parentID },
+        guid: { sessionID: this.structuralSessionID, localID: parentID },
         position: "~", // Fixed position at end
       },
       type: { value: NODE_TYPE_VALUES.CANVAS, name: "CANVAS" },
@@ -143,6 +163,14 @@ export class FigFileBuilder {
    * Add a FRAME node (with AutoLayout support)
    */
   addFrame(data: FrameNodeData): number {
+    // Content nodes reuse localID from data (user provides it)
+    // Register the node's sessionID
+    this.nodeSessionIDs.set(data.localID, this.contentSessionID);
+
+    // Generate fill geometry blob for the frame
+    const blobBytes = encodeRectangleBlob(data.size?.x ?? 100, data.size?.y ?? 100);
+    const blobIndex = this.addBlob({ bytes: blobBytes });
+
     const node = this.createNodeChange({
       localID: data.localID,
       parentID: data.parentID,
@@ -177,6 +205,12 @@ export class FigFileBuilder {
     node.strokeAlign = { value: 1, name: "INSIDE" };
     node.strokeJoin = { value: 0, name: "MITER" };
     node.frameMaskDisabled = false;
+    // Add fill geometry (required for rendering)
+    node.fillGeometry = [{
+      windingRule: { value: 0, name: "NONZERO" },
+      commandsBlob: blobIndex,
+      styleID: 0,
+    }];
     this.nodes.push(node);
     return data.localID;
   }
@@ -240,6 +274,71 @@ export class FigFileBuilder {
     return data.localID;
   }
 
+  // ===========================================================================
+  // Container Nodes
+  // ===========================================================================
+
+  /**
+   * Add a GROUP node
+   */
+  addGroup(data: GroupNodeData): number {
+    const node = this.createNodeChange({
+      localID: data.localID,
+      parentID: data.parentID,
+      type: NODE_TYPE_VALUES.GROUP,
+      name: data.name,
+      size: data.size,
+      transform: data.transform,
+      visible: data.visible,
+      opacity: data.opacity,
+    });
+    this.nodes.push(node);
+    return data.localID;
+  }
+
+  /**
+   * Add a SECTION node
+   */
+  addSection(data: SectionNodeData): number {
+    const node = this.createNodeChange({
+      localID: data.localID,
+      parentID: data.parentID,
+      type: NODE_TYPE_VALUES.SECTION,
+      name: data.name,
+      size: data.size,
+      transform: data.transform,
+      visible: data.visible,
+      opacity: data.opacity,
+    });
+    // Add section-specific field
+    if (data.sectionContentsHidden) {
+      (node as Record<string, unknown>).sectionContentsHidden = data.sectionContentsHidden;
+    }
+    this.nodes.push(node);
+    return data.localID;
+  }
+
+  /**
+   * Add a BOOLEAN_OPERATION node
+   */
+  addBooleanOperation(data: BooleanOperationNodeData): number {
+    const node = this.createNodeChange({
+      localID: data.localID,
+      parentID: data.parentID,
+      type: NODE_TYPE_VALUES.BOOLEAN_OPERATION,
+      name: data.name,
+      size: data.size,
+      transform: data.transform,
+      fillPaints: data.fillPaints,
+      visible: data.visible,
+      opacity: data.opacity,
+    });
+    // Add boolean operation specific field
+    (node as Record<string, unknown>).booleanOperation = data.booleanOperation;
+    this.nodes.push(node);
+    return data.localID;
+  }
+
   /**
    * Add a TEXT node
    */
@@ -280,6 +379,12 @@ export class FigFileBuilder {
    * Add an ELLIPSE node
    */
   addEllipse(data: EllipseNodeData): number {
+    // Generate fill geometry blob
+    const width = data.size?.x ?? 100;
+    const height = data.size?.y ?? 100;
+    const blobBytes = encodeEllipseBlob(width, height);
+    const blobIndex = this.addBlob({ bytes: blobBytes });
+
     const node = this.createNodeChange({
       localID: data.localID,
       parentID: data.parentID,
@@ -302,7 +407,14 @@ export class FigFileBuilder {
       stackCounterSizing: data.stackCounterSizing,
       horizontalConstraint: data.horizontalConstraint,
       verticalConstraint: data.verticalConstraint,
+      effects: data.effects,
     });
+    // Add fill geometry (required for rendering)
+    node.fillGeometry = [{
+      windingRule: { value: 0, name: "NONZERO" },
+      commandsBlob: blobIndex,
+      styleID: 0,
+    }];
     this.nodes.push(node);
     return data.localID;
   }
@@ -332,6 +444,7 @@ export class FigFileBuilder {
       stackCounterSizing: data.stackCounterSizing,
       horizontalConstraint: data.horizontalConstraint,
       verticalConstraint: data.verticalConstraint,
+      effects: data.effects,
     });
     this.nodes.push(node);
     return data.localID;
@@ -364,6 +477,7 @@ export class FigFileBuilder {
       stackCounterSizing: data.stackCounterSizing,
       horizontalConstraint: data.horizontalConstraint,
       verticalConstraint: data.verticalConstraint,
+      effects: data.effects,
     });
     this.nodes.push(node);
     return data.localID;
@@ -395,6 +509,7 @@ export class FigFileBuilder {
       stackCounterSizing: data.stackCounterSizing,
       horizontalConstraint: data.horizontalConstraint,
       verticalConstraint: data.verticalConstraint,
+      effects: data.effects,
     });
     this.nodes.push(node);
     return data.localID;
@@ -427,7 +542,51 @@ export class FigFileBuilder {
       stackCounterSizing: data.stackCounterSizing,
       horizontalConstraint: data.horizontalConstraint,
       verticalConstraint: data.verticalConstraint,
+      effects: data.effects,
     });
+    this.nodes.push(node);
+    return data.localID;
+  }
+
+  /**
+   * Add a RECTANGLE node (basic rectangle without corner radius)
+   */
+  addRectangle(data: RectangleNodeData): number {
+    // Generate fill geometry blob
+    const width = data.size?.x ?? 100;
+    const height = data.size?.y ?? 100;
+    const blobBytes = encodeRectangleBlob(width, height);
+    const blobIndex = this.addBlob({ bytes: blobBytes });
+
+    const node = this.createNodeChange({
+      localID: data.localID,
+      parentID: data.parentID,
+      type: SHAPE_NODE_TYPES.RECTANGLE,
+      name: data.name,
+      size: data.size,
+      transform: data.transform,
+      visible: data.visible,
+      opacity: data.opacity,
+      fillPaints: data.fillPaints,
+      strokePaints: data.strokePaints,
+      strokeWeight: data.strokeWeight,
+      strokeCap: data.strokeCap,
+      strokeJoin: data.strokeJoin,
+      strokeAlign: data.strokeAlign,
+      dashPattern: data.dashPattern,
+      stackPositioning: data.stackPositioning,
+      stackPrimarySizing: data.stackPrimarySizing,
+      stackCounterSizing: data.stackCounterSizing,
+      horizontalConstraint: data.horizontalConstraint,
+      verticalConstraint: data.verticalConstraint,
+      effects: data.effects,
+    });
+    // Add fill geometry (required for rendering)
+    node.fillGeometry = [{
+      windingRule: { value: 0, name: "NONZERO" },
+      commandsBlob: blobIndex,
+      styleID: 0,
+    }];
     this.nodes.push(node);
     return data.localID;
   }
@@ -436,6 +595,13 @@ export class FigFileBuilder {
    * Add a ROUNDED_RECTANGLE node
    */
   addRoundedRectangle(data: RoundedRectangleNodeData): number {
+    // Generate fill geometry blob
+    const width = data.size?.x ?? 100;
+    const height = data.size?.y ?? 100;
+    const radius = data.cornerRadius ?? 0;
+    const blobBytes = encodeRoundedRectangleBlob(width, height, radius);
+    const blobIndex = this.addBlob({ bytes: blobBytes });
+
     const node = this.createNodeChange({
       localID: data.localID,
       parentID: data.parentID,
@@ -459,13 +625,53 @@ export class FigFileBuilder {
       stackCounterSizing: data.stackCounterSizing,
       horizontalConstraint: data.horizontalConstraint,
       verticalConstraint: data.verticalConstraint,
+      effects: data.effects,
     });
+    // Add fill geometry (required for rendering)
+    node.fillGeometry = [{
+      windingRule: { value: 0, name: "NONZERO" },
+      commandsBlob: blobIndex,
+      styleID: 0,
+    }];
     this.nodes.push(node);
     return data.localID;
   }
 
   /**
-   * Create a NodeChange record
+   * Create a NodeChange record for structural nodes (DOCUMENT, CANVAS)
+   * These use structuralSessionID (0) for both guid and parentIndex
+   */
+  private createStructuralNodeChange(data: {
+    localID: number;
+    parentID: number;
+    type: number;
+    name: string;
+  }): Record<string, unknown> {
+    const typeName = this.getTypeName(data.type);
+
+    const node: Record<string, unknown> = {
+      guid: { sessionID: this.structuralSessionID, localID: data.localID },
+      phase: { value: 0, name: "CREATED" },
+      type: { value: data.type, name: typeName },
+      name: data.name,
+      visible: true,
+      opacity: 1,
+    };
+
+    // Parent index (also uses structuralSessionID)
+    if (data.parentID >= 0) {
+      node.parentIndex = {
+        guid: { sessionID: this.structuralSessionID, localID: data.parentID },
+        position: this.generatePosition(data.parentID),
+      };
+    }
+
+    return node;
+  }
+
+  /**
+   * Create a NodeChange record for content nodes (FRAME, shapes, text, etc.)
+   * These use contentSessionID (1) for guid, structuralSessionID (0) for parent reference
    */
   private createNodeChange(data: {
     localID: number;
@@ -544,11 +750,17 @@ export class FigFileBuilder {
     handleMirroring?: { value: number; name: string };
     // Rectangle fields
     rectangleCornerRadii?: readonly [number, number, number, number];
+    // Effects
+    effects?: readonly EffectData[];
   }): Record<string, unknown> {
     const typeName = this.getTypeName(data.type);
 
+    // Register this content node with contentSessionID
+    this.nodeSessionIDs.set(data.localID, this.contentSessionID);
+
+    // Content nodes use contentSessionID (1) for their own guid
     const node: Record<string, unknown> = {
-      guid: { sessionID: this.sessionID, localID: data.localID },
+      guid: { sessionID: this.contentSessionID, localID: data.localID },
       phase: { value: 0, name: "CREATED" },
       type: { value: data.type, name: typeName },
       name: data.name,
@@ -556,11 +768,12 @@ export class FigFileBuilder {
       opacity: data.opacity ?? 1,
     };
 
-    // Parent index
+    // Parent index - look up the parent's actual sessionID
     if (data.parentID >= 0) {
+      const parentSessionID = this.nodeSessionIDs.get(data.parentID) ?? this.structuralSessionID;
       node.parentIndex = {
-        guid: { sessionID: this.sessionID, localID: data.parentID },
-        position: this.generatePosition(),
+        guid: { sessionID: parentSessionID, localID: data.parentID },
+        position: this.generatePosition(data.parentID),
       };
     }
 
@@ -719,16 +932,21 @@ export class FigFileBuilder {
       node.rectangleCornerRadii = data.rectangleCornerRadii;
     }
 
+    // Effects (drop shadow, inner shadow, blur, etc.)
+    if (data.effects && data.effects.length > 0) {
+      node.effects = data.effects;
+    }
+
     return node;
   }
 
-  private positionCounter = 0;
-
-  private generatePosition(): string {
-    // Figma uses a fractional index system
-    // From observation: "!" for first child, then ASCII incrementing ("\"", "#", "$", etc.)
+  private generatePosition(parentID: number): string {
+    // Figma uses a fractional index system per parent
+    // "!" for first child, then ASCII incrementing ("\"", "#", "$", etc.)
+    const count = this.childCountPerParent.get(parentID) ?? 0;
+    this.childCountPerParent.set(parentID, count + 1);
     const base = 33; // ASCII '!'
-    return String.fromCharCode(base + (this.positionCounter++ % 93));
+    return String.fromCharCode(base + (count % 93));
   }
 
   private getTypeName(type: number): string {
@@ -757,7 +975,7 @@ export class FigFileBuilder {
 
     encoder.writeHeader({
       type: { value: 1 },
-      sessionID: this.sessionID,
+      sessionID: this.structuralSessionID,
       ackID: 0,
       blobs: this.blobs,
     });
@@ -802,7 +1020,7 @@ export class FigFileBuilder {
 
     encoder.writeHeader({
       type: { value: 1 },
-      sessionID: this.sessionID,
+      sessionID: this.structuralSessionID,
       ackID: 0,
       blobs: this.blobs,
     });
@@ -851,6 +1069,7 @@ export class FigFileBuilder {
    * This is the format that Figma can open directly.
    *
    * @param options - Optional build options
+   * @param options.fileName - File name for meta.json
    */
   async buildAsync(options?: {
     fileName?: string;
@@ -874,13 +1093,45 @@ export class FigFileBuilder {
     };
     zip.writeText("meta.json", JSON.stringify(meta));
 
-    // Add empty images directory marker (create a placeholder)
-    // ZIP doesn't support empty directories directly, so we skip this
+    // Always add thumbnail (required by Figma for import)
+    const thumbnail = generatePlaceholderThumbnail();
+    zip.writeBinary("thumbnail.png", thumbnail);
 
     // Generate ZIP as ArrayBuffer and convert to Uint8Array
     const buffer = await zip.toArrayBuffer({ compressionLevel: 6 });
     return new Uint8Array(buffer);
   }
+}
+
+/**
+ * Generate a minimal placeholder thumbnail PNG (1x1 gray pixel)
+ * This is a valid PNG file that Figma accepts.
+ */
+function generatePlaceholderThumbnail(): Uint8Array {
+  // Minimal 1x1 gray PNG (pre-computed bytes)
+  // PNG header + IHDR + IDAT + IEND
+  // Color: #F5F5F5 (light gray, matches default canvas background)
+  return new Uint8Array([
+    // PNG signature
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    // IHDR chunk (1x1, 8-bit RGB)
+    0x00, 0x00, 0x00, 0x0d, // length
+    0x49, 0x48, 0x44, 0x52, // "IHDR"
+    0x00, 0x00, 0x00, 0x01, // width: 1
+    0x00, 0x00, 0x00, 0x01, // height: 1
+    0x08, 0x02, // bit depth: 8, color type: RGB
+    0x00, 0x00, 0x00, // compression, filter, interlace
+    0x90, 0x77, 0x53, 0xde, // CRC
+    // IDAT chunk (compressed pixel data: #F5F5F5)
+    0x00, 0x00, 0x00, 0x0c, // length
+    0x49, 0x44, 0x41, 0x54, // "IDAT"
+    0x08, 0xd7, 0x63, 0x78, 0xf6, 0xf6, 0x06, 0x00, 0x02, 0x3b, 0x01, 0x1e,
+    0xd6, 0xcc, 0x05, 0x0e, // CRC
+    // IEND chunk
+    0x00, 0x00, 0x00, 0x00, // length
+    0x49, 0x45, 0x4e, 0x44, // "IEND"
+    0xae, 0x42, 0x60, 0x82, // CRC
+  ]);
 }
 
 /**

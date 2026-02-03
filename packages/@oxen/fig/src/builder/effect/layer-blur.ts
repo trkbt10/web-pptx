@@ -32,7 +32,7 @@ export class LayerBlurBuilder {
 
   build(): BlurEffectData {
     return {
-      type: { value: EFFECT_TYPE_VALUES.LAYER_BLUR, name: "LAYER_BLUR" },
+      type: { value: EFFECT_TYPE_VALUES.FOREGROUND_BLUR, name: "FOREGROUND_BLUR" },
       visible: this._visible,
       radius: this._radius,
     };

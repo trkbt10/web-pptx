@@ -15,7 +15,7 @@ describe("effects utility", () => {
     expect(result).toHaveLength(3);
     expect(result[0].type.name).toBe("DROP_SHADOW");
     expect(result[1].type.name).toBe("INNER_SHADOW");
-    expect(result[2].type.name).toBe("LAYER_BLUR");
+    expect(result[2].type.name).toBe("FOREGROUND_BLUR");
   });
 
   it("creates empty array when no effects provided", () => {
