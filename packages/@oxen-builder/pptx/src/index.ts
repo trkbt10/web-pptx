@@ -72,6 +72,15 @@ export {
   applyBackground,
   applyImageBackground,
   isImageBackground,
+  // Slide utilities
+  getShapeId,
+  getExistingShapeIds,
+  applyBackgroundSpec,
+  // Slide processor
+  processSlideElements,
+  type SlideModInput,
+  type SlideProcessContext,
+  type SlideProcessResult,
   applyAnimations,
   type ApplyAnimationsResult,
   applyComments,

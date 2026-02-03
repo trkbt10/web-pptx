@@ -38,6 +38,9 @@ export type { GetZipTextFileContent } from "./zip";
 
 export { resolveRelationshipTargetPath } from "./relationship-target";
 
+// Zip adapter utilities
+export { createZipFileAdapter } from "./zip-adapter";
+
 // Export utilities
 export {
   XML_DECLARATION,

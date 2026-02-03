@@ -4,7 +4,7 @@
  * Type-safe SVG string generation.
  */
 
-import { unsafeHtml, type HtmlString, buildAttrs } from "../html/primitives";
+import { unsafeHtml, type HtmlString, buildAttrs } from "./string-utils";
 
 // =============================================================================
 // SVG Element Creation

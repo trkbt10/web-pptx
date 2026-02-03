@@ -78,7 +78,7 @@ export function buildLine(
     cap: (options?.cap ?? "flat") as BaseLine["cap"],
     compound: compound,
     alignment: "ctr",
-    fill: { type: "solidFill", color: { spec: { type: "srgb", value: lineColor } } },
+    fill: { type: "solidFill", color: { spec: { type: "srgb", value: lineColor.startsWith("#") ? lineColor.slice(1) : lineColor } } },
     dash: options?.dash ?? "solid",
     join: (options?.join ?? "round") as BaseLine["join"],
     headEnd: options?.headEnd ? buildLineEnd(options.headEnd) : undefined,

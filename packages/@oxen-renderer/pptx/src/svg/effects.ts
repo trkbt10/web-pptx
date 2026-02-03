@@ -12,7 +12,7 @@
 
 import type { Color } from "@oxen-office/drawing-ml/domain/color";
 import type { Effects, GlowEffect, ShadowEffect, SoftEdgeEffect } from "@oxen-office/pptx/domain";
-import type { HtmlString } from "../html/primitives";
+import { type HtmlString, unsafeHtml } from "./string-utils";
 import {
   filter,
   feGaussianBlur,
@@ -21,7 +21,6 @@ import {
   feMerge,
   feMergeNode,
 } from "./primitives";
-import { unsafeHtml } from "../html/primitives";
 import { resolveColor } from "@oxen-office/drawing-ml/domain/color-resolution";
 import type { ColorContext } from "@oxen-office/drawing-ml/domain/color-context";
 

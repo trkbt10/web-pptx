@@ -5,13 +5,12 @@
  * relationships/content types, and inserts a p:graphicFrame on the slide.
  */
 
-import { createElement, serializeDocument, type XmlDocument, type XmlElement } from "@oxen/xml";
+import { createElement, parseXml, serializeDocument, type XmlDocument, type XmlElement } from "@oxen/xml";
 import {
   addShapeToTree,
   addOverride,
   addRelationship,
   ensureRelationshipsDocument,
-  parseXml,
   updateAtPath,
   updateDocumentRoot,
 } from "@oxen-builder/pptx/patcher";

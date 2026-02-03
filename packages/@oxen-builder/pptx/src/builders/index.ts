@@ -41,6 +41,21 @@ export {
   isImageBackground,
 } from "./background-builder";
 
+// Slide utilities
+export {
+  getShapeId,
+  getExistingShapeIds,
+  applyBackgroundSpec,
+} from "./slide-utils";
+
+// Slide processor
+export {
+  processSlideElements,
+  type SlideModInput,
+  type SlideProcessContext,
+  type SlideProcessResult,
+} from "./slide-processor";
+
 // Animation builders
 export { applyAnimations, type ApplyAnimationsResult } from "./animation-builder";
 

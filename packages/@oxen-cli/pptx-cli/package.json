@@ -6,7 +6,8 @@
     "pptx": "./src/cli.ts"
   },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./core": "./src/core/index.ts"
   },
   "dependencies": {
     "@oxen-builder/pptx": "workspace:*",
@@ -14,6 +15,7 @@
     "@oxen-office/chart": "workspace:*",
     "@oxen-office/opc": "workspace:*",
     "@oxen-office/pptx": "workspace:*",
+    "@oxen-renderer/pptx": "workspace:*",
     "@oxen/zip": "workspace:*",
     "commander": "^12.0.0"
   }

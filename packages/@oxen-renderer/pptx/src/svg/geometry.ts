@@ -6,7 +6,7 @@
 
 import type { ArcToCommand, CubicBezierCommand, CustomGeometry, Geometry, GeometryGuide, GeometryPath, PathCommand, PresetGeometry, QuadBezierCommand, Transform } from "@oxen-office/pptx/domain";
 import { px } from "@oxen-office/drawing-ml/domain/units";
-import type { HtmlString } from "../html/primitives";
+import type { HtmlString } from "./string-utils";
 import { path } from "./primitives";
 import { renderFillToStyle, renderLineToStyle } from "./fill";
 import { generateLineMarkers, type MarkerCollection } from "./marker";

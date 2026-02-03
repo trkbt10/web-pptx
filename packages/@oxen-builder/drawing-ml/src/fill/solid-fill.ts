@@ -8,12 +8,20 @@ import type { Percent } from "@oxen-office/drawing-ml/domain/units";
 import type { ColorSpec, ThemeColorSpec } from "../types";
 
 /**
+ * Strip leading "#" from hex color strings.
+ * Internal srgb values must be stored without "#" prefix.
+ */
+function stripHash(hex: string): string {
+  return hex.startsWith("#") ? hex.slice(1) : hex;
+}
+
+/**
  * Build a Color object from ColorSpec
  */
 export function buildColor(colorSpec: ColorSpec): Color {
   if (typeof colorSpec === "string") {
-    // Hex color
-    return { spec: { type: "srgb", value: colorSpec } };
+    // Hex color - strip leading "#" for internal representation
+    return { spec: { type: "srgb", value: stripHash(colorSpec) } };
   }
 
   // Theme color - build transform object immutably
@@ -36,7 +44,7 @@ export function buildColor(colorSpec: ColorSpec): Color {
 export function buildSolidFill(hexColor: string): SolidFill {
   return {
     type: "solidFill",
-    color: { spec: { type: "srgb", value: hexColor } },
+    color: { spec: { type: "srgb", value: stripHash(hexColor) } },
   };
 }
 

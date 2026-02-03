@@ -11,7 +11,6 @@
 import type { Chart } from "@oxen-office/chart/domain";
 import { renderChart as renderChartSvg } from "@oxen-renderer/chart";
 import type { CoreRenderContext } from "../render-context";
-import { type HtmlString, unsafeHtml } from "../html/index";
 import { createChartRenderContext, createFillResolver } from "./context-adapter";
 
 
@@ -40,7 +39,7 @@ import { createChartRenderContext, createFillResolver } from "./context-adapter"
 
 
 /**
- * Render a chart as SVG HTML string.
+ * Render a chart as SVG string.
  */
 export function renderChart({
   chart,
@@ -52,10 +51,10 @@ export function renderChart({
   width: number;
   height: number;
   ctx: CoreRenderContext;
-}): HtmlString {
+}): string {
   const chartCtx = createChartRenderContext(ctx);
   const fillResolver = createFillResolver(ctx);
-  return unsafeHtml(renderChartSvg({ chart, width, height, ctx: chartCtx, fillResolver }));
+  return renderChartSvg({ chart, width, height, ctx: chartCtx, fillResolver });
 }
 
 /**

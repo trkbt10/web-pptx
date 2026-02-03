@@ -11,7 +11,7 @@
  */
 
 import type { LineEnd } from "@oxen-office/pptx/domain";
-import type { HtmlString } from "../html/primitives";
+import type { HtmlString } from "./string-utils";
 import { marker, polygon, polyline, ellipse, path } from "./primitives";
 
 // =============================================================================

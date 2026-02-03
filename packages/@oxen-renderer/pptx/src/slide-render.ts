@@ -16,7 +16,6 @@ import { getNonPlaceholderShapes } from "@oxen-office/pptx/domain/shape-utils";
 import { parseSlide } from "@oxen-office/pptx/parser";
 import { parseShapeTree } from "@oxen-office/pptx/parser";
 import { createParseContext } from "@oxen-office/pptx/parser/context";
-import { renderSlide, createEmptySlideHtml } from "./html/slide";
 import { renderSlideSvg, createEmptySlideSvg } from "./svg/renderer";
 import { createRenderContextFromSlideContext } from "./context/slide-context-adapter";
 import { toResolvedBackgroundFill } from "./background-fill";
@@ -26,20 +25,6 @@ import { enrichSlideContent, type FileReader } from "@oxen-office/pptx/parser/sl
 // =============================================================================
 // Types
 // =============================================================================
-
-/**
- * Result of rendering a slide with the new architecture.
- */
-export type IntegratedRenderResult = {
-  /** Rendered HTML output */
-  readonly html: string;
-
-  /** Generated CSS styles */
-  readonly styles: string;
-
-  /** Warnings generated during rendering */
-  readonly warnings: readonly string[];
-};
 
 /**
  * Result of rendering a slide to SVG with the new architecture.
@@ -108,59 +93,6 @@ function getLayoutNonPlaceholderShapes(ctx: SlideContext): readonly Shape[] {
 // =============================================================================
 // Integrated Render Functions
 // =============================================================================
-
-/**
- * Render a slide using the new Parse → Domain → Render architecture.
- *
- * This function:
- * 1. Parses XmlDocument to Slide domain object (parser)
- * 2. Parses layout to get non-placeholder decorative shapes
- * 3. Resolves background from slide/layout/master hierarchy
- * 4. Merges layout shapes with slide shapes
- * 5. Renders Slide domain object to HTML (render)
- *
- * @param content - Slide XML document
- * @param ctx - Slide render context
- * @param slideSize - Slide dimensions
- * @returns Render result with HTML, styles, and warnings
- */
-export function renderSlideIntegrated(
-  content: XmlDocument,
-  ctx: SlideContext,
-  slideSize: SlideSize,
-): IntegratedRenderResult {
-  // Step 1: Parse XmlDocument → Slide domain object
-  const parseCtx = createParseContext(ctx);
-  const parsedSlide = parseSlide(content, parseCtx);
-
-  if (parsedSlide === undefined) {
-    return {
-      html: createEmptySlideHtml(slideSize),
-      styles: "",
-      warnings: ["Failed to parse slide content"],
-    };
-  }
-
-  // Step 2: Parse layout to get non-placeholder shapes
-  const layoutShapes = getLayoutNonPlaceholderShapes(ctx);
-
-  // Step 3: Resolve background from hierarchy (slide → layout → master)
-  const bgFillData = getBackgroundFillData(ctx);
-  const resolvedBackground = toResolvedBackgroundFill(bgFillData);
-
-  // Step 4: Render Slide domain object → HTML
-  const renderCtx = createRenderContextFromSlideContext(ctx, slideSize, {
-    resolvedBackground,
-    layoutShapes,
-  });
-  const result = renderSlide(parsedSlide, renderCtx);
-
-  return {
-    html: result.html,
-    styles: result.styles,
-    warnings: result.warnings.map((w) => `[${w.type}] ${w.message}`),
-  };
-}
 
 /**
  * Render a slide to SVG using the new Parse → Domain → Render architecture.

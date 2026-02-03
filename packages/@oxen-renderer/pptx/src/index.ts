@@ -1,22 +1,20 @@
 /**
  * @file Render module for PPTX processing
  *
- * Provides renderers that transform Domain Objects to HTML/SVG output.
+ * Provides renderers that transform Domain Objects to SVG output.
  *
  * ## Directory Structure
  *
  * ```
  * render/
- * ├── html/           # HTML slide rendering (browser display with CSS layout)
- * │   ├── slide.ts    # Main HTML slide renderer
- * │   ├── shape.ts    # Shape → HTML div/SVG
- * │   ├── text.ts     # Text → HTML span
- * │   └── media.ts    # Audio/video elements
  * ├── svg/            # SVG slide rendering (image generation with resvg)
  * │   ├── renderer.ts # Main SVG slide renderer
  * │   ├── slide-*.ts  # SVG slide components
  * │   ├── geometry.ts # Shape geometry → SVG path
  * │   └── effects*.ts # SVG filters and 3D effects
+ * ├── react/          # React components for interactive rendering
+ * │   ├── index.ts    # React slide renderer
+ * │   └── shapes/     # Shape components
  * └── text-layout/    # Text layout engine (for SVG absolute positioning)
  * ```
  */
@@ -68,34 +66,6 @@ export { extractTransformData, buildCssTransform, buildCssPositionStyles, buildS
 // =============================================================================
 // Types from domain (fill resolution)
 // =============================================================================
-
-// =============================================================================
-// HTML Utilities (backward compatibility)
-// =============================================================================
-
-export type { HtmlString } from "./html/index";
-
-/** @deprecated Use RenderContext */
-export type { HtmlRenderContext } from "./html/index";
-
-/** @deprecated Use createRenderContext */
-export { createHtmlRenderContext, createEmptyHtmlRenderContext, fillToBackground, lineToBorder } from "./html/index";
-
-export {
-  a,
-  buildAttrs,
-  buildClass,
-  buildStyle,
-  createElement,
-  div,
-  EMPTY_HTML,
-  escapeHtml,
-  img,
-  joinHtml,
-  p,
-  span,
-  unsafeHtml,
-} from "./html/index";
 
 // =============================================================================
 // SVG Utilities
@@ -155,53 +125,18 @@ export {
 } from "./svg/geometry";
 
 // =============================================================================
-// Text Rendering
+// Table Rendering (SVG)
 // =============================================================================
 
-export { renderParagraph, renderTextBody, renderTextRun } from "./html/text";
-
-// =============================================================================
-// Shape Rendering
-// =============================================================================
-
-export {
-  renderCxnShape,
-  renderGraphicFrame,
-  renderGrpShape,
-  renderPicShape,
-  renderShape,
-  renderShapes,
-  renderSpShape,
-} from "./html/shape";
-
-// =============================================================================
-// Media Rendering
-// =============================================================================
-
-export type { MediaRenderResult } from "./html/media";
-
-export { hasMedia, renderAudio, renderMedia, renderVideo } from "./html/media";
-
-// =============================================================================
-// Diagram Rendering
-// =============================================================================
-
-export { renderDiagram, renderDiagramPlaceholder } from "./html/diagram";
-
-// =============================================================================
-// Table Rendering
-// =============================================================================
-
-export { renderTable } from "./html/table";
 export { renderTableSvg } from "./svg/table";
 
 // =============================================================================
-// Slide Rendering
+// Slide Rendering (SVG)
 // =============================================================================
 
-export type { SlideRenderResult } from "./html/slide";
+export type { SvgSlideRenderResult } from "./svg/renderer";
 
-export { renderSlide, renderSlides, renderSlideStandalone } from "./html/slide";
+export { renderSlideSvg, createEmptySlideSvg } from "./svg/renderer";
 
 // =============================================================================
 // Context Adapters
