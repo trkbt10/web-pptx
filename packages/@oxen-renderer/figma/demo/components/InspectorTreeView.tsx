@@ -43,7 +43,9 @@ const treeStyles = {
     paddingBottom: "3px",
     paddingRight: "8px",
     cursor: "pointer",
-    borderLeft: "2px solid transparent",
+    borderLeftWidth: "2px",
+    borderLeftStyle: "solid" as const,
+    borderLeftColor: "transparent",
     transition: "background 0.1s ease",
   },
   toggle: {

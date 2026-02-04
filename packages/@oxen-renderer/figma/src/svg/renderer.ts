@@ -501,7 +501,7 @@ function calculateCanvasBounds(
  * Render a single canvas (page) from Figma nodes
  */
 export function renderCanvas(
-  canvasNode: FigNode,
+  canvasNode: Pick<FigNode, "children">,
   options?: FigSvgRenderOptions
 ): FigSvgRenderResult {
   const children = canvasNode.children ?? [];
@@ -736,7 +736,7 @@ export async function renderFigToSvgAsync(
  * Render a single canvas (page) from Figma nodes (async version)
  */
 export async function renderCanvasAsync(
-  canvasNode: FigNode,
+  canvasNode: Pick<FigNode, "children">,
   options?: FigSvgRenderOptions
 ): Promise<FigSvgRenderResult> {
   const children = canvasNode.children ?? [];

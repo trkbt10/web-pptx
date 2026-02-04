@@ -135,7 +135,9 @@ const styles = {
     borderRadius: "6px",
     fontSize: "13px",
     cursor: "pointer",
-    border: "1px solid transparent",
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderColor: "transparent",
     transition: "all 0.15s ease",
   },
   frameItemActive: {
@@ -189,18 +191,6 @@ const styles = {
     textAlign: "center" as const,
     color: "#64748b",
   },
-  modeToggle: {
-    display: "flex",
-    gap: "4px",
-  },
-  modeButton: {
-    padding: "6px 14px",
-    fontSize: "13px",
-    color: "#fff",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-  },
 };
 
 // Create a singleton font loader instance
@@ -215,7 +205,7 @@ export function FigPreview({ parsedFile, onClose }: Props) {
   const [fontAccessSupported] = useState(() => BrowserFontLoader.isSupported());
   const [renderResult, setRenderResult] = useState<{ svg: string; warnings: readonly string[] }>({ svg: "", warnings: [] });
   const [isRendering, setIsRendering] = useState(false);
-  const [viewMode, setViewMode] = useState<"preview" | "inspector">("preview");
+  const [inspectorEnabled, setInspectorEnabled] = useState(false);
 
   // Build node tree and extract canvas/frame info
   const { canvases, nodeCount, typeCount, symbolMap, resolvedSymbolCache, symbolResolveWarnings } = useMemo(() => {
@@ -272,14 +262,7 @@ export function FigPreview({ parsedFile, onClose }: Props) {
     let cancelled = false;
     setIsRendering(true);
 
-    // Create a wrapper canvas with just the selected frame
-    const wrapperCanvas: FigNode = {
-      type: "CANVAS",
-      name: currentFrame.name,
-      children: [currentFrame.node],
-    };
-
-    renderCanvasAsync(wrapperCanvas, {
+    renderCanvasAsync({ children: [currentFrame.node] }, {
       width: currentFrame.width,
       height: currentFrame.height,
       blobs: parsedFile.blobs,
@@ -378,27 +361,15 @@ export function FigPreview({ parsedFile, onClose }: Props) {
             </div>
           )}
 
-          {/* Mode Toggle */}
-          <div style={styles.modeToggle}>
-            <button
-              style={{
-                ...styles.modeButton,
-                background: viewMode === "preview" ? "#6366f1" : "#334155",
-              }}
-              onClick={() => setViewMode("preview")}
-            >
-              Preview
-            </button>
-            <button
-              style={{
-                ...styles.modeButton,
-                background: viewMode === "inspector" ? "#6366f1" : "#334155",
-              }}
-              onClick={() => setViewMode("inspector")}
-            >
-              Inspector
-            </button>
-          </div>
+          <label style={styles.checkbox}>
+            <input
+              type="checkbox"
+              style={styles.checkboxInput}
+              checked={inspectorEnabled}
+              onChange={(e) => setInspectorEnabled(e.target.checked)}
+            />
+            Inspector
+          </label>
 
           <label style={styles.checkbox}>
             <input
@@ -433,7 +404,16 @@ export function FigPreview({ parsedFile, onClose }: Props) {
 
       {/* Content */}
       <div style={styles.content}>
-        {viewMode === "preview" ? (
+        {inspectorEnabled && currentFrame ? (
+          <InspectorView
+            frameNode={currentFrame.node}
+            frameWidth={currentFrame.width}
+            frameHeight={currentFrame.height}
+            showHiddenNodes={showHiddenNodes}
+            svgHtml={renderResult.svg}
+            isRendering={isRendering}
+          />
+        ) : (
           <>
             {/* Preview */}
             <div style={styles.preview}>
@@ -495,17 +475,6 @@ export function FigPreview({ parsedFile, onClose }: Props) {
               )}
             </div>
           </>
-        ) : currentFrame ? (
-          <InspectorView
-            frameNode={currentFrame.node}
-            frameWidth={currentFrame.width}
-            frameHeight={currentFrame.height}
-            showHiddenNodes={showHiddenNodes}
-          />
-        ) : (
-          <div style={styles.emptyState}>
-            No frames found in this file
-          </div>
         )}
       </div>
     </div>

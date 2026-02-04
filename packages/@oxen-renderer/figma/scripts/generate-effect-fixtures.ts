@@ -264,15 +264,16 @@ const EFFECT_FRAMES: EffectFrameData[] = [
 // Color Helpers
 // =============================================================================
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
+function hexToColor(hex: string): { r: number; g: number; b: number; a: number } {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) {
-    return { r: 0.9, g: 0.9, b: 0.9 };
+    return { r: 0.9, g: 0.9, b: 0.9, a: 1 };
   }
   return {
     r: parseInt(result[1], 16) / 255,
     g: parseInt(result[2], 16) / 255,
     b: parseInt(result[3], 16) / 255,
+    a: 1,
   };
 }
 
@@ -286,8 +287,9 @@ async function generateEffectFixtures(): Promise<void> {
   const figFile = createFigFile();
 
   // Create document and canvas
-  const docID = figFile.addDocument("Effects");
-  const canvasID = figFile.addCanvas(docID, "Effects Canvas");
+  const docID = figFile.addDocument("Document");
+  const canvasID = figFile.addCanvas(docID, "Page 1");
+  figFile.addInternalCanvas(docID); // Required for Figma compatibility
 
   // Grid layout
   const GRID_COLS = 4;
@@ -307,14 +309,14 @@ async function generateEffectFixtures(): Promise<void> {
     const frameY = MARGIN + row * (maxFrameHeight + GRID_GAP);
 
     const frameID = nextID++;
-    const bgColor = hexToRgb(frameData.background);
+    const bgColor = hexToColor(frameData.background);
 
     figFile.addFrame(
       frameNode(frameID, canvasID)
         .name(frameData.name)
         .size(frameData.width, frameData.height)
         .position(frameX, frameY)
-        .background(bgColor.r, bgColor.g, bgColor.b)
+        .background(bgColor)
         .clipsContent(true)
         .exportAsSVG()
         .build()
@@ -329,7 +331,7 @@ async function generateEffectFixtures(): Promise<void> {
           .name(child.name)
           .size(child.width, child.height)
           .position(child.x, child.y)
-          .fill(child.fill.r, child.fill.g, child.fill.b);
+          .fill({ ...child.fill, a: 1 });
 
         if (child.cornerRadius) {
           builder.cornerRadius(child.cornerRadius);
@@ -337,8 +339,9 @@ async function generateEffectFixtures(): Promise<void> {
         if (child.opacity !== undefined) {
           builder.opacity(child.opacity);
         }
-        // Note: effects would need to be added to the node data
-        // For now, we create the structure - Figma will need to apply effects
+        if (child.effects) {
+          builder.effects(child.effects);
+        }
 
         figFile.addRoundedRectangle(builder.build());
       } else if (child.shape === "ellipse") {
@@ -346,10 +349,13 @@ async function generateEffectFixtures(): Promise<void> {
           .name(child.name)
           .size(child.width, child.height)
           .position(child.x, child.y)
-          .fill(child.fill.r, child.fill.g, child.fill.b);
+          .fill({ ...child.fill, a: 1 });
 
         if (child.opacity !== undefined) {
           builder.opacity(child.opacity);
+        }
+        if (child.effects) {
+          builder.effects(child.effects);
         }
 
         figFile.addEllipse(builder.build());
@@ -379,16 +385,12 @@ async function generateEffectFixtures(): Promise<void> {
     console.log(`  - ${frame.name} (${frame.width}x${frame.height})`);
   }
 
-  console.log(`\nNote: Effects need to be applied manually in Figma:`);
-  console.log(`  - Open the file in Figma`);
-  console.log(`  - Apply drop shadows, inner shadows, and blurs to elements`);
-  console.log(`  - Export each frame as SVG`);
+  console.log(`\nEffects are now applied programmatically via the builder.`);
 
   console.log(`\nNext steps:`);
-  console.log(`1. Open ${OUTPUT_FILE} in Figma`);
-  console.log(`2. Apply effects to elements (shadows, blurs, etc.)`);
-  console.log(`3. Export each frame as SVG to ${actualDir}/`);
-  console.log(`4. Run: npx vitest run packages/@oxen-renderer/figma/spec/effects.spec.ts`);
+  console.log(`1. Open ${OUTPUT_FILE} in Figma to verify effects`);
+  console.log(`2. Export each frame as SVG to ${actualDir}/`);
+  console.log(`3. Run: npx vitest run packages/@oxen-renderer/figma/spec/effects.spec.ts`);
 }
 
 // Run

@@ -255,16 +255,23 @@ const SHAPE_FRAMES: ShapeFrameData[] = [
 // Color Helpers
 // =============================================================================
 
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
+type Color = { r: number; g: number; b: number; a: number };
+
+function hexToColor(hex: string): Color {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) {
-    return { r: 0.9, g: 0.9, b: 0.9 };
+    return { r: 0.9, g: 0.9, b: 0.9, a: 1 };
   }
   return {
     r: parseInt(result[1], 16) / 255,
     g: parseInt(result[2], 16) / 255,
     b: parseInt(result[3], 16) / 255,
+    a: 1,
   };
+}
+
+function rgbToColor(rgb: { r: number; g: number; b: number }): Color {
+  return { ...rgb, a: 1 };
 }
 
 // =============================================================================
@@ -279,6 +286,7 @@ async function generateShapeFixtures(): Promise<void> {
   // Create document and canvas
   const docID = figFile.addDocument("Shapes");
   const canvasID = figFile.addCanvas(docID, "Shapes Canvas");
+  figFile.addInternalCanvas(docID); // Required for Figma compatibility
 
   // Grid layout parameters
   const GRID_COLS = 4;
@@ -301,14 +309,14 @@ async function generateShapeFixtures(): Promise<void> {
 
     // Create parent frame
     const frameID = nextID++;
-    const bgColor = hexToRgb(frameData.background);
+    const bgColor = hexToColor(frameData.background);
 
     figFile.addFrame(
       frameNode(frameID, canvasID)
         .name(frameData.name)
         .size(frameData.width, frameData.height)
         .position(frameX, frameY)
-        .background(bgColor.r, bgColor.g, bgColor.b)
+        .background(bgColor)
         .clipsContent(true)
         .exportAsSVG()
         .build()
@@ -317,7 +325,7 @@ async function generateShapeFixtures(): Promise<void> {
     // Add children
     for (const child of frameData.children) {
       const childID = nextID++;
-      const fill = child.fill ?? { r: 0.8, g: 0.8, b: 0.8 };
+      const fill = rgbToColor(child.fill ?? { r: 0.8, g: 0.8, b: 0.8 });
 
       switch (child.type) {
         case "ellipse": {
@@ -325,7 +333,7 @@ async function generateShapeFixtures(): Promise<void> {
             .name(child.name)
             .size(child.width, child.height)
             .position(child.x, child.y)
-            .fill(fill.r, fill.g, fill.b);
+            .fill(fill);
 
           if (child.arcStart !== undefined && child.arcEnd !== undefined) {
             builder.arc(child.arcStart, child.arcEnd);
@@ -345,7 +353,7 @@ async function generateShapeFixtures(): Promise<void> {
             .position(child.x, child.y);
 
           if (child.stroke) {
-            builder.stroke(child.stroke.r, child.stroke.g, child.stroke.b);
+            builder.stroke(rgbToColor(child.stroke));
           }
           if (child.strokeWeight) {
             builder.strokeWeight(child.strokeWeight);
@@ -369,7 +377,7 @@ async function generateShapeFixtures(): Promise<void> {
             .name(child.name)
             .size(child.width, child.height)
             .position(child.x, child.y)
-            .fill(fill.r, fill.g, fill.b);
+            .fill(fill);
 
           if (child.points !== undefined) {
             builder.points(child.points);
@@ -387,7 +395,7 @@ async function generateShapeFixtures(): Promise<void> {
             .name(child.name)
             .size(child.width, child.height)
             .position(child.x, child.y)
-            .fill(fill.r, fill.g, fill.b);
+            .fill(fill);
 
           if (child.sides !== undefined) {
             builder.sides(child.sides);
@@ -402,7 +410,7 @@ async function generateShapeFixtures(): Promise<void> {
             .name(child.name)
             .size(child.width, child.height)
             .position(child.x, child.y)
-            .fill(fill.r, fill.g, fill.b);
+            .fill(fill);
 
           if (child.cornerRadius !== undefined) {
             builder.cornerRadius(child.cornerRadius);

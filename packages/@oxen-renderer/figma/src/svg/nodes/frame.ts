@@ -100,35 +100,32 @@ function buildGeometryElements(
   );
 }
 
-function buildClipShape(
+function buildClipShapes(
   geometry: readonly FigFillGeometry[] | undefined,
   ctx: FigSvgRenderContext,
   size: FigVector,
   cornerRadius: number | undefined,
-): SvgString {
+): readonly SvgString[] {
   if (geometry) {
     const paths = decodePathsFromGeometry(geometry, ctx.blobs);
     if (paths.length > 0) {
-      return g(
-        {},
-        ...paths.map(({ data, windingRule }) =>
-          path({
-            d: data,
-            "fill-rule": mapWindingRule(windingRule),
-            fill: "black",
-          }),
-        ),
+      return paths.map(({ data, windingRule }) =>
+        path({
+          d: data,
+          "fill-rule": mapWindingRule(windingRule),
+          fill: "black",
+        }),
       );
     }
   }
-  return rect({
+  return [rect({
     x: 0,
     y: 0,
     width: size.x,
     height: size.y,
     rx: cornerRadius && cornerRadius > 0 ? cornerRadius : undefined,
     fill: "black",
-  });
+  })];
 }
 
 /**
@@ -178,8 +175,8 @@ export function renderFrameNode(
     if (clipsContent) {
       // Create clip path
       const clipId = ctx.defs.generateId("clip");
-      const clipShape = buildClipShape(geometry, ctx, size, cornerRadius);
-      const clipDef = clipPath({ id: clipId }, clipShape);
+      const clipShapes = buildClipShapes(geometry, ctx, size, cornerRadius);
+      const clipDef = clipPath({ id: clipId }, ...clipShapes);
       ctx.defs.add(clipDef);
 
       // Wrap children in clipped group
