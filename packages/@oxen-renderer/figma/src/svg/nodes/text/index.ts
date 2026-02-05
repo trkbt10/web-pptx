@@ -23,25 +23,27 @@ export type {
   FigFontName,
   FigValueWithUnits,
   FigTextData,
-} from "./types";
+} from "../../../text/layout/types";
 
 // Legacy exports (deprecated - use font module directly)
 export { getFontWeightFromStyle, isItalicStyle } from "./font";
 
-// Alignment
+// SVG-specific alignment
+export { getTextAnchor, type SvgTextAnchor } from "./alignment";
+
+// Shared alignment (from text/layout)
 export {
-  getTextAnchor,
   getAlignedX,
   getAlignedY,
   getAlignedYWithMetrics,
   type AlignYOptions,
-} from "./alignment";
+} from "../../../text/layout/alignment";
 
 // Property extraction
-export { extractTextProps, getValueWithUnits } from "./props";
+export { extractTextProps, getValueWithUnits } from "../../../text/layout/extract-props";
 
 // Fill handling
-export { getFillColorAndOpacity } from "./fill";
+export { getFillColorAndOpacity } from "../../../text/layout/fill";
 
 // Attribute building
 export { buildTextAttrs } from "./attrs";
@@ -50,7 +52,7 @@ export { buildTextAttrs } from "./attrs";
 // export * as font from "../../../font"; // Removed - use direct import
 
 // Text measurement module
-export * as measure from "./measure/index";
+export * as measure from "../../../text/measure";
 
 // Path-based text rendering
 export {

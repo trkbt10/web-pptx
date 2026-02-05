@@ -4,107 +4,31 @@
  * When an INSTANCE is resized relative to its SYMBOL, child positions
  * and sizes must be adjusted according to their constraint settings.
  *
- * Figma defines 5 constraint types per axis:
- * - MIN:     Anchored to left/top edge (position unchanged)
- * - CENTER:  Centered between edges (position shifts by half delta)
- * - MAX:     Anchored to right/bottom edge (position shifts by full delta)
- * - STRETCH: Anchored to both edges (position unchanged, size adjusts)
- * - SCALE:   Proportionally scaled (position and size scale by ratio)
+ * The single-axis math lives in @oxen/fig/symbols (shared with builder).
+ * This module provides the higher-level orchestration:
+ * - applyConstraintsToChildren: depth-1 constraint application
+ * - resolveInstanceLayout: strategy selection (derived vs constraint)
  */
 
 import type { FigNode } from "@oxen/fig/types";
 import { CONSTRAINT_TYPE_VALUES } from "@oxen/fig/constants";
+import { resolveConstraintAxis } from "@oxen/fig/symbols";
+import type { FigDerivedSymbolData } from "./symbol-resolver";
 
 // =============================================================================
-// Types
-// =============================================================================
-
-export type ConstraintKind = "MIN" | "CENTER" | "MAX" | "STRETCH" | "SCALE";
-
-type AxisResult = {
-  readonly pos: number;
-  readonly dim: number;
-};
-
-// =============================================================================
-// Single-axis resolution
+// Constraint value extraction
 // =============================================================================
 
 /**
- * Resolve a single axis constraint.
- *
- * @param originalPos   Child's original position along this axis
- * @param originalDim   Child's original size along this axis
- * @param parentOrigDim SYMBOL's size along this axis
- * @param parentNewDim  INSTANCE's size along this axis
- * @param constraint    Constraint type for this axis
+ * Extract the numeric constraint value from a node's constraint field.
+ * Returns CONSTRAINT_TYPE_VALUES.MIN (0) as default when unset.
  */
-export function resolveAxis(
-  originalPos: number,
-  originalDim: number,
-  parentOrigDim: number,
-  parentNewDim: number,
-  constraint: ConstraintKind,
-): AxisResult {
-  const delta = parentNewDim - parentOrigDim;
-
-  switch (constraint) {
-    case "MIN":
-      // Anchored to left/top: no change
-      return { pos: originalPos, dim: originalDim };
-
-    case "MAX":
-      // Anchored to right/bottom: shift position by full delta
-      return { pos: originalPos + delta, dim: originalDim };
-
-    case "CENTER":
-      // Centered: shift position by half delta
-      return { pos: originalPos + delta / 2, dim: originalDim };
-
-    case "STRETCH": {
-      // Anchored to both edges: margins preserved, size adjusts
-      const leftMargin = originalPos;
-      const rightMargin = parentOrigDim - (originalPos + originalDim);
-      const newDim = Math.max(0, parentNewDim - leftMargin - rightMargin);
-      return { pos: leftMargin, dim: newDim };
-    }
-
-    case "SCALE": {
-      // Proportionally scaled
-      if (parentOrigDim === 0) {
-        return { pos: originalPos, dim: originalDim };
-      }
-      const ratio = parentNewDim / parentOrigDim;
-      return { pos: originalPos * ratio, dim: originalDim * ratio };
-    }
+function getConstraintValue(constraintField: unknown): number {
+  if (!constraintField || typeof constraintField !== "object") {
+    return CONSTRAINT_TYPE_VALUES.MIN;
   }
-}
-
-// =============================================================================
-// Constraint extraction
-// =============================================================================
-
-/**
- * Extract constraint kind from a node's constraint field.
- * Returns "MIN" as default when unset.
- */
-function getConstraintKind(
-  constraintValue: unknown,
-): ConstraintKind {
-  if (!constraintValue || typeof constraintValue !== "object") {
-    return "MIN";
-  }
-  const val = (constraintValue as { value?: number }).value;
-  if (val === undefined) return "MIN";
-
-  switch (val) {
-    case CONSTRAINT_TYPE_VALUES.MIN: return "MIN";
-    case CONSTRAINT_TYPE_VALUES.CENTER: return "CENTER";
-    case CONSTRAINT_TYPE_VALUES.MAX: return "MAX";
-    case CONSTRAINT_TYPE_VALUES.STRETCH: return "STRETCH";
-    case CONSTRAINT_TYPE_VALUES.SCALE: return "SCALE";
-    default: return "MIN";
-  }
+  const val = (constraintField as { value?: number }).value;
+  return val ?? CONSTRAINT_TYPE_VALUES.MIN;
 }
 
 // =============================================================================
@@ -131,13 +55,13 @@ export function applyConstraintsToChildren(
   return children.map((child) => {
     const nodeData = child as Record<string, unknown>;
 
-    const hConstraint = getConstraintKind(nodeData.horizontalConstraint);
-    const vConstraint = getConstraintKind(nodeData.verticalConstraint);
+    const hVal = getConstraintValue(nodeData.horizontalConstraint);
+    const vVal = getConstraintValue(nodeData.verticalConstraint);
 
     // If both are MIN and no resize needed, skip
     if (
-      hConstraint === "MIN" &&
-      vConstraint === "MIN" &&
+      hVal === CONSTRAINT_TYPE_VALUES.MIN &&
+      vVal === CONSTRAINT_TYPE_VALUES.MIN &&
       symbolSize.x === instanceSize.x &&
       symbolSize.y === instanceSize.y
     ) {
@@ -156,8 +80,8 @@ export function applyConstraintsToChildren(
     const origW = size.x ?? 0;
     const origH = size.y ?? 0;
 
-    const hResult = resolveAxis(origX, origW, symbolSize.x, instanceSize.x, hConstraint);
-    const vResult = resolveAxis(origY, origH, symbolSize.y, instanceSize.y, vConstraint);
+    const hResult = resolveConstraintAxis(origX, origW, symbolSize.x, instanceSize.x, hVal);
+    const vResult = resolveConstraintAxis(origY, origH, symbolSize.y, instanceSize.y, vVal);
 
     // Skip creating new object if nothing changed
     if (
@@ -192,4 +116,116 @@ export function applyConstraintsToChildren(
 
     return result as FigNode;
   });
+}
+
+// =============================================================================
+// Instance layout resolution
+// =============================================================================
+
+/**
+ * Check whether derivedSymbolData entries reference GUIDs that actually
+ * exist among the given children. Exported .fig files may carry
+ * derivedSymbolData referencing external component library GUIDs that
+ * don't exist in this file (orphaned entries).
+ */
+function isDerivedDataApplicable(
+  derivedSymbolData: FigDerivedSymbolData,
+  children: readonly FigNode[],
+): boolean {
+  return derivedSymbolData.some((entry) => {
+    const firstGuid = entry.guidPath?.guids?.[0];
+    if (!firstGuid) return false;
+    const key = `${firstGuid.sessionID}:${firstGuid.localID}`;
+    return children.some((child) => {
+      const cg = (child as Record<string, unknown>).guid as
+        | { sessionID: number; localID: number }
+        | undefined;
+      return cg != null && `${cg.sessionID}:${cg.localID}` === key;
+    });
+  });
+}
+
+/**
+ * Clear fillGeometry/strokeGeometry on children whose size was changed by
+ * derivedSymbolData, so the renderer falls back to size-based shape rendering.
+ */
+function clearDerivedGeometry(
+  derivedSymbolData: FigDerivedSymbolData,
+  children: readonly FigNode[],
+): void {
+  for (const entry of derivedSymbolData) {
+    if (!entry.size) continue;
+    const targetGuid =
+      entry.guidPath?.guids?.[entry.guidPath.guids.length - 1];
+    if (!targetGuid) continue;
+    const targetKey = `${targetGuid.sessionID}:${targetGuid.localID}`;
+    for (const child of children) {
+      const cg = (child as Record<string, unknown>).guid as
+        | { sessionID: number; localID: number }
+        | undefined;
+      if (cg && `${cg.sessionID}:${cg.localID}` === targetKey) {
+        delete (child as Record<string, unknown>).fillGeometry;
+        delete (child as Record<string, unknown>).strokeGeometry;
+      }
+    }
+  }
+}
+
+/**
+ * Result of instance layout resolution.
+ */
+export type InstanceLayoutResult = {
+  /** Adjusted children array */
+  readonly children: readonly FigNode[];
+  /** Whether instance size should be applied to the merged node */
+  readonly sizeApplied: boolean;
+};
+
+/**
+ * Resolve layout for a resized INSTANCE's children.
+ *
+ * Strategy:
+ * 1. If derivedSymbolData exists and its GUIDs match actual children,
+ *    Figma has pre-computed the layout — use it as-is.
+ * 2. Otherwise, fall back to constraint-based resolution.
+ *
+ * @param children           Cloned children (overrides already applied)
+ * @param symbolSize         Original SYMBOL size
+ * @param instanceSize       Actual INSTANCE size
+ * @param derivedSymbolData  Pre-computed layout data (may be orphaned)
+ */
+export function resolveInstanceLayout(
+  children: readonly FigNode[],
+  symbolSize: { x: number; y: number },
+  instanceSize: { x: number; y: number },
+  derivedSymbolData: FigDerivedSymbolData | undefined,
+): InstanceLayoutResult {
+  // Strategy 1: derivedSymbolData with valid GUIDs
+  if (derivedSymbolData && derivedSymbolData.length > 0) {
+    if (isDerivedDataApplicable(derivedSymbolData, children)) {
+      clearDerivedGeometry(derivedSymbolData, children);
+      return { children, sizeApplied: true };
+    }
+  }
+
+  // Strategy 2: constraint-based resolution
+  const hasConstraints = children.some((child) => {
+    const nd = child as Record<string, unknown>;
+    const hc = nd.horizontalConstraint as { value?: number } | undefined;
+    const vc = nd.verticalConstraint as { value?: number } | undefined;
+    return (
+      (hc?.value !== undefined && hc.value !== 0) ||
+      (vc?.value !== undefined && vc.value !== 0)
+    );
+  });
+
+  if (hasConstraints) {
+    return {
+      children: applyConstraintsToChildren(children, symbolSize, instanceSize),
+      sizeApplied: true,
+    };
+  }
+
+  // No derived data and no constraints: keep original layout
+  return { children, sizeApplied: false };
 }

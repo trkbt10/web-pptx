@@ -54,6 +54,10 @@
       "types": "./src/constants/index.ts",
       "default": "./src/constants/index.ts"
     },
+    "./symbols": {
+      "types": "./src/symbols/index.ts",
+      "default": "./src/symbols/index.ts"
+    },
     "./test-helpers": {
       "types": "./src/kiwi/test-helpers.ts",
       "default": "./src/kiwi/test-helpers.ts"

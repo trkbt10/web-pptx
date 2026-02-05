@@ -3,7 +3,7 @@
  */
 
 import type { FigNode, FigPaint } from "@oxen/fig/types";
-import { extractBaseProps } from "../extract-props";
+import { extractBaseProps } from "../../svg/nodes/extract-props";
 import type {
   ExtractedTextProps,
   FigFontName,
@@ -14,7 +14,7 @@ import type {
   TextAutoResize,
   TextDecoration,
 } from "./types";
-import { detectWeight, isItalic, FONT_WEIGHTS } from "../../../font";
+import { detectWeight, isItalic, FONT_WEIGHTS } from "../../font";
 
 /**
  * Get numeric value from value-with-units structure

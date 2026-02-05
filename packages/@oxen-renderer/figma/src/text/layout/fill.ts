@@ -3,7 +3,7 @@
  */
 
 import type { FigPaint, FigColor } from "@oxen/fig/types";
-import { figColorToHex, getPaintType } from "../../fill";
+import { figColorToHex, getPaintType } from "../../core/color";
 import type { FillColorResult } from "./types";
 
 /**

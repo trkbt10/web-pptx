@@ -10,7 +10,11 @@ import { preResolveSymbols } from "../../src/symbols/symbol-pre-resolver";
 import { renderCanvas } from "../../src/svg/renderer";
 import { BrowserFontLoader } from "../../src/font-drivers/browser";
 import { CachingFontLoader } from "../../src/font";
+import { buildSceneGraph } from "../../src/scene-graph/builder";
 import { InspectorView } from "./InspectorView";
+import { WebGLCanvas } from "./WebGLCanvas";
+
+type RendererMode = "svg" | "webgl";
 
 type Props = {
   readonly parsedFile: ParsedFigFile;
@@ -191,6 +195,26 @@ const styles = {
     textAlign: "center" as const,
     color: "#64748b",
   },
+  rendererToggle: {
+    display: "flex",
+    borderRadius: "8px",
+    overflow: "hidden",
+    border: "1px solid #334155",
+  },
+  rendererButton: {
+    padding: "6px 14px",
+    fontSize: "13px",
+    fontWeight: 500,
+    color: "#94a3b8",
+    background: "#1e293b",
+    border: "none",
+    cursor: "pointer",
+    transition: "all 0.15s ease",
+  },
+  rendererButtonActive: {
+    color: "#fff",
+    background: "#6366f1",
+  },
 };
 
 // Create a singleton font loader instance
@@ -206,6 +230,7 @@ export function FigPreview({ parsedFile, onClose }: Props) {
   const [renderResult, setRenderResult] = useState<{ svg: string; warnings: readonly string[] }>({ svg: "", warnings: [] });
   const [isRendering, setIsRendering] = useState(false);
   const [inspectorEnabled, setInspectorEnabled] = useState(false);
+  const [rendererMode, setRendererMode] = useState<RendererMode>("svg");
 
   // Build node tree and extract canvas/frame info
   const { canvases, nodeCount, typeCount, symbolMap, resolvedSymbolCache, symbolResolveWarnings } = useMemo(() => {
@@ -251,6 +276,30 @@ export function FigPreview({ parsedFile, onClose }: Props) {
   // Get current selection
   const currentCanvas = canvases[selectedCanvasIndex];
   const currentFrame = currentCanvas?.frames[selectedFrameIndex];
+
+  // Build scene graph for WebGL mode
+  const sceneGraph = useMemo(() => {
+    if (rendererMode !== "webgl" || !currentFrame) return null;
+    try {
+      // Normalize root transform to (0,0) — same as renderCanvas does for SVG
+      const node = currentFrame.node;
+      const transform = node.transform;
+      const normalizedNode = transform
+        ? { ...node, transform: { ...transform, m02: 0, m12: 0 } } as FigNode
+        : node;
+
+      return buildSceneGraph([normalizedNode], {
+        blobs: parsedFile.blobs,
+        images: parsedFile.images,
+        canvasSize: { width: currentFrame.width, height: currentFrame.height },
+        symbolMap,
+        showHiddenNodes,
+      });
+    } catch (e) {
+      console.error("Failed to build scene graph:", e);
+      return null;
+    }
+  }, [rendererMode, currentFrame, parsedFile.blobs, parsedFile.images, symbolMap, showHiddenNodes]);
 
   // Render the selected frame (async)
   useEffect(() => {
@@ -361,12 +410,37 @@ export function FigPreview({ parsedFile, onClose }: Props) {
             </div>
           )}
 
-          <label style={styles.checkbox}>
+          <div style={styles.rendererToggle}>
+            <button
+              style={{
+                ...styles.rendererButton,
+                ...(rendererMode === "svg" ? styles.rendererButtonActive : {}),
+              }}
+              onClick={() => setRendererMode("svg")}
+            >
+              SVG
+            </button>
+            <button
+              style={{
+                ...styles.rendererButton,
+                ...(rendererMode === "webgl" ? styles.rendererButtonActive : {}),
+              }}
+              onClick={() => setRendererMode("webgl")}
+            >
+              WebGL
+            </button>
+          </div>
+
+          <label style={{
+            ...styles.checkbox,
+            ...(rendererMode === "webgl" ? { opacity: 0.4, pointerEvents: "none" as const } : {}),
+          }}>
             <input
               type="checkbox"
               style={styles.checkboxInput}
               checked={inspectorEnabled}
               onChange={(e) => setInspectorEnabled(e.target.checked)}
+              disabled={rendererMode === "webgl"}
             />
             Inspector
           </label>
@@ -404,7 +478,7 @@ export function FigPreview({ parsedFile, onClose }: Props) {
 
       {/* Content */}
       <div style={styles.content}>
-        {inspectorEnabled && currentFrame ? (
+        {inspectorEnabled && rendererMode === "svg" && currentFrame ? (
           <InspectorView
             frameNode={currentFrame.node}
             frameWidth={currentFrame.width}
@@ -417,7 +491,19 @@ export function FigPreview({ parsedFile, onClose }: Props) {
           <>
             {/* Preview */}
             <div style={styles.preview}>
-              {isRendering ? (
+              {rendererMode === "webgl" ? (
+                currentFrame ? (
+                  <WebGLCanvas
+                    sceneGraph={sceneGraph}
+                    width={currentFrame.width}
+                    height={currentFrame.height}
+                  />
+                ) : (
+                  <div style={styles.emptyState}>
+                    No frames found in this file
+                  </div>
+                )
+              ) : isRendering ? (
                 <div style={styles.emptyState}>Rendering...</div>
               ) : currentFrame ? (
                 <div

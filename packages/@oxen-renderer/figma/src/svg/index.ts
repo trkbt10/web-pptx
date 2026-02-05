@@ -32,9 +32,12 @@ export {
 } from "./primitives";
 
 export {
+  buildTransformAttr,
+} from "./transform";
+
+export {
   IDENTITY_MATRIX,
   isIdentityMatrix,
-  buildTransformAttr,
   createTranslationMatrix,
   createScaleMatrix,
   createRotationMatrix,
@@ -42,11 +45,14 @@ export {
   extractTranslation,
   extractScale,
   extractRotation,
-} from "./transform";
+} from "../core/transform";
 
 export {
   figColorToHex,
   figColorToRgba,
+} from "../core/color";
+
+export {
   type FillAttrs,
   getFillAttrs,
   hasVisibleFill,
@@ -74,3 +80,7 @@ export {
   renderVectorNode,
   renderTextNode,
 } from "./nodes";
+
+export {
+  renderSceneGraphToSvg,
+} from "./scene-renderer";

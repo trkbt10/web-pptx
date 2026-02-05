@@ -7,7 +7,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { parse as parseFont } from "opentype.js";
 import * as fs from "node:fs";
 import { OpentypeMeasurementProvider, getAscenderRatioAsync } from "./opentype-provider";
-import type { FontLoader, LoadedFont, FontLoadOptions } from "../../../../font";
+import type { FontLoader, LoadedFont, FontLoadOptions } from "../../font/index";
 
 // Path to Inter font from @fontsource/inter
 const INTER_FONT_PATH = path.resolve(

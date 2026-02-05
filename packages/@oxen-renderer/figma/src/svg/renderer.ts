@@ -17,9 +17,10 @@ import {
 } from "./nodes";
 import { renderTextNodeAsPath, type PathRenderContext } from "./nodes/text/path-render";
 import { renderTextNodeFromDerivedData, hasDerivedPathData, type DerivedPathRenderContext } from "./nodes/text/derived-path-render";
-import { cloneSymbolChildren, getInstanceSymbolID, getInstanceOverriddenSymbolID, getInstanceSymbolOverrides, resolveSymbolGuidStr, type FigDerivedSymbolData } from "../symbols/symbol-resolver";
+import { getEffectiveSymbolID } from "@oxen/fig/symbols";
+import { cloneSymbolChildren, getInstanceSymbolOverrides, resolveSymbolGuidStr, type FigDerivedSymbolData } from "../symbols/symbol-resolver";
 import { preResolveSymbols } from "../symbols/symbol-pre-resolver";
-import { applyConstraintsToChildren } from "../symbols/constraints";
+import { resolveInstanceLayout } from "../symbols/constraints";
 import type { FontLoader } from "../font";
 
 // =============================================================================
@@ -301,12 +302,11 @@ function resolveInstance(
     return { node, children: node.children ?? [] };
   }
 
-  // Symbol-resolver functions accept Record<string, unknown> (symbols/ is a separate concern)
   const nodeRecord = node as Record<string, unknown>;
 
-  // Extract symbolID — handles both nested (symbolData.symbolID) and top-level (symbolID) formats
-  const symbolID = getInstanceSymbolID(nodeRecord);
-  if (!symbolID) {
+  // Unified effective symbol ID (handles overriddenSymbolID for variant switching)
+  const effectiveID = getEffectiveSymbolID(nodeRecord);
+  if (!effectiveID) {
     return { node, children: node.children ?? [] };
   }
 
@@ -318,10 +318,6 @@ function resolveInstance(
     }
     return { node, children: node.children ?? [] };
   }
-
-  // Check for overriddenSymbolID (variant switching)
-  const overriddenID = getInstanceOverriddenSymbolID(nodeRecord);
-  const effectiveID = overriddenID ?? symbolID;
 
   // Resolve SYMBOL/COMPONENT with localID fallback (handles sessionID mismatch in builder files)
   const resolved = resolveSymbolGuidStr(effectiveID, ctx.symbolMap);
@@ -349,7 +345,7 @@ function resolveInstance(
     derivedSymbolData,
   });
 
-  // Constraint resolution: adjust child positions/sizes when instance is resized
+  // Layout resolution: adjust child positions/sizes when instance is resized
   const instanceSize = node.size;
   const symbolSize = symNode.size;
   const isResized = instanceSize && symbolSize &&
@@ -357,42 +353,10 @@ function resolveInstance(
 
   let resolvedChildren = children;
   if (isResized) {
-    const hasDerivedTransforms = derivedSymbolData && derivedSymbolData.length > 0;
-    if (hasDerivedTransforms) {
-      // Figma pre-computed the layout — use instance size for frame
+    const layout = resolveInstanceLayout(children, symbolSize!, instanceSize!, derivedSymbolData);
+    resolvedChildren = layout.children;
+    if (layout.sizeApplied) {
       (mergedNode as Record<string, unknown>).size = instanceSize;
-      // Clear pre-baked geometry on children whose size was changed by derived data
-      // so the renderer falls back to size-based shape rendering
-      for (const entry of derivedSymbolData) {
-        if (entry.size) {
-          const targetGuid = entry.guidPath?.guids?.[entry.guidPath.guids.length - 1];
-          if (targetGuid) {
-            const targetKey = `${targetGuid.sessionID}:${targetGuid.localID}`;
-            for (const child of children) {
-              const cg = (child as Record<string, unknown>).guid as { sessionID: number; localID: number } | undefined;
-              if (cg && `${cg.sessionID}:${cg.localID}` === targetKey) {
-                delete (child as Record<string, unknown>).fillGeometry;
-                delete (child as Record<string, unknown>).strokeGeometry;
-              }
-            }
-          }
-        }
-      }
-    } else {
-      // Check if any child has explicit (non-MIN) constraints
-      const hasConstraints = children.some((child) => {
-        const nd = child as Record<string, unknown>;
-        const hc = nd.horizontalConstraint as { value?: number } | undefined;
-        const vc = nd.verticalConstraint as { value?: number } | undefined;
-        return (hc?.value !== undefined && hc.value !== 0) ||
-               (vc?.value !== undefined && vc.value !== 0);
-      });
-      if (hasConstraints) {
-        // Apply constraint resolution and use instance size
-        resolvedChildren = applyConstraintsToChildren(children, symbolSize!, instanceSize!);
-        (mergedNode as Record<string, unknown>).size = instanceSize;
-      }
-      // No constraints and no derivedSymbolData: keep SYMBOL size (backward compat)
     }
   }
 

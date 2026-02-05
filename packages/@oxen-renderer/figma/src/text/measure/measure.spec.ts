@@ -14,7 +14,7 @@ import {
   TextMeasurer,
   createTextMeasurer,
   FallbackMeasurementProvider,
-} from "./index";
+} from "./";
 import type { MeasurementProvider, FontSpec } from "./types";
 
 describe("text segmentation", () => {

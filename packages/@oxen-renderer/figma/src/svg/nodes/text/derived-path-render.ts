@@ -11,8 +11,8 @@ import { decodeBlobToSvgPath, decodePathCommands, type FigBlob, type PathCommand
 import type { FigSvgRenderContext } from "../../../types";
 import { path, g, type SvgString, EMPTY_SVG } from "../../primitives";
 import { buildTransformAttr } from "../../transform";
-import { extractTextProps } from "./props";
-import { getFillColorAndOpacity } from "./fill";
+import { extractTextProps } from "../../../text/layout/extract-props";
+import { getFillColorAndOpacity } from "../../../text/layout/fill";
 
 /**
  * Baseline data from derivedTextData

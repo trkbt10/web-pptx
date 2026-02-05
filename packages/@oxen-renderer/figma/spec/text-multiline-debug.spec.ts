@@ -20,7 +20,7 @@ import { createNodeFontLoaderWithFontsource } from "../src/font-drivers/node";
 import { CachingFontLoader } from "../src/font";
 import { renderTextNodeAsPath, type PathRenderContext } from "../src/svg/nodes/text/path-render";
 import { createFigSvgRenderContext } from "../src/svg/context";
-import { extractTextProps } from "../src/svg/nodes/text/props";
+import { extractTextProps } from "../src/text/layout/extract-props";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES_DIR = path.join(__dirname, "../fixtures/text-comprehensive");

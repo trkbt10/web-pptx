@@ -10,7 +10,8 @@
 
 import type { FigNode } from "@oxen/fig/types";
 import { guidToString, getNodeType } from "@oxen/fig/parser";
-import { getInstanceSymbolID, resolveSymbolGuidStr } from "./symbol-resolver";
+import { extractSymbolIDPair, getEffectiveSymbolID } from "@oxen/fig/symbols";
+import { resolveSymbolGuidStr } from "./symbol-resolver";
 
 // =============================================================================
 // Public types
@@ -41,12 +42,18 @@ function collectInstanceDependencies(
   symbolMap: ReadonlyMap<string, FigNode>,
 ): void {
   if (getNodeType(node) === "INSTANCE") {
-    const nd = node as Record<string, unknown>;
-    const symbolID = getInstanceSymbolID(nd);
-    if (symbolID) {
-      const resolved = resolveSymbolGuidStr(symbolID, symbolMap);
+    const pair = extractSymbolIDPair(node as Record<string, unknown>);
+    if (pair) {
+      // Track both symbolID and overriddenSymbolID as dependencies
+      const resolved = resolveSymbolGuidStr(pair.symbolID, symbolMap);
       if (resolved) {
         deps.add(resolved.guidStr);
+      }
+      if (pair.overriddenSymbolID) {
+        const overResolved = resolveSymbolGuidStr(pair.overriddenSymbolID, symbolMap);
+        if (overResolved) {
+          deps.add(overResolved.guidStr);
+        }
       }
     }
   }
@@ -74,12 +81,11 @@ function deepCloneWithExpansion(
   const nodeType = getNodeType(node);
 
   if (nodeType === "INSTANCE") {
-    const nd = node as Record<string, unknown>;
-    const symbolID = getInstanceSymbolID(nd);
-    if (symbolID) {
+    const effectiveID = getEffectiveSymbolID(node as Record<string, unknown>);
+    if (effectiveID) {
       // Resolve with localID fallback (handles sessionID mismatch)
-      const resolved = resolveSymbolGuidStr(symbolID, symbolMap);
-      const symGuid = resolved?.guidStr ?? guidToString(symbolID);
+      const resolved = resolveSymbolGuidStr(effectiveID, symbolMap);
+      const symGuid = resolved?.guidStr ?? guidToString(effectiveID);
       // Skip expansion if this SYMBOL is already being expanded (circular dep)
       if (!expanding.has(symGuid)) {
         const sym = cache.get(symGuid) ?? resolved?.node;

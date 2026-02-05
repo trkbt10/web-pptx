@@ -39,33 +39,8 @@ export type FigGuidPath = {
 };
 
 // =============================================================================
-// Symbol ID Extraction
+// Symbol Override Extraction
 // =============================================================================
-
-/**
- * Extract symbolID from an INSTANCE node.
- *
- * Handles two storage formats:
- * - Real Figma exports: `symbolData.symbolID` (nested inside symbolData message)
- * - Builder-generated files: `symbolID` at the node's top level
- *
- * @returns The symbolID GUID, or undefined if not present
- */
-export function getInstanceSymbolID(nodeData: Record<string, unknown>): FigGuid | undefined {
-  // 1. Check symbolData.symbolID (real Figma exports)
-  const symbolData = nodeData.symbolData as FigSymbolData | undefined;
-  if (symbolData?.symbolID) {
-    return symbolData.symbolID;
-  }
-
-  // 2. Check top-level symbolID (builder-generated files)
-  const topLevelSymbolID = nodeData.symbolID as FigGuid | undefined;
-  if (topLevelSymbolID && typeof topLevelSymbolID === "object" && "sessionID" in topLevelSymbolID) {
-    return topLevelSymbolID;
-  }
-
-  return undefined;
-}
 
 /**
  * Extract symbolOverrides from an INSTANCE node.
@@ -80,37 +55,6 @@ export function getInstanceSymbolOverrides(nodeData: Record<string, unknown>): r
     return symbolData.symbolOverrides;
   }
   return nodeData.symbolOverrides as readonly FigSymbolOverride[] | undefined;
-}
-
-// =============================================================================
-// Overridden Symbol ID (Variant Switching)
-// =============================================================================
-
-/**
- * Extract overriddenSymbolID from an INSTANCE node.
- *
- * When a variant is switched in Figma, the INSTANCE keeps its original
- * symbolID but gains an overriddenSymbolID pointing to the new variant's
- * COMPONENT node.
- *
- * Handles both formats:
- * - `symbolData.overriddenSymbolID` (real Figma exports)
- * - `overriddenSymbolID` at node's top level (builder-generated files)
- */
-export function getInstanceOverriddenSymbolID(nodeData: Record<string, unknown>): FigGuid | undefined {
-  // 1. Check symbolData.overriddenSymbolID (real Figma exports)
-  const symbolData = nodeData.symbolData as { overriddenSymbolID?: FigGuid } | undefined;
-  if (symbolData?.overriddenSymbolID) {
-    return symbolData.overriddenSymbolID;
-  }
-
-  // 2. Check top-level overriddenSymbolID (builder-generated files)
-  const topLevel = nodeData.overriddenSymbolID as FigGuid | undefined;
-  if (topLevel && typeof topLevel === "object" && "sessionID" in topLevel) {
-    return topLevel;
-  }
-
-  return undefined;
 }
 
 // =============================================================================
@@ -241,40 +185,67 @@ export function cloneSymbolChildren(
 // =============================================================================
 
 /**
- * Apply symbol overrides to cloned nodes
+ * Apply symbol overrides to cloned nodes.
+ *
+ * Handles both single-level and multi-level guidPaths:
+ * - Single-level (guids.length === 1): Applied directly to matching node
+ * - Multi-level (guids.length > 1): First GUID targets an intermediate node;
+ *   remaining path is propagated as `derivedSymbolData` on that node so the
+ *   override is applied when the nested instance is resolved later.
  */
 function applyOverrides(
   nodes: FigNode[],
   overrides: readonly FigSymbolOverride[]
 ): void {
-  // Build override map keyed by last GUID in path (target node)
-  const overrideMap = new Map<string, FigSymbolOverride>();
+  // Separate direct (depth-1) and nested (depth-N>1) overrides
+  const directMap = new Map<string, FigSymbolOverride>();
+  const nestedMap = new Map<string, FigSymbolOverride[]>();
+
   for (const override of overrides) {
-    const guids = override.guidPath.guids;
-    if (guids.length > 0) {
-      // Use the last GUID as the target
-      const targetGuid = guids[guids.length - 1];
-      const targetKey = guidToString(targetGuid);
-      overrideMap.set(targetKey, override);
+    const guids = override.guidPath?.guids;
+    if (!guids || guids.length === 0) continue;
+
+    if (guids.length === 1) {
+      const key = guidToString(guids[0]);
+      directMap.set(key, override);
+    } else {
+      // Multi-level: key by first GUID, strip it from the path
+      const firstKey = guidToString(guids[0]);
+      const shortened: FigSymbolOverride = {
+        ...override,
+        guidPath: { guids: guids.slice(1) },
+      };
+      let arr = nestedMap.get(firstKey);
+      if (!arr) {
+        arr = [];
+        nestedMap.set(firstKey, arr);
+      }
+      arr.push(shortened);
     }
   }
 
-  // Apply overrides recursively
   function applyToNode(node: FigNode): void {
     const nodeData = node as Record<string, unknown>;
     const guid = nodeData.guid as FigGuid | undefined;
 
     if (guid) {
       const guidStr = guidToString(guid);
-      const override = overrideMap.get(guidStr);
 
-      if (override) {
-        // Apply override properties (except guidPath)
-        for (const [key, value] of Object.entries(override)) {
+      // Apply direct override
+      const direct = directMap.get(guidStr);
+      if (direct) {
+        for (const [key, value] of Object.entries(direct)) {
           if (key !== "guidPath") {
-            (nodeData as Record<string, unknown>)[key] = value;
+            nodeData[key] = value;
           }
         }
+      }
+
+      // Propagate nested overrides as derivedSymbolData on this node
+      const nested = nestedMap.get(guidStr);
+      if (nested && nested.length > 0) {
+        const existing = nodeData.derivedSymbolData as FigSymbolOverride[] | undefined;
+        nodeData.derivedSymbolData = [...(existing ?? []), ...nested];
       }
     }
 

@@ -1,108 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { resolveAxis, applyConstraintsToChildren, type ConstraintKind } from "./constraints";
+import { applyConstraintsToChildren, resolveInstanceLayout } from "./constraints";
 import type { FigNode } from "@oxen/fig/types";
 import { CONSTRAINT_TYPE_VALUES } from "@oxen/fig/constants";
-
-// =============================================================================
-// resolveAxis
-// =============================================================================
-
-describe("resolveAxis", () => {
-  // Parent: 200 -> 300 (delta = +100)
-  const parentOrig = 200;
-  const parentNew = 300;
-
-  describe("MIN", () => {
-    it("keeps position and size unchanged", () => {
-      const result = resolveAxis(20, 60, parentOrig, parentNew, "MIN");
-      expect(result.pos).toBe(20);
-      expect(result.dim).toBe(60);
-    });
-  });
-
-  describe("MAX", () => {
-    it("shifts position by full delta", () => {
-      const result = resolveAxis(20, 60, parentOrig, parentNew, "MAX");
-      expect(result.pos).toBe(120); // 20 + 100
-      expect(result.dim).toBe(60);
-    });
-
-    it("shifts position negative when shrinking", () => {
-      const result = resolveAxis(20, 60, 300, 200, "MAX");
-      expect(result.pos).toBe(-80); // 20 + (-100)
-      expect(result.dim).toBe(60);
-    });
-  });
-
-  describe("CENTER", () => {
-    it("shifts position by half delta", () => {
-      const result = resolveAxis(20, 60, parentOrig, parentNew, "CENTER");
-      expect(result.pos).toBe(70); // 20 + 50
-      expect(result.dim).toBe(60);
-    });
-  });
-
-  describe("STRETCH", () => {
-    it("preserves margins and adjusts size", () => {
-      // Child at pos=20, size=60 in parent=200
-      // leftMargin=20, rightMargin=200-(20+60)=120
-      // newSize = 300 - 20 - 120 = 160
-      const result = resolveAxis(20, 60, parentOrig, parentNew, "STRETCH");
-      expect(result.pos).toBe(20);
-      expect(result.dim).toBe(160);
-    });
-
-    it("handles full-width stretch (inset:0)", () => {
-      // Child fills entire parent: pos=0, size=200 in parent=200
-      // leftMargin=0, rightMargin=0
-      // newSize = 300 - 0 - 0 = 300
-      const result = resolveAxis(0, 200, parentOrig, parentNew, "STRETCH");
-      expect(result.pos).toBe(0);
-      expect(result.dim).toBe(300);
-    });
-
-    it("clamps size to 0 when parent shrinks below margins", () => {
-      // Child: pos=50, size=100 in parent=200
-      // leftMargin=50, rightMargin=50
-      // Parent shrinks to 80: newSize = max(0, 80 - 50 - 50) = max(0, -20) = 0
-      const result = resolveAxis(50, 100, 200, 80, "STRETCH");
-      expect(result.pos).toBe(50);
-      expect(result.dim).toBe(0);
-    });
-  });
-
-  describe("SCALE", () => {
-    it("scales position and size proportionally", () => {
-      // ratio = 300 / 200 = 1.5
-      const result = resolveAxis(20, 60, parentOrig, parentNew, "SCALE");
-      expect(result.pos).toBe(30);  // 20 * 1.5
-      expect(result.dim).toBe(90);  // 60 * 1.5
-    });
-
-    it("handles zero parent size gracefully", () => {
-      const result = resolveAxis(20, 60, 0, 300, "SCALE");
-      expect(result.pos).toBe(20);
-      expect(result.dim).toBe(60);
-    });
-
-    it("scales down proportionally", () => {
-      // ratio = 100 / 200 = 0.5
-      const result = resolveAxis(20, 60, 200, 100, "SCALE");
-      expect(result.pos).toBe(10);  // 20 * 0.5
-      expect(result.dim).toBe(30);  // 60 * 0.5
-    });
-  });
-
-  describe("no-op when sizes are equal", () => {
-    for (const kind of ["MIN", "MAX", "CENTER", "STRETCH", "SCALE"] as ConstraintKind[]) {
-      it(`${kind} returns same values when parent unchanged`, () => {
-        const result = resolveAxis(20, 60, 200, 200, kind);
-        expect(result.pos).toBe(20);
-        expect(result.dim).toBe(60);
-      });
-    }
-  });
-});
 
 // =============================================================================
 // applyConstraintsToChildren
@@ -176,8 +75,7 @@ describe("applyConstraintsToChildren", () => {
 
   it("applies STRETCH with margins", () => {
     // Child: pos=(10, 10), size=(180, 80) in parent=(200, 100)
-    // H margins: left=10, right=10 -> newW = 380 - 10 - 10 = 380
-    // Wait: newW = 400 - 10 - 10 = 380
+    // H margins: left=10, right=10 -> newW = 400 - 10 - 10 = 380
     const children = [
       makeNode(10, 10, 180, 80,
         CONSTRAINT_TYPE_VALUES.STRETCH,
@@ -281,5 +179,107 @@ describe("applyConstraintsToChildren", () => {
     );
     expect(result[0]).toBe(noTransform);
     expect(result[1]).toBe(noSize);
+  });
+});
+
+// =============================================================================
+// resolveInstanceLayout
+// =============================================================================
+
+describe("resolveInstanceLayout", () => {
+  function makeChild(
+    guid: { sessionID: number; localID: number },
+    x: number, y: number, w: number, h: number,
+    hConstraint?: number, vConstraint?: number,
+  ): FigNode {
+    const node: Record<string, unknown> = {
+      name: "child",
+      guid,
+      transform: { m00: 1, m01: 0, m02: x, m10: 0, m11: 1, m12: y },
+      size: { x: w, y: h },
+    };
+    if (hConstraint !== undefined) {
+      node.horizontalConstraint = { value: hConstraint };
+    }
+    if (vConstraint !== undefined) {
+      node.verticalConstraint = { value: vConstraint };
+    }
+    return node as FigNode;
+  }
+
+  it("uses derivedSymbolData when GUIDs match", () => {
+    const children = [
+      makeChild({ sessionID: 1, localID: 10 }, 0, 0, 100, 50),
+    ];
+    const derived = [{
+      guidPath: { guids: [{ sessionID: 1, localID: 10 }] },
+      transform: { m00: 1, m01: 0, m02: 0, m10: 0, m11: 0, m12: 0 },
+      size: { x: 200, y: 100 },
+    }];
+    const result = resolveInstanceLayout(
+      children,
+      { x: 100, y: 50 },
+      { x: 200, y: 100 },
+      derived,
+    );
+    expect(result.sizeApplied).toBe(true);
+    expect(result.children).toBe(children); // same reference (derived path)
+  });
+
+  it("falls back to constraints when derivedSymbolData GUIDs do not match", () => {
+    const children = [
+      makeChild(
+        { sessionID: 1, localID: 10 }, 0, 0, 100, 50,
+        CONSTRAINT_TYPE_VALUES.STRETCH, CONSTRAINT_TYPE_VALUES.STRETCH,
+      ),
+    ];
+    // Derived data references a GUID not in children
+    const derived = [{
+      guidPath: { guids: [{ sessionID: 999, localID: 999 }] },
+      transform: { m00: 1, m01: 0, m02: 0, m10: 0, m11: 0, m12: 0 },
+      size: { x: 200, y: 100 },
+    }];
+    const result = resolveInstanceLayout(
+      children,
+      { x: 100, y: 50 },
+      { x: 200, y: 100 },
+      derived,
+    );
+    expect(result.sizeApplied).toBe(true);
+    // Constraint-based: STRETCH full-fit
+    expect(result.children[0].size?.x).toBe(200);
+    expect(result.children[0].size?.y).toBe(100);
+  });
+
+  it("falls back to constraints when no derivedSymbolData", () => {
+    const children = [
+      makeChild(
+        { sessionID: 1, localID: 10 }, 10, 10, 80, 30,
+        CONSTRAINT_TYPE_VALUES.STRETCH, CONSTRAINT_TYPE_VALUES.STRETCH,
+      ),
+    ];
+    const result = resolveInstanceLayout(
+      children,
+      { x: 100, y: 50 },
+      { x: 200, y: 100 },
+      undefined,
+    );
+    expect(result.sizeApplied).toBe(true);
+    expect(result.children[0].size?.x).toBe(180); // 200 - 10 - 10
+    expect(result.children[0].size?.y).toBe(80);  // 100 - 10 - 10
+  });
+
+  it("returns sizeApplied=false when no constraints and no derived data", () => {
+    const children = [
+      makeChild({ sessionID: 1, localID: 10 }, 10, 10, 80, 30),
+    ];
+    const result = resolveInstanceLayout(
+      children,
+      { x: 100, y: 50 },
+      { x: 200, y: 100 },
+      undefined,
+    );
+    expect(result.sizeApplied).toBe(false);
+    expect(result.children).toBe(children); // unchanged
   });
 });

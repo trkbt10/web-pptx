@@ -7,7 +7,8 @@ import { useMemo } from "react";
 import type { FigNode } from "@oxen/fig/types";
 import type { FigMatrix } from "@oxen/fig/types";
 import { guidToString, getNodeType } from "@oxen/fig/parser";
-import { IDENTITY_MATRIX, multiplyMatrices, buildTransformAttr, createTranslationMatrix } from "../../src/svg/transform";
+import { IDENTITY_MATRIX, multiplyMatrices, createTranslationMatrix } from "../../src/core/transform";
+import { buildTransformAttr } from "../../src/svg/transform";
 import { getCategoryColor } from "./inspector-constants";
 
 type Props = {

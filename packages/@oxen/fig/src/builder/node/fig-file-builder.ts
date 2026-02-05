@@ -38,37 +38,8 @@ import {
   encodeRoundedRectangleBlob,
   encodeEllipseBlob,
 } from "../geometry";
-
-/**
- * Resolve a single-axis constraint for derivedSymbolData computation.
- */
-function resolveConstraintAxis(
-  origPos: number, origDim: number,
-  parentOrigDim: number, parentNewDim: number,
-  constraintValue: number,
-): { pos: number; dim: number } {
-  const delta = parentNewDim - parentOrigDim;
-  switch (constraintValue) {
-    case CONSTRAINT_TYPE_VALUES.MIN:
-      return { pos: origPos, dim: origDim };
-    case CONSTRAINT_TYPE_VALUES.CENTER:
-      return { pos: origPos + delta / 2, dim: origDim };
-    case CONSTRAINT_TYPE_VALUES.MAX:
-      return { pos: origPos + delta, dim: origDim };
-    case CONSTRAINT_TYPE_VALUES.STRETCH: {
-      const leftMargin = origPos;
-      const rightMargin = parentOrigDim - (origPos + origDim);
-      return { pos: leftMargin, dim: Math.max(0, parentNewDim - leftMargin - rightMargin) };
-    }
-    case CONSTRAINT_TYPE_VALUES.SCALE: {
-      if (parentOrigDim === 0) return { pos: origPos, dim: origDim };
-      const ratio = parentNewDim / parentOrigDim;
-      return { pos: origPos * ratio, dim: origDim * ratio };
-    }
-    default:
-      return { pos: origPos, dim: origDim };
-  }
-}
+import { resolveConstraintAxis } from "../../symbols/constraint-axis";
+import { getEffectiveSymbolID } from "../../symbols/effective-symbol-id";
 
 export class FigFileBuilder {
   private schema: KiwiSchema;
@@ -1040,6 +1011,9 @@ export class FigFileBuilder {
    * This pre-computes constraint-resolved child positions so both Figma and our renderer
    * can correctly render resized instances.
    *
+   * Recursively handles nested instances: when a child INSTANCE is resized by constraints,
+   * its referenced symbol's children are also resolved, emitting multi-level guidPath entries.
+   *
    * Called automatically by buildRaw/buildRawAsync before serialization.
    */
   private computeDerivedSymbolData(): void {
@@ -1071,11 +1045,10 @@ export class FigFileBuilder {
       const nodeType = node.type as { value: number } | undefined;
       if (nodeType?.value !== NODE_TYPE_VALUES.INSTANCE) continue;
 
-      const symbolData = node.symbolData as { symbolID?: { sessionID: number; localID: number } } | undefined;
-      const symbolID = symbolData?.symbolID;
-      if (!symbolID) continue;
+      const effectiveID = getEffectiveSymbolID(node);
+      if (!effectiveID) continue;
 
-      const symNode = nodeByLocalID.get(symbolID.localID);
+      const symNode = nodeByLocalID.get(effectiveID.localID);
       if (!symNode) continue;
 
       const instSize = node.size as { x: number; y: number } | undefined;
@@ -1083,46 +1056,91 @@ export class FigFileBuilder {
       if (!instSize || !symSize) continue;
       if (instSize.x === symSize.x && instSize.y === symSize.y) continue;
 
-      // Instance is resized — compute constraint-adjusted children
-      const symChildren = childrenByParent.get(symbolID.localID) ?? [];
       const derived: Record<string, unknown>[] = [];
-
-      for (const child of symChildren) {
-        const childGuid = child.guid as { sessionID: number; localID: number } | undefined;
-        if (!childGuid) continue;
-
-        const hc = child.horizontalConstraint as { value: number } | undefined;
-        const vc = child.verticalConstraint as { value: number } | undefined;
-        const hVal = hc?.value ?? CONSTRAINT_TYPE_VALUES.MIN;
-        const vVal = vc?.value ?? CONSTRAINT_TYPE_VALUES.MIN;
-
-        const childTransform = child.transform as { m00: number; m01: number; m02: number; m10: number; m11: number; m12: number } | undefined;
-        const childSize = child.size as { x: number; y: number } | undefined;
-        if (!childTransform || !childSize) continue;
-
-        const hResult = resolveConstraintAxis(childTransform.m02, childSize.x, symSize.x, instSize.x, hVal);
-        const vResult = resolveConstraintAxis(childTransform.m12, childSize.y, symSize.y, instSize.y, vVal);
-
-        // Only add entry if something changed
-        if (hResult.pos !== childTransform.m02 || hResult.dim !== childSize.x ||
-            vResult.pos !== childTransform.m12 || vResult.dim !== childSize.y) {
-          derived.push({
-            guidPath: { guids: [childGuid] },
-            transform: {
-              m00: childTransform.m00,
-              m01: childTransform.m01,
-              m02: hResult.pos,
-              m10: childTransform.m10,
-              m11: childTransform.m11,
-              m12: vResult.pos,
-            },
-            size: { x: hResult.dim, y: vResult.dim },
-          });
-        }
-      }
+      this.computeDerivedRecursive(
+        effectiveID.localID, symSize, instSize,
+        [], derived, nodeByLocalID, childrenByParent, 0,
+      );
 
       if (derived.length > 0) {
         node.derivedSymbolData = derived;
+      }
+    }
+  }
+
+  /**
+   * Recursively compute constraint-resolved entries for a symbol's children.
+   * When a child INSTANCE is resized, recurse into its referenced symbol to
+   * generate multi-level guidPath entries.
+   */
+  private computeDerivedRecursive(
+    symbolLocalID: number,
+    symSize: { x: number; y: number },
+    instSize: { x: number; y: number },
+    guidPrefix: { sessionID: number; localID: number }[],
+    derived: Record<string, unknown>[],
+    nodeByLocalID: Map<number, Record<string, unknown>>,
+    childrenByParent: Map<number, Record<string, unknown>[]>,
+    depth: number,
+  ): void {
+    if (depth > 8) return; // prevent infinite recursion
+
+    const symChildren = childrenByParent.get(symbolLocalID) ?? [];
+
+    for (const child of symChildren) {
+      const childGuid = child.guid as { sessionID: number; localID: number } | undefined;
+      if (!childGuid) continue;
+
+      const hc = child.horizontalConstraint as { value: number } | undefined;
+      const vc = child.verticalConstraint as { value: number } | undefined;
+      const hVal = hc?.value ?? CONSTRAINT_TYPE_VALUES.MIN;
+      const vVal = vc?.value ?? CONSTRAINT_TYPE_VALUES.MIN;
+
+      const childTransform = child.transform as { m00: number; m01: number; m02: number; m10: number; m11: number; m12: number } | undefined;
+      const childSize = child.size as { x: number; y: number } | undefined;
+      if (!childTransform || !childSize) continue;
+
+      const hResult = resolveConstraintAxis(childTransform.m02, childSize.x, symSize.x, instSize.x, hVal);
+      const vResult = resolveConstraintAxis(childTransform.m12, childSize.y, symSize.y, instSize.y, vVal);
+
+      const posChanged = hResult.pos !== childTransform.m02 || vResult.pos !== childTransform.m12;
+      const sizeChanged = hResult.dim !== childSize.x || vResult.dim !== childSize.y;
+
+      if (posChanged || sizeChanged) {
+        derived.push({
+          guidPath: { guids: [...guidPrefix, childGuid] },
+          transform: {
+            m00: childTransform.m00,
+            m01: childTransform.m01,
+            m02: hResult.pos,
+            m10: childTransform.m10,
+            m11: childTransform.m11,
+            m12: vResult.pos,
+          },
+          size: { x: hResult.dim, y: vResult.dim },
+        });
+      }
+
+      // If this child is an INSTANCE that got resized, recurse into its symbol
+      const childType = child.type as { value: number } | undefined;
+      if (childType?.value === NODE_TYPE_VALUES.INSTANCE && sizeChanged) {
+        const childSymID = getEffectiveSymbolID(child);
+        if (childSymID) {
+          const childSymNode = nodeByLocalID.get(childSymID.localID);
+          if (childSymNode) {
+            const childSymSize = childSymNode.size as { x: number; y: number } | undefined;
+            if (childSymSize) {
+              this.computeDerivedRecursive(
+                childSymID.localID,
+                childSymSize,
+                { x: hResult.dim, y: vResult.dim },
+                [...guidPrefix, childGuid],
+                derived, nodeByLocalID, childrenByParent,
+                depth + 1,
+              );
+            }
+          }
+        }
       }
     }
   }

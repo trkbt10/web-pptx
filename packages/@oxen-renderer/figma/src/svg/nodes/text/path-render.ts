@@ -9,12 +9,12 @@ import type { FigNode } from "@oxen/fig/types";
 import type { FigSvgRenderContext } from "../../../types";
 import { path, g, type SvgString, EMPTY_SVG } from "../../primitives";
 import { buildTransformAttr } from "../../transform";
-import { extractTextProps } from "./props";
-import { getFillColorAndOpacity } from "./fill";
-import { getAlignedX, getAlignedYWithMetrics } from "./alignment";
+import { extractTextProps } from "../../../text/layout/extract-props";
+import { getFillColorAndOpacity } from "../../../text/layout/fill";
+import { getAlignedX, getAlignedYWithMetrics } from "../../../text/layout/alignment";
 import type { FontLoader, LoadedFont, AbstractFont } from "../../../font";
 import { fontHasGlyph, isCJKCharacter } from "../../../font";
-import type { ExtractedTextProps } from "./types";
+import type { ExtractedTextProps } from "../../../text/layout/types";
 
 /**
  * Path render context

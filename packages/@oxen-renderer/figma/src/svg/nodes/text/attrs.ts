@@ -3,8 +3,9 @@
  */
 
 import type { text } from "../../primitives";
-import type { ExtractedTextProps } from "./types";
-import { getTextAnchor, getAlignedX, getAlignedY } from "./alignment";
+import type { ExtractedTextProps } from "../../../text/layout/types";
+import { getAlignedX, getAlignedY } from "../../../text/layout/alignment";
+import { getTextAnchor } from "./alignment";
 
 /**
  * SVG text element attributes

@@ -6,13 +6,13 @@ import type { FigNode } from "@oxen/fig/types";
 import type { FigSvgRenderContext } from "../../../types";
 import { text, g, type SvgString, EMPTY_SVG } from "../../primitives";
 import { buildTransformAttr } from "../../transform";
-import { extractTextProps } from "./props";
-import { getFillColorAndOpacity } from "./fill";
+import { extractTextProps } from "../../../text/layout/extract-props";
+import { getFillColorAndOpacity } from "../../../text/layout/fill";
 import { buildTextAttrs } from "./attrs";
-import type { ExtractedTextProps } from "./types";
-import { createMeasurementProvider } from "./measure/provider";
-import { breakLines } from "./measure/line-break";
-import type { FontSpec } from "./measure/types";
+import type { ExtractedTextProps } from "../../../text/layout/types";
+import { createMeasurementProvider } from "../../../text/measure/provider";
+import { breakLines } from "../../../text/measure/line-break";
+import type { FontSpec } from "../../../text/measure/types";
 
 /**
  * Shared measurement provider instance

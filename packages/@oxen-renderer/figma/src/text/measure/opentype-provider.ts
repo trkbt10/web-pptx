@@ -5,7 +5,7 @@
  * Requires FontLoader to load font files.
  */
 
-import type { FontLoader, LoadedFont, FontMetrics, AbstractFont } from "../../../../font";
+import type { FontLoader, LoadedFont, FontMetrics, AbstractFont } from "../../font/index";
 import type { MeasurementProvider, FontSpec, TextMeasurement } from "./types";
 
 /**

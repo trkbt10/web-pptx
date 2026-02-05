@@ -43,6 +43,22 @@
     "./font-drivers/browser": {
       "types": "./src/font-drivers/browser/index.ts",
       "default": "./src/font-drivers/browser/index.ts"
+    },
+    "./core": {
+      "types": "./src/core/index.ts",
+      "default": "./src/core/index.ts"
+    },
+    "./text": {
+      "types": "./src/text/index.ts",
+      "default": "./src/text/index.ts"
+    },
+    "./scene-graph": {
+      "types": "./src/scene-graph/index.ts",
+      "default": "./src/scene-graph/index.ts"
+    },
+    "./webgl": {
+      "types": "./src/webgl/index.ts",
+      "default": "./src/webgl/index.ts"
     }
   },
   "devDependencies": {

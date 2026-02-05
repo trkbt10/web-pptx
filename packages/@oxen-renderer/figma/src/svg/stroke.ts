@@ -9,7 +9,7 @@ import type {
   FigStrokeJoin,
   FigStrokeWeight,
 } from "@oxen/fig/types";
-import { figColorToHex, getPaintType } from "./fill";
+import { figColorToHex, getPaintType } from "../core/color";
 
 // =============================================================================
 // Stroke Attributes
