@@ -5,7 +5,10 @@
 import * as fs from "node:fs/promises";
 import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
 import { openPresentation } from "@oxen-office/pptx";
+import { createZipAdapter } from "@oxen-office/pptx/domain";
 import { parseSlide } from "@oxen-office/pptx/parser/slide/slide-parser";
+import { createParseContext } from "@oxen-office/pptx/parser/context";
+import { createRenderContext } from "@oxen-renderer/pptx";
 import { success, error, type Result } from "@oxen-cli/cli-core";
 import { serializeShape, type ShapeJson } from "../serializers/shape-serializer";
 import type { Shape } from "@oxen-office/pptx/domain/shape";
@@ -69,7 +72,10 @@ export async function runShow(filePath: string, slideNumber: number): Promise<Re
     }
 
     const apiSlide = presentation.getSlide(slideNumber);
-    const domainSlide = parseSlide(apiSlide.content);
+    const zipFile = createZipAdapter(presentationFile);
+    const renderContext = createRenderContext({ apiSlide, zip: zipFile, slideSize: presentation.size });
+    const parseCtx = createParseContext(renderContext.slideRenderContext);
+    const domainSlide = parseSlide(apiSlide.content, parseCtx);
 
     if (!domainSlide) {
       return error("PARSE_ERROR", `Failed to parse slide ${slideNumber}`);
@@ -86,7 +92,7 @@ export async function runShow(filePath: string, slideNumber: number): Promise<Re
       number: apiSlide.number,
       filename: apiSlide.filename,
       transition: domainSlide.transition,
-      shapes: domainSlide.shapes.map(serializeShape),
+      shapes: domainSlide.shapes.map((s) => serializeShape(s)),
       charts,
     });
   } catch (err) {

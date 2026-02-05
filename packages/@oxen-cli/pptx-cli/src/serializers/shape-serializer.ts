@@ -25,6 +25,16 @@ import type { BlipEffects } from "@oxen-office/pptx/domain/color/types";
 import type { Effects } from "@oxen-office/pptx/domain/effects";
 import type { Shape3d } from "@oxen-office/pptx/domain/three-d";
 import { extractTextFromShape, extractTextFromParagraph, extractTextFromBody } from "@oxen-office/pptx/domain/text-utils";
+import type { Chart } from "@oxen-office/chart/domain";
+
+/**
+ * Optional context for enriching serialized shapes with chart/diagram data.
+ * Used by the preview command to embed renderable data.
+ */
+export type SerializationContext = {
+  readonly resolveChart?: (resourceId: string) => Chart | undefined;
+  readonly resolveDiagramShapes?: (diagramRef: DiagramReference) => readonly Shape[] | undefined;
+};
 
 // =============================================================================
 // Base Types
@@ -197,15 +207,35 @@ export type TableJson = {
 // =============================================================================
 
 /**
+ * Chart series for JSON output (used by ASCII preview)
+ */
+export type ChartSeriesJson = {
+  readonly name?: string;
+  readonly values?: readonly (number | null)[];
+  readonly categories?: readonly (string | null)[];
+};
+
+/**
  * Chart info for JSON output
  */
 export type ChartJson = {
   readonly resourceId: string;
+  readonly title?: string;
+  readonly chartType?: string;
+  readonly series?: readonly ChartSeriesJson[];
 };
 
 // =============================================================================
 // Diagram Types
 // =============================================================================
+
+/**
+ * Diagram shape for JSON output (used by ASCII preview)
+ */
+export type DiagramShapeJson = {
+  readonly bounds: BoundsJson;
+  readonly text?: string;
+};
 
 /**
  * Diagram info for JSON output
@@ -215,6 +245,9 @@ export type DiagramJson = {
   readonly layoutResourceId?: string;
   readonly styleResourceId?: string;
   readonly colorResourceId?: string;
+  readonly shapes?: readonly DiagramShapeJson[];
+  readonly width?: number;
+  readonly height?: number;
 };
 
 // =============================================================================
@@ -690,29 +723,116 @@ function serializeTable(tableRef: TableReference): TableJson {
   };
 }
 
-function serializeChart(chartRef: ChartReference): ChartJson {
-  return {
+function serializeChart(chartRef: ChartReference, ctx?: SerializationContext): ChartJson {
+  const result: ChartJson & Record<string, unknown> = {
     resourceId: chartRef.resourceId,
   };
+
+  if (ctx?.resolveChart) {
+    const chart = ctx.resolveChart(chartRef.resourceId as string);
+    if (chart) {
+      const title = chart.title?.textBody?.paragraphs
+        .flatMap((p) => p.runs.map((r) => ("text" in r ? r.text : "") ?? ""))
+        .join("") || undefined;
+      const chartSeries = chart.plotArea.charts[0];
+      if (chartSeries) {
+        (result as Record<string, unknown>).title = title;
+        (result as Record<string, unknown>).chartType = chartSeries.type;
+        const series: ChartSeriesJson[] = [];
+        const seriesItems = "series" in chartSeries ? (chartSeries as { series: readonly unknown[] }).series : [];
+        for (const s of seriesItems) {
+          const item = s as {
+            tx?: { value?: string };
+            values?: {
+              numRef?: { cache?: { points: readonly { idx: number; value: number }[] } };
+              numLit?: { points: readonly { idx: number; value: number }[] };
+            };
+            categories?: {
+              strRef?: { cache?: { points: readonly { idx: number; value: string }[] } };
+              strLit?: { points: readonly { idx: number; value: string }[] };
+              numRef?: { cache?: { points: readonly { idx: number; value: number }[] } };
+              numLit?: { points: readonly { idx: number; value: number }[] };
+            };
+          };
+          const numPoints = item.values?.numRef?.cache?.points ?? item.values?.numLit?.points;
+          const values = numPoints
+            ?.slice()
+            .sort((a, b) => a.idx - b.idx)
+            .map((p) => p.value) ?? [];
+          const strPoints = item.categories?.strRef?.cache?.points ?? item.categories?.strLit?.points;
+          const numCatPoints = item.categories?.numRef?.cache?.points ?? item.categories?.numLit?.points;
+          const cats = strPoints
+            ?.slice()
+            .sort((a, b) => a.idx - b.idx)
+            .map((p) => p.value)
+            ?? numCatPoints
+              ?.slice()
+              .sort((a, b) => a.idx - b.idx)
+              .map((p) => String(p.value));
+          series.push({
+            name: item.tx?.value,
+            values,
+            categories: cats,
+          });
+        }
+        (result as Record<string, unknown>).series = series;
+      }
+    }
+  }
+
+  return result;
 }
 
-function serializeDiagram(diagramRef: DiagramReference): DiagramJson {
-  return {
+function serializeDiagram(
+  diagramRef: DiagramReference,
+  frame?: { transform?: Transform },
+  ctx?: SerializationContext,
+): DiagramJson {
+  const base: DiagramJson & Record<string, unknown> = {
     dataResourceId: diagramRef.dataResourceId,
     layoutResourceId: diagramRef.layoutResourceId,
     styleResourceId: diagramRef.styleResourceId,
     colorResourceId: diagramRef.colorResourceId,
   };
+
+  if (ctx?.resolveDiagramShapes) {
+    const shapes = ctx.resolveDiagramShapes(diagramRef);
+    if (shapes && shapes.length > 0) {
+      const diagramShapes: DiagramShapeJson[] = [];
+      for (const s of shapes) {
+        if (s.type === "sp" || s.type === "pic") {
+          const sp = s as { properties?: { transform?: Transform }; textBody?: { paragraphs: readonly Paragraph[] } };
+          const t = sp.properties?.transform;
+          if (t) {
+            const text = sp.textBody
+              ? sp.textBody.paragraphs.map((p) => extractTextFromParagraph(p)).filter(Boolean).join("\n")
+              : undefined;
+            diagramShapes.push({
+              bounds: { x: t.x, y: t.y, width: t.width, height: t.height },
+              text: text || undefined,
+            });
+          }
+        }
+      }
+      (base as Record<string, unknown>).shapes = diagramShapes;
+      if (frame?.transform) {
+        (base as Record<string, unknown>).width = frame.transform.width;
+        (base as Record<string, unknown>).height = frame.transform.height;
+      }
+    }
+  }
+
+  return base;
 }
 
-function serializeGraphicContent(content: GraphicContent): GraphicContentJson {
+function serializeGraphicContent(content: GraphicContent, frame?: { transform?: Transform }, ctx?: SerializationContext): GraphicContentJson {
   switch (content.type) {
     case "table":
       return { type: "table", table: serializeTable(content.data) };
     case "chart":
-      return { type: "chart", chart: serializeChart(content.data) };
+      return { type: "chart", chart: serializeChart(content.data, ctx) };
     case "diagram":
-      return { type: "diagram", diagram: serializeDiagram(content.data) };
+      return { type: "diagram", diagram: serializeDiagram(content.data, frame, ctx) };
     case "oleObject":
       return { type: "oleObject", progId: content.data.progId };
     case "unknown":
@@ -739,7 +859,7 @@ function serializeShapeProperties(props: ShapeProperties): {
 /**
  * Serialize a Shape to JSON-friendly format
  */
-export function serializeShape(shape: Shape): ShapeJson {
+export function serializeShape(shape: Shape, ctx?: SerializationContext): ShapeJson {
   switch (shape.type) {
     case "sp": {
       const text = extractTextFromShape(shape);
@@ -789,7 +909,7 @@ export function serializeShape(shape: Shape): ShapeJson {
         id: shape.nonVisual.id,
         name: shape.nonVisual.name,
         type: shape.type,
-        children: shape.children.map(serializeShape),
+        children: shape.children.map((c) => serializeShape(c, ctx)),
       };
     }
     case "cxnSp": {
@@ -818,7 +938,7 @@ export function serializeShape(shape: Shape): ShapeJson {
         type: shape.type,
         bounds: serializeBounds(shape.transform),
         rotation: shape.transform?.rotation !== 0 ? shape.transform?.rotation : undefined,
-        content: serializeGraphicContent(shape.content),
+        content: serializeGraphicContent(shape.content, { transform: shape.transform ?? undefined }, ctx),
       };
     }
     case "contentPart": {

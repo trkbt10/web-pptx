@@ -2,6 +2,9 @@
  * @file Library exports for @oxen-cli/xlsx-cli
  */
 
+// Program
+export { createProgram } from "./program";
+
 // Commands
 export { runInfo, type InfoData } from "./commands/info";
 export { runList, type ListData, type SheetListItem } from "./commands/list";

@@ -5,10 +5,17 @@
 import * as fs from "node:fs/promises";
 import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
 import { openPresentation } from "@oxen-office/pptx";
+import { createZipAdapter } from "@oxen-office/pptx/domain";
 import { parseSlide } from "@oxen-office/pptx/parser/slide/slide-parser";
+import { createParseContext } from "@oxen-office/pptx/parser/context";
+import { enrichSlideContent, type FileReader } from "@oxen-office/pptx/parser/slide/external-content-loader";
+import { createResourceStore } from "@oxen-office/pptx/domain/resource-store";
+import { createRenderContext } from "@oxen-renderer/pptx";
 import { success, error, type Result } from "@oxen-cli/cli-core";
-import { serializeShape } from "../serializers/shape-serializer";
+import { serializeShape, type SerializationContext } from "../serializers/shape-serializer";
 import { renderSlideAscii } from "@oxen-renderer/pptx/ascii";
+import type { Chart } from "@oxen-office/chart/domain";
+import type { Shape } from "@oxen-office/pptx/domain/shape";
 
 export type PreviewSlide = {
   readonly number: number;
@@ -51,16 +58,40 @@ export async function runPreview(
     const start = slideNumber ?? 1;
     const end = slideNumber ?? presentation.count;
     const slides: PreviewSlide[] = [];
+    const zipFile = createZipAdapter(presentationFile);
 
     for (let i = start; i <= end; i++) {
       const apiSlide = presentation.getSlide(i);
-      const domainSlide = parseSlide(apiSlide.content);
+
+      // Build parse context with layout/master inheritance for placeholder transforms
+      const renderContext = createRenderContext({ apiSlide, zip: zipFile, slideSize: presentation.size });
+      const parseCtx = createParseContext(renderContext.slideRenderContext);
+      const domainSlide = parseSlide(apiSlide.content, parseCtx);
 
       if (!domainSlide) {
         continue;
       }
 
-      const shapes = domainSlide.shapes.map(serializeShape);
+      // Enrich slide with chart/diagram data from archive
+      const fileReader: FileReader = {
+        readFile: (path: string) => apiSlide.zip.file(path)?.asArrayBuffer() ?? null,
+        resolveResource: (id: string) => apiSlide.relationships.getTarget(id),
+        getResourceByType: (relType: string) => apiSlide.relationships.getTargetByType(relType),
+      };
+      const resourceStore = createResourceStore();
+      const enrichedSlide = enrichSlideContent(domainSlide, fileReader, resourceStore);
+
+      // Build serialization context with resolvers from resource store
+      const ctx: SerializationContext = {
+        resolveChart: (resourceId: string) =>
+          resourceStore.get(resourceId)?.parsed as Chart | undefined,
+        resolveDiagramShapes: (diagramRef) => {
+          const entry = resourceStore.get(diagramRef.dataResourceId ?? "");
+          return (entry?.parsed as { shapes?: readonly Shape[] } | undefined)?.shapes;
+        },
+      };
+
+      const shapes = enrichedSlide.shapes.map((s) => serializeShape(s, ctx));
       const ascii = renderSlideAscii({
         shapes,
         slideWidth: presentation.size.width,

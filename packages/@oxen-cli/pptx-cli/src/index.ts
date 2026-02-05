@@ -2,6 +2,9 @@
  * @file Library exports for @oxen-cli/pptx-cli
  */
 
+// Program
+export { createProgram } from "./program";
+
 // Commands
 export { runInfo, type InfoData } from "./commands/info";
 export { runList, type ListData, type SlideListItem } from "./commands/list";
@@ -43,8 +46,11 @@ export {
   type LineJson,
   type TableJson,
   type ChartJson,
+  type ChartSeriesJson,
   type DiagramJson,
+  type DiagramShapeJson,
   type GraphicContentJson,
+  type SerializationContext,
 } from "./serializers/shape-serializer";
 
 // Pretty output formatters
