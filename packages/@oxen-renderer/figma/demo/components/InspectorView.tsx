@@ -7,9 +7,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { FigNode } from "@oxen/fig/types";
 import { CATEGORY_COLORS, CATEGORY_LABELS, type NodeCategory } from "./inspector-constants";
 import { getCategoryColor } from "./inspector-constants";
-import { InspectorOverlay, collectBoxes, type BoxInfo } from "./InspectorOverlay";
+import { InspectorOverlay, collectBoxes, getRootNormalizationTransform, type BoxInfo } from "./InspectorOverlay";
 import { InspectorTreeView } from "./InspectorTreeView";
-import { IDENTITY_MATRIX } from "../../src/svg/transform";
 
 type Props = {
   readonly frameNode: FigNode;
@@ -156,10 +155,14 @@ export function InspectorView({
   // Tooltip
   const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number } | null>(null);
 
-  // Boxes for tooltip lookup
+  // Boxes for tooltip lookup (normalized to match SVG rendering)
+  const initialTransform = useMemo(
+    () => getRootNormalizationTransform(frameNode),
+    [frameNode],
+  );
   const boxes = useMemo(
-    () => collectBoxes(frameNode, IDENTITY_MATRIX, showHiddenNodes),
-    [frameNode, showHiddenNodes],
+    () => collectBoxes(frameNode, initialTransform, showHiddenNodes),
+    [frameNode, initialTransform, showHiddenNodes],
   );
 
   const hoveredBox: BoxInfo | null = useMemo(

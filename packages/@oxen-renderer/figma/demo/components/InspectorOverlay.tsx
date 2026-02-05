@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import type { FigNode } from "@oxen/fig/types";
 import type { FigMatrix } from "@oxen/fig/types";
 import { guidToString, getNodeType } from "@oxen/fig/parser";
-import { IDENTITY_MATRIX, multiplyMatrices, buildTransformAttr } from "../../src/svg/transform";
+import { IDENTITY_MATRIX, multiplyMatrices, buildTransformAttr, createTranslationMatrix } from "../../src/svg/transform";
 import { getCategoryColor } from "./inspector-constants";
 
 type Props = {
@@ -79,9 +79,13 @@ export function InspectorOverlay({
   onNodeClick,
   showHiddenNodes,
 }: Props) {
+  const initialTransform = useMemo(
+    () => getRootNormalizationTransform(frameNode),
+    [frameNode],
+  );
   const boxes = useMemo(
-    () => collectBoxes(frameNode, IDENTITY_MATRIX, showHiddenNodes),
-    [frameNode, showHiddenNodes],
+    () => collectBoxes(frameNode, initialTransform, showHiddenNodes),
+    [frameNode, initialTransform, showHiddenNodes],
   );
 
   return (
@@ -125,6 +129,20 @@ export function InspectorOverlay({
       })}
     </svg>
   );
+}
+
+/**
+ * Compute a transform that normalizes the root frame's canvas position to (0,0),
+ * matching the normalizeRootTransform behavior in the SVG renderer.
+ */
+export function getRootNormalizationTransform(frameNode: FigNode): FigMatrix {
+  const nodeData = frameNode as Record<string, unknown>;
+  const transform = nodeData.transform as FigMatrix | undefined;
+  if (!transform) return IDENTITY_MATRIX;
+  const offsetX = transform.m02 ?? 0;
+  const offsetY = transform.m12 ?? 0;
+  if (offsetX === 0 && offsetY === 0) return IDENTITY_MATRIX;
+  return createTranslationMatrix(-offsetX, -offsetY);
 }
 
 /** Re-export collectBoxes for use by InspectorView tooltip */
