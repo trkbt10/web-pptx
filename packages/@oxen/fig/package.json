@@ -50,6 +50,10 @@
       "types": "./src/kiwi/stream.ts",
       "default": "./src/kiwi/stream.ts"
     },
+    "./constants": {
+      "types": "./src/constants/index.ts",
+      "default": "./src/constants/index.ts"
+    },
     "./test-helpers": {
       "types": "./src/kiwi/test-helpers.ts",
       "default": "./src/kiwi/test-helpers.ts"

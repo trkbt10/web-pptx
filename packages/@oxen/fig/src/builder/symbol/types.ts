@@ -63,6 +63,7 @@ export type InstanceNodeData = {
 
   // Override properties
   readonly fillPaints?: readonly Paint[];
+  readonly overriddenSymbolID?: { sessionID: number; localID: number };
   readonly componentPropertyReferences?: readonly string[];
 
   // Child constraint properties (when inside auto-layout parent)

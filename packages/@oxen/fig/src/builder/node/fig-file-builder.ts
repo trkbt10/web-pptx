@@ -29,7 +29,7 @@ import type { EffectData } from "../effect/types";
 import type { GroupNodeData } from "./group-builder";
 import type { SectionNodeData } from "./section-builder";
 import type { BooleanOperationNodeData } from "./boolean-builder";
-import { SHAPE_NODE_TYPES, NODE_TYPE_VALUES } from "../../constants";
+import { SHAPE_NODE_TYPES, NODE_TYPE_VALUES, CONSTRAINT_TYPE_VALUES } from "../../constants";
 import { buildFigHeader } from "../header";
 import { createEmptyZipPackage } from "@oxen/zip";
 import { encodeFigSchema } from "./schema-encoder";
@@ -38,6 +38,37 @@ import {
   encodeRoundedRectangleBlob,
   encodeEllipseBlob,
 } from "../geometry";
+
+/**
+ * Resolve a single-axis constraint for derivedSymbolData computation.
+ */
+function resolveConstraintAxis(
+  origPos: number, origDim: number,
+  parentOrigDim: number, parentNewDim: number,
+  constraintValue: number,
+): { pos: number; dim: number } {
+  const delta = parentNewDim - parentOrigDim;
+  switch (constraintValue) {
+    case CONSTRAINT_TYPE_VALUES.MIN:
+      return { pos: origPos, dim: origDim };
+    case CONSTRAINT_TYPE_VALUES.CENTER:
+      return { pos: origPos + delta / 2, dim: origDim };
+    case CONSTRAINT_TYPE_VALUES.MAX:
+      return { pos: origPos + delta, dim: origDim };
+    case CONSTRAINT_TYPE_VALUES.STRETCH: {
+      const leftMargin = origPos;
+      const rightMargin = parentOrigDim - (origPos + origDim);
+      return { pos: leftMargin, dim: Math.max(0, parentNewDim - leftMargin - rightMargin) };
+    }
+    case CONSTRAINT_TYPE_VALUES.SCALE: {
+      if (parentOrigDim === 0) return { pos: origPos, dim: origDim };
+      const ratio = parentNewDim / parentOrigDim;
+      return { pos: origPos * ratio, dim: origDim * ratio };
+    }
+    default:
+      return { pos: origPos, dim: origDim };
+  }
+}
 
 export class FigFileBuilder {
   private schema: KiwiSchema;
@@ -262,6 +293,7 @@ export class FigFileBuilder {
       fillPaints: data.fillPaints,
       // Symbol reference
       symbolID: data.symbolID,
+      overriddenSymbolID: data.overriddenSymbolID,
       componentPropertyReferences: data.componentPropertyReferences,
       // Child constraints
       stackPositioning: data.stackPositioning,
@@ -767,6 +799,7 @@ export class FigFileBuilder {
     verticalConstraint?: { value: number; name: string };
     // Symbol/Instance fields
     symbolID?: { sessionID: number; localID: number };
+    overriddenSymbolID?: { sessionID: number; localID: number };
     componentPropertyReferences?: readonly string[];
     // Shape stroke fields
     strokePaints?: readonly Stroke[];
@@ -828,9 +861,9 @@ export class FigFileBuilder {
       node.fillPaints = data.fillPaints;
     }
 
-    // Frame-specific
+    // Frame-specific — Kiwi schema uses frameMaskDisabled (inverted clipsContent)
     if (data.clipsContent !== undefined) {
-      node.clipsContent = data.clipsContent;
+      node.frameMaskDisabled = !data.clipsContent;
     }
     if (data.cornerRadius !== undefined) {
       node.cornerRadius = data.cornerRadius;
@@ -882,9 +915,14 @@ export class FigFileBuilder {
       node.verticalConstraint = data.verticalConstraint;
     }
 
-    // Symbol/Instance fields
+    // Symbol/Instance fields — symbolID must be wrapped in symbolData
+    // (NodeChange schema has symbolData: SymbolData, not a direct symbolID field)
     if (data.symbolID) {
-      node.symbolID = data.symbolID;
+      const symbolDataObj: Record<string, unknown> = { symbolID: data.symbolID };
+      if (data.overriddenSymbolID) {
+        symbolDataObj.overriddenSymbolID = data.overriddenSymbolID;
+      }
+      node.symbolData = symbolDataObj;
     }
     if (data.componentPropertyReferences && data.componentPropertyReferences.length > 0) {
       node.componentPropertyReferences = data.componentPropertyReferences;
@@ -998,12 +1036,105 @@ export class FigFileBuilder {
   }
 
   /**
+   * Compute derivedSymbolData for INSTANCE nodes whose size differs from their SYMBOL.
+   * This pre-computes constraint-resolved child positions so both Figma and our renderer
+   * can correctly render resized instances.
+   *
+   * Called automatically by buildRaw/buildRawAsync before serialization.
+   */
+  private computeDerivedSymbolData(): void {
+    // Index: localID → node
+    const nodeByLocalID = new Map<number, Record<string, unknown>>();
+    for (const node of this.nodes) {
+      const guid = node.guid as { sessionID: number; localID: number } | undefined;
+      if (guid) {
+        nodeByLocalID.set(guid.localID, node);
+      }
+    }
+
+    // Index: parentLocalID → child nodes
+    const childrenByParent = new Map<number, Record<string, unknown>[]>();
+    for (const node of this.nodes) {
+      const pi = node.parentIndex as { guid: { localID: number } } | undefined;
+      if (pi) {
+        const parentID = pi.guid.localID;
+        let list = childrenByParent.get(parentID);
+        if (!list) {
+          list = [];
+          childrenByParent.set(parentID, list);
+        }
+        list.push(node);
+      }
+    }
+
+    for (const node of this.nodes) {
+      const nodeType = node.type as { value: number } | undefined;
+      if (nodeType?.value !== NODE_TYPE_VALUES.INSTANCE) continue;
+
+      const symbolData = node.symbolData as { symbolID?: { sessionID: number; localID: number } } | undefined;
+      const symbolID = symbolData?.symbolID;
+      if (!symbolID) continue;
+
+      const symNode = nodeByLocalID.get(symbolID.localID);
+      if (!symNode) continue;
+
+      const instSize = node.size as { x: number; y: number } | undefined;
+      const symSize = symNode.size as { x: number; y: number } | undefined;
+      if (!instSize || !symSize) continue;
+      if (instSize.x === symSize.x && instSize.y === symSize.y) continue;
+
+      // Instance is resized — compute constraint-adjusted children
+      const symChildren = childrenByParent.get(symbolID.localID) ?? [];
+      const derived: Record<string, unknown>[] = [];
+
+      for (const child of symChildren) {
+        const childGuid = child.guid as { sessionID: number; localID: number } | undefined;
+        if (!childGuid) continue;
+
+        const hc = child.horizontalConstraint as { value: number } | undefined;
+        const vc = child.verticalConstraint as { value: number } | undefined;
+        const hVal = hc?.value ?? CONSTRAINT_TYPE_VALUES.MIN;
+        const vVal = vc?.value ?? CONSTRAINT_TYPE_VALUES.MIN;
+
+        const childTransform = child.transform as { m00: number; m01: number; m02: number; m10: number; m11: number; m12: number } | undefined;
+        const childSize = child.size as { x: number; y: number } | undefined;
+        if (!childTransform || !childSize) continue;
+
+        const hResult = resolveConstraintAxis(childTransform.m02, childSize.x, symSize.x, instSize.x, hVal);
+        const vResult = resolveConstraintAxis(childTransform.m12, childSize.y, symSize.y, instSize.y, vVal);
+
+        // Only add entry if something changed
+        if (hResult.pos !== childTransform.m02 || hResult.dim !== childSize.x ||
+            vResult.pos !== childTransform.m12 || vResult.dim !== childSize.y) {
+          derived.push({
+            guidPath: { guids: [childGuid] },
+            transform: {
+              m00: childTransform.m00,
+              m01: childTransform.m01,
+              m02: hResult.pos,
+              m10: childTransform.m10,
+              m11: childTransform.m11,
+              m12: vResult.pos,
+            },
+            size: { x: hResult.dim, y: vResult.dim },
+          });
+        }
+      }
+
+      if (derived.length > 0) {
+        node.derivedSymbolData = derived;
+      }
+    }
+  }
+
+  /**
    * Build the raw fig-kiwi data (without ZIP wrapping)
    * Use this for internal testing or when you need the raw format.
    * Note: This uses deflate-raw compression. For Figma compatibility,
    * use buildRawAsync() which uses zstd compression.
    */
   buildRaw(): Uint8Array {
+    this.computeDerivedSymbolData();
     // Encode schema
     const schemaData = encodeFigSchema(this.schema);
     const compressedSchema = deflateRaw(schemaData);
@@ -1049,6 +1180,8 @@ export class FigFileBuilder {
    * This is the format that Figma expects.
    */
   async buildRawAsync(): Promise<Uint8Array> {
+    this.computeDerivedSymbolData();
+
     // Encode schema
     const schemaData = encodeFigSchema(this.schema);
     const compressedSchema = deflateRaw(schemaData);

@@ -57,6 +57,7 @@ export class InstanceNodeBuilder {
   // Override fields
   private _fillColor?: Color;
   private _componentPropertyRefs: string[] = [];
+  private _overriddenSymbolID?: SymbolID;
 
   // Child constraint fields
   private _stackPositioning?: StackPositioning;
@@ -119,6 +120,16 @@ export class InstanceNodeBuilder {
   }
 
   /**
+   * Override the symbol reference (for variant switching).
+   * When set, the instance renders the overridden symbol's content
+   * instead of the original symbolID.
+   */
+  overrideSymbol(symbolID: number | SymbolID): this {
+    this._overriddenSymbolID = normalizeSymbolID(symbolID);
+    return this;
+  }
+
+  /**
    * Add a component property reference (for text overrides, etc.)
    */
   addPropertyReference(ref: string): this {
@@ -172,6 +183,7 @@ export class InstanceNodeBuilder {
 
       // Overrides
       fillPaints: buildFillPaintsOverride(this._fillColor),
+      overriddenSymbolID: this._overriddenSymbolID,
       componentPropertyReferences: optionalArray(this._componentPropertyRefs),
 
       // Child constraints

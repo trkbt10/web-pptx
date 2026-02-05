@@ -18,7 +18,7 @@ Figma ファイル (.fig) のパーサー・ビルダー
 |---------|------|------|
 | `canvas.fig` | ✓ | メインデータ（fig-kiwi形式） |
 | `meta.json` | ✓ | メタデータ（ファイル名、背景色等） |
-| `thumbnail.png` | △ | サムネイル画像（推奨） |
+| `thumbnail.png` | ✓ | サムネイル画像（必須。ないとFigmaインポートが失敗する） |
 | `images/*` | - | 埋め込み画像 |
 
 ### meta.json 構造
@@ -155,7 +155,27 @@ Kiwi 形式の float は **ビット回転** を使用してエンコードさ�
 
 #### NodeType (ENUM)
 
-ノードの種類を表す。DOCUMENT, CANVAS, GROUP, FRAME, VECTOR, RECTANGLE, TEXT, INSTANCE など37種類。
+ノードの種類を表す。値は `figma-schema.json` の NodeType enum が正（`node-types.ts` はこれに合わせる）。
+
+| 値 | 名前 | 値 | 名前 |
+|----|------|----|------|
+| 0 | NONE | 14 | SLICE |
+| 1 | DOCUMENT | 15 | SYMBOL |
+| 2 | CANVAS | 16 | INSTANCE |
+| 3 | GROUP | 17 | STICKY |
+| 4 | FRAME | 18 | SHAPE_WITH_TEXT |
+| 5 | BOOLEAN_OPERATION | 19 | CONNECTOR |
+| 6 | VECTOR | 20 | CODE_BLOCK |
+| 7 | STAR | 21 | WIDGET |
+| 8 | LINE | 22 | STAMP |
+| 9 | ELLIPSE | 23 | MEDIA |
+| 10 | RECTANGLE | 24 | HIGHLIGHT |
+| 11 | REGULAR_POLYGON | 25 | **SECTION** |
+| 12 | ROUNDED_RECTANGLE | 26 | SECTION_OVERLAY |
+| 13 | TEXT | 29 | TABLE |
+
+> **注意**: `node-types.ts` の値は `figma-schema.json` の NodeType enum に完全一致させること。
+> 過去にずれがあり（SECTION が 29 ではなく 25 等）、Figmaインポートが失敗する原因となった。
 
 #### Color (STRUCT)
 
@@ -177,11 +197,21 @@ x: float, y: float, w: float, h: float
 
 #### Matrix (STRUCT)
 
-2x3 アフィン変換行列。
+2x3 アフィン変換行列。`m02` / `m12` が平行移動（位置）を表す。
 
 ```
-m00: float, m01: float, m02: float
-m10: float, m11: float, m12: float
+m00: float, m01: float, m02: float (translation x)
+m10: float, m11: float, m12: float (translation y)
+```
+
+**座標系**: 子ノードの transform は**親に対する相対座標**。
+Canvas 直下のノードはキャンバス上の絶対座標だが、
+Section / Frame / Group 内のノードは親の左上を原点とした相対座標になる。
+
+```
+例: Section(600, 50) の中にフレームを (30, 40) の位置に配置する場合
+  → position(30, 40)  ✓
+  → position(630, 90)  ✗ （絶対座標を指定するとセクション外にはみ出す）
 ```
 
 #### Paint (MESSAGE)
@@ -222,11 +252,15 @@ Document (DOCUMENT)
 #### 図形ノードのプロパティ
 
 - `size`: サイズ (Vector)
-- `strokeWeight`: 線の太さ
-- `strokeAlign`: 線の位置 (CENTER/INSIDE/OUTSIDE)
+- `strokeWeight`: 線の太さ（**必須**、デフォルト `0`）
+- `strokeAlign`: 線の位置（**必須**、デフォルト `CENTER`）
+- `strokeJoin`: 線の結合（**必須**、デフォルト `MITER`）
 - `fillPaints`: 塗りのリスト (Paint[])
 - `strokePaints`: 線のリスト (Paint[])
 - `fillGeometry` / `strokeGeometry`: ジオメトリデータ
+
+> **注意**: `strokeWeight`, `strokeAlign`, `strokeJoin` は値が 0/デフォルトでも明示的に設定が必要。
+> 未設定の場合、Figmaインポート時に "Internal error during import" エラーになる。
 
 ## 圧縮形式
 
@@ -362,7 +396,8 @@ const data = await builder.buildAsync({ fileName: "my-design" });
 2. **CANVAS** ノード（ページ、1つ以上）
 3. **Internal Only Canvas**（`internalOnly: true`, `position: "~"`）
 4. **meta.json**（ファイル名、背景色等）
-5. **thumbnail.png**（推奨）
+5. **thumbnail.png**（必須。1x1 ピクセルのプレースホルダーでも可）
+6. **strokeWeight / strokeAlign / strokeJoin** が全図形ノードに必須（未設定だとインポートエラー）
 
 ## ラウンドトリップ
 
