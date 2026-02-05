@@ -136,19 +136,23 @@ export function buildSymbolDependencyGraph(
 
   // 1. Identify all SYMBOLs and collect their dependencies
   for (const [guidStr, node] of symbolMap) {
-    if (getNodeType(node) !== "SYMBOL") continue;
+    const nodeType = getNodeType(node);
+    if (nodeType !== "SYMBOL" && nodeType !== "COMPONENT" && nodeType !== "COMPONENT_SET") continue;
     allSymbolIds.add(guidStr);
     const deps = new Set<string>();
-    // Only scan children, not the SYMBOL node itself
+    // Only scan children, not the SYMBOL/COMPONENT node itself
     for (const child of node.children ?? []) {
       collectInstanceDependencies(child, deps, symbolMap);
     }
-    // Filter to only deps that are actually SYMBOLs in the map
+    // Filter to only deps that are actually SYMBOLs/COMPONENTs in the map
     const validDeps = new Set<string>();
     for (const dep of deps) {
       const depNode = symbolMap.get(dep);
-      if (depNode && getNodeType(depNode) === "SYMBOL") {
-        validDeps.add(dep);
+      if (depNode) {
+        const depType = getNodeType(depNode);
+        if (depType === "SYMBOL" || depType === "COMPONENT" || depType === "COMPONENT_SET") {
+          validDeps.add(dep);
+        }
       }
     }
     // Remove self-dependency

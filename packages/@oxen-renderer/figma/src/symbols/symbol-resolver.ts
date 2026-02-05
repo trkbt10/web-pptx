@@ -83,6 +83,37 @@ export function getInstanceSymbolOverrides(nodeData: Record<string, unknown>): r
 }
 
 // =============================================================================
+// Overridden Symbol ID (Variant Switching)
+// =============================================================================
+
+/**
+ * Extract overriddenSymbolID from an INSTANCE node.
+ *
+ * When a variant is switched in Figma, the INSTANCE keeps its original
+ * symbolID but gains an overriddenSymbolID pointing to the new variant's
+ * COMPONENT node.
+ *
+ * Handles both formats:
+ * - `symbolData.overriddenSymbolID` (real Figma exports)
+ * - `overriddenSymbolID` at node's top level (builder-generated files)
+ */
+export function getInstanceOverriddenSymbolID(nodeData: Record<string, unknown>): FigGuid | undefined {
+  // 1. Check symbolData.overriddenSymbolID (real Figma exports)
+  const symbolData = nodeData.symbolData as { overriddenSymbolID?: FigGuid } | undefined;
+  if (symbolData?.overriddenSymbolID) {
+    return symbolData.overriddenSymbolID;
+  }
+
+  // 2. Check top-level overriddenSymbolID (builder-generated files)
+  const topLevel = nodeData.overriddenSymbolID as FigGuid | undefined;
+  if (topLevel && typeof topLevel === "object" && "sessionID" in topLevel) {
+    return topLevel;
+  }
+
+  return undefined;
+}
+
+// =============================================================================
 // Symbol Resolution
 // =============================================================================
 
