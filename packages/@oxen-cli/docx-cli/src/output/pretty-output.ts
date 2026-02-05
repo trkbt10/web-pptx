@@ -15,6 +15,7 @@ import type { TablesData } from "../commands/tables";
 import type { CommentsData } from "../commands/comments";
 import type { ImagesData } from "../commands/images";
 import type { TocData } from "../commands/toc";
+import type { PreviewData } from "../commands/preview";
 
 /**
  * Format document info for pretty display.
@@ -394,6 +395,23 @@ export function formatTocPretty(data: TocData): string {
     lines.push(`${indent}${entry.level}. ${entry.text}${styleStr}`);
   }
 
+  return lines.join("\n");
+}
+
+/**
+ * Format preview result for pretty display.
+ */
+export function formatPreviewPretty(data: PreviewData): string {
+  const lines: string[] = [];
+  for (let i = 0; i < data.sections.length; i++) {
+    const section = data.sections[i]!;
+    if (i > 0) {
+      lines.push("");
+    }
+    lines.push(`Section ${section.number} (${section.paragraphCount} paragraphs, ${section.tableCount} tables)`);
+    lines.push("");
+    lines.push(section.ascii);
+  }
   return lines.join("\n");
 }
 

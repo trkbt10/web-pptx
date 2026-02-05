@@ -28,6 +28,7 @@ import { runValidation } from "./commands/validation";
 import { runConditional } from "./commands/conditional";
 import { runHyperlinks } from "./commands/hyperlinks";
 import { runStyles } from "./commands/styles";
+import { runPreview } from "./commands/preview";
 import { output, type OutputMode } from "@oxen-cli/cli-core";
 import {
   formatInfoPretty,
@@ -46,6 +47,7 @@ import {
   formatConditionalPretty,
   formatHyperlinksPretty,
   formatStylesPretty,
+  formatPreviewPretty,
 } from "./output/pretty-output";
 
 const program = new Command();
@@ -229,6 +231,25 @@ program
     const mode = program.opts().output as OutputMode;
     const result = await runStyles(file, options);
     output(result, mode, formatStylesPretty);
+  });
+
+program
+  .command("preview")
+  .description("Render ASCII grid preview of sheet data")
+  .argument("<file>", "XLSX file path")
+  .argument("[sheet]", "Sheet name (omit for all sheets)")
+  .option("--width <columns>", "Terminal width in columns", "80")
+  .option("--range <range>", "Cell range (e.g., \"A1:C10\")")
+  .action(async (file: string, sheet: string | undefined, options: { width: string; range?: string }) => {
+    const mode = program.opts().output as OutputMode;
+    const width = parseInt(options.width, 10);
+    if (Number.isNaN(width) || width < 20) {
+      console.error("Error: Width must be an integer >= 20");
+      process.exitCode = 1;
+      return;
+    }
+    const result = await runPreview(file, sheet, { width, range: options.range });
+    output(result, mode, formatPreviewPretty);
   });
 
 program.parse();

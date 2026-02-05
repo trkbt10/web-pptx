@@ -18,6 +18,7 @@ import type { ValidationData } from "../commands/validation";
 import type { ConditionalData } from "../commands/conditional";
 import type { HyperlinksData } from "../commands/hyperlinks";
 import type { StylesData, ColorJson } from "../commands/styles";
+import type { PreviewData } from "../commands/preview";
 
 /**
  * Format workbook info for pretty display.
@@ -449,6 +450,23 @@ export function formatHyperlinksPretty(data: HyperlinksData): string {
   }
 
   return lines.join("\n").trim();
+}
+
+/**
+ * Format preview result for pretty display.
+ */
+export function formatPreviewPretty(data: PreviewData): string {
+  const lines: string[] = [];
+  for (let i = 0; i < data.sheets.length; i++) {
+    const sheet = data.sheets[i]!;
+    if (i > 0) {
+      lines.push("");
+    }
+    lines.push(`Sheet: ${sheet.name} (${sheet.rowCount} rows, ${sheet.colCount} columns)`);
+    lines.push("");
+    lines.push(sheet.ascii);
+  }
+  return lines.join("\n");
 }
 
 // =============================================================================

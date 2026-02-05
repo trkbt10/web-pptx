@@ -35,6 +35,9 @@ export {
   type SheetDataJson,
 } from "./serializers/sheet-serializer";
 
+// Preview
+export { runPreview, type PreviewData, type PreviewSheet, type PreviewOptions } from "./commands/preview";
+
 // Pretty output formatters
 export {
   formatInfoPretty,
@@ -43,4 +46,5 @@ export {
   formatExtractPretty,
   formatBuildPretty,
   formatVerifyPretty,
+  formatPreviewPretty,
 } from "./output/pretty-output";

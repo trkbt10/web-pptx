@@ -25,6 +25,7 @@ import { runTables } from "./commands/tables";
 import { runComments } from "./commands/comments";
 import { runImages } from "./commands/images";
 import { runToc } from "./commands/toc";
+import { runPreview } from "./commands/preview";
 import { output, type OutputMode } from "@oxen-cli/cli-core";
 import {
   formatInfoPretty,
@@ -40,6 +41,7 @@ import {
   formatCommentsPretty,
   formatImagesPretty,
   formatTocPretty,
+  formatPreviewPretty,
 } from "./output/pretty-output";
 
 const program = new Command();
@@ -191,6 +193,33 @@ program
     const maxLevel = options.maxLevel ? parseInt(options.maxLevel, 10) : undefined;
     const result = await runToc(file, { maxLevel });
     output(result, mode, formatTocPretty);
+  });
+
+program
+  .command("preview")
+  .description("Render ASCII art preview of document content")
+  .argument("<file>", "DOCX file path")
+  .argument("[section]", "Section number (1-based, omit for all)")
+  .option("--width <columns>", "Terminal width in columns", "80")
+  .action(async (file: string, section: string | undefined, options: { width: string }) => {
+    const mode = program.opts().output as OutputMode;
+    let sectionNumber: number | undefined;
+    if (section !== undefined) {
+      sectionNumber = parseInt(section, 10);
+      if (Number.isNaN(sectionNumber)) {
+        console.error("Error: Section number must be a valid integer");
+        process.exitCode = 1;
+        return;
+      }
+    }
+    const width = parseInt(options.width, 10);
+    if (Number.isNaN(width) || width < 20) {
+      console.error("Error: Width must be an integer >= 20");
+      process.exitCode = 1;
+      return;
+    }
+    const result = await runPreview(file, sectionNumber, { width });
+    output(result, mode, formatPreviewPretty);
   });
 
 program.parse();

@@ -12,6 +12,7 @@
     "@oxen-cli/cli-core": "workspace:*",
     "@oxen-builder/docx": "workspace:*",
     "@oxen-office/docx": "workspace:*",
+    "@oxen-renderer/docx": "workspace:*",
     "@oxen/zip": "workspace:*",
     "commander": "^12.0.0"
   }

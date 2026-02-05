@@ -45,6 +45,9 @@ export {
   type ColumnsJson,
 } from "./serializers/section-serializer";
 
+// Preview
+export { runPreview, type PreviewData, type PreviewSection, type PreviewOptions } from "./commands/preview";
+
 // Pretty output formatters
 export {
   formatInfoPretty,
@@ -53,4 +56,5 @@ export {
   formatExtractPretty,
   formatBuildPretty,
   formatVerifyPretty,
+  formatPreviewPretty,
 } from "./output/pretty-output";
