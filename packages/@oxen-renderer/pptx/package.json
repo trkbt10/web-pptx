@@ -58,6 +58,10 @@
     "./slide-render": {
       "types": "./src/slide-render.ts",
       "default": "./src/slide-render.ts"
+    },
+    "./ascii": {
+      "types": "./src/ascii/index.ts",
+      "default": "./src/ascii/index.ts"
     }
   }
 }

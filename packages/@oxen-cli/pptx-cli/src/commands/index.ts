@@ -19,3 +19,4 @@ export {
   type ExpectedTable,
   type Assertion,
 } from "./verify";
+export { runPreview, type PreviewData, type PreviewSlide, type PreviewOptions } from "./preview";

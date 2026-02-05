@@ -18,6 +18,7 @@ import { runExtract } from "./commands/extract";
 import { runTheme } from "./commands/theme";
 import { runBuild } from "./commands/build";
 import { runVerify } from "./commands/verify";
+import { runPreview } from "./commands/preview";
 import { output, type OutputMode } from "@oxen-cli/cli-core";
 import {
   formatInfoPretty,
@@ -27,6 +28,7 @@ import {
   formatThemePretty,
   formatBuildPretty,
   formatVerifyPretty,
+  formatPreviewPretty,
 } from "./output/pretty-output";
 
 const program = new Command();
@@ -114,6 +116,34 @@ program
     const mode = program.opts().output as OutputMode;
     const result = await runVerify(specPath, options);
     output(result, mode, formatVerifyPretty);
+  });
+
+program
+  .command("preview")
+  .description("Render ASCII art preview of a slide (omit slide number to show all)")
+  .argument("<file>", "PPTX file path")
+  .argument("[slide]", "Slide number (1-based, omit for all)")
+  .option("--width <columns>", "Terminal width in columns", "80")
+  .option("--border", "Show slide border outline")
+  .action(async (file: string, slide: string | undefined, options: { width: string; border?: boolean }) => {
+    const mode = program.opts().output as OutputMode;
+    let slideNumber: number | undefined;
+    if (slide !== undefined) {
+      slideNumber = parseInt(slide, 10);
+      if (Number.isNaN(slideNumber)) {
+        console.error("Error: Slide number must be a valid integer");
+        process.exitCode = 1;
+        return;
+      }
+    }
+    const width = parseInt(options.width, 10);
+    if (Number.isNaN(width) || width < 20) {
+      console.error("Error: Width must be an integer >= 20");
+      process.exitCode = 1;
+      return;
+    }
+    const result = await runPreview(file, slideNumber, { width, border: options.border });
+    output(result, mode, formatPreviewPretty);
   });
 
 program.parse();

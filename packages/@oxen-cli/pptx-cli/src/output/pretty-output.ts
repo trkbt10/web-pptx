@@ -9,6 +9,7 @@ import type { ExtractData } from "../commands/extract";
 import type { ThemeData } from "../commands/theme";
 import type { BuildData } from "@oxen-builder/pptx/types";
 import type { VerifyData } from "../commands/verify";
+import type { PreviewData } from "../commands/preview";
 
 function getSlideFlags(slide: SlideListItem): string[] {
   const flags: string[] = [];
@@ -192,6 +193,23 @@ export function formatBuildPretty(data: BuildData): string {
   lines.push(`Output: ${data.outputPath}`);
   lines.push(`Slides: ${data.slideCount}`);
   lines.push(`Shapes added: ${data.shapesAdded}`);
+  return lines.join("\n");
+}
+
+/**
+ * Format preview result for human-readable output.
+ */
+export function formatPreviewPretty(data: PreviewData): string {
+  const lines: string[] = [];
+  for (let i = 0; i < data.slides.length; i++) {
+    const slide = data.slides[i]!;
+    if (i > 0) {
+      lines.push("");
+    }
+    lines.push(`Slide ${slide.number} (${data.slideWidth}x${data.slideHeight}px, ${slide.shapeCount} shapes)`);
+    lines.push("");
+    lines.push(slide.ascii);
+  }
   return lines.join("\n");
 }
 

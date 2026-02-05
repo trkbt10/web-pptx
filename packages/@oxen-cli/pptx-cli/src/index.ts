@@ -20,6 +20,7 @@ export {
   type ExpectedTable,
   type Assertion,
 } from "./commands/verify";
+export { runPreview, type PreviewData, type PreviewSlide, type PreviewOptions } from "./commands/preview";
 
 // Text extraction (from @oxen-office/pptx)
 export {
@@ -55,4 +56,5 @@ export {
   formatThemePretty,
   formatBuildPretty,
   formatVerifyPretty,
+  formatPreviewPretty,
 } from "./output/pretty-output";
