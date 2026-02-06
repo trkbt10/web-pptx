@@ -223,7 +223,8 @@ describe("resolveInstanceLayout", () => {
       derived,
     );
     expect(result.sizeApplied).toBe(true);
-    expect(result.children).toBe(children); // same reference (derived path)
+    // Child is covered by dsd, kept as-is (same reference inside array)
+    expect(result.children[0]).toBe(children[0]);
   });
 
   it("falls back to constraints when derivedSymbolData GUIDs do not match", () => {
@@ -281,5 +282,80 @@ describe("resolveInstanceLayout", () => {
     );
     expect(result.sizeApplied).toBe(false);
     expect(result.children).toBe(children); // unchanged
+  });
+
+  it("supplements constraints for children NOT covered by partial dsd", () => {
+    // Scenario: dsd covers child A but not child B.
+    // Child B has STRETCH constraints and should be resized.
+    const childA = makeChild(
+      { sessionID: 1, localID: 10 }, 0, 0, 48, 48,
+    );
+    const childB = makeChild(
+      { sessionID: 1, localID: 20 }, 0, 0, 48, 48,
+      CONSTRAINT_TYPE_VALUES.STRETCH, CONSTRAINT_TYPE_VALUES.STRETCH,
+    );
+    // Give childB fillGeometry to verify it gets cleared
+    (childB as Record<string, unknown>).fillGeometry = [{ commandsBlob: 0 }];
+
+    // dsd only covers childA (GUID 1:10), not childB (1:20)
+    const derived = [{
+      guidPath: { guids: [{ sessionID: 1, localID: 10 }] },
+      size: { x: 44, y: 22 },
+    }];
+
+    const result = resolveInstanceLayout(
+      [childA, childB],
+      { x: 48, y: 48 },   // SYMBOL size
+      { x: 44, y: 22 },   // INSTANCE size
+      derived,
+    );
+
+    expect(result.sizeApplied).toBe(true);
+
+    // childA: covered by dsd, fillGeometry cleared, size unchanged by supplementConstraints
+    expect(result.children[0]).toBe(childA);
+
+    // childB: NOT covered by dsd, has STRETCH constraints
+    // -> supplementConstraints applies constraint resolution
+    // STRETCH full-fit: 48->44 (H), 48->22 (V)
+    expect(result.children[1].size?.x).toBe(44);
+    expect(result.children[1].size?.y).toBe(22);
+    // fillGeometry should be cleared
+    expect((result.children[1] as Record<string, unknown>).fillGeometry).toBeUndefined();
+  });
+
+  it("does not touch dsd-covered children during constraint supplementation", () => {
+    // Both children covered by dsd — no constraint supplementation needed
+    const childA = makeChild(
+      { sessionID: 1, localID: 10 }, 0, 0, 100, 50,
+      CONSTRAINT_TYPE_VALUES.STRETCH, CONSTRAINT_TYPE_VALUES.STRETCH,
+    );
+    const childB = makeChild(
+      { sessionID: 1, localID: 20 }, 0, 0, 100, 50,
+      CONSTRAINT_TYPE_VALUES.STRETCH, CONSTRAINT_TYPE_VALUES.STRETCH,
+    );
+
+    const derived = [
+      {
+        guidPath: { guids: [{ sessionID: 1, localID: 10 }] },
+        size: { x: 200, y: 100 },
+      },
+      {
+        guidPath: { guids: [{ sessionID: 1, localID: 20 }] },
+        size: { x: 200, y: 100 },
+      },
+    ];
+
+    const result = resolveInstanceLayout(
+      [childA, childB],
+      { x: 100, y: 50 },
+      { x: 200, y: 100 },
+      derived,
+    );
+
+    expect(result.sizeApplied).toBe(true);
+    // Both covered by dsd — kept as-is (same references)
+    expect(result.children[0]).toBe(childA);
+    expect(result.children[1]).toBe(childB);
   });
 });

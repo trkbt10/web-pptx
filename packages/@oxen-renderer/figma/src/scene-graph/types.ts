@@ -199,6 +199,7 @@ export type FallbackTextData = {
   readonly fontWeight?: number;
   readonly fontStyle?: string;
   readonly letterSpacing?: number;
+  readonly lineHeight: number;
   readonly textAnchor: "start" | "middle" | "end";
   readonly textDecoration?: "underline" | "strikethrough";
 };
@@ -262,6 +263,10 @@ export type PathNode = SceneNodeBase & {
 
 export type TextNode = SceneNodeBase & {
   readonly type: "text";
+  /** Bounding box width */
+  readonly width: number;
+  /** Bounding box height */
+  readonly height: number;
   /** Pre-outlined glyph path contours (from opentype or derived data) */
   readonly glyphContours?: readonly PathContour[];
   /** Decoration paths (underlines, strikethroughs) as contours */

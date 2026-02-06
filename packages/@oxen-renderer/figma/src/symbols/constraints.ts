@@ -103,11 +103,15 @@ function isDerivedDataApplicable(
 /**
  * Clear fillGeometry/strokeGeometry on children whose size was changed by
  * derivedSymbolData, so the renderer falls back to size-based shape rendering.
+ *
+ * Returns the set of child GUID strings that were matched by dsd entries,
+ * so callers can identify children NOT covered by dsd.
  */
 function clearDerivedGeometry(
   derivedSymbolData: FigDerivedSymbolData,
   children: readonly FigNode[],
-): void {
+): Set<string> {
+  const matched = new Set<string>();
   for (const entry of derivedSymbolData) {
     if (!entry.size) continue;
     const targetGuid =
@@ -121,9 +125,11 @@ function clearDerivedGeometry(
       if (cg && `${cg.sessionID}:${cg.localID}` === targetKey) {
         delete (child as Record<string, unknown>).fillGeometry;
         delete (child as Record<string, unknown>).strokeGeometry;
+        matched.add(targetKey);
       }
     }
   }
+  return matched;
 }
 
 /**
@@ -142,6 +148,8 @@ export type InstanceLayoutResult = {
  * Strategy:
  * 1. If derivedSymbolData exists and its GUIDs match actual children,
  *    Figma has pre-computed the layout — use it as-is.
+ *    When dsd only partially covers children (e.g. partial GUID translation),
+ *    supplement with constraint-based resolution for uncovered children.
  * 2. Otherwise, fall back to constraint-based resolution.
  *
  * @param children           Cloned children (overrides already applied)
@@ -158,8 +166,17 @@ export function resolveInstanceLayout(
   // Strategy 1: derivedSymbolData with valid GUIDs
   if (derivedSymbolData && derivedSymbolData.length > 0) {
     if (isDerivedDataApplicable(derivedSymbolData, children)) {
-      clearDerivedGeometry(derivedSymbolData, children);
-      return { children, sizeApplied: true };
+      const coveredGuids = clearDerivedGeometry(derivedSymbolData, children);
+
+      // Supplement: apply constraint-based resolution to children NOT
+      // covered by dsd. This handles partial GUID translation where some
+      // dsd entries couldn't be mapped to children (e.g. non-contiguous
+      // session GUIDs that majority-vote can't resolve).
+      const supplemented = supplementConstraints(
+        children, symbolSize, instanceSize, coveredGuids,
+      );
+
+      return { children: supplemented, sizeApplied: true };
     }
   }
 
@@ -181,4 +198,60 @@ export function resolveInstanceLayout(
 
   // No derived data and no constraints: keep original layout
   return { children, sizeApplied: false };
+}
+
+/**
+ * Apply constraint-based resolution to children that weren't covered
+ * by derivedSymbolData (their GUIDs weren't in the dsd entries).
+ * Children already covered by dsd are left as-is to preserve Figma's
+ * pre-computed layout values.
+ */
+function supplementConstraints(
+  children: readonly FigNode[],
+  symbolSize: { x: number; y: number },
+  instanceSize: { x: number; y: number },
+  coveredGuids: Set<string>,
+): readonly FigNode[] {
+  return children.map((child) => {
+    const nd = child as Record<string, unknown>;
+    const cg = nd.guid as { sessionID: number; localID: number } | undefined;
+    const guidKey = cg ? `${cg.sessionID}:${cg.localID}` : undefined;
+
+    // Skip children already handled by dsd
+    if (guidKey && coveredGuids.has(guidKey)) return child;
+
+    // Skip children without constraints
+    if (
+      getConstraintValue(nd.horizontalConstraint) === CONSTRAINT_TYPE_VALUES.MIN &&
+      getConstraintValue(nd.verticalConstraint) === CONSTRAINT_TYPE_VALUES.MIN
+    ) {
+      return child;
+    }
+
+    const resolution = resolveChildConstraints(
+      nd, symbolSize, instanceSize,
+    );
+    if (!resolution) return child;
+    if (!resolution.posChanged && !resolution.sizeChanged) return child;
+
+    const result: Record<string, unknown> = {
+      ...child,
+      transform: {
+        ...child.transform,
+        m02: resolution.posX,
+        m12: resolution.posY,
+      },
+      size: {
+        x: resolution.dimX,
+        y: resolution.dimY,
+      },
+    };
+
+    if (resolution.sizeChanged) {
+      delete result.fillGeometry;
+      delete result.strokeGeometry;
+    }
+
+    return result as FigNode;
+  });
 }

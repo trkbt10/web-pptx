@@ -82,6 +82,10 @@ function getNodeTypeName(node: FigNode): string {
 function getNodeId(node: FigNode, ctx: BuildContext): SceneNodeId {
   const guid = node.guid;
   if (guid) {
+    if (typeof guid === "object" && guid !== null) {
+      const g = guid as { sessionID?: number; localID?: number };
+      return createNodeId(`${g.sessionID ?? 0}:${g.localID ?? 0}`);
+    }
     return createNodeId(String(guid));
   }
   return createNodeId(`node-${ctx.nodeCounter++}`);
@@ -257,12 +261,23 @@ function buildVectorNode(node: FigNode, ctx: BuildContext): PathNode {
   const vectorPaths = nodeData.vectorPaths as readonly { data: string; windingRule?: unknown }[] | undefined;
 
   let contours = convertVectorPathsToContours(vectorPaths);
+  let isStrokeGeometry = false;
   if (contours.length === 0) {
     contours = decodeGeometryToContours(fillGeometry, ctx.blobs);
   }
   if (contours.length === 0) {
     contours = decodeGeometryToContours(strokeGeometry, ctx.blobs);
+    isStrokeGeometry = contours.length > 0;
   }
+
+  // strokeGeometry is Figma's pre-expanded outline of a stroke.
+  // It should be *filled* with the stroke colour, not stroked again.
+  const fills = isStrokeGeometry
+    ? convertPaintsToFills(strokePaints, ctx.images)
+    : convertPaintsToFills(fillPaints, ctx.images);
+  const stroke = isStrokeGeometry
+    ? undefined
+    : convertStrokeToSceneStroke(strokePaints, strokeWeight);
 
   return {
     type: "path",
@@ -273,14 +288,15 @@ function buildVectorNode(node: FigNode, ctx: BuildContext): PathNode {
     visible: base.visible,
     effects: convertEffectsToScene(effects),
     contours,
-    fills: convertPaintsToFills(fillPaints, ctx.images),
-    stroke: convertStrokeToSceneStroke(strokePaints, strokeWeight),
+    fills,
+    stroke,
   };
 }
 
 function buildTextNode(node: FigNode, ctx: BuildContext): TextNode {
   const base = extractBaseProps(node);
   const textData = convertTextNode(node, ctx.blobs);
+  const sizeObj = (node as Record<string, unknown>).size as { x?: number; y?: number } | undefined;
 
   return {
     type: "text",
@@ -290,6 +306,8 @@ function buildTextNode(node: FigNode, ctx: BuildContext): TextNode {
     opacity: base.opacity,
     visible: base.visible,
     effects: [],
+    width: sizeObj?.x ?? 0,
+    height: sizeObj?.y ?? 0,
     glyphContours: textData.glyphContours,
     decorationContours: textData.decorationContours,
     fill: textData.fill,
