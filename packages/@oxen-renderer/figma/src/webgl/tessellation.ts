@@ -283,24 +283,58 @@ export function tessellateContours(
     outerIsNegative = negativeCount >= positiveCount;
   }
 
-  // Classify as outer / hole
-  type ClassifiedContour = { coords: number[]; isHole: boolean };
-  const classifiedContours: ClassifiedContour[] = flatContours.map((fc) => ({
-    coords: fc.coords,
-    isHole: outerIsNegative ? fc.area > 0 : fc.area < 0,
-  }));
-
-  // Group: each outer contour collects subsequent holes until next outer
-  type ContourGroup = { outer: number[]; holes: number[][] };
-  const groups: ContourGroup[] = [];
-
-  for (const fc of classifiedContours) {
-    if (!fc.isHole) {
-      groups.push({ outer: fc.coords, holes: [] });
-    } else if (groups.length > 0) {
-      groups[groups.length - 1].holes.push(fc.coords);
+  // Classify as outer / hole and compute bounding boxes
+  type ClassifiedContour = {
+    coords: number[];
+    isHole: boolean;
+    absArea: number;
+    minX: number; minY: number; maxX: number; maxY: number;
+  };
+  const classifiedContours: ClassifiedContour[] = flatContours.map((fc) => {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (let i = 0; i < fc.coords.length; i += 2) {
+      const x = fc.coords[i], y = fc.coords[i + 1];
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
     }
-    // Orphan holes (no preceding outer) are dropped
+    return {
+      coords: fc.coords,
+      isHole: outerIsNegative ? fc.area > 0 : fc.area < 0,
+      absArea: Math.abs(fc.area),
+      minX, minY, maxX, maxY,
+    };
+  });
+
+  // Separate outers and holes, sort outers by area (largest first)
+  const outers = classifiedContours.filter((c) => !c.isHole);
+  const holes = classifiedContours.filter((c) => c.isHole);
+  outers.sort((a, b) => b.absArea - a.absArea);
+
+  // Group: assign each hole to the smallest outer whose bbox contains it
+  type ContourGroup = { outer: number[]; holes: number[][] };
+  const groups: ContourGroup[] = outers.map((o) => ({ outer: o.coords, holes: [] }));
+
+  for (const hole of holes) {
+    // Find the smallest containing outer by bounding box
+    let bestIdx = -1;
+    let bestArea = Infinity;
+    const hCx = (hole.minX + hole.maxX) / 2;
+    const hCy = (hole.minY + hole.maxY) / 2;
+    for (let i = 0; i < outers.length; i++) {
+      const o = outers[i];
+      if (hCx >= o.minX && hCx <= o.maxX && hCy >= o.minY && hCy <= o.maxY) {
+        if (o.absArea < bestArea) {
+          bestArea = o.absArea;
+          bestIdx = i;
+        }
+      }
+    }
+    if (bestIdx >= 0) {
+      groups[bestIdx].holes.push(hole.coords);
+    }
+    // Holes not contained by any outer are dropped
   }
 
   // Tessellate each group

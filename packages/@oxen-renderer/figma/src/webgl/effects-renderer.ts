@@ -5,9 +5,9 @@
  * and multi-pass rendering.
  */
 
-import type { DropShadowEffect, InnerShadowEffect } from "../scene-graph/types";
+import type { DropShadowEffect, InnerShadowEffect, LayerBlurEffect } from "../scene-graph/types";
 import type { Framebuffer } from "./framebuffer";
-import { createFramebuffer, deleteFramebuffer, bindFramebuffer } from "./framebuffer";
+import { createFramebuffer, createFramebufferWithStencil, deleteFramebuffer, bindFramebuffer } from "./framebuffer";
 
 /**
  * Gaussian blur shader (separable 2-pass)
@@ -36,10 +36,17 @@ export const gaussianBlurFragmentShader = `
     vec4 color = vec4(0.0);
     float totalWeight = 0.0;
 
-    // 9-tap Gaussian kernel
-    for (float i = -4.0; i <= 4.0; i += 1.0) {
-      float weight = exp(-0.5 * (i * i) / max(u_radius * 0.5, 0.5));
-      vec2 offset = u_direction * u_texelSize * i * u_radius * 0.25;
+    // u_radius = per-pass sigma (in texels)
+    float sigma = max(u_radius, 0.001);
+    float invTwoSigmaSq = -0.5 / (sigma * sigma);
+    // spacing: cover ±3σ with 13 taps → spacing = σ/2, clamped to ≥1 texel
+    float spacing = max(sigma * 0.5, 1.0);
+
+    // 13-tap Gaussian kernel (i = -6..6)
+    for (float i = -6.0; i <= 6.0; i += 1.0) {
+      float d = i * spacing;
+      float weight = exp(invTwoSigmaSq * d * d);
+      vec2 offset = u_direction * u_texelSize * d;
       color += texture2D(u_texture, v_texCoord + offset) * weight;
       totalWeight += weight;
     }
@@ -105,6 +112,23 @@ export const innerShadowFragmentShader = `
 `;
 
 /**
+ * Blit (copy) shader for compositing FBO texture to screen with opacity
+ */
+export const blitFragmentShader = `
+  precision mediump float;
+
+  uniform sampler2D u_texture;
+  uniform float u_opacity;
+
+  varying vec2 v_texCoord;
+
+  void main() {
+    vec4 texel = texture2D(u_texture, v_texCoord);
+    gl_FragColor = texel * u_opacity;
+  }
+`;
+
+/**
  * Effects renderer state
  */
 export class EffectsRenderer {
@@ -112,10 +136,12 @@ export class EffectsRenderer {
   private blurProgram: WebGLProgram | null = null;
   private compositeProgram: WebGLProgram | null = null;
   private innerShadowProgram: WebGLProgram | null = null;
+  private blitProgram: WebGLProgram | null = null;
   private fullscreenQuad: WebGLBuffer | null = null;
   private tempFBO1: Framebuffer | null = null;
   private tempFBO2: Framebuffer | null = null;
   private shapeFBO: Framebuffer | null = null;
+  private layerFBO: Framebuffer | null = null;
 
   constructor(gl: WebGLRenderingContext) {
     this.gl = gl;
@@ -283,9 +309,84 @@ export class EffectsRenderer {
     gl.activeTexture(gl.TEXTURE0);
   }
 
+  /**
+   * Begin off-screen rendering for layer blur.
+   *
+   * Redirects rendering to a stencil-enabled FBO so the caller can render
+   * the full node subtree (including clipping) into it.
+   *
+   * @returns The layer FBO that rendering is directed to
+   */
+  beginLayerCapture(canvasWidth: number, canvasHeight: number): Framebuffer {
+    const gl = this.gl;
+    this.ensureLayerFBO(canvasWidth, canvasHeight);
+
+    bindFramebuffer(gl, this.layerFBO!);
+    gl.viewport(0, 0, canvasWidth, canvasHeight);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+
+    return this.layerFBO!;
+  }
+
+  /**
+   * End off-screen capture, blur the captured content, and composite to screen.
+   *
+   * @param canvasWidth - Canvas width in physical pixels
+   * @param canvasHeight - Canvas height in physical pixels
+   * @param effect - Layer blur effect parameters
+   * @param pixelRatio - Device pixel ratio
+   */
+  endLayerCaptureAndBlur(
+    canvasWidth: number,
+    canvasHeight: number,
+    effect: LayerBlurEffect,
+    pixelRatio: number
+  ): void {
+    const gl = this.gl;
+    this.ensureResources(canvasWidth, canvasHeight);
+    this.ensureBlitProgram();
+
+    // Blur the captured layer
+    const blurred = this.applyGaussianBlur(this.layerFBO!, effect.radius * pixelRatio);
+
+    // Composite blurred layer back to screen
+    bindFramebuffer(gl, null);
+    gl.viewport(0, 0, canvasWidth, canvasHeight);
+
+    const program = this.blitProgram!;
+    gl.useProgram(program);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, blurred.texture);
+    gl.uniform1i(gl.getUniformLocation(program, "u_texture"), 0);
+    gl.uniform1f(gl.getUniformLocation(program, "u_opacity"), 1.0);
+
+    gl.enable(gl.BLEND);
+    gl.blendFuncSeparate(
+      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
+      gl.ONE, gl.ONE_MINUS_SRC_ALPHA
+    );
+    this.drawFullscreenQuad(program);
+  }
+
   private ensureInnerShadowProgram(): void {
     if (!this.innerShadowProgram) {
       this.innerShadowProgram = this.compileProgram(compositeVertexShader, innerShadowFragmentShader);
+    }
+  }
+
+  private ensureLayerFBO(width: number, height: number): void {
+    const gl = this.gl;
+    if (!this.layerFBO || this.layerFBO.width !== width || this.layerFBO.height !== height) {
+      if (this.layerFBO) deleteFramebuffer(gl, this.layerFBO);
+      this.layerFBO = createFramebufferWithStencil(gl, width, height);
+    }
+  }
+
+  private ensureBlitProgram(): void {
+    if (!this.blitProgram) {
+      this.blitProgram = this.compileProgram(compositeVertexShader, blitFragmentShader);
     }
   }
 
@@ -298,37 +399,54 @@ export class EffectsRenderer {
   }
 
   /**
-   * Apply a Gaussian blur to a framebuffer texture
+   * Apply a Gaussian blur to a framebuffer texture.
    *
-   * Uses a separable 2-pass approach (horizontal + vertical).
+   * Uses a separable 2-pass (H+V) approach with multi-pass iteration
+   * for larger radii to maintain quality. Matches SVG feGaussianBlur
+   * convention: sigma = radius / 2.
    *
    * @param source - Source framebuffer to blur
-   * @param radius - Blur radius in pixels
-   * @returns Blurred framebuffer (caller must not delete source)
+   * @param radius - Blur radius in physical pixels (sigma = radius / 2)
+   * @returns Blurred framebuffer (always tempFBO2; caller must not delete source)
    */
   applyGaussianBlur(source: Framebuffer, radius: number): Framebuffer {
     const gl = this.gl;
     this.ensureResources(source.width, source.height);
 
-    const target1 = this.tempFBO1!;
-    const target2 = this.tempFBO2!;
+    // sigma = radius / 2 to match SVG feGaussianBlur stdDeviation convention
+    const sigmaTotal = radius / 2;
 
-    // Pass 1: Horizontal blur (source → target1)
-    bindFramebuffer(gl, target1);
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    this.drawBlurPass(source.texture, source.width, source.height, 1, 0, radius);
+    // Multi-pass: each pass can effectively blur sigma ≤ 3 texels with 13-tap kernel
+    // (13 taps at spacing = max(sigma*0.5, 1) covers ±3σ without excessive aliasing)
+    const maxSigmaPerPass = 3;
+    const numPasses = Math.max(1, Math.ceil(sigmaTotal / maxSigmaPerPass));
+    // Gaussian convolution: N passes of sigma_each → combined sigma = sigma_each * sqrt(N)
+    const sigmaPerPass = sigmaTotal / Math.sqrt(numPasses);
 
-    // Pass 2: Vertical blur (target1 → target2)
-    bindFramebuffer(gl, target2);
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    this.drawBlurPass(target1.texture, target1.width, target1.height, 0, 1, radius);
+    const width = source.width;
+    const height = source.height;
+    let currentSource: Framebuffer = source;
+
+    for (let p = 0; p < numPasses; p++) {
+      // H: read currentSource → write tempFBO1
+      bindFramebuffer(gl, this.tempFBO1!);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      this.drawBlurPass(currentSource.texture, width, height, 1, 0, sigmaPerPass);
+
+      // V: read tempFBO1 → write tempFBO2
+      bindFramebuffer(gl, this.tempFBO2!);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      this.drawBlurPass(this.tempFBO1!.texture, width, height, 0, 1, sigmaPerPass);
+
+      currentSource = this.tempFBO2!;
+    }
 
     // Restore default framebuffer
     bindFramebuffer(gl, null);
 
-    return target2;
+    return this.tempFBO2!;
   }
 
   private drawBlurPass(
@@ -423,9 +541,11 @@ export class EffectsRenderer {
     if (this.blurProgram) gl.deleteProgram(this.blurProgram);
     if (this.compositeProgram) gl.deleteProgram(this.compositeProgram);
     if (this.innerShadowProgram) gl.deleteProgram(this.innerShadowProgram);
+    if (this.blitProgram) gl.deleteProgram(this.blitProgram);
     if (this.fullscreenQuad) gl.deleteBuffer(this.fullscreenQuad);
     if (this.tempFBO1) deleteFramebuffer(gl, this.tempFBO1);
     if (this.tempFBO2) deleteFramebuffer(gl, this.tempFBO2);
     if (this.shapeFBO) deleteFramebuffer(gl, this.shapeFBO);
+    if (this.layerFBO) deleteFramebuffer(gl, this.layerFBO);
   }
 }

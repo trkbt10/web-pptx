@@ -47,8 +47,6 @@ import {
   feOffset,
   feBlend,
   feComposite,
-  feMerge,
-  feMergeNode,
   unsafeSvg,
   type SvgString,
   EMPTY_SVG,
@@ -210,6 +208,7 @@ function renderEffectsFilter(effects: readonly Effect[], defsCol: SvgDefsCollect
 
   const id = defsCol.generateId("filter");
   const primitives: SvgString[] = [];
+  let shapeEstablished = false;
 
   for (const effect of effects) {
     switch (effect.type) {
@@ -217,31 +216,47 @@ function renderEffectsFilter(effects: readonly Effect[], defsCol: SvgDefsCollect
         const stdDev = effect.radius / 2;
         primitives.push(
           feFlood({ "flood-opacity": 0, result: "BackgroundImageFix" }),
-          feColorMatrix({ in: "SourceAlpha", values: "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0", result: "hardAlpha" }),
+          feColorMatrix({ in: "SourceAlpha", type: "matrix", values: "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0", result: "hardAlpha" }),
           feOffset({ dx: effect.offset.x, dy: effect.offset.y }),
           feGaussianBlur({ stdDeviation: stdDev }),
           feColorMatrix({
+            type: "matrix",
             values: `0 0 0 0 ${effect.color.r} 0 0 0 0 ${effect.color.g} 0 0 0 0 ${effect.color.b} 0 0 0 ${effect.color.a} 0`,
           }),
           feBlend({ mode: "normal", in2: "BackgroundImageFix" }),
           feBlend({ mode: "normal", in: "SourceGraphic", in2: "effect", result: "shape" })
         );
+        shapeEstablished = true;
         break;
       }
 
       case "inner-shadow": {
         const stdDev = effect.radius / 2;
+        // Establish "shape" base if not set by a preceding drop shadow
+        if (!shapeEstablished) {
+          primitives.push(
+            feFlood({ "flood-opacity": 0, result: "BackgroundImageFix" }),
+            feBlend({ mode: "normal", in: "SourceGraphic", in2: "BackgroundImageFix", result: "shape" })
+          );
+          shapeEstablished = true;
+        }
+        // Figma-standard inner shadow filter:
+        // 1. Binarize source alpha (×127 clamps to 1.0)
+        // 2. Offset
+        // 3. Blur
+        // 4. arithmetic: hardAlpha − blurred → inner edge mask
+        // 5. Colorize with shadow color
+        // 6. Blend onto shape
         primitives.push(
-          feFlood({ "flood-color": colorToHex(effect.color), result: "flood" }),
-          feComposite({ in: "flood", in2: "SourceAlpha", operator: "in" }),
+          feColorMatrix({ in: "SourceAlpha", type: "matrix", values: "0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0", result: "hardAlpha" }),
           feOffset({ dx: effect.offset.x, dy: effect.offset.y }),
           feGaussianBlur({ stdDeviation: stdDev }),
-          feComposite({ in2: "SourceAlpha", operator: "out" }),
-          feMerge(
-            {},
-            feMergeNode({ in: "SourceGraphic" }),
-            feMergeNode({ in: "effect" })
-          )
+          feComposite({ in2: "hardAlpha", operator: "arithmetic", k2: -1, k3: 1 }),
+          feColorMatrix({
+            type: "matrix",
+            values: `0 0 0 0 ${effect.color.r} 0 0 0 0 ${effect.color.g} 0 0 0 0 ${effect.color.b} 0 0 0 ${effect.color.a} 0`,
+          }),
+          feBlend({ mode: "normal", in2: "shape", result: "shape" })
         );
         break;
       }

@@ -55,6 +55,41 @@ export function tessellateTextNode(
 }
 
 /**
+ * Word-wrap a single line of text to fit within maxWidth using Canvas2D measureText
+ */
+function wrapLine(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+): string[] {
+  if (maxWidth <= 0) return [text];
+
+  const measured = ctx.measureText(text);
+  if (measured.width <= maxWidth) return [text];
+
+  const words = text.split(/(\s+)/);
+  const lines: string[] = [];
+  let currentLine = "";
+
+  for (const word of words) {
+    const testLine = currentLine + word;
+    const testWidth = ctx.measureText(testLine).width;
+
+    if (testWidth > maxWidth && currentLine.length > 0) {
+      lines.push(currentLine);
+      currentLine = word.trimStart();
+    } else {
+      currentLine = testLine;
+    }
+  }
+  if (currentLine.length > 0) {
+    lines.push(currentLine);
+  }
+
+  return lines.length > 0 ? lines : [text];
+}
+
+/**
  * Render fallback text using Canvas 2D
  *
  * Creates a texture from canvas-rendered text for nodes without glyph outlines.
@@ -71,19 +106,23 @@ export function renderFallbackTextToCanvas(
   const fb = node.fallbackText;
   if (fb.lines.length === 0) return null;
 
-  // Calculate canvas bounds from text positions
-  let maxX = 0;
-  let maxY = 0;
-  for (const line of fb.lines) {
-    // Rough estimate of text bounds
-    maxX = Math.max(maxX, line.x + fb.fontSize * line.text.length * 0.6);
-    maxY = Math.max(maxY, line.y + fb.fontSize);
-  }
-
   const canvas = document.createElement("canvas");
-  const padding = fb.fontSize * 0.5;
-  canvas.width = Math.ceil(maxX + padding);
-  canvas.height = Math.ceil(maxY + padding);
+  const hasSize = node.width > 0 && node.height > 0;
+
+  if (hasSize) {
+    canvas.width = Math.ceil(node.width);
+    canvas.height = Math.ceil(node.height);
+  } else {
+    let maxX = 0;
+    let maxY = 0;
+    for (const line of fb.lines) {
+      maxX = Math.max(maxX, line.x + fb.fontSize * line.text.length * 0.6);
+      maxY = Math.max(maxY, line.y + fb.fontSize);
+    }
+    const padding = fb.fontSize * 0.5;
+    canvas.width = Math.ceil(maxX + padding);
+    canvas.height = Math.ceil(maxY + padding);
+  }
 
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
@@ -115,9 +154,22 @@ export function renderFallbackTextToCanvas(
     (ctx as CanvasRenderingContext2D & { letterSpacing: string }).letterSpacing = `${fb.letterSpacing}px`;
   }
 
-  // Render each line
+  // Render each line, with word wrapping if the node has a fixed width
+  const lineHeight = fb.lineHeight;
+  let currentY = fb.lines[0]?.y ?? fb.fontSize;
+
   for (const line of fb.lines) {
-    ctx.fillText(line.text, line.x, line.y);
+    if (hasSize && canvas.width > 0) {
+      // Word-wrap within the text box width
+      const wrappedLines = wrapLine(ctx, line.text, canvas.width - line.x);
+      for (const wrappedText of wrappedLines) {
+        ctx.fillText(wrappedText, line.x, currentY);
+        currentY += lineHeight;
+      }
+    } else {
+      ctx.fillText(line.text, line.x, line.y);
+      currentY = line.y + lineHeight;
+    }
   }
 
   return canvas;

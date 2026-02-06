@@ -20,6 +20,7 @@ import type {
   AffineMatrix,
   Fill,
   Color,
+  LayerBlurEffect,
 } from "../scene-graph/types";
 import { ShaderCache } from "./shaders";
 import {
@@ -105,6 +106,7 @@ export class WebGLFigmaRenderer {
   private textureCache: TextureCache;
   private effectsRenderer: EffectsRenderer;
   private clipActive: boolean = false;
+  private clipStencilValid: boolean = false;
 
   constructor(options: WebGLRendererOptions) {
     const gl = options.canvas.getContext("webgl", {
@@ -206,6 +208,7 @@ export class WebGLFigmaRenderer {
 
     // Render scene tree
     this.clipActive = false;
+    this.clipStencilValid = false;
     this.renderNode(scene.root, IDENTITY_MATRIX, 1);
   }
 
@@ -222,6 +225,22 @@ export class WebGLFigmaRenderer {
     const worldTransform = multiplyMatrices(parentTransform, node.transform);
     const worldOpacity = parentOpacity * node.opacity;
 
+    // Check for layer blur effect — render to FBO, blur, composite
+    const layerBlur = this.findLayerBlur(node);
+    if (layerBlur) {
+      this.renderWithLayerBlur(node, worldTransform, worldOpacity, layerBlur);
+      return;
+    }
+
+    this.renderNodeDirect(node, worldTransform, worldOpacity);
+  }
+
+  /** Render a node directly (without layer blur redirection) */
+  private renderNodeDirect(
+    node: SceneNode,
+    worldTransform: AffineMatrix,
+    worldOpacity: number
+  ): void {
     switch (node.type) {
       case "group":
         this.renderGroup(node, worldTransform, worldOpacity);
@@ -245,6 +264,57 @@ export class WebGLFigmaRenderer {
         this.renderImage(node, worldTransform, worldOpacity);
         break;
     }
+  }
+
+  /** Find a layer-blur effect on this node, if any */
+  private findLayerBlur(node: SceneNode): LayerBlurEffect | null {
+    if (!("effects" in node)) return null;
+    for (const effect of node.effects) {
+      if (effect.type === "layer-blur" && effect.radius > 0) return effect;
+    }
+    return null;
+  }
+
+  /**
+   * Render a node with layer blur: capture to FBO → blur → composite.
+   * The FBO has its own stencil buffer so clipping works inside it.
+   */
+  private renderWithLayerBlur(
+    node: SceneNode,
+    worldTransform: AffineMatrix,
+    worldOpacity: number,
+    effect: LayerBlurEffect
+  ): void {
+    const gl = this.gl;
+    const canvasW = this.width * this.pixelRatio;
+    const canvasH = this.height * this.pixelRatio;
+
+    // Begin FBO capture
+    this.effectsRenderer.beginLayerCapture(canvasW, canvasH);
+
+    // Save and reset clip state (FBO has fresh stencil)
+    const wasClipActive = this.clipActive;
+    this.clipActive = false;
+
+    // Render node normally into the FBO
+    this.renderNodeDirect(node, worldTransform, worldOpacity);
+
+    // Restore clip state and composite blurred result
+    this.clipActive = wasClipActive;
+
+    // Restore blending state (may have been modified by inner renders)
+    gl.enable(gl.BLEND);
+    gl.blendFuncSeparate(
+      gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
+      gl.ONE, gl.ONE_MINUS_SRC_ALPHA
+    );
+
+    // Restore stencil state for clip
+    if (wasClipActive) {
+      gl.enable(gl.STENCIL_TEST);
+    }
+
+    this.effectsRenderer.endLayerCaptureAndBlur(canvasW, canvasH, effect, this.pixelRatio);
   }
 
   private renderGroup(node: GroupNode, transform: AffineMatrix, opacity: number): void {
@@ -280,6 +350,7 @@ export class WebGLFigmaRenderer {
 
     // Clipping
     const wasClipActive = this.clipActive;
+    const wasClipStencilValid = this.clipStencilValid;
     if (node.clipsContent) {
       const clipShape = node.clip ?? {
         type: "rect" as const,
@@ -291,6 +362,7 @@ export class WebGLFigmaRenderer {
         drawSolidFill(this.glContext, vertices, { r: 0, g: 0, b: 0, a: 1 }, transform, 1);
       });
       this.clipActive = true;
+      this.clipStencilValid = true;
     }
 
     // Render children
@@ -301,6 +373,10 @@ export class WebGLFigmaRenderer {
     if (node.clipsContent) {
       endStencilClip(this.gl);
       this.clipActive = wasClipActive;
+      // After a nested clip ends, the parent's clip stencil bit has been
+      // destroyed by the child's beginStencilClip (which clears the buffer).
+      // Mark it as invalid so stencil fills fall back to clip-unaware mode.
+      this.clipStencilValid = wasClipActive ? false : wasClipStencilValid;
     }
   }
 
@@ -355,31 +431,51 @@ export class WebGLFigmaRenderer {
   /**
    * Render a path node.
    *
-   * Strategy:
-   * - Multi-contour paths → always stencil (earcut's hole detection unreliable)
-   * - Single-contour paths → earcut first (fast), stencil fallback if empty
+   * Each contour is rendered independently (matching SVG per-geometry-entry rendering).
+   * - Simple contours (single sub-path): earcut tessellation (fast, correct)
+   * - Complex contours (multiple sub-paths + evenodd): stencil INVERT for outline rendering
    */
   private renderPath(node: PathNode, transform: AffineMatrix, opacity: number): void {
     if (node.contours.length === 0) return;
 
-    if (node.contours.length === 1) {
-      // Single contour — try earcut first (fast, correct for simple shapes)
-      const vertices = tessellateContours(node.contours);
-      if (vertices.length > 0) {
-        this.renderDropShadows(node, vertices, transform, opacity);
-        if (node.fills.length > 0) {
-          const elementSize = computeBoundingBox(vertices);
-          for (const fill of node.fills) {
-            this.drawFill(vertices, fill, transform, opacity, elementSize);
+    let didDropShadows = false;
+
+    for (const contour of node.contours) {
+      // Evenodd contours need stencil-based INVERT rendering to correctly handle
+      // self-intersecting paths (stroke outlines) and multi-sub-path shapes.
+      const needsStencil = contour.windingRule === "evenodd";
+
+      if (needsStencil) {
+        // Multiple sub-paths with evenodd: stencil INVERT for outline rendering
+        const prepared = prepareFanTriangles([contour]);
+        if (prepared) {
+          const { fanVertices, bounds } = prepared;
+          const coverQuad = generateCoverQuad(bounds);
+          const elementSize = { width: bounds.maxX - bounds.minX, height: bounds.maxY - bounds.minY };
+          if (!didDropShadows) {
+            this.renderDropShadowsStencil(node, fanVertices, coverQuad, bounds, transform, opacity);
+            didDropShadows = true;
+          }
+          if (node.fills.length > 0) {
+            this.drawStencilFill(fanVertices, coverQuad, transform, opacity, elementSize, node.fills);
           }
         }
       } else {
-        // Earcut failed — fall back to stencil
-        this.renderPathStencil(node, transform, opacity);
+        // Simple contour: earcut tessellation
+        const vertices = tessellateContours([contour], 0.25);
+        if (vertices.length > 0) {
+          if (!didDropShadows) {
+            this.renderDropShadows(node, vertices, transform, opacity);
+            didDropShadows = true;
+          }
+          if (node.fills.length > 0) {
+            const elementSize = computeBoundingBox(vertices);
+            for (const fill of node.fills) {
+              this.drawFill(vertices, fill, transform, opacity, elementSize);
+            }
+          }
+        }
       }
-    } else {
-      // Multiple contours — always use stencil for correct hole handling
-      this.renderPathStencil(node, transform, opacity);
     }
 
     // Stroke (using polyline thickening)
@@ -409,35 +505,26 @@ export class WebGLFigmaRenderer {
   /**
    * Render text node.
    *
-   * Always uses stencil-based fill for glyph outlines. Stencil + MSAA gives
-   * per-sample precision at the actual contour outline, producing better
-   * anti-aliasing than earcut's artificial triangle edges.
-   *
-   * Uses tolerance=0.1 (tighter than default 0.25) for smoother glyph curves.
+   * Prefers Canvas2D texture rendering (proper font rasterization with
+   * anti-aliasing) when fallbackText data is available. Falls back to
+   * stencil-based glyph outlines for exact contour rendering.
    */
   private renderText(node: TextNode, transform: AffineMatrix, opacity: number): void {
     const ctx = this.glContext;
     const color = node.fill.color;
     const fillOpacity = node.fill.opacity;
 
+    // Primary: glyph outlines from .fig derived data (font-independent, exact Figma rendering)
     if (node.glyphContours && node.glyphContours.length > 0) {
-      // Always use stencil for glyph outlines (tighter tolerance for smoother curves)
-      const prepared = prepareFanTriangles(node.glyphContours, 0.1);
-      if (prepared) {
-        const { fanVertices, bounds } = prepared;
-        const coverQuad = generateCoverQuad(bounds);
-        const elementSize = { width: bounds.maxX - bounds.minX, height: bounds.maxY - bounds.minY };
-        this.drawStencilFill(
-          fanVertices, coverQuad, transform, opacity * fillOpacity,
-          elementSize, [{ type: "solid", color, opacity: 1 }]
-        );
-      }
-
-      // Render decorations (underlines, strikethroughs) via stencil too
-      if (node.decorationContours && node.decorationContours.length > 0) {
-        const decPrepared = prepareFanTriangles(node.decorationContours, 0.1);
-        if (decPrepared) {
-          const { fanVertices, bounds } = decPrepared;
+      // Try earcut tessellation first (autoDetectWinding for CFF/TrueType compatibility)
+      const vertices = tessellateContours(node.glyphContours, 0.1, true);
+      if (vertices.length > 0) {
+        drawSolidFill(ctx, vertices, color, transform, opacity * fillOpacity);
+      } else {
+        // Stencil fallback for contours that earcut can't handle
+        const prepared = prepareFanTriangles(node.glyphContours, 0.1);
+        if (prepared) {
+          const { fanVertices, bounds } = prepared;
           const coverQuad = generateCoverQuad(bounds);
           const elementSize = { width: bounds.maxX - bounds.minX, height: bounds.maxY - bounds.minY };
           this.drawStencilFill(
@@ -446,10 +533,18 @@ export class WebGLFigmaRenderer {
           );
         }
       }
+
+      // Render decorations (underlines, strikethroughs)
+      if (node.decorationContours && node.decorationContours.length > 0) {
+        const decVertices = tessellateContours(node.decorationContours, 0.1, true);
+        if (decVertices.length > 0) {
+          drawSolidFill(ctx, decVertices, color, transform, opacity * fillOpacity);
+        }
+      }
       return;
     }
 
-    // Fallback: render text via Canvas 2D → texture
+    // Fallback: Canvas2D text rendering (when glyph outlines not available)
     if (node.fallbackText) {
       const textureKey = `__text_${node.id}`;
       let entry = this.textureCache.getIfCached(textureKey);
@@ -462,8 +557,10 @@ export class WebGLFigmaRenderer {
       }
 
       if (entry) {
-        const vertices = generateRectVertices(entry.width, entry.height);
-        const elementSize = { width: entry.width, height: entry.height };
+        const w = node.width > 0 ? node.width : entry.width;
+        const h = node.height > 0 ? node.height : entry.height;
+        const vertices = generateRectVertices(w, h);
+        const elementSize = { width: w, height: h };
         drawImageFill(ctx, vertices, entry.texture, transform, opacity * fillOpacity, elementSize);
       }
     }
@@ -494,7 +591,11 @@ export class WebGLFigmaRenderer {
    * 3. Clean up stencil fill bits
    *
    * Uses bits 0-6 (FILL_STENCIL_MASK = 0x7F) for fill, bit 7 (0x80) for clip.
-   * Works correctly with frame clipping: fan triangles only write where clip passes.
+   *
+   * Note: Nested clips can destroy the parent's clip stencil bit. When this
+   * happens, stencil fills inside the clip would fail because the clip bit is
+   * no longer set. We detect this by checking clipStencilValid and fall back
+   * to clip-unaware mode (the fill is still spatially inside the clip region).
    */
   private drawStencilFill(
     fanVertices: Float32Array,
@@ -505,7 +606,8 @@ export class WebGLFigmaRenderer {
     fills: readonly Fill[]
   ): void {
     const gl = this.gl;
-    const isClipActive = this.clipActive;
+    // Only use clip-aware stencil mode when the clip stencil bit is actually valid
+    const useClipAwareMode = this.clipActive && this.clipStencilValid;
     const white: Color = { r: 1, g: 1, b: 1, a: 1 };
 
     // Step 1: Write fan triangles to stencil via INVERT
@@ -513,10 +615,10 @@ export class WebGLFigmaRenderer {
     gl.colorMask(false, false, false, false);
     gl.stencilMask(FILL_STENCIL_MASK);
 
-    if (!isClipActive) {
+    if (!useClipAwareMode) {
       gl.stencilFunc(gl.ALWAYS, 0, 0xff);
     }
-    // If clip is active, keep existing stencilFunc (EQUAL, CLIP_BIT, CLIP_BIT)
+    // If clip is active AND valid, keep existing stencilFunc (EQUAL, CLIP_BIT, CLIP_BIT)
     // — fan triangles only write where clip passes
 
     gl.stencilOp(gl.KEEP, gl.KEEP, gl.INVERT);
@@ -529,9 +631,9 @@ export class WebGLFigmaRenderer {
     gl.stencilMask(0xff);
     gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
 
-    if (isClipActive) {
+    if (useClipAwareMode) {
       // Clip active: need bit 7 set AND any fill bit set
-      gl.stencilFunc(gl.GREATER, CLIP_STENCIL_BIT, 0xff);
+      gl.stencilFunc(gl.LESS, CLIP_STENCIL_BIT, 0xff);
     } else {
       // Any fill bit set (bits 0-6)
       gl.stencilFunc(gl.NOTEQUAL, 0, FILL_STENCIL_MASK);
@@ -553,7 +655,7 @@ export class WebGLFigmaRenderer {
     gl.colorMask(true, true, true, true);
     gl.stencilMask(0xff);
 
-    if (isClipActive) {
+    if (useClipAwareMode) {
       gl.stencilFunc(gl.EQUAL, CLIP_STENCIL_BIT, CLIP_STENCIL_BIT);
       gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
     } else {

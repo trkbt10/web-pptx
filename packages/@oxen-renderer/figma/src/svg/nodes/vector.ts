@@ -2,16 +2,18 @@
  * @file Vector node renderer
  */
 
-import type { FigNode, FigVectorPath, FigFillGeometry } from "@oxen/fig/types";
+import type { FigNode, FigVectorPath, FigFillGeometry, FigPaint } from "@oxen/fig/types";
 import type { FigBlob } from "@oxen/fig/parser";
 import type { FigSvgRenderContext } from "../../types";
 import { type SvgString, EMPTY_SVG } from "../primitives";
 import { buildTransformAttr } from "../transform";
-import { getFillAttrs } from "../fill";
-import { getStrokeAttrs } from "../stroke";
+import { getFillAttrs, type FillAttrs } from "../fill";
+import { getStrokeAttrs, type StrokeAttrs } from "../stroke";
+import type { GeometryPathData } from "../geometry-path";
 import { decodePathsFromGeometry } from "../geometry-path";
 import { renderPaths } from "../render-paths";
 import { extractBaseProps, extractPaintProps, extractGeometryProps } from "./extract-props";
+import { figColorToHex, getPaintType } from "../../core/color";
 
 // =============================================================================
 // Vector Path Types
@@ -24,10 +26,20 @@ type PathSources = {
   readonly blobs: readonly FigBlob[];
 };
 
+type PathResolution = {
+  readonly paths: readonly GeometryPathData[];
+  /** True when paths come from strokeGeometry (already-expanded outlines) */
+  readonly isStrokeGeometry: boolean;
+};
+
 /**
- * Get paths to render from various sources
+ * Resolve paths to render, tracking the source.
+ *
+ * Priority: vectorPaths → fillGeometry → strokeGeometry.
+ * When strokeGeometry is used, the paths are pre-expanded outlines that
+ * should be *filled* with the stroke colour (not stroked again).
  */
-function getPathsToRender(sources: PathSources): readonly { data: string; windingRule?: "NONZERO" | "EVENODD" | "ODD" }[] {
+function resolvePaths(sources: PathSources): PathResolution {
   const { vectorPaths, fillGeometry, strokeGeometry, blobs } = sources;
 
   // Try vectorPaths first (if available)
@@ -36,7 +48,7 @@ function getPathsToRender(sources: PathSources): readonly { data: string; windin
       .filter((vp) => vp.data)
       .map((vp) => ({ data: vp.data!, windingRule: vp.windingRule }));
     if (paths.length > 0) {
-      return paths;
+      return { paths, isStrokeGeometry: false };
     }
   }
 
@@ -44,16 +56,40 @@ function getPathsToRender(sources: PathSources): readonly { data: string; windin
   if (fillGeometry && fillGeometry.length > 0) {
     const paths = decodePathsFromGeometry(fillGeometry, blobs);
     if (paths.length > 0) {
-      return paths;
+      return { paths, isStrokeGeometry: false };
     }
   }
 
-  // For LINE nodes, use strokeGeometry instead of fillGeometry
+  // Fallback: strokeGeometry (expanded outline — should be filled, not stroked)
   if (strokeGeometry && strokeGeometry.length > 0) {
-    return decodePathsFromGeometry(strokeGeometry, blobs);
+    const paths = decodePathsFromGeometry(strokeGeometry, blobs);
+    if (paths.length > 0) {
+      return { paths, isStrokeGeometry: true };
+    }
   }
 
-  return [];
+  return { paths: [], isStrokeGeometry: false };
+}
+
+/**
+ * Build fill attrs from stroke paints.
+ *
+ * strokeGeometry is Figma's pre-expanded outline of a stroke.
+ * It must be *filled* with the stroke colour instead of being stroked.
+ */
+function strokePaintsToFillAttrs(paints: readonly FigPaint[] | undefined): FillAttrs {
+  if (!paints || paints.length === 0) return { fill: "none" };
+  const visible = paints.find((p) => p.visible !== false);
+  if (!visible) return { fill: "none" };
+
+  if (getPaintType(visible) === "SOLID") {
+    const solid = visible as FigPaint & { color: { r: number; g: number; b: number; a: number } };
+    const hex = figColorToHex(solid.color);
+    const opacity = visible.opacity ?? 1;
+    if (opacity < 1) return { fill: hex, "fill-opacity": opacity };
+    return { fill: hex };
+  }
+  return { fill: "#000000" };
 }
 
 /**
@@ -69,14 +105,26 @@ export function renderVectorNode(
   const vectorPaths = node.vectorPaths;
 
   const transformStr = buildTransformAttr(transform);
-  const fillAttrs = getFillAttrs(fillPaints, ctx);
-  const strokeAttrs = getStrokeAttrs({ paints: strokePaints, strokeWeight });
 
-  // Try vectorPaths first (if available), then fillGeometry, then strokeGeometry
-  const pathsToRender = getPathsToRender({ vectorPaths, fillGeometry, strokeGeometry, blobs: ctx.blobs });
+  const { paths: pathsToRender, isStrokeGeometry } = resolvePaths({
+    vectorPaths, fillGeometry, strokeGeometry, blobs: ctx.blobs,
+  });
 
   if (pathsToRender.length === 0) {
     return EMPTY_SVG;
+  }
+
+  let fillAttrs: FillAttrs;
+  let strokeAttrs: StrokeAttrs;
+
+  if (isStrokeGeometry) {
+    // strokeGeometry paths are pre-expanded outlines — fill them with stroke
+    // colour and do NOT apply an additional stroke.
+    fillAttrs = strokePaintsToFillAttrs(strokePaints);
+    strokeAttrs = {};
+  } else {
+    fillAttrs = getFillAttrs(fillPaints, ctx);
+    strokeAttrs = getStrokeAttrs({ paints: strokePaints, strokeWeight });
   }
 
   return renderPaths({

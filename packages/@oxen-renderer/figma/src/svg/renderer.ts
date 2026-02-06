@@ -18,9 +18,10 @@ import {
 import { renderTextNodeAsPath, type PathRenderContext } from "./nodes/text/path-render";
 import { renderTextNodeFromDerivedData, hasDerivedPathData, type DerivedPathRenderContext } from "./nodes/text/derived-path-render";
 import { getEffectiveSymbolID } from "@oxen/fig/symbols";
-import { cloneSymbolChildren, getInstanceSymbolOverrides, resolveSymbolGuidStr, type FigDerivedSymbolData } from "../symbols/symbol-resolver";
+import { cloneSymbolChildren, collectComponentPropAssignments, getInstanceSymbolOverrides, resolveSymbolGuidStr, type FigDerivedSymbolData } from "../symbols/symbol-resolver";
 import { preResolveSymbols } from "../symbols/symbol-pre-resolver";
 import { resolveInstanceLayout } from "../symbols/constraints";
+import { buildGuidTranslationMap, translateOverrides } from "../symbols/guid-translation";
 import type { FontLoader } from "../font";
 
 // =============================================================================
@@ -261,12 +262,18 @@ function mergeSymbolProperties(instanceNode: FigNode, symbolNode: FigNode): FigN
   if (symbolNode.rectangleCornerRadii) {
     merged.rectangleCornerRadii = symbolNode.rectangleCornerRadii;
   }
-  // fillGeometry
-  if (symbolNode.fillGeometry) {
+  // fillGeometry / strokeGeometry: only copy from SYMBOL if sizes match.
+  // These contain pre-baked paths for the SYMBOL's specific dimensions.
+  // When the INSTANCE is resized, using SYMBOL geometry produces wrong-sized shapes.
+  // The frame renderer falls back to generating rect from size + cornerRadius.
+  const instSize = instanceNode.size;
+  const symSize = symbolNode.size;
+  const sameSize = instSize && symSize &&
+    instSize.x === symSize.x && instSize.y === symSize.y;
+  if (symbolNode.fillGeometry && sameSize) {
     merged.fillGeometry = symbolNode.fillGeometry;
   }
-  // strokeGeometry
-  if (symbolNode.strokeGeometry) {
+  if (symbolNode.strokeGeometry && sameSize) {
     merged.strokeGeometry = symbolNode.strokeGeometry;
   }
   // clipsContent / frameMaskDisabled
@@ -331,18 +338,36 @@ function resolveInstance(
 
   // Try pre-resolved cache first, then use the resolved node directly
   const symNode = ctx.resolvedSymbolCache?.get(resolved.guidStr) ?? resolved.node;
+  // Use original SYMBOL (not pre-resolved) for GUID translation to avoid offset
+  // distortion from expanded INSTANCE children in the descendant set
+  const originalSymNode = resolved.node;
 
   // Merge SYMBOL properties into INSTANCE (inherit fill, stroke, etc.)
   const mergedNode = mergeSymbolProperties(node, symNode);
 
   // Get overrides and derivedSymbolData for transform overrides
-  const symbolOverrides = getInstanceSymbolOverrides(nodeRecord);
-  const derivedSymbolData = nodeRecord.derivedSymbolData as FigDerivedSymbolData | undefined;
+  const rawSymbolOverrides = getInstanceSymbolOverrides(nodeRecord);
+  const rawDerivedSymbolData = nodeRecord.derivedSymbolData as FigDerivedSymbolData | undefined;
+
+  // Translate override GUIDs to match SYMBOL descendant GUIDs
+  const translationMap = buildGuidTranslationMap(
+    originalSymNode.children ?? [],
+    rawDerivedSymbolData,
+    rawSymbolOverrides,
+  );
+  const symbolOverrides = translationMap.size > 0 && rawSymbolOverrides
+    ? translateOverrides(rawSymbolOverrides, translationMap) : rawSymbolOverrides;
+  const derivedSymbolData = translationMap.size > 0 && rawDerivedSymbolData
+    ? translateOverrides(rawDerivedSymbolData, translationMap) as FigDerivedSymbolData : rawDerivedSymbolData;
+
+  // Collect component property assignments for text overrides etc.
+  const componentPropAssignments = collectComponentPropAssignments(nodeRecord);
 
   // Clone SYMBOL children with overrides applied
   const children = cloneSymbolChildren(symNode, {
     symbolOverrides,
     derivedSymbolData,
+    componentPropAssignments: componentPropAssignments.length > 0 ? componentPropAssignments : undefined,
   });
 
   // Layout resolution: adjust child positions/sizes when instance is resized

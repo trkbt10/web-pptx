@@ -3,14 +3,15 @@
  */
 
 import { getNodeType } from "@oxen/fig/parser";
-import type { FigNode, FigVector } from "@oxen/fig/types";
+import type { FigNode, FigVector, FigPaint } from "@oxen/fig/types";
 import type { FigSvgRenderContext } from "../../types";
 import { g, rect, clipPath, path, type SvgString, EMPTY_SVG } from "../primitives";
 import { buildTransformAttr } from "../transform";
-import { getFillAttrs } from "../fill";
-import { getStrokeAttrs } from "../stroke";
+import { getFillAttrs, type FillAttrs } from "../fill";
+import { getStrokeAttrs, type StrokeAttrs } from "../stroke";
 import { decodePathsFromGeometry, mapWindingRule, type FigFillGeometry } from "../geometry-path";
 import { buildPathElements } from "../render-paths";
+import { figColorToHex, getPaintType } from "../../core/color";
 import {
   extractBaseProps,
   extractSizeProps,
@@ -39,17 +40,39 @@ function resolveClipsContent(node: FigNode): boolean {
   return false;
 }
 
+type GeometryResolution = {
+  readonly geometry: readonly FigFillGeometry[] | undefined;
+  readonly isStrokeGeometry: boolean;
+};
+
 function selectGeometry(
   fillGeometry: readonly FigFillGeometry[] | undefined,
   strokeGeometry: readonly FigFillGeometry[] | undefined,
-): readonly FigFillGeometry[] | undefined {
+): GeometryResolution {
   if (fillGeometry && fillGeometry.length > 0) {
-    return fillGeometry;
+    return { geometry: fillGeometry, isStrokeGeometry: false };
   }
   if (strokeGeometry && strokeGeometry.length > 0) {
-    return strokeGeometry;
+    return { geometry: strokeGeometry, isStrokeGeometry: true };
   }
-  return undefined;
+  return { geometry: undefined, isStrokeGeometry: false };
+}
+
+/**
+ * Build fill attrs from stroke paints (for strokeGeometry).
+ */
+function strokePaintsToFillAttrs(paints: readonly FigPaint[] | undefined): FillAttrs {
+  if (!paints || paints.length === 0) return { fill: "none" };
+  const visible = paints.find((p) => p.visible !== false);
+  if (!visible) return { fill: "none" };
+  if (getPaintType(visible) === "SOLID") {
+    const solid = visible as FigPaint & { color: { r: number; g: number; b: number; a: number } };
+    const hex = figColorToHex(solid.color);
+    const opacity = visible.opacity ?? 1;
+    if (opacity < 1) return { fill: hex, "fill-opacity": opacity };
+    return { fill: hex };
+  }
+  return { fill: "#000000" };
 }
 
 function buildClipShapes(
@@ -108,14 +131,23 @@ export function renderFrameNode(
   }
 
   const transformStr = buildTransformAttr(transform);
-  const fillAttrs = getFillAttrs(fillPaints, ctx, { elementSize: { width: size.x, height: size.y } });
-  const strokeAttrs = getStrokeAttrs({ paints: strokePaints, strokeWeight });
+  const baseFillAttrs = getFillAttrs(fillPaints, ctx, { elementSize: { width: size.x, height: size.y } });
+  const baseStrokeAttrs = getStrokeAttrs({ paints: strokePaints, strokeWeight });
 
   const elements: SvgString[] = [];
 
-  const geometry = selectGeometry(fillGeometry, strokeGeometry);
+  const { geometry, isStrokeGeometry } = selectGeometry(fillGeometry, strokeGeometry);
   const decodedPaths = geometry ? decodePathsFromGeometry(geometry, ctx.blobs) : [];
   if (decodedPaths.length > 0) {
+    let fillAttrs: FillAttrs;
+    let strokeAttrs: StrokeAttrs;
+    if (isStrokeGeometry) {
+      fillAttrs = strokePaintsToFillAttrs(strokePaints);
+      strokeAttrs = {};
+    } else {
+      fillAttrs = baseFillAttrs;
+      strokeAttrs = baseStrokeAttrs;
+    }
     elements.push(...buildPathElements(decodedPaths, fillAttrs, strokeAttrs));
   } else {
     const bgRect = rect({
@@ -125,8 +157,8 @@ export function renderFrameNode(
       height: size.y,
       rx,
       ry,
-      ...fillAttrs,
-      ...strokeAttrs,
+      ...baseFillAttrs,
+      ...baseStrokeAttrs,
     });
     elements.push(bgRect);
   }

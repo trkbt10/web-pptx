@@ -43,6 +43,10 @@ export function getValueWithUnits(
     if (unitsName === "PERCENT" && fontSize) {
       return (vwu.value / 100) * fontSize;
     }
+    // RAW = unitless em-relative multiplier (e.g., lineHeight 1.4 = 1.4 × fontSize)
+    if (unitsName === "RAW" && fontSize) {
+      return vwu.value * fontSize;
+    }
     return vwu.value;
   }
   return defaultValue;
