@@ -3,7 +3,7 @@
  */
 
 import type { Color } from "../types";
-import type { TextNodeData } from "./types";
+import type { TextNodeData, DerivedTextNodeData } from "./types";
 import {
   TEXT_ALIGN_H_VALUES,
   TEXT_ALIGN_V_VALUES,
@@ -66,6 +66,7 @@ export class TextNodeBuilder {
   private _fillColor: Color;
   private _visible: boolean;
   private _opacity: number;
+  private _derivedTextData?: DerivedTextNodeData;
 
   constructor(localID: number, parentID: number) {
     this._localID = localID;
@@ -171,6 +172,11 @@ export class TextNodeBuilder {
     return this;
   }
 
+  derivedTextData(data: DerivedTextNodeData): this {
+    this._derivedTextData = data;
+    return this;
+  }
+
   build(): TextNodeData {
     return {
       localID: this._localID,
@@ -224,6 +230,7 @@ export class TextNodeBuilder {
       ],
       visible: this._visible,
       opacity: this._opacity,
+      derivedTextData: this._derivedTextData,
     };
   }
 }

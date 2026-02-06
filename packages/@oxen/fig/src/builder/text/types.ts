@@ -11,6 +11,31 @@ import type {
   TextCase,
 } from "../../constants";
 
+export type DerivedGlyphData = {
+  readonly commandsBlob: number;
+  readonly position: { x: number; y: number };
+  readonly styleID?: number;
+  readonly fontSize: number;
+  readonly firstCharacter: number;
+  readonly advance: number;
+};
+
+export type DerivedBaselineData = {
+  readonly position: { x: number; y: number };
+  readonly width: number;
+  readonly lineY: number;
+  readonly lineHeight: number;
+  readonly lineAscent: number;
+  readonly firstCharacter: number;
+  readonly endCharacter: number;
+};
+
+export type DerivedTextNodeData = {
+  readonly layoutSize?: { x: number; y: number };
+  readonly baselines?: readonly DerivedBaselineData[];
+  readonly glyphs?: readonly DerivedGlyphData[];
+};
+
 export type TextNodeData = {
   readonly localID: number;
   readonly parentID: number;
@@ -37,4 +62,5 @@ export type TextNodeData = {
   readonly fillPaints: readonly Paint[];
   readonly visible: boolean;
   readonly opacity: number;
+  readonly derivedTextData?: DerivedTextNodeData;
 };

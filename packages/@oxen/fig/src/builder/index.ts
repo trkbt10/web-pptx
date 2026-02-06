@@ -21,6 +21,9 @@ export {
   DEFAULT_LETTER_SPACING,
   DEFAULT_AUTO_RESIZE,
   type TextNodeData,
+  type DerivedTextNodeData,
+  type DerivedGlyphData,
+  type DerivedBaselineData,
 } from "./text";
 
 // Frame node builder (from frame/)

@@ -408,6 +408,9 @@ export class FigFileBuilder {
       },
       fillPaints: data.fillPaints,
     });
+    if (data.derivedTextData) {
+      (node as Record<string, unknown>).derivedTextData = data.derivedTextData;
+    }
     this.nodes.push(node);
     return data.localID;
   }

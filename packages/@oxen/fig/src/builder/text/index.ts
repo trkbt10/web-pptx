@@ -3,7 +3,7 @@
  */
 
 // Types
-export type { TextNodeData } from "./types";
+export type { TextNodeData, DerivedTextNodeData, DerivedGlyphData, DerivedBaselineData } from "./types";
 
 // Builder
 export {
