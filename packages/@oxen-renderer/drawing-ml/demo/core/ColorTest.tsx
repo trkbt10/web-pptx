@@ -5,7 +5,7 @@
  */
 
 import { pct } from "@oxen-office/drawing-ml/domain/units";
-import { ColorSwatch, ColorSwatchRow } from "@oxen-renderer/drawing-ml";
+import { ColorSwatch, ColorSwatchRow } from "@oxen-renderer/drawing-ml/react";
 import type { CheckItem } from "../types";
 import { TestSubsection } from "../components";
 

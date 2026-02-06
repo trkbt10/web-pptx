@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback } from "react";
-import { DrawingMLProvider } from "../../src/context";
+import { DrawingMLProvider } from "../../src/react/context";
 import { categories, getDefaultRoute, findFeature } from "../routes";
 import { testColorContext } from "../fixtures";
 import { Sidebar } from "./components/Sidebar";

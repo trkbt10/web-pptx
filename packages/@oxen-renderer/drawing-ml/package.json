@@ -19,45 +19,13 @@
     "dev:demo": "vite --config demo/viewer/vite.config.ts"
   },
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+    "./react": {
+      "types": "./src/react/index.ts",
+      "default": "./src/react/index.ts"
     },
-    "./context": {
-      "types": "./src/context/index.ts",
-      "default": "./src/context/index.ts"
-    },
-    "./color": {
-      "types": "./src/color/index.ts",
-      "default": "./src/color/index.ts"
-    },
-    "./fill": {
-      "types": "./src/fill/index.ts",
-      "default": "./src/fill/index.ts"
-    },
-    "./gradient": {
-      "types": "./src/gradient/index.ts",
-      "default": "./src/gradient/index.ts"
-    },
-    "./effects": {
-      "types": "./src/effects/index.ts",
-      "default": "./src/effects/index.ts"
-    },
-    "./text-fill": {
-      "types": "./src/text-fill/index.ts",
-      "default": "./src/text-fill/index.ts"
-    },
-    "./text-effects": {
-      "types": "./src/text-effects/index.ts",
-      "default": "./src/text-effects/index.ts"
-    },
-    "./text-3d": {
-      "types": "./src/text-3d/index.ts",
-      "default": "./src/text-3d/index.ts"
-    },
-    "./hooks": {
-      "types": "./src/hooks/index.ts",
-      "default": "./src/hooks/index.ts"
+    "./ascii": {
+      "types": "./src/ascii/index.ts",
+      "default": "./src/ascii/index.ts"
     },
     "./demo": {
       "types": "./demo/index.ts",
@@ -66,10 +34,6 @@
     "./demo/fixtures": {
       "types": "./demo/fixtures.ts",
       "default": "./demo/fixtures.ts"
-    },
-    "./ascii": {
-      "types": "./src/ascii/index.ts",
-      "default": "./src/ascii/index.ts"
     }
   }
 }
