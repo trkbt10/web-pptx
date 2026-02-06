@@ -16,6 +16,7 @@ import { columnLetterToIndex } from "@oxen-office/xlsx/domain/cell/address";
 export type PreviewSheet = {
   readonly name: string;
   readonly ascii: string;
+  readonly rows: readonly AsciiSheetRow[];
   readonly rowCount: number;
   readonly colCount: number;
 };
@@ -98,6 +99,7 @@ export async function runPreview(
         results.push({
           name: sheet.name,
           ascii: `(empty sheet: ${sheet.name})`,
+          rows: [],
           rowCount: 0,
           colCount: 0,
         });
@@ -152,6 +154,7 @@ export async function runPreview(
       results.push({
         name: sheet.name,
         ascii,
+        rows: asciiRows,
         rowCount: asciiRows.length,
         colCount,
       });

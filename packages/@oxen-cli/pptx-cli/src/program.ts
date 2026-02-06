@@ -18,6 +18,7 @@ import {
   formatVerifyPretty,
   formatPreviewPretty,
 } from "./output/pretty-output";
+import { formatPreviewMermaid } from "./output/mermaid-output";
 
 export function createProgram(): Command {
   const program = new Command();
@@ -26,7 +27,7 @@ export function createProgram(): Command {
     .name("pptx")
     .description("CLI tool for inspecting PPTX files")
     .version("0.1.0")
-    .option("-o, --output <mode>", "Output mode (json|pretty)", "pretty");
+    .option("-o, --output <mode>", "Output mode (json|pretty|mermaid)", "pretty");
 
   program
     .command("info")
@@ -132,7 +133,7 @@ export function createProgram(): Command {
         return;
       }
       const result = await runPreview(file, slideNumber, { width, border: options.border });
-      output(result, mode, formatPreviewPretty);
+      output(result, mode, formatPreviewPretty, formatPreviewMermaid);
     });
 
   return program;

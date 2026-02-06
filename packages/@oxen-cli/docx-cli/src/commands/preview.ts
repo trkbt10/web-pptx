@@ -14,6 +14,7 @@ import { renderDocxAscii, type AsciiDocBlock, type AsciiParagraph, type AsciiTab
 export type PreviewSection = {
   readonly number: number;
   readonly ascii: string;
+  readonly blocks: readonly AsciiDocBlock[];
   readonly paragraphCount: number;
   readonly tableCount: number;
 };
@@ -185,6 +186,7 @@ export async function runPreview(
       results.push({
         number: i,
         ascii,
+        blocks,
         paragraphCount,
         tableCount,
       });

@@ -12,7 +12,7 @@ import { enrichSlideContent, type FileReader } from "@oxen-office/pptx/parser/sl
 import { createResourceStore } from "@oxen-office/pptx/domain/resource-store";
 import { createRenderContext } from "@oxen-renderer/pptx";
 import { success, error, type Result } from "@oxen-cli/cli-core";
-import { serializeShape, type SerializationContext } from "../serializers/shape-serializer";
+import { serializeShape, type SerializationContext, type ShapeJson } from "../serializers/shape-serializer";
 import { renderSlideAscii } from "@oxen-renderer/pptx/ascii";
 import type { Chart } from "@oxen-office/chart/domain";
 import type { Shape } from "@oxen-office/pptx/domain/shape";
@@ -21,6 +21,7 @@ export type PreviewSlide = {
   readonly number: number;
   readonly filename: string;
   readonly ascii: string;
+  readonly shapes: readonly ShapeJson[];
   readonly shapeCount: number;
 };
 
@@ -104,6 +105,7 @@ export async function runPreview(
         number: apiSlide.number,
         filename: apiSlide.filename,
         ascii,
+        shapes,
         shapeCount: shapes.length,
       });
     }

@@ -5,6 +5,7 @@
   "type": "module",
   "sideEffects": false,
   "dependencies": {
+    "@oxen/mermaid": "workspace:*",
     "@oxen-renderer/drawing-ml": "workspace:*"
   },
   "scripts": {
@@ -20,6 +21,10 @@
     "./ascii": {
       "types": "./src/ascii/index.ts",
       "default": "./src/ascii/index.ts"
+    },
+    "./mermaid": {
+      "types": "./src/mermaid/index.ts",
+      "default": "./src/mermaid/index.ts"
     }
   }
 }

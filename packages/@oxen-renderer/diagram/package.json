@@ -5,6 +5,8 @@
   "type": "module",
   "sideEffects": false,
   "dependencies": {
+    "@oxen/mermaid": "workspace:*",
+    "@oxen-builder/mermaid": "workspace:*",
     "@oxen-office/diagram": "workspace:*",
     "@oxen-office/ooxml": "workspace:*",
     "@oxen-renderer/drawing-ml": "workspace:*"
@@ -35,6 +37,10 @@
     "./ascii": {
       "types": "./src/ascii/index.ts",
       "default": "./src/ascii/index.ts"
+    },
+    "./mermaid": {
+      "types": "./src/mermaid/index.ts",
+      "default": "./src/mermaid/index.ts"
     }
   }
 }

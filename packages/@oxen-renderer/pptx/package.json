@@ -8,6 +8,7 @@
     "@oxen/buffer": "workspace:*",
     "@oxen/color": "workspace:*",
     "@oxen/glyph": "workspace:*",
+    "@oxen/mermaid": "workspace:*",
     "@oxen-office/chart": "workspace:*",
     "@oxen-office/drawing-ml": "workspace:*",
     "@oxen-renderer/chart": "workspace:*",
@@ -62,6 +63,10 @@
     "./ascii": {
       "types": "./src/ascii/index.ts",
       "default": "./src/ascii/index.ts"
+    },
+    "./mermaid": {
+      "types": "./src/mermaid/index.ts",
+      "default": "./src/mermaid/index.ts"
     }
   }
 }
