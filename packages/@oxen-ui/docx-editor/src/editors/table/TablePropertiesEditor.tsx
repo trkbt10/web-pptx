@@ -3,19 +3,22 @@
  *
  * Provides UI controls for editing table-level properties like
  * width, alignment, borders, and cell spacing.
+ * Uses shared TableStyleBandsEditor for the style band toggles.
  */
 
 import { useCallback, type CSSProperties, type ReactNode } from "react";
 import type {
   DocxTableProperties,
-  DocxTableLook,
 } from "@oxen-office/docx/domain/table";
 import type { TableAlignment, TableLayoutType, TableWidth } from "@oxen-office/ooxml/domain/table";
-import { ToggleButton, Input, Select, Toggle } from "@oxen-ui/ui-components/primitives";
+import { ToggleButton, Input, Select } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
 import { AlignLeftIcon, AlignCenterIcon, AlignRightIcon } from "@oxen-ui/ui-components/icons";
 import { iconTokens } from "@oxen-ui/ui-components/design-tokens";
+import { TableStyleBandsEditor } from "@oxen-ui/editor-controls/table";
+import type { TableStyleBands } from "@oxen-ui/editor-controls/types";
+import { docxTableAdapter } from "../../adapters/editor-controls";
 import styles from "./TablePropertiesEditor.module.css";
 
 // =============================================================================
@@ -90,12 +93,11 @@ export function TablePropertiesEditor({
     [value, onChange],
   );
 
-  const handleLookChange = useCallback(
-    (look: Partial<DocxTableLook>) => {
-      onChange({
-        ...value,
-        tblLook: { ...value.tblLook, ...look },
-      });
+  // Handle shared TableStyleBandsEditor onChange
+  const handleBandsChange = useCallback(
+    (update: Partial<TableStyleBands>) => {
+      const updated = docxTableAdapter.applyUpdate(value, update);
+      onChange(updated);
     },
     [value, onChange],
   );
@@ -164,48 +166,13 @@ export function TablePropertiesEditor({
         />
       </FieldGroup>
 
-      {/* Style Bands */}
+      {/* Style Bands - uses shared editor */}
       {showStyleBands && (
-        <FieldGroup label="Style Options">
-          <div className={styles.lookCheckboxes}>
-            <Toggle
-              checked={value.tblLook?.firstRow ?? false}
-              onChange={(checked) => handleLookChange({ firstRow: checked })}
-              label="Header Row"
-              disabled={disabled}
-            />
-            <Toggle
-              checked={value.tblLook?.lastRow ?? false}
-              onChange={(checked) => handleLookChange({ lastRow: checked })}
-              label="Total Row"
-              disabled={disabled}
-            />
-            <Toggle
-              checked={value.tblLook?.firstColumn ?? false}
-              onChange={(checked) => handleLookChange({ firstColumn: checked })}
-              label="First Column"
-              disabled={disabled}
-            />
-            <Toggle
-              checked={value.tblLook?.lastColumn ?? false}
-              onChange={(checked) => handleLookChange({ lastColumn: checked })}
-              label="Last Column"
-              disabled={disabled}
-            />
-            <Toggle
-              checked={!(value.tblLook?.noHBand ?? false)}
-              onChange={(checked) => handleLookChange({ noHBand: !checked })}
-              label="Banded Rows"
-              disabled={disabled}
-            />
-            <Toggle
-              checked={!(value.tblLook?.noVBand ?? true)}
-              onChange={(checked) => handleLookChange({ noVBand: !checked })}
-              label="Banded Columns"
-              disabled={disabled}
-            />
-          </div>
-        </FieldGroup>
+        <TableStyleBandsEditor
+          value={docxTableAdapter.toGeneric(value)}
+          onChange={handleBandsChange}
+          disabled={disabled}
+        />
       )}
 
       {/* Caption and Description */}

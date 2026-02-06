@@ -1,16 +1,19 @@
 /**
  * @file RunPropertiesEditor - Editor for DOCX run properties
  *
- * Provides UI controls for editing text formatting properties like
- * bold, italic, underline, font size, font family, and color.
+ * Wraps the shared TextFormattingEditor with DOCX-specific adapters and slots.
+ * DOCX-specific controls (highlight, vertical align) go in renderExtras.
  */
 
 import { useCallback, type CSSProperties } from "react";
 import type { DocxRunProperties, DocxHighlightColor } from "@oxen-office/docx/domain/run";
 import type { HalfPoints } from "@oxen-office/docx/domain/types";
-import { ToggleButton, Input, Select } from "@oxen-ui/ui-components/primitives";
+import { Select } from "@oxen-ui/ui-components/primitives";
 import { FieldGroup } from "@oxen-ui/ui-components/layout";
 import type { EditorProps, SelectOption } from "@oxen-ui/ui-components/types";
+import { TextFormattingEditor } from "@oxen-ui/editor-controls/text";
+import type { TextFormatting, MixedContext } from "@oxen-ui/editor-controls/types";
+import { docxTextAdapter } from "../../adapters/editor-controls";
 import styles from "./RunPropertiesEditor.module.css";
 
 // =============================================================================
@@ -40,7 +43,7 @@ export type RunPropertiesMixedState = {
 };
 
 // =============================================================================
-// Constants
+// Constants (DOCX-specific)
 // =============================================================================
 
 const HIGHLIGHT_OPTIONS: SelectOption<DocxHighlightColor | "none">[] = [
@@ -69,11 +72,29 @@ const VERTICAL_ALIGN_OPTIONS: SelectOption<"baseline" | "superscript" | "subscri
 ];
 
 // =============================================================================
+// Helpers
+// =============================================================================
+
+/** Convert DOCX RunPropertiesMixedState to generic MixedContext. */
+function toMixedContext(mixed: RunPropertiesMixedState | undefined): MixedContext | undefined {
+  if (!mixed) return undefined;
+  const fields = new Set<string>();
+  if (mixed.b) fields.add("bold");
+  if (mixed.i) fields.add("italic");
+  if (mixed.u) fields.add("underline");
+  if (mixed.strike) fields.add("strikethrough");
+  if (mixed.sz) fields.add("fontSize");
+  if (mixed.rFonts) fields.add("fontFamily");
+  return fields.size > 0 ? { mixedFields: fields } : undefined;
+}
+
+// =============================================================================
 // Component
 // =============================================================================
 
 /**
  * Editor component for DOCX run properties.
+ * Uses shared TextFormattingEditor for common controls.
  */
 export function RunPropertiesEditor({
   value,
@@ -85,71 +106,54 @@ export function RunPropertiesEditor({
   showHighlight = true,
   mixed,
 }: RunPropertiesEditorProps) {
-  const handleBoldToggle = useCallback(
-    (pressed: boolean) => {
-      onChange({ ...value, b: pressed });
-    },
-    [value, onChange],
-  );
+  const generic = docxTextAdapter.toGeneric(value);
+  const mixedCtx = toMixedContext(mixed);
 
-  const handleItalicToggle = useCallback(
-    (pressed: boolean) => {
-      onChange({ ...value, i: pressed });
-    },
-    [value, onChange],
-  );
+  // Handle shared editor onChange
+  const handleSharedChange = useCallback(
+    (update: Partial<TextFormatting>) => {
+      const parts: Partial<DocxRunProperties>[] = [];
 
-  const handleUnderlineToggle = useCallback(
-    (pressed: boolean) => {
-      const newU = pressed ? { val: "single" as const } : undefined;
-      onChange({ ...value, u: newU });
-    },
-    [value, onChange],
-  );
-
-  const handleStrikeToggle = useCallback(
-    (pressed: boolean) => {
-      onChange({ ...value, strike: pressed });
-    },
-    [value, onChange],
-  );
-
-  const handleFontSizeChange = useCallback(
-    (size: string | number) => {
-      const numSize = typeof size === "string" ? parseFloat(size) : size;
-      if (!isNaN(numSize) && numSize > 0) {
-        const halfPoints = (numSize * 2) as HalfPoints;
-        onChange({ ...value, sz: halfPoints, szCs: halfPoints });
+      if ("bold" in update) {
+        parts.push({ b: update.bold ?? undefined });
       }
+      if ("italic" in update) {
+        parts.push({ i: update.italic ?? undefined });
+      }
+      if ("underline" in update) {
+        parts.push({ u: update.underline ? { val: "single" as const } : undefined });
+      }
+      if ("strikethrough" in update) {
+        parts.push({ strike: update.strikethrough ?? undefined });
+      }
+      if ("fontSize" in update && update.fontSize !== undefined) {
+        const hp = (update.fontSize * 2) as HalfPoints;
+        parts.push({ sz: hp, szCs: hp });
+      }
+      if ("fontFamily" in update && update.fontFamily) {
+        parts.push({
+          rFonts: {
+            ...value.rFonts,
+            ascii: update.fontFamily,
+            hAnsi: update.fontFamily,
+            eastAsia: update.fontFamily,
+            cs: update.fontFamily,
+          },
+        });
+      }
+      if ("superscript" in update) {
+        parts.push({ vertAlign: update.superscript ? "superscript" : "baseline" });
+      }
+      if ("subscript" in update) {
+        parts.push({ vertAlign: update.subscript ? "subscript" : "baseline" });
+      }
+
+      onChange({ ...value, ...Object.assign({}, ...parts) });
     },
     [value, onChange],
   );
 
-  const handleFontFamilyChange = useCallback(
-    (family: string | number) => {
-      const familyStr = String(family);
-      onChange({
-        ...value,
-        rFonts: {
-          ...value.rFonts,
-          ascii: familyStr,
-          hAnsi: familyStr,
-          eastAsia: familyStr,
-          cs: familyStr,
-        },
-      });
-    },
-    [value, onChange],
-  );
-
-  const handleColorChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const color = e.target.value.slice(1); // Remove # prefix
-      onChange({ ...value, color: { val: color } });
-    },
-    [value, onChange],
-  );
-
+  // DOCX-specific: highlight dropdown
   const handleHighlightChange = useCallback(
     (highlight: DocxHighlightColor | "none") => {
       if (highlight === "none") {
@@ -163,6 +167,7 @@ export function RunPropertiesEditor({
     [value, onChange],
   );
 
+  // DOCX-specific: vertical alignment select
   const handleVertAlignChange = useCallback(
     (vertAlign: "baseline" | "superscript" | "subscript") => {
       onChange({ ...value, vertAlign });
@@ -170,120 +175,61 @@ export function RunPropertiesEditor({
     [value, onChange],
   );
 
-  const fontSizeInPoints = mixed?.sz ? "" : value.sz ? value.sz / 2 : "";
-  const fontFamily = mixed?.rFonts ? "" : value.rFonts?.ascii ?? value.rFonts?.hAnsi ?? "";
-  const textColor = value.color?.val ?? "000000";
-
   const containerClassName = className ? `${styles.container} ${className}` : styles.container;
 
   return (
-    <div className={containerClassName} style={style}>
-      {/* Font formatting buttons */}
-      <FieldGroup label="Formatting">
-        <div className={styles.formatting}>
-          <ToggleButton
-            pressed={value.b ?? false}
-            onChange={handleBoldToggle}
-            label="B"
-            ariaLabel="Bold"
-            disabled={disabled}
-            mixed={mixed?.b}
-            style={{ fontWeight: 700 }}
-          />
-          <ToggleButton
-            pressed={value.i ?? false}
-            onChange={handleItalicToggle}
-            label="I"
-            ariaLabel="Italic"
-            disabled={disabled}
-            mixed={mixed?.i}
-            style={{ fontStyle: "italic" }}
-          />
-          <ToggleButton
-            pressed={value.u !== undefined}
-            onChange={handleUnderlineToggle}
-            label="U"
-            ariaLabel="Underline"
-            disabled={disabled}
-            mixed={mixed?.u}
-            style={{ textDecoration: "underline" }}
-          />
-          <ToggleButton
-            pressed={value.strike ?? false}
-            onChange={handleStrikeToggle}
-            label="S"
-            ariaLabel="Strikethrough"
-            disabled={disabled}
-            mixed={mixed?.strike}
-            style={{ textDecoration: "line-through" }}
-          />
-        </div>
-      </FieldGroup>
-
-      {/* Font size and family */}
-      <FieldGroup label="Font">
-        <div className={styles.fontSection}>
-          <Input
-            type="number"
-            value={fontSizeInPoints}
-            onChange={handleFontSizeChange}
-            disabled={disabled}
-            placeholder={mixed?.sz ? "Mixed" : "Size"}
-            min={1}
-            max={999}
-            width={60}
-          />
-          <Input
-            type="text"
-            value={fontFamily}
-            onChange={handleFontFamilyChange}
-            disabled={disabled}
-            placeholder={mixed?.rFonts ? "Mixed" : "Font Family"}
-          />
-        </div>
-      </FieldGroup>
-
-      {/* Color */}
-      <FieldGroup label="Color">
-        <div className={styles.colorSection}>
-          <input
-            type="color"
-            value={`#${textColor}`}
-            onChange={handleColorChange}
-            disabled={disabled}
-            title="Text Color"
-          />
-        </div>
-      </FieldGroup>
-
-      {/* Highlight color */}
-      {showHighlight && (
-        <FieldGroup label="Highlight">
-          <div className={styles.highlightSection}>
-            <Select
-              value={(value.highlight ?? "none") as DocxHighlightColor | "none"}
-              onChange={handleHighlightChange}
-              options={HIGHLIGHT_OPTIONS}
-              disabled={disabled}
-            />
-          </div>
-        </FieldGroup>
+    <TextFormattingEditor
+      value={generic}
+      onChange={handleSharedChange}
+      disabled={disabled}
+      className={containerClassName}
+      style={style}
+      features={{ showSuperSubscript: true }}
+      mixed={mixedCtx}
+      renderColorPicker={({ disabled: d }) => (
+        <input
+          type="color"
+          value={`#${value.color?.val ?? "000000"}`}
+          onChange={(e) => {
+            const color = e.target.value.slice(1);
+            onChange({ ...value, color: { val: color } });
+          }}
+          disabled={d}
+          title="Text Color"
+        />
       )}
+      renderExtras={() => (
+        <>
+          {/* DOCX-specific: Highlight */}
+          {showHighlight && (
+            <FieldGroup label="Highlight">
+              <div className={styles.highlightSection}>
+                <Select
+                  value={(value.highlight ?? "none") as DocxHighlightColor | "none"}
+                  onChange={handleHighlightChange}
+                  options={HIGHLIGHT_OPTIONS}
+                  disabled={disabled}
+                />
+              </div>
+            </FieldGroup>
+          )}
 
-      {/* Vertical alignment */}
-      {showSpacing && (
-        <FieldGroup label="Position">
-          <div className={styles.spacingSection}>
-            <Select
-              value={value.vertAlign ?? "baseline"}
-              onChange={handleVertAlignChange}
-              options={VERTICAL_ALIGN_OPTIONS}
-              disabled={disabled}
-            />
-          </div>
-        </FieldGroup>
+          {/* DOCX-specific: Vertical Alignment (detailed select, not just toggle) */}
+          {showSpacing && (
+            <FieldGroup label="Position">
+              <div className={styles.spacingSection}>
+                <Select
+                  value={value.vertAlign ?? "baseline"}
+                  onChange={handleVertAlignChange}
+                  options={VERTICAL_ALIGN_OPTIONS}
+                  disabled={disabled}
+                />
+              </div>
+            </FieldGroup>
+          )}
+        </>
       )}
-    </div>
+    />
   );
 }
 

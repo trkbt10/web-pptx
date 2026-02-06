@@ -9,6 +9,7 @@
     "@oxen-office/docx": "workspace:*",
     "@oxen-office/text-layout": "workspace:*",
     "@oxen-ui/editor-core": "workspace:*",
+    "@oxen-ui/editor-controls": "workspace:*",
     "@oxen-ui/ui-components": "workspace:*"
   },
   "peerDependencies": {
