@@ -9,6 +9,7 @@ import { parseSlide } from "@oxen-office/pptx/parser/slide/slide-parser";
 import { success, error, type Result } from "@oxen-cli/cli-core";
 import type { Shape } from "@oxen-office/pptx/domain/shape";
 import { extractTextFromShape } from "@oxen-office/pptx/domain/text-utils";
+import { hasShapeOfType } from "./utils";
 
 export type SlideListItem = {
   readonly number: number;
@@ -56,18 +57,6 @@ function countShapesRecursive(shapes: readonly Shape[], initial: number): number
 
 function countShapes(shapes: readonly Shape[]): number {
   return countShapesRecursive(shapes, 0);
-}
-
-function hasShapeOfType(shapes: readonly Shape[], check: (shape: Shape) => boolean): boolean {
-  for (const shape of shapes) {
-    if (check(shape)) {
-      return true;
-    }
-    if (shape.type === "grpSp" && hasShapeOfType(shape.children, check)) {
-      return true;
-    }
-  }
-  return false;
 }
 
 function hasTable(shapes: readonly Shape[]): boolean {

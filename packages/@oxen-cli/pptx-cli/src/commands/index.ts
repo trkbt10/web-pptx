@@ -20,3 +20,8 @@ export {
   type Assertion,
 } from "./verify";
 export { runPreview, type PreviewData, type PreviewSlide, type PreviewOptions } from "./preview";
+export { runInventory, type InventoryData } from "./inventory";
+export { runTables, type TablesData, type PptxTableSummaryJson, type TablesOptions } from "./tables";
+export { runImages, type ImagesData, type PptxImageJson, type ImagesOptions } from "./images";
+export { runDiff, type DiffData } from "./diff";
+export { parseSlideRange, getSlideNumbers, hasShapeOfType, collectShapes } from "./utils";

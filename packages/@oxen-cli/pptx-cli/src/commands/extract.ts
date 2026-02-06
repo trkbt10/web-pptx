@@ -9,6 +9,7 @@ import { parseSlide } from "@oxen-office/pptx/parser/slide/slide-parser";
 import { success, error, type Result } from "@oxen-cli/cli-core";
 import type { Shape } from "@oxen-office/pptx/domain/shape";
 import { extractTextFromShape } from "@oxen-office/pptx/domain/text-utils";
+import { getSlideNumbers } from "./utils";
 
 export type SlideTextItem = {
   readonly number: number;
@@ -22,42 +23,6 @@ export type ExtractData = {
 export type ExtractOptions = {
   readonly slides?: string; // Range like "1,3-5"
 };
-
-function parseRangePart(part: string, maxSlide: number, result: number[]): void {
-  if (part.includes("-")) {
-    const [startStr, endStr] = part.split("-").map((s) => s.trim());
-    const start = parseInt(startStr, 10);
-    const end = parseInt(endStr, 10);
-    if (Number.isNaN(start) || Number.isNaN(end)) {
-      return;
-    }
-    for (let i = Math.max(1, start); i <= Math.min(maxSlide, end); i++) {
-      if (!result.includes(i)) {
-        result.push(i);
-      }
-    }
-  } else {
-    const num = parseInt(part, 10);
-    if (!Number.isNaN(num) && num >= 1 && num <= maxSlide && !result.includes(num)) {
-      result.push(num);
-    }
-  }
-}
-
-/**
- * Parse slide range string into slide numbers.
- * Examples: "1", "1,3,5", "1-3", "1-3,5,7-9"
- */
-function parseSlideRange(range: string, maxSlide: number): number[] {
-  const result: number[] = [];
-  const parts = range.split(",").map((s) => s.trim());
-
-  for (const part of parts) {
-    parseRangePart(part, maxSlide, result);
-  }
-
-  return result.sort((a, b) => a - b);
-}
 
 function collectAllText(shapes: readonly Shape[]): string[] {
   const texts: string[] = [];
@@ -73,13 +38,6 @@ function collectAllText(shapes: readonly Shape[]): string[] {
   return texts;
 }
 
-function getSlideNumbers(options: ExtractOptions, count: number): number[] {
-  if (options.slides) {
-    return parseSlideRange(options.slides, count);
-  }
-  return Array.from({ length: count }, (_, i) => i + 1);
-}
-
 /**
  * Extract text from slides in a PPTX file.
  */
@@ -89,7 +47,7 @@ export async function runExtract(filePath: string, options: ExtractOptions): Pro
     const { presentationFile } = await loadPptxBundleFromBuffer(buffer);
     const presentation = openPresentation(presentationFile);
 
-    const slideNumbers = getSlideNumbers(options, presentation.count);
+    const slideNumbers = getSlideNumbers(options.slides, presentation.count);
 
     const items: SlideTextItem[] = [];
 

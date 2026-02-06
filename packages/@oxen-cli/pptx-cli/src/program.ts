@@ -7,6 +7,10 @@ import { runTheme } from "./commands/theme";
 import { runBuild } from "./commands/build";
 import { runVerify } from "./commands/verify";
 import { runPreview } from "./commands/preview";
+import { runInventory } from "./commands/inventory";
+import { runTables } from "./commands/tables";
+import { runImages } from "./commands/images";
+import { runDiff } from "./commands/diff";
 import { output, type OutputMode } from "@oxen-cli/cli-core";
 import {
   formatInfoPretty,
@@ -17,6 +21,10 @@ import {
   formatBuildPretty,
   formatVerifyPretty,
   formatPreviewPretty,
+  formatInventoryPretty,
+  formatTablesPretty,
+  formatImagesPretty,
+  formatDiffPretty,
 } from "./output/pretty-output";
 import { formatPreviewMermaid } from "./output/mermaid-output";
 
@@ -134,6 +142,49 @@ export function createProgram(): Command {
       }
       const result = await runPreview(file, slideNumber, { width, border: options.border });
       output(result, mode, formatPreviewPretty, formatPreviewMermaid);
+    });
+
+  program
+    .command("inventory")
+    .description("Display media inventory summary")
+    .argument("<file>", "PPTX file path")
+    .action(async (file: string) => {
+      const mode = program.opts().output as OutputMode;
+      const result = await runInventory(file);
+      output(result, mode, formatInventoryPretty);
+    });
+
+  program
+    .command("tables")
+    .description("Display table information from slides")
+    .argument("<file>", "PPTX file path")
+    .option("--slides <range>", "Slide range (e.g., \"1,3-5\")")
+    .action(async (file: string, options: { slides?: string }) => {
+      const mode = program.opts().output as OutputMode;
+      const result = await runTables(file, options);
+      output(result, mode, formatTablesPretty);
+    });
+
+  program
+    .command("images")
+    .description("Display embedded image information from slides")
+    .argument("<file>", "PPTX file path")
+    .option("--slides <range>", "Slide range (e.g., \"1,3-5\")")
+    .action(async (file: string, options: { slides?: string }) => {
+      const mode = program.opts().output as OutputMode;
+      const result = await runImages(file, options);
+      output(result, mode, formatImagesPretty);
+    });
+
+  program
+    .command("diff")
+    .description("Compare text content between two PPTX files")
+    .argument("<fileA>", "First PPTX file path")
+    .argument("<fileB>", "Second PPTX file path")
+    .action(async (fileA: string, fileB: string) => {
+      const mode = program.opts().output as OutputMode;
+      const result = await runDiff(fileA, fileB);
+      output(result, mode, formatDiffPretty);
     });
 
   return program;
