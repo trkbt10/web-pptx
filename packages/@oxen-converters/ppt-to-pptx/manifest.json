@@ -1,0 +1,300 @@
+{
+  "name": "web-pptx fixtures",
+  "generated_at": "2026-01-13T02:07:10.036782Z",
+  "slide_size": {
+    "width_in": 13.333,
+    "height_in": 7.5,
+    "pixel_at_72dpi": [
+      960,
+      540
+    ]
+  },
+  "render_pipeline": [
+    "libreoffice:convert-to pdf",
+    "pdftoppm -png -r 72"
+  ],
+  "cases": [
+    {
+      "id": "000_blank",
+      "title": "Blank baseline",
+      "description": "Single blank slide with background fill and centered text.",
+      "tags": [
+        "slide",
+        "background",
+        "text"
+      ],
+      "slides": 1,
+      "level": "core",
+      "paths": {
+        "author_pptx": "cases/000_blank/author.pptx",
+        "ref_ppt": "cases/000_blank/ref.ppt",
+        "ref_pptx": "cases/000_blank/ref.pptx",
+        "render_ppt": "cases/000_blank/render/ppt",
+        "render_pptx": "cases/000_blank/render/pptx"
+      }
+    },
+    {
+      "id": "010_text_basic",
+      "title": "Text basic",
+      "description": "Rich text runs: bold/italic/underline, colors, mixed font sizes, Japanese + emoji.",
+      "tags": [
+        "text",
+        "runs",
+        "fonts",
+        "unicode"
+      ],
+      "slides": 1,
+      "level": "core",
+      "paths": {
+        "author_pptx": "cases/010_text_basic/author.pptx",
+        "ref_ppt": "cases/010_text_basic/ref.ppt",
+        "ref_pptx": "cases/010_text_basic/ref.pptx",
+        "render_ppt": "cases/010_text_basic/render/ppt",
+        "render_pptx": "cases/010_text_basic/render/pptx"
+      }
+    },
+    {
+      "id": "011_text_bullets",
+      "title": "Text bullets",
+      "description": "Bulleted list with multiple nesting levels.",
+      "tags": [
+        "text",
+        "bullets",
+        "paragraph"
+      ],
+      "slides": 1,
+      "level": "core",
+      "paths": {
+        "author_pptx": "cases/011_text_bullets/author.pptx",
+        "ref_ppt": "cases/011_text_bullets/ref.ppt",
+        "ref_pptx": "cases/011_text_bullets/ref.pptx",
+        "render_ppt": "cases/011_text_bullets/render/ppt",
+        "render_pptx": "cases/011_text_bullets/render/pptx"
+      }
+    },
+    {
+      "id": "012_text_alignment",
+      "title": "Text alignment",
+      "description": "Left/center/right alignment + rotated text box.",
+      "tags": [
+        "text",
+        "alignment",
+        "rotation"
+      ],
+      "slides": 1,
+      "level": "extended",
+      "paths": {
+        "author_pptx": "cases/012_text_alignment/author.pptx",
+        "ref_ppt": "cases/012_text_alignment/ref.ppt",
+        "ref_pptx": "cases/012_text_alignment/ref.pptx",
+        "render_ppt": "cases/012_text_alignment/render/ppt",
+        "render_pptx": "cases/012_text_alignment/render/pptx"
+      }
+    },
+    {
+      "id": "020_shapes_basic",
+      "title": "Shapes basic",
+      "description": "Rectangle/oval/triangle with fills, lines, rotation, and text.",
+      "tags": [
+        "shapes",
+        "fill",
+        "line",
+        "rotation",
+        "text"
+      ],
+      "slides": 1,
+      "level": "core",
+      "paths": {
+        "author_pptx": "cases/020_shapes_basic/author.pptx",
+        "ref_ppt": "cases/020_shapes_basic/ref.ppt",
+        "ref_pptx": "cases/020_shapes_basic/ref.pptx",
+        "render_ppt": "cases/020_shapes_basic/render/ppt",
+        "render_pptx": "cases/020_shapes_basic/render/pptx"
+      }
+    },
+    {
+      "id": "021_line_styles",
+      "title": "Line styles",
+      "description": "Straight connectors with solid/dash/round-dot styles.",
+      "tags": [
+        "lines",
+        "dash"
+      ],
+      "slides": 1,
+      "level": "extended",
+      "paths": {
+        "author_pptx": "cases/021_line_styles/author.pptx",
+        "ref_ppt": "cases/021_line_styles/ref.ppt",
+        "ref_pptx": "cases/021_line_styles/ref.pptx",
+        "render_ppt": "cases/021_line_styles/render/ppt",
+        "render_pptx": "cases/021_line_styles/render/pptx"
+      }
+    },
+    {
+      "id": "030_images_basic",
+      "title": "Images basic",
+      "description": "PNG and JPG pictures placed/scaled.",
+      "tags": [
+        "images",
+        "png",
+        "jpg"
+      ],
+      "slides": 1,
+      "level": "core",
+      "paths": {
+        "author_pptx": "cases/030_images_basic/author.pptx",
+        "ref_ppt": "cases/030_images_basic/ref.ppt",
+        "ref_pptx": "cases/030_images_basic/ref.pptx",
+        "render_ppt": "cases/030_images_basic/render/ppt",
+        "render_pptx": "cases/030_images_basic/render/pptx"
+      }
+    },
+    {
+      "id": "031_images_crop_rotate",
+      "title": "Images crop & rotate",
+      "description": "Picture crop and rotation.",
+      "tags": [
+        "images",
+        "crop",
+        "rotation"
+      ],
+      "slides": 1,
+      "level": "extended",
+      "paths": {
+        "author_pptx": "cases/031_images_crop_rotate/author.pptx",
+        "ref_ppt": "cases/031_images_crop_rotate/ref.ppt",
+        "ref_pptx": "cases/031_images_crop_rotate/ref.pptx",
+        "render_ppt": "cases/031_images_crop_rotate/render/ppt",
+        "render_pptx": "cases/031_images_crop_rotate/render/pptx"
+      }
+    },
+    {
+      "id": "040_table_basic",
+      "title": "Table basic",
+      "description": "Simple 4x4 table with header fill and alternating row shading.",
+      "tags": [
+        "table",
+        "cellfill",
+        "text"
+      ],
+      "slides": 1,
+      "level": "extended",
+      "paths": {
+        "author_pptx": "cases/040_table_basic/author.pptx",
+        "ref_ppt": "cases/040_table_basic/ref.ppt",
+        "ref_pptx": "cases/040_table_basic/ref.pptx",
+        "render_ppt": "cases/040_table_basic/render/ppt",
+        "render_pptx": "cases/040_table_basic/render/pptx"
+      }
+    },
+    {
+      "id": "041_table_merged",
+      "title": "Table merged",
+      "description": "Table with merged 2x2 region.",
+      "tags": [
+        "table",
+        "merge"
+      ],
+      "slides": 1,
+      "level": "hard",
+      "paths": {
+        "author_pptx": "cases/041_table_merged/author.pptx",
+        "ref_ppt": "cases/041_table_merged/ref.ppt",
+        "ref_pptx": "cases/041_table_merged/ref.pptx",
+        "render_ppt": "cases/041_table_merged/render/ppt",
+        "render_pptx": "cases/041_table_merged/render/pptx"
+      }
+    },
+    {
+      "id": "050_chart_bar",
+      "title": "Chart bar",
+      "description": "Clustered column chart (two series).",
+      "tags": [
+        "chart",
+        "embedded",
+        "drawingml"
+      ],
+      "slides": 1,
+      "level": "hard",
+      "paths": {
+        "author_pptx": "cases/050_chart_bar/author.pptx",
+        "ref_ppt": "cases/050_chart_bar/ref.ppt",
+        "ref_pptx": "cases/050_chart_bar/ref.pptx",
+        "render_ppt": "cases/050_chart_bar/render/ppt",
+        "render_pptx": "cases/050_chart_bar/render/pptx"
+      }
+    },
+    {
+      "id": "051_chart_line",
+      "title": "Chart line",
+      "description": "Line chart with markers and gridlines.",
+      "tags": [
+        "chart",
+        "embedded"
+      ],
+      "slides": 1,
+      "level": "hard",
+      "paths": {
+        "author_pptx": "cases/051_chart_line/author.pptx",
+        "ref_ppt": "cases/051_chart_line/ref.ppt",
+        "ref_pptx": "cases/051_chart_line/ref.pptx",
+        "render_ppt": "cases/051_chart_line/render/ppt",
+        "render_pptx": "cases/051_chart_line/render/pptx"
+      }
+    },
+    {
+      "id": "060_hyperlink",
+      "title": "Hyperlink",
+      "description": "Text run hyperlink + shape click hyperlink.",
+      "tags": [
+        "hyperlink",
+        "rels"
+      ],
+      "slides": 1,
+      "level": "extended",
+      "paths": {
+        "author_pptx": "cases/060_hyperlink/author.pptx",
+        "ref_ppt": "cases/060_hyperlink/ref.ppt",
+        "ref_pptx": "cases/060_hyperlink/ref.pptx",
+        "render_ppt": "cases/060_hyperlink/render/ppt",
+        "render_pptx": "cases/060_hyperlink/render/pptx"
+      }
+    },
+    {
+      "id": "070_notes",
+      "title": "Speaker notes",
+      "description": "Notes slide text (including Japanese).",
+      "tags": [
+        "notes"
+      ],
+      "slides": 1,
+      "level": "extended",
+      "paths": {
+        "author_pptx": "cases/070_notes/author.pptx",
+        "ref_ppt": "cases/070_notes/ref.ppt",
+        "ref_pptx": "cases/070_notes/ref.pptx",
+        "render_ppt": "cases/070_notes/render/ppt",
+        "render_pptx": "cases/070_notes/render/pptx"
+      }
+    },
+    {
+      "id": "080_multislide",
+      "title": "Multi-slide",
+      "description": "Three slides to test slide order + mixed content.",
+      "tags": [
+        "slides",
+        "ordering",
+        "mixed"
+      ],
+      "slides": 3,
+      "level": "core",
+      "paths": {
+        "author_pptx": "cases/080_multislide/author.pptx",
+        "ref_ppt": "cases/080_multislide/ref.ppt",
+        "ref_pptx": "cases/080_multislide/ref.pptx",
+        "render_ppt": "cases/080_multislide/render/ppt",
+        "render_pptx": "cases/080_multislide/render/pptx"
+      }
+    }
+  ]
+}

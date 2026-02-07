@@ -1,0 +1,13 @@
+{
+  "id": "051_chart_line",
+  "title": "Chart line",
+  "description": "Line chart with markers and gridlines.",
+  "tags": [
+    "chart",
+    "embedded"
+  ],
+  "slides": 1,
+  "level": "hard",
+  "generated_at": "2026-01-13T01:56:03.647272Z",
+  "authoring": "python-pptx"
+}

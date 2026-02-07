@@ -1,0 +1,14 @@
+{
+  "id": "040_table_basic",
+  "title": "Table basic",
+  "description": "Simple 4x4 table with header fill and alternating row shading.",
+  "tags": [
+    "table",
+    "cellfill",
+    "text"
+  ],
+  "slides": 1,
+  "level": "extended",
+  "generated_at": "2026-01-13T01:56:03.405767Z",
+  "authoring": "python-pptx"
+}

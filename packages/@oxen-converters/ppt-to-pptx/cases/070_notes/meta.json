@@ -1,0 +1,12 @@
+{
+  "id": "070_notes",
+  "title": "Speaker notes",
+  "description": "Notes slide text (including Japanese).",
+  "tags": [
+    "notes"
+  ],
+  "slides": 1,
+  "level": "extended",
+  "generated_at": "2026-01-13T01:56:03.814529Z",
+  "authoring": "python-pptx"
+}

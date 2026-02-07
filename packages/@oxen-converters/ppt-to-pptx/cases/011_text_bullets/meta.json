@@ -1,0 +1,14 @@
+{
+  "id": "011_text_bullets",
+  "title": "Text bullets",
+  "description": "Bulleted list with multiple nesting levels.",
+  "tags": [
+    "text",
+    "bullets",
+    "paragraph"
+  ],
+  "slides": 1,
+  "level": "core",
+  "generated_at": "2026-01-13T01:56:02.907806Z",
+  "authoring": "python-pptx"
+}

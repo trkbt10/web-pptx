@@ -1,0 +1,13 @@
+{
+  "id": "041_table_merged",
+  "title": "Table merged",
+  "description": "Table with merged 2x2 region.",
+  "tags": [
+    "table",
+    "merge"
+  ],
+  "slides": 1,
+  "level": "hard",
+  "generated_at": "2026-01-13T01:56:03.516470Z",
+  "authoring": "python-pptx"
+}

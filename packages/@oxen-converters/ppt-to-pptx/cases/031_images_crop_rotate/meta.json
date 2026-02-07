@@ -1,0 +1,14 @@
+{
+  "id": "031_images_crop_rotate",
+  "title": "Images crop & rotate",
+  "description": "Picture crop and rotation.",
+  "tags": [
+    "images",
+    "crop",
+    "rotation"
+  ],
+  "slides": 1,
+  "level": "extended",
+  "generated_at": "2026-01-13T01:56:03.243935Z",
+  "authoring": "python-pptx"
+}

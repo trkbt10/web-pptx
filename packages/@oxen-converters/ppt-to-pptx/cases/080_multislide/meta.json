@@ -1,0 +1,14 @@
+{
+  "id": "080_multislide",
+  "title": "Multi-slide",
+  "description": "Three slides to test slide order + mixed content.",
+  "tags": [
+    "slides",
+    "ordering",
+    "mixed"
+  ],
+  "slides": 3,
+  "level": "core",
+  "generated_at": "2026-01-13T01:56:03.927771Z",
+  "authoring": "python-pptx"
+}

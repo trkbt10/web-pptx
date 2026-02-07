@@ -1,0 +1,14 @@
+{
+  "id": "050_chart_bar",
+  "title": "Chart bar",
+  "description": "Clustered column chart (two series).",
+  "tags": [
+    "chart",
+    "embedded",
+    "drawingml"
+  ],
+  "slides": 1,
+  "level": "hard",
+  "generated_at": "2026-01-13T01:56:03.601126Z",
+  "authoring": "python-pptx"
+}

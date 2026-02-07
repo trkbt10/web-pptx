@@ -1,0 +1,13 @@
+{
+  "id": "021_line_styles",
+  "title": "Line styles",
+  "description": "Straight connectors with solid/dash/round-dot styles.",
+  "tags": [
+    "lines",
+    "dash"
+  ],
+  "slides": 1,
+  "level": "extended",
+  "generated_at": "2026-01-13T01:56:03.101540Z",
+  "authoring": "python-pptx"
+}

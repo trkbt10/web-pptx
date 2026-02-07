@@ -1,0 +1,14 @@
+{
+  "id": "012_text_alignment",
+  "title": "Text alignment",
+  "description": "Left/center/right alignment + rotated text box.",
+  "tags": [
+    "text",
+    "alignment",
+    "rotation"
+  ],
+  "slides": 1,
+  "level": "extended",
+  "generated_at": "2026-01-13T01:56:02.957808Z",
+  "authoring": "python-pptx"
+}

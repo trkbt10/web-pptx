@@ -1,0 +1,15 @@
+{
+  "id": "010_text_basic",
+  "title": "Text basic",
+  "description": "Rich text runs: bold/italic/underline, colors, mixed font sizes, Japanese + emoji.",
+  "tags": [
+    "text",
+    "runs",
+    "fonts",
+    "unicode"
+  ],
+  "slides": 1,
+  "level": "core",
+  "generated_at": "2026-01-13T01:56:02.828752Z",
+  "authoring": "python-pptx"
+}

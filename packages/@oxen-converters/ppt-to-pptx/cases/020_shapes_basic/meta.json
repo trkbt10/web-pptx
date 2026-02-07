@@ -1,0 +1,16 @@
+{
+  "id": "020_shapes_basic",
+  "title": "Shapes basic",
+  "description": "Rectangle/oval/triangle with fills, lines, rotation, and text.",
+  "tags": [
+    "shapes",
+    "fill",
+    "line",
+    "rotation",
+    "text"
+  ],
+  "slides": 1,
+  "level": "core",
+  "generated_at": "2026-01-13T01:56:03.024292Z",
+  "authoring": "python-pptx"
+}

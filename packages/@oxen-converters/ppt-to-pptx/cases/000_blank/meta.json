@@ -1,0 +1,14 @@
+{
+  "id": "000_blank",
+  "title": "Blank baseline",
+  "description": "Single blank slide with background fill and centered text.",
+  "tags": [
+    "slide",
+    "background",
+    "text"
+  ],
+  "slides": 1,
+  "level": "core",
+  "generated_at": "2026-01-13T01:56:02.741803Z",
+  "authoring": "python-pptx"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "060_hyperlink",
+  "title": "Hyperlink",
+  "description": "Text run hyperlink + shape click hyperlink.",
+  "tags": [
+    "hyperlink",
+    "rels"
+  ],
+  "slides": 1,
+  "level": "extended",
+  "generated_at": "2026-01-13T01:56:03.723050Z",
+  "authoring": "python-pptx"
+}

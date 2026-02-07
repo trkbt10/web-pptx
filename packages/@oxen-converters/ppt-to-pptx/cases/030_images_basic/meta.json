@@ -1,0 +1,14 @@
+{
+  "id": "030_images_basic",
+  "title": "Images basic",
+  "description": "PNG and JPG pictures placed/scaled.",
+  "tags": [
+    "images",
+    "png",
+    "jpg"
+  ],
+  "slides": 1,
+  "level": "core",
+  "generated_at": "2026-01-13T01:56:03.196529Z",
+  "authoring": "python-pptx"
+}
