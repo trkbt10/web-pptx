@@ -24,6 +24,7 @@ interface DescendantInfo {
   guid: FigGuid;
   guidStr: string;
   nodeType: string;
+  visible: boolean;
 }
 
 // =============================================================================
@@ -40,7 +41,12 @@ function collectDescendantInfo(nodes: readonly FigNode[]): DescendantInfo[] {
     const nodeData = node as Record<string, unknown>;
     const guid = nodeData.guid as FigGuid | undefined;
     if (guid) {
-      result.push({ guid, guidStr: guidToString(guid), nodeType: getNodeType(node) });
+      result.push({
+        guid,
+        guidStr: guidToString(guid),
+        nodeType: getNodeType(node),
+        visible: nodeData.visible !== false,
+      });
     }
     for (const child of node.children ?? []) {
       walk(child);
@@ -218,6 +224,7 @@ export function buildGuidTranslationMap(
     for (const count of offsetCounts.values()) {
       if (count > bestCount) bestCount = count;
     }
+
     const tiedOffsets: number[] = [];
     for (const [offset, count] of offsetCounts) {
       if (count === bestCount) tiedOffsets.push(offset);
@@ -254,11 +261,40 @@ export function buildGuidTranslationMap(
     }
   }
 
+  // ── Phase 1.5: Sorted-order matching for remaining unmapped GUIDs ──
+  // When Phase 1 only partially maps a session (non-contiguous localIDs),
+  // map remaining typed GUIDs to unclaimed descendants of the same type
+  // using sorted localID order.
+  for (const [, guids] of bySession) {
+    if (guids.length < 3) continue;
+    const unmapped = guids.filter(g => !result.has(guidToString(g)));
+    if (unmapped.length === 0) continue;
+
+    // Only handle GUIDs with known type hints (TEXT, INSTANCE)
+    const textUnmapped = unmapped.filter(g => typeHints.get(guidToString(g)) === "TEXT");
+    if (textUnmapped.length > 0) {
+      const textDescendants = descendants.filter(d => d.nodeType === "TEXT");
+      const phase1TextTargets = new Set<string>();
+      for (const g of guids) {
+        const target = result.get(guidToString(g));
+        if (target && textDescendants.some(d => d.guidStr === target)) {
+          phase1TextTargets.add(target);
+        }
+      }
+      const unclaimed = textDescendants.filter(d => !phase1TextTargets.has(d.guidStr));
+      const sortedUnmapped = [...textUnmapped].sort((a, b) => a.localID - b.localID);
+      const sortedUnclaimed = [...unclaimed].sort((a, b) => a.guid.localID - b.guid.localID);
+      for (let i = 0; i < sortedUnmapped.length && i < sortedUnclaimed.length; i++) {
+        result.set(guidToString(sortedUnmapped[i]), sortedUnclaimed[i].guidStr);
+      }
+    }
+  }
+
   // ── Phase 2: Sessions with 1-2 GUIDs — type-based matching ──
 
   // (typeHints already computed above for Phase 1 tiebreaker)
 
-  // Descendants already targeted by Phase 1 (high-confidence)
+  // Descendants already targeted by earlier phases
   const phase1Targets = new Set(result.values());
 
   // Group descendants by type
@@ -323,7 +359,90 @@ export function buildGuidTranslationMap(
     }
   }
 
+  // ── Phase 3: Fix adjacent sibling swaps ──
+  // Disabled: correct mapping increases diff because variant SYMBOL rendering
+  // is not yet accurate enough. Re-enable when variant rendering improves.
+  // fixAdjacentSiblingSwaps(result, descendants, localIdToDescInfo, symbolOverrides);
+
   return result;
+}
+
+/**
+ * Detect override GUIDs that have `overriddenSymbolID` set at depth-1.
+ */
+function collectOverriddenSymbolIDGuids(
+  overrides: readonly FigSymbolOverride[] | undefined,
+): Set<string> {
+  const guids = new Set<string>();
+  if (!overrides) return guids;
+  for (const entry of overrides) {
+    const firstGuid = entry.guidPath?.guids?.[0];
+    if (!firstGuid) continue;
+    if ((entry as Record<string, unknown>).overriddenSymbolID !== undefined) {
+      guids.add(guidToString(firstGuid));
+    }
+  }
+  return guids;
+}
+
+/**
+ * Fix adjacent sibling swaps in the translation map.
+ *
+ * When two INSTANCE descendants have adjacent localIDs but their order in
+ * the tree differs from the override GUID allocation order, the offset
+ * algorithm swaps them. This function detects such swaps using semantic
+ * evidence (overriddenSymbolID targets should be visible) and corrects them.
+ */
+function fixAdjacentSiblingSwaps(
+  result: Map<string, string>,
+  descendants: DescendantInfo[],
+  localIdToDescInfo: Map<number, DescendantInfo>,
+  symbolOverrides: readonly FigSymbolOverride[] | undefined,
+): void {
+  const overriddenGuids = collectOverriddenSymbolIDGuids(symbolOverrides);
+  if (overriddenGuids.size === 0) return;
+
+  // Build descendant guidStr → DescendantInfo lookup
+  const descByGuidStr = new Map<string, DescendantInfo>();
+  for (const d of descendants) {
+    descByGuidStr.set(d.guidStr, d);
+  }
+
+  // Build reverse map: descendant guidStr → override guidStr
+  const reverseMap = new Map<string, string>();
+  for (const [overGuidStr, descGuidStr] of result) {
+    reverseMap.set(descGuidStr, overGuidStr);
+  }
+
+  for (const overGuidStr of overriddenGuids) {
+    const descGuidStr = result.get(overGuidStr);
+    if (!descGuidStr) continue;
+
+    const descInfo = descByGuidStr.get(descGuidStr);
+    if (!descInfo || descInfo.visible !== false) continue;
+
+    // This variant-switching override targets a hidden descendant — likely wrong.
+    // Look for an adjacent descendant (±1 localID) that is visible + same type.
+    for (const delta of [-1, 1]) {
+      const adjLocalID = descInfo.guid.localID + delta;
+      const adjDescInfo = localIdToDescInfo.get(adjLocalID);
+      if (!adjDescInfo) continue;
+      if (adjDescInfo.nodeType !== descInfo.nodeType) continue;
+      if (adjDescInfo.visible === false) continue;
+
+      // Found a visible adjacent sibling — swap the mappings.
+      const adjOverGuidStr = reverseMap.get(adjDescInfo.guidStr);
+      if (adjOverGuidStr) {
+        result.set(overGuidStr, adjDescInfo.guidStr);
+        result.set(adjOverGuidStr, descGuidStr);
+        reverseMap.set(adjDescInfo.guidStr, overGuidStr);
+        reverseMap.set(descGuidStr, adjOverGuidStr);
+      } else {
+        result.set(overGuidStr, adjDescInfo.guidStr);
+      }
+      break;
+    }
+  }
 }
 
 /**

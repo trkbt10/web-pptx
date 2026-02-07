@@ -414,30 +414,8 @@ function createPatternFromImage(params: CreatePatternParams): string {
   const base64 = uint8ArrayToBase64(figImage.data);
   const dataUri = `data:${figImage.mimeType};base64,${base64}`;
 
-  // If element size is provided, use userSpaceOnUse for correct aspect ratio
-  if (elementSize && elementSize.width > 0 && elementSize.height > 0) {
-    const patternDef = pattern(
-      {
-        id,
-        patternUnits: "userSpaceOnUse",
-        width: elementSize.width,
-        height: elementSize.height,
-      },
-      image({
-        href: dataUri,
-        x: 0,
-        y: 0,
-        width: elementSize.width,
-        height: elementSize.height,
-        preserveAspectRatio: getPreserveAspectRatio(paint),
-      })
-    );
-
-    ctx.defs.add(patternDef);
-    return id;
-  }
-
-  // Fallback: use objectBoundingBox (may distort non-square images)
+  // Use objectBoundingBox to match Figma's SVG export behavior:
+  // the image stretches to fill the element's bounding box exactly.
   const patternDef = pattern(
     {
       id,
@@ -451,7 +429,7 @@ function createPatternFromImage(params: CreatePatternParams): string {
       y: 0,
       width: 1,
       height: 1,
-      preserveAspectRatio: getPreserveAspectRatio(paint),
+      preserveAspectRatio: "none",
     })
   );
 

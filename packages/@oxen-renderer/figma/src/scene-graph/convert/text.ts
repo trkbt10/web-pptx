@@ -7,8 +7,8 @@ import type { FigBlob } from "@oxen/fig/parser";
 import { extractTextProps } from "../../text/layout/extract-props";
 import { getFillColorAndOpacity } from "../../text/layout/fill";
 import { computeTextLayout } from "../../text/layout/compute-layout";
-import { extractDerivedTextPathData, hasDerivedGlyphs, type DerivedTextData, type DerivedGlyph } from "../../text/paths/derived-paths";
-import type { PathContour, Color, FallbackTextData, PathCommand } from "../types";
+import { extractDerivedTextPathData, hasDerivedGlyphs, type DerivedTextData } from "../../text/paths/derived-paths";
+import type { PathContour, Color, FallbackTextData } from "../types";
 import { figColorToSceneColor } from "./fill";
 
 /**
@@ -95,38 +95,6 @@ function parseHexColor(hex: string): Color {
 }
 
 /**
- * Compute the rendered text width from derived glyph data.
- * Width = last glyph's right edge (position.x + advance * fontSize)
- */
-function computeDerivedTextWidth(glyphs: readonly DerivedGlyph[]): number {
-  if (glyphs.length === 0) return 0;
-  const last = glyphs[glyphs.length - 1];
-  return last.position.x + last.advance * last.fontSize;
-}
-
-/**
- * Shift all X coordinates in path contours by dx.
- */
-function shiftContoursX(contours: PathContour[], dx: number): PathContour[] {
-  return contours.map((contour) => ({
-    ...contour,
-    commands: contour.commands.map((cmd): PathCommand => {
-      switch (cmd.type) {
-        case "M":
-        case "L":
-          return { ...cmd, x: cmd.x + dx };
-        case "C":
-          return { ...cmd, x1: cmd.x1! + dx, x2: cmd.x2! + dx, x: cmd.x + dx };
-        case "Q":
-          return { ...cmd, x1: cmd.x1! + dx, x: cmd.x + dx };
-        case "Z":
-          return cmd;
-      }
-    }),
-  }));
-}
-
-/**
  * Result of text conversion for scene graph
  */
 export type TextConversionResult = {
@@ -163,23 +131,8 @@ export function convertTextNode(
 
   if (hasDerivedGlyphs(derivedTextData)) {
     const pathData = extractDerivedTextPathData(derivedTextData!, blobs);
-    let glyphContours = convertTextContours(pathData.glyphContours);
+    const glyphContours = convertTextContours(pathData.glyphContours);
     const decorationContours = convertDecorationsToContours(pathData.decorations);
-
-    // Derived glyph positions are left-aligned (x starts at 0).
-    // Apply horizontal alignment offset based on text node properties.
-    if (props.textAlignHorizontal !== "LEFT" && props.textAlignHorizontal !== "JUSTIFIED" && props.size?.width) {
-      const textWidth = computeDerivedTextWidth(derivedTextData!.glyphs!);
-      let dx = 0;
-      if (props.textAlignHorizontal === "CENTER") {
-        dx = (props.size.width - textWidth) / 2;
-      } else if (props.textAlignHorizontal === "RIGHT") {
-        dx = props.size.width - textWidth;
-      }
-      if (Math.abs(dx) > 0.01) {
-        glyphContours = shiftContoursX(glyphContours, dx);
-      }
-    }
 
     // Also generate fallback text layout for Canvas2D rendering
     // (glyph outlines may not render well at low resolution via stencil)

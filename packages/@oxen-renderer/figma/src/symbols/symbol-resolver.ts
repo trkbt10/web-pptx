@@ -275,26 +275,35 @@ function applyComponentPropAssignments(
       for (const ref of propRefs) {
         const defKey = guidToString(ref.defID);
         const assignment = assignMap.get(defKey);
-        if (!assignment) continue;
 
         // Apply based on field type
-        if (ref.componentPropNodeField?.name === "TEXT_DATA" && assignment.value.textValue) {
-          const tv = assignment.value.textValue;
-          // Update textData with overridden characters
-          const existingTextData = nodeData.textData as Record<string, unknown> | undefined;
-          nodeData.textData = {
-            ...(existingTextData ?? {}),
-            characters: tv.characters,
-            lines: tv.lines ?? existingTextData?.lines,
-          };
-          // Also set top-level characters for renderers that check it
-          nodeData.characters = tv.characters;
-          // Clear derivedTextData — its glyph paths correspond to the
-          // original text, not the overridden content.  Removing it forces
-          // the renderer to fall back to <text> element rendering.
-          // NOTE: derivedSymbolData applied later may re-add stale derivedTextData;
-          // cleanupStaleDerivedTextData() handles that in cloneSymbolChildren.
-          delete nodeData.derivedTextData;
+        if (ref.componentPropNodeField?.name === "TEXT_DATA") {
+          if (assignment?.value.textValue) {
+            const tv = assignment.value.textValue;
+            // Update textData with overridden characters
+            const existingTextData = nodeData.textData as Record<string, unknown> | undefined;
+            nodeData.textData = {
+              ...(existingTextData ?? {}),
+              characters: tv.characters,
+              lines: tv.lines ?? existingTextData?.lines,
+            };
+            // Also set top-level characters for renderers that check it
+            nodeData.characters = tv.characters;
+            // Clear derivedTextData — its glyph paths correspond to the
+            // original text, not the overridden content.  Removing it forces
+            // the renderer to fall back to <text> element rendering.
+            // NOTE: derivedSymbolData applied later may re-add stale derivedTextData;
+            // cleanupStaleDerivedTextData() handles that in cloneSymbolChildren.
+            delete nodeData.derivedTextData;
+          }
+        } else if (ref.componentPropNodeField?.name === "VISIBLE") {
+          if (assignment) {
+            // Explicit CPA value
+            const boolVal = assignment.value.boolValue;
+            if (boolVal !== undefined) {
+              nodeData.visible = boolVal;
+            }
+          }
         }
       }
     }
@@ -422,15 +431,42 @@ function applyOverrides(
       if (direct) {
         for (const [key, value] of Object.entries(direct)) {
           if (key === "guidPath") continue;
-          nodeData[key] = value;
+          if (key === "componentPropAssignments") {
+            // Merge CPA arrays: existing entries + override entries.
+            // Override entries with the same defID take precedence.
+            const existing = nodeData.componentPropAssignments as ComponentPropAssignment[] | undefined;
+            const incoming = value as ComponentPropAssignment[];
+            if (existing && existing.length > 0) {
+              const incomingKeys = new Set(incoming.map(a => guidToString(a.defID)));
+              const merged = existing.filter(a => !incomingKeys.has(guidToString(a.defID)));
+              merged.push(...incoming);
+              nodeData[key] = merged;
+            } else {
+              nodeData[key] = value;
+            }
+          } else {
+            nodeData[key] = value;
+          }
         }
       }
 
-      // Propagate nested overrides as derivedSymbolData on this node
+      // Propagate nested overrides
       const nested = nestedMap.get(guidStr);
       if (nested && nested.length > 0) {
-        const existing = nodeData.derivedSymbolData as FigSymbolOverride[] | undefined;
-        nodeData.derivedSymbolData = [...(existing ?? []), ...nested];
+        const nodeType = getNodeType(node);
+        if (nodeType === "INSTANCE") {
+          // INSTANCE: store as derivedSymbolData for resolveInstance() to consume
+          const existing = nodeData.derivedSymbolData as FigSymbolOverride[] | undefined;
+          nodeData.derivedSymbolData = [...(existing ?? []), ...nested];
+        } else {
+          // Non-INSTANCE container (FRAME, GROUP, etc.): apply recursively
+          // to children immediately, since these nodes don't go through
+          // resolveInstance() and derivedSymbolData would be lost.
+          const children = node.children as FigNode[] | undefined;
+          if (children && children.length > 0) {
+            applyOverrides(children, nested);
+          }
+        }
       }
     }
 

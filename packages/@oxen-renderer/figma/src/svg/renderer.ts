@@ -277,10 +277,23 @@ function mergeSymbolProperties(instanceNode: FigNode, symbolNode: FigNode): FigN
     merged.strokeGeometry = symbolNode.strokeGeometry;
   }
   // clipsContent / frameMaskDisabled
-  if (symbolNode.frameMaskDisabled !== undefined) {
-    merged.frameMaskDisabled = symbolNode.frameMaskDisabled;
-  } else if (symbolNode.clipsContent !== undefined) {
-    merged.clipsContent = symbolNode.clipsContent;
+  // Respect INSTANCE-level overrides: if the INSTANCE has its own explicit
+  // frameMaskDisabled (different from SYMBOL's), it's an intentional per-instance
+  // clip override and should be preserved.
+  const instanceHasOwnClip =
+    instanceNode.frameMaskDisabled !== undefined ||
+    instanceNode.clipsContent !== undefined;
+  if (!instanceHasOwnClip) {
+    if (symbolNode.frameMaskDisabled !== undefined) {
+      merged.frameMaskDisabled = symbolNode.frameMaskDisabled;
+    } else if (symbolNode.clipsContent !== undefined) {
+      merged.clipsContent = symbolNode.clipsContent;
+    } else {
+      // SYMBOL/COMPONENT/FRAME clip content by default in Figma.
+      // Set explicitly so the INSTANCE node doesn't fall through to
+      // resolveClipsContent()'s INSTANCE default (false).
+      merged.frameMaskDisabled = false;
+    }
   }
   // effects
   if (symbolNode.effects) {
@@ -388,6 +401,36 @@ function resolveInstance(
   return { node: mergedNode, children: resolvedChildren };
 }
 
+const FIGMA_BLEND_MODE_TO_CSS: Record<string, string> = {
+  DARKEN: "darken",
+  MULTIPLY: "multiply",
+  LINEAR_BURN: "plus-darker",
+  COLOR_BURN: "color-burn",
+  LIGHTEN: "lighten",
+  SCREEN: "screen",
+  LINEAR_DODGE: "plus-lighter",
+  COLOR_DODGE: "color-dodge",
+  OVERLAY: "overlay",
+  SOFT_LIGHT: "soft-light",
+  HARD_LIGHT: "hard-light",
+  DIFFERENCE: "difference",
+  EXCLUSION: "exclusion",
+  HUE: "hue",
+  SATURATION: "saturation",
+  COLOR: "color",
+  LUMINOSITY: "luminosity",
+};
+
+function getBlendModeCss(node: FigNode): string | undefined {
+  const bm = (node as Record<string, unknown>).blendMode as
+    | { value: number; name: string }
+    | string
+    | undefined;
+  const name = typeof bm === "string" ? bm : bm?.name;
+  if (!name) return undefined;
+  return FIGMA_BLEND_MODE_TO_CSS[name];
+}
+
 /**
  * Render a single Figma node to SVG
  *
@@ -413,36 +456,37 @@ async function renderNode(
   const resolvedChildren = resolution.children;
   const renderedChildren = await renderChildrenWithMasks(resolvedChildren, ctx, warnings);
 
+  let content: SvgString;
   switch (nodeType) {
     case "DOCUMENT":
-      return g({}, ...renderedChildren);
+      content = g({}, ...renderedChildren); break;
 
     case "CANVAS":
-      return g({}, ...renderedChildren);
+      content = g({}, ...renderedChildren); break;
 
     case "FRAME":
     case "COMPONENT":
     case "COMPONENT_SET":
     case "INSTANCE":
     case "SYMBOL":
-      return renderFrameNode(resolvedNode, ctx, renderedChildren);
+      content = renderFrameNode(resolvedNode, ctx, renderedChildren); break;
 
     case "GROUP":
     case "BOOLEAN_OPERATION":
-      return renderGroupNode(node, ctx, renderedChildren);
+      content = renderGroupNode(node, ctx, renderedChildren); break;
 
     case "RECTANGLE":
     case "ROUNDED_RECTANGLE":
-      return renderRectangleNode(node, ctx);
+      content = renderRectangleNode(node, ctx); break;
 
     case "ELLIPSE":
-      return renderEllipseNode(node, ctx);
+      content = renderEllipseNode(node, ctx); break;
 
     case "VECTOR":
     case "LINE":
     case "STAR":
     case "REGULAR_POLYGON":
-      return renderVectorNode(node, ctx);
+      content = renderVectorNode(node, ctx); break;
 
     case "TEXT":
       // Prefer derived path rendering (exact match with Figma export)
@@ -451,7 +495,7 @@ async function renderNode(
           ...ctx,
           blobs: ctx.blobs,
         };
-        return renderTextNodeFromDerivedData(node, derivedCtx);
+        content = renderTextNodeFromDerivedData(node, derivedCtx); break;
       }
       // Fallback to opentype.js path rendering if fontLoader is available
       if (ctx.fontLoader) {
@@ -459,17 +503,24 @@ async function renderNode(
           ...ctx,
           fontLoader: ctx.fontLoader,
         };
-        return renderTextNodeAsPath(node, pathCtx);
+        content = renderTextNodeAsPath(node, pathCtx); break;
       }
-      return renderTextNode(node, ctx);
+      content = renderTextNode(node, ctx); break;
 
     default:
       if (renderedChildren.length > 0) {
-        return g({}, ...renderedChildren);
+        content = g({}, ...renderedChildren); break;
       }
       warnings.push(`Unknown node type: ${nodeType}`);
-      return EMPTY_SVG;
+      content = EMPTY_SVG; break;
   }
+
+  // Apply node-level blend mode as CSS mix-blend-mode
+  const blendModeCss = getBlendModeCss(node);
+  if (blendModeCss) {
+    return g({ style: `mix-blend-mode:${blendModeCss}` }, content);
+  }
+  return content;
 }
 
 /**

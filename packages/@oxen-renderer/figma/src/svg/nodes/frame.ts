@@ -40,24 +40,6 @@ function resolveClipsContent(node: FigNode): boolean {
   return false;
 }
 
-type GeometryResolution = {
-  readonly geometry: readonly FigFillGeometry[] | undefined;
-  readonly isStrokeGeometry: boolean;
-};
-
-function selectGeometry(
-  fillGeometry: readonly FigFillGeometry[] | undefined,
-  strokeGeometry: readonly FigFillGeometry[] | undefined,
-): GeometryResolution {
-  if (fillGeometry && fillGeometry.length > 0) {
-    return { geometry: fillGeometry, isStrokeGeometry: false };
-  }
-  if (strokeGeometry && strokeGeometry.length > 0) {
-    return { geometry: strokeGeometry, isStrokeGeometry: true };
-  }
-  return { geometry: undefined, isStrokeGeometry: false };
-}
-
 /**
  * Build fill attrs from stroke paints (for strokeGeometry).
  */
@@ -136,19 +118,21 @@ export function renderFrameNode(
 
   const elements: SvgString[] = [];
 
-  const { geometry, isStrokeGeometry } = selectGeometry(fillGeometry, strokeGeometry);
-  const decodedPaths = geometry ? decodePathsFromGeometry(geometry, ctx.blobs) : [];
-  if (decodedPaths.length > 0) {
-    let fillAttrs: FillAttrs;
-    let strokeAttrs: StrokeAttrs;
-    if (isStrokeGeometry) {
-      fillAttrs = strokePaintsToFillAttrs(strokePaints);
-      strokeAttrs = {};
-    } else {
-      fillAttrs = baseFillAttrs;
-      strokeAttrs = baseStrokeAttrs;
-    }
-    elements.push(...buildPathElements(decodedPaths, fillAttrs, strokeAttrs));
+  const decodedFillPaths = fillGeometry ? decodePathsFromGeometry(fillGeometry, ctx.blobs) : [];
+  const decodedStrokePaths = strokeGeometry ? decodePathsFromGeometry(strokeGeometry, ctx.blobs) : [];
+
+  if (decodedFillPaths.length > 0 && decodedStrokePaths.length > 0) {
+    // Both geometries: render fill paths with fill paints, stroke paths as filled outlines
+    elements.push(...buildPathElements(decodedFillPaths, baseFillAttrs, {}));
+    const strokeFillAttrs = strokePaintsToFillAttrs(strokePaints);
+    elements.push(...buildPathElements(decodedStrokePaths, strokeFillAttrs, {}));
+  } else if (decodedFillPaths.length > 0) {
+    // Only fill geometry: apply SVG stroke attrs
+    elements.push(...buildPathElements(decodedFillPaths, baseFillAttrs, baseStrokeAttrs));
+  } else if (decodedStrokePaths.length > 0) {
+    // Only stroke geometry: fill with stroke color
+    const strokeFillAttrs = strokePaintsToFillAttrs(strokePaints);
+    elements.push(...buildPathElements(decodedStrokePaths, strokeFillAttrs, {}));
   } else {
     const bgRect = rect({
       x: 0,
@@ -168,7 +152,8 @@ export function renderFrameNode(
     if (clipsContent) {
       // Create clip path
       const clipId = ctx.defs.generateId("clip");
-      const clipShapes = buildClipShapes(geometry, ctx, size, rx, ry);
+      const clipGeometry = decodedFillPaths.length > 0 ? fillGeometry : strokeGeometry;
+      const clipShapes = buildClipShapes(clipGeometry, ctx, size, rx, ry);
       const clipDef = clipPath({ id: clipId }, ...clipShapes);
       ctx.defs.add(clipDef);
 
