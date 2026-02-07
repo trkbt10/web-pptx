@@ -45,7 +45,7 @@ import type {
 import { parseOfficeMath, parseOfficeMathPara } from "./math";
 import type { ParagraphAlignment, TabStopAlignment, TabStopLeader } from "@oxen-office/ooxml/domain/text";
 import type { WordBorderStyle } from "@oxen-office/ooxml/domain/border";
-import type { DocxThemeColor } from "../domain/run";
+import type { DocxRun, DocxThemeColor } from "../domain/run";
 import {
   parseToggleChild,
   getChildVal,
