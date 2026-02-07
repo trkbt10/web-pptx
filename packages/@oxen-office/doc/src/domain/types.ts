@@ -2,25 +2,233 @@
  * @file DOC domain types – intermediate representation extracted from .doc binary
  */
 
+// --- Underline style ---
+
+export type DocUnderlineStyle =
+  | "single"
+  | "wordsOnly"
+  | "double"
+  | "dotted"
+  | "thick"
+  | "dash"
+  | "dotDash"
+  | "dotDotDash"
+  | "wave";
+
+// --- Line spacing ---
+
+export type DocLineSpacing = {
+  /** Line height value (twips or 1/240 of a line) */
+  readonly value: number;
+  /** true = proportional (value in 1/240 units), false = exact/atLeast twips */
+  readonly multi: boolean;
+};
+
+// --- Character formatting ---
+
 /** A run of text with uniform character properties. */
 export type DocTextRun = {
   readonly text: string;
   readonly bold?: boolean;
   readonly italic?: boolean;
   readonly underline?: boolean;
+  readonly underlineStyle?: DocUnderlineStyle;
+  readonly underlineColor?: string;
   readonly strike?: boolean;
+  readonly dstrike?: boolean;
+  readonly caps?: boolean;
+  readonly smallCaps?: boolean;
+  readonly hidden?: boolean;
+  readonly outline?: boolean;
+  readonly shadow?: boolean;
+  readonly emboss?: boolean;
+  readonly imprint?: boolean;
+  readonly superscript?: boolean;
+  readonly subscript?: boolean;
   readonly fontSize?: number;
   readonly fontName?: string;
+  readonly fontNameEastAsia?: string;
+  readonly fontNameComplex?: string;
+  readonly fontNameBiDi?: string;
   readonly color?: string;
+  readonly highlight?: string;
+  readonly spacing?: number;
 };
+
+// --- Paragraph formatting ---
+
+/** Paragraph alignment. */
+export type DocAlignment = "left" | "center" | "right" | "justify" | "distribute";
 
 /** A paragraph extracted from .doc. */
 export type DocParagraph = {
   readonly runs: readonly DocTextRun[];
-  readonly alignment?: "left" | "center" | "right" | "justify";
+  readonly alignment?: DocAlignment;
+  readonly indentLeft?: number;
+  readonly indentRight?: number;
+  readonly firstLineIndent?: number;
+  readonly spaceBefore?: number;
+  readonly spaceAfter?: number;
+  readonly lineSpacing?: DocLineSpacing;
+  readonly keepTogether?: boolean;
+  readonly keepWithNext?: boolean;
+  readonly pageBreakBefore?: boolean;
+  readonly widowControl?: boolean;
+  readonly outlineLevel?: number;
+  readonly styleIndex?: number;
+  readonly listIndex?: number;
+  readonly listLevel?: number;
+  readonly inTable?: boolean;
+  readonly isRowEnd?: boolean;
+  readonly tableDepth?: number;
 };
+
+// --- Section ---
+
+export type DocSectionBreakType = "continuous" | "newColumn" | "newPage" | "evenPage" | "oddPage";
+
+export type DocSection = {
+  readonly pageWidth?: number;
+  readonly pageHeight?: number;
+  readonly orientation?: "portrait" | "landscape";
+  readonly marginTop?: number;
+  readonly marginBottom?: number;
+  readonly marginLeft?: number;
+  readonly marginRight?: number;
+  readonly gutter?: number;
+  readonly columns?: number;
+  readonly columnSpacing?: number;
+  readonly breakType?: DocSectionBreakType;
+  readonly titlePage?: boolean;
+  readonly headerDistance?: number;
+  readonly footerDistance?: number;
+  readonly paragraphs: readonly DocParagraph[];
+};
+
+// --- Table ---
+
+export type DocTableCell = {
+  readonly paragraphs: readonly DocParagraph[];
+  readonly width?: number;
+  readonly verticalMerge?: "restart" | "continue";
+  readonly verticalAlign?: "top" | "center" | "bottom";
+};
+
+export type DocTableRow = {
+  readonly cells: readonly DocTableCell[];
+  readonly height?: number;
+  readonly header?: boolean;
+};
+
+export type DocTable = {
+  readonly rows: readonly DocTableRow[];
+};
+
+// --- Style ---
+
+export type DocStyleType = "paragraph" | "character" | "table" | "list";
+
+export type DocStyle = {
+  readonly index: number;
+  readonly name?: string;
+  readonly type: DocStyleType;
+  readonly basedOn?: number;
+  readonly next?: number;
+};
+
+// --- List ---
+
+export type DocListLevel = {
+  readonly start: number;
+  readonly format: number;
+  readonly text: string;
+  readonly alignment: number;
+  readonly follow: number;
+};
+
+export type DocListDefinition = {
+  readonly lsid: number;
+  readonly levels: readonly DocListLevel[];
+  readonly simpleList: boolean;
+};
+
+export type DocListOverride = {
+  readonly lsid: number;
+};
+
+// --- Hyperlink ---
+
+export type DocHyperlink = {
+  readonly url?: string;
+  readonly anchor?: string;
+  readonly displayText: string;
+};
+
+// --- Headers/Footers ---
+
+export type DocHeaderFooterType = "even" | "odd" | "first";
+
+export type DocHeaderFooter = {
+  readonly type: DocHeaderFooterType;
+  readonly content: readonly DocParagraph[];
+};
+
+// --- Footnotes/Endnotes ---
+
+export type DocNote = {
+  readonly cpRef: number;
+  readonly content: readonly DocParagraph[];
+};
+
+// --- Comments ---
+
+export type DocComment = {
+  readonly author: string;
+  readonly initials?: string;
+  readonly cpStart: number;
+  readonly cpEnd: number;
+  readonly content: readonly DocParagraph[];
+};
+
+// --- Bookmarks ---
+
+export type DocBookmark = {
+  readonly name: string;
+  readonly cpStart: number;
+  readonly cpEnd: number;
+};
+
+// --- Field ---
+
+export type DocField = {
+  readonly type: string;
+  readonly instruction: string;
+  readonly result: string;
+  readonly cpStart: number;
+  readonly cpEnd: number;
+};
+
+// --- Document ---
+
+/** A block-level content element: paragraph or table. */
+export type DocBlockContent = DocParagraph | DocTable;
 
 /** The full document extracted from .doc binary. */
 export type DocDocument = {
   readonly paragraphs: readonly DocParagraph[];
+  /** Block-level content: paragraphs and tables (table paragraphs grouped into DocTable). */
+  readonly content?: readonly DocBlockContent[];
+  readonly sections?: readonly DocSection[];
+  readonly styles?: readonly DocStyle[];
+  readonly fonts?: readonly string[];
+  readonly lists?: readonly DocListDefinition[];
+  readonly listOverrides?: readonly DocListOverride[];
+  readonly headers?: readonly DocHeaderFooter[];
+  readonly footers?: readonly DocHeaderFooter[];
+  readonly footnotes?: readonly DocNote[];
+  readonly endnotes?: readonly DocNote[];
+  readonly comments?: readonly DocComment[];
+  readonly bookmarks?: readonly DocBookmark[];
+  readonly fields?: readonly DocField[];
+  readonly hyperlinks?: readonly DocHyperlink[];
 };

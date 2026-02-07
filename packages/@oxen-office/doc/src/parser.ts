@@ -5,7 +5,7 @@
 import { openCfb, type CfbWarning } from "@oxen-office/cfb";
 import type { DocParseContext, DocParseMode } from "./parse-context";
 import { isStrict } from "./parse-context";
-import type { DocWarningSink, DocWarning } from "./warnings";
+import type { DocWarningSink, DocWarning, DocWarningCode } from "./warnings";
 import { createDocWarningCollector } from "./warnings";
 import { parseFib } from "./stream/fib";
 import { parsePieceTable } from "./stream/piece-table";
@@ -32,7 +32,7 @@ function createCfbWarningSink(warn?: DocWarningSink) {
       message: warning.message,
       ...(warning.meta ? { meta: warning.meta } : {}),
     };
-    const codeMapping: Record<string, string> = {
+    const codeMapping: Record<string, DocWarningCode> = {
       FAT_CHAIN_INVALID: "CFB_FAT_CHAIN_INVALID",
       FAT_CHAIN_TOO_SHORT: "CFB_FAT_CHAIN_TOO_SHORT",
       FAT_CHAIN_LENGTH_MISMATCH: "CFB_FAT_CHAIN_LENGTH_MISMATCH",
@@ -42,7 +42,7 @@ function createCfbWarningSink(warn?: DocWarningSink) {
       MINIFAT_CHAIN_LENGTH_MISMATCH: "CFB_MINIFAT_CHAIN_LENGTH_MISMATCH",
       MINISTREAM_TRUNCATED: "CFB_MINISTREAM_TRUNCATED",
     };
-    const code = codeMapping[warning.code] as DocWarning["code"] | undefined;
+    const code = codeMapping[warning.code];
     if (code) {
       warn({ code, ...base });
     }
@@ -90,7 +90,7 @@ function parseDocFromBytes(bytes: Uint8Array, ctx: DocParseContext): DocDocument
   const pieces = parsePieceTable(tableStream, fib.fcClx, fib.lcbClx);
 
   // Extract domain model
-  return extractDocDocument({ wordDocStream, fib, pieces, ctx });
+  return extractDocDocument({ wordDocStream, tableStream, fib, pieces, ctx });
 }
 
 /** Parse a DOC file and return the document data with collected warnings. */
