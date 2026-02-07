@@ -2,8 +2,7 @@
  * @file show command - display slide content
  */
 
-import * as fs from "node:fs/promises";
-import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
+import { loadPresentationBundle } from "./loader";
 import { openPresentation } from "@oxen-office/pptx";
 import { createZipAdapter } from "@oxen-office/pptx/domain";
 import { parseSlide } from "@oxen-office/pptx/parser/slide/slide-parser";
@@ -60,8 +59,7 @@ function collectChartResourceIds(shapes: readonly Shape[]): readonly string[] {
  */
 export async function runShow(filePath: string, slideNumber: number): Promise<Result<ShowData>> {
   try {
-    const buffer = await fs.readFile(filePath);
-    const { zipPackage, presentationFile } = await loadPptxBundleFromBuffer(buffer);
+    const { zipPackage, presentationFile } = await loadPresentationBundle(filePath);
     const presentation = openPresentation(presentationFile);
 
     if (slideNumber < 1 || slideNumber > presentation.count) {

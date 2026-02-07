@@ -18,6 +18,7 @@
   "dependencies": {
     "@oxen-builder/pptx": "workspace:*",
     "@oxen-cli/cli-core": "workspace:*",
+    "@oxen-converters/ppt-to-pptx": "workspace:*",
     "@oxen-office/chart": "workspace:*",
     "@oxen-office/opc": "workspace:*",
     "@oxen-office/pptx": "workspace:*",

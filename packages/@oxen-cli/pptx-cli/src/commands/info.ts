@@ -2,8 +2,7 @@
  * @file info command - display presentation metadata
  */
 
-import * as fs from "node:fs/promises";
-import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
+import { loadPresentationBundle } from "./loader";
 import { openPresentation } from "@oxen-office/pptx";
 import { success, error, type Result } from "@oxen-cli/cli-core";
 import { EMU_PER_PIXEL } from "@oxen-office/pptx/domain";
@@ -24,8 +23,7 @@ export type InfoData = {
  */
 export async function runInfo(filePath: string): Promise<Result<InfoData>> {
   try {
-    const buffer = await fs.readFile(filePath);
-    const { presentationFile } = await loadPptxBundleFromBuffer(buffer);
+    const { presentationFile } = await loadPresentationBundle(filePath);
     const presentation = openPresentation(presentationFile);
 
     const widthEmu = Math.round(presentation.size.width * EMU_PER_PIXEL);

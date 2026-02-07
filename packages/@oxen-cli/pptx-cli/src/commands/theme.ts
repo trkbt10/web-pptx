@@ -2,8 +2,7 @@
  * @file theme command - display theme information
  */
 
-import * as fs from "node:fs/promises";
-import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
+import { loadPresentationBundle } from "./loader";
 import { openPresentation } from "@oxen-office/pptx";
 import { parseTheme } from "@oxen-office/pptx/parser/slide/theme-parser";
 import { success, error, type Result } from "@oxen-cli/cli-core";
@@ -70,8 +69,7 @@ export type ThemeData = {
  */
 export async function runTheme(filePath: string): Promise<Result<ThemeData>> {
   try {
-    const buffer = await fs.readFile(filePath);
-    const { presentationFile } = await loadPptxBundleFromBuffer(buffer);
+    const { presentationFile } = await loadPresentationBundle(filePath);
     const presentation = openPresentation(presentationFile);
 
     // Get theme from first slide

@@ -2,8 +2,7 @@
  * @file images command - display embedded image information from PPTX slides
  */
 
-import * as fs from "node:fs/promises";
-import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
+import { loadPresentationBundle } from "./loader";
 import { openPresentation } from "@oxen-office/pptx";
 import { parseSlide } from "@oxen-office/pptx/parser/slide/slide-parser";
 import { success, error, type Result } from "@oxen-cli/cli-core";
@@ -34,8 +33,7 @@ export type ImagesOptions = {
  */
 export async function runImages(filePath: string, options: ImagesOptions): Promise<Result<ImagesData>> {
   try {
-    const buffer = await fs.readFile(filePath);
-    const { presentationFile } = await loadPptxBundleFromBuffer(buffer);
+    const { presentationFile } = await loadPresentationBundle(filePath);
     const presentation = openPresentation(presentationFile);
 
     const slideNumbers = getSlideNumbers(options.slides, presentation.count);

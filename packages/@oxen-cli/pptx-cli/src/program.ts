@@ -40,7 +40,7 @@ export function createProgram(): Command {
   program
     .command("info")
     .description("Display presentation metadata")
-    .argument("<file>", "PPTX file path")
+    .argument("<file>", "PPTX/PPT file path")
     .action(async (file: string) => {
       const mode = program.opts().output as OutputMode;
       const result = await runInfo(file);
@@ -50,7 +50,7 @@ export function createProgram(): Command {
   program
     .command("list")
     .description("List slides with summary")
-    .argument("<file>", "PPTX file path")
+    .argument("<file>", "PPTX/PPT file path")
     .action(async (file: string) => {
       const mode = program.opts().output as OutputMode;
       const result = await runList(file);
@@ -60,7 +60,7 @@ export function createProgram(): Command {
   program
     .command("show")
     .description("Display slide content")
-    .argument("<file>", "PPTX file path")
+    .argument("<file>", "PPTX/PPT file path")
     .argument("<slide>", "Slide number (1-based)")
     .action(async (file: string, slide: string) => {
       const mode = program.opts().output as OutputMode;
@@ -77,7 +77,7 @@ export function createProgram(): Command {
   program
     .command("extract")
     .description("Extract text from slides")
-    .argument("<file>", "PPTX file path")
+    .argument("<file>", "PPTX/PPT file path")
     .option("--slides <range>", "Slide range (e.g., \"1,3-5\")")
     .action(async (file: string, options: { slides?: string }) => {
       const mode = program.opts().output as OutputMode;
@@ -88,7 +88,7 @@ export function createProgram(): Command {
   program
     .command("theme")
     .description("Display theme information (fonts, colors, styles)")
-    .argument("<file>", "PPTX file path")
+    .argument("<file>", "PPTX/PPT file path")
     .action(async (file: string) => {
       const mode = program.opts().output as OutputMode;
       const result = await runTheme(file);
@@ -119,7 +119,7 @@ export function createProgram(): Command {
   program
     .command("preview")
     .description("Render ASCII art preview of a slide (omit slide number to show all)")
-    .argument("<file>", "PPTX file path")
+    .argument("<file>", "PPTX/PPT file path")
     .argument("[slide]", "Slide number (1-based, omit for all)")
     .option("--width <columns>", "Terminal width in columns", "80")
     .option("--border", "Show slide border outline")
@@ -147,7 +147,7 @@ export function createProgram(): Command {
   program
     .command("inventory")
     .description("Display media inventory summary")
-    .argument("<file>", "PPTX file path")
+    .argument("<file>", "PPTX/PPT file path")
     .action(async (file: string) => {
       const mode = program.opts().output as OutputMode;
       const result = await runInventory(file);
@@ -157,7 +157,7 @@ export function createProgram(): Command {
   program
     .command("tables")
     .description("Display table information from slides")
-    .argument("<file>", "PPTX file path")
+    .argument("<file>", "PPTX/PPT file path")
     .option("--slides <range>", "Slide range (e.g., \"1,3-5\")")
     .action(async (file: string, options: { slides?: string }) => {
       const mode = program.opts().output as OutputMode;
@@ -168,7 +168,7 @@ export function createProgram(): Command {
   program
     .command("images")
     .description("Display embedded image information from slides")
-    .argument("<file>", "PPTX file path")
+    .argument("<file>", "PPTX/PPT file path")
     .option("--slides <range>", "Slide range (e.g., \"1,3-5\")")
     .action(async (file: string, options: { slides?: string }) => {
       const mode = program.opts().output as OutputMode;
@@ -179,8 +179,8 @@ export function createProgram(): Command {
   program
     .command("diff")
     .description("Compare text content between two PPTX files")
-    .argument("<fileA>", "First PPTX file path")
-    .argument("<fileB>", "Second PPTX file path")
+    .argument("<fileA>", "First PPTX/PPT file path")
+    .argument("<fileB>", "Second PPTX/PPT file path")
     .action(async (fileA: string, fileB: string) => {
       const mode = program.opts().output as OutputMode;
       const result = await runDiff(fileA, fileB);

@@ -2,8 +2,7 @@
  * @file list command - list slides with summary
  */
 
-import * as fs from "node:fs/promises";
-import { loadPptxBundleFromBuffer } from "@oxen-office/pptx/app/pptx-loader";
+import { loadPresentationBundle } from "./loader";
 import { openPresentation } from "@oxen-office/pptx";
 import { parseSlide } from "@oxen-office/pptx/parser/slide/slide-parser";
 import { success, error, type Result } from "@oxen-cli/cli-core";
@@ -76,8 +75,7 @@ function hasImage(shapes: readonly Shape[]): boolean {
  */
 export async function runList(filePath: string): Promise<Result<ListData>> {
   try {
-    const buffer = await fs.readFile(filePath);
-    const { presentationFile } = await loadPptxBundleFromBuffer(buffer);
+    const { presentationFile } = await loadPresentationBundle(filePath);
     const presentation = openPresentation(presentationFile);
 
     const items: SlideListItem[] = [];
